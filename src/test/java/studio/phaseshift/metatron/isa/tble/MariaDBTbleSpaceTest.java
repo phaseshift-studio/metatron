@@ -36,7 +36,7 @@ import studio.phaseshift.metatron.SkipRegexTest;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SkipRegexTest(value = {
         @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M33", "M34", "M37"}),
-        @SkipRegexTest.Skip(method = "testRshiftDirectorySpine", params = "rshift/x/y.>>.>>")
+        @SkipRegexTest.Skip(method = "testRshiftUriGraphSpine", params = "rshift/x/y.>>.>>")
 })
 public class MariaDBTbleSpaceTest extends AbstractTbleSpaceTest {
 

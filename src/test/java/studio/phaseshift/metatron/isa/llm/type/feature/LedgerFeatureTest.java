@@ -29,6 +29,7 @@ import static studio.phaseshift.metatron.Tokens.CONTENT;
 import static studio.phaseshift.metatron.Tokens.NAME;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_LEDGER_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -42,10 +43,25 @@ public class LedgerFeatureTest extends AbstractFeatureTest {
     @Test
     public void testOnBeforeChatCreatesLedgerInSpace() {
         final LedgerFeature ledger = feature();
-        final Agent a = agentWith(ledger);
+        // SystemFeature receives the injected system message (features contribute
+        // through it via agent.feature(SYSTEM).<SystemFeature>as()).
+        final SystemFeature system = new SystemFeature(mutableMap(), LLM_SYSTEM_FEATURE_TID, null);
+        final Agent a = agentWith(ledger, system);
         ledger.onBeforeChat(a);
         assertFalse(Router.readFromSpace(f("/usr/test/ledger")).isNoObj(), "ledger should be created in space");
-        assertFalse(a.getSystemMessages().isEmpty(), "onBeforeChat should inject a system message");
+        assertFalse(system.getSystemMessages().isEmpty(), "onBeforeChat should inject a system message");
+    }
+
+    @Test
+    public void testOnBeforeChatDebilitatedWithoutSystemFeature() {
+        // Without a SystemFeature, the ledger feature proceeds debilitated: it still
+        // creates the ledger (its own work), logs the missing cross-feature requirement,
+        // and does NOT crash.
+        final LedgerFeature ledger = feature();
+        final Agent a = agentWith(ledger);   // no SystemFeature
+        ledger.onBeforeChat(a);
+        assertFalse(Router.readFromSpace(f("/usr/test/ledger")).isNoObj(),
+                "ledger should still be created in space even without SystemFeature (debilitated)");
     }
 
     @Test

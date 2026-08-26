@@ -346,7 +346,7 @@ mtron> int::T[?>0]@nat           [-- syntax sugar on is(gt(0)) --]
 mtron> nat::2                    [-- ok --]
 ==>nat::2
 mtron> nat::-1                   [-- <ERROR> --]
-==>fail::[-1 is not a int::T[is(gt(0))]@nat]@/sys/fail/202
+==>fail::[-1 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/202
 ```
 ---
 
@@ -653,8 +653,9 @@ mtron> int{?}::10                     [-- optional coefficient {0,1} --]
 `==`
 ```mtron
 mtron> [a=>1,b=>2,c=>3]==[a=>_]     [-- select with pattern match --]
-==>[a=>1]
+==>ERROR: class studio.phaseshift.metatron.isa.m.type.NoObj cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.NoObj and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')
 mtron> [a=>1,b=>2,c=>3]==[a=>is(gt(1))]  [-- select with filter --]
+==>ERROR: class studio.phaseshift.metatron.isa.m.type.NoObj cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.NoObj and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')
 ```
 ---
 
@@ -662,9 +663,13 @@ mtron> [a=>1,b=>2,c=>3]==[a=>is(gt(1))]  [-- select with filter --]
 
 ```mtron
 mtron> ?=1        [-- check if equal to 1 --]
+==>ERROR: class studio.phaseshift.metatron.isa.m.type.NoObj cannot be cast to class studio.phaseshift.metatron.isa.m.type.Fail (studio.phaseshift.metatron.isa.m.type.NoObj and studio.phaseshift.metatron.isa.m.type.Fail are in unnamed module of loader 'app')
 mtron> ?>1        [-- check if greater than 1 --]
+==>ERROR: class studio.phaseshift.metatron.isa.m.type.NoObj cannot be cast to class studio.phaseshift.metatron.isa.m.type.Fail (studio.phaseshift.metatron.isa.m.type.NoObj and studio.phaseshift.metatron.isa.m.type.Fail are in unnamed module of loader 'app')
 mtron> ?<5        [-- check if less than 5 --]
+==>ERROR: class studio.phaseshift.metatron.isa.m.type.NoObj cannot be cast to class studio.phaseshift.metatron.isa.m.type.Fail (studio.phaseshift.metatron.isa.m.type.NoObj and studio.phaseshift.metatron.isa.m.type.Fail are in unnamed module of loader 'app')
 mtron> ?int::T    [-- check if type is int --]
+==>ERROR: class studio.phaseshift.metatron.isa.m.type.NoObj cannot be cast to class studio.phaseshift.metatron.isa.m.type.Fail (studio.phaseshift.metatron.isa.m.type.NoObj and studio.phaseshift.metatron.isa.m.type.Fail are in unnamed module of loader 'app')
 ```
 ---
 
@@ -703,9 +708,7 @@ mtron> ?int::T    [-- check if type is int --]
 
 ```mtron
 mtron> [-- Chaining example (read test data from test file): --]
+==>ERROR: class studio.phaseshift.metatron.isa.m.type.NoObj cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.NoObj and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')
 mtron> {1,2,3,4}.sum{2}().sum?int<=int{1,7}().sum()-<[_,_]>-.sum?int<=int{2}()  #
-==>fail::[parse error at line 1, col 74:
-     ...,7}().sum()-<[_,_]>-.sum?int<=int{2}()  #
-                                                ^
-     could not parse at '#' — unclosed '<' — missing '>'?]@/sys/fail/412
+==>ERROR: class studio.phaseshift.metatron.isa.m.type.NoObj cannot be cast to class studio.phaseshift.metatron.isa.m.type.Fail (studio.phaseshift.metatron.isa.m.type.NoObj and studio.phaseshift.metatron.isa.m.type.Fail are in unnamed module of loader 'app')
 ```

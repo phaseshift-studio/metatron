@@ -105,6 +105,18 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         return false;
     }
 
+    @Override
+    protected void dropDeducedCollection(final String collectionName) {
+        // Drop the table so the shared DataPathSpace tests stay order-independent.
+        if (this.space instanceof tbleSpace ts) {
+            try {
+                ts.sql("DROP TABLE IF EXISTS " + collectionName);
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
+            }
+        }
+    }
+
     protected static final fURI SPACE_VID = f("/sys/space/tabledb/test");
     protected static DatabaseConfig staticDbConfig;
     protected final DatabaseConfig dbConfig;

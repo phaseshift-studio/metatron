@@ -97,6 +97,17 @@ else
     echo -e "${CHECKMARK} maven ${GREEN}already installed${NC}"
 fi
 
+# patchelf: the jar ships a musl-built tree-sitter native lib; on glibc Linux,
+# ObjJavaSerializer patches it with patchelf (missing → tree-sitter features fail).
+# Non-fatal: if patchelf can't be installed, metatron still runs — only Java
+# source parsing degrades.
+if ! command_exists patchelf; then
+    echo -e "${YELLOW}patchelf not installed — installing (tree-sitter native lib needs it on glibc)${NC}"
+    sudo apt-get install -y patchelf || echo -e "${YELLOW}warning: could not install patchelf; Java source parsing may fail${NC}"
+else
+    echo -e "${CHECKMARK} patchelf ${GREEN}already installed${NC}"
+fi
+
 # Clone the repository
 echo -e "cloning ${REPO_URL}..."
 if [ -d "${BUILD_DIR}" ]; then
@@ -112,14 +123,30 @@ fi
 # Build the project with Maven
 export MAVEN_OPTS="--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow"
 mvn clean install -q -DskipTests=true &
-spinner $! "installing metatron"
+MVN_PID=$!
+spinner "$MVN_PID" "installing metatron"
+# `set -e` would abort on a failed wait; capture the real build status instead.
+set +e
+wait "$MVN_PID"
+MVN_EXIT=$?
+set -e
 
 # Check build status
-if [ $? -eq 0 ]; then
+if [ "$MVN_EXIT" -eq 0 ]; then
+    # Bundle the uber-jar for runtime: bin/metatron launches lib/metatron.jar
+    # when present (no Maven needed at runtime).
+    mkdir -p lib
+    UBER_JAR=$(ls target/metatron-*-jar-with-dependencies.jar 2>/dev/null | head -1)
+    if [ -n "$UBER_JAR" ]; then
+        cp "$UBER_JAR" lib/metatron.jar
+        echo -e "${CHECKMARK} bundled ${UBER_JAR##*/} -> lib/metatron.jar${NC}"
+    else
+        echo -e "${YELLOW}warning: uber-jar not found; bin/metatron will need maven at runtime${NC}"
+    fi
     echo -e "${CHECKMARK} build successful${NC}"
     echo -e "${GREEN}up next${NC}"
     echo "cd ${BUILD_DIR}"
-    echo "bin/metatron --help" 
+    echo "bin/metatron --help"
 else
     echo -e "${RED} build failed${NC}"
     exit 1

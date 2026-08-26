@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.SkipWhenPortUnavailable;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.feature.AbstractFeature;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
+import studio.phaseshift.metatron.isa.llm.type.feature.SystemFeature;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -49,6 +50,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -315,6 +317,124 @@ public class AgentTest extends AbstractMetatronTest {
         //      onPartialResponse("Hello"), onPartialResponse("World"),
         //      onCompleteResponse("HelloWorld")
         //    ]
+    }
+
+    // ========================================================================
+    //  System-message channel (single channel: addSystemMessage → transformer)
+    // ========================================================================
+
+    /**
+     * The single system-message channel: SystemFeature owns the {@code systemMessages}
+     * list; features communicate cross-feature via {@code agent.feature(SYSTEM)}.
+     * No LLM needed — verify the field contract directly.
+     */
+    @Test
+    public void testSystemMessageChannelAppends() {
+        final SystemFeature system = new SystemFeature(mutableMap(), LLM_SYSTEM_FEATURE_TID, null);
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        map.put(uri(NAME), str("system-channel-agent"));
+        map.put(uri(FEATURE), lst(system));
+        final Agent a = Agent.agent(rec(map, LLM_AGENT_TID, null));
+
+        final SystemFeature sf = a.feature(SYSTEM).<SystemFeature>as();
+        assertTrue(sf.getSystemMessages().isEmpty(), "fresh agent should have no system messages");
+
+        sf.addSystemMessage("first");
+        sf.addSystemMessage("second");
+
+        assertEquals(2, sf.getSystemMessages().size());
+        assertEquals("first", sf.getSystemMessages().get(0));
+        assertEquals("second", sf.getSystemMessages().get(1));
+
+        // The transformer appends these to the model's base prompt — the join is
+        // exactly what Agent.chat() feeds to systemMessageTransformer.
+        assertEquals("first\nsecond", sf.systemMessage());
+    }
+
+    /**
+     * SystemFeature's onBeforeChat must be a pure no-op — it no longer writes a
+     * SYSTEM_MESSAGE_TID into the message ledger (Channel B is removed).  There is
+     * exactly ONE channel: addSystemMessage → transformer.
+     */
+    @Test
+    public void testSystemFeatureOnBeforeChatIsPureNoop() {
+        final SystemFeature system = new SystemFeature(mutableMap(), LLM_SYSTEM_FEATURE_TID, null);
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        map.put(uri(NAME), str("system-feature-agent"));
+        map.put(uri(FEATURE), lst(system));
+        map.put(uri(ROOT), f("/usr/test/system/").toUri());
+        final Agent a = Agent.agent(rec(map, LLM_AGENT_TID, null));
+
+        // Dispatch onBeforeChat directly — must be a silent no-op
+        final Obj result = system.onBeforeChat(a);
+        assertTrue(result.isNoObj(), "SystemFeature.onBeforeChat should return noobj");
+
+        // And it must NOT have added a system message (no Channel B / ledger write).
+        // The single channel is addSystemMessage; if SystemFeature wrote one, the
+        // feature's pending system messages would be non-empty after onBeforeChat.
+        assertTrue(a.feature(SYSTEM).<SystemFeature>as().getSystemMessages().isEmpty(),
+                "SystemFeature.onBeforeChat must not add system messages (single channel only)");
+    }
+
+    /**
+     * System messages are per-chat and ephemeral: cleared in chat()'s finally.
+     * LLM-backed — a real chat must clear the accumulated list afterward.
+     */
+    @Test
+    public void testSystemMessagesClearedAfterChat() {
+        // Minimal chat agent — Chat + System features only (the full buildFixture's
+        // skill/note features fail on toSkill; chat needs just these two).
+        // Chat feature must be a plain rec with tid(LLM_CHAT_FEATURE_TID) — matching
+        // buildFixture — so the FEATURE list type-checks.
+        final Rec chat = rec(mutableMap(
+                uri(MODEL), rec(mutableMap(
+                        uri(LLM), uri("qwen3:8b"),
+                        uri(PROTOCOL), uri("ollama"),
+                        uri(HOST), uri(PROVIDER_HOST)), LLM_MODEL_TID, null))).tid(LLM_CHAT_FEATURE_TID);
+        final SystemFeature system = new SystemFeature(mutableMap(), LLM_SYSTEM_FEATURE_TID, null);
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        map.put(uri(NAME), str("system-clear-agent"));
+        map.put(uri(DESC), str("test system message clearing"));
+        map.put(uri(FEATURE), lst(system, chat));
+        final Agent a = Agent.agent(rec(map, LLM_AGENT_TID, null));
+
+        final SystemFeature sf = a.feature(SYSTEM).<SystemFeature>as();
+        try {
+            sf.addSystemMessage("You are a test agent.");
+            assertFalse(sf.getSystemMessages().isEmpty(), "system message should be pending before chat");
+            a.chat("Just say ok.");
+        } catch (final Exception e) {
+            if (e.getMessage() != null && e.getMessage().contains("Connection refused"))
+                return; // Ollama not running — skip
+            throw e;
+        }
+        assertTrue(sf.getSystemMessages().isEmpty(),
+                "systemMessages must be cleared after chat() completes (ephemeral per-chat contract)");
+    }
+
+    /**
+     * SystemFeature clears its contributions on onCompleteResponse and onError —
+     * the per-chat lifecycle lives on the feature, not the Agent.
+     */
+    @Test
+    public void testSystemFeatureClearsOnCompleteAndError() {
+        final SystemFeature system = new SystemFeature(mutableMap(), LLM_SYSTEM_FEATURE_TID, null);
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        map.put(uri(NAME), str("system-clear-hooks-agent"));
+        map.put(uri(FEATURE), lst(system));
+        final Agent a = Agent.agent(rec(map, LLM_AGENT_TID, null));
+
+        // onCompleteResponse clears
+        system.addSystemMessage("context");
+        assertFalse(system.getSystemMessages().isEmpty(), "message pending before completion");
+        system.onCompleteResponse(a, ChatResult.chatResult());
+        assertTrue(system.getSystemMessages().isEmpty(), "onCompleteResponse must clear system messages");
+
+        // onError clears (safety — a failed chat must not leak context)
+        system.addSystemMessage("context");
+        assertFalse(system.getSystemMessages().isEmpty(), "message pending before error");
+        system.onError(a, fail(new RuntimeException("test error")));
+        assertTrue(system.getSystemMessages().isEmpty(), "onError must clear system messages");
     }
 
     @Test

@@ -131,7 +131,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
     public String make(final String expression, final Method testMethod) {
         // For testMonoUpdate, $$ → mongo: so seed data writes to mongo:<collection>/<docId>
         // and update/read expressions resolve to the same two-segment document paths.
-        if (testMethod != null && "testRshiftDirectorySpine".equals(testMethod.getName())) {
+        if (testMethod != null && "testRshiftUriGraphSpine".equals(testMethod.getName())) {
             // Flat path spine: $$/rshift/a/b/c/d → mongo:rshift/a/b/c/d, so the >> walk
             // descends collection → entry → field → extension like a directory spine.
             return expression.contains("$$") ? expression.replace("$$/", "mongo:") : expression;

@@ -1218,9 +1218,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         return current;
                     }),*/
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
-                    /*docWrap(*/instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> (!inst.arg(1).isNoObj() ? inst.arg(1) : Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs)).vid(null)),
-                    //"any obj", "the obj referred to by the uri arg", Map.of(jnt(0), "the uri to dereference"),"like from(uri), except that dereferencing happens immediately upon accessing the instruction (no inst apply required)."),
-                    instC(AUTO_AT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> !inst.arg(1).isNoObj() ? inst.arg(1) : Router.readFromSpace(inst.arg(0).uriValue()).orSupply(() -> inst.arg(1).vid(inst.arg(0).uriValue())).autoResolve(lhs).selfVID(inst.arg(0).uriValue())),
+                    /*docWrap(*/instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs).vid(null)),
+                    //"maybe an obj", "the obj referred to by the uri arg", Map.of(jnt(0).maybe(), "the uri to dereference"), "like from(uri), except that dereferencing happens immediately upon accessing the instruction (no inst apply required)."),
+                    /*docWrap(*/instC(AUTO_AT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs).selfVID(inst.arg(0).uriValue())),
+                    // "maybe an obj", "the obj referred to by the uri arg", Map.of(jnt(0).maybe(), "the uri to dereference"), "like at(uri), except that dereferencing happens immediately upon accessing the instruction (no inst apply required)."),
                     docWrap(instC(AUTO_TO_INST_TID.dom(ALL.maybe()).rng(ALL), lst(ALL_TYPE), (lhs, inst) -> (null == lhs.vid() || lhs.isAutoFrom()) ? lhs : auto_from_(lhs.vid()).tryToInst()),
                             "any obj", "the uri (if possible) that refers to the obj arg", Map.of(jnt(0), "the obj to reference"), "like !*(vid), except that the obj arg is converted to an !* reference (an inverse dereference) immediately upon inst access (no inst apply required)."),
                     docWrap(instC(CATCH_INST_TID.dom(A).rng(C.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> lhs.isFail() && !lhs.isCaughtFail() ? inst.arg(0).apply(lhs.asFail().caught()).c(c -> c.mult(lhs.c())) : lhs),
@@ -1240,6 +1241,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     }),
                     docWrap(instC(ID_INST_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                             "an rhs obj", "an lhs obj", Map.of(), "the obj identity function \\(f(x)\\to x\\)"),
+                    // TODO: do we gut this and rely fully on the non-barried form?
                     docWrap(instC(ID_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                             "the rhs obj", "the lhs obj", Map.of(), "a objs barrier identity function \\(f(X)\\to X\\)"),
                     docWrap(instC(AND_INST_TID.dom(A).rng(BOOL_TID), lst(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe()), (lhs, inst) -> bool(inst.args().elements().map(o -> o.orElse(BOOL_TRUE)).allMatch(Obj::boolValue))),
@@ -1252,7 +1254,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     //instC(MAP_INST_TID.dom(A).rng(ALL.maybe()), lst(T(B)), (lhs, inst) -> inst.arg(0)),
                     docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)), "maybe some obj", "the lhs obj applied to the arg obj", Map.of(jnt(0), "any obj"), "applies the lhs obj to the arg obj to yield the rhs obj"),
                     instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? noobj() : lhs),
-                    instC(SIDE_INST_TID.dom(A).rng(A), lst(ALL_TYPE), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
+                    docWrap(instC(SIDE_INST_TID.dom(A).rng(A), lst(ALL_TYPE), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
+                            "any obj", "the lhs obj", Map.of(jnt(0), "any obj applied by lhs obj"), "passes lhs obj through after applying itself to inst arg obj", "1.side(plus(2).to(x)) [-- 1 [x=>3] --]"),
                     docWrap(instC(TID_INST_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),
                             "any obj", "the lhs obj type id", Map.of(), "the spatial location of the lhs obj [equivalent to f(x) ~ vid(type())]"),
                     docWrap(instC(VID_INST_TID.dom(A).rng(URI_TID.maybe()), lst(), (lhs, inst) -> null == lhs.vid() ? noobj() : uri(lhs.vid())),

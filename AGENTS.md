@@ -261,13 +261,14 @@ and `<uri> -> <obj>` reference).
 
 ## CI/CD
 
-|                           .github/workflows/maven.yml |          `.github/workflows/jdeploy.yml` 
-|------------------------------------------------------:|-----------------------------------------:
-|                                     Push/PR to `main` | Push to `*-snapshot` branches, `v*` tags |
-|                                         Oracle JDK 24 |                           Temurin JDK 25 |
-| `./mvnw install -Dtest='!httpSpaceTest,!fsSpaceTest'` |       `./mvnw package` + jDeploy bundler |
+|                `.github/workflows/maven.yml` |                `.github/workflows/docker.yml` |
+|--------------------------------------------:|------------------------------------------------:|
+|                         Push/PR to `main` |      Push to `main`, `v*` tags, `workflow_dispatch` |
+|                                 Oracle JDK 24 |                        Temurin JDK 25 (uber-jar) |
+| `./mvnw install -Dtest='!httpSpaceTest,!fsSpaceTest'` | `mvn package` → build & push image to GHCR |
 
-Docker build is **disabled by default** (`skipDocker=true` in pom). Enable with `-DskipDocker=false`.
+Docker images are built and published to GHCR (`ghcr.io/phaseshift-studio/metatron`) by the
+`docker.yml` workflow — the Maven build itself does not touch Docker.
 
 ---
 
@@ -279,7 +280,7 @@ Docker build is **disabled by default** (`skipDocker=true` in pom). Enable with 
 4. **Tests**: Mirror main packages; prefer `@ParameterizedTest` + `@CsvSource` with `%` delimiter; use mtron string
    expressions in CSV rows; leverage `checkCodeParseApply`/`checkCodeEvaluate`/`checkEquality` from
    `AbstractMetatronTest`; use `@SkipInheritedTests` for selective skipping
-5. **Docker**: Skipped by default. Run `-DskipDocker=false` to build.
+5. **Docker**: Image built & published to GHCR via `.github/workflows/docker.yml` (not part of the Maven build).
 
 ---
 

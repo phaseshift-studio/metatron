@@ -272,7 +272,9 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
 
         // ── Verify unified message table ──────────────────────
         // Messages are stored in a single polymorphic table with _tid column.
-        // Verify that system, user, and ai messages all land in message.
+        // Verify that system, user, and ai messages all land in message.  The system
+        // message (base + contributions) is persisted by SystemFeature.onBeforeChat
+        // write-on-change — 3 chats with an unchanged system message → exactly 1 row.
         assertCollectionHasType(basePath, "message", SYSTEM_MESSAGE_TID, "system", 1, 1);
         assertCollectionHasType(basePath, "message", USER_MESSAGE_TID, "user", 3, 3);
         assertCollectionHasType(basePath, "message", AI_MESSAGE_TID, "ai", 3, 3);
@@ -426,7 +428,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
                 uri("mem"), auto_at_(sessionVID()).tryToInst(),
                 uri(ALGORITHM), rec(mutableMap(uri(NAME), uri("message_window"), uri(MAX), jnt(max))));
         final SessionFeature session = new SessionFeature(sessionConfig.jvm(), LLM_SESSION_FEATURE_TID, null);
-        final SystemFeature system = new SystemFeature(mutableMap(), LLM_SYSTEM_FEATURE_TID, null);
+        final SystemFeature system = new SystemFeature(mutableMap(uri("base"), str("you are a helpful assistant")), LLM_SYSTEM_FEATURE_TID, null);
         final Rec agentRec = rec(mutableMap(
                 uri(NAME), str("llm-session-test-agent"),
                 uri(DESC), str("testing llm-session implementation"),

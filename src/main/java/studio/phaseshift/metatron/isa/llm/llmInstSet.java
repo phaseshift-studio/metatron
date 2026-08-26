@@ -139,19 +139,31 @@ public class llmInstSet extends AbstractInstSet {
      * model never sees message vids, only the digest text.
      */
     private static final String SUMMARIZE_PROMPT = """
-                                                   You are distilling a past metatron session into claims. A claim is a terse proposition
-                                                   (1-3 sentences) capturing a decision, problem, solution, or observation — what a future
-                                                   agent would need to understand what happened and why.
+                                                   You are distilling a past metatron session into claims and loose ends. A claim is a terse
+                                                   proposition (1-3 sentences) capturing a decision, problem, solution, or observation — what
+                                                   a future agent would need to understand what happened and why. A loose end is an OPEN
+                                                   continuation point a DIFFERENT session could pick up cold — work that is still owed.
                                                    
-                                                   Output ONLY a single json block whose body is a JSON array of claim objects, of the form:
+                                                   Output exactly TWO json blocks. The first is a JSON array of claim objects, the second a
+                                                   JSON array of loose end objects:
                                                    
                                                    <<json:claim>>[{"text":"...","kind":"decision"},{"text":"...","kind":"problem"}]<</json:claim>>
+                                                   <<json:loose_end>>[{"title":"...","desc":"...","status":"open"}]<</json:loose_end>>
                                                    
-                                                   Rules:
+                                                   Rules for claims:
                                                    1. kind is one of: decision, problem, solution, observation.
                                                    2. A decision without a rationale is not worth recording — say why in the text.
                                                    3. Prefer specific over general; if nothing significant happened, emit an empty array: <<json:claim>>[]<</json:claim>>
-                                                   4. Do NOT emit session ids, timestamps, or source refs — those are stamped from the record.
+                                                   
+                                                   Rules for loose ends:
+                                                   4. The cold test: could a session with no access to this transcript act on it? If reading it
+                                                      requires knowing what happened here, it is not a loose end. Most sessions justify 0-2; if
+                                                      you are writing a third, you are recording rather than continuing.
+                                                   5. These do NOT earn a loose end: something this session finished; a current-state observation;
+                                                      a defect the operator should queue; a restatement of a decision (that is already a claim).
+                                                   6. If nothing is left open, emit an empty array: <<json:loose_end>>[]<</json:loose_end>>
+                                                   
+                                                   Do NOT emit session ids, timestamps, source refs, or ids — those are stamped from the record.
                                                    
                                                    The session transcript:
                                                    
@@ -237,8 +249,8 @@ public class llmInstSet extends AbstractInstSet {
                                                         uri("problem"),
                                                         uri("solution"),
                                                         uri("observation"))).tryToInst(),
-                                                uri(SOURCE).maybe(), lst(ALL_TYPE).maybe(),
-                                                uri(CONCEPT).maybe(), lst(ALL_TYPE).maybe(),
+                                                uri(SOURCE).maybe(), lst(T(ALL.maybe())),
+                                                uri(CONCEPT).maybe(), lst(T(ALL.maybe())),
                                                 uri("tier").maybe(), isa_(NAT_TYPE).else_(jnt(1))))
                                         .create(),
                                 null, null, mutableMap(
@@ -250,8 +262,8 @@ public class llmInstSet extends AbstractInstSet {
                                 "a distilled claim with provenance — the proposition layer above concept nouns",
                                 "claim::[text=>\"the scratch project writes do not persist because there is no backing write primitive\"," +
                                         "\tkind=>problem," +
-                                        "\tsource=>/usr/dr/message/4," +
-                                        "\tconcept=>/usr/dr/concept/persistence," +
+                                        "\tsource=>[/usr/dr/message/4]," +
+                                        "\tconcept=>[/usr/dr/concept/persistence]," +
                                         "\ttier=>nat::1]"),
                         //////////////////////////////////////////////////
                         // LOOSE_END — an open problem a future session can pick up cold
@@ -261,22 +273,28 @@ public class llmInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri(TITLE), STR_TYPE,
                                                 uri(DESC), STR_TYPE,
-                                                uri(STATUS), union_(lst(uri("open"), uri("in_progress"),
-                                                        uri("resolved"), uri("abandoned"))).tryToInst(),
-                                                uri("claim").maybe(), T(URI_TID.maybeSome()),
+                                                uri(STATUS), union_(lst(
+                                                        uri("open"),
+                                                        uri("in_progress"),
+                                                        uri("resolved"),
+                                                        uri("abandoned"))).tryToInst(),
+                                                uri(SOURCE).maybe(), lst(T(ALL.maybe())),
+                                                uri("claim").maybe(), lst(T(ALL.maybe())),
                                                 uri(TIME), DATETIME_TYPE))
                                         .create(),
                                 null, null, mutableMap(
                                         uri(TITLE), "short actionable title",
                                         uri(DESC), "what needs to happen and why",
                                         uri(STATUS), "open, in_progress, resolved, or abandoned",
+                                        uri(SOURCE).maybe(), "message vids and/or external uris the loose end derives from",
                                         uri("claim").maybe(), "claims that define/resolve this loose end (auto_from refs)",
                                         uri(TIME), "last updated timestamp"),
                                 "an open problem a future session can pick up cold — the continuation point carried across sessions",
                                 "loose_end::[title=>\"wire the mcp_stdio transport\"," +
                                         "\tdesc=>\"expose /mcp over stdin so harness can spawn metatron directly\"," +
                                         "\tstatus=>open," +
-                                        "\tclaim=>/usr/dr/claim/7," +
+                                        "\tsource=>[/usr/dr/message/4]," +
+                                        "\tclaim=>[/usr/dr/claim/7]," +
                                         "\ttime=>datetime::<//2026.08:25/15/48/02/251?tz=+0000>]"),
                         // LLM_MESSAGE_TYPE defined below after all message sub-types
                         docWrap(LLM_SYSTEM_MESSAGE_TYPE = Type.Builder.build()
@@ -662,50 +680,76 @@ public class llmInstSet extends AbstractInstSet {
                                                     .collect(Collectors.joining("\n"));
                                             // 3. the model — from the agent home (matches <agent>/model)
                                             final Model model = modelArg.isNoObj() ? Model.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec()) : Model.model(modelArg.asRec());
-                                            LOG.info("summarize model: %s", model);
+                                            LOG.debug("summarize model: %s", model);
                                             // 4. distill via a mini-task
                                             final ChatResult result = Agent.Helper.miniTask("session_summarizer", model, SUMMARIZE_PROMPT.formatted(digest));
-                                            LOG.info("summarize result: %s", result);
-                                            // 5. parse the <<mtron:claim>> block(s) into claim vids
+                                            LOG.debug("summarize result: %s", result);
+                                            // 5. parse the <<json:claim>> and <<json:loose_end>> blocks into vids
+                                            final List<Obj> resultVids = new ArrayList<>();
                                             final List<Obj> claimVids = new ArrayList<>();
                                             final Obj blocks = result.at(uri("blocks")).orElse(noobj());
-                                            LOG.info("summarize blocks: %s", blocks);
+                                            LOG.debug("summarize blocks: %s", blocks);
                                             if (!blocks.isNoObj()) {
                                                 final Rec blocksRec = blocks.asRec();
-                                                int index = 0;
+                                                int claimIndex = 0;
+                                                int looseEndIndex = 0;
                                                 for (final Rel entry : blocksRec.elements().toList()) {
-                                                    if (!Str.Helper.cleanString(entry.first()).equals("claim")) continue;
-                                                    final Obj claimBody = entry.second();
-                                                    final Lst claimLst = claimBody.isLst() ? claimBody.asLst() : lst(claimBody);
-                                                    for (final Obj claimObj : claimLst.elements().toList()) {
-                                                        Rec claimRec = claimObj.asRec();
-                                                        // JSON parses kind as a string ("observation") — coerce to a uri
-                                                        // as claim::T expects (kind => union of uris)
-                                                        final Obj kind = claimRec.at(uri(KIND));
-                                                        if (kind.isStr())
-                                                            claimRec.at(uri(KIND), uri(kind.strValue()), MUTABLE);
-                                                        // source: lst of !* auto_from refs to the message vids — the same
-                                                        // storage form concept uses for its {uri} collections (tble round-trips
-                                                        // lst fine; objs/coefficient collections do not)
-                                                        claimRec.at(uri(SOURCE), lst(messages.stream()
-                                                                .map(pair -> (Obj) auto_from_(pair.first().uriValue()).tryToInst())
-                                                                .toList()), MUTABLE);
-                                                        claimRec = claimRec.tid(LLM_CLAIM_TID);
-                                                        final fURI claimVID = agentHome.extend("claim").extend(String.valueOf(index++));
-                                                        claimRec = claimRec.selfVID(claimVID);
-                                                        Router.writeToSpace(claimVID, claimRec);
-                                                        claimVids.add(uri(claimVID));
+                                                    final String keyStr = Str.Helper.cleanString(entry.first());
+                                                    final Obj body = entry.second();
+                                                    final Lst bodyLst = body.isLst() ? body.asLst() : lst(body);
+                                                    for (final Obj bodyObj : bodyLst.elements().toList()) {
+                                                        Rec rec = bodyObj.asRec();
+                                                        if (keyStr.equals("claim")) {
+                                                            // JSON parses kind as a string ("observation") — coerce to a uri
+                                                            // as claim::T expects (kind => union of uris)
+                                                            final Obj kind = rec.at(uri(KIND));
+                                                            if (kind.isStr())
+                                                                rec.at(uri(KIND), uri(kind.strValue()), MUTABLE);
+                                                            // source: lst of !* auto_from refs to the message vids — the same
+                                                            // storage form concept uses for its {uri} collections (tble
+                                                            // round-trips lst fine; objs/coefficient collections do not)
+                                                            rec.at(uri(SOURCE), lst(messages.stream()
+                                                                    .map(pair -> (Obj) auto_from_(pair.first().uriValue()).tryToInst())
+                                                                    .toList()), MUTABLE);
+                                                            rec = rec.tid(LLM_CLAIM_TID);
+                                                            final fURI vid = agentHome.extend("claim").extend(String.valueOf(claimIndex++));
+                                                            rec = rec.selfVID(vid);
+                                                            Router.writeToSpace(vid, rec);
+                                                            resultVids.add(uri(vid));
+                                                            claimVids.add(uri(vid));
+                                                        } else if (keyStr.equals("loose_end")) {
+                                                            // JSON parses status as a string ("open") — coerce to a uri
+                                                            // as loose_end::T expects (status => union of uris)
+                                                            final Obj status = rec.at(uri(STATUS));
+                                                            if (status.isStr())
+                                                                rec.at(uri(STATUS), uri(status.strValue()), MUTABLE);
+                                                            // source: lst of !* auto_from refs to the message vids — same as claims
+                                                            rec.at(uri(SOURCE), lst(messages.stream()
+                                                                    .map(pair -> (Obj) auto_from_(pair.first().uriValue()).tryToInst())
+                                                                    .toList()), MUTABLE);
+                                                            // claim: !* auto_from refs to the claims distilled in this same
+                                                            // pass — the loose end's justifying propositions
+                                                            if (!claimVids.isEmpty())
+                                                                rec.at(uri("claim"), lst(claimVids.stream()
+                                                                        .map(v -> (Obj) auto_from_(v.uriValue()).tryToInst())
+                                                                        .toList()), MUTABLE);
+                                                            // time is stamped by the inst, not the model
+                                                            rec.at(uri(TIME), nowDatetime(), MUTABLE);
+                                                            rec = rec.tid(LLM_LOOSE_END_TID);
+                                                            final fURI vid = agentHome.extend("loose_end").extend(String.valueOf(looseEndIndex++));
+                                                            rec = rec.selfVID(vid);
+                                                            Router.writeToSpace(vid, rec);
+                                                            resultVids.add(uri(vid));
+                                                        }
                                                     }
                                                 }
                                             }
-                                            return claimVids.isEmpty()
-                                                    ? fail("no claim blocks found in summarize response for %s", sessionVID)
-                                                    : lst(claimVids);
+                                            return lst(resultVids);
                                         }),
                                 "a session to distill",
-                                "a lst of claim vids distilled from the session",
+                                "a lst of claim and loose_end vids distilled from the session",
                                 mutableMap(),
-                                "distill a session's message ledger into claim::T recs via a mini-task; the model emits <<mtron:claim>> blocks that are parsed and anchored at <agent>/claim/",
+                                "distill a session's message ledger into claim::T and loose_end::T recs via a mini-task; the model emits <<json:claim>> and <<json:loose_end>> blocks that are parsed and anchored at <agent>/claim/ and <agent>/loose_end/",
                                 "@dr/session/1.summarize(_)  [-- fluent --]  |  summarize(@dr/session/1)  [-- function --]"))));
         docWrap(this, "large language model think and reason within the metatron");
         super.setup();

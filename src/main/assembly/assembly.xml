@@ -80,6 +80,7 @@
             <includes>
                 <include>studio.phaseshift.metatron.isa.m.type.InstSet</include>
                 <include>dev.langchain4j.model.chat.ChatModel</include>
+                <include>studio.phaseshift.metatron.isa.vec.space.VectorDBClient</include>
             </includes>
         </fileSet>
         <fileSet>

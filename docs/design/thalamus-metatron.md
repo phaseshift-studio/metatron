@@ -467,8 +467,8 @@ Session: {session_vid}  Agent: {agent_vid}
 
 ## 9. Implementation status — what's shipped (2026-08-25)
 
-**This is a verified-live report, not design.** The `claim::T` + `summarize()` half of the plan
-is implemented in `llmInstSet.java` and exercised against the running Dr. Stynx agent:
+**This is a verified-live report, not design.** The `claim::T` + `loose_end::T` + `summarize()`
+core of the plan is implemented in `llmInstSet.java` and exercised against the running Dr. Stynx agent:
 
 ### 9.1 `claim::T` — [DONE]
 
@@ -506,7 +506,7 @@ caller's concern. `Agent.chat()` now returns `ChatResult` (typed), and `Model` g
 spec accessors (`size`, `quant`, `cost`, `skill`). `miniTask` constructs a fresh translator agent
 (a single ChatFeature over the given model), calls `chat(prompt)`, returns the `ChatResult`.
 
-### 9.3 The `summarize()` inst — [DONE]
+### 9.3 The `summarize()` inst (claims + loose ends) — [DONE]
 
 ```java
 instC(LLM_INST_TID.extend("summarize").dom(LLM_SESSION_TID.maybe()).rng(LST_TID),
@@ -547,6 +547,28 @@ The claim's `source` is a **live lazy pointer into the message ledger** — dere
 original typed message. That is Thalamus's `DERIVED_FROM` provenance, expressed as metatron's
 native `!*` ref idiom.
 
+### 9.4b `loose_end::T` — [DONE]
+
+The `<<json:loose_end>>` block was added to the same `SUMMARIZE_PROMPT`, and the inst's block-parse
+loop dispatches on `claim` vs `loose_end` keys. Loose end writes: coerce `status` str→uri, stamp
+`time` via `nowDatetime()`, tag `LLM_LOOSE_END_TID`, anchor at `<agent>/loose_end/N`. The prompt
+carries the cold-pickup test and the 0–2 guidance ("if you are writing a third, you are recording
+rather than continuing"), plus the non-examples (finished work, current-state observation,
+operator-queue defects, decision restatements).
+
+**This required a `MTRON_BLOCK` fix in `Agent.java`:** the regex was `$`-end-anchored with a lazy
+`.+?`, which silently limited it to parsing **one** block per response (the last one). With two
+blocks (claim + loose_end) the second was never found. Removed the `$` anchor — verified with a
+standalone regex test that both blocks parse and both strip cleanly. Backward-compatible with the
+single-block consumers (`LoopFeature`, `LedgerFeature`); it now enables a general multi-block
+`<<json:...>>` response protocol.
+
+Verified live against Dr. Stynx: prompting "Load your concept skill now and a little later, we'll
+load your loop skill" produced a claim (the agent's access observation) AND a loose end
+`[title=>'Activate loop skill', desc=>"The operator indicated intent to load the 'loop' skill after...",
+status=>open, time=>datetime::<...>]` — the model correctly extracted the *deferred intent* as an
+open continuation point.
+
 ### 9.5 Bugs found and fixed during implementation
 
 - **Java `Obj.dom()` ≠ mtron `dom()`.** Java `dom()` returns the instruction's *domain Type*;
@@ -572,6 +594,49 @@ native `!*` ref idiom.
 - `take()` on a branch of rels loses the vid keys (renders `noobj`) — the `*/usr/dr/message/+.take(3)`
   observation. Workaround: keep the rels and use `<<`/`pair.first()`. The `take` bug itself is unfixed.
 
+### 9.7 System-message architecture — [DONE]
+
+SystemFeature is now the **gatekeeper** of the agent's system message — state, construction, and
+lifecycle. `Agent` holds no system-message state (no blackboard; consistent with the blackboard→
+`chat_result::T` redesign).
+
+- **`base` field**: SystemFeature's rec carries the agent's persistent instruction
+  (`base => "you are a helpful assistant"`).  `systemMessage()` = `base + "\n" + join(addSystemMessage
+  contributions)`.
+- **Persist on-change**: `onBeforeChat` writes the composed system message to the ledger as a
+  `SYSTEM_MESSAGE_TID` (URI-addressable, part of session memory).  Write-on-change via a `last_system_text`
+  marker — matches LangChain4j semantics (one system message; new only when content changes).  So 3 chats
+  with unchanged system text → **1 ledger row**, not 3.
+- **No duplicate prompt**: `SpaceChatSessionStore.getMessages()` filters to user/ai/tool_result only —
+  `SYSTEM_MESSAGE_TID` never reaches the ChatMemory.  So the ledger write is *durability/addressability*,
+  and the `systemMessageTransformer` in `Agent.chat()` is the *model delivery* channel.  Two purposes,
+  one model path.  This resolves the old Channel A + Channel B duplicate.
+- **Lifecycle**: `onCompleteResponse`/`onError` clear the *contributions* (the `base` persists);
+  `Agent.chat()` `finally` clears as an interrupt safety net.
+- **Cross-feature requirement helper**: `AbstractFeature.requireFeature(agent, required)` — the standard
+  "X requires the agent to have a Y feature" check.  Warn-and-degrade (debilitated) when absent;
+  `missingFeatureException()` for mandatory.  Concept/Skill/Ledger features guard their system-message
+  contribution with it.
+
+**Verified live**: all four session backends (Sqlite/PostgreSQL/MariaDB/memSpace) pass
+`testTypedCollectionPopulation` with `SYSTEM_MESSAGE_TID → 1 row`; 64 tests green.
+
+### 9.8 Bugs found and fixed during implementation (continued)
+
+- **datetime VARCHAR read-back**: `ObjSQLSerializer.readColumnWithType` wrapped the ISO string via
+  `uri(f(raw), DATETIME_TID)` producing invalid `datetime::<2026-08-25 22:34:11.533>` (no host/port).
+  Fixed to `parseDatetime(raw)` → canonical `//yyyy.MM:dd/HH/mm/ss/SSS?tz=`.
+- **SystemFeature redundant `onBeforeChat`**: overrode the super default with the identical `return noobj()`.
+  Removed — the "construction timing" note lives in the class Javadoc.
+
+
+- The `[WARN] user message write failed (non-blocking): no incrq query processor attached to
+  /m/space/memspace` — the translator agent (a bare ChatFeature) tries to persist its user message
+  to a root it doesn't have. Harmless (caught), but noisy. The miniTask translator may want a root
+  or a non-persisting chat feature.
+- `take()` on a branch of rels loses the vid keys (renders `noobj`) — the `*/usr/dr/message/+.take(3)`
+  observation. Workaround: keep the rels and use `<<`/`pair.first()`. The `take` bug itself is unfixed.
+
 ---
 
 ## 10. NEXT STEPS (handoff)
@@ -580,16 +645,26 @@ native `!*` ref idiom.
 
 ### What's done
 - `claim::T` type (registered, verified reading back from SQLite)
+- `loose_end::T` type (registered, verified reading back from SQLite; `source` + `claim` provenance)
 - `Agent.Helper.miniTask(Model, String) → ChatResult` (extracted from ConceptFeature)
 - `Agent.chat()` → `ChatResult`; `Model` spec accessors
-- `summarize()` inst — dual-form, model-transform arg, `<<json:claim>>` parse, `source` as `!*` refs
-- Full loop verified live: session → model → claims → source → original messages
+- `summarize()` inst — dual-form, model-transform arg, `<<json:claim>>` + `<<json:loose_end>>` parse,
+  `source` as `!*` refs, `time` stamped
+- `MTRON_BLOCK` `$`-anchor removed → multi-block response protocol
+- **SystemFeature gatekeeper** — `base` + contributions, persist-on-change to ledger, cross-feature
+  `requireFeature` helper (§9.7)
+- **datetime VARCHAR read-back fix** (§9.8)
+- Full loop verified live: session → model → claims + loose_ends → source → original messages
+- 64 tests green across all four session backends + AgentTest + feature tests
 
 ### Next increments, in order
 
-1. **`loose_end::T` in the same distill.** Add `<<json:loose_end>>` to the summarize prompt (open
-   problems with `status=>open`), parse it alongside claims, write `loose_end::T` at `<agent>/loose_end/N`.
-   The type is already registered (`LLM_LOOSE_END_TYPE`); the inst needs the second block parse.
+1. **SurfacingFeature — the consume side.** **[NEXT — the point of the whole feature]** An
+   `on_before_chat` hook that reads open loose_ends (`/usr/dr/loose_end` where `status=>open`) +
+   recent claims, and injects them via
+   `agent.feature(SYSTEM).<SystemFeature>as().addSystemMessage(...)` (guarded by `requireFeature`).
+   This is the "where you left off" — turns claims/loose_ends from write-only data into resumption
+   behavior. The system-message channel is now ready for it.
 2. **`on_before_chat` surfacing hook.** The consume side — inject open loose ends + recent claims
    into the next session's system message ("where you left off"). Reuse the `CONCEPT_FEATURE_SYSTEM_TEMPLATE`
    injection pattern in `ConceptFeature.onBeforeChat`. Decision: thin mtron feature rec vs. a Java
@@ -612,8 +687,18 @@ native `!*` ref idiom.
 - `src/main/java/studio/phaseshift/metatron/isa/llm/llmInstSet.java` — `claim::T`, `loose_end::T`,
   `summarize()`, `SUMMARIZE_PROMPT`
 - `src/main/java/studio/phaseshift/metatron/isa/llm/type/Agent.java` — `Agent.Helper.miniTask`,
-  `Agent.chat() → ChatResult`
+  `Agent.chat() → ChatResult`, no system-message state
+- `src/main/java/studio/phaseshift/metatron/isa/llm/type/feature/SystemFeature.java` — gatekeeper:
+  `base`, contributions, persist-on-change, clear hooks, docs
+- `src/main/java/studio/phaseshift/metatron/isa/llm/type/feature/AbstractFeature.java` —
+  `requireFeature` / `missingFeatureException` (cross-feature requirement helper)
+- `src/main/java/studio/phaseshift/metatron/isa/llm/type/feature/{Concept,Skill,Ledger}Feature.java` —
+  `requireFeature(SYSTEM)` guards on system-message contributions
+- `src/main/java/studio/phaseshift/metatron/isa/llm/type/feature/{Audit,Chat,Loop}Feature.java` —
+  system-message routing / signature updates
 - `src/main/java/studio/phaseshift/metatron/isa/llm/type/Model.java` — spec accessors
-- `src/main/java/studio/phaseshift/metatron/isa/llm/type/feature/ConceptFeature.java` — `AgentExtractor`
-  delegates to `Agent.Helper.miniTask`
+- `src/main/java/studio/phaseshift/metatron/isa/mach/io/type/ObjSQLSerializer.java` — datetime VARCHAR
+  read-back fix
+- `src/test/.../{AgentTest, LedgerFeatureTest, AuditFeatureTest, *LLMSessionIntegrationTest}` —
+  system-message tests, write-on-change assertion, debilitated-without-SystemFeature test
 - `docs/design/thalamus-metatron.md` — this doc

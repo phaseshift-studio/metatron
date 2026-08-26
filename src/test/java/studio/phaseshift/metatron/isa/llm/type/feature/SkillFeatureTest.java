@@ -48,7 +48,7 @@ public class SkillFeatureTest extends AbstractFeatureTest {
         final Obj skill = loop.skill(agentDummy());
         assertFalse(skill.isNoObj(), "LoopFeature should have a skill");
         final Rec skillRec = skill.asLst().at(0).asRec();
-        assertEquals("loop", skillRec.at(uri(NAME)).uriValue().name(), "skill name should be 'loop'");
+        assertEquals("loop_feature", skillRec.at(uri(NAME)).uriValue().name(), "skill name should be 'loop'");
         assertFalse(skillRec.at(uri(DESC)).strValue().isBlank(), "skill should have description");
         assertFalse(skillRec.at(uri(CONTENT)).strValue().isBlank(), "skill should have content");
     }
@@ -59,7 +59,7 @@ public class SkillFeatureTest extends AbstractFeatureTest {
         };
         final var lc4jSkill = mSkill.of(loop.skill(agentDummy()).asLst().at(0).asRec()).toSkill();
         assertNotNull(lc4jSkill, "should build LC4j Skill from skill() Rec");
-        assertEquals("loop", lc4jSkill.name());
+        assertEquals("loop_feature", lc4jSkill.name());
     }
 
     @Test
@@ -98,15 +98,17 @@ public class SkillFeatureTest extends AbstractFeatureTest {
 
     @Test
     public void testSkillsResolvesFeatureSkills() {
-        final LoopFeature loop = new LoopFeature(new LinkedHashMap<>(), feat("loop"), null) {};
+        final LoopFeature loop = new LoopFeature(new LinkedHashMap<>(), feat("loop"), null) {
+        };
         final Lst skills = mSkill.skills(agentWith("test-agent", null, loop));
         assertEquals(1, skills.elements().count(), "LoopFeature contributes one skill");
-        assertEquals("loop", skills.at(0).asRec().at(uri(NAME)).uriValue().name());
+        assertEquals("loop_feature", skills.at(0).asRec().at(uri(NAME)).uriValue().name());
     }
 
     @Test
     public void testAgentToSkillAggregatesTools() {
-        final IterationFeature iteration = new IterationFeature(new LinkedHashMap<>(), feat("iteration"), null) {};
+        final IterationFeature iteration = new IterationFeature(new LinkedHashMap<>(), feat("iteration"), null) {
+        };
         final mSkill skill = mSkill.agentToSkill(agentWith("test-agent", "with tools", iteration));
         assertEquals("test-agent", skill.at(uri(NAME)).uriValue().name());
         assertFalse(skill.at(uri(TOOL)).isNoObj(), "IterationFeature exposes tools");

@@ -777,7 +777,10 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
             if (current == null) return null;
         }
 
-        final BsonValue bson = toBsonValue(current);
+        // Recover DBRefs stored in the projected field (auto_from refs write as
+        // native Mongo DBRefs): without normalizeDBRefs the raw DBRef falls through
+        // toBsonValue's cases to BsonNull and the reference reads back as noobj.
+        final BsonValue bson = toBsonValue(normalizeDBRefs(current));
         final Obj fieldValue = this.getSerializer().read(bson);
         return IdObj.of(nodePattern, fieldValue);
     }

@@ -47,7 +47,6 @@
         <java.version>21</java.version>
         <!-- SKIP BUILD PROCESSES -->
         <skipTests>false</skipTests>
-        <skipDocker>true</skipDocker>
         <skipAsciidoc>false</skipAsciidoc>
         <skipInstSet>false</skipInstSet>
         <skipMarkdown>false</skipMarkdown>
@@ -87,7 +86,6 @@
         <ollama4j.version>1.1.7</ollama4j.version>
         <!--<guice.version>7.0.0</guice.version>-->
         <moquette.version>0.18.0</moquette.version>
-        <dockerfile-maven.version>1.4.13</dockerfile-maven.version>
         <commonmark.version>0.30.0</commonmark.version>
         <jserialcomm.version>2.11.4</jserialcomm.version>
         <rhino.version>1.9.1</rhino.version>
@@ -811,26 +809,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>com.spotify</groupId>
-                <artifactId>dockerfile-maven-plugin</artifactId>
-                <version>${dockerfile-maven.version}</version>
-                <executions>
-                    <execution>
-                        <id>default</id>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <skip>${skipDocker}</skip>
-                    <repository>${project.artifactId}</repository>
-                    <tag>${project.version}</tag>
-                    <contextDirectory>${project.basedir}</contextDirectory>
-                    <dockerfile>dist/docker/Dockerfile</dockerfile>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.asciidoctor</groupId>
                 <artifactId>asciidoctor-maven-plugin</artifactId>
                 <version>${asciidoctor.version}</version>
@@ -885,36 +863,6 @@
                             <outputDirectory>${project.basedir}/docs/website/articles</outputDirectory>
                             <skip>${skipAsciidoc}</skip>
                             <backend>html</backend>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.vafer</groupId>
-                <artifactId>jdeb</artifactId>
-                <version>1.14</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jdeb</goal>
-                        </goals>
-                        <configuration>
-                            <verbose>true</verbose>
-                            <controlDir>${project.basedir}/dist/deb/control</controlDir>
-                            <dataSet>
-                                <!--<destFile>${project.build.directory}/${project.build.finalName}-linux.deb</destFile>-->
-                                <data>
-                                    <src>
-                                        ${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar
-                                    </src>
-                                    <type>file</type>
-                                    <mapper>
-                                        <type>perm</type>
-                                        <prefix>/usr/share/java</prefix>
-                                    </mapper>
-                                </data>
-                            </dataSet>
                         </configuration>
                     </execution>
                 </executions>

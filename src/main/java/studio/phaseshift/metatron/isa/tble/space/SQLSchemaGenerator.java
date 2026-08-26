@@ -31,7 +31,6 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
@@ -351,7 +350,7 @@ public class SQLSchemaGenerator {
             final FKTarget fkTarget = getFKTarget(tbl, column.name());
             if (fkTarget != null) {
                 final Obj fkPredicate = isa_(uri(fkTarget.targetPath()))
-                        .auto_from_(id_(), noobj())
+                        .auto_from_(id_())
                         .tryToInst();
                 fields.put(uri(column.name()), fkPredicate);
             } else {

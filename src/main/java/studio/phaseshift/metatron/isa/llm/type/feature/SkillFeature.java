@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.SKILL;
+import static studio.phaseshift.metatron.Tokens.SYSTEM;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrapDocs;
@@ -85,7 +86,10 @@ public class SkillFeature extends AbstractFeature {
         try {
             final Skills skills = new Skills.Builder().skills(allSkills).build();
             agent.addToolProvider(skills.toolProvider());
-            agent.addSystemMessage("skills accessible by calling list_skills() using the mtron eval tool");
+            // Cross-feature communication: SystemFeature owns the system-message channel.
+            // If the agent lacks it, this feature is debilitated — log and proceed.
+            if (this.requireFeature(agent, SYSTEM))
+                agent.feature(SYSTEM).<SystemFeature>as().addSystemMessage("skills accessible by calling list_skills() using the mtron eval tool");
         } catch (final Exception e) {
             throw MTronException.of("unable to setup skills: %s", e);
         }

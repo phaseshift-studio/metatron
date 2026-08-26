@@ -27,10 +27,12 @@ import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.ACTIVE;
+import static studio.phaseshift.metatron.Tokens.FEATURE;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -67,5 +69,35 @@ public abstract class AbstractFeature extends MRec implements Feature {
     @Override
     public boolean active() {
         return this.at(ACTIVE).orElse(Bool.BOOL_TRUE).boolValue();
+    }
+
+    // ========================================================================
+    // Cross-feature requirements
+    // ========================================================================
+
+    /**
+     * Standard message for a feature that requires another feature on the agent.
+     * Cross-feature communication is via {@code agent.feature(FEATURE).<T>as()}, which
+     * requires the target feature to be present.  This is the canonical phrasing for
+     * "feature X requires feature Y" — used by all features so the message is uniform.
+     */
+    protected MTronException missingFeatureException(final String required) {
+        return MTronException.of("%s requires the agent to have a %s feature", this.tid(), required);
+    }
+
+    /**
+     * Check whether the agent has the required feature.  If absent, log a warning and
+     * return {@code false} — the calling feature proceeds in a <b>debilitated</b> state
+     * (it cannot do the cross-feature work, but should not crash the chat).
+     *
+     * @param agent    the agent
+     * @param required the feature key to check (e.g. {@code SYSTEM})
+     * @return {@code true} if the feature is present, {@code false} if absent (debilitated)
+     */
+    protected boolean requireFeature(final Agent agent, final String required) {
+        if (agent.hasFeature(required))
+            return true;
+        LOG.warn("%s", this.missingFeatureException(required).getMessage());
+        return false;
     }
 }
