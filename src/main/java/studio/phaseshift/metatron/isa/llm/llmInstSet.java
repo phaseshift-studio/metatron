@@ -21,19 +21,20 @@ package studio.phaseshift.metatron.isa.llm;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
-import studio.phaseshift.metatron.isa.llm.type.mSkill;
-import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.vec.type.MVec;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -45,16 +46,19 @@ import static studio.phaseshift.metatron.isa.llm.type.Model.model;
 import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.staticObjToFile;
@@ -76,6 +80,8 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_TOOL_TID = LLM_ISA_TID.extend(TOOL);
     public static final fURI LLM_SESSION_TID = LLM_ISA_TID.extend(SESSION);
     public static final fURI LLM_ITERATION_TID = LLM_ISA_TID.extend(ITERATION);
+    public static final fURI LLM_CLAIM_TID = LLM_ISA_TID.extend("claim");
+    public static final fURI LLM_LOOSE_END_TID = LLM_ISA_TID.extend("loose_end");
     public static final fURI LLM_SKILL_TID = LLM_ISA_TID.extend(SKILL);
     public static final fURI MESSAGE_TID = LLM_ISA_TID.extend(MESSAGE);
     public static final fURI AI_MESSAGE_TID = MESSAGE_TID.extend(AI);
@@ -112,6 +118,8 @@ public class llmInstSet extends AbstractInstSet {
     public static Type LLM_SKILL_TYPE;
     public static Type LLM_SESSION_TYPE;
     public static Type LLM_ITERATION_TYPE;
+    public static Type LLM_CLAIM_TYPE;
+    public static Type LLM_LOOSE_END_TYPE;
     public static Type LLM_MESSAGE_TYPE;
     public static Type LLM_TOOL_RESULT_MESSAGE_TYPE;
     public static Type LLM_TOOL_REQUEST_MESSAGE_TYPE;
@@ -120,6 +128,36 @@ public class llmInstSet extends AbstractInstSet {
     public static Type LLM_CHAT_RESULT_TYPE;
     public static ObjFactory LLM_OBJ_FACTORY = MObjFactory.of().addExtension(MVec.class, x -> lst(x.jvm().stream().toList()));
     public static Type LLM_FEATURE_TYPE;
+
+    /**
+     * Distill prompt for {@code summarize()}: asks the model to emit one or more
+     * {@code <<mtron:claim>>} blocks, each containing a single claim rec shaped like
+     * {@code [text=>'...', kind=>decision|problem|solution|observation]}.  The blocks
+     * are parsed by {@code Agent.chat()} into the ChatResult's {@code blocks} rec and
+     * anchored by {@code summarize()} as {@code claim::T} at {@code <agent>/claim/}.
+     * The {@code source} (message vids) is stamped by the inst, not the model — the
+     * model never sees message vids, only the digest text.
+     */
+    private static final String SUMMARIZE_PROMPT = """
+                                                   You are distilling a past metatron session into claims. A claim is a terse proposition
+                                                   (1-3 sentences) capturing a decision, problem, solution, or observation — what a future
+                                                   agent would need to understand what happened and why.
+                                                   
+                                                   Output ONLY a single json block whose body is a JSON array of claim objects, of the form:
+                                                   
+                                                   <<json:claim>>[{"text":"...","kind":"decision"},{"text":"...","kind":"problem"}]<</json:claim>>
+                                                   
+                                                   Rules:
+                                                   1. kind is one of: decision, problem, solution, observation.
+                                                   2. A decision without a rationale is not worth recording — say why in the text.
+                                                   3. Prefer specific over general; if nothing significant happened, emit an empty array: <<json:claim>>[]<</json:claim>>
+                                                   4. Do NOT emit session ids, timestamps, or source refs — those are stamped from the record.
+                                                   
+                                                   The session transcript:
+                                                   
+                                                   %s
+                                                   """;
+
 
     public llmInstSet() {
         super(mutableMap(uri(PATTERN), uri(LLM_ISA_TID.extend(ALL))), INSTSET_TID, LLM_ISA_TID);
@@ -187,6 +225,59 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(MESSAGE).maybe(), "auto_from references to message VIDs in this iteration",
                                         uri(TIME), "creation timestamp"),
                                 "an iteration groups the messages of a single chat turn within a session and links to prev/next iterations"),
+                        //////////////////////////////////////////////////
+                        // CLAIM — a distilled proposition with provenance
+                        docWrap(LLM_CLAIM_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_CLAIM_TID)
+                                        .isaPredicate(rec(
+                                                uri(TEXT), STR_TYPE,
+                                                uri(KIND), union_(lst(
+                                                        uri("decision"),
+                                                        uri("problem"),
+                                                        uri("solution"),
+                                                        uri("observation"))).tryToInst(),
+                                                uri(SOURCE).maybe(), lst(ALL_TYPE).maybe(),
+                                                uri(CONCEPT).maybe(), lst(ALL_TYPE).maybe(),
+                                                uri("tier").maybe(), isa_(NAT_TYPE).else_(jnt(1))))
+                                        .create(),
+                                null, null, mutableMap(
+                                        uri(TEXT), "the distilled proposition",
+                                        uri(KIND), "claim kind — decision, problem, solution, or observation",
+                                        uri(SOURCE).maybe(), "message vids and/or external uris the claim derives from",
+                                        uri(CONCEPT).maybe(), "concept graph links (auto_from refs)",
+                                        uri("tier"), "trust tier (nat), bounded by min(source tiers)"),
+                                "a distilled claim with provenance — the proposition layer above concept nouns",
+                                "claim::[text=>\"the scratch project writes do not persist because there is no backing write primitive\"," +
+                                        "\tkind=>problem," +
+                                        "\tsource=>/usr/dr/message/4," +
+                                        "\tconcept=>/usr/dr/concept/persistence," +
+                                        "\ttier=>nat::1]"),
+                        //////////////////////////////////////////////////
+                        // LOOSE_END — an open problem a future session can pick up cold
+                        docWrap(LLM_LOOSE_END_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_LOOSE_END_TID)
+                                        .isaPredicate(rec(
+                                                uri(TITLE), STR_TYPE,
+                                                uri(DESC), STR_TYPE,
+                                                uri(STATUS), union_(lst(uri("open"), uri("in_progress"),
+                                                        uri("resolved"), uri("abandoned"))).tryToInst(),
+                                                uri("claim").maybe(), T(URI_TID.maybeSome()),
+                                                uri(TIME), DATETIME_TYPE))
+                                        .create(),
+                                null, null, mutableMap(
+                                        uri(TITLE), "short actionable title",
+                                        uri(DESC), "what needs to happen and why",
+                                        uri(STATUS), "open, in_progress, resolved, or abandoned",
+                                        uri("claim").maybe(), "claims that define/resolve this loose end (auto_from refs)",
+                                        uri(TIME), "last updated timestamp"),
+                                "an open problem a future session can pick up cold — the continuation point carried across sessions",
+                                "loose_end::[title=>\"wire the mcp_stdio transport\"," +
+                                        "\tdesc=>\"expose /mcp over stdin so harness can spawn metatron directly\"," +
+                                        "\tstatus=>open," +
+                                        "\tclaim=>/usr/dr/claim/7," +
+                                        "\ttime=>datetime::<//2026.08:25/15/48/02/251?tz=+0000>]"),
                         // LLM_MESSAGE_TYPE defined below after all message sub-types
                         docWrap(LLM_SYSTEM_MESSAGE_TYPE = Type.Builder.build()
                                         .tid(MESSAGE_TID)
@@ -534,8 +625,88 @@ public class llmInstSet extends AbstractInstSet {
                                 "the models chat response", // rng
                                 mutableMap(jnt(0), "the message to send the model", jnt(1), "the desired response format"), // args
                                 "communicate with am llm enriched by tools, skills, etc. and receive response in particular format", // desc
-                                "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts/_?incrq)].chat('what is 4+2?',[answer=>int::T])"))))
-        ;
+                                "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts/_?incrq)].chat('what is 4+2?',[answer=>int::T])"),
+                        // SUMMARIZE INSTRUCTION — distill a session into claim::T recs
+                        docWrap(instC(LLM_INST_TID.extend("summarize").dom(LLM_SESSION_TID.maybe()).rng(LST_TID), rec(
+                                                uri(SESSION), T(LLM_SESSION_TID.maybe()),
+                                                uri(MODEL), choose_(rec(
+                                                        isa_(LLM_MODEL_TYPE).tryToInst(), id_(),
+                                                        isa_(LLM_SESSION_TYPE), from_(rshift_(uri(AGENT)).mult_(uri(MODEL)))))
+                                                        .rshift_().tryToInst()),
+                                        (lhs, inst) -> {
+                                            // The session may arrive as the lhs (fluent: @dr/session/1.summarize(_))
+                                            // or as arg 0 (function form: summarize(@dr/session/1)).
+                                            final Rec session = inst.arg(f(SESSION), 0).orElse(lhs.asRec());
+                                            final Obj modelArg = inst.arg(f(MODEL), 1);
+                                            final fURI sessionVID = session.vid();
+                                            final fURI agentHome = session.at(AGENT).uriValue();
+                                            if (null == sessionVID || sessionVID.isEmpty())
+                                                return fail("summarize requires an anchored session — use @dr/session/N.summarize()");
+                                            // 1. collect this session's messages from the ledger as rels
+                                            //    (vid => rec) — the rel key IS the message vid (branch read)
+                                            final List<Rel> messages = Router.readFromSpace(agentHome.extend(MESSAGE).extend("+/"))
+                                                    .stream()
+                                                    .map(Obj::asRel)
+                                                    .filter(pair -> {
+                                                        final Obj sess = pair.second().asRec().at(uri(SESSION)).orElse(noobj());
+                                                        return sess.isUri() && sess.uriValue().equals(sessionVID);
+                                                    })
+                                                    .sorted(Comparator.comparing(pair -> pair.first().uriValue().name()))
+                                                    .toList();
+                                            if (messages.isEmpty())
+                                                return fail("no messages found for session %s", sessionVID);
+                                            // 2. build the distill digest
+                                            final String digest = messages.stream()
+                                                    .map(pair -> Str.Helper.cleanString(pair.second().asRec().at(TEXT).orElse(str(""))))
+                                                    .filter(s -> !s.isBlank())
+                                                    .collect(Collectors.joining("\n"));
+                                            // 3. the model — from the agent home (matches <agent>/model)
+                                            final Model model = modelArg.isNoObj() ? Model.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec()) : Model.model(modelArg.asRec());
+                                            LOG.info("summarize model: %s", model);
+                                            // 4. distill via a mini-task
+                                            final ChatResult result = Agent.Helper.miniTask("session_summarizer", model, SUMMARIZE_PROMPT.formatted(digest));
+                                            LOG.info("summarize result: %s", result);
+                                            // 5. parse the <<mtron:claim>> block(s) into claim vids
+                                            final List<Obj> claimVids = new ArrayList<>();
+                                            final Obj blocks = result.at(uri("blocks")).orElse(noobj());
+                                            LOG.info("summarize blocks: %s", blocks);
+                                            if (!blocks.isNoObj()) {
+                                                final Rec blocksRec = blocks.asRec();
+                                                int index = 0;
+                                                for (final Rel entry : blocksRec.elements().toList()) {
+                                                    if (!Str.Helper.cleanString(entry.first()).equals("claim")) continue;
+                                                    final Obj claimBody = entry.second();
+                                                    final Lst claimLst = claimBody.isLst() ? claimBody.asLst() : lst(claimBody);
+                                                    for (final Obj claimObj : claimLst.elements().toList()) {
+                                                        Rec claimRec = claimObj.asRec();
+                                                        // JSON parses kind as a string ("observation") — coerce to a uri
+                                                        // as claim::T expects (kind => union of uris)
+                                                        final Obj kind = claimRec.at(uri(KIND));
+                                                        if (kind.isStr())
+                                                            claimRec.at(uri(KIND), uri(kind.strValue()), MUTABLE);
+                                                        // source: lst of !* auto_from refs to the message vids — the same
+                                                        // storage form concept uses for its {uri} collections (tble round-trips
+                                                        // lst fine; objs/coefficient collections do not)
+                                                        claimRec.at(uri(SOURCE), lst(messages.stream()
+                                                                .map(pair -> (Obj) auto_from_(pair.first().uriValue()).tryToInst())
+                                                                .toList()), MUTABLE);
+                                                        claimRec = claimRec.tid(LLM_CLAIM_TID);
+                                                        final fURI claimVID = agentHome.extend("claim").extend(String.valueOf(index++));
+                                                        claimRec = claimRec.selfVID(claimVID);
+                                                        Router.writeToSpace(claimVID, claimRec);
+                                                        claimVids.add(uri(claimVID));
+                                                    }
+                                                }
+                                            }
+                                            return claimVids.isEmpty()
+                                                    ? fail("no claim blocks found in summarize response for %s", sessionVID)
+                                                    : lst(claimVids);
+                                        }),
+                                "a session to distill",
+                                "a lst of claim vids distilled from the session",
+                                mutableMap(),
+                                "distill a session's message ledger into claim::T recs via a mini-task; the model emits <<mtron:claim>> blocks that are parsed and anchored at <agent>/claim/",
+                                "@dr/session/1.summarize(_)  [-- fluent --]  |  summarize(@dr/session/1)  [-- function --]"))));
         docWrap(this, "large language model think and reason within the metatron");
         super.setup();
     }

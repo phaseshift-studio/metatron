@@ -125,6 +125,7 @@ public final class Tokens {
     public static final String DEPTH = "depth";
     public static final String CHAT_ID = "chat_id";
     public static final String TEXT = "text";
+    public static final String KIND = "kind";
     public static final String UNTIL = "until";
     public static final String EMIT = "emit";
     public static final String LOOPBACK = "loopback";

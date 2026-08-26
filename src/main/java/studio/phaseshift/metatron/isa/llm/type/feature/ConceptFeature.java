@@ -35,11 +35,7 @@ import org.apache.lucene.store.ByteBuffersDirectory;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.BytesRef;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.AgentServices;
-import studio.phaseshift.metatron.isa.llm.type.Model;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
-import studio.phaseshift.metatron.isa.llm.type.mSkill;
+import studio.phaseshift.metatron.isa.llm.type.*;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -63,7 +59,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CONCEPT_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -537,22 +534,24 @@ public class ConceptFeature extends AbstractFeature {
             try {
                 LOG.info("using agent to extract concepts from text length=%d", text.length());
                 final CoreThread thread = CoreThread.core(instLambda((lhs, inst) -> {
-                    final Obj result = Agent.Helper.miniTask(model, """
-                                                                   Rewrite the following text where key concepts are wrapped in <<concept:a key concept>> tags.
-                                                                   For instance, if the text is:
-                                                                      "An agent's context window can be indexed like a database."
-                                                                   It should be rewritten as:
-                                                                      "An agent's <<concept:context window>> can be <<concept:indexed>> like a <<concept:database>>."
-
-                                                                   IMPORTANT:
-                                                                     1. Do not wrap common words nor stop words.
-                                                                     2. Do not remove spaces (e.g. context window should not be mapped to contextwindow).
-                                                                   Finally, it's better to have fewer, highly specific concepts then many general concepts.
-                                                                   Thus, if the text has no significant concepts, then simply return the text as is, no changes needed.
-
-                                                                   The text to rewrite is:
-
-                                                                   """ + text);
+                    final Obj result = Agent.Helper.miniTask("concept_extractor",
+                            model,
+                            """
+                            Rewrite the following text where key concepts are wrapped in <<concept:a key concept>> tags.
+                            For instance, if the text is:
+                               "An agent's context window can be indexed like a database."
+                            It should be rewritten as:
+                               "An agent's <<concept:context window>> can be <<concept:indexed>> like a <<concept:database>>."
+                            
+                            IMPORTANT:
+                              1. Do not wrap common words nor stop words.
+                              2. Do not remove spaces (e.g. context window should not be mapped to contextwindow).
+                            Finally, it's better to have fewer, highly specific concepts then many general concepts.
+                            Thus, if the text has no significant concepts, then simply return the text as is, no changes needed.
+                            
+                            The text to rewrite is:
+                            
+                            """ + text);
                     LOG.debug("agent translation: %s", result);
                     final Matcher matcher = CONCEPT_PATTERN.matcher(Str.Helper.cleanString(result));
                     while (matcher.find()) {
