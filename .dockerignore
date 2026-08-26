@@ -1,0 +1,11 @@
+# Build context whitelist — the image only needs the uber-jar and the boot/conf dirs.
+# CI copies target/metatron-<version>-jar-with-dependencies.jar -> metatron.jar first.
+*
+!metatron.jar
+!boot/
+!boot/**
+!conf/
+!conf/**
+!dist/
+!dist/docker/
+!dist/docker/Dockerfile
