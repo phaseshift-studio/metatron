@@ -41,8 +41,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.as_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
@@ -76,6 +75,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final fURI MATH_CEIL_INST_TID = MATH_INST_TID.extend("ceil");
     public static final fURI MATH_FLOOR_INST_TID = MATH_INST_TID.extend("floor");
     public static final fURI MATH_ROUND_INST_TID = MATH_INST_TID.extend("round");
+    public static final fURI NAT_TID = MATH_ISA_TID.extend("nat");
     public static final fURI MATH_DATA_TID = MATH_ISA_TID.extend("data");
     public static final fURI MATH_BYTE_TID = MATH_DATA_TID.extend("bB");
     public static final fURI MATH_KBYTE_TID = MATH_DATA_TID.extend("kB");
@@ -459,6 +459,11 @@ public class mathInstSet extends AbstractInstSet {
             .predicate(id_().tryToInst())
             .create();
 
+    public static final Type NAT_TYPE = Type.Builder.build()
+            .tid(INT_TID)
+            .vid(NAT_TID)
+            .predicate(is_(gt_(jnt(0))).tryToInst())
+            .create();
 
     public static final Type BYTE_TYPE = Type.Builder.build()
             .tid(MATH_DATA_TID)
@@ -555,7 +560,9 @@ public class mathInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(MATH_ISA_TID.extend(ALL)),
-                uri(TYPE), lst(DATA_SIZE_TYPE,
+                uri(TYPE), lst(
+                        docWrap(NAT_TYPE, "a positive integer"),
+                        DATA_SIZE_TYPE,
                         docWrap(BYTE_TYPE, "a byte of data"),
                         docWrap(KBYTE_TYPE, "a kilobyte (1024 bytes) of data"),
                         docWrap(MBYTE_TYPE, "a megabyte (1024 kilobytes) of data"),

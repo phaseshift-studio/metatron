@@ -1,10 +1,12 @@
 # Thalamus × metatron — Persistent Agent Memory, Natively
 
-**Status:** design analysis — how (and whether) to fold [Thalamus](https://github.com/Ybx-jp/thalamus)'s
-memory architecture into metatron. Grounded in the live `/usr/dr` agent memory we exercised via MCP
-(`*dr`, `/usr/dr/message/+`, `/usr/dr/concept/+`, `/usr/dr/model`, `/sys/space/usr/dr.as(str::T)`),
+**Status:** design analysis → **partially implemented and verified live**. [Thalamus](https://github.com/Ybx-jp/thalamus)'s
+claims model is now working in metatron: `claim::T` is registered, `summarize()` distills a session
+into claims via `Agent.Helper.miniTask`, and the claims read back from the SQLite `/usr/dr` space
+with `source => {!*message-vids}` provenance. Grounded in the live `/usr/dr` agent memory we exercised
+via MCP (`*dr`, `/usr/dr/message/+`, `/usr/dr/concept/+`, `/usr/dr/model`, `/sys/space/usr/dr.as(str::T)`),
 plus a source read of both Thalamus (`harness/extraction.py`) and metatron's `ConceptFeature`.
-Items marked **OPEN** are unresolved.
+Items marked **OPEN** are unresolved; items marked **[DONE]** are implemented in `llmInstSet`.
 
 ---
 
@@ -459,3 +461,159 @@ Session: {session_vid}  Agent: {agent_vid}
 - **(I) `loose_end` status transitions.** Who sets `in_progress` / `resolved`? The summarizing
   session's `thread_refs`, or an explicit agent action mid-session? Thalamus only sets status at
   distill time; metatron could support live transitions via `loose_end` derefs.
+
+
+---
+
+## 9. Implementation status — what's shipped (2026-08-25)
+
+**This is a verified-live report, not design.** The `claim::T` + `summarize()` half of the plan
+is implemented in `llmInstSet.java` and exercised against the running Dr. Stynx agent:
+
+### 9.1 `claim::T` — [DONE]
+
+Registered in `llmInstSet` as `LLM_CLAIM_TYPE`:
+
+```java
+docWrap(LLM_CLAIM_TYPE = Type.Builder.build()
+        .tid(REC_TID)
+        .vid(LLM_CLAIM_TID)
+        .isaPredicate(rec(
+                uri(TEXT), STR_TYPE,
+                uri("kind"), union_(lst(uri("decision"), uri("problem"),
+                                        uri("solution"), uri("observation"))).tryToInst(),
+                uri(SOURCE).maybe(), lst(URI_TYPE).maybe(),
+                uri(CONCEPT).maybe(), lst(URI_TYPE).maybe(),
+                uri("tier"), isa_(NAT_TYPE).else_(jnt(1))))
+        .create(), ...)
+```
+
+Design decisions that crystallized during implementation:
+
+- **`source`/`concept` are `lst[uri]`, not `uri{*}`.** The type was originally `T(URI_TID.maybeSome())`
+  (a coefficient collection). tbleSpace has no `objs` serializer — `baseVidForValue` falls through to
+  `/m/rec` for a coefficient collection, which mis-types the column and breaks read-back. The working
+  storage form (same as ConceptFeature's `{uri}` collections) is a **`lst` of `!*` auto_from refs**.
+  The type declaration matches the storage form: `lst(URI_TYPE).maybe()`.
+- **`tier` default lives in the type definition**, not the inst: `isa_(NAT_TYPE).else_(jnt(1))` —
+  "a nat, else 1." The summarize inst never stamps tier; coercion supplies it.
+- **`kind` is a union coproduct** (`union_(lst(...))`), enforced at write.
+
+### 9.2 `Agent.Helper.miniTask(model, prompt)` — [DONE]
+
+Extracted from `ConceptFeature.AgentExtractor` into `Agent.Helper`. Synchronous; threading is the
+caller's concern. `Agent.chat()` now returns `ChatResult` (typed), and `Model` gained the optional
+spec accessors (`size`, `quant`, `cost`, `skill`). `miniTask` constructs a fresh translator agent
+(a single ChatFeature over the given model), calls `chat(prompt)`, returns the `ChatResult`.
+
+### 9.3 The `summarize()` inst — [DONE]
+
+```java
+instC(LLM_INST_TID.extend("summarize").dom(LLM_SESSION_TID.maybe()).rng(LST_TID),
+    rec(uri(SESSION), T(LLM_SESSION_TID.maybe()),
+        uri(MODEL), choose_(rec(
+                isa_(LLM_MODEL_TYPE).tryToInst(), id_(),
+                isa_(LLM_SESSION_TYPE), from_(rshift_(uri(AGENT)).mult_(uri(MODEL)))))
+                .rshift_().tryToInst()),
+    (lhs, inst) -> { ... })
+```
+
+- **Dual-form call**: `@dr/session/1.summarize(_)` (fluent, session as lhs) or `summarize(@dr/session/1)`
+  (function, session as arg 0). Resolved via `inst.arg(f(SESSION), 0).orElse(lhs.asRec())`.
+- **The `model` arg is a type-directed transform**: pass a `model::T` (kept as-is) or a `session::T`
+  (deref `session.agent/model`). The arg definition normalizes whatever arrives to a `model::T`
+  before the body runs.
+- **Body**: collect the session's messages via the `+/` branch read (rel keys = message vids) →
+  build a digest → `miniTask(model, SUMMARIZE_PROMPT)` → parse `<<json:claim>>` blocks off the
+  `ChatResult` → coerce `kind` str→uri → stamp `source` as `lst` of `!*` refs → write `claim::T`
+  at `<agent>/claim/N` → return the claim vids.
+
+### 9.4 Verified live (Dr. Stynx)
+
+```mtron
+@/usr/dr/session/1.summarize()
+==> [/usr/dr/claim/0, /usr/dr/claim/1, /usr/dr/claim/2, /usr/dr/claim/3]
+
+*/usr/dr/claim/0
+==> claim::[ text=>'The agent dr.stynx operates within the Metatron system and ...',
+             kind=>observation,
+             source=>[ !*/usr/dr/message/1, !*/usr/dr/message/2, !*/usr/dr/message/3, !*/usr/dr/message/4]]
+
+*/usr/dr/claim/0/source.>>0
+==> user::[ text=>'what tools do you have access to?', ... session=>/usr/dr/session/1, ...]
+```
+
+The claim's `source` is a **live lazy pointer into the message ledger** — deref it and you get the
+original typed message. That is Thalamus's `DERIVED_FROM` provenance, expressed as metatron's
+native `!*` ref idiom.
+
+### 9.5 Bugs found and fixed during implementation
+
+- **Java `Obj.dom()` ≠ mtron `dom()`.** Java `dom()` returns the instruction's *domain Type*;
+  mtron `[a=>1,b=>2].dom()` returns the keys (an inst, `DOM_INST_TID`). Iterating a rec's entries in
+  Java requires `.elements()` (key=>value rels), not `.dom()`. This silently iterated a Type and
+  never found the `claim` block key.
+- **`MUTABLE`-at mutates in place; `tid()`/`selfVID()` are pure.** The former is a statement-expression;
+  the latter must be reassigned (`rec = rec.tid(...)`). Mixing them without tracking which-is-which
+  silently drops state.
+- **`objs` (coefficient collections) are not a tbleSpace column type.** `baseVidForValue` has no
+  `isObjs()` branch → mis-types to `/m/rec` → FK-by-convention on the message uris → `parseLong("/usr/dr/message/1")`
+  on read-back. Store `{uri}` collections as `lst` of `!*` refs instead.
+- **LLM output is JSON, not mtron-rec.** The `<<mtron:claim>>` body failed to parse because the model
+  emitted JSON objects. Switched to `<<json:claim>>` (rides the same `MTRON_BLOCK` parse, maps to
+  `ObjJSONSerializer`) and coerce `kind` str→uri at the write.
+
+### 9.6 Known debts
+
+- The `[WARN] user message write failed (non-blocking): no incrq query processor attached to
+  /m/space/memspace` — the translator agent (a bare ChatFeature) tries to persist its user message
+  to a root it doesn't have. Harmless (caught), but noisy. The miniTask translator may want a root
+  or a non-persisting chat feature.
+- `take()` on a branch of rels loses the vid keys (renders `noobj`) — the `*/usr/dr/message/+.take(3)`
+  observation. Workaround: keep the rels and use `<<`/`pair.first()`. The `take` bug itself is unfixed.
+
+---
+
+## 10. NEXT STEPS (handoff)
+
+**Context:** at ~70% context window as of this section. This is the handoff for the next phase.
+
+### What's done
+- `claim::T` type (registered, verified reading back from SQLite)
+- `Agent.Helper.miniTask(Model, String) → ChatResult` (extracted from ConceptFeature)
+- `Agent.chat()` → `ChatResult`; `Model` spec accessors
+- `summarize()` inst — dual-form, model-transform arg, `<<json:claim>>` parse, `source` as `!*` refs
+- Full loop verified live: session → model → claims → source → original messages
+
+### Next increments, in order
+
+1. **`loose_end::T` in the same distill.** Add `<<json:loose_end>>` to the summarize prompt (open
+   problems with `status=>open`), parse it alongside claims, write `loose_end::T` at `<agent>/loose_end/N`.
+   The type is already registered (`LLM_LOOSE_END_TYPE`); the inst needs the second block parse.
+2. **`on_before_chat` surfacing hook.** The consume side — inject open loose ends + recent claims
+   into the next session's system message ("where you left off"). Reuse the `CONCEPT_FEATURE_SYSTEM_TEMPLATE`
+   injection pattern in `ConceptFeature.onBeforeChat`. Decision: thin mtron feature rec vs. a Java
+   feature (the earlier "don't build SummarizeFeature yet" analysis suggests mtron-rec first).
+3. **Trust-tier floor.** `claim?tier<=min(source tiers)` — a type predicate or write-time rule.
+   Currently tier defaults to `1` via the type. Needs the tier-assignment rule (message kind:
+   tool_result > ai > thinking; `external` sources down-tier).
+4. **Concept links on claims.** Stamp `concept` with the concepts the claim's source messages link to
+   (reuse the concept space). The field is declared; the inst doesn't populate it yet.
+5. **MCP query surface.** `claims(c1,c2)`, `loose_ends()`, `summary()` as tools via the existing
+   `skill::T → mcp_server::T` reduction.
+
+### Open questions carried forward (from §6, §8.6)
+- Distill granularity: per-turn vs session-end (currently session-end via explicit `summarize()`).
+- Claim output format: `<<json:claim>>` chosen (LLM-reliable). mtron-block variant rejected.
+- `loose_end` status transitions: who sets `in_progress`/`resolved` — the next summarize, or live agent action?
+- `take()`-on-branch-rel vid-loss bug (in `from`/`read` path) — fix or keep the `<<`/`pair.first()` workaround.
+
+### Files touched (this phase)
+- `src/main/java/studio/phaseshift/metatron/isa/llm/llmInstSet.java` — `claim::T`, `loose_end::T`,
+  `summarize()`, `SUMMARIZE_PROMPT`
+- `src/main/java/studio/phaseshift/metatron/isa/llm/type/Agent.java` — `Agent.Helper.miniTask`,
+  `Agent.chat() → ChatResult`
+- `src/main/java/studio/phaseshift/metatron/isa/llm/type/Model.java` — spec accessors
+- `src/main/java/studio/phaseshift/metatron/isa/llm/type/feature/ConceptFeature.java` — `AgentExtractor`
+  delegates to `Agent.Helper.miniTask`
+- `docs/design/thalamus-metatron.md` — this doc

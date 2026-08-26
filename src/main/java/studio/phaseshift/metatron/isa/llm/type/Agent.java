@@ -65,7 +65,8 @@ import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AGENT_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
@@ -232,8 +233,9 @@ public class Agent extends MRec {
          * @param prompt the task instruction sent to the translator agent
          * @return the resulting {@code chat_result::T} as a {@link ChatResult}
          */
-        public static ChatResult miniTask(final Model model, final String prompt) {
+        public static ChatResult miniTask(final String agentName, final Model model, final String prompt) {
             final Agent translator = new Agent(mutableMap(
+                    uri(NAME), str(agentName),
                     uri(FEATURE), lst(new ChatFeature(mutableMap(
                             uri(MODEL), model,
                             uri(RESPONSE), rec(uri(TO), id_().tryToInst())),
