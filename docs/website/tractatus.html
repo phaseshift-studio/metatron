@@ -45,8 +45,10 @@
     <script src="./highlight/highlight.min.js" type="text/javascript"></script>
     <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
     <script src="./highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="./highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="./highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="./highlight/languages/sql.min.js" type="text/javascript"></script>
     <script src="./highlight/languages/json.min.js" type="text/javascript"></script>
-    <!-- <script src="./highlight/languages/bash.min.js" type="text/javascript"></script>-->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
     <script src="lib/wow/wow.min.js" type="text/javascript"></script>
@@ -120,28 +122,15 @@
                     download
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
-                    <!--<li>
-                        <div class="terminal-box">
-                            <pre><code>npm i -g metatron-vm</code></pre>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="terminal-box">
-                            <pre><code>docker pull docker.phaseshift.studio/metatron:0.1-SNAPSHOT</code></pre>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="terminal-box">
-                            <span class="badge bg-danger">only linux tested</span>
-                            <pre><code>git clone https://github.com/phaseshift-studio/metatron.git
-mvn clean install -DskipTests=true
-bin/metatron</code></pre>
-                        </div>
-                    </li>-->
                     <li>
                         <div class="terminal-box">
                             <span class="badge bg-danger">only linux tested</span>
                             <pre><code>curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box">
+                            <pre><code>docker pull ghcr.io/phaseshift-studio/metatron:main</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -1646,6 +1635,7 @@ These types are distributed in the <code>/m/math</code> instruction set and impo
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/math.&gt;&gt;type.&gt;&gt;     ​1​
+==&gt;int::T[is(gt(0))]@/m/math/nat
 ==&gt;real::T[id()]@/m/math/data
 ==&gt;data::T[][ctor?bB&lt;=#{?}(#{*}::T)]@/m/math/data/bB
 ==&gt;data::T[][ctor?kB&lt;=#{?}(#{*}::T)]@/m/math/data/kB
@@ -1750,7 +1740,8 @@ Over the remainder of this documentation, each of the components of Dr.Stynx&#82
                                                                          protocol     =&gt; ollama,
                                                                          host         =&gt; &lt;http://ginger.local:11434&gt;,
                                                                          llm          =&gt; &lt;qwen3.8:27b&gt;])),
-                        response      =&gt; [to =&gt; print(_)]],
+                        response      =&gt; [to =&gt; print(_)],
+                        root          =&gt; /usr/dr/chat_result],
     think_feature::::::[on_agent_ctor =&gt; inst(a=&gt;agent::T){
                                             accordion::[title =&gt; "thoughts", 
                                                         body  =&gt; "",
@@ -1758,19 +1749,21 @@ Over the remainder of this documentation, each of the components of Dr.Stynx&#82
                        on_before_chat =&gt; inst(){ @&lt;think_widget&gt; &gt;&gt;= [body=&gt;""] },
                        root           =&gt; /usr/dr/message,
                        think          =&gt; [to =&gt; inst(a=&gt;str::T){ @&lt;think_widget&gt;&gt;&gt;=[body=&gt;+*a].display() }]],
-    loop_feature:::::::[max_loop      =&gt; 100],                         
+    loop_feature:::::::[max_loop      =&gt; 100,
+                        root          =&gt; /usr/dr/loop],
     comment_feature::::[              =&gt; ],
     skill_feature::::::[skill         =&gt; [ &lt;mfs:.metatron/skills/metatron&gt;, 
                                            &lt;mfs:.metatron/skills/mtron&gt; ]],
     concept_feature::::[root          =&gt; /usr/dr/concept,
                         extractor     =&gt; lucene],
     tool_feature:::::::[tool          =&gt; [!*eval,!*sql,!*codegraph]],
-    audit_feature::::::[on_agent_ctor =&gt; inst(a=&gt;agent::T) {  
-                                           accordion::[title  =&gt; "audit", 
+    audit_feature::::::[on_agent_ctor =&gt; inst(a=&gt;agent::T) {
+                                           accordion::[title  =&gt; "audit",
                                                        body   =&gt; "",
                                                        style  =&gt; style::[anchor=&gt;bottom_right,width=&gt;65,height=&gt;30,
                                                                          left=&gt;-2,top=&gt;8,foreground =&gt;"{{y}}"]]@&lt;audit_widget&gt; },
-                        to            =&gt; inst(a=&gt;str::T){ @&lt;audit_widget&gt;&gt;&gt;=[body=&gt;+*a].display() }],
+                        to            =&gt; inst(a=&gt;str::T){ @&lt;audit_widget&gt;&gt;&gt;=[body=&gt;+*a].display() },
+                        root          =&gt; /usr/dr/audit],
     system_feature:::::[              =&gt; ],
     cost_feature:::::::[root          =&gt; /usr/dr/cost,
                         to            =&gt; inst(in_cost=&gt;real::T,out_cost=&gt;real::T,total_cost=&gt;real::T){ 
@@ -2470,7 +2463,7 @@ mtron&gt; nat::4     ​2​
 mtron&gt; int::-4     ​3​
 ==&gt;-4
 mtron&gt;  nat::-4     ​4​
-==&gt;fail::[-4 is not a int::T[is(gt(0))]@nat]@/sys/fail/32
+==&gt;fail::[-4 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/32
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;int::T]]@chicken     ​5​
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​6​
 ==&gt;chicken::[name=&gt;'snowbutt',age=&gt;7]
@@ -2549,11 +2542,11 @@ mtron&gt;  -21.as(int::T).as(nat::T).as(age::T)     ​4​
    	  \_pred │ []
    	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-21 is not a int::T[is(gt(0))]@nat [structural]]][-21 is not a int::T[is(gt(0))]@nat [structural]]@/sys/fail/36
+   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-21 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-21 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/36
 mtron&gt;  121.as(int::T).as(nat::T).as(age::T)     ​5​
 ==&gt;fail::[apply failure:
    	[lhs]    │ nat::121
-   	 \_type  │ nat
+   	 \_type  │ /m/math/nat
    	  \_pred │ [is(gt(0))]
    	[inst]   │ as?rng=age&amp;dom=int(age::T){&lt;j&gt;}@<i class="conum" data-value="3"></i><b>(3)</b>
    	 \_dom   │ int::T
@@ -2809,25 +2802,25 @@ mtron&gt; *nat     ​2​
 mtron&gt; nat::2     ​3​
 ==&gt;nat::2
 mtron&gt; nat::-2     ​4​
-==&gt;nat::2
+==&gt;fail::[-2 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/46
 mtron&gt; 2.as(nat::T)     ​5​
-==&gt;2
+==&gt;nat::2
 mtron&gt;  -2.as(nat::T)     ​6​
 ==&gt;fail::[apply failure:
    	[lhs]    │ -2
    	 \_type  │ /m/int
    	  \_pred │ []
-   	[inst]   │ as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
+   	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [int::T][MTronException&lt;127&gt;:-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()] [structural]]][-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()] [structural]]@/sys/fail/62
+   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-2 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-2 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/48
 mtron&gt;  nat::2 * -1     ​7​
 ==&gt;fail::[apply failure:
    	[lhs]    │ nat::2
-   	 \_type  │ nat
+   	 \_type  │ /m/math/nat
    	  \_pred │ [is(gt(0))]
    	[inst]   │ mult?rng=int&amp;dom=int(-1){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [-1][MTronException&lt;127&gt;:-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]]][-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]]@/sys/fail/72</code></pre>
+   	 \_args  │ [-1][MTronException&lt;127&gt;:-2 is not a int::T[is(gt(0))]@/m/math/nat]][-2 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/50</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2854,7 +2847,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{r}}m{{g}}e{{r}}t{{r}}A{{g}}T{{m}}r{{y}}o{{c}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{r}}M{{g}}E{{c}}t{{r}}a{{g}}T{{b}}r{{m}}o{{c}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -2948,7 +2941,7 @@ mtron&gt; a/b/c * d/e/f     ​6​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 'metatron'.as(bytes::T)     ​1​
 ==&gt;0x6d65746174726f6e
 mtron&gt; bytes::'48656c6c6f'     ​2​
-==&gt;fail::['48656c6c6f' is not a bytes::T]@/sys/fail/82</code></pre>
+==&gt;fail::['48656c6c6f' is not a bytes::T]@/sys/fail/60</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3411,7 +3404,7 @@ mtron&gt; filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;     �
 ==&gt;fail::[parse error at line 1, col 19:
      filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;
                        ^
-     could not parse at '&lt;']@/sys/fail/118
+     could not parse at '&lt;']@/sys/fail/96
 mtron&gt; *filtered     ​3​</code></pre>
 </div>
 </div>
@@ -3505,15 +3498,15 @@ This constraint is a refinement of <code>int</code> (a well defined subset).</p>
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt;  nat::-10
-==&gt;fail::[-10 is not a int::T[is(gt(0))]]@/sys/fail/136
+==&gt;fail::[-10 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/114
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[apply failure:
    	[lhs]    │ -10
    	 \_type  │ /m/int
    	  \_pred │ []
-   	[inst]   │ as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
+   	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [int::T][MTronException&lt;127&gt;:-10 is not a int::T[is(gt(0))] [structural]]][-10 is not a int::T[is(gt(0))] [structural]]@/sys/fail/138</code></pre>
+   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/116</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3611,15 +3604,15 @@ In order to constrain an <code>int</code> to this definition, a <strong>refineme
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt;  nat::-10
-==&gt;fail::[-10 is not a int::T[is(gt(0))]]@/sys/fail/140
+==&gt;fail::[-10 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/118
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[apply failure:
    	[lhs]    │ -10
    	 \_type  │ /m/int
    	  \_pred │ []
-   	[inst]   │ as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
+   	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [int::T][MTronException&lt;127&gt;:-10 is not a int::T[is(gt(0))] [structural]]][-10 is not a int::T[is(gt(0))] [structural]]@/sys/fail/142</code></pre>
+   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/120</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3639,25 +3632,19 @@ mtron&gt; int::T</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat::125
-==&gt;nat::125
+==&gt;fail::[125 is not a int::T[is(lt(120))]@/m/math/nat]@/sys/fail/122
 mtron&gt; age::125
-==&gt;fail::[125 is not a int::T[is(lt(120))]]@/sys/fail/144
+==&gt;fail::[125 is not a int::T[is(lt(120))]@/m/math/nat]@/sys/fail/124
 mtron&gt;  nat::125.as(age::T)
-==&gt;fail::[apply failure:
-   	[lhs]    │ nat::125
-   	 \_type  │ nat
-   	  \_pred │ [is(gt(0))]
-   	[inst]   │ as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
-   	 \_dom   │ int::T
-   	 \_args  │ [int::T][MTronException&lt;127&gt;:nat::125 is not a int::T[is(lt(120))] [structural]]][nat::125 is not a int::T[is(lt(120))] [structural]]@/sys/fail/146
+==&gt;fail::[125 is not a int::T[is(lt(120))]@/m/math/nat]@/sys/fail/126
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[apply failure:
    	[lhs]    │ 125
    	 \_type  │ /m/int
    	  \_pred │ []
-   	[inst]   │ as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
+   	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [int::T][MTronException&lt;127&gt;:125 is not a int::T[is(lt(120))] [structural]]][125 is not a int::T[is(lt(120))] [structural]]@/sys/fail/148</code></pre>
+   	 \_args  │ [nat::T][MTronException&lt;127&gt;:125 is not a int::T[is(lt(120))]@/m/math/nat [structural]]][125 is not a int::T[is(lt(120))]@/m/math/nat [structural]]@/sys/fail/128</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -6796,6 +6783,19 @@ mtron&gt; *fs:m     ​3​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
 mtron&gt; */sys/space/localfs/script     ​2​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
+==&gt;'[?25l'
+==&gt;{2}'⠙ resolving dependencies'
+==&gt;{2}'⠹ resolving dependencies'
+==&gt;{2}'⠸ resolving dependencies'
+==&gt;{2}'⠼ resolving dependencies'
+==&gt;{2}'⠴ resolving dependencies'
+==&gt;{2}'⠦ resolving dependencies'
+==&gt;'⠧ resolving dependencies'
+==&gt;'⠇ resolving dependencies'
+==&gt;'⠏ resolving dependencies'
+==&gt;'⠋ resolving dependencies'
+==&gt;'⠧ resolving dependencies[?12l[?25h'
+==&gt;'[K[0;32m✓[0m resolving dependencies'
 ==&gt;null
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
 ==&gt;fail::[apply failure:
@@ -6857,14 +6857,14 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
-==&gt;'tmpfs            6356184      6188   6349996   1% /run'
+==&gt;'tmpfs            6356184      6116   6350068   1% /run'
 ==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2 959786032 494604920 416352904  55% /'
-==&gt;'tmpfs           31780908    772520  31008388   3% /dev/shm'
+==&gt;'/dev/nvme1n1p2 959786032 496003744 414954080  55% /'
+==&gt;'tmpfs           31780908   1782984  29997924   6% /dev/shm'
 ==&gt;'tmpfs               5120        20      5100   1% /run/lock'
 ==&gt;'tmpfs           31780908       220  31780688   1% /run/qemu'
 ==&gt;'/dev/nvme1n1p1    523248      6288    516960   2% /boot/efi'
-==&gt;'tmpfs            6356180       248   6355932   1% /run/user/1000'
+==&gt;'tmpfs            6356180       240   6355940   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2 976744444 251306824 725437620  26% /media/hdd0'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
@@ -6875,7 +6875,6 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;'CONTRIBUTING.md'
 ==&gt;dist
 ==&gt;docs
-==&gt;jdeploy-bundle
 ==&gt;'language.properties'
 ==&gt;LICENSE
 ==&gt;'metatron.iml'
@@ -6884,7 +6883,6 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;'mvnw.cmd'
 ==&gt;node_modules
 ==&gt;'opencode.json'
-==&gt;'package.json'
 ==&gt;'pom.xml'
 ==&gt;'project.ide.mtron'
 ==&gt;'README.md'
@@ -6893,7 +6891,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;target
 ==&gt;worktrees
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;682</code></pre>
+==&gt;669</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7081,7 +7079,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.08:25/09/25/52/839?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.08:26/03/10/27/769?tz=-0600&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -9707,7 +9705,8 @@ mtron&gt; farm:animals/2 -&gt; chicken::[name=&gt;'cluck',age=&gt;3,shelter=&gt;
 ==&gt;chicken::[name=&gt;'cluck',age=&gt;3,shelter=&gt;!*loc:barns/1]
 mtron&gt; *farm:animals/2     ​7​
 ==&gt;chicken::[name=&gt;'cluck',age=&gt;3,shelter=&gt;!*loc:barns/1]
-mtron&gt; *farm:animals/2/shelter     ​8​</code></pre>
+mtron&gt; *farm:animals/2/shelter     ​8​
+==&gt;[label=&gt;'old_red_barn',capacity=&gt;12]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -10716,16 +10715,10 @@ console::[        =&gt; ]@/sys/console;
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
-    import mtron from './highlight/languages/mtron.min.js';
-    import java from './highlight/languages/java.min.js';
-    import bash from './highlight/languages/bash.min.js';
-    import sql from './highlight/languages/sql.min.js';
-    import json from './highlight/languages/json.min.js';
-    hljs.registerLanguage('mtron', mtron);
-    hljs.registerLanguage('java', java);
-    hljs.registerLanguage('bash', bash);
-    hljs.registerLanguage('sql', sql);
-    hljs.registerLanguage('json', json);
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
     hljs.configure({
         ignoreUnescapedHTML: true,
         languages: ['mtron','java','bash','sql','json']

@@ -66,12 +66,12 @@ public class AuditFeature extends AbstractFeature {
         this.partialThinkings = 0;
         snapshot(agent, "before_chat",
                 rec(uri("features"), jnt(agent.features().lstValue().size()),
-                        uri("systemMsgs"), jnt(agent.getSystemMessages().size()),
+                        uri("systemMsgs"), jnt(agent.hasFeature(SYSTEM) ? agent.feature(SYSTEM).<SystemFeature>as().getSystemMessages().size() : 0),
                         uri("userMessage"), str(null == agent.userMessage() ? "" : agent.userMessage())));
         agent.feature(AUDIT).asRec().at(TO).apply(str("""
                                                       {{_}}{{g}}system{{/g}}{{/_}}: %s
                                                       {{_}}{{g}}prompt{{/g}}{{/_}}: %s
-                                                      """.formatted(agent.getSystemMessages().stream().collect(Collectors.joining()), agent.userMessage())));
+                                                      """.formatted(agent.hasFeature(SYSTEM) ? agent.feature(SYSTEM).<SystemFeature>as().getSystemMessages().stream().collect(Collectors.joining()) : "", agent.userMessage())));
         return noobj();
     }
 

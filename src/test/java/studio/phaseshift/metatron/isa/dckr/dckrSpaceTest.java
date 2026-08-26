@@ -74,7 +74,7 @@ public class dckrSpaceTest extends AbstractSpaceTest {
     }
 
     @Override
-    public void testRshiftDirectorySpine(final String a, final String b) {
+    public void testRshiftUriGraphSpine(final String a, final String b) {
     }
 
     @BeforeAll

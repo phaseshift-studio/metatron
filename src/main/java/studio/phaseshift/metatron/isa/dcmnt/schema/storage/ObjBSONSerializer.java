@@ -44,7 +44,8 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -188,6 +189,22 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
             // Objs wrapper — {__mtron_objs: [...]} distinguishes objs from lst (BSON has no set type).
             if (doc.size() == 1 && doc.containsKey(MTRON_OBJS_FIELD))
                 return objs(doc.getArray(MTRON_OBJS_FIELD).stream().map(this::read).toList());
+            // A DBRef pattern { $ref, $id } read as a value (array element or projected leaf)
+            // reconstructs the auto_from reference — mirrors readRec's field-level DBRef branch,
+            // which only fires when the reference sits directly under a field key.
+            if (this.referencePathBuilder != null && doc.containsKey("$ref") && doc.containsKey("$id")) {
+                final String collection = doc.getString("$ref").getValue();
+                final BsonValue idValue = doc.get("$id");
+                final String id = idValue.isObjectId()
+                        ? idValue.asObjectId().getValue().toHexString()
+                        : idValue.isString()
+                        ? idValue.asString().getValue()
+                        : idValue.toString();
+                final fURI referencedPath = collection.indexOf(':') >= 0
+                        ? f(collection).extend(id)
+                        : this.referencePathBuilder.apply(new ReferenceInfo(collection, id));
+                return instB(mInstSet.AUTO_FROM_INST_TID, lst(referencedPath.toUri()));
+            }
             return this.readRec(bson);
         }
         if (bson.isArray())
@@ -294,7 +311,7 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
                             referencedPath = this.referencePathBuilder.apply(
                                     new ReferenceInfo(collection, id));
                         }
-                        return rel(uri(key), auto_from_(referencedPath).tryToInst());
+                        return rel(uri(key), instB(mInstSet.AUTO_FROM_INST_TID, lst(referencedPath.toUri())));
                     }
 
                     // Check if this field is a potential reference (ends with "Id" and is an ObjectId)
@@ -308,7 +325,7 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
                         final String id = value.asObjectId().getValue().toHexString();
 
                         final fURI referencedPath = this.referencePathBuilder.apply(new ReferenceInfo(collectionName, id));
-                        return rel(uri(key), auto_from_(referencedPath).tryToInst());
+                        return rel(uri(key), instB(mInstSet.AUTO_FROM_INST_TID, lst(referencedPath.toUri())));
                     }
 
                     // Regular field

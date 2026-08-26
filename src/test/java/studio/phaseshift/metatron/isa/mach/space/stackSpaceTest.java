@@ -27,7 +27,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@SkipRegexTest({@SkipRegexTest.Skip(method = "testRshiftDirectorySpine")})
+@SkipRegexTest({@SkipRegexTest.Skip(method = "testRshiftUriGraphSpine")})
 public class stackSpaceTest extends AbstractSpaceTest {
 
     public stackSpaceTest() {

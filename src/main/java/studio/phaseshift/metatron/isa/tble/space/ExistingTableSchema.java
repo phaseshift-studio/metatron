@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MType;
@@ -670,8 +671,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final Rec current = readCurrentRow(conn, metadata, pkColumn, rowId);
                 if (current == null) return 0;
                 final Obj colValue = current.at(dp.field()).selfVID(null);
-                final Obj updated = colValue.isRec()
-                        ? colValue.asRec().at(dp.extension(), obj, MUTABLE)
+                final Obj updated = colValue.isPoly()
+                        ? colValue.<Poly<?, ?>>as().at(dp.extension(), obj, MUTABLE)
                         : obj;
                 return writeField(conn, metadata, rowId, dp.field(), updated);
             }
@@ -1313,7 +1314,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     this.space.logger().warn("table %s has no primary key, cannot read specific row", tableName);
                     return Collections.emptyIterator();
                 }
-                if (dp.hasField()) {
+                if (dp.hasField() && !dp.fieldIsWildcard()) {
                     final String pkColumn = metadata.primaryKeys.getFirst();
                     final String pkColumns = metadata.primaryKeys.stream()
                             .map(this::q).reduce((a, b) -> a + ", " + b).orElse("");
@@ -1332,8 +1333,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                             if (rs.next()) {
                                 final fURI rowFuri = f(tableName).extend(rowId).extend(fieldName);
                                 Obj row = readTableRow(rs, metadata, fieldName);
-                                if (dp.extension() != null && row.isRec())
-                                    row = row.asRec().at(dp.extension());
+                                if (dp.extension() != null && row.isPoly() && !pattern.hasPattern())
+                                    row = row.<Poly<?, ?>>as().at(dp.extension());
                                 results.add(Space.IdObj.of(rowFuri, row));
                             }
                         } catch (final SQLException e) {

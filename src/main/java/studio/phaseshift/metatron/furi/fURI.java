@@ -570,14 +570,34 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return !this.qMap().isEmpty();
     }
 
+    /**
+     * A relative furi has no leading /
+     *
+     * @return whether the furi path has a leading /
+     */
     boolean isRelative();
 
+    /**
+     * An absolute furi has a leading /
+     *
+     * @return whether the furi path has a leading /
+     */
     default boolean isAbsolute() {
         return !this.isRelative();
     }
 
+    /**
+     * A branch furi has a trailing /
+     *
+     * @return whether the furi path has a trailing /
+     */
     boolean isBranch();
 
+    /**
+     * A node furi has no trailing /
+     *
+     * @return whether the furi path has no trailing /
+     */
     default boolean isNode() {
         return !this.isBranch();
     }

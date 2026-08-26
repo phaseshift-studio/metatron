@@ -45,8 +45,10 @@
     <script src="../highlight/highlight.min.js" type="text/javascript"></script>
     <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
-    <!-- <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>-->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
     <script src="../lib/wow/wow.min.js" type="text/javascript"></script>
@@ -121,28 +123,15 @@
                     download
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
-                    <!--<li>
-                        <div class="terminal-box">
-                            <pre><code>npm i -g metatron-vm</code></pre>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="terminal-box">
-                            <pre><code>docker pull docker.phaseshift.studio/metatron:0.1-SNAPSHOT</code></pre>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="terminal-box">
-                            <span class="badge bg-danger">only linux tested</span>
-                            <pre><code>git clone https://github.com/phaseshift-studio/metatron.git
-mvn clean install -DskipTests=true
-bin/metatron</code></pre>
-                        </div>
-                    </li>-->
                     <li>
                         <div class="terminal-box">
                             <span class="badge bg-danger">only linux tested</span>
                             <pre><code>curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box">
+                            <pre><code>docker pull ghcr.io/phaseshift-studio/metatron:main</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -455,12 +444,12 @@ bin/metatron</code></pre>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a rec describing a document database connection" class="text-info">a rec describing a document database connection</a> <span class="text-light">=&gt;</span> <a href="#a rec with fields for configuring a document database connection" class="text-success">a rec with fields for configuring a document database connection</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}serializer" class="text-light">{?}serializer</a> <span class="text-light">=&gt;</span> <a href="#'the serializer for BSON documents'" class="text-info">&#39;the serializer for BSON documents&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#'the route for accessing documents'" class="text-info">&#39;the route for accessing documents&#39;</a>
+  <a href="#{?}serializer" class="text-light">{?}serializer</a> <span class="text-light">=&gt;</span> <a href="#'the serializer for BSON documents'" class="text-info">&#39;the serializer for BSON documents&#39;</a>
   <a href="#pattern" class="text-light">pattern</a> <span class="text-light">=&gt;</span> <a href="#'the pattern for accessing documents'" class="text-info">&#39;the pattern for accessing documents&#39;</a>
   <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'connection uri (mongodb:____host:port__database?options)'" class="text-info">database?options)&#39;</a>
   <a href="#{?}schema" class="text-light">{?}schema</a> <span class="text-light">=&gt;</span> <a href="#'an instset of collection types auto-discovered from the live database'" class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</a>
   <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root type constraint — writes at document root must satisfy this type; defaults to rec::T'" class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</a>
-  <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#'the route for accessing documents'" class="text-info">&#39;the route for accessing documents&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -601,16 +590,10 @@ bin/metatron</code></pre>
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
-    import mtron from './highlight/languages/mtron.min.js';
-    import java from './highlight/languages/java.min.js';
-    import bash from './highlight/languages/bash.min.js';
-    import sql from './highlight/languages/sql.min.js';
-    import json from './highlight/languages/json.min.js';
-    hljs.registerLanguage('mtron', mtron);
-    hljs.registerLanguage('java', java);
-    hljs.registerLanguage('bash', bash);
-    hljs.registerLanguage('sql', sql);
-    hljs.registerLanguage('json', json);
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
     hljs.configure({
         ignoreUnescapedHTML: true,
         languages: ['mtron','java','bash','sql','json']

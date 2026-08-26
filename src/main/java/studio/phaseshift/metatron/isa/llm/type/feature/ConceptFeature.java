@@ -437,10 +437,13 @@ public class ConceptFeature extends AbstractFeature {
         final Set<fURI> concepts = this.processConcepts(agent, agent.userMessage(), true);
         this.injectConceptRecommendations(agent, concepts);
         if (!this.conceptRecommendations.isEmpty()) {
-            agent.addSystemMessage(CONCEPT_FEATURE_SYSTEM_TEMPLATE
-                    .formatted(this.conceptRecommendations.stream().reduce("", (a, b) -> a + b + "\n"),
-                            MESSAGES_INST_TID,
-                            CONCEPTS_INST_TID));
+            // Cross-feature communication: SystemFeature owns the system-message channel.
+            // If the agent lacks it, this feature is debilitated — log and proceed.
+            if (this.requireFeature(agent, SYSTEM))
+                agent.feature(SYSTEM).<SystemFeature>as().addSystemMessage(CONCEPT_FEATURE_SYSTEM_TEMPLATE
+                        .formatted(this.conceptRecommendations.stream().reduce("", (a, b) -> a + b + "\n"),
+                                MESSAGES_INST_TID,
+                                CONCEPTS_INST_TID));
         }
         this.conceptRecommendations.clear();
         return noobj();

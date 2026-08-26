@@ -18,7 +18,10 @@
 
 package studio.phaseshift.metatron.isa;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -216,6 +219,10 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             //         "$$/ -> [a=>1,b=>2,c=>3]                               % *<$$/>                               % [$$/a=>1,$$/b=>2,$$/c=>3]>-",
             ".                                                     % *<$$/x>                            % noobj",
             ".                                                     % *$$/a                              % 1",
+            "$$ -> [a=>[1,2,3]]                                    % *$$/a/0                            % 1",
+            ".                                                     % *$$/a/1                            % 2",
+            "$$ -> [a=>[!*$$,2,3]]                                 % *$$/a/0                            % [a=>[!*$$,2,3]]",
+            ".                                                     % *$$/a/1                            % 2",
             "$$ -> [a=>[b=>2,c=>3],d=>4]                           % *$$/a/b                            % 2",
             //".                                                     % *$$/#                              % [[a=>[b=>2,c=>3],d=>4],[b=>2,c=>3],2,3,4]>-", TODO: make poly.at() consistent with space.read()
             ".                                                     % *<$$/x>                            % noobj",
@@ -711,7 +718,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             "$$/rshift/x/y.>>.>>                   % {$$/rshift/x/y/zz/0,$$/rshift/x/y/zz/1}",
             "$$/rshift/x/y.>>.>>.*_                % {2,3}"
     }, delimiter = '%')
-    public void testRshiftDirectorySpine(final String lookupExpression, final String expectedExpression) {
+    public void testRshiftUriGraphSpine(final String lookupExpression, final String expectedExpression) {
         final String lookupExpr = make(lookupExpression);
         final Obj lookup = ObjmtronSerializer.parse(lookupExpr).apply();
         final Obj expected = ObjmtronSerializer.parse(make(expectedExpression)).apply();

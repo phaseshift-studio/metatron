@@ -45,8 +45,10 @@
     <script src="../highlight/highlight.min.js" type="text/javascript"></script>
     <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
-    <!-- <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>-->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
     <script src="../lib/wow/wow.min.js" type="text/javascript"></script>
@@ -121,28 +123,15 @@
                     download
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
-                    <!--<li>
-                        <div class="terminal-box">
-                            <pre><code>npm i -g metatron-vm</code></pre>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="terminal-box">
-                            <pre><code>docker pull docker.phaseshift.studio/metatron:0.1-SNAPSHOT</code></pre>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="terminal-box">
-                            <span class="badge bg-danger">only linux tested</span>
-                            <pre><code>git clone https://github.com/phaseshift-studio/metatron.git
-mvn clean install -DskipTests=true
-bin/metatron</code></pre>
-                        </div>
-                    </li>-->
                     <li>
                         <div class="terminal-box">
                             <span class="badge bg-danger">only linux tested</span>
                             <pre><code>curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box">
+                            <pre><code>docker pull ghcr.io/phaseshift-studio/metatron:main</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -322,7 +311,7 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- type=&gt;[data::T,bB::T,kB::T,mB::T,gB::T,tB::T,pB::T,currency::T,usd::T,euro::T,...(5 more)],
+ type=&gt;[nat::T,data::T,bB::T,kB::T,mB::T,gB::T,tB::T,pB::T,currency::T,usd::T,...(6 more)],
  inst=&gt;[datetime_now?datetime&lt;=#{?}(),plus?datetime&lt;=datetime(time::T),minus?datetime&lt;=datetime(time::T),minus?/m/math/time&lt;=datetime(datetime::T),as?datetime&lt;=uri(uri::T),as?str&lt;=datetime(str::T),as?datetime&lt;=str(datetime::T),normalize?/m/math/time&lt;=/m/math/time(),normalize?data&lt;=data(),cos?real&lt;=#{?}(as(real::T)),...(12 more)],
  const=&gt;[2.7183@/m/math/e?constq,3.1416@/m/math/pi?constq]]@/m/math</code></pre>
                     </div>
@@ -332,7 +321,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">15</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">16</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">16</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">16</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -356,6 +345,9 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__math__datetime" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">datetime</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__nat" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">nat</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">currency</small></div><div class="d-flex flex-wrap"><a href="#__m__math__currency__euro" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">euro</span>
@@ -462,7 +454,7 @@ bin/metatron</code></pre>
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">15</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">16</span></h3>
     <div class="card mb-3" id="__m__math__data__bB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -603,6 +595,19 @@ bin/metatron</code></pre>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a minute of time (60 seconds)</p>
+</div>
+</div><div class="card mb-3" id="__m__math__nat">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">nat::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__int" class="instset-doc-small-code text-info code">/m/int::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/nat</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[is(gt(0))]@/m/math/nat</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a positive integer</p>
 </div>
 </div><div class="card mb-3" id="__m__math__data__pB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -844,16 +849,10 @@ bin/metatron</code></pre>
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
-    import mtron from './highlight/languages/mtron.min.js';
-    import java from './highlight/languages/java.min.js';
-    import bash from './highlight/languages/bash.min.js';
-    import sql from './highlight/languages/sql.min.js';
-    import json from './highlight/languages/json.min.js';
-    hljs.registerLanguage('mtron', mtron);
-    hljs.registerLanguage('java', java);
-    hljs.registerLanguage('bash', bash);
-    hljs.registerLanguage('sql', sql);
-    hljs.registerLanguage('json', json);
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
     hljs.configure({
         ignoreUnescapedHTML: true,
         languages: ['mtron','java','bash','sql','json']

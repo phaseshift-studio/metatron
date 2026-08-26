@@ -44,17 +44,19 @@ public class ChatFeature extends AbstractFeature {
             return noobj();
 
         try {
-            MessageBuilder.build(USER_MESSAGE_TID)
-                    .text(Str.Helper.cleanString(str(userMessage).apply()))
-                    .contents(userMessage)
-                    .time()
-                    .session(agent.hasFeature(SESSION)
-                            ? agent.feature(SESSION).asRec().at(SESSION).uriValue()
-                            : null)
-                    .depth(agent.chatDepth())
-                    .chatId(agent.chatId())
-                    .create(agent.at(ROOT).uriValue().extend(MESSAGE)
-                            .extend("_").addQ(INCRQ));
+            if (Router.global().getSpaceFor(agent.at(ROOT).uriValue().extend(MESSAGE)).hasQ(f(INCRQ))) {
+                MessageBuilder.build(USER_MESSAGE_TID)
+                        .text(Str.Helper.cleanString(str(userMessage).apply()))
+                        .contents(userMessage)
+                        .time()
+                        .session(agent.hasFeature(SESSION)
+                                ? agent.feature(SESSION).asRec().at(SESSION).uriValue()
+                                : null)
+                        .depth(agent.chatDepth())
+                        .chatId(agent.chatId())
+                        .create(agent.at(ROOT).uriValue().extend(MESSAGE)
+                                .extend("_").addQ(INCRQ));
+            }
         } catch (final Exception e) {
             this.logger().warn("user message write failed (non-blocking): %s", e.getMessage());
         }
@@ -95,7 +97,7 @@ public class ChatFeature extends AbstractFeature {
     @Override
     public Lst skill(final Agent agent) {
         return lst(rec(mutableMap(
-                uri(NAME), uri(LLM_CHAT_FEATURE_TID),
+                uri(NAME), uri(LLM_CHAT_FEATURE_TID.name()),
                 uri(DESC), str("chat with the agent"),
                 uri(CONTENT), str("""
                                   if you are not accessing this skill via an mcp server, then you are in the metatron.

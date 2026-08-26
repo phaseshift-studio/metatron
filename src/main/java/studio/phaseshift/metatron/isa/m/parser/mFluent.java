@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -269,10 +268,6 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.MERGE_INST_TID, lst()));
     }
 
-    public F rmerge_(final Obj obj) {
-        return this.addInst(instB(mInstSet.RMERGE_TID, lst(obj)));
-    }
-
     public F take_(final Obj obj) {
         return this.addInst(instB(mInstSet.TAKE_INST_TID, lst(obj)));
     }
@@ -346,12 +341,12 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.AUTO_INST_TID, lst(obj)));
     }
 
-    public F auto_from_(final Obj obj, final Obj defaultObj) {
-        return this.addInst(instB(mInstSet.AUTO_FROM_INST_TID, lst(obj, defaultObj)));
+    public F auto_from_(final Obj obj) {
+        return this.addInst(instB(mInstSet.AUTO_FROM_INST_TID, lst(obj)));
     }
 
-    public F auto_at_(final Obj obj, final Obj defaultObj) {
-        return this.addInst(instB(mInstSet.AUTO_AT_INST_TID, lst(obj, defaultObj)));
+    public F auto_at_(final Obj obj) {
+        return this.addInst(instB(mInstSet.AUTO_AT_INST_TID, lst(obj)));
     }
 
 
@@ -673,10 +668,6 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().merge_();
         }
 
-        public static <F extends mFluent<F>> F rmerge_(final Obj obj) {
-            return new mFluent<F>().rmerge_(obj);
-        }
-
         public static <F extends mFluent<F>> F take_(final Obj obj) {
             return new mFluent<F>().take_(obj);
         }
@@ -724,7 +715,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         public static <F extends mFluent<F>> F lshift_(final Obj... obj) {
             return new mFluent<F>().lshift_(obj);
         }
-        
+
         public static <F extends mFluent<F>> F rshift_(final Obj... obj) {
             return new mFluent<F>().rshift_(obj);
         }
@@ -753,22 +744,14 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().auto_(instC(M_ISA_INST_TID, lst(), (x, y) -> function.get()));
         }
 
-        public static <F extends mFluent<F>> F auto_at_(final Obj obj, final Obj defaultObj) {
-            return new mFluent<F>().auto_at_(obj, defaultObj);
-        }
-
         public static <F extends mFluent<F>> F auto_at_(final fURI furi) {
-            return auto_at_(uri(furi), noobj());
-        }
-
-        public static <F extends mFluent<F>> F auto_from_(final Uri uri, final Obj defaultObj) {
-            if (null == uri)
-                throw MTronException.of("uri can not be null");
-            return new mFluent<F>().auto_from_(uri, defaultObj);
+            return new mFluent<F>().auto_at_(uri(furi));
         }
 
         public static <F extends mFluent<F>> F auto_from_(final Uri uri) {
-            return new mFluent<F>().auto_from_(uri, noobj());
+            if (null == uri)
+                throw MTronException.of("uri can not be null");
+            return new mFluent<F>().auto_from_(uri);
         }
 
         public static <F extends mFluent<F>> F auto_from_(final fURI uri) {

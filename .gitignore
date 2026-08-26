@@ -2,8 +2,17 @@
 *.sqlite
 opencode.json
 !.metatron/
+# mvnw reads .mvn/wrapper/maven-wrapper.properties at runtime — it must ship
+# in clones, but `.*` above swallows the whole .mvn/ dir. Re-include it.
+!.mvn/
+!.mvn/wrapper/
+!.mvn/wrapper/maven-wrapper.properties
+# `.*` above also swallows the docker build context and new GitHub workflows.
+!.dockerignore
+!.github/
+!.github/workflows/
+!.github/workflows/docker.yml
 target/
-jdeploy-bundle/node_modules/
 node_modules/
 .metatron.history
 *.iml
@@ -29,7 +38,6 @@ benchmark/*.json
 
 # Package Files #
 *.jar
-!jdeploy-bundle/jar-runner.jar
 *.war
 *.nar
 *.ear

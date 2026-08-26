@@ -3,7 +3,10 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Fail;
+import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.ArrayList;
@@ -12,6 +15,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_LOOP_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -64,7 +68,9 @@ public class LoopFeature extends AbstractFeature {
     final List<Rec> iterations = new ArrayList<>();
     long startTime;
     int loopCount;
-    /** True when the next chat is a loop continuation (this feature's own recursion). */
+    /**
+     * True when the next chat is a loop continuation (this feature's own recursion).
+     */
     private boolean isContinuation = false;
 
     public LoopFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -83,7 +89,8 @@ public class LoopFeature extends AbstractFeature {
         final String instructions = LOOP_FEATURE_INSTRUCTIONS
                 .replace("%%%1", this.maxLoops > 0 ? this.maxLoops + "" : "<no limit>")
                 .replace("%%%2", this.maxTimeMillis > 0 ? this.maxTimeMillis + "" : "<no limit>");
-        return lst(rec(uri(NAME), uri("loop"),
+        return lst(rec(
+                uri(NAME), uri(LLM_LOOP_FEATURE_TID.name()),
                 uri(DESC), str("multi-pass reasoning loop with iteration control and polling support"),
                 uri(CONTENT), str(instructions)));
     }

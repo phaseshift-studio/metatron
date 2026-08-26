@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@SkipRegexTest({@SkipRegexTest.Skip(method = "testRshiftDirectorySpine")})
+@SkipRegexTest({@SkipRegexTest.Skip(method = "testRshiftUriGraphSpine")})
 public class ChromaDBVecSpaceTest extends AbstractVecSpaceTest {
 
     private static final int CHROMADB_PORT = 8000;

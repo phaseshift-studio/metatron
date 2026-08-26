@@ -10,16 +10,10 @@
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
-    import mtron from './highlight/languages/mtron.min.js';
-    import java from './highlight/languages/java.min.js';
-    import bash from './highlight/languages/bash.min.js';
-    import sql from './highlight/languages/sql.min.js';
-    import json from './highlight/languages/json.min.js';
-    hljs.registerLanguage('mtron', mtron);
-    hljs.registerLanguage('java', java);
-    hljs.registerLanguage('bash', bash);
-    hljs.registerLanguage('sql', sql);
-    hljs.registerLanguage('json', json);
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
     hljs.configure({
         ignoreUnescapedHTML: true,
         languages: ['mtron','java','bash','sql','json']

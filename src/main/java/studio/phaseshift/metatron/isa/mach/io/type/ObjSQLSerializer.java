@@ -359,14 +359,18 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
             }
 
             // datetime::T — use readDateTime for TIMESTAMP columns, or
-            // parse a datetime URI string from a VARCHAR column.
+            // parse a datetime URI string from a VARCHAR column.  The VARCHAR
+            // value was written as an ISO-8601 string via toSqlDatetimeString,
+            // so parse it back to a canonical datetime URI — wrapping the raw
+            // ISO string in uri(f(raw)) would produce an invalid datetime
+            // (e.g. datetime::<2026-08-25 22:34:11.533> with no host/port).
             if ("datetime".equals(typeName)) {
                 if (sqlType == Types.DATE || sqlType == Types.TIME || sqlType == Types.TIMESTAMP)
                     return readDateTime(rs, columnName);
                 final String raw = rs.getString(columnName);
                 if (raw == null || raw.isBlank()) return noobj();
                 try {
-                    return uri(f(raw), MATH_DATETIME_TID, null);
+                    return mathInstSet.parseDatetime(raw);
                 } catch (final Exception ignored) { /* fall through */ }
                 return readMaybeJSON(raw);
             }

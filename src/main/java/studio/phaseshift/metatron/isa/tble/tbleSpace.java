@@ -605,12 +605,21 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
                             this.sjvm(), aligned);
                     final List<IdObj> all = new ArrayList<>();
                     raw.forEachRemaining(kv -> {
-                        // Use pattern for exact node queries so the fURI matches what
-                        // locateBasePoly/unrollPoly produce — prevents dupes in resolveRead
-                        final fURI external = pattern.isNode()
-                                ? pattern
-                                : Space.Helper.routeToSpace(kv.furi(), this.routes());
-                        all.add(IdObj.of(Space.Helper.routeToSpace(kv.furi(), this.routes()), kv.obj()));
+                        // Use the value's base uri as the polyvid whenever the pattern carries a
+                        // wildcard, so unrollPoly expands against the stored value's location
+                        // rather than the pattern itself (a node pattern like field/+ would
+                        // otherwise fabricate keys under the wildcard segment).
+                        final fURI external = pattern.hasPattern()
+                                ? Space.Helper.routeToSpace(kv.furi(), this.routes())
+                                : pattern;
+                        final fURI rawUri = Space.Helper.routeToSpace(kv.furi(), this.routes());
+                        // Only surface the raw value when it sits at the pattern's depth; on a
+                        // wildcard read the unrollPoly below emits the matching children instead
+                        // (mirrors dcmntSpace's docVID.test(nodePattern) gate).  Compare in the
+                        // space-internal form: routeToSpace can reconstruct an external via a
+                        // different route entry in multi-route spaces.
+                        if (!pattern.hasPattern() || kv.furi().test(aligned.asNode()))
+                            all.add(IdObj.of(rawUri, kv.obj()));
                         if (pattern.hasPattern() && kv.obj().isPoly())
                             all.addAll(Space.Helper.unrollPoly(
                                     external, kv.obj().as(), pattern.asNode()));

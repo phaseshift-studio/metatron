@@ -85,7 +85,6 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class Agent extends MRec {
 
-    private final List<String> systemMessages = new ArrayList<>();
     private final AtomicReference<Tuple.Pair<fURI, fURI>> currentHook = new AtomicReference<>(null);
     /**
      * Holds the {@link CostCalculator} created during streaming so that
@@ -144,16 +143,6 @@ public class Agent extends MRec {
 
     public Agent(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(new ConcurrentHashMap<>(jvm), tid, vid);
-    }
-
-    // ── System messages ────────────────────────────────────────────
-
-    public void addSystemMessage(final String text) {
-        this.systemMessages.add(text);
-    }
-
-    public List<String> getSystemMessages() {
-        return this.systemMessages;
     }
 
     // ── User message ───────────────────────────────────────────────
@@ -274,7 +263,7 @@ public class Agent extends MRec {
      * Matches {@code <<TYPE:KEY>>...<</TYPE:KEY>>} blocks for LLM-to-feature signaling.
      */
     private static final Pattern MTRON_BLOCK =
-            Pattern.compile("<<(\\w+):(\\w+)>>\\s*(.+?)\\s*<</\\1:\\2>>\\s*$", Pattern.DOTALL);
+            Pattern.compile("<<(\\w+):(\\w+)>>\\s*(.+?)\\s*<</\\1:\\2>>", Pattern.DOTALL);
 
     /**
      * Maps block tag names to MIME types for deserialization.
@@ -389,12 +378,19 @@ public class Agent extends MRec {
                     SkillFeature.buildSkills(this, service);
                 if (this.hasFeature(TOOL))
                     ToolFeature.buildTools(this, service);
-                // if (this.hasFeature(SYSTEM))
-                //     SystemFeature.buildSystemMessage(this, service);
                 this.at(feat(CONCEPT)).ifPresent(c -> ((ConceptFeature) c).build(this, service));
                 //////////////////////////////////////////////////////////////////////////////////
+                // The single system-message channel: SystemFeature owns the contributions
+                // (features add via agent.feature(SYSTEM).<SystemFeature>as().addSystemMessage
+                // during onBeforeChat, Phase 1) and composes the text here at build time.
+                // Capture it now — AFTER all onBeforeChat hooks ran — then append to the
+                // model's base system prompt.  SystemFeature.clearSystemMessages() runs in
+                // the finally below after this chat completes.
+                final String systemText = this.hasFeature(SYSTEM)
+                        ? this.feature(SYSTEM).<SystemFeature>as().systemMessage()
+                        : "";
                 final AgentServices agent = service
-                        .systemMessageTransformer(current -> current + String.join("\n", this.systemMessages))
+                        .systemMessageTransformer(current -> current + systemText)
                         .streamingChatModel(LLMFactory.createChatInteraction(this,
                                 chat.at(uri(MODEL)),
                                 chat.at(uri(RESPONSE)),
@@ -539,7 +535,10 @@ public class Agent extends MRec {
             return ChatResult.chatResult();
         } finally {
             closeSpinner(waiting);
-            this.systemMessages.clear();
+            // SystemFeature owns the per-chat system-message state — clear it so the
+            // next chat re-surfaces its own system context.
+            if (this.hasFeature(SYSTEM))
+                this.feature(SYSTEM).<SystemFeature>as().clearSystemMessages();
             counter.decrementAndGet();
             this.currentDepth = 0;
 

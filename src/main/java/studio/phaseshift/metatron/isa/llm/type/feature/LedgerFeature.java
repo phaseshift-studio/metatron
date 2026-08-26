@@ -80,7 +80,10 @@ public class LedgerFeature extends AbstractFeature {
         ObjmtronSerializer.parse("""
                                  <%%%/../search> ->  |inst?#{*}<=#{?}(reg=>str::T){ *<%%%>.>-.-<[<< => >>.as(str::T).=?=(regex(*reg)>-.count()?>0)]=?=(>-.count()?>0) }
                                  """.replaceAll("%%%", ledgerVID.toString())).apply();
-        agent.addSystemMessage("ledger keys: " + ledger.asRec().keys().toList());
+        // Cross-feature communication: SystemFeature owns the system-message channel.
+        // If the agent lacks it, this feature is debilitated — log and proceed.
+        if (this.requireFeature(agent, SYSTEM))
+            agent.feature(SYSTEM).<SystemFeature>as().addSystemMessage("ledger keys: " + ledger.asRec().keys().toList());
         return noobj();
     }
 }

@@ -45,8 +45,10 @@
     <script src="../highlight/highlight.min.js" type="text/javascript"></script>
     <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
-    <!-- <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>-->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
     <script src="../lib/wow/wow.min.js" type="text/javascript"></script>
@@ -121,28 +123,15 @@
                     download
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
-                    <!--<li>
-                        <div class="terminal-box">
-                            <pre><code>npm i -g metatron-vm</code></pre>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="terminal-box">
-                            <pre><code>docker pull docker.phaseshift.studio/metatron:0.1-SNAPSHOT</code></pre>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="terminal-box">
-                            <span class="badge bg-danger">only linux tested</span>
-                            <pre><code>git clone https://github.com/phaseshift-studio/metatron.git
-mvn clean install -DskipTests=true
-bin/metatron</code></pre>
-                        </div>
-                    </li>-->
                     <li>
                         <div class="terminal-box">
                             <span class="badge bg-danger">only linux tested</span>
                             <pre><code>curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box">
+                            <pre><code>docker pull ghcr.io/phaseshift-studio/metatron:main</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -322,7 +311,7 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- type=&gt;[model::T,tool::T,session::T,iteration::T,system::T,chat_result::T,user::T,tool_request::T,ai::T,tool_result::T,...(20 more)],
+ type=&gt;[model::T,tool::T,session{?}::T,iteration::T,claim::T,loose_end::T,system::T,chat_result::T,user::T,tool_request::T,...(21 more)],
  inst=&gt;[
   as?model&lt;=rec(model::T),
   as?tool&lt;=docs(tool::T),
@@ -332,7 +321,8 @@ bin/metatron</code></pre>
   chat?chat_result&lt;=agent(str::T),
   embed?/m/vec/vec&lt;=model(#::T),
   interrupt?noobj{0}&lt;=agent(),
-  chat?chat_result&lt;=agent(str::T,rec::T)]]@/m/llm</code></pre>
+  chat?chat_result&lt;=agent(str::T,rec::T),
+  summarize?lst&lt;=session{?}(session=&gt;session{?}::T,model=&gt;choose([isa(model::T)=&gt;id(),isa(session{?}::T)=&gt;*rshift(agent).mult(model)]).rshift())]]@/m/llm</code></pre>
                     </div>
                 </div>
             </div>
@@ -340,7 +330,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">30</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">4</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">31</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">5</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -353,11 +343,17 @@ bin/metatron</code></pre>
 </a><a href="#__m__llm__chat_result" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">chat_result</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__llm__claim" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">claim</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__llm__feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__llm__iteration" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">iteration</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__llm__loose_end" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">loose_end</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__llm__message" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">message</span>
@@ -407,9 +403,6 @@ bin/metatron</code></pre>
 </a><a href="#__m__llm__feature__skill_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">skill_feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__llm__feature__stage_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">stage_feature</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__llm__feature__system_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">system_feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -449,11 +442,14 @@ bin/metatron</code></pre>
 </a><a href="#__m__llm__inst__interrupt?rng=noobj{0}&dom=__m__llm__agent" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">interrupt</span>
     <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__llm__inst__summarize?rng=__m__lst&dom=__m__llm__session{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">summarize</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
 </a></div>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">30</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">31</span></h3>
     <div class="card mb-3" id="__m__llm__agent">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -468,9 +464,9 @@ bin/metatron</code></pre>
     <p class="mb-0 text-light">an agent is an llm enriched with embodied capabilities</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
+  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
   <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
-  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__message__ai">
@@ -501,7 +497,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/audit_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?audit_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/audit_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
  {?}on_before_chat=&gt;#::T,
@@ -511,7 +507,7 @@ bin/metatron</code></pre>
  {?}before_tool_execution=&gt;#::T,
  {?}on_tool_executed=&gt;#::T,
  {?}on_complete_response=&gt;#::T,
- {?}on_error=&gt;#::T]</code></div></div>
+ ...(1 more)]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">lifecycle audit trail with table text and widget result</p>
 </div>
@@ -527,7 +523,7 @@ bin/metatron</code></pre>
   model=&gt;model::T,
   {?}response=&gt;{?}[to=&gt;#::T],
   {?}format=&gt;#::T]][ctor?chat_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/chat_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
  {?}on_before_chat=&gt;#::T,
@@ -537,7 +533,7 @@ bin/metatron</code></pre>
  {?}before_tool_execution=&gt;#::T,
  {?}on_tool_executed=&gt;#::T,
  {?}on_complete_response=&gt;#::T,
- {?}on_error=&gt;#::T]</code></div></div>
+ ...(1 more)]</code></div></div>
     
 </div><div class="card mb-3" id="__m__llm__chat_result">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -548,8 +544,8 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/chat_result</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  chat=&gt;#::T,
-  time=&gt;time::T,
+  {?}chat=&gt;#::T,
+  {?}time=&gt;time::T,
   {?}error=&gt;fail::T]]@/m/llm/chat_result</code></pre></div>
     
     <div class="card-body border-top py-2">
@@ -561,6 +557,39 @@ bin/metatron</code></pre>
   <a href="#{?}error" class="text-light">{?}error</a> <span class="text-light">=&gt;</span> <a href="#'a fail chain if errors occurred'" class="text-info">&#39;a fail chain if errors occurred&#39;</a>
 </pre>
 </div>
+</div><div class="card mb-3" id="__m__llm__claim">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">claim::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/llm/claim</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+  text=&gt;str::T,
+  kind=&gt;union([
+ decision,
+ problem,
+ solution,
+ observation]),
+  {?}source=&gt;[#{?}::T],
+  {?}concept=&gt;[#{?}::T],
+  {?}tier=&gt;isa(nat::T).else(1)]]@/m/llm/claim</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a distilled claim with provenance — the proposition layer above concept nouns</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the distilled proposition'" class="text-info">&#39;the distilled proposition&#39;</a>
+  <a href="#kind" class="text-light">kind</a> <span class="text-light">=&gt;</span> <a href="#'claim kind — decision, problem, solution, or observation'" class="text-info">&#39;claim kind — decision, problem, solution, or observation&#39;</a>
+  <a href="#{?}source" class="text-light">{?}source</a> <span class="text-light">=&gt;</span> <a href="#'message vids and__or external uris the claim derives from'" class="text-info">or external uris the claim derives from&#39;</a>
+  <a href="#{?}concept" class="text-light">{?}concept</a> <span class="text-light">=&gt;</span> <a href="#'concept graph links (auto_from refs)'" class="text-info">&#39;concept graph links (auto_from refs)&#39;</a>
+  <a href="#tier" class="text-light">tier</a> <span class="text-light">=&gt;</span> <a href="#'trust tier (nat), bounded by min(source tiers)'" class="text-info">&#39;trust tier (nat), bounded by min(source tiers)&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">claim::[text=&gt;&quot;the scratch project writes do not persist because there is no backing write primitive&quot;,	kind=&gt;problem,	source=&gt;[/usr/dr/message/4],	concept=&gt;[/usr/dr/concept/persistence],	tier=&gt;nat::1]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__llm__feature__comment_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -570,7 +599,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/comment_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?comment_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/comment_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
  {?}on_before_chat=&gt;#::T,
@@ -580,7 +609,7 @@ bin/metatron</code></pre>
  {?}before_tool_execution=&gt;#::T,
  {?}on_tool_executed=&gt;#::T,
  {?}on_complete_response=&gt;#::T,
- {?}on_error=&gt;#::T]</code></div></div>
+ ...(1 more)]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">allows user to interject with a comment in the current chat lifecycle of the agent</p>
 </div>
@@ -593,7 +622,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/concept_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?concept_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/concept_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
  {?}on_before_chat=&gt;#::T,
@@ -603,7 +632,7 @@ bin/metatron</code></pre>
  {?}before_tool_execution=&gt;#::T,
  {?}on_tool_executed=&gt;#::T,
  {?}on_complete_response=&gt;#::T,
- {?}on_error=&gt;#::T]</code></div></div>
+ ...(1 more)]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">extracts and normalizes concepts from the agent response and thinking stream</p>
 </div>
@@ -618,7 +647,7 @@ bin/metatron</code></pre>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[root=&gt;uri::T,rate=&gt;[
  in=&gt;currency::T,
  out=&gt;currency::T]]][ctor?cost_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/cost_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
  {?}on_before_chat=&gt;#::T,
@@ -628,7 +657,7 @@ bin/metatron</code></pre>
  {?}before_tool_execution=&gt;#::T,
  {?}on_tool_executed=&gt;#::T,
  {?}on_complete_response=&gt;#::T,
- {?}on_error=&gt;#::T]</code></div></div>
+ ...(1 more)]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">tracks real token-based LLM costs via CostCalculator, persists in/out/total to space</p>
 </div><div class="card-body py-2">
@@ -649,7 +678,7 @@ bin/metatron</code></pre>
         </span>
         <small class="text-muted code">/m/llm/feature</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[  {?}root=&gt;uri::T,
   {?}skill=&gt;[skill::T],
   {?}on_agent_ctor=&gt;#::T,
   {?}on_before_chat=&gt;#::T,
@@ -659,13 +688,14 @@ bin/metatron</code></pre>
   {?}before_tool_execution=&gt;#::T,
   {?}on_tool_executed=&gt;#::T,
   {?}on_complete_response=&gt;#::T,
-  {?}on_error=&gt;#::T]]@/m/llm/feature</code></pre></div>
+  ...(1 more)]]@/m/llm/feature</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">each concrete feature refines llm_feature::T with its own hook implementations</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}skill" class="text-light">{?}skill</a> <span class="text-light">=&gt;</span> <a href="#'skills associated with the feature'" class="text-info">&#39;skills associated with the feature&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri location of feature data'" class="text-info">&#39;the root uri location of feature data&#39;</a>
+  <a href="#{?}skill" class="text-light">{?}skill</a> <span class="text-light">=&gt;</span> <a href="#'skills associated with the feature'" class="text-info">&#39;skills associated with the feature&#39;</a>
   <a href="#{?}on_agent_ctor" class="text-light">{?}on_agent_ctor</a> <span class="text-light">=&gt;</span> <a href="#'inst?noobj<=agent(){ [-- one time setup --] }'" class="text-info">&#39;inst?noobj&lt;=agent(){ [-- one time setup --] }&#39;</a>
   <a href="#{?}on_before_chat" class="text-light">{?}on_before_chat</a> <span class="text-light">=&gt;</span> <a href="#'inst?#{?}<=agent(){ [-- non-noobj to short-circuit --] }'" class="text-info">&#39;inst?#{?}&lt;=agent(){ [-- non-noobj to short-circuit --] }&#39;</a>
   <a href="#{?}on_partial_response" class="text-light">{?}on_partial_response</a> <span class="text-light">=&gt;</span> <a href="#'inst?noobj<=agent(text=>str::T)'" class="text-info">&#39;inst?noobj&lt;=agent(text=&gt;str::T)&#39;</a>
@@ -673,7 +703,7 @@ bin/metatron</code></pre>
   <a href="#{?}on_partial_tool_call" class="text-light">{?}on_partial_tool_call</a> <span class="text-light">=&gt;</span> <a href="#'inst?noobj<=agent(request=>call::T)'" class="text-info">&#39;inst?noobj&lt;=agent(request=&gt;call::T)&#39;</a>
   <a href="#{?}before_tool_execution" class="text-light">{?}before_tool_execution</a> <span class="text-light">=&gt;</span> <a href="#'inst?noobj<=agent(request=>call::T)'" class="text-info">&#39;inst?noobj&lt;=agent(request=&gt;call::T)&#39;</a>
   <a href="#{?}on_tool_executed" class="text-light">{?}on_tool_executed</a> <span class="text-light">=&gt;</span> <a href="#'inst?noobj<=agent(result=>call::T)'" class="text-info">&#39;inst?noobj&lt;=agent(result=&gt;call::T)&#39;</a>
-  <a href="#{?}on_complete_response" class="text-light">{?}on_complete_response</a> <span class="text-light">=&gt;</span> <a href="#'inst?noobj<=agent(response=>str::T)'" class="text-info">&#39;inst?noobj&lt;=agent(response=&gt;str::T)&#39;</a>
+  <a href="#{?}on_complete_response" class="text-light">{?}on_complete_response</a> <span class="text-light">=&gt;</span> <a href="#'inst?noobj<=agent(result=>chat_result::T)'" class="text-info">&#39;inst?noobj&lt;=agent(result=&gt;chat_result::T)&#39;</a>
   <a href="#{?}on_error" class="text-light">{?}on_error</a> <span class="text-light">=&gt;</span> <a href="#'inst?noobj<=agent(fail=>fail::T)'" class="text-info">&#39;inst?noobj&lt;=agent(fail=&gt;fail::T)&#39;</a>
 </pre>
 </div>
@@ -714,7 +744,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/iteration_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?iteration_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/iteration_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
  {?}on_before_chat=&gt;#::T,
@@ -724,7 +754,7 @@ bin/metatron</code></pre>
  {?}before_tool_execution=&gt;#::T,
  {?}on_tool_executed=&gt;#::T,
  {?}on_complete_response=&gt;#::T,
- {?}on_error=&gt;#::T]</code></div></div>
+ ...(1 more)]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">overlays an iteration graph on the message ledger — each chat turn creates a linked iteration node with prev/next pointers and message back-references</p>
 </div><div class="card-body border-top py-2">
@@ -740,7 +770,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/ledger_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[{?}init=&gt;lst::T]][ctor?ledger_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/ledger_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
  {?}on_before_chat=&gt;#::T,
@@ -750,7 +780,7 @@ bin/metatron</code></pre>
  {?}before_tool_execution=&gt;#::T,
  {?}on_tool_executed=&gt;#::T,
  {?}on_complete_response=&gt;#::T,
- {?}on_error=&gt;#::T]</code></div></div>
+ ...(1 more)]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">Never cleared between chat calls. Agent reads via system message injection, writes via &lt;&lt;mtron:ledger&gt;&gt; blocks. Survives the entire session.</p>
 </div><div class="card-body py-2">
@@ -775,7 +805,7 @@ bin/metatron</code></pre>
   {?}max_time=&gt;#::T,
   {?}delay=&gt;#::T,
   {?}preserve=&gt;lst::T]][ctor?loop_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/loop_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
  {?}on_before_chat=&gt;#::T,
@@ -785,7 +815,7 @@ bin/metatron</code></pre>
  {?}before_tool_execution=&gt;#::T,
  {?}on_tool_executed=&gt;#::T,
  {?}on_complete_response=&gt;#::T,
- {?}on_error=&gt;#::T]</code></div></div>
+ ...(1 more)]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">multi-pass reasoning loop with iteration control and polling</p>
 </div><div class="card-body py-2">
@@ -798,6 +828,41 @@ bin/metatron</code></pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">loop_feature::[max_loop=&gt;5,delay=&gt;second::2]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__llm__loose_end">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">loose_end::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/llm/loose_end</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+  title=&gt;str::T,
+  desc=&gt;str::T,
+  status=&gt;union([
+ open,
+ in_progress,
+ resolved,
+ abandoned]),
+  {?}source=&gt;[#{?}::T],
+  {?}claim=&gt;[#{?}::T],
+  time=&gt;datetime::T]]@/m/llm/loose_end</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">an open problem a future session can pick up cold — the continuation point carried across sessions</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'short actionable title'" class="text-info">&#39;short actionable title&#39;</a>
+  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'what needs to happen and why'" class="text-info">&#39;what needs to happen and why&#39;</a>
+  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'open, in_progress, resolved, or abandoned'" class="text-info">&#39;open, in_progress, resolved, or abandoned&#39;</a>
+  <a href="#{?}source" class="text-light">{?}source</a> <span class="text-light">=&gt;</span> <a href="#'message vids and__or external uris the loose end derives from'" class="text-info">or external uris the loose end derives from&#39;</a>
+  <a href="#{?}claim" class="text-light">{?}claim</a> <span class="text-light">=&gt;</span> <a href="#'claims that define__resolve this loose end (auto_from refs)'" class="text-info">resolve this loose end (auto_from refs)&#39;</a>
+  <a href="#time" class="text-light">time</a> <span class="text-light">=&gt;</span> <a href="#'last updated timestamp'" class="text-info">&#39;last updated timestamp&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">loose_end::[title=&gt;&quot;wire the mcp_stdio transport&quot;,	desc=&gt;&quot;expose /mcp over stdin so harness can spawn metatron directly&quot;,	status=&gt;open,	source=&gt;[/usr/dr/message/4],	claim=&gt;[/usr/dr/claim/7],	time=&gt;datetime::&lt;//2026.08:25/15/48/02/251?tz=+0000&gt;]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__message">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -857,7 +922,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/recall_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?recall_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/recall_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
  {?}on_before_chat=&gt;#::T,
@@ -867,17 +932,17 @@ bin/metatron</code></pre>
  {?}before_tool_execution=&gt;#::T,
  {?}on_tool_executed=&gt;#::T,
  {?}on_complete_response=&gt;#::T,
- {?}on_error=&gt;#::T]</code></div></div>
+ ...(1 more)]</code></div></div>
     
 </div><div class="card mb-3" id="__m__llm__session">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">session::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec{?}" class="instset-doc-small-code text-info code">/m/rec{?}::T</a></span>
         </span>
         <small class="text-muted code">/m/llm/session</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[agent=&gt;uri{+}::T,user=&gt;uri{+}::T,algorithm=&gt;rec::T]]@/m/llm/session</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec{?}::T[?[agent=&gt;uri{+}::T,user=&gt;uri{+}::T,algorithm=&gt;rec::T]]@/m/llm/session</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">llm session session policy with algorithm config and a resolved lst of messages from sub-path */msg/*</p>
@@ -897,7 +962,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/session_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[session=&gt;uri::T]][ctor?session_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/session_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
  {?}on_before_chat=&gt;#::T,
@@ -907,7 +972,7 @@ bin/metatron</code></pre>
  {?}before_tool_execution=&gt;#::T,
  {?}on_tool_executed=&gt;#::T,
  {?}on_complete_response=&gt;#::T,
- {?}on_error=&gt;#::T]</code></div></div>
+ ...(1 more)]</code></div></div>
     
 </div><div class="card mb-3" id="__m__llm__skill">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -952,7 +1017,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/skill_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?skill_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/skill_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
  {?}on_before_chat=&gt;#::T,
@@ -962,31 +1027,8 @@ bin/metatron</code></pre>
  {?}before_tool_execution=&gt;#::T,
  {?}on_tool_executed=&gt;#::T,
  {?}on_complete_response=&gt;#::T,
- {?}on_error=&gt;#::T]</code></div></div>
+ ...(1 more)]</code></div></div>
     
-</div><div class="card mb-3" id="__m__llm__feature__stage_feature">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">stage_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__llm__feature" class="instset-doc-small-code text-info code">/m/llm/feature::T</a></span>
-        </span>
-        <small class="text-muted code">/m/llm/feature/stage_feature</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?stage_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/stage_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- {?}skill=&gt;[skill::T],
- {?}on_agent_ctor=&gt;#::T,
- {?}on_before_chat=&gt;#::T,
- {?}on_partial_response=&gt;#::T,
- {?}on_partial_thinking=&gt;#::T,
- {?}on_partial_tool_call=&gt;#::T,
- {?}before_tool_execution=&gt;#::T,
- {?}on_tool_executed=&gt;#::T,
- {?}on_complete_response=&gt;#::T,
- {?}on_error=&gt;#::T]</code></div></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">appends typed stage entries to res(stages). purely observational — no configuration needed.</p>
-</div>
 </div><div class="card mb-3" id="__m__llm__message__system">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1013,7 +1055,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/system_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?system_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/system_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
  {?}on_before_chat=&gt;#::T,
@@ -1023,7 +1065,7 @@ bin/metatron</code></pre>
  {?}before_tool_execution=&gt;#::T,
  {?}on_tool_executed=&gt;#::T,
  {?}on_complete_response=&gt;#::T,
- {?}on_error=&gt;#::T]</code></div></div>
+ ...(1 more)]</code></div></div>
     
 </div><div class="card mb-3" id="__m__llm__feature__think_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1034,7 +1076,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/think_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?think_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/think_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
  {?}on_before_chat=&gt;#::T,
@@ -1044,7 +1086,7 @@ bin/metatron</code></pre>
  {?}before_tool_execution=&gt;#::T,
  {?}on_tool_executed=&gt;#::T,
  {?}on_complete_response=&gt;#::T,
- {?}on_error=&gt;#::T]</code></div></div>
+ ...(1 more)]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">think feature captures thinking text during response generation</p>
 </div>
@@ -1089,7 +1131,7 @@ bin/metatron</code></pre>
         <small class="text-muted code">/m/llm/feature/tool_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[tool=&gt;lst::T]][ctor?tool_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/tool_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
  {?}on_before_chat=&gt;#::T,
@@ -1099,7 +1141,7 @@ bin/metatron</code></pre>
  {?}before_tool_execution=&gt;#::T,
  {?}on_tool_executed=&gt;#::T,
  {?}on_complete_response=&gt;#::T,
- {?}on_error=&gt;#::T]</code></div></div>
+ ...(1 more)]</code></div></div>
     
 </div><div class="card mb-3" id="__m__llm__message__tool_request">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1170,7 +1212,7 @@ bin/metatron</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">4</span></h3>
+    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">5</span></h3>
     <div class="card mb-3" id="__m__llm__inst__chat?rng=__m__llm__chat_result&dom=__m__llm__agent">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1219,6 +1261,24 @@ bin/metatron</code></pre>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__llm__agent" class="text-info">agent</a> <span class="text-light">=&gt;</span> <a href="#noobj{0}" class="text-success">noobj{0}</a></pre>
 </div>
+</div><div class="card mb-3" id="__m__llm__inst__summarize?rng=__m__lst&dom=__m__llm__session{?}">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">summarize</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__llm__session" data-bs-toggle="tooltip" title="domain" class="code text-info">session</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__lst" data-bs-toggle="tooltip" title="range" class="code text-success">lst</a></span></span>
+        </span>
+        <small class="text-muted code">/m/llm/inst/summarize?rng=/m/lst&amp;dom=/m/llm/session{?}</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__llm__inst__summarize?rng=__m__lst&dom=__m__llm__session{?}-doc-0-tab').click();document.getElementById('__m__llm__inst__summarize?rng=__m__lst&dom=__m__llm__session{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">summarize?rng=lst&dom=session{?}(session=>session{?}::T,model=>choose([isa(model::T)=>id(),isa(session{?}::T)=>*rshift(agent).mult(model)]).rshift()){<j>}</code></pre>
+</div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">distill a session&#39;s message ledger into claim::T and loose_end::T recs via a mini-task; the model emits &lt;&lt;json:claim&gt;&gt; and &lt;&lt;json:loose_end&gt;&gt; blocks that are parsed and anchored at &lt;agent&gt;/claim/ and &lt;agent&gt;/loose_end/</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a session to distill" class="text-info">a session to distill</a> <span class="text-light">=&gt;</span> <a href="#a lst of claim and loose_end vids distilled from the session" class="text-success">a lst of claim and loose_end vids distilled from the session</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">@dr/session/1.summarize(_)  [-- fluent --]  |  summarize(@dr/session/1)  [-- function --]</code></pre>
+</div>
 </div>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
@@ -1238,16 +1298,10 @@ bin/metatron</code></pre>
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
-    import mtron from './highlight/languages/mtron.min.js';
-    import java from './highlight/languages/java.min.js';
-    import bash from './highlight/languages/bash.min.js';
-    import sql from './highlight/languages/sql.min.js';
-    import json from './highlight/languages/json.min.js';
-    hljs.registerLanguage('mtron', mtron);
-    hljs.registerLanguage('java', java);
-    hljs.registerLanguage('bash', bash);
-    hljs.registerLanguage('sql', sql);
-    hljs.registerLanguage('json', json);
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
     hljs.configure({
         ignoreUnescapedHTML: true,
         languages: ['mtron','java','bash','sql','json']

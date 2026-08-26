@@ -1,9 +1,9 @@
 #!/bin/bash
 # bin/metatron — dev entry point for the metatron runtime.
 #
-# Compiles (if needed), resolves dependencies, and launches BootLoader
-# directly from target/classes/ + cached dependency JARs — no uber-jar,
-# no Maven JVM at runtime.
+# Dev mode (no lib/metatron.jar): compiles (if needed), resolves dependencies,
+# and launches BootLoader from target/classes/ + cached dependency JARs.
+# Installed mode (lib/metatron.jar from install.sh): launches the uber-jar.
 #
 # Usage:
 #   bin/metatron                                    # boots from boot/boot.mtron
@@ -19,50 +19,90 @@ set -euo pipefail
 cd "$(dirname "$(readlink -f "$0")")/.."
 
 # ── container toolchain: root FS is read-only, so use the in-repo JDK
-#    and the patched ./mvnw (JAVA_HOME/Maven caches live under .build/) ──
-MVNW="./mvnw"
+#    when present (Maven caches live under .build/) ──
 if [ -x "./.build/jdk/bin/java" ]; then JAVA_BIN="./.build/jdk/bin/java"; else JAVA_BIN="java"; fi
 
 # Source utility functions (spinner, etc.)
 . "$(dirname "$(readlink -f "$0")")/utility.sh"
 
-# ── dependency classpath cache ──────────────────────────────────────
-# Only rebuild when pom.xml changes.  After that, mvn compile is all
-# we need for source changes — the uber-jar is for distribution, not dev.
-CP_FILE=".mtron-classpath"
-STEP_RAN=0
-if [ ! -f "$CP_FILE" ] || [ pom.xml -nt "$CP_FILE" ]; then
-    MVN_LOG=$(mktemp)
-    set +e
-    "$MVNW" dependency:build-classpath -DincludeScope=runtime -Dmdep.outputFile="$CP_FILE" -q > "$MVN_LOG" 2>&1 &
-    spinner $! "resolving dependencies"
-    wait $!
-    MVN_EXIT=$?
-    set -e
-    grep -v "^WARNING:" "$MVN_LOG" 2>/dev/null || true
-    rm -f "$MVN_LOG"
-    if [ "$MVN_EXIT" -ne 0 ]; then exit "$MVN_EXIT"; fi
-    STEP_RAN=1
-fi
-CLASSPATH="target/classes:src/main/resources:$(tr -d '\n' < "$CP_FILE")"
+# ── run mode ────────────────────────────────────────────────────────
+# Installed deployments (install.sh) ship lib/metatron.jar and launch it
+# directly — no Maven, no source tree needed.  Dev checkouts have no lib/,
+# so they keep the classpath + recompile loop below.
+JVM_FLAGS=()
+LAUNCH=()
+if [ -f "lib/metatron.jar" ]; then
+    JVM_FLAGS=( --enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector
+                --add-opens=java.base/java.lang=ALL-UNNAMED
+                --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
+                --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+                --add-opens=java.base/java.util=ALL-UNNAMED
+                --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
+                --add-opens=java.base/java.io=ALL-UNNAMED
+                --add-opens=java.base/java.nio=ALL-UNNAMED
+                --add-opens=java.base/java.net=ALL-UNNAMED
+                --add-opens=java.base/sun.nio.cs=ALL-UNNAMED )
+    # --sun-misc-unsafe-memory-access exists only on JDK 23+; gate it so the
+    # install still works on the JDK 21/22 the install script permits.
+    JAVA_MAJOR=$("$JAVA_BIN" -version 2>&1 | sed -nE 's/.*version "([0-9]+).*/\1/p')
+    if [ "${JAVA_MAJOR:-0}" -ge 23 ]; then
+        JVM_FLAGS+=( --sun-misc-unsafe-memory-access=allow )
+    fi
+    LAUNCH=( -jar lib/metatron.jar )
+else
+    # ── dev toolchain: use the patched ./mvnw (JAVA_HOME/caches under .build/) ──
+    MVNW="./mvnw"
+    # mvnw needs .mvn/wrapper/maven-wrapper.properties, which is git-ignored and
+    # absent in a fresh clone. Fall back to system maven (install.sh guarantees `mvn`).
+    if [ ! -f ".mvn/wrapper/maven-wrapper.properties" ]; then
+        MVNW="mvn"
+    fi
 
-# ── compile (only if needed) ────────────────────────────────────────
-if [ ! -d target/classes ] || \
-   [ -n "$(find src -name '*.java' -newer target/classes -print -quit 2>/dev/null)" ]; then
-    MVN_LOG=$(mktemp)
-    set +e
-    "$MVNW" compile -q > "$MVN_LOG" 2>&1 &
-    # spinner $! "compiling"
-    wait $!
-    MVN_EXIT=$?
-    set -e
-    grep -v "^WARNING:" "$MVN_LOG" 2>/dev/null || true
-    rm -f "$MVN_LOG"
-    if [ "$MVN_EXIT" -ne 0 ]; then exit "$MVN_EXIT"; fi
-    STEP_RAN=1
+    # ── dependency classpath cache ──────────────────────────────────────
+    # Only rebuild when pom.xml changes.  After that, mvn compile is all
+    # we need for source changes — the uber-jar is for distribution, not dev.
+    CP_FILE=".mtron-classpath"
+    STEP_RAN=0
+    if [ ! -f "$CP_FILE" ] || [ pom.xml -nt "$CP_FILE" ]; then
+        MVN_LOG=$(mktemp)
+        set +e
+        "$MVNW" dependency:build-classpath -DincludeScope=runtime -Dmdep.outputFile="$CP_FILE" -q > "$MVN_LOG" 2>&1 &
+        spinner $! "resolving dependencies"
+        wait $!
+        MVN_EXIT=$?
+        set -e
+        grep -v "^WARNING:" "$MVN_LOG" 2>/dev/null || true
+        rm -f "$MVN_LOG"
+        if [ "$MVN_EXIT" -ne 0 ]; then exit "$MVN_EXIT"; fi
+        STEP_RAN=1
+    fi
+    CLASSPATH="target/classes:src/main/resources:$(tr -d '\n' < "$CP_FILE")"
+
+    # ── compile (only if needed) ────────────────────────────────────────
+    if [ ! -d target/classes ] || \
+       [ -n "$(find src -name '*.java' -newer target/classes -print -quit 2>/dev/null)" ]; then
+        MVN_LOG=$(mktemp)
+        set +e
+        "$MVNW" compile -q > "$MVN_LOG" 2>&1 &
+        # spinner $! "compiling"
+        wait $!
+        MVN_EXIT=$?
+        set -e
+        grep -v "^WARNING:" "$MVN_LOG" 2>/dev/null || true
+        rm -f "$MVN_LOG"
+        if [ "$MVN_EXIT" -ne 0 ]; then exit "$MVN_EXIT"; fi
+        STEP_RAN=1
+    fi
+    # Spinner already emits \n when done.  Only need this when nothing ran.
+    if [ "$STEP_RAN" -eq 0 ]; then echo; fi
+
+    JVM_FLAGS=( -Dlogback.configurationFile=conf/logback.xml
+                -Djava.util.logging.config.file=conf/logging.properties
+                --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
+                --enable-native-access=ALL-UNNAMED
+                --sun-misc-unsafe-memory-access=allow )
+    LAUNCH=( -cp "$CLASSPATH" studio.phaseshift.metatron.BootLoader )
 fi
-# Spinner already emits \n when done.  Only need this when nothing ran.
-if [ "$STEP_RAN" -eq 0 ]; then echo; fi
 
 # ── launch ──────────────────────────────────────────────────────────
 # Loop on EXIT_RESET (100) so the JVM can request a clean restart.
@@ -70,14 +110,7 @@ if [ "$STEP_RAN" -eq 0 ]; then echo; fi
 EXIT_RESET=100
 while true; do
     set +e
-    "$JAVA_BIN" \
-        -Dlogback.configurationFile=conf/logback.xml \
-        -Djava.util.logging.config.file=conf/logging.properties \
-        --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
-        --enable-native-access=ALL-UNNAMED \
-        --sun-misc-unsafe-memory-access=allow \
-        -cp "$CLASSPATH" \
-        studio.phaseshift.metatron.BootLoader "$@"
+    "$JAVA_BIN" "${JVM_FLAGS[@]}" "${LAUNCH[@]}" "$@"
     exit_code=$?
     set -e
     if [ "$exit_code" -ne "$EXIT_RESET" ]; then
