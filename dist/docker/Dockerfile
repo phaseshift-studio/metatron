@@ -19,7 +19,7 @@ ARG METATRON_VERSION
 
 # OCI metadata (replaces the deprecated MAINTAINER)
 LABEL org.opencontainers.image.title="metatron"
-LABEL org.opencontainers.image.description="A distributed data-oriented computing language and virtual machine"
+LABEL org.opencontainers.image.description="a distributed data-oriented computing language and virtual machine"
 LABEL org.opencontainers.image.licenses="AGPL-3.0"
 LABEL org.opencontainers.image.source="https://github.com/phaseshift-studio/metatron"
 LABEL org.opencontainers.image.vendor="PhaseShift Studio, LLC"
@@ -70,7 +70,7 @@ ENTRYPOINT ["java", \
 # Default boot.  The standard deployed boot is still being settled — mount your
 # own and pass its boot args as the command:
 #   docker run ... metatron "[boot=><boot/deploy.mtron>,log=>info]"
-CMD ["[boot=><boot/boot.mtron>,log=>info]"]
+CMD ["[boot=><.metatron/skills/drstynx/assets/drstynx.boot.mtron>,log=>info]"]
 
 # Assumes the boot serves http on 0.0.0.0:8777 (the container's healthcheck port).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
