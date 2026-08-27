@@ -16,13 +16,13 @@ RED = '\u001b[0;31m'
 GREEN = '\u001b[0;32m'
 BROWN = '\u001b[0;33m'
 BLUE = '\u001b[0;34m'
-PURPLE = '\u001b[0;35m'
+MAGENTA = '\u001b[0;35m'
 CYAN = '\u001b[0;36m'
 LIGHT_GRAY = '\u001b[0;37m'
 DARK_GRAY = '\u001b[1;30m'
 LIGHT_RED = '\u001b[1;31m'
 LIGHT_GREEN = '\u001b[1;32m'
-MUSTARD = '\u001b[1;33m'
+YELLOW = '\u001b[1;33m'
 LIGHT_BLUE = '\u001b[1;34m'
 LIGHT_PURPLE = '\u001b[1;35m'
 BOLD = '\u001b[1m'
@@ -40,31 +40,41 @@ except ImportError:
     print("wsplus requires the 'websockets' package: pip install websockets")
     sys.exit(1)
 
-BANNER = r"""
- __    __    ___  ____    _____  ___     __   ____  ______
+try:
+    import readline  # up-arrow history + line editing for input()
+except ImportError:
+    pass
+
+BANNER = rf"""
+{BLUE} __    __    ___  ____    _____  ___     __   ____  ______
 |  |__|  |  /  _]|    \  / ___/ /   \   /  ] /    ||      |
 |  |  |  | /  [_ |  o  )(   \_ |     | /  / |  o  ||      |
-|  |  |  ||    _]|     | \__  ||  O  |/  /  |     ||_|  |_|
+|  |  |  ||    _]|     {MAGENTA}| \__  ||  O  |/  /  |     ||_|  |_|
 |  '  '  ||   [_ |  O  | /  \ ||     /   \_ |  _  |  |  |
  \      / |     ||     | \    ||     \     ||  |  |  |  |
-  \_/\_/  |_____||_____|  \___| \___/ \____||__|__|  |__
-           wsplus — an mtron console (Ctrl-D to exit)"""
+  \_/\_/  |_____||_____|  \___| \___/ {CYAN}\____||__|__|  |__
+           wsplus — an mtron console (ctrl-c to :quit){NC}"""
 
 
 async def repl(url):
     async with websockets.connect(url) as ws:
         while True:
             try:
-                line = input(MUSTARD + "mtron> " + NC)
+                line = input(MAGENTA + "mtron" + GREEN + "> " + NC)
             except (EOFError, KeyboardInterrupt):
                 print()
                 return
             if not line.strip():
                 continue
+            if line.strip() in (":quit", ":exit"):
+                print()
+                return
             await ws.send(line)
             try:
                 result = await asyncio.wait_for(ws.recv(), 30)
                 text = result.decode() if isinstance(result, bytes) else str(result)
+                if not text.strip() or text.strip() == "noobj":  # silent for empty/noobj results
+                    continue
                 print(GREEN + "==>" + NC + text.replace("\n", "\n   "))
             except asyncio.TimeoutError:
                 print(RED + "==>ERROR: " + NC + "timed out")

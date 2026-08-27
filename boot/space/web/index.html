@@ -10,14 +10,17 @@
             color: #c9d1d9;
             font-family: ui-monospace, "JetBrains Mono", monospace;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
+            min-height: 100vh;
+            flex-direction: column;
+            text-align: center;
         }
 
         main {
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            flex: 1;
         }
 
         h1 {
@@ -35,17 +38,25 @@
         a {
             color: #58a6ff;
         }
+
+        footer {
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
 <main>
     <h1>metatron</h1>
     <p>a ring-oriented language and virtual machine</p>
-    <p>ws://&lt;host&gt;:8555 &nbsp;&middot;&nbsp; <a href="/mcp">/mcp</a></p>
 </main>
-</body>
 <footer>
-    <small><a href="http://phaseshift.studio">PhaseShift Studio</a> presents <a
-            href="http://metatron.phaseshift.studio/">metatron</a></small>
+    <p>
+        <small>
+            <a href="http://phaseshift.studio">PhaseShift Studio</a> presents <a
+                href="http://metatron.phaseshift.studio/">metatron</a>
+        </small>
+        <br/>
+    </p>
 </footer>
+</body>
 </html>

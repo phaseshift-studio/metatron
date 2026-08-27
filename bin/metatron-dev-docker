@@ -1,0 +1,49 @@
+#!/bin/sh
+# metatron-dev-docker — the container dev loop, in one command:
+#   mvn package → stage jar → kill old container → build image → run
+#
+# Usage:
+#   bin/metatron-dev-docker             # full loop (build jar + image)
+#   bin/metatron-dev-docker --no-build  # skip mvn+image (boot/conf edits only)
+#
+# The live boot/conf mounts mean boot file edits take effect on re-run without
+# an image rebuild — use --no-build for pure-boot iteration.
+#
+# Env:
+#   METATRON_USER       metatron user name (default: $USER)
+#   METATRON_CONTAINER  container name   (default: metatron)
+#   METATRON_IMAGE      image tag        (default: metatron:dev)
+set -eu
+
+cd "$(dirname "$(readlink -f "$0")")/.."
+
+NAME="${METATRON_CONTAINER:-metatron}"
+IMAGE="${METATRON_IMAGE:-metatron:dev}"
+USER_NAME="${METATRON_USER:-$USER}"
+
+if [ "${1-}" = "--no-build" ]; then
+  echo "==> skipping build (--no-build)"
+else
+  echo "==> mvn package (skip tests)"
+  mvn -q -DskipTests package
+  echo "==> staging uber-jar -> metatron.jar"
+  cp target/metatron-*-jar-with-dependencies.jar metatron.jar
+  echo "==> docker build -t $IMAGE"
+  docker build -f dist/docker/Dockerfile -t "$IMAGE" .
+fi
+
+echo "==> removing old container '$NAME'"
+docker rm -f "$NAME" >/dev/null 2>&1 || true
+
+echo "==> running $IMAGE as '$NAME'"
+docker run --name "$NAME" \
+  -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add "$(stat -c '%g' /var/run/docker.sock)" \
+  -v "$(pwd)/boot:/app/boot:ro" \
+  -v "$(pwd)/conf:/app/conf:ro" \
+  "$IMAGE" \
+  "[boot=><boot/docker.boot.mtron>,user=><$USER_NAME>,web=>[http=><http://0.0.0.0:8777>,ws=><ws://0.0.0.0:8555>],log=>info]"
+
+echo "==> up.  console: docker exec -it $NAME wsplus ws://localhost:8555/mtron"
+echo "==> stop:  docker stop $NAME    (or docker rm -f $NAME to kill+recreate)"

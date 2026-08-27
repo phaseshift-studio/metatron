@@ -92,6 +92,22 @@
             background-color: #7a2519;
             color: #ffffff;
         }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .terminal-box.click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .terminal-box.click-to-copy:active {
+            background-color: var(--mred);
+        }
+
+        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
+        .terminal-box.click-to-copy .hljs-copy-button {
+            display: none;
+        }
     </style>
     <script src="js/metatron.js" type="text/javascript"></script>
 </head>
@@ -123,13 +139,13 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
                     <li>
-                        <div class="terminal-box">
+                        <div class="terminal-box click-to-copy" title="click to copy">
                             <span class="badge bg-danger">only linux tested</span>
                             <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
                         </div>
                     </li>
                     <li>
-                        <div class="terminal-box">
+                        <div class="terminal-box click-to-copy" title="click to copy">
                             <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
                         </div>
                     </li>
@@ -280,6 +296,36 @@
         </div>
     </div>
 </nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target (no rollover copy button). The :active CSS turns the block
+    // red while pressed; this copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
 <main class="container my-4 flex-grow-1">
 <div class="container-xxl py-5">
     <h1 class="text-primary text-center pt-2 pb-1 glow-text">Tractatus Algebraicus Metatronicus</h1>
@@ -585,11 +631,22 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |&lt;1&gt;?int&lt;=#{?}(){1}@&lt;1&gt;   [-- 1 --]
 ==&gt;1
 mtron&gt; &lt;1&gt;()                     [-- 2 --]
-==&gt;1
 mtron&gt; 10.&lt;1&gt;()                  [-- 3 --]
-==&gt;1
+==&gt;fail::[unable to determine inst function:
+   	10          =&gt; 1?dom=int()@&lt;1&gt;   | [inst]
+   	int::T      =&gt; int::T   |  \_dom
+   	int::T     ==&gt; [,]   |  \_args]@/sys/fail/180
 mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
-==&gt;13</code></pre>
+==&gt;fail::[apply failure:
+   	[lhs]    │ 12
+   	 \_type  │ /m/int
+   	  \_pred │ []
+   	[inst]   │ plus?rng=int&amp;dom=int(fail::[unable to determine inst function:]@/sys/fail/184){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
+   	 \_dom   │ int::T
+   	 \_args  │ [fail::[unable to determine inst function:]@/sys/fail/186][MTronException&lt;127&gt;:fail::[unable to determine inst function:...]][fail::[unable to determine inst function:
+   	12          =&gt; 1?dom=int()   | [inst]
+   	int::T      =&gt; int::T   |  \_dom
+   	int::T     ==&gt; [,]   |  \_args]@/sys/fail/182 [value] unable to convert fail::T]@/sys/fail/188</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -627,15 +684,54 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;+/#/&gt;
-==&gt;&lt;1&gt;=&gt;plus?rng=int&amp;dom=int(1){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;boot/args/boot=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;
 ==&gt;boot/args=&gt;[
     log=&gt;info,
     boot=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;,
     local=&gt;booger]
-==&gt;boot/args/log=&gt;info
+==&gt;&lt;1/x/total&gt;=&gt;15.0000
+==&gt;v5/name=&gt;'ripple'
+==&gt;chicken=&gt;animal{*}::T@chicken
+==&gt;boot/args/local=&gt;booger
+==&gt;v6/age=&gt;35
+==&gt;&lt;1/x&gt;=&gt;[item=&gt;'book',total=&gt;15.0000,seller=&gt;!*g:V/4]@&lt;1/x&gt;
+==&gt;&lt;1&gt;=&gt;plus?rng=int&amp;dom=int(fail::[unable to determine inst function:]@/sys/fail/190){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
+==&gt;v5/lang=&gt;java
+==&gt;knows=&gt;edge::T[?[weight=&gt;real::T]]@knows
+==&gt;person=&gt;vrtx::T[?[name=&gt;str::T,age=&gt;int::T]]@person
+==&gt;animals=&gt;rec::T[?[
+     __mtron_tid=&gt;str::T,
+     name=&gt;str::T,
+     age=&gt;int::T,
+     {?}shelter=&gt;rec::T]]@animals
+==&gt;v1/outE_=&gt;[knows=&gt;{[weight=&gt;0.5000,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5000,inV_=&gt;!*v4,outV_=&gt;!*v1]}]
+==&gt;v2/name=&gt;'vadas'
+==&gt;v1/created=&gt;[weight=&gt;0.2000,inV_=&gt;!*v3,outV_=&gt;!*v1]
+==&gt;v4=&gt;[name=&gt;'lop']
+==&gt;v1=&gt;[
+    name=&gt;'marko',
+    age=&gt;29,
+    outE_=&gt;[knows=&gt;{[weight=&gt;0.5000,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5000,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
+    created=&gt;[weight=&gt;0.2000,inV_=&gt;!*v3,outV_=&gt;!*v1]]
+==&gt;v6/out_=&gt;[created=&gt;!*v4]
+==&gt;v1/name=&gt;'marko'
 ==&gt;boot/file=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;@boot/file
-==&gt;boot/args/local=&gt;booger</code></pre>
+==&gt;equipment=&gt;rec{*}::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment
+==&gt;&lt;1/x/item&gt;=&gt;'book'
+==&gt;v6=&gt;[name=&gt;'peter',age=&gt;35,out_=&gt;[created=&gt;!*v4]]
+==&gt;animal=&gt;rec{*}::T[?[name=&gt;str::T,age=&gt;int::T]]@animal
+==&gt;v2=&gt;[name=&gt;'vadas']
+==&gt;v4/name=&gt;'lop'
+==&gt;v1/age=&gt;29
+==&gt;boot/args/log=&gt;info
+==&gt;v3=&gt;[name=&gt;'josh']
+==&gt;v6/name=&gt;'peter'
+==&gt;software=&gt;vrtx::T[?[name=&gt;str::T,lang=&gt;str::T]]@software
+==&gt;&lt;1/x/seller&gt;=&gt;!*g:V/4
+==&gt;v3/name=&gt;'josh'
+==&gt;created=&gt;edge{*}::T[?[weight=&gt;real::T]]@created
+==&gt;out=&gt;out?rng=rec{*}&amp;dom=rec(label=&gt;uri{*}::T){rshift(outE_).rshift(*label).rshift(inV_)}
+==&gt;v5=&gt;[name=&gt;'ripple',lang=&gt;java]</code></pre>
 </div>
 </div>
 </div>
@@ -1009,7 +1105,7 @@ mtron&gt;  10.is_divisible('abc')
    	  \_pred │ []
    	[inst]   │ mod?rng=int&amp;dom=int('abc'){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ ['abc'][MTronException&lt;127&gt;:'abc' [value] unable to convert str::T]]['abc' [value] unable to convert str::T]@/sys/fail/48</code></pre>
+   	 \_args  │ ['abc'][MTronException&lt;127&gt;:'abc' [value] unable to convert str::T]]['abc' [value] unable to convert str::T]@/sys/fail/208</code></pre>
 </div>
 </div>
 </div>
@@ -1063,7 +1159,7 @@ This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> p
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​1​
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]]@/sys/fail/50
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]]@/sys/fail/210
 mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​2​
 mtron&gt; *trpl     ​3​</code></pre>
 </div>
@@ -1411,6 +1507,25 @@ mtron&gt; httpspace::[host     =&gt; http://localhost:8777,
                    pattern  =&gt; &lt;http://#&gt;,
                    route    =&gt; [/mcp     =&gt; mcp_mtron_http,
                                 /       =&gt; &lt;&gt;]]@/sys/space/web/http
+==&gt;fail::[unable to construct httpspace::T: fail::[apply failure:
+   	[lhs]    │ [
+    host=&gt;http://localhost:8777,
+    q=&gt;[mimeq::[pattern=&gt;mimeq,post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
+    pattern=&gt;http://#,
+    route=&gt;[/mcp=&gt;mcp_mtron_http,/=&gt;&lt;&gt;]]@/sys/space/web/http
+   	 \_type  │ /m/rec
+   	  \_pred │ []
+   	[inst]   │ /m/web/space/httpspace/ctor?rng=httpspace&amp;dom=#{?}([
+     host=&gt;http://localhost:8777,
+     q=&gt;[mimeq::[pattern=&gt;mimeq,post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
+     pattern=&gt;http://#,
+     route=&gt;[/mcp=&gt;mcp_mtron_http,/=&gt;&lt;&gt;]]@/sys/space/web/http){&lt;j&gt;}
+   	 \_dom   │ #{?}::T
+   	 \_args  │ [[
+    host=&gt;http://localhost:8777,
+    q=&gt;[mimeq::[pattern=&gt;mimeq,post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
+    pattern=&gt;http://#,
+    route=&gt;[/mcp=&gt;mcp_mtron_http,/=&gt;&lt;&gt;]]@/sys/space/web/http][Net&lt;-2&gt;:Address already in use[Net&lt;-2&gt;:Address already in use] ← Address already in use]][Address already in use[Net&lt;-2&gt;:Address already in use]][Address already in use]@/sys/fail/232]@/sys/fail/234
 mtron&gt; wsspace::[host     =&gt; ws://localhost:8555,
                  pattern  =&gt; &lt;ws://#&gt;,
                  q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
@@ -1575,7 +1690,14 @@ The purpose of breaking up the example into two expression is to highlight the O
                to(http://localhost:11434/api/show).
                =?=[capabilities=&gt;has(thinking).has(tools)]].dom().
          order(&gt;&gt;size * -1).
-         take(1).to(ollama_model)</code></pre>
+         take(1).to(ollama_model)
+==&gt;fail::[apply failure:
+   	[lhs]    │ noobj
+   	 \_type  │ noobj{0}
+   	  \_pred │ []
+   	[inst]   │ *http://localhost:11434/api/tags/+
+   	 \_dom   │ #{?}::T
+   	 \_args  │ [http://localhost:11434/api/tags/+][MTronException&lt;127&gt;:no active space supports pattern http://localhost:11434/api/tags/+]][no active space supports pattern http://localhost:11434/api/tags/+]@/sys/fail/268</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1700,12 +1822,6 @@ mtron&gt; tB::1.0.as(mB::T)     ​3​
 [source,mtron]
 ----
 mtron> *<fs:agent.mtron>     ​1​
-==>fail::[parse error at line 2, col 1:
-     ...agent_id=>'testy']@</usr/agent/memory>;
-   [,]@</usr/agent/notes>;
-   mcp_mtron_ws::[h...
-                                                ^
-     could not parse at '[']
 mtron> *<fs:agent.mtron/feature>     ​2​
 ----
 
@@ -1811,7 +1927,7 @@ mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*eval],
           response  => [to=>_]]]
-==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/106
+==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/270
 ----
 
 [source,mtron]
@@ -1842,18 +1958,64 @@ As such, an MCP client has an natural mapping to an LLM tool feature.
 [source,mtron]
 ----
 mtron> mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
-==>fail::[unable to construct mcp_client::T: fail::[apply failure:
-   	[lhs]    │ [host=>ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
-   	 \_type  │ /m/rec
-   	  \_pred │ []
-   	[inst]   │ ctor?rng=mcp_client&dom=#{?}([host=>ws://localhost:8555/mcp]@/usr/ai/mcp/mtron){<j>}
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [[host=>ws://localhost:8555/mcp]@/usr/ai/mcp/mtron][SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← ...] ← java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.util.concurrent.ExecutionException: java.net.ConnectException ← ...]][java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← ...]][java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException][java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/110]@/sys/fail/112
+==>mcp_client::[
+    host=>ws://localhost:8555/mcp,
+    status=>!inst?bool<=#{?}(),
+    tool=>[
+     m_inst_write_memory=>tool::[
+      inst=>inst?#{?}<=#{?}(current_memory=>'the memory to remember -- a str::T, a markdown::T, etc.',previous_memory=>'a previous memory vid to chain current memory to'),
+      name=>m_inst_write_memory,
+      desc=>'(experimental) returns a memory relation of the form(curren...',
+      arg=>[
+       current_memory=>'the memory to remember -- a str::T, a markdown::T, etc.',
+       previous_memory=>'a previous memory vid to chain current memory to']],
+     m_inst_read_memory=>tool::[
+      inst=>inst?#{?}<=#{?}(memory_vid=>'the vid of the memory to read'),
+      name=>m_inst_read_memory,
+      desc=>'(experimental) returns the result of reading the provided m...',
+      arg=>[memory_vid=>'the vid of the memory to read']],
+     m_inst_eval_mtron=>tool::[
+      inst=>inst?#{?}<=#{?}(code=>'mtron code to evaluate'),
+      name=>m_inst_eval_mtron,
+      desc=>'returns the result of evaluating the provided mtron express...',
+      arg=>[code=>'mtron code to evaluate']],
+     m_inst_list_space=>tool::[
+      inst=>inst?#{?}<=#{?}(),
+      name=>m_inst_list_space,
+      desc=>'returns a rec identifying all active metatron spaces',
+      arg=>[=>]],
+     m_inst_router_info=>tool::[
+      inst=>inst?#{?}<=#{?}(),
+      name=>m_inst_router_info,
+      desc=>'returns router vid, tid, and space count',
+      arg=>[=>]],
+     m_inst_find_inst=>tool::[
+      inst=>inst?#{?}<=#{?}(pattern=>'the inst tid to match',dom=>'the dom of inst to match (can be added to pattern arg)',rng=>'the rng of inst to match (can be added to pattern arg'),
+      name=>m_inst_find_inst,
+      desc=>'returns a lst of all instruction pattern matches w/ documen...',
+      arg=>[
+       pattern=>'the inst tid to match',
+       dom=>'the dom of inst to match (can be added to pattern arg)',
+       rng=>'the rng of inst to match (can be added to pattern arg']],
+     m_inst_spawn_wsclient=>tool::[
+      inst=>inst?#{?}<=#{?}(host=>'the full ws:// uri of the websocket server to connect to',on_message=>'the function to evaluate on every received message'),
+      name=>m_inst_spawn_wsclient,
+      desc=>'create a websocket client with provided on_message behavior',
+      arg=>[
+       host=>'the full ws:// uri of the websocket server to connect to',
+       on_message=>'the function to evaluate on every received message']],
+     m_inst_spawn_wshandler=>tool::[
+      inst=>inst?#{?}<=#{?}(host=>'the full ws:// uri of the websocket handler to expose',on_message=>'the function to evaluate on every received message'),
+      name=>m_inst_spawn_wshandler,
+      desc=>'create a websocket handler with provided on_message behavior',
+      arg=>[
+       host=>'the full ws:// uri of the websocket handler to expose',
+       on_message=>'the function to evaluate on every received message']]]]@/usr/ai/mcp/mtron
 mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*/usr/ai/mcp/mtron],
           response  => [to=>_]]]
-==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/114
+==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/272
 ----
 
 Given that an `mcp_client::T` is an index of `insts`.
@@ -1930,7 +2092,7 @@ mtron> *ollama:+.
    	  \_pred │ []
    	[inst]   │ *ollama:+
    	 \_dom   │ #{?}::T
-   	 \_args  │ [ollama:+][MTronException<127>:no active space supports pattern ollama:+]][no active space supports pattern ollama:+]@/sys/fail/140
+   	 \_args  │ [ollama:+][MTronException<127>:no active space supports pattern ollama:+]][no active space supports pattern ollama:+]@/sys/fail/298
 ----
 
 <1> create a `lst` to server as the an ordered sequence of chat interactions.
@@ -2293,7 +2455,7 @@ Note the use of the tools provided to the agent.
    	  \_pred │ []
    	[inst]   │ plus?rng=datetime&amp;dom=int(b){&lt;j&gt;}
    	 \_dom   │ int::T
-   	 \_args  │ [b][Obj&lt;606&gt;:unable to convert int::T to uri::T[Obj&lt;606&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Uri (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Uri are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Uri (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Uri are in unnamed module of loader 'app')]][unable to convert int::T to uri::T[Obj&lt;606&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Uri (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Uri are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Uri (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Uri are in unnamed module of loader 'app')]@/sys/fail/42
+   	 \_args  │ [b][Obj&lt;606&gt;:unable to convert int::T to uri::T[Obj&lt;606&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Uri (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Uri are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Uri (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Uri are in unnamed module of loader 'app')]][unable to convert int::T to uri::T[Obj&lt;606&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Uri (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Uri are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Uri (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Uri are in unnamed module of loader 'app')]@/sys/fail/52
 mtron&gt; */sys/fail/+     ​2​
 mtron&gt; */sys/fail/+.catch(_)     ​3​
 mtron&gt; */sys/fail     ​4​</code></pre>
@@ -2468,7 +2630,7 @@ mtron&gt; nat::4     ​2​
 mtron&gt; int::-4     ​3​
 ==&gt;-4
 mtron&gt;  nat::-4     ​4​
-==&gt;fail::[-4 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/32
+==&gt;fail::[-4 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/644
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;int::T]]@chicken     ​5​
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​6​
 ==&gt;chicken::[name=&gt;'snowbutt',age=&gt;7]
@@ -2476,9 +2638,9 @@ mtron&gt;  chicken::[name=&gt;'punky',age=&gt;'four']     ​7​
 ==&gt;fail::[obj does not match chicken::T
      [name=&gt;'punky',age=&gt;'four']
          X=&gt;
-     rec::T[?[name=&gt;str::T,age=&gt;int::T]]@chicken
+     animal::T[?[name=&gt;str::T,age=&gt;int::T]]@chicken
      ----------------------------------------------------------------------
-     [name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,age=&gt;(/=&gt;age)=&gt;'four'=&gt;X=&gt;int::T]]@/sys/fail/34</code></pre>
+     [name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,age=&gt;(/=&gt;age)=&gt;'four'=&gt;X=&gt;int::T]]@/sys/fail/646</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2547,7 +2709,7 @@ mtron&gt;  -21.as(int::T).as(nat::T).as(age::T)     ​4​
    	  \_pred │ []
    	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-21 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-21 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/36
+   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-21 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-21 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/648
 mtron&gt;  121.as(int::T).as(nat::T).as(age::T)     ​5​
 ==&gt;fail::[apply failure:
    	[lhs]    │ nat::121
@@ -2555,7 +2717,7 @@ mtron&gt;  121.as(int::T).as(nat::T).as(age::T)     ​5​
    	  \_pred │ [is(gt(0))]
    	[inst]   │ as?rng=age&amp;dom=int(age::T){&lt;j&gt;}@<i class="conum" data-value="3"></i><b>(3)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [age::T][MTronException&lt;127&gt;:nat::121 is not a nat::T[is(lt(120))]@age [structural]]][nat::121 is not a nat::T[is(lt(120))]@age [structural]]@/sys/fail/38
+   	 \_args  │ [age::T][MTronException&lt;127&gt;:nat::121 is not a nat::T[is(lt(120))]@age [structural]]][nat::121 is not a nat::T[is(lt(120))]@age [structural]]@/sys/fail/650
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;age::T]]@chicken     ​6​
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​7​
 ==&gt;chicken::[name=&gt;'snowbutt',age=&gt;7]
@@ -2563,11 +2725,11 @@ mtron&gt;  chicken::[name=&gt;'punky',age=&gt;444]     ​8​
 ==&gt;fail::[obj does not match chicken::T
      [name=&gt;'punky',age=&gt;444]
          X=&gt;
-     rec::T[?[
+     animal::T[?[
        name=&gt;str::T,
        age=&gt;age::T]]@chicken
-     -------------------------------------------------------------------
-     [name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,age=&gt;(/=&gt;age)=&gt;444=&gt;X=&gt;age::T]]@/sys/fail/40</code></pre>
+     -------------------------------------------------------------------------------------------------
+     [name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,age=&gt;(/=&gt;age)=&gt;444=&gt;X=&gt;age::T,age=&gt;(==&gt;age)=&gt;444=&gt;==&gt;int::T]]@/sys/fail/652</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2686,10 +2848,10 @@ mtron&gt;  chicken::[name=&gt;'snowbutt',age=&gt;7].as(human::T)     ​5​
    	 \_type  │ chicken
    	  \_pred │ [isa([
      name=&gt;str::T,
-     age=&gt;age::T])]
+     age=&gt;age::T]), isa([name=&gt;str::T,age=&gt;int::T])]
    	[inst]   │ as?rng=human&amp;dom=rec(human::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ rec::T
-   	 \_args  │ [human::T][MTronException&lt;127&gt;:chicken::[name=&gt;'snowbutt',age=&gt;7] is not a human::T [nominal]]][chicken::[name=&gt;'snowbutt',age=&gt;7] is not a human::T [nominal]]@/sys/fail/42
+   	 \_args  │ [human::T][MTronException&lt;127&gt;:chicken::[name=&gt;'snowbutt',age=&gt;7] is not a human::T [nominal]]][chicken::[name=&gt;'snowbutt',age=&gt;7] is not a human::T [nominal]]@/sys/fail/654
 mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)     ​6​
 ==&gt;chicken::[name=&gt;'fuzzy feet',age=&gt;2]
 mtron&gt; 'punky'.as(chicken::T)     ​7​
@@ -2699,9 +2861,9 @@ mtron&gt; 'punky'.as(chicken::T)     ​7​
    	  \_pred │ []
    	[inst]   │ as?rng=chicken&amp;dom=str(chicken::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ str::T
-   	 \_args  │ [chicken::T][MTronException&lt;127&gt;:'punky' is not a rec::T[?[...]]['punky' is not a rec::T[?[
+   	 \_args  │ [chicken::T][MTronException&lt;127&gt;:'punky' is not a animal::T[?[...]]['punky' is not a animal::T[?[
      name=&gt;str::T,
-     age=&gt;age::T]]@chicken [structural]]@/sys/fail/44</code></pre>
+     age=&gt;age::T]]@chicken [structural]]@/sys/fail/656</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2807,7 +2969,7 @@ mtron&gt; *nat     ​2​
 mtron&gt; nat::2     ​3​
 ==&gt;nat::2
 mtron&gt; nat::-2     ​4​
-==&gt;fail::[-2 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/46
+==&gt;fail::[-2 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/658
 mtron&gt; 2.as(nat::T)     ​5​
 ==&gt;nat::2
 mtron&gt;  -2.as(nat::T)     ​6​
@@ -2817,7 +2979,7 @@ mtron&gt;  -2.as(nat::T)     ​6​
    	  \_pred │ []
    	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-2 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-2 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/48
+   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-2 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-2 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/660
 mtron&gt;  nat::2 * -1     ​7​
 ==&gt;fail::[apply failure:
    	[lhs]    │ nat::2
@@ -2825,7 +2987,7 @@ mtron&gt;  nat::2 * -1     ​7​
    	  \_pred │ [is(gt(0))]
    	[inst]   │ mult?rng=int&amp;dom=int(-1){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [-1][MTronException&lt;127&gt;:-2 is not a int::T[is(gt(0))]@/m/math/nat]][-2 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/50</code></pre>
+   	 \_args  │ [-1][MTronException&lt;127&gt;:-2 is not a int::T[is(gt(0))]@/m/math/nat]][-2 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/662</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2852,7 +3014,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{r}}M{{r}}E{{c}}t{{g}}a{{m}}T{{y}}R{{b}}O{{y}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{r}}m{{m}}e{{y}}T{{c}}A{{g}}t{{g}}r{{r}}o{{m}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -2946,7 +3108,7 @@ mtron&gt; a/b/c * d/e/f     ​6​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 'metatron'.as(bytes::T)     ​1​
 ==&gt;0x6d65746174726f6e
 mtron&gt; bytes::'48656c6c6f'     ​2​
-==&gt;fail::['48656c6c6f' is not a bytes::T]@/sys/fail/60</code></pre>
+==&gt;fail::['48656c6c6f' is not a bytes::T]@/sys/fail/672</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3409,7 +3571,7 @@ mtron&gt; filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;     �
 ==&gt;fail::[parse error at line 1, col 19:
      filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;
                        ^
-     could not parse at '&lt;']@/sys/fail/96
+     could not parse at '&lt;']@/sys/fail/708
 mtron&gt; *filtered     ​3​</code></pre>
 </div>
 </div>
@@ -3503,7 +3665,7 @@ This constraint is a refinement of <code>int</code> (a well defined subset).</p>
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt;  nat::-10
-==&gt;fail::[-10 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/114
+==&gt;fail::[-10 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/726
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[apply failure:
    	[lhs]    │ -10
@@ -3511,7 +3673,7 @@ mtron&gt;  int::-10.as(nat::T)
    	  \_pred │ []
    	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/116</code></pre>
+   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/728</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3609,7 +3771,7 @@ In order to constrain an <code>int</code> to this definition, a <strong>refineme
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt;  nat::-10
-==&gt;fail::[-10 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/118
+==&gt;fail::[-10 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/730
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[apply failure:
    	[lhs]    │ -10
@@ -3617,7 +3779,7 @@ mtron&gt;  int::-10.as(nat::T)
    	  \_pred │ []
    	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/120</code></pre>
+   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/732</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3637,11 +3799,11 @@ mtron&gt; int::T</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat::125
-==&gt;fail::[125 is not a int::T[is(lt(120))]@/m/math/nat]@/sys/fail/122
+==&gt;fail::[125 is not a int::T[is(lt(120))]@/m/math/nat]@/sys/fail/734
 mtron&gt; age::125
-==&gt;fail::[125 is not a int::T[is(lt(120))]@/m/math/nat]@/sys/fail/124
+==&gt;fail::[125 is not a int::T[is(lt(120))]@/m/math/nat]@/sys/fail/736
 mtron&gt;  nat::125.as(age::T)
-==&gt;fail::[125 is not a int::T[is(lt(120))]@/m/math/nat]@/sys/fail/126
+==&gt;fail::[125 is not a int::T[is(lt(120))]@/m/math/nat]@/sys/fail/738
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[apply failure:
    	[lhs]    │ 125
@@ -3649,7 +3811,7 @@ mtron&gt;  125.as(nat::T).as(age::T)
    	  \_pred │ []
    	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [nat::T][MTronException&lt;127&gt;:125 is not a int::T[is(lt(120))]@/m/math/nat [structural]]][125 is not a int::T[is(lt(120))]@/m/math/nat [structural]]@/sys/fail/128</code></pre>
+   	 \_args  │ [nat::T][MTronException&lt;127&gt;:125 is not a int::T[is(lt(120))]@/m/math/nat [structural]]][125 is not a int::T[is(lt(120))]@/m/math/nat [structural]]@/sys/fail/740</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -3830,7 +3992,7 @@ mtron&gt; memspace::[
 ==&gt;console::[=&gt;]@/usr/ui/console
 mtron&gt; */usr/ui/console/pane/0     ​2​
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​
-==&gt;fail::[unable to locate inst-f of /usr/ui/console/pane/0/result('printed at ==&gt;xyz')]@/sys/fail/32</code></pre>
+==&gt;fail::[unable to locate inst-f of /usr/ui/console/pane/0/result('printed at ==&gt;xyz')]@/sys/fail/34</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3946,7 +4108,7 @@ mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-.map(&lt;${g:V/_}&gt;)&gt;&gt;+  
    	  \_pred │ []
    	[inst]   │ rshift?rng=B{*}&amp;dom=A(&lt;+&gt;){&lt;j&gt;}@<i class="conum" data-value="4"></i><b>(4)</b>
    	 \_dom   │ A::T
-   	 \_args  │ [&lt;+&gt;][MTronException&lt;127&gt;:unable to parse ${g to a furi: ${g]][unable to parse ${g to a furi: ${g]@/sys/fail/48</code></pre>
+   	 \_args  │ [&lt;+&gt;][MTronException&lt;127&gt;:unable to parse ${g to a furi: ${g]][unable to parse ${g to a furi: ${g]@/sys/fail/466</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4917,7 +5079,7 @@ mtron> -->
 ==>fail::[parse error at line 1, col 1:
      -->
      ^
-     could not parse at '-']@/sys/fail/32
+     could not parse at '-']@/sys/fail/750
 mtron> ++++
 mtron> [discrete]
 ==>[discrete]
@@ -4927,16 +5089,16 @@ mtron> === Navigating the Reference Structure
 ==>fail::[parse error at line 1, col 1:
      === Navigating the Reference Structure
      ^
-     could not parse at '=']@/sys/fail/34
+     could not parse at '=']@/sys/fail/752
 mtron> Metatron is address-first: `a` answers the *address*, `*a` answers the *value*.
 ==>fail::[parse error at line 1, col 9:
      Metatron is address-first: `a` answers the *addr...
              ^
-     could not parse at ' ']@/sys/fail/36
+     could not parse at ' ']@/sys/fail/754
 mtron> The uri is the reference; the obj is the referent — and the same operator walks either side of the reference.
-==>fail::[Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null[MType<56>:Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]][Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]@/sys/fail/38
+==>fail::[Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null[MType<56>:Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]][Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]@/sys/fail/756
 mtron> The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.
-==>fail::[Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null[MType<56>:Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]][Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]@/sys/fail/40
+==>fail::[Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null[MType<56>:Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]][Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]@/sys/fail/758
 mtron> [mtron]
 ==>[mtron]
 ----
@@ -5725,7 +5887,7 @@ mtron&gt; --&gt;
 ==&gt;fail::[parse error at line 1, col 1:
      --&gt;
      ^
-     could not parse at '-']@/sys/fail/32
+     could not parse at '-']@/sys/fail/750
 mtron&gt; ++++
 mtron&gt; [discrete]
 ==&gt;[discrete]
@@ -5735,16 +5897,16 @@ mtron&gt; === Navigating the Reference Structure
 ==&gt;fail::[parse error at line 1, col 1:
      === Navigating the Reference Structure
      ^
-     could not parse at '=']@/sys/fail/34
+     could not parse at '=']@/sys/fail/752
 mtron&gt; Metatron is address-first: `a` answers the *address*, `*a` answers the *value*.
 ==&gt;fail::[parse error at line 1, col 9:
      Metatron is address-first: `a` answers the *addr...
              ^
-     could not parse at ' ']@/sys/fail/36
+     could not parse at ' ']@/sys/fail/754
 mtron&gt; The uri is the reference; the obj is the referent — and the same operator walks either side of the reference.
-==&gt;fail::[Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null[MType&lt;56&gt;:Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]][Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]@/sys/fail/38
+==&gt;fail::[Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null[MType&lt;56&gt;:Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]][Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]@/sys/fail/756
 mtron&gt; The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.
-==&gt;fail::[Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null[MType&lt;56&gt;:Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]][Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]@/sys/fail/40
+==&gt;fail::[Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null[MType&lt;56&gt;:Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]][Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]@/sys/fail/758
 mtron&gt; [mtron]
 ==&gt;[mtron]</code></pre>
 </div>
@@ -6638,7 +6800,7 @@ mtron&gt; -&#8594;
 =&#8658;fail::[parse error at line 1, col 1:
      -&#8594;
      ^
-     could not parse at '-']@/sys/fail/32
+     could not parse at '-']@/sys/fail/750
 mtron&gt; 
 mtron&gt; [discrete]
 =&#8658;[discrete]
@@ -6648,16 +6810,16 @@ mtron&gt; === Navigating the Reference Structure
 =&#8658;fail::[parse error at line 1, col 1:
      === Navigating the Reference Structure
      ^
-     could not parse at '=']@/sys/fail/34
+     could not parse at '=']@/sys/fail/752
 mtron&gt; Metatron is address-first: <code>a</code> answers the <strong>address</strong>, <code><strong>a</code> answers the *value</strong>.
 =&#8658;fail::[parse error at line 1, col 9:
      Metatron is address-first: <code>a</code> answers the *addr&#8230;&#8203;
              ^
-     could not parse at ' ']@/sys/fail/36
+     could not parse at ' ']@/sys/fail/754
 mtron&gt; The uri is the reference; the obj is the referent — and the same operator walks either side of the reference.
-=&#8658;fail::[Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null[MType&lt;56&gt;:Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]][Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]@/sys/fail/38
+=&#8658;fail::[Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null[MType&lt;56&gt;:Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]][Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]@/sys/fail/756
 mtron&gt; The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.
-=&#8658;fail::[Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null[MType&lt;56&gt;:Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]][Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]@/sys/fail/40
+=&#8658;fail::[Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null[MType&lt;56&gt;:Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]][Cannot invoke "studio.phaseshift.metatron.furi.fURI.big()" because "vid" is null]@/sys/fail/758
 mtron&gt; [mtron]
 =&#8658;[mtron]</p>
 </div>
@@ -6793,13 +6955,13 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
 ==&gt;{2}'⠹ resolving dependencies'
 ==&gt;{2}'⠸ resolving dependencies'
 ==&gt;{2}'⠼ resolving dependencies'
-==&gt;'⠴ resolving dependencies'
+==&gt;{2}'⠴ resolving dependencies'
 ==&gt;'⠦ resolving dependencies'
 ==&gt;'⠧ resolving dependencies'
 ==&gt;'⠇ resolving dependencies'
 ==&gt;'⠏ resolving dependencies'
 ==&gt;'⠋ resolving dependencies'
-==&gt;'⠴ resolving dependencies[?12l[?25h'
+==&gt;'⠦ resolving dependencies[?12l[?25h'
 ==&gt;'[K[0;32m✓[0m resolving dependencies'
 ==&gt;null
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
@@ -6809,7 +6971,7 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
    	  \_pred │ []
    	[inst]   │ as?rng=bytes&amp;dom=bool(bytes::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ bool::T
-   	 \_args  │ [bytes::T][MTronException&lt;127&gt;:/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;} [/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}::T] unable to convert bool::T]][/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;} [/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}::T] unable to convert bool::T]@/sys/fail/32
+   	 \_args  │ [bytes::T][MTronException&lt;127&gt;:/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;} [/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}::T] unable to convert bool::T]][/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;} [/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}::T] unable to convert bool::T]@/sys/fail/64
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 ==&gt;fail::[apply failure:
    	[lhs]    │ /sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}
@@ -6817,7 +6979,7 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
    	  \_pred │ []
    	[inst]   │ as?rng=bytes&amp;dom=bool(bytes::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ bool::T
-   	 \_args  │ [bytes::T][MTronException&lt;127&gt;:/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;} [/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}::T] unable to convert bool::T]][/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;} [/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}::T] unable to convert bool::T]@/sys/fail/34</code></pre>
+   	 \_args  │ [bytes::T][MTronException&lt;127&gt;:/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;} [/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}::T] unable to convert bool::T]][/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;} [/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}::T] unable to convert bool::T]@/sys/fail/66</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6862,14 +7024,14 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
-==&gt;'tmpfs            6356184      6184   6350000   1% /run'
+==&gt;'tmpfs            6356184      6544   6349640   1% /run'
 ==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2 959786032 495620696 415337128  55% /'
-==&gt;'tmpfs           31780908   2000332  29780576   7% /dev/shm'
+==&gt;'/dev/nvme1n1p2 959786032 497415796 413542028  55% /'
+==&gt;'tmpfs           31780908   2093364  29687544   7% /dev/shm'
 ==&gt;'tmpfs               5120        20      5100   1% /run/lock'
 ==&gt;'tmpfs           31780908       220  31780688   1% /run/qemu'
 ==&gt;'/dev/nvme1n1p1    523248      6288    516960   2% /boot/efi'
-==&gt;'tmpfs            6356180       252   6355928   1% /run/user/1000'
+==&gt;'tmpfs            6356180       264   6355916   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2 976744444 251306824 725437620  26% /media/hdd0'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
@@ -6883,6 +7045,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;'language.properties'
 ==&gt;LICENSE
 ==&gt;'metatron.iml'
+==&gt;'metatron.jar'
 ==&gt;'migrate-skills-to-website.sh'
 ==&gt;mvnw
 ==&gt;'mvnw.cmd'
@@ -6896,7 +7059,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;target
 ==&gt;worktrees
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;669</code></pre>
+==&gt;682</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7084,7 +7247,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.08:26/06/40/02/403?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.08:27/09/41/17/321?tz=-0600&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7103,7 +7266,7 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;host     ​7​
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(host){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ uri::T
-   	 \_args  │ [host][MTronException&lt;127&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]@/sys/fail/72
+   	 \_args  │ [host][MTronException&lt;127&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]@/sys/fail/374
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;port     ​8​
 ==&gt;fail::[apply failure:
    	[lhs]    │ &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
@@ -7111,7 +7274,7 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;port     ​8​
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(port){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException&lt;127&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/82
+   	 \_args  │ [port][MTronException&lt;127&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/384
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;path&gt;&gt;0     ​9​
 ==&gt;fail::[apply failure:
    	[lhs]    │ &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
@@ -7119,7 +7282,7 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;path&gt;&gt;0     �
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(path){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ uri::T
-   	 \_args  │ [path][MTronException&lt;127&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/path?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/path?tz=-0500&gt;]@/sys/fail/92
+   	 \_args  │ [path][MTronException&lt;127&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/path?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/path?tz=-0500&gt;]@/sys/fail/394
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;==[port=&gt;+1]&gt;&gt;port     ​10​
 ==&gt;fail::[apply failure:
    	[lhs]    │ &lt;//2024.12:26/09/00/00/000?tz=-0500&gt;
@@ -7127,7 +7290,7 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;==[port=&gt;+1]&gt;&gt;port 
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(port){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
    	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException&lt;127&gt;:no active space supports pattern &lt;//2024.12:26/09/00/00/000/port?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:26/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/104
+   	 \_args  │ [port][MTronException&lt;127&gt;:no active space supports pattern &lt;//2024.12:26/09/00/00/000/port?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:26/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/406
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;=?=[port=&gt;25]     ​11​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)&gt;&gt;=[q=&gt;[tz=&gt;'+0000']].as(datetime::T)     ​12​
@@ -7408,7 +7571,7 @@ mtron&gt; *g:V/1.outE()     ​2​
    	  \_pred │ [isa([name=&gt;str::T,age=&gt;int::T]), isa([{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]])]
    	[inst]   │ outE?rng=#{*}&amp;dom=elmt(){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ rec::T@/m/grph/elmt
-   	 \_args  │ [,][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/36
+   	 \_args  │ [,][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/80
 mtron&gt; *g:V/1.outE(created)     ​3​
 ==&gt;fail::[apply failure:
    	[lhs]    │ person::[name=&gt;marko,age=&gt;29]
@@ -7416,7 +7579,7 @@ mtron&gt; *g:V/1.outE(created)     ​3​
    	  \_pred │ [isa([name=&gt;str::T,age=&gt;int::T]), isa([{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]])]
    	[inst]   │ outE?rng=#{*}&amp;dom=elmt(created){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ rec::T@/m/grph/elmt
-   	 \_args  │ [created][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/38
+   	 \_args  │ [created][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/82
 mtron&gt; *g:V/1.out(created)     ​4​
 ==&gt;fail::[apply failure:
    	[lhs]    │ person::[name=&gt;marko,age=&gt;29]
@@ -7424,7 +7587,7 @@ mtron&gt; *g:V/1.out(created)     ​4​
    	  \_pred │ [isa([name=&gt;str::T,age=&gt;int::T]), isa([{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]])]
    	[inst]   │ out?rng=#{*}&amp;dom=elmt(created){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ rec::T@/m/grph/elmt
-   	 \_args  │ [created][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/40
+   	 \_args  │ [created][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/84
 mtron&gt; *g:V/1.out(knows)&gt;&gt;name     ​5​
 ==&gt;fail::[apply failure:
    	[lhs]    │ person::[name=&gt;marko,age=&gt;29]
@@ -7432,7 +7595,7 @@ mtron&gt; *g:V/1.out(knows)&gt;&gt;name     ​5​
    	  \_pred │ [isa([name=&gt;str::T,age=&gt;int::T]), isa([{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]])]
    	[inst]   │ out?rng=#{*}&amp;dom=elmt(knows){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ rec::T@/m/grph/elmt
-   	 \_args  │ [knows][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/42
+   	 \_args  │ [knows][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/86
 mtron&gt; *g:V/1.out(knows).count()     ​6​
 ==&gt;1
 mtron&gt; *g:E/7.inV()&gt;&gt;name     ​7​
@@ -7442,7 +7605,7 @@ mtron&gt; *g:E/7.inV()&gt;&gt;name     ​7​
    	  \_pred │ [isa([weight=&gt;real::T]), isa([OUT=&gt;[uri::T=&gt;vrtx::T],IN=&gt;[uri::T=&gt;vrtx::T]])]
    	[inst]   │ inV?rng=#{*}&amp;dom=elmt(){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ rec::T@/m/grph/elmt
-   	 \_args  │ [,][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/54</code></pre>
+   	 \_args  │ [,][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/98</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -7802,7 +7965,7 @@ mtron&gt; *g:V/1.out(consulted)     ​4​
    	  \_pred │ [isa([name=&gt;str::T,age=&gt;int::T]), isa([{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]])]
    	[inst]   │ out?rng=#{*}&amp;dom=elmt(consulted){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ rec::T@/m/grph/elmt
-   	 \_args  │ [consulted][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/80
+   	 \_args  │ [consulted][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/124
 mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​
 ==&gt;fail::[apply failure:
    	[lhs]    │ person::[name=&gt;marko,age=&gt;29]
@@ -7810,7 +7973,7 @@ mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​
    	  \_pred │ [isa([name=&gt;str::T,age=&gt;int::T]), isa([{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]])]
    	[inst]   │ out?rng=#{*}&amp;dom=elmt(consulted){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ rec::T@/m/grph/elmt
-   	 \_args  │ [consulted][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/82</code></pre>
+   	 \_args  │ [consulted][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/126</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7861,7 +8024,7 @@ These expressions highlight the nested structural pattern matching and data mani
    	  \_pred │ [isa([name=&gt;str::T,age=&gt;int::T]), isa([{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]])]
    	[inst]   │ out?rng=#{*}&amp;dom=elmt(consulted){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ rec::T@/m/grph/elmt
-   	 \_args  │ [consulted][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/84
+   	 \_args  │ [consulted][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/128
 mtron&gt; *g:V/1.out(consulted)
          &gt;&gt;salesRepEmployeeNumber
          &gt;&gt;reportsTo.-&lt;[
@@ -7873,7 +8036,7 @@ mtron&gt; *g:V/1.out(consulted)
    	  \_pred │ [isa([name=&gt;str::T,age=&gt;int::T]), isa([{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]])]
    	[inst]   │ out?rng=#{*}&amp;dom=elmt(consulted){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ rec::T@/m/grph/elmt
-   	 \_args  │ [consulted][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/86</code></pre>
+   	 \_args  │ [consulted][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/130</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8025,7 +8188,7 @@ mtron&gt; *g:V/1/OUT/te:hot/a/owner/name     ​3​
    	  \_pred │ []
    	[inst]   │ *g:V/1/OUT/te:hot/a/owner/name
    	 \_dom   │ #{?}::T
-   	 \_args  │ [g:V/1/OUT/te:hot/a/owner/name][Obj&lt;614&gt;:unable to convert mfail to rec::T[Obj&lt;614&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]][unable to convert mfail to rec::T[Obj&lt;614&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/92
+   	 \_args  │ [g:V/1/OUT/te:hot/a/owner/name][Obj&lt;614&gt;:unable to convert mfail to rec::T[Obj&lt;614&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]][unable to convert mfail to rec::T[Obj&lt;614&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/136
 mtron&gt; *g:V/1/OUT/te:cold/x/total     ​4​
 ==&gt;15.0000
 mtron&gt; *g:V/1/OUT/knows.count()     ​5​
@@ -8044,7 +8207,7 @@ mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;item     ​2​
    	  \_pred │ [isa([name=&gt;str::T,age=&gt;int::T]), isa([{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]])]
    	[inst]   │ outE?rng=#{*}&amp;dom=elmt(te:hot/a){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ rec::T@/m/grph/elmt
-   	 \_args  │ [te:hot/a][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/112
+   	 \_args  │ [te:hot/a][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/156
 mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;owner&gt;&gt;name     ​3​
 ==&gt;fail::[apply failure:
    	[lhs]    │ person::[name=&gt;marko,age=&gt;29]
@@ -8052,7 +8215,7 @@ mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;owner&gt;&gt;name     ​3​
    	  \_pred │ [isa([name=&gt;str::T,age=&gt;int::T]), isa([{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]])]
    	[inst]   │ outE?rng=#{*}&amp;dom=elmt(te:hot/a){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ rec::T@/m/grph/elmt
-   	 \_args  │ [te:hot/a][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/122
+   	 \_args  │ [te:hot/a][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/166
 mtron&gt; *g:V/1.outE(te:cold/x)&gt;&gt;total     ​4​
 ==&gt;fail::[apply failure:
    	[lhs]    │ person::[name=&gt;marko,age=&gt;29]
@@ -8060,7 +8223,7 @@ mtron&gt; *g:V/1.outE(te:cold/x)&gt;&gt;total     ​4​
    	  \_pred │ [isa([name=&gt;str::T,age=&gt;int::T]), isa([{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]])]
    	[inst]   │ outE?rng=#{*}&amp;dom=elmt(te:cold/x){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ rec::T@/m/grph/elmt
-   	 \_args  │ [te:cold/x][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/132
+   	 \_args  │ [te:cold/x][ElementRec&lt;83&gt;:unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')] ← class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][unable to convert linkedhashmap to elementmap[ElementRec&lt;83&gt;:class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/176
 mtron&gt; *g:V/1.outE(knows).count()     ​5​
 ==&gt;1</code></pre>
 </div>
@@ -8841,7 +9004,6 @@ mtron&gt; *core</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/thread/executor/run/0     ​1​
-==&gt;core::[code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),source=&gt;!*/sys/thread/main,state=&gt;run]
 mtron&gt; */sys/thread==&lt;+&gt;==run==&lt;+&gt;.vid() * &lt;.?docq&gt;.*_     ​2​</code></pre>
 </div>
 </div>
@@ -8908,9 +9070,9 @@ core::[code=&gt;expensive_computation]            [-- &lt;3&gt; --]</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/thread/executor/run
-==&gt;[!*/sys/thread/main]
-mtron&gt; */sys/thread/executor/stop
 ==&gt;[,]
+mtron&gt; */sys/thread/executor/stop
+==&gt;[!*/sys/thread/main]
 mtron&gt; */sys/thread/executor/stop/+/source
 mtron&gt; */sys/thread/executor/stop/+/source/source</code></pre>
 </div>
@@ -8930,6 +9092,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
     code=&gt;at(ab).plus('B'),
     loop=&gt;second::1.0000,
     state=&gt;run,
+    source=&gt;!*/sys/thread/main,
     start=&gt;[code=&gt;at(ab).plus('B'),loop=&gt;second::1.0000,state=&gt;pause]@/sys/thread/b]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -8938,6 +9101,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'A',
     code=&gt;at(ab).plus('A'),
     loop=&gt;second::1.0000,
     yield=&gt;!*/sys/thread/b,
+    source=&gt;!*/sys/thread/main,
     start=&gt;[code=&gt;at(ab).plus('A'),loop=&gt;second::1.0000,yield=&gt;!*/sys/thread/b]@/sys/thread/a,
     state=&gt;run]@/sys/thread/a
 mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
@@ -8945,6 +9109,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
     code=&gt;at(ab).plus('B'),
     loop=&gt;second::1.0000,
     state=&gt;run,
+    source=&gt;!*/sys/thread/main,
     start=&gt;[code=&gt;at(ab).plus('B'),loop=&gt;second::1.0000,state=&gt;pause]@/sys/thread/b,
     result=&gt;'B'@ab]@/sys/thread/b
 mtron&gt; sleep(second::5.0)
@@ -8953,6 +9118,7 @@ mtron&gt; */sys/thread/b.stop()
     code=&gt;at(ab).plus('B'),
     loop=&gt;second::1.0000,
     state=&gt;stop,
+    source=&gt;!*/sys/thread/main,
     start=&gt;[code=&gt;at(ab).plus('B'),loop=&gt;second::1.0000,state=&gt;pause]@/sys/thread/b,
     result=&gt;'BABABABABAB'@ab]@/sys/thread/b
 mtron&gt; */sys/thread/a.stop()
@@ -8960,6 +9126,7 @@ mtron&gt; */sys/thread/a.stop()
     code=&gt;at(ab).plus('A'),
     loop=&gt;second::1.0000,
     yield=&gt;!*/sys/thread/b,
+    source=&gt;!*/sys/thread/main,
     start=&gt;[code=&gt;at(ab).plus('A'),loop=&gt;second::1.0000,yield=&gt;!*/sys/thread/b]@/sys/thread/a,
     state=&gt;stop,
     result=&gt;'BABABABABABA'@ab]@/sys/thread/a
@@ -8996,12 +9163,14 @@ mtron&gt; *ab
 ==&gt;virtual::[
     code=&gt;print('.'),
     loop=&gt;second::2.5000,
+    source=&gt;!*/sys/thread/main,
     start=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example,
     state=&gt;run]@/sys/thread/example
 mtron&gt; */sys/thread/example.pause()     ​2​
 ==&gt;virtual::[
     code=&gt;print('.'),
     loop=&gt;second::2.5000,
+    source=&gt;!*/sys/thread/main,
     start=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example,
     state=&gt;pause,
     result=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example]@/sys/thread/example
@@ -9011,6 +9180,7 @@ mtron&gt; */sys/thread/example.resume()     ​4​
 ==&gt;virtual::[
     code=&gt;print('.'),
     loop=&gt;second::2.5000,
+    source=&gt;!*/sys/thread/main,
     start=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example,
     state=&gt;run,
     result=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example]@/sys/thread/example
@@ -9052,10 +9222,10 @@ mtron&gt; */sys/thread/example/state     ​5​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/thread/main
-==&gt;[code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),source=&gt;!*/sys/thread/main,state=&gt;run]
+==&gt;core::[code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),state=&gt;stop]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[
-    obj=&gt;[code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),source=&gt;!*/sys/thread/main,state=&gt;run],
+    obj=&gt;core::[code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),state=&gt;stop],
     desc=&gt;'this root thread waits till all child threads are complete ...']</code></pre>
 </div>
 </div>
@@ -9149,7 +9319,7 @@ When <code><a href="http://#" class="bare">http://#</a></code> is the pattern, t
      /=&gt;&lt;&gt;,
      /mcp=&gt;mcp_mtron_http,
      /docs=&gt;target/docs,
-     /console=&gt;src/main/resources/web/console]]@/sys/space/web/http][Net&lt;-2&gt;:Address already in use[Net&lt;-2&gt;:Address already in use] ← Address already in use]][Address already in use[Net&lt;-2&gt;:Address already in use]][Address already in use]@/sys/fail/52]@/sys/fail/54</code></pre>
+     /console=&gt;src/main/resources/web/console]]@/sys/space/web/http][Net&lt;-2&gt;:Address already in use[Net&lt;-2&gt;:Address already in use] ← Address already in use]][Address already in use[Net&lt;-2&gt;:Address already in use]][Address already in use]@/sys/fail/780]@/sys/fail/782</code></pre>
 </div>
 </div>
 <h3 id="sec-html-type" class="discrete">HTML Type</h3>
@@ -9162,26 +9332,51 @@ The structural <code>rec::T</code> DOM tree is opt-in.</p>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     ​1​
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
-==&gt;fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ *&lt;http://phaseshift.studio/splash.html&gt;
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://phaseshift.studio/splash.html&gt;][MTronException&lt;127&gt;:no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;]][no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;]@/sys/fail/56
+==&gt;html::"""&lt;html&gt;
+   	&lt;head&gt;
+   		&lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
+   		&lt;link href="css/metatron.css" rel="stylesheet"&gt;
+   		&lt;title&gt;PhaseShift Studio&lt;/title&gt;
+   	&lt;/head&gt;
+   	&lt;body style="background-color: black;"&gt;
+
+   		&lt;p&gt;&amp;nbsp;&lt;/p&gt;		&lt;h1 style="padding-left:125px;color:var(--primary)"&gt;PhaseShift Studio&lt;/h1&gt;
+   &lt;img style="padding-left:100px" src="http://metatron.phaseshift.studio/images/metatron-character.png" width="500px" /&gt;
+   	&lt;script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"2ed4d310d5f64c4a9118e02b0e07c623","r":1}' crossorigin="anonymous"&gt;&lt;/script&gt;
+   &lt;/body&gt;
+   &lt;/html&gt;
+   """
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​3​
-==&gt;fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ *&lt;http://phaseshift.studio/splash.html&gt;
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://phaseshift.studio/splash.html&gt;][MTronException&lt;127&gt;:no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;]][no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;]@/sys/fail/58
+==&gt;[html=&gt;[head=&gt;[title=&gt;'PhaseShift Studio',out=&gt;[
+    [
+     tag=&gt;link,
+     href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
+     rel=&gt;'stylesheet'],
+    [tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet']]],body=&gt;[
+    out=&gt;[
+     [tag=&gt;p],
+     [
+      tag=&gt;h1,
+      style=&gt;'padding-left:125px;color:var(--primary)',
+      text=&gt;'PhaseShift Studio'],
+     [
+      tag=&gt;img,
+      style=&gt;'padding-left:100px',
+      src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
+      width=&gt;'500px'],
+     [
+      tag=&gt;script,
+      type=&gt;'module',
+      src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496&gt;,
+      integrity=&gt;'sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2A...',
+      data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2ed4d310d5f64c4a9118e02b0e0...',
+      crossorigin=&gt;'anonymous']],
+    style=&gt;'background-color: black;']]]
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)/html/head/title     ​4​
 ==&gt;fail::[parse error at line 1, col 51:
      ...haseshift.studio/splash.html&gt;.as(rec::T)/html/head/title
                                                 ^
-     could not parse at '/']@/sys/fail/60
+     could not parse at '/']@/sys/fail/784
 mtron&gt; *&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt;     ​5​
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
@@ -9189,15 +9384,33 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt
    	  \_pred │ []
    	[inst]   │ *&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt;][MTronException&lt;127&gt;:no active space supports pattern &lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt;]][no active space supports pattern &lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt;]@/sys/fail/62
+   	 \_args  │ [&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt;][MTronException&lt;127&gt;:no mimeq query processor attached to /sys/space/http]][no mimeq query processor attached to /sys/space/http]@/sys/fail/786
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​6​
-==&gt;fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ *&lt;http://phaseshift.studio/splash.html&gt;
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://phaseshift.studio/splash.html&gt;][MTronException&lt;127&gt;:no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;]][no active space supports pattern &lt;http://phaseshift.studio/splash.html&gt;]@/sys/fail/64</code></pre>
+==&gt;[html=&gt;[head=&gt;[title=&gt;'PhaseShift Studio',out=&gt;[
+    [
+     tag=&gt;link,
+     href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
+     rel=&gt;'stylesheet'],
+    [tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet']]],body=&gt;[
+    out=&gt;[
+     [tag=&gt;p],
+     [
+      tag=&gt;h1,
+      style=&gt;'padding-left:125px;color:var(--primary)',
+      text=&gt;'PhaseShift Studio'],
+     [
+      tag=&gt;img,
+      style=&gt;'padding-left:100px',
+      src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
+      width=&gt;'500px'],
+     [
+      tag=&gt;script,
+      type=&gt;'module',
+      src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496&gt;,
+      integrity=&gt;'sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2A...',
+      data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2ed4d310d5f64c4a9118e02b0e0...',
+      crossorigin=&gt;'anonymous']],
+    style=&gt;'background-color: black;']]]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9241,21 +9454,9 @@ As such, REST resources can be enriched/typed to become active computational obj
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:11434&gt;     ​1​
-==&gt;fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ *http://localhost:11434
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [http://localhost:11434][MTronException&lt;127&gt;:no active space supports pattern http://localhost:11434]][no active space supports pattern http://localhost:11434]@/sys/fail/66
+==&gt;'Ollama is running'
 mtron&gt; *&lt;http://localhost:11434/api/tags&gt;     ​2​
-==&gt;fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ *http://localhost:11434/api/tags
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [http://localhost:11434/api/tags][MTronException&lt;127&gt;:no active space supports pattern http://localhost:11434/api/tags]][no active space supports pattern http://localhost:11434/api/tags]@/sys/fail/68
+==&gt;json::'{"models":[{"name":"qwen3.5:4b","model":"qwen3.5:4b","modified_at":"2026-06-28T00:25:31.583735-06:00","size":3389983735,"digest":"2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd","details":{"parent_model":"","format":"gguf","family":"qwen35","families":["qwen35"],"parameter_size":"4.7B","quantization_level":"Q4_K_M","context_length":262144,"embedding_length":2560},"capabilities":["vision","completion","tools","thinking"]},{"name":"dr.stynx:latest","model":"dr.stynx:latest","modified_at":"2026-06-13T12:19:21.4935225-06:00","size":17690513930,"digest":"8b8560aa375897345cc5213cc8b953ce0e77758527421aa087afa374d4f4b36d","details":{"parent_model":"danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth:latest","format":"gguf","family":"qwen3moe","families":["qwen3moe"],"parameter_size":"30.5B","quantization_level":"Q4_K_M","context_length":1048576,"embedding_length":2048},"capabilities":["completion","tools"]},{"name":"hengwen/DeepSeek-R1-Distill-Qwen-14B:q8_0","model":"hengwen/DeepSeek-R1-Distill-Qwen-14B:q8_0","modified_at":"2026-05-20T03:50:17.3003242-06:00","size":15701597480,"digest":"ed6b8c52bf980271969bffe42db30569937922207469ffa9bb0c30513a5ca8d2","details":{"parent_model":"/home/test/ollama/models/blobs/sha256-b6b2172e953e1cd9b32f6a061b1855b1751b365ab5c7b67c7bd4862480a48ac3","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"14.8B","quantization_level":"Q8_0","context_length":131072,"embedding_length":5120},"capabilities":["completion"]},{"name":"qwen2.5-coder:32b","model":"qwen2.5-coder:32b","modified_at":"2026-05-20T03:48:28.2625806-06:00","size":19851349898,"digest":"b92d6a0bd47ee79114298de0177bf920c05a706d12633950b3936778492bef41","details":{"parent_model":"","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"32.8B","quantization_level":"Q4_K_M","context_length":32768,"embedding_length":5120},"capabilities":["completion","tools","insert"]},{"name":"deepseek-r1:14b","model":"deepseek-r1:14b","modified_at":"2026-05-14T00:23:01.4598875-06:00","size":8988112209,"digest":"c333b7232bdb521236694ffbb5f5a6b11cc45d98e9142c73123b670fca400b09","details":{"parent_model":"","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"14.8B","quantization_level":"Q4_K_M","context_length":131072,"embedding_length":5120},"capabilities":["completion","thinking"]},{"name":"qwen2.5-coder:7b","model":"qwen2.5-coder:7b","modified_at":"2026-05-12T21:08:02.3143859-06:00","size":4683087561,"digest":"dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364","details":{"parent_model":"","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"7.6B","quantization_level":"Q4_K_M","context_length":32768,"embedding_length":3584},"capabilities":["completion","tools","insert"]},{"name":"qwen3-embedding:8b","model":"qwen3-embedding:8b","modified_at":"2026-05-10T15:16:25.3309793-06:00","size":4676805193,"digest":"64b933495768fbd3b87c20583d379728a07471e0c66733a9df87cd1901b3c44b","details":{"parent_model":"/Users/ollama/.ollama/models/blobs/sha256-3fcd3febec8b3fd64435204db75bf0dd73b91e8d0661e0331acfe7e7c3120b85","format":"gguf","family":"qwen3","families":["qwen3"],"parameter_size":"7.6B","quantization_level":"Q4_K_M","context_length":40960,"embedding_length":4096},"capabilities":["embedding"]},{"name":"batiai/qwen3.6-27b:iq3","model":"batiai/qwen3.6-27b:iq3","modified_at":"2026-05-10T01:44:06.5919578-06:00","size":11186372790,"digest":"a785b19cc583791ed62e5ed102a047056083bde4f9870a2d8ea6d3250f84638b","details":{"parent_model":"/usr/share/ollama/.ollama/models/blobs/sha256-d548ae2bfa257199e3240994d038693a4392941819934854772e6c95591f9d87","format":"gguf","family":"qwen35","families":["qwen35"],"parameter_size":"26.9B","quantization_level":"unknown","context_length":262144,"embedding_length":5120},"capabilities":["completion","tools","thinking"]},{"name":"qwen3.6:27b","model":"qwen3.6:27b","modified_at":"2026-05-09T21:07:13.4279469-06:00","size":17420432739,"digest":"a50eda8ed977ab48a12431878896b27ffd5cef552c17af3317d9623b939a7f1e","details":{"parent_model":"","format":"gguf","family":"qwen35","families":["qwen35"],"parameter_size":"27.8B","quantization_level":"Q4_K_M","context_length":262144,"embedding_length":5120},"capabilities":["vision","completion","tools","thinking"]},{"name":"qwen3.5:27b","model":"qwen3.5:27b","modified_at":"2026-05-03T16:06:35.5354596-06:00","size":17420432728,"digest":"7653528ba5cba4dd8e19da24aaddc7f4d0b5ecd93571c0825dfd4137958ec06e","details":{"parent_model":"","format":"gguf","family":"qwen35","families":["qwen35"],"parameter_size":"27.8B","quantization_level":"Q4_K_M","context_length":262144,"embedding_length":5120},"capabilities":["vision","completion","tools","thinking"]},{"name":"danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth:latest","model":"danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth:latest","modified_at":"2026-05-02T23:38:06.0644134-06:00","size":17690513537,"digest":"56720d55401ef206408d20f25505eda128d8e357e8c90435adbdd240f73f334c","details":{"parent_model":"","format":"gguf","family":"qwen3moe","families":["qwen3moe"],"parameter_size":"30.5B","quantization_level":"Q4_K_M","context_length":1048576,"embedding_length":2048},"capabilities":["completion","tools"]},{"name":"MeetSolanki/MeetAISmall:latest","model":"MeetSolanki/MeetAISmall:latest","modified_at":"2026-04-23T18:26:05.0225546-06:00","size":522654409,"digest":"f2122a60667ba6d277ecc10eb3406c41e53f81167d002d2de476ca4150be7972","details":{"parent_model":"qwen3:0.6b","format":"gguf","family":"qwen3","families":["qwen3"],"parameter_size":"751.63M","quantization_level":"Q4_K_M","context_length":40960,"embedding_length":1024},"capabilities":["completion","tools","thinking"]},{"name":"nebulamodules/nebula-small:latest","model":"nebulamodules/nebula-small:latest","modified_at":"2026-04-23T18:26:01.0975908-06:00","size":2620788570,"digest":"37fecda4b4c4c8ba75c8746f0f89afef9cbd0a57ce33dfec7684025d6b3ca333","details":{"parent_model":"qwen3:4b","format":"gguf","family":"qwen3","families":["qwen3"],"parameter_size":"4.0B","quantization_level":"Q4_K_M","context_length":40960,"embedding_length":2560},"capabilities":["completion","tools","thinking"]},{"name":"smollm:1.7b","model":"smollm:1.7b","modified_at":"2026-04-23T18:21:20.6643201-06:00","size":990741362,"digest":"95f6557a0f0f1e1d08ba0d426e50de0927dd2b0861a384b193802c551b298c28","details":{"parent_model":"","format":"gguf","family":"llama","families":["llama"],"parameter_size":"1.7B","quantization_level":"Q4_0","context_length":2048,"embedding_length":2048},"capabilities":["completion"]},{"name":"devstral-small-2:latest","model":"devstral-small-2:latest","modified_at":"2026-04-18T21:14:33.8707012-06:00","size":15177374099,"digest":"24277f07f62db8f9cb68e9dfc679ea1818a7fbac47a50eff0a701d3f645b63c8","details":{"parent_model":"","format":"gguf","family":"mistral3","families":["mistral3"],"parameter_size":"24.0B","quantization_level":"Q4_K_M","context_length":393216,"embedding_length":5120},"capabilities":["vision","completion","tools"]},{"name":"glm-4.7-flash:latest","model":"glm-4.7-flash:latest","modified_at":"2026-03-28T10:16:41.8924486-06:00","size":19019270852,"digest":"d1a8a26252f18b34301218d22abd2620a65b85ba4b78987842eb157e01321222","details":{"parent_model":"","format":"gguf","family":"glm4moelite","families":["glm4moelite"],"parameter_size":"29.9B","quantization_level":"Q4_K_M","context_length":202752,"embedding_length":2048},"capabilities":["completion","tools","thinking"]},{"name":"qwen3:8b","model":"qwen3:8b","modified_at":"2026-03-03T15:06:29.9259633-07:00","size":5225388164,"digest":"500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41","details":{"parent_model":"","format":"gguf","family":"qwen3","families":["qwen3"],"parameter_size":"8.2B","quantization_level":"Q4_K_M","context_length":40960,"embedding_length":4096},"capabilities":["completion","tools","thinking"]},{"name":"maternion/sweep-next-edit-1.5B:latest","model":"maternion/sweep-next-edit-1.5B:latest","modified_at":"2026-03-03T14:50:08.2074942-07:00","size":1537271675,"digest":"6a6bbfafb2cf6a24ad3bae58997a95f70799550b4d262e4f4cbcc16817e8c0df","details":{"parent_model":"/usr/share/ollama/.ollama/models/blobs/sha256-1321ea5e5d7529e60f9770c6a0b3a965f89542d16cf4ae51bab267f6a88150da","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"1.4B","quantization_level":"Q8_0","context_length":32768,"embedding_length":1536},"capabilities":["completion","tools"]},{"name":"tomasmcm/undi95-meta-llama-3.1-8b-claude:q5_K_M","model":"tomasmcm/undi95-meta-llama-3.1-8b-claude:q5_K_M","modified_at":"2026-02-27T13:35:04.7281519-07:00","size":5733002850,"digest":"284ae9e1633bc76204c639964ef01d6257136d60bc4f76025810bdbe82f00db2","details":{"parent_model":"/Users/tomasmcm/.ollama/models/blobs/sha256-0b74617f79db8400aa7459067f53547d0643bd7b7235437f3f14a19f12599699","format":"gguf","family":"llama","families":["llama"],"parameter_size":"8.0B","quantization_level":"Q5_K_M","context_length":131072,"embedding_length":4096},"capabilities":["completion","tools"]},{"name":"minimax-m2.5:cloud","model":"minimax-m2.5:cloud","remote_model":"minimax-m2.5","remote_host":"https://ollama.com:443","modified_at":"2026-02-27T12:51:12.1390208-07:00","size":337,"digest":"c0d5751c800fd16b7cd21fce68e99e0db6d489d7196794f9a46b97b2f97036f5","details":{"parent_model":"","format":"","family":"","families":null,"parameter_size":"","quantization_level":"","context_length":202752},"capabilities":["completion","tools","thinking"]},{"name":"qwen3-coder-next:latest","model":"qwen3-coder-next:latest","modified_at":"2026-02-07T23:26:00.5694139-07:00","size":51741611823,"digest":"ca06e9e4087c714d44355bf954099187890e63084b4a632b8e9956c4b9492074","details":{"parent_model":"","format":"gguf","family":"qwen3next","families":["qwen3next"],"parameter_size":"79.7B","quantization_level":"Q4_K_M","context_length":262144,"embedding_length":2048},"capabilities":["completion","tools"]},{"name":"qwen3:latest","model":"qwen3:latest","modified_at":"2025-11-25T18:24:39.7052749-07:00","size":5225388164,"digest":"500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41","details":{"parent_model":"","format":"gguf","family":"qwen3","families":["qwen3"],"parameter_size":"8.2B","quantization_level":"Q4_K_M","context_length":40960,"embedding_length":4096},"capabilities":["completion","tools","thinking"]},{"name":"deepcoder:latest","model":"deepcoder:latest","modified_at":"2025-11-18T16:09:56.9797731-07:00","size":8988113141,"digest":"12bdda054d2380ce5c86dcea8a033db5a018d799af359b953ac0ce0c739da9c7","details":{"parent_model":"","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"14.8B","quantization_level":"Q4_K_M","context_length":131072,"embedding_length":5120},"capabilities":["completion"]},{"name":"tinyllama:latest","model":"tinyllama:latest","modified_at":"2025-11-18T12:02:00.7121561-07:00","size":637700138,"digest":"2644915ede352ea7bdfaff0bfac0be74c719d5d5202acb63a6fb095b52f394a4","details":{"parent_model":"","format":"gguf","family":"llama","families":["llama"],"parameter_size":"1B","quantization_level":"Q4_0","context_length":2048,"embedding_length":2048},"capabilities":["completion"]},{"name":"ben1t0/tiny-llm:latest","model":"ben1t0/tiny-llm:latest","modified_at":"2025-11-18T03:40:58.4420944-07:00","size":5676399,"digest":"52b027121460505eb3ddcaa93b6bfff130e2f41d325d5f03ddd9ae354b42a21e","details":{"parent_model":"","format":"gguf","family":"llama","families":["llama"],"parameter_size":"4.62M","quantization_level":"Q8_0","context_length":2048,"embedding_length":64},"capabilities":["completion"]},{"name":"hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:latest","model":"hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:latest","modified_at":"2025-11-14T00:24:11.6136623-07:00","size":807696561,"digest":"042cf58aa32fa6ce631caff838fc9efd05313a629530756ccf59308eaa49b8aa","details":{"parent_model":"","format":"gguf","family":"llama","families":["llama"],"parameter_size":"1.24B","quantization_level":"Q4_K_M","context_length":131072,"embedding_length":2048},"capabilities":["completion","tools"]},{"name":"llama3-groq-tool-use:latest","model":"llama3-groq-tool-use:latest","modified_at":"2025-11-10T19:57:21.4196747-07:00","size":4661257688,"digest":"36211dad2b153f09fe2b0c5f3e4e82ee83d27db68e3a00006cd934dfdc5057a4","details":{"parent_model":"","format":"gguf","family":"llama","families":["llama"],"parameter_size":"8.0B","quantization_level":"Q4_0","context_length":8192,"embedding_length":4096},"capabilities":["completion","tools"]},{"name":"llava:latest","model":"llava:latest","modified_at":"2025-11-09T12:22:07.147987-07:00","size":4733363377,"digest":"8dd30f6b0cb19f555f2c7a7ebda861449ea2cc76bf1f44e262931f45fc81d081","details":{"parent_model":"","format":"gguf","family":"llama","families":["llama","clip"],"parameter_size":"7B","quantization_level":"Q4_0","context_length":32768,"embedding_length":4096},"capabilities":["completion","vision"]},{"name":"gpt-oss:latest","model":"gpt-oss:latest","modified_at":"2025-11-09T11:52:38.0566449-07:00","size":13793441244,"digest":"17052f91a42e97930aa6e28a6c6c06a983e6a58dbb00434885a0cf5313e376f7","details":{"parent_model":"","format":"gguf","family":"gptoss","families":["gptoss"],"parameter_size":"20.9B","quantization_level":"MXFP4","context_length":131072,"embedding_length":2880},"capabilities":["completion","tools","thinking"]}]}'
 mtron&gt; *&lt;http://localhost:11434/api/tags?mimeq=application/x-mtron&gt;     ​3​
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
@@ -9263,15 +9464,109 @@ mtron&gt; *&lt;http://localhost:11434/api/tags?mimeq=application/x-mtron&gt;    
    	  \_pred │ []
    	[inst]   │ *http://localhost:11434/api/tags?mimeq=application/x-mtron
    	 \_dom   │ #{?}::T
-   	 \_args  │ [http://localhost:11434/api/tags?mimeq=application/x-mtron][MTronException&lt;127&gt;:no active space supports pattern http://localhost:11434/api/tags?mimeq=application/x-mtron]][no active space supports pattern http://localhost:11434/api/tags?mimeq=application/x-mtron]@/sys/fail/70
+   	 \_args  │ [http://localhost:11434/api/tags?mimeq=application/x-mtron][MTronException&lt;127&gt;:no mimeq query processor attached to /sys/space/http]][no mimeq query processor attached to /sys/space/http]@/sys/fail/788
 mtron&gt; *&lt;http://localhost:11434/api/tags&gt;.as(rec::T)     ​4​
-==&gt;fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ *http://localhost:11434/api/tags
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [http://localhost:11434/api/tags][MTronException&lt;127&gt;:no active space supports pattern http://localhost:11434/api/tags]][no active space supports pattern http://localhost:11434/api/tags]@/sys/fail/72</code></pre>
+==&gt;[models=&gt;[[
+    name=&gt;&lt;qwen3.5:4b&gt;,
+    model=&gt;&lt;qwen3.5:4b&gt;,
+    modified_at=&gt;&lt;2026-06-28T00:25:31.583735-06:00&gt;,
+    size=&gt;3389983735,
+    digest=&gt;&lt;2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd&gt;,
+    details=&gt;[
+     parent_model=&gt;&lt;&gt;,
+     format=&gt;gguf,
+     family=&gt;qwen35,
+     families=&gt;[qwen35],
+     parameter_size=&gt;&lt;4.7B&gt;,
+     quantization_level=&gt;Q4_K_M,
+     context_length=&gt;262144,
+     embedding_length=&gt;2560],
+    capabilities=&gt;[
+     vision,
+     completion,
+     tools,
+     thinking]],[
+    name=&gt;&lt;dr.stynx:latest&gt;,
+    model=&gt;&lt;dr.stynx:latest&gt;,
+    modified_at=&gt;&lt;2026-06-13T12:19:21.4935225-06:00&gt;,
+    size=&gt;17690513930,
+    digest=&gt;&lt;8b8560aa375897345cc5213cc8b953ce0e77758527421aa087afa374d4f4b36d&gt;,
+    details=&gt;[
+     parent_model=&gt;danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth:latest,
+     format=&gt;gguf,
+     family=&gt;qwen3moe,
+     families=&gt;[qwen3moe],
+     parameter_size=&gt;&lt;30.5B&gt;,
+     quantization_level=&gt;Q4_K_M,
+     context_length=&gt;1048576,
+     embedding_length=&gt;2048],
+    capabilities=&gt;[completion,tools]],[
+    name=&gt;hengwen/DeepSeek-R1-Distill-Qwen-14B:q8_0,
+    model=&gt;hengwen/DeepSeek-R1-Distill-Qwen-14B:q8_0,
+    modified_at=&gt;&lt;2026-05-20T03:50:17.3003242-06:00&gt;,
+    size=&gt;15701597480,
+    digest=&gt;ed6b8c52bf980271969bffe42db30569937922207469ffa9bb0c30513a5ca8d2,
+    details=&gt;[
+     parent_model=&gt;/home/test/ollama/models/blobs/sha256-b6b2172e953e1cd9b32f6a061b1855b1751b365ab5c7b67c7bd4862480a48ac3,
+     format=&gt;gguf,
+     family=&gt;qwen2,
+     families=&gt;[qwen2],
+     parameter_size=&gt;&lt;14.8B&gt;,
+     quantization_level=&gt;Q8_0,
+     context_length=&gt;131072,
+     embedding_length=&gt;5120],
+    capabilities=&gt;[completion]],[
+    name=&gt;&lt;qwen2.5-coder:32b&gt;,
+    model=&gt;&lt;qwen2.5-coder:32b&gt;,
+    modified_at=&gt;&lt;2026-05-20T03:48:28.2625806-06:00&gt;,
+    size=&gt;19851349898,
+    digest=&gt;b92d6a0bd47ee79114298de0177bf920c05a706d12633950b3936778492bef41,
+    details=&gt;[
+     parent_model=&gt;&lt;&gt;,
+     format=&gt;gguf,
+     family=&gt;qwen2,
+     families=&gt;[qwen2],
+     parameter_size=&gt;&lt;32.8B&gt;,
+     quantization_level=&gt;Q4_K_M,
+     context_length=&gt;32768,
+     embedding_length=&gt;5120],
+    capabilities=&gt;[completion,tools,insert]],[
+    name=&gt;deepseek-r1:14b,
+    model=&gt;deepseek-r1:14b,
+    modified_at=&gt;&lt;2026-05-14T00:23:01.4598875-06:00&gt;,
+    size=&gt;8988112209,
+    digest=&gt;c333b7232bdb521236694ffbb5f5a6b11cc45d98e9142c73123b670fca400b09,
+    details=&gt;[
+     parent_model=&gt;&lt;&gt;,
+     format=&gt;gguf,
+     family=&gt;qwen2,
+     families=&gt;[qwen2],
+     parameter_size=&gt;&lt;14.8B&gt;,
+     quantization_level=&gt;Q4_K_M,
+     context_length=&gt;131072,
+     embedding_length=&gt;5120],
+    capabilities=&gt;[completion,thinking]],[
+    name=&gt;&lt;qwen2.5-coder:7b&gt;,
+    model=&gt;&lt;qwen2.5-coder:7b&gt;,
+    modified_at=&gt;&lt;2026-05-12T21:08:02.3143859-06:00&gt;,
+    size=&gt;4683087561,
+    digest=&gt;dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364,
+    details=&gt;[
+     parent_model=&gt;&lt;&gt;,
+     format=&gt;gguf,
+     family=&gt;qwen2,
+     families=&gt;[qwen2],
+     parameter_size=&gt;&lt;7.6B&gt;,
+     quantization_level=&gt;Q4_K_M,
+     context_length=&gt;32768,
+     embedding_length=&gt;3584],
+    capabilities=&gt;[completion,tools,insert]],[
+    name=&gt;qwen3-embedding:8b,
+    model=&gt;qwen3-embedding:8b,
+    modified_at=&gt;&lt;2026-05-10T15:16:25.3309793-06:00&gt;,
+    size=&gt;4676805193,
+    digest=&gt;&lt;64b933495768fbd3b87c20583d379728a07471e0c66733a9df87cd1901b3c44b&gt;,
+   ...</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9332,7 +9627,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
      ...1434/api/tags?mimeq=application/x-mtron&gt;/0.&gt;&gt;data/1.
             -&lt;[provider=&gt; olla...
                                                 ^
-     could not parse at '/']@/sys/fail/74</code></pre>
+     could not parse at '/']@/sys/fail/790</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9623,7 +9918,7 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schem
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  farm:animals/1 -&gt; 'a chicken named trill'     ​1​
-==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T]@/sys/fail/36
+==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T]@/sys/fail/40
 mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​2​
 ==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1     ​3​

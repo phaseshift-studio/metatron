@@ -92,6 +92,22 @@
             background-color: #7a2519;
             color: #ffffff;
         }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .terminal-box.click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .terminal-box.click-to-copy:active {
+            background-color: var(--mred);
+        }
+
+        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
+        .terminal-box.click-to-copy .hljs-copy-button {
+            display: none;
+        }
     </style>
     <script src="js/metatron.js" type="text/javascript"></script>
 </head>
@@ -123,13 +139,13 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
                     <li>
-                        <div class="terminal-box">
+                        <div class="terminal-box click-to-copy" title="click to copy">
                             <span class="badge bg-danger">only linux tested</span>
                             <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
                         </div>
                     </li>
                     <li>
-                        <div class="terminal-box">
+                        <div class="terminal-box click-to-copy" title="click to copy">
                             <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
                         </div>
                     </li>
@@ -280,6 +296,36 @@
         </div>
     </div>
 </nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target (no rollover copy button). The :active CSS turns the block
+    // red while pressed; this copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
 <main class="container my-4 flex-grow-1">
 <h2 id="sec-quick-start" class="discrete">Quick Start</h2>
 <div class="legend-index">
@@ -586,17 +632,31 @@ In metatron, the uri is called a <em>fURI</em> (<strong>functional uniform resou
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/+.count()
-==&gt;6
+==&gt;14
 mtron&gt; */sys/space/+.&gt;&gt;pattern
+==&gt;fs:#
 ==&gt;&lt;+/#&gt;
+==&gt;/te/cold/#
 ==&gt;g:#
+==&gt;ha:#
 ==&gt;/usr/#
+==&gt;/te/hot/#
 ==&gt;http://#
+==&gt;acme:#
+==&gt;/sys/#
+==&gt;loc:#
+==&gt;farm:#
 ==&gt;mtronfs:#
 ==&gt;local:#
 mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
-==&gt;{3}[=&gt;]
+==&gt;[fs:#=&gt;[fs:m=&gt;/home/killswitch/software/metatron,fs:=&gt;/home/killswitch/]]
+==&gt;{5}[=&gt;]
+==&gt;[/te/cold/#=&gt;[/te/cold/=&gt;&lt;&gt;]]
+==&gt;[ha:#=&gt;[ha:=&gt;/home/chips]]
+==&gt;[/te/hot/#=&gt;[/te/hot/=&gt;&lt;&gt;]]
 ==&gt;[http://#=&gt;[/=&gt;local:]]
+==&gt;[acme:#=&gt;[acme:=&gt;&lt;&gt;]]
+==&gt;[farm:#=&gt;[farm:=&gt;&lt;&gt;]]
 ==&gt;[mtronfs:#=&gt;[mtronfs:=&gt;&lt;.metatron&gt;]]
 ==&gt;[local:#=&gt;[local:=&gt;/home/killswitch/]]</code></pre>
 </div>

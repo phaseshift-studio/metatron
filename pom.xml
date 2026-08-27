@@ -51,7 +51,7 @@
         <skipInstSet>false</skipInstSet>
         <skipMarkdown>false</skipMarkdown>
         <!-- doc-generation experiment toggles: fresh VM per file by default -->
-        <mtron.singleBoot>false</mtron.singleBoot>
+        <mtron.singleBoot>true</mtron.singleBoot>
         <mtron.reverse>false</mtron.reverse>
         <buildNumber>0</buildNumber>
         <!-- metatron instset documentation -->
