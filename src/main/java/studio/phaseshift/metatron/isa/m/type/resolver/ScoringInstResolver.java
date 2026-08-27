@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.util.Comparator;
 import java.util.List;
@@ -31,6 +32,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.q.QCollection.MIMEQ_PATTERN;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
@@ -76,9 +78,12 @@ public class ScoringInstResolver implements InstResolver {
         /////////////////////// FROM/AS FAST RESOLUTION ///////////////////////
         if (!userInst.hasRng()) {
             final Optional<fURI> fromOrAt = Inst.Helper.isFromOrAtInstToUri(userInst);
-            if (fromOrAt.isPresent()) {
+            if (fromOrAt.isPresent()) { // todo: use a directReader() and avoid apply()
                 if (!fromOrAt.get().hasPattern()) {
-                    final Obj fromOrAtObj = Router.readFromSpace(fromOrAt.get());
+                    // todo: hack-a-thon-a-tron to the hizzle-my-nizzle...fizzle.
+                    final Obj fromOrAtObj = Router.global().getSpaceFor(fromOrAt.get()).hasQ(MIMEQ_PATTERN) ?
+                            Router.readFromSpace(fromOrAt.get().addQ(MIMEQ_PATTERN.toString(), MIME.MIMEType.TEXT_PLAIN)) :
+                            Router.readFromSpace(fromOrAt.get());
                     if (!fromOrAtObj.isNothing() && !fromOrAtObj.isCall()) {
                         userInst.logger().debug("fast from/at() resolution: %s", fromOrAt.get());
                         return Router.readFromSpace(userInst.tid()).asInst().args(lst(fromOrAt.get().toUri())).rng(T(fromOrAtObj.typeId().maybeSome()));

@@ -1,4 +1,0 @@
-a -> *(boot/args/command);
-b -> *a;
-print(*b);
-*/sys/obj/router.close()

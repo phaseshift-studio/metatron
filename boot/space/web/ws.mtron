@@ -1,0 +1,5 @@
+[-- wsspace — ws server: mcp + mtron routes, plus user-supplied mcp servers. --]
+wsspace::[host    => !*<boot/args/web/ws>,
+          pattern => <ws://#>,
+          route   => [/mcp   => mcp_mtron_ws,
+                      /mtron => mtron_ws]]@/sys/space/web/ws;

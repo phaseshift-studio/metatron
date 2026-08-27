@@ -86,7 +86,7 @@ httpspace::[host     => !*<boot/args/external/web/http>,
             q        => [mimeq::[=>]],
             pattern  => <http://#>,
             route    => [/mcp     => mcp_mtron_http,
-                         /        => <>]]@/sys/space/web/http;   
+                         /        => mfs:]]@/sys/space/web/http;   
 [==  
 *boot/args/external/ollama.mult(api/tags/models).*(_).>-.
   =?=[capabilities=>[embedding]].

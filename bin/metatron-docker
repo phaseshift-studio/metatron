@@ -7,7 +7,7 @@ set -e
 IMAGE="${METATRON_IMAGE:-ghcr.io/phaseshift-studio/metatron:main}"
 
 if [ $# -eq 0 ]; then
-  set -- "[boot=><boot/boot.mtron>,log=>info]"
+  set -- "[boot=><boot/docker.boot.mtron>,log=>info]"
 fi
 
 echo "  metatron w/
@@ -19,4 +19,5 @@ exec docker run --rm -it \
   -p 8555:8555 \
   -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add "$(stat -c '%g' /var/run/docker.sock)" \
   "$IMAGE" "$@"

@@ -1,0 +1,12 @@
+[-- tblespace on a local sqlite file in the writable data dir; a dckrspace-pulled
+    sqlite container shares the same volume so data persists across recreates. --]
+*docker:container/dr_sqlite.else(
+  [services => [sqlite => [image   => hibitdev/sqlite:latest,
+                           volumes => ["${*boot/args/data.else(<~/.metatron>)}:/db"],
+                           command => ['tail', '-f', '/dev/null']]]]@docker:compose/dr_sqlite);
+tblespace::[pattern => </usr/dr/#>,
+            host    => <sqlite:${*boot/args/data.else(<~/.metatron>)}/dr.sqlite>,
+            driver  => <org.sqlite.JDBC>,
+            table   => [,],
+            q       => [incrq::[=>], subq::[=>]],
+            route   => [/usr/dr/ => <>]]@</sys/space/usr/dr>;

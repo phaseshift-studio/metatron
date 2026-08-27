@@ -1,0 +1,5 @@
+[-- memspace — in-memory home space. --]
+memspace::[pattern => </usr/${!*boot/args/user}/#>,
+           q       => [docq::[=>], subq::[=>], 
+                       mimeq::[=>],lineq::[=>],lockq::[=>], 
+                       incrq::[=>]]]@</sys/space/usr/home>;
