@@ -1,10 +1,11 @@
-[-- dckrspace — orchestrate infra containers through the HOST docker socket.
-    Requires the socket + docker group mounted at runtime (dist/docker/README.md). --]
-dckrspace::[host     => <unix:///var/run/docker.sock>,
-            pattern  => docker:#,
-            progress => progress_table::[style => style::[body          => "{{y}}={{g}}",
-                                                          pointer       => "{{g}}>{{X}}",
-                                                          border        => continuous,
-                                                          anchor        => bottom_left,
-                                                          width         => 70]],
-            route    => [docker: => <>]]@</sys/space/docker>;
+[== dckrspace — orchestrate infra containers through the HOST docker socket.
+    Requires the socket + docker group mounted at runtime (dist/docker/README.md). ==]
+||inst?dckrspace<=uri(){
+ -<[host     => _,
+    pattern  => docker:#,
+    progress => progress_table::[style => style::[body          => "{{y}}={{g}}",
+                                                  pointer       => "{{g}}>{{X}}",
+                                                  border        => continuous,
+                                                  anchor        => bottom_left,
+                                                  width         => 70]],
+    route    => [docker: => <>]]@</sys/space/docker>.as(dckrspace::T) }

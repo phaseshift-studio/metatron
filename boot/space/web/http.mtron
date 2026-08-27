@@ -1,6 +1,7 @@
 [-- httpspace — http server with the mcp route.  Binds 0.0.0.0 for the container. --]
-httpspace::[host    => !*<boot/args/web/http>,
-            q       => [mimeq::[=>]],
-            pattern => http://#,
-            route   => [/mcp   => mcp_mtron_http,
-                        /      => fs:boot/space/web]]@/sys/space/web/http;
+||inst?httspace<=uri() { 
+  -<([host    => _,
+      q       => [mimeq::[=>]],
+      pattern => http://#,
+      route   => [/mcp   => mcp_mtron_http,
+                  /      => fs:boot/space/web]]@/sys/space/web/http).as(httpspace::T) }

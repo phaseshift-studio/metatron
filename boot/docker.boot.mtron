@@ -36,15 +36,13 @@ fsspace::[pattern => fs:#,
           q       => [mimeq::[=>]],
           route   => [fs: => <.>]]@/sys/space/fs/root;
 
-[-- deployment identity: home.mtron builds /usr/${*boot/args/user}/# from this; override via the CMD: user=><name> --]
-
-*<fs:boot/space/dckr/socket.mtron>;
-*<fs:boot/space/mem/home.mtron>;
-*<fs:boot/space/web/http.mtron>;
-*<fs:boot/space/web/ws.mtron>;
-*<fs:boot/space/tble/sqlite.mtron>;
-
-
+[== calls boot modules to load spaces ==]
+[== deployment identity: home.mtron builds /usr/${*boot/args/user}/# from this; override via the CMD: user=><name> ==]
+<unix:///var/run/docker.sock>.<fs:boot/space/dckr/socket.mtron>();
+*boot/args/user.<fs:boot/space/mem/home.mtron>();
+*boot/args/web/http.<fs:boot/space/web/http.mtron>();
+*boot/args/web/ws.<fs:boot/space/web/ws.mtron>();
+<fs:boot/space/tble/sqlite.mtron>(user=>!*boot/args/user,storage=>!(*boot/args/data.else(/tmp)));
 
 print('{{g}}docker boot complete — ws 0.0.0.0:8555, http 0.0.0.0:8777{{X}}\n');
 print('{{g}}a simple remote console: {{y}}wsplus {{b}}ws://localhost:8555/mtron{{X}}\n')

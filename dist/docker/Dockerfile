@@ -47,7 +47,7 @@ RUN apt-get update \
     && chmod a+r /etc/apt/keyrings/docker.asc \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list \
     && apt-get update \
-    && apt-get install -y --no-install-recommends docker-ce-cli \
+    && apt-get install -y --no-install-recommends docker-ce-cli docker-compose-plugin \
     && rm -rf /var/lib/apt/lists/*
 
 # non-root runtime user (fixed uid so host-mounted volumes can be chowned)
@@ -62,6 +62,9 @@ COPY --chown=metatron:metatron conf/ /app/conf/
 #   docker exec -it metatron wsplus ws://localhost:8555/mtron
 COPY --chown=metatron:metatron bin/wsplus /app/bin/wsplus
 ENV PATH="/app/bin:${PATH}"
+# entrypoint: `docker run <image> --help` prints usage, otherwise runs the VM
+COPY --chown=metatron:metatron dist/docker/entrypoint.sh dist/docker/usage.txt /app/
+RUN chmod +x /app/entrypoint.sh
 # skills — the MCP handlers load SKILL.md from .metatron/skills (a symlink to
 # docs/website/skills in the repo; bake the two skill sets directly here)
 COPY --chown=metatron:metatron docs/website/skills/mtron /app/.metatron/skills/mtron
@@ -72,26 +75,14 @@ USER metatron
 # ws (mtron/MCP) and http — the standard boot binds both on 0.0.0.0
 EXPOSE 8555 8777
 
-# metatron needs module access to run.  After a console-less boot completes,
-# BootLoader parks the main thread on its shutdown latch (BootLoader.java ~540)
-# until SIGTERM, so the boot's web/mcp servers keep the process alive.  Do NOT
-# pass --headless: it is not a recognized flag — the parser swallows it as a
-# bare mtron expression (mtron comments start with --) and ONE_SHOT exits.
-# The boot-args string (the CMD) is passed straight to BootLoader.
-ENTRYPOINT ["java", \
-    "--enable-native-access=ALL-UNNAMED", \
-    "--add-modules", "jdk.incubator.vector", \
-    "--add-opens", "java.base/java.lang=ALL-UNNAMED", \
-    "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED", \
-    "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED", \
-    "--add-opens", "java.base/java.util=ALL-UNNAMED", \
-    "--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED", \
-    "--add-opens", "java.base/java.io=ALL-UNNAMED", \
-    "--add-opens", "java.base/java.nio=ALL-UNNAMED", \
-    "--add-opens", "java.base/java.net=ALL-UNNAMED", \
-    "--add-opens", "java.base/sun.nio.cs=ALL-UNNAMED", \
-    "--sun-misc-unsafe-memory-access=allow", \
-    "-jar", "/app/metatron.jar"]
+# The entrypoint runs the VM with the JVM flags it needs (in entrypoint.sh).
+# After a console-less boot completes, BootLoader parks the main thread on its
+# shutdown latch (BootLoader.java ~540) until SIGTERM, so the boot's web/mcp
+# servers keep the process alive.  Do NOT pass --headless: it is not a
+# recognized flag — the parser swallows it as a bare mtron expression (mtron
+# comments start with --) and ONE_SHOT exits.  The boot-args string (the CMD)
+# is passed straight to BootLoader.
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Default boot: the thin container profile (boot/docker.boot.mtron), which pulls
 # the boot/space modules.  Mount your own boot and pass its boot args as the
