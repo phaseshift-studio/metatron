@@ -1,0 +1,26 @@
+metatron — a ring-oriented language and virtual machine
+  PhaseShift Studio
+
+RUN THE CONTAINER
+  docker run -d --name metatron \
+    -p 8555:8555 -p 8777:8777 \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    --group-add "$(stat -c '%g' /var/run/docker.sock)" \
+    ghcr.io/phaseshift-studio/metatron:latest \
+    "[boot=><boot/docker.boot.mtron>,user=>avatar,web=>[http=><http://0.0.0.0:8777>,ws=><ws://0.0.0.0:8555>],log=>info]"
+
+ENDPOINTS (once running)
+  ws://<host>:8555/mtron    mtron repl console
+  ws://<host>:8555/mcp      mcp over websocket
+  http://<host>:8777/mcp    mcp over http (post json-rpc)
+  http://<host>:8777/       web root (index page)
+
+CONSOLE
+  docker exec -it metatron wsplus ws://localhost:8555/mtron
+
+NOTES
+  - the docker socket mount + --group-add are required for dckrspace::T — the
+    boot pulls its infra (sqlite / postgres / janusgraph / ...) containers via
+    the HOST docker socket.
+  - override the boot or its args by appending a boot-args string as the command.
+  - full docs: dist/docker/README.md in the repo.

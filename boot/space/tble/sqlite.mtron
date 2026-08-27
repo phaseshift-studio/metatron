@@ -1,12 +1,17 @@
-[-- tblespace on a local sqlite file in the writable data dir; a dckrspace-pulled
-    sqlite container shares the same volume so data persists across recreates. --]
-*docker:container/dr_sqlite.else(
-  [services => [sqlite => [image   => hibitdev/sqlite:latest,
-                           volumes => ["${*boot/args/data.else(<~/.metatron>)}:/db"],
-                           command => ['tail', '-f', '/dev/null']]]]@docker:compose/dr_sqlite);
-tblespace::[pattern => </usr/dr/#>,
-            host    => <sqlite:${*boot/args/data.else(<~/.metatron>)}/dr.sqlite>,
-            driver  => <org.sqlite.JDBC>,
-            table   => [,],
-            q       => [incrq::[=>], subq::[=>]],
-            route   => [/usr/dr/ => <>]]@</sys/space/usr/dr>;
+[== tblespace on a local sqlite file in the writable data dir; a dckrspace-pulled
+    sqlite container shares the same volume so data persists across recreates. ==]
+||inst?#{?}<=#{?}(user=>uri::T,storage=>uri::T){
+  print("loading ${!*storage} sqlite container for user ${!*user}").
+  from(docker:container/metatron).
+  else(
+    *storage -< [services => -< [sqlite => -< [
+                                  image   => hibitdev/sqlite:latest,
+                                  volumes => -< ["${as(str::T)}:/db"],
+                                  command => ['tail', '-f', '/dev/null']]]].to(docker:compose/metatron)).
+  print("container loaded ${_}").
+  -<[pattern => </usr/${!*user}/#>,
+     host    => <sqlite:${!*storage}/metatron.sqlite>,
+     driver  => <org.sqlite.JDBC>,
+     table   => [,],
+     q       => [incrq::[=>], subq::[=>]],
+     route   => -< [</usr/${!*user}> => <>]]@</sys/space/usr/user>.as(tblespace::T) }

@@ -1,5 +1,6 @@
 [-- memspace — in-memory home space. --]
-memspace::[pattern => </usr/${!*boot/args/user}/#>,
-           q       => [docq::[=>], subq::[=>], 
-                       mimeq::[=>],lineq::[=>],lockq::[=>], 
-                       incrq::[=>]]]@</sys/space/usr/home>;
+||inst?memspace<=uri(){
+  [pattern => </usr/${_}/#>,
+   q       => [docq::[=>], subq::[=>], 
+               mimeq::[=>],lineq::[=>],lockq::[=>], 
+               incrq::[=>]]]@</sys/space/usr/home>.as(memspace::T) }
