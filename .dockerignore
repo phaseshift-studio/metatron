@@ -9,3 +9,10 @@
 !dist/
 !dist/docker/
 !dist/docker/Dockerfile
+!docs/
+!docs/website/
+!docs/website/skills/
+!docs/website/skills/mtron/
+!docs/website/skills/metatron/
+!bin/
+!bin/wsplus

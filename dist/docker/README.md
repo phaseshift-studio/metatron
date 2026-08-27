@@ -16,8 +16,11 @@ file.  Built and published to GHCR (`ghcr.io/phaseshift-studio/metatron`) by
 - **Healthcheck** probes `http://localhost:8777/` — the boot must serve http on
   that port or the container reports unhealthy (20s start period before checking).
 - **`dckrspace::T`** (used by the standard boot to pull sqlite / postgres /
-  janusgraph / etc.) needs the host docker socket mounted at runtime:
-  `-v /var/run/docker.sock:/var/run/docker.sock`.
+  janusgraph / etc.) uses the docker CLI baked into the image, talking to the
+  HOST docker socket — mount it at runtime with
+  `-v /var/run/docker.sock:/var/run/docker.sock`, and add the host's docker
+  group so the non-root user can access the socket:
+  `--group-add $(stat -c '%g' /var/run/docker.sock)`.
 - Runs as non-root user `metatron` (uid 10001); chown host-mounted volumes to
   that uid.
 
@@ -52,3 +55,22 @@ docker run -d --name metatron \
 # quick interactive shell (the bin/metatron-docker wrapper does this):
 ./bin/metatron-docker
 ```
+
+## Console
+
+The image includes `wsplus`, a basic mtron REPL for talking to the headless
+server's `/mtron` endpoint. The connection is persistent, so session state
+carries across lines:
+
+```bash
+docker exec -it metatron wsplus ws://localhost:8555/mtron
+
+mtron> 1 + 2
+==>3
+mtron> /usr/alice/x -> [1,2,3]
+==>[1,2,3]
+mtron> */usr/alice/x/1
+==>2
+```
+
+`bin/wsplus` from a checkout works the same way against any running metatron.

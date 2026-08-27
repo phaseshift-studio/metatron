@@ -1,12 +1,61 @@
-#!/usr/bin/sh
+#!/usr/bin/env python3
+# wsplus — a basic mtron console for a headless metatron ws:// server.
+# Connects to the server's /mtron endpoint and presents a REPL:
+#
+#   mtron> 1 + 2
+#   ==>3
+#
+# Persistent connection (session state carries across lines), readline history
+# + arrow keys when run on a TTY.
+import asyncio
+import sys
 
-echo " __    __    ___  ____    _____  ___     __   ____  ______ ";
-echo "|  |__|  |  /  _]|    \  / ___/ /   \   /  ] /    ||      |";
-echo "|  |  |  | /  [_ |  o  )(   \_ |     | /  / |  o  ||      |";
-echo "|  |  |  ||    _]|     | \__  ||  O  |/  /  |     ||_|  |_|";
-echo "|  '  '  ||   [_ |  O  | /  \ ||     /   \_ |  _  |  |  |  ";
-echo " \      / |     ||     | \    ||     \     ||  |  |  |  |  ";
-echo "  \_/\_/  |_____||_____|  \___| \___/ \____||__|__|  |__|  ";
-echo "   history, arrow keys, and more                     PLUS  ";
+try:
+    import websockets
+except ImportError:
+    print("wsplus requires the 'websockets' package: pip install websockets")
+    sys.exit(1)
 
-rlwrap websocat --text  "$@"
+BANNER = r""" __    __    ___  ____    _____  ___     __   ____  ______
+|  |__|  |  /  _]|    \  / ___/ /   \   /  ] /    ||      |
+|  |  |  | /  [_ |  o  )(   \_ |     | /  / |  o  ||      |
+|  |  |  ||    _]|     | \__  ||  O  |/  /  |     ||_|  |_|
+|  '  '  ||   [_ |  O  | /  \ ||     /   \_ |  _  |  |  |
+ \      / |     ||     | \    ||     \     ||  |  |  |  |
+  \_/\_/  |_____||_____|  \___| \___/ \____||__|__|  |__
+           wsplus — an mtron console (Ctrl-D to exit)"""
+
+
+async def repl(url):
+    async with websockets.connect(url) as ws:
+        while True:
+            try:
+                line = input("mtron> ")
+            except (EOFError, KeyboardInterrupt):
+                print()
+                return
+            if not line.strip():
+                continue
+            await ws.send(line)
+            try:
+                result = await asyncio.wait_for(ws.recv(), 30)
+                text = result.decode() if isinstance(result, bytes) else str(result)
+                print("==>" + text.replace("\n", "\n   "))
+            except asyncio.TimeoutError:
+                print("==>ERROR: timed out")
+
+
+def main():
+    url = sys.argv[1] if len(sys.argv) > 1 else "ws://localhost:8555/mtron"
+    print(BANNER)
+    try:
+        asyncio.run(repl(url))
+    except KeyboardInterrupt:
+        print()
+    except Exception as e:
+        print(f"==>ERROR: {e}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

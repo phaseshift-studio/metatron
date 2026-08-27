@@ -1,0 +1,50 @@
+[== docker.boot.mtron — container deployment profile (the thin boot for the
+     Docker approach).  The curl install / bin/metatron approach uses a sibling
+     profile like linux.boot.mtron.  Assembles the boot/space modules.
+     Every config value comes from boot/args (the container CMD) with .else()
+     defaults inside each module — nothing here is special, just mtron.  The
+     fs: fsspace below (rooted at cwd = /app in the container) pulls the modules
+     and exposes the full container filesystem to mtron.
+     Container run (see dist/docker/README.md):
+       docker run ... ghcr.io/phaseshift-studio/metatron \
+         "[user=><name>,
+           web=>[http=><http://0.0.0.0:8777>,ws=><ws://0.0.0.0:8555>],
+           data=><~/.metatron>,mcp=>[...]]"
+==]
+print("""
+                       PhaseShift Studio Presents
+ ______         ,-----.        _______   .--.   .--.      .-''-.  .-------.     
+|    _ `''.   .'  .-,  '.     /   __  \  |  | _/  /     .'_ _   \ |  _ _   \    
+| _ | ) _  \ / ,-.|  \ _ \   | ,_/  \__) | (`' ) /     / ( ` )   '| ( ' )  |    
+|( ''_'  ) |;  \  '_ /  | :,-./  )       |(_ ()_)     . (_ o _)  ||(_ o _) /    
+| . (_) `. ||  _`,/ \ _/  |\  '_ '`)     | (_,_)   __ |  (_,_)___|| (_,_).' __  
+|(_    ._) ': (  '\_/ \   ; > (_)  )  __ |  |\ \  |  |'  \   .---.|  |\ \  |  | 
+|  (_.\.' /  \ `"/  \  ) / (  .  .-'_/  )|  | \ `'   / \  `-'    /|  | \ `'   / 
+|       .'    '. \_/``".'   `-'`-'     / |  |  \    /   \       / |  |  \    /  
+'-----'`        '-----'       `._____.'  `--'   `'-'     `'-..-'  ''-'   `'-'   
+                                                                a metatron bomb                                                                         
+""");
+import(/m/mach/io);
+import(/m/mach/ui,ui);
+import(/m/llm);
+import(/m/web,web);
+import(/m/tble);
+import(/m/dckr);
+
+
+fsspace::[pattern => fs:#,
+          q       => [mimeq::[=>]],
+          route   => [fs: => <.>]]@/sys/space/fs/root;
+
+[-- deployment identity: home.mtron builds /usr/${*boot/args/user}/# from this; override via the CMD: user=><name> --]
+
+*<fs:boot/space/dckr/socket.mtron>;
+*<fs:boot/space/mem/home.mtron>;
+*<fs:boot/space/web/http.mtron>;
+*<fs:boot/space/web/ws.mtron>;
+*<fs:boot/space/tble/sqlite.mtron>;
+
+
+
+print('{{g}}docker boot complete — ws 0.0.0.0:8555, http 0.0.0.0:8777{{X}}\n');
+print('{{g}}a simple remote console: {{y}}wsplus {{b}}ws://localhost:8555/mtron{{X}}\n')
