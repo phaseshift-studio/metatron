@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.ProjectionFailureException;
 
 import java.nio.ByteBuffer;
@@ -301,6 +302,11 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                 string = string.substring(0, string.length() - 1);
             }
             return string;
+        }
+
+        public static String stripString(final Obj obj) {
+            final String result = cleanString(obj, false);
+            return Graphitty.strip(Graphitty.string(result));
         }
 
         public static String cleanString(final Obj obj) {

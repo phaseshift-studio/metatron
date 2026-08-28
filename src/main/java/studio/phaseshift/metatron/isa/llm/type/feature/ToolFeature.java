@@ -3,13 +3,11 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.McpClient;
-import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolExecutor;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.llm.type.mcpClient;
 import studio.phaseshift.metatron.isa.m.type.Lst;
@@ -29,6 +27,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.TOOL_RESULT_MESSAGE_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -40,7 +39,8 @@ public class ToolFeature extends AbstractFeature {
         super(jvm, tid, vid);
     }
 
-    public static void buildTools(final Agent agent, final AiServices<AgentServices> service) {
+    @Override
+    public Obj onBeforeChat(final Agent agent) {
         agent.features().elements().map(Obj::asRec).filter(f -> f.has(TOOL)).forEach(feature -> {
             final Obj tool = feature.at(TOOL);
             final List<McpClient> mcpClients = new ArrayList<>();
@@ -69,6 +69,7 @@ public class ToolFeature extends AbstractFeature {
             if (!mcpClients.isEmpty())
                 agent.addToolProvider(McpToolProvider.builder().mcpClients(mcpClients).build());
         });
+        return noobj();
     }
 
     @Override

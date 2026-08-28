@@ -32,7 +32,10 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.llm.mToolProvider;
-import studio.phaseshift.metatron.isa.llm.type.feature.*;
+import studio.phaseshift.metatron.isa.llm.type.feature.ChatFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
+import studio.phaseshift.metatron.isa.llm.type.feature.SessionFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.SystemFeature;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -51,7 +54,6 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +70,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AGENT_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -227,7 +228,7 @@ public class Agent extends MRec {
                     uri(NAME), str(agentName),
                     uri(FEATURE), lst(new ChatFeature(mutableMap(
                             uri(MODEL), model,
-                            uri(RESPONSE), rec(uri(TO), id_().tryToInst())),
+                            uri(RESPONSE), rec(uri(TO), noobj())),
                             LLM_CHAT_FEATURE_TID, null))), LLM_AGENT_TID, null);
             return translator.chat(prompt);
         }
@@ -352,9 +353,9 @@ public class Agent extends MRec {
                 this.feature(CHAT).ifPresent(chat -> chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE));
                 // ── Phase 2: Build LC4j service from Agent's own JVM state ──
                 final AiServices<AgentServices> service = AiServices.builder(AgentServices.class)
-                        // .executeToolsConcurrently()
-                        // .executeToolsConcurrently(BootLoader.getExecutor())
-                        // .maxToolCallingRoundTrips()
+                        //.executeToolsConcurrently(ThreadExecutor.instance())
+                        //.maxToolCallingRoundTrips(10)
+                        .storeRetrievedContentInChatMemory(true)
                         .toolProvider(this.toolProvider)
                         .toolExecutionErrorHandler((error, context) -> {
                             if (this.has(TOOL) && this.feature(TOOL).asRec().has(ON_ERROR)) {
@@ -374,11 +375,11 @@ public class Agent extends MRec {
                 final Rec chat = chatFeature.asRec();
                 if (this.hasFeature(SESSION))
                     SessionFeature.buildSession(this, service);
-                if (this.hasFeature(SKILL))
-                    SkillFeature.buildSkills(this, service);
-                if (this.hasFeature(TOOL))
-                    ToolFeature.buildTools(this, service);
-                this.at(feat(CONCEPT)).ifPresent(c -> ((ConceptFeature) c).build(this, service));
+                //if (this.hasFeature(SKILL))
+                //    SkillFeature.buildSkills(this, service);
+                //if (this.hasFeature(TOOL))
+                //    ToolFeature.buildTools(this, service);
+                // this.at(feat(CONCEPT)).ifPresent(c -> ((ConceptFeature) c).build(this, service));
                 //////////////////////////////////////////////////////////////////////////////////
                 // The single system-message channel: SystemFeature owns the contributions
                 // (features add via agent.feature(SYSTEM).<SystemFeature>as().addSystemMessage
@@ -398,7 +399,7 @@ public class Agent extends MRec {
                 // ── Phase 3: Stream — write events to result blackboard, dispatch hooks ──
                 LOG.debug("processed message: %s %s", this.userMessage, this.feature(CHAT).asRec().at(FORMAT).orElse(rec(uri(FORMAT), uri("none"))));
                 spinnerMessage(waiting, "waiting for agent response...");
-                agent.chat(Str.Helper.cleanString(str(this.userMessage).apply(this)))
+                agent.chat(Str.Helper.stripString(str(this.userMessage)))
                         .onToolExecuted(tool -> {
                             if (this.interrupt.get()) latch.countDown();
                             isTooling.set(false);

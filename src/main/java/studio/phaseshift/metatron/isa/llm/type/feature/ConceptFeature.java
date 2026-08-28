@@ -18,10 +18,6 @@
 
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
-import dev.langchain4j.service.AiServices;
-import dev.langchain4j.service.tool.ToolProvider;
-import dev.langchain4j.skills.Skill;
-import dev.langchain4j.skills.Skills;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.analysis.TokenStream;
@@ -35,12 +31,13 @@ import org.apache.lucene.store.ByteBuffersDirectory;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.BytesRef;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.llm.type.*;
+import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.Model;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
@@ -179,7 +176,7 @@ public class ConceptFeature extends AbstractFeature {
                                                                   """;
 
 
-    public AiServices<AgentServices> build(final Agent agent, final AiServices<AgentServices> service) {
+   /* public AiServices<AgentServices> build(final Agent agent, final AiServices<AgentServices> service) {
         final List<Skill> skillList = this.skill(agent).elements()
                 .map(s -> s.isUri() ?
                         mSkill.of(fsSpace.staticObjToFile(s)).toSkill() :
@@ -189,7 +186,7 @@ public class ConceptFeature extends AbstractFeature {
         agent.addToolProvider(skillToolProvider);
         this.onBeforeChat(agent);
         return service;
-    }
+    }*/
 
     // =========================================================================
     // Constructor
