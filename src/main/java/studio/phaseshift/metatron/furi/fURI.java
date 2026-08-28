@@ -470,6 +470,10 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     fURI c(final cInt coefficient);
 
+    default fURI cLess() {
+        return this.c((cInt) null);
+    }
+
     default fURI c(final Function<cInt, cInt> func) {
         return this.c(func.apply(this.c()));
     }

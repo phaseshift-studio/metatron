@@ -22,7 +22,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -40,7 +40,7 @@ import java.util.Map;
  */
 public final class EmojiTable {
 
-    private static final Map<String, String> EMOJIS = load();
+    public static final Map<String, String> EMOJIS = load();
 
     private EmojiTable() {
     }
@@ -54,7 +54,7 @@ public final class EmojiTable {
     }
 
     private static Map<String, String> load() {
-        final Map<String, String> emojis = new HashMap<>();
+        final Map<String, String> emojis = new LinkedHashMap<>();
         try (InputStream in = EmojiTable.class.getResourceAsStream("/emoji.txt")) {
             if (null == in) return emojis;
             final BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
@@ -71,7 +71,9 @@ public final class EmojiTable {
         return emojis;
     }
 
-    /** Build the emoji string from space-separated {@code U+XXXX} codepoints. */
+    /**
+     * Build the emoji string from space-separated {@code U+XXXX} codepoints.
+     */
     private static String codepoints(final String cps) {
         final StringBuilder sb = new StringBuilder();
         for (final String cp : cps.split(" ")) {

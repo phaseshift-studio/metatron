@@ -61,7 +61,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     /**
      * Buffered appends — coalesced to avoid O(n²) string joining and per-line Router reads.
      */
-    private final StringBuilder pendingBuffer = new StringBuilder();
+    private StringBuilder pendingBuffer = new StringBuilder();
     private static final int BUFFER_FLUSH_THRESHOLD = 4096;
 
     // ── JRec constructor ───────────────────────────────────────────
@@ -72,6 +72,21 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
         if (this.style.foreground().isEmpty()) this.style.foreground("{{g}}");
         // Pull style config (incl. float) from the JVM so run() sees it
         readStyle();
+    }
+
+    /**
+     * JRec rehydration (a widget read back from a serialized space) bypasses the
+     * constructor, so the plain-Java transient fields are left null.  Restore
+     * them before any method touches {@link #style} or {@link #pendingBuffer}.
+     */
+    private void ensureRehydrated() {
+        if (null == this.style) {
+            this.style = Style.empty();
+            if (this.style.border() == Border.none) this.style.border(Border.continuous);
+            if (this.style.foreground().isEmpty()) this.style.foreground("{{g}}");
+        }
+        if (null == this.pendingBuffer)
+            this.pendingBuffer = new StringBuilder();
     }
 
     // ── convenience constructors ───────────────────────────────────
@@ -111,6 +126,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     }
 
     public AccordionWidget body(final String text) {
+        ensureRehydrated();
         synchronized (this.pendingBuffer) {
             this.pendingBuffer.setLength(0);
         }
@@ -125,6 +141,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
      * {@link #height()} is called.
      */
     public AccordionWidget appendLine(final String line) {
+        ensureRehydrated();
         if (line == null || line.isEmpty()) return this;
         boolean shouldFlush = false;
         synchronized (this.pendingBuffer) {
@@ -145,6 +162,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
      * Idempotent — safe to call from render loops.
      */
     public AccordionWidget flush() {
+        ensureRehydrated();
         final String pending;
         synchronized (this.pendingBuffer) {
             if (this.pendingBuffer.length() == 0) return this;
@@ -177,6 +195,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     }
 
     public AccordionWidget clearBody() {
+        ensureRehydrated();
         synchronized (this.pendingBuffer) {
             this.pendingBuffer.setLength(0);
         }
@@ -192,6 +211,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
 
     @Override
     public Style<AccordionWidget> getStyle() {
+        ensureRehydrated();
         return this.style;
     }
 
@@ -259,6 +279,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
 
     @Override
     public String format() {
+        ensureRehydrated();
         flush();  // persist buffered appends before rendering
         final String title = this.title();
         final boolean expanded = this.isExpanded();

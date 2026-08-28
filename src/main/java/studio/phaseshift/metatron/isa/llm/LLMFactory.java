@@ -56,14 +56,12 @@ import java.util.Optional;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MODEL_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_BYTE_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.normalizeData;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -237,6 +235,7 @@ public final class LLMFactory {
                                 .returnThinking(thinking)
                                 .logRequests(true)
                                 .logResponses(true)
+                                .timeout(Duration.ofSeconds(model.at(TIMEOUT).orElse(real(60.0, MATH_SECOND_TID, null)).tid(MATH_SECOND_TID).realValue().longValue()))
                                 // .listeners(model.cost().isPresent() ? List.of(new CostCalculator(model.cost().get())) : null)
                                 .logger(Graphitty.log(OllamaStreamingChatModel.class).logger(Level.WARN));
                 if (hasResponseFormat)

@@ -505,6 +505,7 @@
                 <directory>src/main/resources</directory>
                 <includes>
                     <include>studio/phaseshift/metatron/util/dictionary_en.txt</include>
+                    <include>studio/phaseshift/metatron/util/terrier_stop_word_list_en.txt</include>
                     <include>emoji.txt</include>
                 </includes>
             </resource>

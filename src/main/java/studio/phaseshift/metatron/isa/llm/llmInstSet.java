@@ -39,8 +39,7 @@ import java.util.stream.Collectors;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.DOCS_TID;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
 import static studio.phaseshift.metatron.isa.llm.type.Model.model;
 import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
@@ -58,6 +57,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -148,13 +148,15 @@ public class llmInstSet extends AbstractInstSet {
                                                   Output exactly TWO json blocks. The first is a JSON array of claim objects, the second a
                                                   JSON array of loose end objects:
                                                   
-                                                  <<json:claim>>[{"text":"...","kind":"decision"},{"text":"...","kind":"problem"}]<</json:claim>>
+                                                  <<json:claim>>[{"text":"...","kind":"decision","source":[...]},{"text":"...","kind":"problem"}]<</json:claim>>
                                                   <<json:loose_end>>[{"title":"...","desc":"...","status":"open"}]<</json:loose_end>>
                                                   
                                                   Rules for claims:
                                                   1. kind is one of: decision, problem, solution, observation.
-                                                  2. A decision without a rationale is not worth recording — say why in the text.
-                                                  3. Prefer specific over general; if nothing significant happened, emit an empty array: <<json:claim>>[]<</json:claim>>
+                                                  2. source is a list of messages (by vid) that inspired you to create the claim.
+                                                    - ["/example/message/1","/example/message/5"]
+                                                  3. A decision without a rationale is not worth recording — say why in the text.
+                                                  4. Prefer specific over general; if nothing significant happened, emit an empty array: <<json:claim>>[]<</json:claim>>
                                                   
                                                   Rules for loose ends:
                                                   4. The cold test: could a session with no access to this transcript act on it? If reading it
@@ -189,6 +191,7 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(PROTOCOL), URI_TYPE,
                                                 uri(LLM), URI_TYPE,
                                                 uri(API_KEY).maybe(), STR_TYPE,
+                                                uri(TIMEOUT).maybe(), TIME_TYPE,
                                                 uri(SIZE).maybe(), DATA_SIZE_TYPE,
                                                 uri(QUANT).maybe(), INT_TYPE,
                                                 uri(COST).maybe(), rec(uri(IN), MATH_CURRENCY_TYPE, uri(OUT), MATH_CURRENCY_TYPE).maybe()))
@@ -654,114 +657,181 @@ public class llmInstSet extends AbstractInstSet {
                                 "communicate with am llm enriched by tools, skills, etc. and receive response in particular format", // desc
                                 "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts/_?incrq)].chat('what is 4+2?',[answer=>int::T])"),
                         // SUMMARIZE INSTRUCTION — distill a session into claim::T recs
-                        docWrap(instC(LLM_INST_TID.extend("summary").dom(LLM_SESSION_TID.maybe()).rng(LST_TID), rec(
-                                                uri(SESSION), T(LLM_SESSION_TID.maybe()),
-                                                uri(MODEL), choose_(rec(
-                                                        isa_(LLM_MODEL_TYPE).tryToInst(), id_(),
-                                                        isa_(LLM_SESSION_TYPE), from_(rshift_(uri(AGENT)).mult_(uri(MODEL)))))
-                                                        .rshift_().tryToInst()),
+                        docWrap(instC(LLM_INST_TID.extend("summary").dom(LLM_SESSION_TID.maybe()).rng(REC_TID), rec(
+                                                uri(SESSION).maybe().asUri(), T(LLM_SESSION_TID.maybe()),
+                                                uri(MODEL).maybe().asUri(), choose_(rec(
+                                                        isa_(LLM_MODEL_TYPE).tryToInst(), id_().tryToInst(),
+                                                        isa_(LLM_SESSION_TYPE).tryToInst(), from_(rshift_(uri(AGENT)).mult_(uri(MODEL))).tryToInst()))
+                                                        .rshift_().tryToInst(),
+                                                uri(SCOPE).maybe().asUri(), T(ALL_STAR),
+                                                uri(KIND).maybe().asUri(), T(ALL_STAR),
+                                                uri(CONCEPT).maybe().asUri(), T(ALL_STAR)),
                                         (lhs, inst) -> {
                                             // The session may arrive as the lhs (fluent: @dr/session/1.summarize(_))
                                             // or as arg 0 (function form: summarize(@dr/session/1)).
                                             final Rec session = inst.arg(f(SESSION), 0).orElse(lhs.asRec());
-                                            final Obj modelArg = inst.arg(f(MODEL), 1);
                                             final fURI sessionVID = session.vid();
-                                            final fURI agentHome = session.at(AGENT).uriValue();
                                             if (null == sessionVID || sessionVID.isEmpty())
                                                 return fail("summarize requires an anchored session — use @dr/session/N.summarize()");
-                                            // 1. collect this session's messages from the ledger as rels
-                                            //    (vid => rec) — the rel key IS the message vid (branch read)
-                                            final List<Rel> messages = Router.readFromSpace(agentHome.extend(MESSAGE).extend("+/"))
-                                                    .stream()
-                                                    .map(Obj::asRel)
-                                                    .filter(pair -> {
-                                                        final Obj sess = pair.second().asRec().at(uri(SESSION)).orElse(noobj());
-                                                        return sess.isUri() && sess.uriValue().equals(sessionVID);
-                                                    })
-                                                    .sorted(Comparator.comparing(pair -> pair.first().uriValue().name()))
-                                                    .toList();
-                                            if (messages.isEmpty())
-                                                return fail("no messages found for session %s", sessionVID);
-                                            // 2. build the distill digest
-                                            final String digest = messages.stream()
-                                                    .map(pair -> Str.Helper.cleanString(pair.second().asRec().at(TEXT).orElse(str(""))))
-                                                    .filter(s -> !s.isBlank())
-                                                    .collect(Collectors.joining("\n"));
-                                            // 3. the model — from the agent home (matches <agent>/model)
-                                            final Model model = modelArg.isNoObj() ? Model.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec()) : Model.model(modelArg.asRec());
-                                            LOG.debug("summarize model: %s", model);
-                                            // 4. distill via a mini-task
-                                            final ChatResult result = Agent.Helper.miniTask("session_summarizer", model, SUMMARIZE_PROMPT.formatted(digest));
-                                            LOG.debug("summarize result: %s", result);
-                                            // 5. parse the <<json:claim>> and <<json:loose_end>> blocks into vids
-                                            final List<Obj> resultVids = new ArrayList<>();
-                                            final List<Obj> claimVids = new ArrayList<>();
-                                            final Obj blocks = result.at(uri("blocks")).orElse(noobj());
-                                            LOG.debug("summarize blocks: %s", blocks);
-                                            if (!blocks.isNoObj()) {
-                                                final Rec blocksRec = blocks.asRec();
-                                                int claimIndex = 0;
-                                                int looseEndIndex = 0;
-                                                for (final Rel entry : blocksRec.elements().toList()) {
-                                                    final String keyStr = Str.Helper.cleanString(entry.first());
-                                                    final Obj body = entry.second();
-                                                    final Lst bodyLst = body.isLst() ? body.asLst() : lst(body);
-                                                    for (final Obj bodyObj : bodyLst.elements().toList()) {
-                                                        Rec rec = bodyObj.asRec();
-                                                        if (keyStr.equals("claim")) {
-                                                            // JSON parses kind as a string ("observation") — coerce to a uri
-                                                            // as claim::T expects (kind => union of uris)
-                                                            final Obj kind = rec.at(uri(KIND));
-                                                            if (kind.isStr())
-                                                                rec.at(uri(KIND), uri(kind.strValue()), MUTABLE);
-                                                            // source: lst of !* auto_from refs to the message vids — the same
-                                                            // storage form concept uses for its {uri} collections (tble
-                                                            // round-trips lst fine; objs/coefficient collections do not)
-                                                            rec.at(uri(SOURCE), lst(messages.stream()
-                                                                    .map(pair -> (Obj) auto_from_(pair.first().uriValue()).tryToInst())
-                                                                    .toList()), MUTABLE);
-                                                            rec = rec.tid(LLM_CLAIM_TID);
-                                                            final fURI vid = agentHome.extend("claim").extend(String.valueOf(claimIndex++));
-                                                            rec = rec.selfVID(vid);
-                                                            Router.writeToSpace(vid, rec);
-                                                            resultVids.add(uri(vid));
-                                                            claimVids.add(uri(vid));
-                                                        } else if (keyStr.equals("loose_end")) {
-                                                            // JSON parses status as a string ("open") — coerce to a uri
-                                                            // as loose_end::T expects (status => union of uris)
-                                                            final Obj status = rec.at(uri(STATUS));
-                                                            if (status.isStr())
-                                                                rec.at(uri(STATUS), uri(status.strValue()), MUTABLE);
-                                                            // source: lst of !* auto_from refs to the message vids — same as claims
-                                                            rec.at(uri(SOURCE), lst(messages.stream()
-                                                                    .map(pair -> (Obj) auto_from_(pair.first().uriValue()).tryToInst())
-                                                                    .toList()), MUTABLE);
-                                                            // claim: !* auto_from refs to the claims distilled in this same
-                                                            // pass — the loose end's justifying propositions
-                                                            if (!claimVids.isEmpty())
-                                                                rec.at(uri("claim"), lst(claimVids.stream()
-                                                                        .map(v -> (Obj) auto_from_(v.uriValue()).tryToInst())
-                                                                        .toList()), MUTABLE);
-                                                            // time is stamped by the inst, not the model
-                                                            rec.at(uri(TIME), nowDatetime(), MUTABLE);
-                                                            rec = rec.tid(LLM_LOOSE_END_TID);
-                                                            final fURI vid = agentHome.extend("loose_end").extend(String.valueOf(looseEndIndex++));
-                                                            rec = rec.selfVID(vid);
-                                                            Router.writeToSpace(vid, rec);
-                                                            resultVids.add(uri(vid));
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            return lst(resultVids);
+                                            final fURI agentHome = session.at(AGENT).uriValue();
+                                            // the argument rec — same vocabulary as the <<mtron:summarize>> block
+                                            // (session/model are summary()-only keys; the block uses scope/kinds/concepts)
+                                            final Rec config = rec(uri(SESSION), uri(sessionVID),
+                                                    uri(MODEL), inst.arg(f(MODEL), 1),
+                                                    uri(SCOPE), inst.arg(f(SCOPE), 2),
+                                                    uri(KIND), inst.arg(f(KIND), 3),
+                                                    uri(CONCEPT), inst.arg(f(CONCEPT), 4),
+                                                    uri(TO), uri(agentHome));
+                                            return summarizeSession(agentHome, sessionVID, config);
                                         }),
                                 "a session to distill",
-                                "a lst of claim and loose_end vids distilled from the session",
+                                "the applied constraints rec — [session, model, scope, kind, concept, to, claim=>[vids], loose_end=>[vids]]",
                                 mutableMap(),
-                                "distill a session's message ledger into claim::T and loose_end::T recs via a mini-task; the model emits <<json:claim>> and <<json:loose_end>> blocks that are parsed and anchored at <agent>/claim/ and <agent>/loose_end/",
+                                "distill a session's message ledger into claim::T and loose_end::T recs via a mini-task — the same call as the <<mtron:summarize>> block (they share the argument rec::T vocabulary: session, model, scope, kind, concept, to)",
                                 "@dr/session/1.summarize(_)  [-- fluent --]  |  summarize(@dr/session/1)  [-- function --]"))));
         docWrap(this, "large language model think and reason within the metatron");
         super.setup();
+    }
+
+    /**
+     * Distill a session's message ledger into claim::T and loose_end::T recs
+     * via a mini-task, appending them under the config's {@code output} base.
+     * Shared by the {@code summary} inst and the SummarizeFeature's background
+     * thread — the config rec has the same vocabulary as the
+     * {@code <<mtron:summarize>>} block (session, model, scope, kinds,
+     * concepts, output), so the block is simply a deferred summary() call.
+     *
+     * @param agentHome  the agent root — the model rec is resolved from
+     *                   {@code <agentHome>/model} when the config's model is noobj
+     * @param sessionVID the session whose ledger messages are distilled
+     * @param config     the argument/block rec — {@code scope} filters the
+     *                   message set (a time::T duration or datetime::T cutoff);
+     *                   {@code kind} and {@code concept} are recall hints
+     *                   echoed back for the follow-on briefing; {@code to} is
+     *                   the anchor base (default: the agent home)
+     * @return the applied-constraints rec — the resolved
+     * [session, model, scope, kind, concept, to] plus the written
+     * claim/ and loose_end/ vids; a fail::T on error
+     */
+    public static Obj summarizeSession(final fURI agentHome, final fURI sessionVID, final Rec config) {
+        final Obj modelArg = config.at(uri(MODEL));
+        final Obj scope = config.at(uri(SCOPE));
+        final Obj kinds = config.at(uri(KIND));
+        final Obj concepts = config.at(uri(CONCEPT));
+        final Obj output = config.at(uri(TO));
+        final fURI outputBase = output.isNoObj() ? agentHome : output.uriValue();
+        // 1. collect this session's messages from the ledger as rels
+        //    (vid => rec) — the rel key IS the message vid (branch read)
+        final List<Rel> messages = Router.readFromSpace(agentHome.extend(MESSAGE).extend("+/"))
+                .stream()
+                .map(Obj::asRel)
+                .filter(pair -> {
+                    final Obj sess = pair.second().asRec().at(uri(SESSION)).orElse(noobj());
+                    return sess.isUri() && sess.uriValue().equals(sessionVID);
+                })
+                .filter(pair -> withinScope(pair.second().asRec(), scope))
+                .sorted(Comparator.comparing(pair -> pair.first().uriValue().name()))
+                .toList();
+        if (messages.isEmpty())
+            return fail("no messages found for session %s", sessionVID);
+        // 2. build the distill digest — vid ==> text so the model can cite real vids
+        final String digest = messages.stream()
+                .filter(pair -> !Str.Helper.cleanString(pair.second().asRec().at(TEXT)).isBlank())
+                .map(pair -> Str.Helper.cleanString(pair.first()) + "==>" + Str.Helper.cleanString(pair.second().asRec().at(TEXT).orElse(str(""))))
+                .collect(Collectors.joining("\n"));
+        // 3. the model — from the agent home (matches <agent>/model)
+        final Model model = modelArg.isNoObj() ? Model.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec()) : Model.model(modelArg.asRec());
+        // 4. distill via a mini-task
+        final ChatResult result = Agent.Helper.miniTask("session_summarizer", model(model.at(TIMEOUT, real(5.0, MATH_MINUTE_TID, null))), SUMMARIZE_PROMPT.formatted(digest));
+        // 5. parse the <<json:claim>> and <<json:loose_end>> blocks into vids
+        final List<Obj> claimVids = new ArrayList<>();
+        final List<Obj> looseEndVids = new ArrayList<>();
+        final Obj blocks = result.at(uri("blocks")).orElse(noobj());
+        if (!blocks.isNoObj()) {
+            final Rec blocksRec = blocks.asRec();
+            for (final Rel entry : blocksRec.elements().toList()) {
+                final String keyStr = Str.Helper.cleanString(entry.first());
+                final Obj body = entry.second();
+                final Lst bodyLst = body.isLst() ? body.asLst() : lst(body);
+                for (final Obj bodyObj : bodyLst.elements().toList()) {
+                    Rec rec = bodyObj.asRec();
+                    if (keyStr.equals("claim")) {
+                        // JSON parses kind as a string ("observation") — coerce to a uri
+                        // as claim::T expects (kind => union of uris)
+                        final Obj kind = rec.at(uri(KIND));
+                        if (kind.isStr())
+                            rec.at(uri(KIND), uri(kind.strValue()), MUTABLE);
+                        // source: lst of !* auto_from refs to the message vids — the same
+                        // storage form concept uses for its {uri} collections (tble
+                        // round-trips lst fine; objs/coefficient collections do not)
+                        final Lst source = rec.at(uri(SOURCE)).orElse(lst());
+                        if (!source.isEmpty()) {
+                            rec.at(uri(SOURCE), lst(source.elements()
+                                    .map(s -> (Obj) auto_from_(uri(Str.Helper.cleanString(s))).tryToInst())
+                                    .toList()), MUTABLE);
+                        }
+                        rec = rec.tid(LLM_CLAIM_TID);
+                        final fURI vid = Router.writeToSpace(outputBase.extend("claim").extend("_").addQ(INCRQ), rec).vid();
+                        claimVids.add(uri(vid));
+                    } else if (keyStr.equals("loose_end")) {
+                        // JSON parses status as a string ("open") — coerce to a uri
+                        // as loose_end::T expects (status => union of uris)
+                        final Obj status = rec.at(uri(STATUS));
+                        if (status.isStr())
+                            rec.at(uri(STATUS), uri(status.strValue()), MUTABLE);
+                        // source: lst of !* auto_from refs to the message vids — same as claims
+                        final Lst source = rec.at(uri(SOURCE)).orElse(lst());
+                        if (!source.isEmpty()) {
+                            rec.at(uri(SOURCE), lst(source.elements()
+                                    .map(s -> (Obj) auto_from_(uri(Str.Helper.cleanString(s))).tryToInst())
+                                    .toList()), MUTABLE);
+                        }
+                        // claim: !* auto_from refs to the claims distilled in this same
+                        // pass — the loose end's justifying propositions
+                        if (!claimVids.isEmpty())
+                            rec.at(uri("claim"), lst(claimVids.stream()
+                                    .map(v -> (Obj) auto_from_(v.uriValue()).tryToInst())
+                                    .toList()), MUTABLE);
+                        // time is stamped by the inst, not the model
+                        rec.at(uri(TIME), nowDatetime(), MUTABLE);
+                        rec = rec.tid(LLM_LOOSE_END_TID);
+                        final fURI vid = Router.writeToSpace(outputBase.extend("loose_end").extend("_").addQ(INCRQ), rec).vid();
+                        looseEndVids.add(uri(vid));
+                    }
+                }
+            }
+        }
+        // 6. the applied constraints — the config echoed back with defaults resolved
+        return rec(uri(SESSION), uri(sessionVID),
+                uri(MODEL), model,
+                uri(SCOPE), scope,
+                uri(KIND), kinds,
+                uri(CONCEPT), concepts,
+                uri(TO), uri(outputBase),
+                uri("claim"), lst(claimVids),
+                uri("loose_end"), lst(looseEndVids));
+    }
+
+    /**
+     * Scope filter: keep messages whose {@code time} is at or after the cutoff
+     * implied by {@code scope} — a time::T duration (relative to now) or an
+     * absolute datetime::T.  Noobj (or an unrecognized shape) means no filter.
+     */
+    private static boolean withinScope(final Rec message, final Obj scope) {
+        if (scope.isNoObj())
+            return true;
+        final Obj time = message.at(uri(TIME));
+        if (time.isNoObj() || !time.isUri())
+            return true;
+        final long cutoff;
+        if (scope.isUri()) {
+            cutoff = datetimeToMillis(scope.asUri());
+        } else if (scope.tid().basePath().toString().startsWith(MATH_TIME_TID.toString())) {
+            cutoff = System.currentTimeMillis() - (long) timeToMillis(scope);
+        } else {
+            return true; // unrecognized scope — don't filter
+        }
+        return datetimeToMillis(time.asUri()) >= cutoff;
     }
 
     /**

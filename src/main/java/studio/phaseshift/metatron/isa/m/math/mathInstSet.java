@@ -96,10 +96,12 @@ public class mathInstSet extends AbstractInstSet {
     public static final fURI MATH_SECOND_TID = MATH_TIME_TID.extend("second");
     public static final fURI MATH_MINUTE_TID = MATH_TIME_TID.extend("minute");
     public static final fURI MATH_HOUR_TID = MATH_TIME_TID.extend("hour");
+    public static final fURI MATH_DAY_TID = MATH_TIME_TID.extend("day");
     public static final String MATH_MILLIS_STRING = "/m/math/time/millis";
     public static final String MATH_SECOND_STRING = "/m/math/time/second";
     public static final String MATH_MINUTE_STRING = "/m/math/time/minute";
     public static final String MATH_HOUR_STRING = "/m/math/time/hour";
+    public static final String MATH_DAY_STRING = "/m/math/time/day";
     /// ///////////////////////
     public static final fURI MATH_DATETIME_TID = MATH_ISA_TID.extend("datetime");
     public static final fURI MATH_DATETIME_NOW_INST_TID = MATH_INST_TID.extend("datetime_now");
@@ -120,20 +122,17 @@ public class mathInstSet extends AbstractInstSet {
         assert MATH_GBYTE_STRING.equals(MATH_GBYTE_TID.toString());
         assert MATH_TBYTE_STRING.equals(MATH_TBYTE_TID.toString());
         assert MATH_PBYTE_STRING.equals(MATH_PBYTE_TID.toString());
+        assert MATH_MILLIS_STRING.equals(MATH_MILLIS_TID.toString());
+        assert MATH_SECOND_STRING.equals(MATH_SECOND_TID.toString());
+        assert MATH_MINUTE_STRING.equals(MATH_MINUTE_TID.toString());
+        assert MATH_HOUR_STRING.equals(MATH_HOUR_TID.toString());
+        assert MATH_DAY_STRING.equals(MATH_DAY_TID.toString());
     }
 
 
     public mathInstSet() {
         super(mutableMap(uri(PATTERN), uri(MATH_ISA_TID.extend(HASH_FURI))), INSTSET_TID, MATH_ISA_TID);
     }
-
-    // TODO: date::T
-    // //2006.01:23/01/32/34/999?tz=-0500
-    /*public static final Type DATE_TYPE = Type.Builder.build()
-            .tid(URI_TID)
-            .vid(MATH_DATE_TID)
-            .isaPredicate(uri("/${time}/${day}/${month}/${year}"))
-            .create();*/
 
     public static final Type TIME_TYPE = Type.Builder.build()
             .tid(REAL_TID)
@@ -150,6 +149,7 @@ public class mathInstSet extends AbstractInstSet {
                     case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
                     case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 60.0d);
                     case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 60.0d * 60.0d);
+                    case MATH_DAY_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 60.0d * 60.0d * 24.0d);
                     default -> arg;
                 };
             }).create();
@@ -163,6 +163,7 @@ public class mathInstSet extends AbstractInstSet {
                     case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
                     case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() * 60.0d);
                     case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() * 60.0d * 60.0d);
+                    case MATH_DAY_STRING -> arg.jvm(arg.asReal().jvm() * 60.0d * 60.0d * 24.0d);
                     default -> arg;
                 };
             }).create();
@@ -176,6 +177,7 @@ public class mathInstSet extends AbstractInstSet {
                     case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 1000.0d);
                     case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d);
                     case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() * 60.0d);
+                    case MATH_DAY_STRING -> arg.jvm(arg.asReal().jvm() * 60.0d * 24.0d);
                     default -> arg;
                 };
             }).create();
@@ -189,6 +191,21 @@ public class mathInstSet extends AbstractInstSet {
                     case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 1000.0d);
                     case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d);
                     case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d);
+                    case MATH_DAY_STRING -> arg.jvm(arg.asReal().jvm() * 24.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static final Type DAY_TYPE = Type.Builder.build()
+            .tid(MATH_TIME_TID)
+            .vid(MATH_DAY_TID)
+            .constructor(arg -> {
+                final String tid = arg.tid().toString();
+                return switch (tid) {
+                    case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 24.0d / 1000.0d);
+                    case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 24.0d);
+                    case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 24.0d);
+                    case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() / 24.0d);
                     default -> arg;
                 };
             }).create();
@@ -383,14 +400,17 @@ public class mathInstSet extends AbstractInstSet {
     }
 
     /**
-     * Convert a {@code time::T} (millis/second/minute/hour) to milliseconds.
+     * Convert a {@code time::T} (millis/second/minute/hour/day) to milliseconds.
+     * Time units require real-backed values — an int-backed time is a type
+     * violation and {@code asReal()} rejects it.
      */
-    private static double timeToMillis(final Obj time) {
+    public static double timeToMillis(final Obj time) {
         return switch (time.tid().basePath().toString()) {
             case MATH_MILLIS_STRING -> time.asReal().jvm();
             case MATH_SECOND_STRING -> time.asReal().jvm() * 1000.0d;
             case MATH_MINUTE_STRING -> time.asReal().jvm() * 1000.0d * 60.0d;
             case MATH_HOUR_STRING -> time.asReal().jvm() * 1000.0d * 60.0d * 60.0d;
+            case MATH_DAY_STRING -> time.asReal().jvm() * 1000.0d * 60.0d * 60.0d * 24.0d;
             default -> throw MTronException.of("not a time unit: %s", time);
         };
     }
@@ -403,6 +423,7 @@ public class mathInstSet extends AbstractInstSet {
      *   millis ≥ 2000  → seconds
      *   seconds ≥ 120  → minutes
      *   minutes ≥ 120  → hours
+     *   hours   ≥ 48   → days
      * </pre>
      * Recurses until the value stabilizes in the appropriate unit.
      */
@@ -416,6 +437,8 @@ public class mathInstSet extends AbstractInstSet {
             return normalizeTime(time.as(MINUTE_TYPE).asReal());
         if (tid.equals(MATH_MINUTE_STRING) && value >= 120.0d)
             return normalizeTime(time.as(HOUR_TYPE).asReal());
+        if (tid.equals(MATH_HOUR_STRING) && value >= 48.0d)
+            return normalizeTime(time.as(DAY_TYPE).asReal());
 
         return time;
     }
@@ -576,11 +599,18 @@ public class mathInstSet extends AbstractInstSet {
                         docWrap(SECOND_TYPE, "a second of time (1000 millis)"),
                         docWrap(MINUTE_TYPE, "a minute of time (60 seconds)"),
                         docWrap(HOUR_TYPE, "an hour of time (60 minutes)"),
-                        docWrap(DATETIME_TYPE, "a datetime as uri: //yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm")),
+                        docWrap(DAY_TYPE, "a day of time (24 hours)"),
+                        docWrap(DATETIME_TYPE, "a datetime as uri: <//yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm>")),
                 uri(INST), lst(
                         instC(MATH_DATETIME_NOW_INST_TID.dom(ALL.maybe()).rng(MATH_DATETIME_TID), lst(), (lhs, inst) -> nowDatetime()),
                         // datetime arithmetic: datetime + time -> datetime, datetime - time -> datetime,
                         // datetime - datetime -> millis::T
+                       /* instC(PLUS_INST_TID.dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(TIME_TYPE), (lhs, inst) -> {
+                            final fURI normalizedTID = inst.arg(0).tid().basePath().equals(REAL_TID) ? lhs.tid().basePath() : MATH_MILLIS_TID;
+                            return real(lhs.tid(normalizedTID).realValue() +
+                                    inst.arg(0).tid(normalizedTID).realValue(), normalizedTID, lhs.vid()).tid(lhs.tid());
+                        }),*/
+                        instC(AS_INST_TID.dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(TIME_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vid())),
                         instC(PLUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_DATETIME_TID), lst(TIME_TYPE), (lhs, inst) ->
                                 buildDatetimeUri(ZonedDateTime.ofInstant(Instant.ofEpochMilli(datetimeToMillis(lhs.asUri()) + (long) timeToMillis(inst.arg(0))), ZoneOffset.UTC))),
                         instC(MINUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_DATETIME_TID), lst(TIME_TYPE), (lhs, inst) ->

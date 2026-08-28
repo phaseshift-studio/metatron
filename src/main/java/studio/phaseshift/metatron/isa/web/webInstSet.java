@@ -104,6 +104,8 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI JAVA_TID = MIME_TYPE_TID.extend("java");
     public static final fURI YAML_TID = MIME_TYPE_TID.extend("yaml");
     public static final fURI XSV_TID = MIME_TYPE_TID.extend("xsv");
+    public static final fURI CSV_TID = MIME_TYPE_TID.extend("csv");
+    public static final fURI TSV_TID = MIME_TYPE_TID.extend("tsv");
 
     // ── Serializer types ────────────────────────────────────────────
     public static final fURI OBJ_SERIALIZER_TID = WEB_ISA_TID.extend("serializer");
@@ -195,6 +197,18 @@ public class webInstSet extends AbstractInstSet {
                 }
             }).create();
 
+    public static final Type CSV_TYPE = Type.Builder.build()
+            .tid(XSV_TID)
+            .vid(CSV_TID)
+            .predicate((lhs, inst) -> {
+                try {
+                    ObjXSVSerializer.csv().read(inst.arg(0).strValue());
+                    return lhs;
+                } catch (final Exception e) {
+                    return noobj();
+                }
+            }).create();
+
     public static final Type CSS_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(CSS_TID).create();
@@ -254,6 +268,7 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(WEB_JSON_TYPE, "a json document"),
                         docWrap(YAML_TYPE, "a yaml document"),
                         docWrap(XSV_TYPE, "an xsv verified str encoding of a {comma,tab,etc.}-separated values document"),
+                        docWrap(CSV_TYPE, "a csv verified str encoding of a comma-separated values document"),
                         docWrap(CSS_TYPE, "a rec encoding of a css document"),
                         docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
                         docWrap(JAVA_TYPE, "a rec encoding of a java source file"),
@@ -453,6 +468,8 @@ public class webInstSet extends AbstractInstSet {
                         instC(AS_INST_TID.dom(REC_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> str(new String(ObjJavaSerializer.single().outputBytes(lhs).array()), JAVA_TID, null)),
                         instC(AS_INST_TID.dom(STR_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> str(lhs.strValue(), JAVA_TID, null)),
                         instC(AS_INST_TID.dom(STR_TID).rng(XSV_TID), lst(XSV_TYPE), (lhs, inst) -> str(ObjXSVSerializer.single().write(ObjXSVSerializer.single().read(lhs.strValue())), XSV_TID, null)),
+                        instC(AS_INST_TID.dom(STR_TID).rng(CSV_TID), lst(CSV_TYPE), (lhs, inst) -> str(ObjXSVSerializer.csv().write(ObjXSVSerializer.csv().read(lhs.strValue())), CSV_TID, null)),
+
                         // cs (coarse schema) — cs_java::T is a rec::T refinement: the parse IS the
                         // cast.  as?cs_java<=java(cs_java::T) parses a dereferenced java::T str into
                         // the coarse rec; the rec↔cs_java paths re-tag (rec::T <-> cs_java::T).

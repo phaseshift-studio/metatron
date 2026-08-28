@@ -15,6 +15,7 @@ The math instset provides numeric constants, unit-of-measurement types, and date
 | `second::T`  | `real::T` | `/m/math/time/second`  | Second unit (1000 millis)            |
 | `minute::T`  | `real::T` | `/m/math/time/minute`  | Minute unit (60 seconds)             |
 | `hour::T`    | `real::T` | `/m/math/time/hour`    | Hour unit (60 minutes)               |
+| `day::T`     | `real::T` | `/m/math/time/day`     | Day unit (24 hours)                  |
 | `bB::T`      | `real::T` | `/m/math/data/bB`      | Byte unit                            |
 | `kB::T`      | `real::T` | `/m/math/data/kB`      | Kilobyte (1024 bytes)                |
 | `mB::T`      | `real::T` | `/m/math/data/mB`      | Megabyte (1024 kB)                   |

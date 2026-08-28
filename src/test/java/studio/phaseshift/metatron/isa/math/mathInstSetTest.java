@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.math;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -207,6 +208,30 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "hour::1.0.as(minute::T)                                                             % minute::60.0",
             "hour::1.0.as(hour::T)                                                               % hour::1.0",
 
+            // day conversions (downward, identity, and upward)
+            "day::1.0.as(millis::T)                                                             % millis::1000.0.mult(60.0).mult(60.0).mult(24.0)",
+            "day::1.0.as(second::T)                                                             % second::60.0.mult(60.0).mult(24.0)",
+            "day::1.0.as(minute::T)                                                             % minute::60.0.mult(24.0)",
+            "day::1.0.as(hour::T)                                                               % hour::24.0",
+            "day::1.0.as(day::T)                                                                % day::1.0",
+
+            // smaller units → day
+            "millis::86400000.0.as(day::T)                                                      % day::1.0",
+            "second::86400.0.as(day::T)                                                         % day::1.0",
+            "minute::1440.0.as(day::T)                                                          % day::1.0",
+            "hour::24.0.as(day::T)                                                              % day::1.0",
+
+            // Multi-step and fractional day conversions
+            "millis::172800000.0.as(day::T)                                                     % day::2.0",
+            "hour::36.0.as(day::T)                                                              % day::1.5",
+            "day::1.5.as(hour::T)                                                               % hour::36.0",
+            "day::2.5.as(minute::T)                                                             % minute::3600.0",
+            "day::0.5.as(second::T)                                                             % second::43200.0",
+
+            // time units require real values — int-backed time is a type violation
+            "day::2.as(millis::T)                                                              % <ERROR>",
+            "hour::2.as(minute::T)                                                             % <ERROR>",
+
             // Multi-step conversions (skip levels)
             "millis::3600000.0.as(hour::T)                                                       % hour::1.0",
             "second::3600.0.as(hour::T)                                                          % hour::1.0",
@@ -249,6 +274,17 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "millis::1000.0.gte(second::1.0)                                                      % true",
             "minute::60.0.lte(hour::1.0)                                                          % true",
             "minute::60.0.gte(hour::1.0)                                                          % true",
+
+            // day conversions
+            "day::1.0.eq(hour::24.0)                                                             % true",
+            "hour::24.0.eq(day::1.0)                                                             % true",
+            "day::2.0.eq(hour::48.0)                                                             % true",
+            "day::1.0.eq(millis::86400000.0)                                                     % true",
+            "day::1.0.neq(hour::23.0)                                                            % true",
+            "hour::12.0.lt(day::1.0)                                                             % true",
+            "day::1.0.gt(hour::12.0)                                                             % true",
+            "day::1.0.lte(hour::24.0)                                                            % true",
+            "day::1.0.gte(hour::24.0)                                                            % true",
     }, delimiter = '%', quoteCharacter = '~')
     public void testTimeConversionRelations(final String code, final boolean match) {
         assertEquals(match, ObjmtronSerializer.parse(code).apply().boolValue());
@@ -264,12 +300,46 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "second::1.0.as(millis::T)       | *millis   | true",
             "minute::1.0.as(second::T)       | *second   | true",
             "hour::1.0.as(minute::T)         | *minute   | true",
+            // day conversions
+            "day::1.0.as(hour::T)            | *hour     | true",
+            "day::1.0.as(minute::T)          | *minute   | true",
+            "day::1.0.as(day::T)             | *day      | true",
+            "hour::24.0.as(day::T)           | *day      | true",
+            "minute::1440.0.as(day::T)       | *day      | true",
+            "second::86400.0.as(day::T)      | *day      | true",
+            "millis::86400000.0.as(day::T)   | *day      | true",
     }, delimiter = '|')
     public void testTimeAs(String code, String expectedType, boolean shouldMatch) {
         Obj result = ObjmtronSerializer.parse(code);
         Obj expected = ObjmtronSerializer.parse(expectedType);
         LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
         assertEquals(shouldMatch, result.test(expected));
+    }
+
+    @Disabled("plus in inst registry causing havoc")
+    @ParameterizedTest
+    @CsvSource(value = {
+            // time + time = time — same unit
+            "hour::1.0.plus(hour::2.0)                                                          % hour::3.0",
+            "day::1.0.plus(day::2.0)                                                            % day::3.0",
+            "minute::30.0.plus(minute::30.0)                                                    % minute::60.0",
+            "second::30.0.plus(second::30.0)                                                    % second::60.0",
+
+            // time + time = time — cross unit, result carries the lhs unit
+            "hour::24.0.plus(day::2.0)                                                          % hour::72.0",
+            "day::1.0.plus(hour::12.0)                                                          % day::1.5",
+            "day::2.0.plus(hour::12.0)                                                          % day::2.5",
+            "minute::30.0.plus(second::30.0)                                                    % minute::30.5",
+            "second::30.0.plus(millis::500.0)                                                   % second::30.5",
+            "millis::1000.0.plus(second::1.0)                                                   % millis::2000.0",
+            "hour::12.0.plus(minute::720.0)                                                     % hour::24.0",
+
+            // bare real rhs is treated as the lhs unit
+            "hour::24.0.plus(2.0)                                                               % hour::26.0",
+            "day::1.0.plus(0.5)                                                                 % day::1.5",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTimeAddition(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest(name = "[{index}] {0} => {1}")

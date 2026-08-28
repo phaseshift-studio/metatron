@@ -39,6 +39,7 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.router.BasicRouter;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.EmojiTable;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.sys.sysInstSet;
@@ -449,6 +450,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                                            use /sys/tmp as a temporary location for objs.
                                            note that /sys/tmp can be automatically garbage collected at any time.
                                            """));
+            sysSpace.write("/sys/emoji", EmojiTable.EMOJIS.entrySet().stream().map(kv -> rel(uri(kv.getKey()), str(kv.getValue()))).collect(new CommonUtil.RecCollector()));
             // LOAD STDIO INSTRUCTIONS
            /* sysSpace.write("/sys/io/stdout", docWrap(instC(f("/sys/io/stdout").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
                 final Object arg = inst.arg(0).jvm();

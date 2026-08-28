@@ -1,12 +1,14 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.Model;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
@@ -29,12 +31,18 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class ChatFeature extends AbstractFeature {
 
+    protected Rec lastMessage = rec0();
+
     public ChatFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
 
     public static ChatFeature chatFeature(final Model model, final Obj response) {
         return new ChatFeature(mutableMap(uri(MODEL), model, uri(RESPONSE), response), LLM_CHAT_FEATURE_TID, null);
+    }
+
+    public Rec lastMessage() {
+        return this.lastMessage;
     }
 
     @Override
@@ -44,8 +52,9 @@ public class ChatFeature extends AbstractFeature {
             return noobj();
 
         try {
-            if (Router.global().getSpaceFor(agent.at(ROOT).uriValue().extend(MESSAGE)).hasQ(f(INCRQ))) {
-                MessageBuilder.build(USER_MESSAGE_TID)
+            final Space space = Router.global().getSpaceFor(agent.at(ROOT).uriValue().extend(MESSAGE));
+            if (space.hasQ(f(INCRQ))) {
+                this.lastMessage = MessageBuilder.build(USER_MESSAGE_TID)
                         .text(Str.Helper.cleanString(str(userMessage).apply()))
                         .contents(userMessage)
                         .time()
@@ -56,9 +65,11 @@ public class ChatFeature extends AbstractFeature {
                         .chatId(agent.chatId())
                         .create(agent.at(ROOT).uriValue().extend(MESSAGE)
                                 .extend("_").addQ(INCRQ));
+            } else {
+                LOG.warn("user message storage requires an incrq space: %s", space.vidOrTid());
             }
         } catch (final Exception e) {
-            this.logger().warn("user message write failed (non-blocking): %s", e.getMessage());
+            this.logger().warn("user message write failed: %s", e.getMessage());
         }
         return noobj();
     }
@@ -110,20 +121,14 @@ public class ChatFeature extends AbstractFeature {
                                   this means that you have native access to the uri graph and its associated objs.
                                   any time you want to control metatron, simply use mtron str::T templates in any of your 
                                   outputs (thoughts, responses) to invoke template expansion.
-                                  this same feature applies to human users -- chat messages can leverage str::T templates.
-                                  
-                                  There are two forms of template expansion.
-                                  
-                                  \\{\\{\\{ 1 + 2 \\}\\}\\}
-                                  
-                                  and
+                                  this same feature applies to human users -- chat messages can leverage str::T templates.                               
                                   
                                   $\\{ 1.-<[+2,_]>-.sum() \\}
                                   
-                                  Both support recursive expansion where the output of the inner template will become a
+                                  Templates support recursive expansion where the output of the inner template will become a
                                   literal value in the outer expansion until no more templates are left to expand.
                                   
-                                  "The magic number {{{ 1 + {{{ 2 + {{{ 3 }}} + 4 }}} + 5 }}} wasn't so magical once I knew what it was."
+                                  "The magic number ${ 1 + ${ 2 + ${ 3 } + 4 } + 5 } wasn't so magical once I knew what it was."
                                   """.formatted(agent.vidOrTid())),
                 uri(TOOL), lst(docWrap(instC(CHAT_INST_TID.dom(NOOBJ_TID.zero()).rng(LLM_CHAT_RESULT_TID),
                                 lst(STR_TYPE),
