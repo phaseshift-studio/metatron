@@ -264,6 +264,7 @@ public final class Tokens {
     public static final String AGENT = "agent";
     public static final String GGUF_KEY = "gguf";
     public static final String QUANT = "quant";
+    public static final String TIMEOUT = "timeout";
     public static final String FAMILY = "family";
     public static final String FROM = "from";
     public static final String PROB = "prob";
@@ -287,6 +288,8 @@ public final class Tokens {
     public static final String EDGE = "edge";
     public static final String CONFIG = "config";
     public static final String SOURCE = "source";
+    public static final String SCOPE = "scope";
+    public static final String LOCATION = "location";
     public static final String STATE = "state";
     public static final String ROOT = "root";
     public static final String WEB_ROOT = "web_root";

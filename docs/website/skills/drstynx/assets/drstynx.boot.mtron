@@ -292,12 +292,11 @@ agent::[
     concept_feature::::[root          => /usr/dr/concept,
                         extractor     => lucene],
     tool_feature:::::::[tool          => [!*eval,!*sql,!*codegraph]],
-    audit_feature::::::[on_agent_ctor => inst(a=>agent::T) {
-                                           @<audit_widget>.update(noobj).else(
+    audit_feature::::::[on_agent_ctor => inst(a=>agent::T) {   
                                            accordion::[title  => "audit",
                                                        body   => "",
                                                        style  => style::[anchor=>bottom_right,width=>65,height=>30,
-                                                                         left=>-2,top=>8,foreground =>"{{y}}"]]@<audit_widget>) },
+                                                                         left=>-2,top=>8,foreground =>"{{y}}"]]@<audit_widget> },
                         to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() },
                         root          => /usr/dr/audit],
     summarize_feature::[root          => /usr/dr],

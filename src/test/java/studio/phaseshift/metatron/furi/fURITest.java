@@ -54,6 +54,12 @@ public class fURITest extends AbstractMetatronTest {
         final fURI f4 = mParser.m_furi().parse(furi).get();
         assertEquals(f, f4);
         assertEquals(f3, f4);
+        //////////////////////////
+       /* final Uri u = uri(furi);
+        final Rec r = u.as(REC_TYPE).as();
+        final Uri v = r.as(URI_TYPE).as();
+        assertEquals(v.uriValue(), u.uriValue());*/
+        //////////////////////////
         return f;
     }
 

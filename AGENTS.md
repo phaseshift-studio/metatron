@@ -64,6 +64,9 @@ The root filesystem is read-only (`HOME=/root`, `/usr` not writable), so the too
 - `this.` should be used when referencing fields.
 - Leverage existing `XXXUtil`, `XXX.Helper`, etc. style static method providers for common algorithms.
 - Don't use "Hello World" or "foo bar" in examples and test cases. Come up with something more clever and unique.
+- Don't create new terms for rec keys unless you absolutely have to. Instead, review `Tokens.java` as that is our
+  running list of terms used across the code base. Best to reuse existing terms instead of creating an ever-growing set
+  of synonyms.
 
 ### Test Framework
 

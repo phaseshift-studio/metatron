@@ -230,6 +230,7 @@ public class Agent extends MRec {
                             uri(MODEL), model,
                             uri(RESPONSE), rec(uri(TO), noobj())),
                             LLM_CHAT_FEATURE_TID, null))), LLM_AGENT_TID, null);
+            //model.logger().status(DEBUG, "mini-task launched by %s over %s", agentName, model.llm());
             return translator.chat(prompt);
         }
     }

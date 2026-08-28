@@ -19,30 +19,23 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
-import studio.phaseshift.metatron.isa.llm.type.Model;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
+import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.nowDatetime;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SUMMARIZE_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.summarizeSession;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -54,7 +47,13 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class SummarizeFeature extends AbstractFeature {
 
-    public static final fURI SUMMARIZE_INST_TID = LLM_SUMMARIZE_FEATURE_TID.extend(INST).extend("summarize");
+    /**
+     * The background distill currently running, if any.  Queued in
+     * {@link #onCompleteResponse} when the agent appends a
+     * {@code <<mtron:summarize>>} block; cleared in {@link #onBeforeChat}
+     * once the task completes and the recall briefing is injected.
+     */
+    final AtomicReference<FutureObj<Obj>> summaryTask = new AtomicReference<>();
 
     public SummarizeFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -62,132 +61,85 @@ public class SummarizeFeature extends AbstractFeature {
 
     @Override
     public Lst skill(final Agent agent) {
-        final Lst skills = lst(rec(mutableMap(uri(NAME), uri(LLM_SUMMARIZE_FEATURE_TID.name()),
-                uri(DESC), str("summarize a session by generating high-level over-arching constructs"),
+        return lst(rec(mutableMap(uri(NAME), uri(LLM_SUMMARIZE_FEATURE_TID.name()),
+                uri(DESC), str("summarize a session into claims and loose ends, recalling them on demand"),
                 uri(CONTENT), str("""
-                                  When a session becomes overly complex, use the summarization tool to have the session analyzed.
+                                  When a session becomes overly complex or you need to recall decisions, problems, and observations
+                                  from your past, append a `<<mtron:summarize>>` block to your response — a deferred `summary()`
+                                  call, where the block rec is the same argument rec `summary()` takes:
                                   
-                                    %s()
+                                      <<mtron:summarize>>
+                                      [scope=>day::2.0, kind=>[problem, decision], concept=>["AgentExtractor"]]
+                                      <</mtron:summarize>>
                                   
-                                  The generate a collection of claim::T and loose_end::T uris can be accessed using the m_inst_eval tool:
+                                  The summarization runs in the background — acknowledge that recall is queued and respond normally.
+                                  On the next chat, a structured briefing is injected into your system context:
                                   
-                                    *<summarization_uri>
+                                      [claim=>[[text=>"a claim",location=>!*/usr/dr/claim/3],...],
+                                       loose_end=>[[text=>"an open thread",location=>!*/usr/dr/loose_end/1],...]]
                                   
-                                  The claim::T and loose_end::T values contain high-level descriptions of long running session themes as well as references to particular
-                                  messages supporting derived claims and loose ends.
-                                  """.formatted(SUMMARIZE_INST_TID)),
-                uri(TOOL), lst(
-                        docWrap(instC(SUMMARIZE_INST_TID.dom(ALL.maybe()).rng(LST_TID), lst(),
-                                        (lhs, inst) -> {
-                                            // The session may arrive as the lhs (fluent: @dr/session/1.summarize(_))
-                                            // or as arg 0 (function form: summarize(@dr/session/1)).
-                                            final Rec session = agent.feature(SESSION).asRec();
-                                            final Obj modelArg = noobj(); //agent.feature(CHAT).<ChatFeature>as().at(MODEL);
-                                            final fURI sessionVID = session.at(SESSION).uriValue();
-                                            final fURI agentHome = agent.at(ROOT).uriValue();
-                                            if (null == sessionVID || sessionVID.isEmpty())
-                                                return fail("summarize requires an anchored session — use @dr/session/N.summarize()");
-                                            // 1. collect this session's messages from the ledger as rels
-                                            //    (vid => rec) — the rel key IS the message vid (branch read)
-                                            final List<Rel> messages = Router.readFromSpace(agentHome.extend(MESSAGE).extend("+/"))
-                                                    .stream()
-                                                    .map(Obj::asRel)
-                                                    .filter(pair -> {
-                                                        final Obj sess = pair.second().asRec().at(uri(SESSION)).orElse(noobj());
-                                                        return sess.isUri() && sess.uriValue().equals(sessionVID);
-                                                    })
-                                                    .sorted(Comparator.comparing(pair -> pair.first().uriValue().name()))
-                                                    .toList();
-                                            if (messages.isEmpty())
-                                                return fail("no messages found for session %s", sessionVID);
-                                            // 2. build the distill digest
-                                            final String digest = messages.stream()
-                                                    .map(pair -> Str.Helper.cleanString(pair.second().asRec().at(TEXT).orElse(str(""))))
-                                                    .filter(s -> !s.isBlank())
-                                                    .collect(Collectors.joining("\n"));
-                                            // 3. the model — from the agent home (matches <agent>/model)
-                                            final Model model = modelArg.isNoObj() ? Model.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec()) : Model.model(modelArg.asRec());
-                                            LOG.debug("summarize model: %s", model);
-                                            // 4. distill via a mini-task
-                                            final ChatResult result = Agent.Helper.miniTask("session_summarizer", model, SUMMARIZE_PROMPT.formatted(digest));
-                                            LOG.debug("summarize result: %s", result);
-                                            // 5. parse the <<json:claim>> and <<json:loose_end>> blocks into vids
-                                            final List<Obj> resultVids = new ArrayList<>();
-                                            final List<Obj> claimVids = new ArrayList<>();
-                                            final Obj blocks = result.at(uri("blocks")).orElse(noobj());
-                                            LOG.debug("summarize blocks: %s", blocks);
-                                            if (!blocks.isNoObj()) {
-                                                final Rec blocksRec = blocks.asRec();
-                                                int claimIndex = 0;
-                                                int looseEndIndex = 0;
-                                                for (final Rel entry : blocksRec.elements().toList()) {
-                                                    final String keyStr = Str.Helper.cleanString(entry.first());
-                                                    final Obj body = entry.second();
-                                                    final Lst bodyLst = body.isLst() ? body.asLst() : lst(body);
-                                                    for (final Obj bodyObj : bodyLst.elements().toList()) {
-                                                        Rec rec = bodyObj.asRec();
-                                                        if (keyStr.equals("claim")) {
-                                                            // JSON parses kind as a string ("observation") — coerce to a uri
-                                                            // as claim::T expects (kind => union of uris)
-                                                            final Obj kind = rec.at(uri(KIND));
-                                                            if (kind.isStr())
-                                                                rec.at(uri(KIND), uri(kind.strValue()), MUTABLE);
-                                                            // source: lst of !* auto_from refs to the message vids — the same
-                                                            // storage form concept uses for its {uri} collections (tble
-                                                            // round-trips lst fine; objs/coefficient collections do not)
-                                                            rec.at(uri(SOURCE), lst(messages.stream()
-                                                                    .map(pair -> (Obj) auto_from_(pair.first().uriValue()).tryToInst())
-                                                                    .toList()), MUTABLE);
-                                                            rec = rec.tid(LLM_CLAIM_TID);
-                                                            final fURI vid = agentHome.extend("claim").extend(String.valueOf(claimIndex++));
-                                                            rec = rec.selfVID(vid);
-                                                            Router.writeToSpace(vid, rec);
-                                                            resultVids.add(uri(vid));
-                                                            claimVids.add(uri(vid));
-                                                        } else if (keyStr.equals("loose_end")) {
-                                                            // JSON parses status as a string ("open") — coerce to a uri
-                                                            // as loose_end::T expects (status => union of uris)
-                                                            final Obj status = rec.at(uri(STATUS));
-                                                            if (status.isStr())
-                                                                rec.at(uri(STATUS), uri(status.strValue()), MUTABLE);
-                                                            // source: lst of !* auto_from refs to the message vids — same as claims
-                                                            rec.at(uri(SOURCE), lst(messages.stream()
-                                                                    .map(pair -> (Obj) auto_from_(pair.first().uriValue()).tryToInst())
-                                                                    .toList()), MUTABLE);
-                                                            // claim: !* auto_from refs to the claims distilled in this same
-                                                            // pass — the loose end's justifying propositions
-                                                            if (!claimVids.isEmpty())
-                                                                rec.at(uri("claim"), lst(claimVids.stream()
-                                                                        .map(v -> (Obj) auto_from_(v.uriValue()).tryToInst())
-                                                                        .toList()), MUTABLE);
-                                                            // time is stamped by the inst, not the model
-                                                            rec.at(uri(TIME), nowDatetime(), MUTABLE);
-                                                            rec = rec.tid(LLM_LOOSE_END_TID);
-                                                            final fURI vid = agentHome.extend("loose_end").extend(String.valueOf(looseEndIndex++));
-                                                            rec = rec.selfVID(vid);
-                                                            Router.writeToSpace(vid, rec);
-                                                            resultVids.add(uri(vid));
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            return lst(resultVids);
-                                        }),
-                                "maybe an obj",
-                                "a lst of claim and loose_end vids distilled from the session",
-                                mutableMap(),
-                                "distill a session's message ledger into claim::T and loose_end::T recs via a mini-task; the model emits <<json:claim>> and <<json:loose_end>> blocks that are parsed and anchored at <agent>/claim/ and <agent>/loose_end/")))));
-        skills.elements().map(s -> s.asRec().at(TOOL).orElse(lst0())).flatMap(t -> t.asLst().elements()).forEach(t -> {
-            Router.readFromSpace(((Obj) t).tid().addQ(DOCQ)).stream().forEach(doc -> {
-                agent.addTool((QCollection.Docs) doc);
-            });
-        });
-        return skills;
+                                  The `location` fields are mtron deref pointers — follow them (e.g. `*<location>` or
+                                  `*<location>/source`) to dig into the underlying records.
+                                  
+                                  Config (all optional):
+                                    scope     — only summarize messages since this time (a time::T like hour::48.0 or day::2.0,
+                                                or an absolute datetime::T). Default: all messages.
+                                    kind      — focus the follow-on briefing on claims of this kind (decision, problem,
+                                                solution, observation). Default: all kinds.
+                                    concept   — focus the follow-on briefing on claims whose source messages touch this
+                                                concept. Default: no concept filter.
+                                  
+                                  **IMPORTANT**: This skill is about formatting your response, not calling a function. The block
+                                  is stripped from what the user sees.
+                                  """))));
     }
 
     @Override
-    public Obj onBeforeChat(Agent agent) {
-        final Obj looseEnds = Router.readFromSpace(agent.at(ROOT).uriValue().extend("loose_end").extend("+"));
+    public void onCompleteResponse(final Agent agent, final ChatResult result) {
+        final Obj blocks = result.at(uri("blocks")).orElse(noobj());
+        if (blocks.isNoObj())
+            return;
+        final Obj signal = blocks.asRec().at(uri("summarize"));
+        if (signal.isNoObj())
+            return;
+        final Rec block = signal.asRec();
+        if (!agent.hasFeature(SESSION)) {
+            LOG.warn("summarize requires the session feature");
+            return;
+        }
+        final fURI sessionVID = agent.feature(SESSION).asRec().at(SESSION).uriValue();
+        if (null == sessionVID || sessionVID.isEmpty()) {
+            LOG.warn("summarize requires an anchored session");
+            return;
+        }
+        final fURI agentHome = agent.at(ROOT).uriValue();
+        // the block rec is the summary() argument rec — the agent is lazily
+        // calling summary() by appending <<mtron:summarize>>; feature defaults
+        // fill the keys the block left noobj
+        final Rec config = this.resolveConfig(agent, block);
+        // queue the distill on a background thread so this turn completes immediately
+        final fURI home = agentHome;
+        final fURI sess = sessionVID;
+        final CoreThread thread = CoreThread.core(instLambda((lhs, inst) -> {
+            try {
+                final Obj applied = summarizeSession(home, sess, config);
+                if (applied.isFail())
+                    LOG.warn("summarize failed: %s", Str.Helper.cleanString(applied));
+                return applied;
+            } catch (final Exception e) {
+                LOG.error("summarize failed: %s", e.getMessage());
+                return noobj();
+            }
+        }));
+        this.summaryTask.set(thread.applyAsync());
+        LOG.info("summarize queued for session %s", sess);
+    }
+
+    @Override
+    public Obj onBeforeChat(final Agent agent) {
+        final fURI outputBase = this.outputBase(agent);
+        // always-on loose-end reminder
+        final Obj looseEnds = Router.readFromSpace(outputBase.extend("loose_end").extend("+"));
         if (!looseEnds.isNoObj() && agent.hasFeature(SYSTEM)) {
             agent.feature(SYSTEM).<SystemFeature>as().addSystemMessage("""
                                                                        An analysis of the last summarization identified the following loose ends:
@@ -195,6 +147,109 @@ public class SummarizeFeature extends AbstractFeature {
                                                                        %s
                                                                        """.formatted(String.join("\n", looseEnds.stream().map(Str.Helper::cleanString).toList())));
         }
+        // gated recall briefing — once the queued summarization has completed,
+        // the applied-constraints rec returned by summary() drives the briefing
+        final FutureObj<Obj> task = this.summaryTask.get();
+        if (task != null && task.isDone()) {
+            try {
+                final Obj applied = task.get();
+                if (!applied.isNoObj() && !applied.isFail() && agent.hasFeature(SYSTEM)) {
+                    final Obj briefing = this.buildBriefing(agent, applied.asRec());
+                    if (!briefing.isNoObj())
+                        agent.feature(SYSTEM).<SystemFeature>as().addSystemMessage(ObjmtronSerializer.compact().write(briefing));
+                }
+            } catch (final Exception e) {
+                LOG.warn("summarize briefing unavailable: %s", e.getMessage());
+            }
+            this.summaryTask.set(null);
+        }
         return noobj();
+    }
+
+    /**
+     * The argument rec for summary() — the block rec (scope/kinds/concepts)
+     * merged over the feature's defaults, plus the output base.  The
+     * non-overlapping summary() keys (session, model) are resolved by the
+     * caller and helper, so the block is exactly a deferred summary() call.
+     */
+    Rec resolveConfig(final Agent agent, final Rec block) {
+        return rec(uri(SCOPE), block.at(uri(SCOPE)).orElse(this.at(uri(SCOPE))),
+                uri(KIND), block.at(uri(KIND)).orElse(this.at(uri(KIND))),
+                uri(CONCEPT), block.at(uri(CONCEPT)).orElse(this.at(uri(CONCEPT))),
+                uri(TO), uri(this.outputBase(agent)));
+    }
+
+    /**
+     * The base under which claim/ and loose_end/ are anchored — the feature's
+     * {@code root} config when present, else the agent home.
+     */
+    private fURI outputBase(final Agent agent) {
+        final Obj root = this.at(ROOT);
+        return root.isNoObj() ? agent.at(ROOT).uriValue() : root.uriValue();
+    }
+
+    /**
+     * Build the recall briefing for a completed summarization:
+     * {@code [claim=>[{text,location},...], loose_end=>[{text,location},...]]}.
+     * Claims are filtered by the wanted {@code kinds}; when {@code concepts}
+     * are given, only claims whose source messages touch those concepts (the
+     * concept root's {@code message} back-refs, intersected with the claim
+     * sources) are included.  The {@code location} fields are {@code !*} deref
+     * pointers to the underlying recs.
+     */
+    Obj buildBriefing(final Agent agent, final Rec applied) {
+        final Obj out = applied.at(uri(TO));
+        final fURI outputBase = out.isNoObj() ? this.outputBase(agent) : out.uriValue();
+        final Lst kinds = applied.at(uri(KIND)).orElse(lst0()).asLst();
+        final Lst concepts = applied.at(uri(CONCEPT)).orElse(lst0()).asLst();
+        // concept → message uris (ConceptFeature root; each concept rec's
+        // message field holds !* refs to the ledger messages that used it)
+        final Set<fURI> conceptMessages = new HashSet<>();
+        if (!concepts.isEmpty() && agent.hasFeature(CONCEPT)) {
+            final fURI conceptRoot = agent.feature(CONCEPT).asRec().at(ROOT).uriValue();
+            for (final Obj concept : concepts.elements().toList()) {
+                final fURI conceptURI = concept.isUri()
+                        ? concept.uriValue()
+                        : conceptRoot.extend(Str.Helper.cleanString(concept));
+                final Obj cRec = Router.readFromSpace(conceptURI).orElse(noobj());
+                if (cRec.isNoObj()) {
+                    LOG.warn("summarize briefing: no concept rec at %s", conceptURI);
+                    continue;
+                }
+                final Lst msgs = cRec.asRec().at(uri(MESSAGE)).orElse(lst0());
+                msgs.elements().forEach(ref -> {
+                    if (ref.isInst())
+                        conceptMessages.add(ref.asInst().arg(0).uriValue());
+                });
+            }
+        }
+        // claims of the wanted kinds (and concept-relevant sources, when concepts given)
+        final List<Obj> claimEntries = new ArrayList<>();
+        for (final Rel rel : Router.readFromSpace(outputBase.extend("claim").extend("+/")).stream().map(Obj::asRel).toList()) {
+            final fURI claimVid = rel.first().uriValue();
+            final Rec claimRec = rel.second().asRec();
+            final Obj kind = claimRec.at(uri(KIND));
+            if (!kinds.isEmpty() && !kinds.elements().anyMatch(k -> Str.Helper.cleanString(k).equals(Str.Helper.cleanString(kind))))
+                continue;
+            if (!concepts.isEmpty() && !hasConceptSource(claimRec, conceptMessages))
+                continue;
+            claimEntries.add(rec(uri(TEXT), claimRec.at(uri(TEXT)).orElse(str("")),
+                    uri(LOCATION), auto_from_(claimVid).tryToInst()));
+        }
+        // loose ends
+        final List<Obj> looseEndEntries = new ArrayList<>();
+        for (final Rel rel : Router.readFromSpace(outputBase.extend("loose_end").extend("+/")).stream().map(Obj::asRel).toList()) {
+            final Rec leRec = rel.second().asRec();
+            looseEndEntries.add(rec(uri(TEXT), leRec.at(uri(TITLE)).orElse(leRec.at(uri(DESC)).orElse(str(""))),
+                    uri(LOCATION), auto_from_(rel.first().uriValue()).tryToInst()));
+        }
+        if (claimEntries.isEmpty() && looseEndEntries.isEmpty())
+            return noobj();
+        return rec(uri("claim"), lst(claimEntries), uri("loose_end"), lst(looseEndEntries));
+    }
+
+    private static boolean hasConceptSource(final Rec claimRec, final Set<fURI> conceptMessages) {
+        final Lst source = claimRec.at(uri(SOURCE)).orElse(lst0());
+        return source.elements().anyMatch(ref -> ref.isInst() && conceptMessages.contains(ref.asInst().arg(0).uriValue()));
     }
 }

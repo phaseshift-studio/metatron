@@ -401,68 +401,7 @@ public final class CommonUtil {
         } while (retryIfCollision && !Router.readFromSpace(shortId).isNoObj());
         return shortId;
     }
-
-    private static final String[] STOP_WORDS = {
-            "a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't", "as", "at",
-            "be", "because", "been", "before", "being", "below", "between", "both", "but", "by",
-            "can't", "cannot", "could", "couldn't",
-            "did", "didn't", "do", "does", "doesn't", "doing", "don't", "down", "during",
-            "each",
-            "few", "for", "from", "further",
-            "had", "hadn't", "has", "hasn't", "have", "haven't", "having", "he", "he'd", "he'll", "he's", "her", "here", "here's", "hers", "herself", "him", "himself", "his", "how", "how's",
-            "i", "i'd", "i'll", "i'm", "i've", "if", "in", "into", "is", "isn't", "it", "it's", "its", "itself",
-            "let's",
-            "me", "more", "most", "mustn't", "my", "myself",
-            "no", "nor", "not",
-            "of", "off", "on", "once", "only", "or", "other", "ought", "our", "ours", "ourselves", "out", "over", "own",
-            "same", "shan't", "she", "she'd", "she'll", "she's", "should", "shouldn't", "so", "some", "such",
-            "than", "that", "that's", "the", "their", "theirs", "them", "themselves", "then", "there", "there's", "these", "they", "they'd", "they'll", "they're", "they've", "this", "those", "through", "to", "too",
-            "under", "until", "up",
-            "very",
-            "was", "wasn't", "we", "we'd", "we'll", "we're", "we've", "were", "weren't", "what", "what's", "when", "when's", "where", "where's", "which", "while", "who", "who's", "whom", "why", "why's", "with", "won't", "would", "wouldn't",
-            "you", "you'd", "you'll", "you're", "you've", "your", "yours", "yourself", "yourselves",
-            // Extended list including less common forms and variations
-            "able", "according", "accordingly", "across", "actually", "afterwards", "ain", "allow", "allows", "almost", "alone", "along", "already", "also", "although", "always", "among", "amongst", "another", "anybody", "anyhow", "anyone", "anything", "anyway", "anyways", "anywhere", "apart", "appear", "appreciate", "appropriate", "around", "aside", "ask", "asking", "associated", "available", "away", "awfully",
-            "back", "became", "become", "becomes", "becoming", "beforehand", "behind", "believe", "beside", "besides", "best", "better", "beyond", "brief",
-            "came", "cause", "causes", "certain", "certainly", "changes", "clearly", "co", "com", "come", "comes", "concerning", "consequently", "consider", "considering", "contain", "containing", "contains", "corresponding", "course", "currently",
-            "definitely", "described", "despite", "did", "different", "done", "downwards", "due",
-            "edu", "eg", "eight", "either", "else", "elsewhere", "enough", "entirely", "especially", "et", "etc", "even", "ever", "every", "everybody", "everyone", "everything", "everywhere", "ex", "exactly", "example", "except",
-            "far", "ff", "fifth", "first", "five", "followed", "following", "follows", "former", "formerly", "forth", "four", "front", "full", "furthermore",
-            "get", "gets", "getting", "given", "gives", "go", "goes", "going", "gone", "got", "gotten", "greetings",
-            "happens", "hardly", "hence", "help", "hereafter", "hereby", "herein", "hereupon", "hi", "hopefully", "howbeit", "however",
-            "ie", "ignored", "immediate", "inasmuch", "inc", "indeed", "indicate", "indicated", "indicates", "inner", "insofar", "instead", "inward",
-            "just",
-            "keep", "keeps", "kept", "know", "known", "knows",
-            "last", "lately", "later", "latter", "latterly", "least", "less", "lest", "let", "like", "liked", "likely", "little", "look", "looking", "looks", "ltd",
-            "mainly", "many", "may", "maybe", "mean", "meanwhile", "merely", "might", "moreover", "mostly", "much", "must",
-            "name", "namely", "nd", "near", "nearly", "necessary", "need", "needs", "neither", "never", "nevertheless", "new", "next", "nine", "nobody", "non", "none", "noone", "normally", "nothing", "novel", "nowhere",
-            "obviously", "oh", "ok", "okay", "old", "onto", "others", "otherwise", "outside", "overall", "own",
-            "particular", "particularly", "per", "perhaps", "placed", "please", "plus", "possible", "presumably", "probably", "provides",
-            "que", "quite", "qv",
-            "rather", "rd", "re", "really", "reasonably", "regarding", "regardless", "regards", "relatively", "respectively", "right",
-            "said", "saw", "say", "saying", "says", "second", "secondly", "see", "seeing", "seem", "seemed", "seeming", "seems", "seen", "self", "selves", "sensible", "sent", "serious", "seriously", "seven", "several", "shall", "side", "since", "six", "slightly", "somebody", "somehow", "someone", "something", "sometime", "sometimes", "somewhat", "somewhere", "soon", "sorry", "specified", "specify", "specifying", "state", "states", "still", "sub", "sure",
-            "take", "taken", "tell", "tends", "th", "thank", "thanks", "thanx", "third", "thorough", "thoroughly", "thought", "thoughts", "thru", "thus", "together", "took", "toward", "towards", "tried", "tries", "truly", "try", "trying", "twice", "two",
-            "un", "underneath", "unfortunately", "unless", "unlikely", "unto", "upon", "use", "used", "useful", "uses", "using", "usually",
-            "value", "various", "via", "viz", "vs",
-            "want", "wants", "way", "welcome", "went", "well", "whatever", "whence", "whenever", "whereafter", "whereas", "whereby", "wherein", "whereupon", "wherever", "whether", "whilst", "whither", "whoever", "whole", "whose", "willing", "wish", "wonder", "wrote",
-            "yes", "yet",
-            "zero"
-    };
-
-    private static final Set<String> STOP_WORDS_SET = new HashSet<>(Arrays.asList(STOP_WORDS));
-
-    public static String stripStopwords(final String text) {
-        final String[] words = text.split("\\s+");
-        final StringBuilder filteredText = new StringBuilder();
-        for (String word : words) {
-            // Clean punctuation and normalize case
-            String cleanWord = word.replaceAll("[^a-zA-Z]", "").toLowerCase();
-            if (!STOP_WORDS_SET.contains(cleanWord)) {
-                filteredText.append(cleanWord).append(" ");
-            }
-        }
-        return filteredText.toString().trim();
-    }
+    
 
     public static String clipString(final String string, final int maxLength, final boolean ellipses) {
         if (string.length() < maxLength)

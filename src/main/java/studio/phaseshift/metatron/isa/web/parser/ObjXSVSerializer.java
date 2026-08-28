@@ -19,7 +19,10 @@
 package studio.phaseshift.metatron.isa.web.parser;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
@@ -39,7 +42,6 @@ import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_XSV_SERIALIZER_TID;
@@ -58,6 +60,10 @@ public class ObjXSVSerializer extends AbstractObjSerializer<String> {
 
     public static ObjXSVSerializer single() {
         return INSTANCE;
+    }
+
+    public static ObjXSVSerializer csv() {
+        return ObjXSVSerializer.of(rec(uri(KEY_DELIMITER), str(",")), null);
     }
 
     public static ObjXSVSerializer of(final Rec rec, final fURI vid) {

@@ -6,12 +6,14 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_ACCORDION_TID;
@@ -57,6 +59,8 @@ public class AccordionWidgetTest extends AbstractMetatronTest {
         final String r = a.format();
         assertTrue(r.contains("[-]"));
         assertTrue(r.contains("Hi"));
+        new Console(rec(), f("/sys/console")); // TODO: move to AbstractWidgetTest and force all widgets to test run()
+        a.run();
     }
 
     @Test

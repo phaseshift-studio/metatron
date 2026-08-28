@@ -235,7 +235,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             if (objs.isEmpty())
                 return noobj();
             if (objs.size() == 1)
-                return objs.get(0);
+                return objs.getFirst();
             return objs(objs);
         }
     }
@@ -305,15 +305,14 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
      * {@code rec ⇝ bad_person::T}). Distinct from {@link #testNominally(Obj)}: that is the directional subtype
      * check; this is the symmetric same-form check.
      */
-    default boolean testLabelNominal(final Obj rhs) {
+   /* default boolean testLabelNominal(final Obj rhs) {
         final Type thisType = Obj.Helper.specificType(this);
         final Type rhsType = Obj.Helper.specificType(rhs);
         final fURI thisId = Obj.Helper.specificTypeId(this);
         final fURI rhsId = Obj.Helper.specificTypeId(rhs);
         return thisId.basePath().equals(rhsId.basePath())
                 || (thisType.isBaseType() && thisId.basePath().equals(rhsType.tid().basePath()));
-    }
-
+    }*/
     default boolean test(final Obj rhs) {
         if (this == rhs) return true;
         return Obj.Helper.testObjs(this, rhs);
