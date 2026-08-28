@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
@@ -98,9 +99,22 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         final fURI msgBase = this.agent.at(ROOT).uriValue().extend(MESSAGE);
 
         // ── Read all session messages (no skip yet — we adjust for pairs) ─
+        final AtomicReference<Rel> SYSTEM_MESSAGE_HOLDER = new AtomicReference<>();
         final List<Rel> allMessages = Router.readFromSpace(msgBase.extend("+/"))
                 .stream()
                 .map(Obj::asRel)
+                // find the last unique system message generated
+                .peek(pair -> {
+                    if (pair.second().tid().equals(SYSTEM_MESSAGE_TID)) {
+                        final Rel previous = SYSTEM_MESSAGE_HOLDER.get();
+                        final int previousId = null == previous ? -1 : Integer.parseInt(previous.first().uriValue().name());
+                        final int currentId = Integer.parseInt(pair.first().uriValue().name());
+                        if (previousId < currentId) {
+                            SYSTEM_MESSAGE_HOLDER.set(pair);
+                        }
+                    }
+                })
+                // only include user/ai/and tool_request messages
                 .filter(pair -> pair.second().isRec()
                         && (pair.second().asRec().tid().equals(USER_MESSAGE_TID)
                         || pair.second().asRec().tid().equals(AI_MESSAGE_TID)
@@ -130,7 +144,10 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                             && chatIdField.intValue().intValue() == this.chatId;
                 })
                 .sorted(Comparator.comparing(a -> Integer.parseInt(a.first().uriValue().name())))
-                .toList();
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+        // if there was a system message, prepend it to the list of messages to provide to the agent
+        if (SYSTEM_MESSAGE_HOLDER.get() != null)
+            allMessages.addFirst(SYSTEM_MESSAGE_HOLDER.get());
 
         // ── Pair-aware window: don't break AiMessage(tool_calls) /
         //     ToolExecutionResultMessage groups ──────────────────────

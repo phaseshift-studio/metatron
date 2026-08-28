@@ -103,6 +103,7 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI MARKDOWN_TID = MIME_TYPE_TID.extend("markdown");
     public static final fURI JAVA_TID = MIME_TYPE_TID.extend("java");
     public static final fURI YAML_TID = MIME_TYPE_TID.extend("yaml");
+    public static final fURI XSV_TID = MIME_TYPE_TID.extend("xsv");
 
     // ── Serializer types ────────────────────────────────────────────
     public static final fURI OBJ_SERIALIZER_TID = WEB_ISA_TID.extend("serializer");
@@ -119,6 +120,7 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI OBJ_JAVA_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_java");
     public static final fURI OBJ_RDF_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_rdf");
     public static final fURI OBJ_PLAINTEXT_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_text");
+    public static final fURI OBJ_XSV_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_xsv");
 
     public static Type MIME_OBJ_TYPE = Type.Builder.build()
             .tid(URI_TID)
@@ -181,6 +183,17 @@ public class webInstSet extends AbstractInstSet {
                     return noobj();
                 }
             }).create();
+    public static final Type XSV_TYPE = Type.Builder.build()
+            .tid(STR_TID)
+            .vid(XSV_TID)
+            .predicate((lhs, inst) -> {
+                try {
+                    ObjXSVSerializer.single().read(inst.arg(0).strValue());
+                    return lhs;
+                } catch (final Exception e) {
+                    return noobj();
+                }
+            }).create();
 
     public static final Type CSS_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -204,6 +217,7 @@ public class webInstSet extends AbstractInstSet {
     public static Type OBJ_BSON_SERIALIZER_TYPE;
     public static Type OBJ_YAML_SERIALIZER_TYPE;
     public static Type OBJ_BYTE_BUFFER_SERIALIZER_TYPE;
+    public static Type OBJ_XSV_SERIALIZER_TYPE;
     public static final fURI MCP_SERVER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_server");
     public static final fURI MCP_CLIENT_TID = WEB_ISA_TID.extend("mcp").extend("mcp_client");
     public static Type MCP_CLIENT_TYPE;
@@ -230,7 +244,8 @@ public class webInstSet extends AbstractInstSet {
                         ObjmtronSerializer.single(),
                         ObjByteBufferSerializer.singleton(),
                         ObjJSONSerializer.simple(),
-                        ObjBSONSerializer.single()),
+                        ObjBSONSerializer.single(),
+                        ObjXSVSerializer.single()),
                 uri(TYPE), lst(
                         docWrap(MIME_OBJ_TYPE, "indicates the media type of the data as specified by RFC-9110"),
                         docWrap(XML_TYPE, "a xml verified str encoding of an xml document"),
@@ -238,6 +253,7 @@ public class webInstSet extends AbstractInstSet {
                                 "*<http://metatron.phaseshift.studio> [-- yields an html::T --]"),
                         docWrap(WEB_JSON_TYPE, "a json document"),
                         docWrap(YAML_TYPE, "a yaml document"),
+                        docWrap(XSV_TYPE, "an xsv verified str encoding of a {comma,tab,etc.}-separated values document"),
                         docWrap(CSS_TYPE, "a rec encoding of a css document"),
                         docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
                         docWrap(JAVA_TYPE, "a rec encoding of a java source file"),
@@ -312,6 +328,19 @@ public class webInstSet extends AbstractInstSet {
                                         .create(), "byte buffer serializer",
                                 "a serializer for converting objs to/from raw byte buffers",
                                 "obj_bytebuffer::[=>]"),
+                        docWrap(OBJ_XSV_SERIALIZER_TYPE = Type.Builder.build()
+                                        .tid(OBJ_SERIALIZER_TID)
+                                        .vid(OBJ_XSV_SERIALIZER_TID)
+                                        .isaPredicate(rec(
+                                                uri("delimiter").maybe().asUri(), isa_(STR_TYPE).orElse(str(",")),
+                                                uri("header").maybe().asUri(), isa_(BOOL_TYPE).orElse(BOOL_FALSE)))
+                                        .constructor(instC(INST_CTOR_TID.rng(OBJ_XSV_SERIALIZER_TID), lst(T(OBJ_XSV_SERIALIZER_TID)), (lhs, inst) -> ObjXSVSerializer.of(inst.arg(0).asRec(), inst.arg(0).vid())))
+                                        .create(), "xsv serializer",
+                                "a serializer for converting objs to/from {comma,tab,etc.}-separated values",
+                                mutableMap(
+                                        uri("delimiter").maybe().asUri(), "the column delimiter token (e.g. ',' or '\\t')",
+                                        uri("header").maybe().asUri(), "whether the first row is a header row parsed into rec::T keys"),
+                                "obj_xsv::[delimiter => ',', header => true]"),
                         docWrap(HTTP_SPACE_TYPE, """
                                                  a space for reading and writing web-related resources. 
                                                  for http://# patterns and remote routes, uri resolution will fetch remote web resources and httpspace will handle nested addresses client-side. 
@@ -423,6 +452,7 @@ public class webInstSet extends AbstractInstSet {
                         instC(AS_INST_TID.dom(JAVA_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjJavaSerializer.single().inputBytes(lhs.strValue().getBytes())),
                         instC(AS_INST_TID.dom(REC_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> str(new String(ObjJavaSerializer.single().outputBytes(lhs).array()), JAVA_TID, null)),
                         instC(AS_INST_TID.dom(STR_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> str(lhs.strValue(), JAVA_TID, null)),
+                        instC(AS_INST_TID.dom(STR_TID).rng(XSV_TID), lst(XSV_TYPE), (lhs, inst) -> str(ObjXSVSerializer.single().write(ObjXSVSerializer.single().read(lhs.strValue())), XSV_TID, null)),
                         // cs (coarse schema) — cs_java::T is a rec::T refinement: the parse IS the
                         // cast.  as?cs_java<=java(cs_java::T) parses a dereferenced java::T str into
                         // the coarse rec; the rec↔cs_java paths re-tag (rec::T <-> cs_java::T).

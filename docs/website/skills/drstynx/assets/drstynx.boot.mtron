@@ -262,7 +262,7 @@ agent::[
                                            session::[agent     => !*boot/args/internal/agent_home,
                                                      user      => !*boot/args/internal/user_home,
                                                      name      => 'general chat',
-                                                     algorithm => [name=><message_window>, max=>30]]
+                                                     algorithm => [name=><message_window>, max=>20]]
                                                            ==[_=>_].to(/usr/dr/session/1)) },
                         session       => /usr/dr/session/1,
                         tool          => [forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
@@ -270,7 +270,7 @@ agent::[
                                                                          protocol     => ollama,
                                                                          host         => <http://ginger.local:11434>,
                                                                          llm          => <qwen3.8:27b>])),
-                        response      => [complete => -<modal::[title => '{{r}}agent response{{/r}}',
+                        response      => [complete => -<modal::[title => '{{r}}agent response',
                                                                 body  => "{{y}}${>>chat}",
                                                                 style => style::[border    =>continuous,
                                                                                  background=>"{{[k]}}",
@@ -293,12 +293,14 @@ agent::[
                         extractor     => lucene],
     tool_feature:::::::[tool          => [!*eval,!*sql,!*codegraph]],
     audit_feature::::::[on_agent_ctor => inst(a=>agent::T) {
+                                           @<audit_widget>.update(noobj).else(
                                            accordion::[title  => "audit",
                                                        body   => "",
                                                        style  => style::[anchor=>bottom_right,width=>65,height=>30,
-                                                                         left=>-2,top=>8,foreground =>"{{y}}"]]@<audit_widget> },
+                                                                         left=>-2,top=>8,foreground =>"{{y}}"]]@<audit_widget>) },
                         to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() },
                         root          => /usr/dr/audit],
+    summarize_feature::[root          => /usr/dr],
     system_feature:::::[              => ],
     cost_feature:::::::[root          => /usr/dr/cost,
                         to            => inst(in_cost=>real::T,out_cost=>real::T,total_cost=>real::T){ 

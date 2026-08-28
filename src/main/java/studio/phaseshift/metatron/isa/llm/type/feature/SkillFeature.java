@@ -1,11 +1,9 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
-import dev.langchain4j.service.AiServices;
 import dev.langchain4j.skills.Skill;
 import dev.langchain4j.skills.Skills;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -32,7 +30,7 @@ public class SkillFeature extends AbstractFeature {
         super(jvm, tid, vid);
     }
 
-    public static void buildSkills(final Agent agent, final AiServices<AgentServices> service) {
+   /* public static void buildSkills(final Agent agent, final AiServices<AgentServices> service) {
         final List<Skill> allSkills = agent.features().asLst()
                 .elements()
                 .flatMap(entry -> (entry instanceof Feature feat ?
@@ -60,10 +58,10 @@ public class SkillFeature extends AbstractFeature {
                     "\nYou have access to the following skills:\n" +
                             skills.formatAvailableSkills()
                             + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");*/
-        } catch (final Exception e) {
-            throw MTronException.of("unable to setup skills: %s", e);
-        }
-    }
+    //  } catch (final Exception e) {
+    //    throw MTronException.of("unable to setup skills: %s", e);
+    // }
+    //}*/
 
     @Override
     public Lst skill(final Agent agent) {
@@ -88,6 +86,12 @@ public class SkillFeature extends AbstractFeature {
             agent.addToolProvider(skills.toolProvider());
             // Cross-feature communication: SystemFeature owns the system-message channel.
             // If the agent lacks it, this feature is debilitated — log and proceed.
+            agent.addTool(docWrapDocs(instC(f("list_skills").dom(NOOBJ.zero()).rng(LST_TID), lst(),
+                            (lhs, inst) -> lst(allSkills.stream().map(s -> (Obj) lst(str(s.name()), str(s.description()))).toList())),
+                    "no domain",
+                    "a lst[lst[str,str]] of skills",
+                    Map.of(),
+                    "generates a lst of available skills by name and description"));
             if (this.requireFeature(agent, SYSTEM))
                 agent.feature(SYSTEM).<SystemFeature>as().addSystemMessage("skills accessible by calling list_skills() using the mtron eval tool");
         } catch (final Exception e) {

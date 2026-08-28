@@ -103,6 +103,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_THINK_FEATURE_TID = LLM_FEATURE_TID.extend("think_feature");
     public static final fURI LLM_CONCEPT_FEATURE_TID = LLM_FEATURE_TID.extend("concept_feature");
     public static final fURI LLM_COMMENT_FEATURE_TID = LLM_FEATURE_TID.extend("comment_feature");
+    public static final fURI LLM_SUMMARIZE_FEATURE_TID = LLM_FEATURE_TID.extend("summarize_feature");
     public static final fURI LLM_COST_FEATURE_TID = LLM_FEATURE_TID.extend("cost_feature");
     public static final fURI LLM_AUDIT_FEATURE_TID = LLM_FEATURE_TID.extend("audit_feature");
     public static final fURI LLM_LOOP_FEATURE_TID = LLM_FEATURE_TID.extend("loop_feature");
@@ -138,37 +139,37 @@ public class llmInstSet extends AbstractInstSet {
      * The {@code source} (message vids) is stamped by the inst, not the model — the
      * model never sees message vids, only the digest text.
      */
-    private static final String SUMMARIZE_PROMPT = """
-                                                   You are distilling a past metatron session into claims and loose ends. A claim is a terse
-                                                   proposition (1-3 sentences) capturing a decision, problem, solution, or observation — what
-                                                   a future agent would need to understand what happened and why. A loose end is an OPEN
-                                                   continuation point a DIFFERENT session could pick up cold — work that is still owed.
-                                                   
-                                                   Output exactly TWO json blocks. The first is a JSON array of claim objects, the second a
-                                                   JSON array of loose end objects:
-                                                   
-                                                   <<json:claim>>[{"text":"...","kind":"decision"},{"text":"...","kind":"problem"}]<</json:claim>>
-                                                   <<json:loose_end>>[{"title":"...","desc":"...","status":"open"}]<</json:loose_end>>
-                                                   
-                                                   Rules for claims:
-                                                   1. kind is one of: decision, problem, solution, observation.
-                                                   2. A decision without a rationale is not worth recording — say why in the text.
-                                                   3. Prefer specific over general; if nothing significant happened, emit an empty array: <<json:claim>>[]<</json:claim>>
-                                                   
-                                                   Rules for loose ends:
-                                                   4. The cold test: could a session with no access to this transcript act on it? If reading it
-                                                      requires knowing what happened here, it is not a loose end. Most sessions justify 0-2; if
-                                                      you are writing a third, you are recording rather than continuing.
-                                                   5. These do NOT earn a loose end: something this session finished; a current-state observation;
-                                                      a defect the operator should queue; a restatement of a decision (that is already a claim).
-                                                   6. If nothing is left open, emit an empty array: <<json:loose_end>>[]<</json:loose_end>>
-                                                   
-                                                   Do NOT emit session ids, timestamps, source refs, or ids — those are stamped from the record.
-                                                   
-                                                   The session transcript:
-                                                   
-                                                   %s
-                                                   """;
+    public static final String SUMMARIZE_PROMPT = """
+                                                  You are distilling a past metatron session into claims and loose ends. A claim is a terse
+                                                  proposition (1-3 sentences) capturing a decision, problem, solution, or observation — what
+                                                  a future agent would need to understand what happened and why. A loose end is an OPEN
+                                                  continuation point a DIFFERENT session could pick up cold — work that is still owed.
+                                                  
+                                                  Output exactly TWO json blocks. The first is a JSON array of claim objects, the second a
+                                                  JSON array of loose end objects:
+                                                  
+                                                  <<json:claim>>[{"text":"...","kind":"decision"},{"text":"...","kind":"problem"}]<</json:claim>>
+                                                  <<json:loose_end>>[{"title":"...","desc":"...","status":"open"}]<</json:loose_end>>
+                                                  
+                                                  Rules for claims:
+                                                  1. kind is one of: decision, problem, solution, observation.
+                                                  2. A decision without a rationale is not worth recording — say why in the text.
+                                                  3. Prefer specific over general; if nothing significant happened, emit an empty array: <<json:claim>>[]<</json:claim>>
+                                                  
+                                                  Rules for loose ends:
+                                                  4. The cold test: could a session with no access to this transcript act on it? If reading it
+                                                     requires knowing what happened here, it is not a loose end. Most sessions justify 0-2; if
+                                                     you are writing a third, you are recording rather than continuing.
+                                                  5. These do NOT earn a loose end: something this session finished; a current-state observation;
+                                                     a defect the operator should queue; a restatement of a decision (that is already a claim).
+                                                  6. If nothing is left open, emit an empty array: <<json:loose_end>>[]<</json:loose_end>>
+                                                  
+                                                  Do NOT emit session ids, timestamps, source refs, or ids — those are stamped from the record.
+                                                  
+                                                  The session transcript:
+                                                  
+                                                  %s
+                                                  """;
 
 
     public llmInstSet() {
@@ -475,6 +476,12 @@ public class llmInstSet extends AbstractInstSet {
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
+                                .vid(LLM_SUMMARIZE_FEATURE_TID)
+                                .isaPredicate(rec(ROOT, URI_TYPE))
+                                .constructor(arg -> createStageLambdas(new SummarizeFeature(arg.asRec().jvm(), LLM_SUMMARIZE_FEATURE_TID, arg.vid())))
+                                .create(),
+                        Type.Builder.build()
+                                .tid(LLM_FEATURE_TID)
                                 .vid(LLM_SESSION_FEATURE_TID)
                                 .isaPredicate(rec(SESSION, URI_TYPE))
                                 .constructor(arg -> createStageLambdas(new SessionFeature(arg.asRec().jvm(), LLM_SESSION_FEATURE_TID, arg.vid())))
@@ -647,7 +654,7 @@ public class llmInstSet extends AbstractInstSet {
                                 "communicate with am llm enriched by tools, skills, etc. and receive response in particular format", // desc
                                 "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts/_?incrq)].chat('what is 4+2?',[answer=>int::T])"),
                         // SUMMARIZE INSTRUCTION — distill a session into claim::T recs
-                        docWrap(instC(LLM_INST_TID.extend("summarize").dom(LLM_SESSION_TID.maybe()).rng(LST_TID), rec(
+                        docWrap(instC(LLM_INST_TID.extend("summary").dom(LLM_SESSION_TID.maybe()).rng(LST_TID), rec(
                                                 uri(SESSION), T(LLM_SESSION_TID.maybe()),
                                                 uri(MODEL), choose_(rec(
                                                         isa_(LLM_MODEL_TYPE).tryToInst(), id_(),
