@@ -240,7 +240,7 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../skills/agent/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
@@ -253,7 +253,7 @@
                     </li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
@@ -271,7 +271,7 @@
                     </li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
@@ -736,17 +736,7 @@
         <small class="text-muted code">/m/web/http/http_client</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">http_socket::T[][/m/web/http/http_client/ctor?http_socket&lt;=#{?}(rec::T)]@/m/web/http/http_client</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__http__http_socket" class="code inherited-link">http_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
- {?}out=&gt;isa(mime::T),
- {?}send=&gt;inst::T,
- {?}on_get=&gt;#::T,
- {?}on_post=&gt;#::T,
- {?}on_put=&gt;#::T,
- {?}on_delete=&gt;#::T,
- {?}on_patch=&gt;#::T,
- {?}on_head=&gt;#::T,
- {?}on_options=&gt;#::T,
- ...(2 more)]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__http__http_socket" class="code inherited-link">http_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}on_get=&gt;#::T,{?}on_post=&gt;#::T,{?}on_put=&gt;#::T,{?}on_delete=&gt;#::T,{?}on_patch=&gt;#::T,{?}on_head=&gt;#::T,{?}on_options=&gt;#::T,...(2 more)]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an http client which should be refined to implement protocol specs</p>
 </div>
@@ -759,17 +749,7 @@
         <small class="text-muted code">/m/web/http/http_handler</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">http_socket::T[][ctor?http_socket&lt;=#{?}(rec::T)]@/m/web/http/http_handler</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__http__http_socket" class="code inherited-link">http_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
- {?}out=&gt;isa(mime::T),
- {?}send=&gt;inst::T,
- {?}on_get=&gt;#::T,
- {?}on_post=&gt;#::T,
- {?}on_put=&gt;#::T,
- {?}on_delete=&gt;#::T,
- {?}on_patch=&gt;#::T,
- {?}on_head=&gt;#::T,
- {?}on_options=&gt;#::T,
- ...(2 more)]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__http__http_socket" class="code inherited-link">http_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}on_get=&gt;#::T,{?}on_post=&gt;#::T,{?}on_put=&gt;#::T,{?}on_delete=&gt;#::T,{?}on_patch=&gt;#::T,{?}on_head=&gt;#::T,{?}on_options=&gt;#::T,...(2 more)]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a http server which should be refined to implement protocol specs</p>
 </div>
@@ -781,17 +761,7 @@
         </span>
         <small class="text-muted code">/m/web/http/http_socket</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[  {?}in=&gt;isa(mime::T),
-  {?}out=&gt;isa(mime::T),
-  {?}send=&gt;inst::T,
-  {?}on_get=&gt;#::T,
-  {?}on_post=&gt;#::T,
-  {?}on_put=&gt;#::T,
-  {?}on_delete=&gt;#::T,
-  {?}on_patch=&gt;#::T,
-  {?}on_head=&gt;#::T,
-  {?}on_options=&gt;#::T,
-  ...(2 more)]]@/m/web/http/http_socket</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}on_get=&gt;#::T,{?}on_post=&gt;#::T,{?}on_put=&gt;#::T,{?}on_delete=&gt;#::T,{?}on_patch=&gt;#::T,{?}on_head=&gt;#::T,{?}on_options=&gt;#::T,...(2 more)]]@/m/web/http/http_socket</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a generic http obj which can be refined with useful behaviors</p>
@@ -843,13 +813,7 @@
         </span>
         <small class="text-muted code">/m/web/mcp/mcp_client</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  {?}host=&gt;uri::T,
-  {?}transport=&gt;uri::T,
-  {?}command=&gt;lst::T,
-  {?}env=&gt;[uri::T=&gt;#::T],
-  {?}tool=&gt;[uri::T=&gt;tool::T],
-  {?}status=&gt;bool::T]][ctor?mcp_client&lt;=#{?}(rec::T)]@/m/web/mcp/mcp_client</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}host=&gt;uri::T,{?}transport=&gt;uri::T,{?}command=&gt;lst::T,{?}env=&gt;[uri::T=&gt;#::T],{?}tool=&gt;[uri::T=&gt;tool::T],{?}status=&gt;bool::T]][ctor?mcp_client&lt;=#{?}(rec::T)]@/m/web/mcp/mcp_client</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a client implementing the model content protocol used by llms for the acquisition of tools and access to external software systems</p>
@@ -857,11 +821,11 @@
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an mcp client type specification" class="text-info">an mcp client type specification</a> <span class="text-light">=&gt;</span> <a href="#a connection to an existing mcp server" class="text-success">a connection to an existing mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'the tools__functions available for use on the mcp server'" class="text-info">functions available for use on the mcp server&#39;</a>
-  <a href="#{?}env" class="text-light">{?}env</a> <span class="text-light">=&gt;</span> <a href="#'environment variables for the stdio server process'" class="text-info">&#39;environment variables for the stdio server process&#39;</a>
-  <a href="#{?}transport" class="text-light">{?}transport</a> <span class="text-light">=&gt;</span> <a href="#"specify the transport if host schema resolution isn't sufficient"" class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</a>
-  <a href="#{?}host" class="text-light">{?}host</a> <span class="text-light">=&gt;</span> <a href="#'the mcp server endpoint (optional for stdio)'" class="text-info">&#39;the mcp server endpoint (optional for stdio)&#39;</a>
-  <a href="#{?}command" class="text-light">{?}command</a> <span class="text-light">=&gt;</span> <a href="#'only necessary for stdio mcp servers, where the client is the server'" class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</a>
   <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the current status of the mcp client__server connection'" class="text-info">server connection&#39;</a>
+  <a href="#{?}command" class="text-light">{?}command</a> <span class="text-light">=&gt;</span> <a href="#'only necessary for stdio mcp servers, where the client is the server'" class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</a>
+  <a href="#{?}host" class="text-light">{?}host</a> <span class="text-light">=&gt;</span> <a href="#'the mcp server endpoint (optional for stdio)'" class="text-info">&#39;the mcp server endpoint (optional for stdio)&#39;</a>
+  <a href="#{?}transport" class="text-light">{?}transport</a> <span class="text-light">=&gt;</span> <a href="#"specify the transport if host schema resolution isn't sufficient"" class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</a>
+  <a href="#{?}env" class="text-light">{?}env</a> <span class="text-light">=&gt;</span> <a href="#'environment variables for the stdio server process'" class="text-info">&#39;environment variables for the stdio server process&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -890,15 +854,7 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         <small class="text-muted code">/m/web/mcp/mcp_emulator_ws</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_ws::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_emulator_ws&lt;=#{?}(rec::T)]@/m/web/mcp/mcp_emulator_ws</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__mcp__mcp_ws" class="code inherited-link">mcp_ws::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__ws__web_socket" class="code inherited-link">web_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- {?}in=&gt;isa(mime::T),
- {?}out=&gt;isa(mime::T),
- {?}send=&gt;inst::T,
- {?}send_recv=&gt;inst::T,
- {?}on_open=&gt;#::T,
- {?}on_error=&gt;#::T,
- {?}on_message=&gt;#::T,
- {?}on_close=&gt;#::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__mcp__mcp_ws" class="code inherited-link">mcp_ws::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__ws__web_socket" class="code inherited-link">web_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}send_recv=&gt;inst::T,{?}on_open=&gt;#::T,{?}on_error=&gt;#::T,{?}on_message=&gt;#::T,{?}on_close=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a websocket mcp emulator server that provides an agent a stateful environment of mcp server access</p>
 </div>
@@ -937,15 +893,7 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         <small class="text-muted code">/m/web/mcp/mcp_mtron_ws</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_ws::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_mtron_ws&lt;=#{?}(rec::T)]@/m/web/mcp/mcp_mtron_ws</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__mcp__mcp_ws" class="code inherited-link">mcp_ws::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__ws__web_socket" class="code inherited-link">web_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- {?}in=&gt;isa(mime::T),
- {?}out=&gt;isa(mime::T),
- {?}send=&gt;inst::T,
- {?}send_recv=&gt;inst::T,
- {?}on_open=&gt;#::T,
- {?}on_error=&gt;#::T,
- {?}on_message=&gt;#::T,
- {?}on_close=&gt;#::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__mcp__mcp_ws" class="code inherited-link">mcp_ws::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__ws__web_socket" class="code inherited-link">web_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}send_recv=&gt;inst::T,{?}on_open=&gt;#::T,{?}on_error=&gt;#::T,{?}on_message=&gt;#::T,{?}on_close=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an mcp handler server with built-in mtron eval, space listing, router info and instruction listing tools</p>
 </div>
@@ -965,8 +913,8 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an mcp server specification" class="text-info">an mcp server specification</a> <span class="text-light">=&gt;</span> <a href="#a transport-agnostic mcp server" class="text-success">a transport-agnostic mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}prompt" class="text-light">{?}prompt</a> <span class="text-light">=&gt;</span> <a href="#'a collection of prompts (various obj types handled accordingly'" class="text-info">&#39;a collection of prompts (various obj types handled accordingly&#39;</a>
-  <a href="#{?}resource" class="text-light">{?}resource</a> <span class="text-light">=&gt;</span> <a href="#'a collection of obj references (various obj types handled accordingly)'" class="text-info">&#39;a collection of obj references (various obj types handled accordingly)&#39;</a>
   <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'a collection of inst::T, tool::T, or skill::T objs'" class="text-info">&#39;a collection of inst::T, tool::T, or skill::T objs&#39;</a>
+  <a href="#{?}resource" class="text-light">{?}resource</a> <span class="text-light">=&gt;</span> <a href="#'a collection of obj references (various obj types handled accordingly)'" class="text-info">&#39;a collection of obj references (various obj types handled accordingly)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__web__mcp__mcp_ws">
@@ -978,15 +926,7 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         <small class="text-muted code">/m/web/mcp/mcp_ws</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">ws_handler::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_ws&lt;=#{?}(rec::T)]@/m/web/mcp/mcp_ws</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__ws__web_socket" class="code inherited-link">web_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- {?}in=&gt;isa(mime::T),
- {?}out=&gt;isa(mime::T),
- {?}send=&gt;inst::T,
- {?}send_recv=&gt;inst::T,
- {?}on_open=&gt;#::T,
- {?}on_error=&gt;#::T,
- {?}on_message=&gt;#::T,
- {?}on_close=&gt;#::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__ws__web_socket" class="code inherited-link">web_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}send_recv=&gt;inst::T,{?}on_open=&gt;#::T,{?}on_error=&gt;#::T,{?}on_message=&gt;#::T,{?}on_close=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an abstract mcp websocket handler providing necessary json-rpc infrastructure for mcp servers to leverage</p>
 </div>
@@ -1037,17 +977,7 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         <small class="text-muted code">/m/web/http/mtron_http</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">http_handler::T[?[{?}in=&gt;isa(mime::T).else(application/x-mtron),{?}out=&gt;isa(mime::T).else(application/x-mtron)]][ctor?mtron_http&lt;=#{?}(rec::T)]@/m/web/http/mtron_http</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__http__http_socket" class="code inherited-link">http_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
- {?}out=&gt;isa(mime::T),
- {?}send=&gt;inst::T,
- {?}on_get=&gt;#::T,
- {?}on_post=&gt;#::T,
- {?}on_put=&gt;#::T,
- {?}on_delete=&gt;#::T,
- {?}on_patch=&gt;#::T,
- {?}on_head=&gt;#::T,
- {?}on_options=&gt;#::T,
- ...(2 more)]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__http__http_socket" class="code inherited-link">http_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}on_get=&gt;#::T,{?}on_post=&gt;#::T,{?}on_put=&gt;#::T,{?}on_delete=&gt;#::T,{?}on_patch=&gt;#::T,{?}on_head=&gt;#::T,{?}on_options=&gt;#::T,...(2 more)]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a simple http handler accepting mtron expressions and return mtron results</p>
 </div><div class="card-body border-top py-2">
@@ -1063,15 +993,7 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         <small class="text-muted code">/m/web/ws/mtron_ws</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">ws_handler::T[?[{?}in=&gt;isa(mime::T).else(application/x-mtron),{?}out=&gt;isa(mime::T).else(application/x-mtron)]][ctor?mtron_ws&lt;=#{?}(rec::T)]@/m/web/ws/mtron_ws</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__ws__web_socket" class="code inherited-link">web_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- {?}in=&gt;isa(mime::T),
- {?}out=&gt;isa(mime::T),
- {?}send=&gt;inst::T,
- {?}send_recv=&gt;inst::T,
- {?}on_open=&gt;#::T,
- {?}on_error=&gt;#::T,
- {?}on_message=&gt;#::T,
- {?}on_close=&gt;#::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__ws__web_socket" class="code inherited-link">web_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}send_recv=&gt;inst::T,{?}on_open=&gt;#::T,{?}on_error=&gt;#::T,{?}on_message=&gt;#::T,{?}on_close=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a simple websocket handler accepting mtron expressions and return mtron results</p>
 </div><div class="card-body border-top py-2">
@@ -1117,14 +1039,7 @@ obj_bytebuffer::[=&gt;]</code></pre>
         <small class="text-muted code">/m/web/serializer/obj_mtron</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T[?[
-  clip=&gt;[
-   {?}/m/rec=&gt;isa(int::T),
-   {?}/m/lst=&gt;isa(int::T),
-   {?}/m/str=&gt;isa(int::T),
-   {?}/m/uri=&gt;isa(int::T),
-   {?}/m/real=&gt;isa(int::T),
-   {?}/m/bytes=&gt;isa(int::T),
-   {?}/m/fail=&gt;isa(int::T)],
+  clip=&gt;[{?}/m/rec=&gt;isa(int::T),{?}/m/lst=&gt;isa(int::T),{?}/m/str=&gt;isa(int::T),{?}/m/uri=&gt;isa(int::T),{?}/m/real=&gt;isa(int::T),{?}/m/bytes=&gt;isa(int::T),{?}/m/fail=&gt;isa(int::T)],
   {?}justify=&gt;isa(bool::T)]][ctor?obj_mtron&lt;=#{?}(obj_mtron::T)]@/m/web/serializer/obj_mtron</code></pre></div>
     
     <div class="card-body border-top py-2">
@@ -1218,23 +1133,8 @@ obj_bytebuffer::[=&gt;]</code></pre>
         </span>
         <small class="text-muted code">/m/web/http/web_http</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">http_handler::T[?[
-  {?}in=&gt;isa(mime::T).else(application/x-mtron),
-  {?}out=&gt;isa(mime::T).else(application/x-mtron),
-  {?}web_root=&gt;#::T,
-  {?}default_page=&gt;#::T,
-  {?}read_only=&gt;#::T]][ctor?web_http&lt;=#{?}(rec::T)]@/m/web/http/web_http</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__http__http_socket" class="code inherited-link">http_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}in=&gt;isa(mime::T),
- {?}out=&gt;isa(mime::T),
- {?}send=&gt;inst::T,
- {?}on_get=&gt;#::T,
- {?}on_post=&gt;#::T,
- {?}on_put=&gt;#::T,
- {?}on_delete=&gt;#::T,
- {?}on_patch=&gt;#::T,
- {?}on_head=&gt;#::T,
- {?}on_options=&gt;#::T,
- ...(2 more)]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">http_handler::T[?[{?}in=&gt;isa(mime::T).else(application/x-mtron),{?}out=&gt;isa(mime::T).else(application/x-mtron),{?}web_root=&gt;#::T,{?}default_page=&gt;#::T,{?}read_only=&gt;#::T]][ctor?web_http&lt;=#{?}(rec::T)]@/m/web/http/web_http</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__http__http_socket" class="code inherited-link">http_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}on_get=&gt;#::T,{?}on_post=&gt;#::T,{?}on_put=&gt;#::T,{?}on_delete=&gt;#::T,{?}on_patch=&gt;#::T,{?}on_head=&gt;#::T,{?}on_options=&gt;#::T,...(2 more)]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a http handler serving web content from a router-backed space</p>
 </div>
@@ -1246,15 +1146,7 @@ obj_bytebuffer::[=&gt;]</code></pre>
         </span>
         <small class="text-muted code">/m/web/ws/web_socket</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  {?}in=&gt;isa(mime::T),
-  {?}out=&gt;isa(mime::T),
-  {?}send=&gt;inst::T,
-  {?}send_recv=&gt;inst::T,
-  {?}on_open=&gt;#::T,
-  {?}on_error=&gt;#::T,
-  {?}on_message=&gt;#::T,
-  {?}on_close=&gt;#::T]]@/m/web/ws/web_socket</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}send_recv=&gt;inst::T,{?}on_open=&gt;#::T,{?}on_error=&gt;#::T,{?}on_message=&gt;#::T,{?}on_close=&gt;#::T]]@/m/web/ws/web_socket</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a generic websocket obj which can be refined with useful behaviors</p>
@@ -1268,15 +1160,7 @@ obj_bytebuffer::[=&gt;]</code></pre>
         <small class="text-muted code">/m/web/ws/ws_client</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">web_socket::T[][ctor?web_socket&lt;=#{?}(rec::T)]@/m/web/ws/ws_client</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__ws__web_socket" class="code inherited-link">web_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- {?}in=&gt;isa(mime::T),
- {?}out=&gt;isa(mime::T),
- {?}send=&gt;inst::T,
- {?}send_recv=&gt;inst::T,
- {?}on_open=&gt;#::T,
- {?}on_error=&gt;#::T,
- {?}on_message=&gt;#::T,
- {?}on_close=&gt;#::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__ws__web_socket" class="code inherited-link">web_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}send_recv=&gt;inst::T,{?}on_open=&gt;#::T,{?}on_error=&gt;#::T,{?}on_message=&gt;#::T,{?}on_close=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an websocket client which should be refined to implement protocol specs</p>
 </div>
@@ -1289,15 +1173,7 @@ obj_bytebuffer::[=&gt;]</code></pre>
         <small class="text-muted code">/m/web/ws/ws_handler</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">web_socket::T[][ctor?web_socket&lt;=#{?}(rec::T)]@/m/web/ws/ws_handler</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__ws__web_socket" class="code inherited-link">web_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- {?}in=&gt;isa(mime::T),
- {?}out=&gt;isa(mime::T),
- {?}send=&gt;inst::T,
- {?}send_recv=&gt;inst::T,
- {?}on_open=&gt;#::T,
- {?}on_error=&gt;#::T,
- {?}on_message=&gt;#::T,
- {?}on_close=&gt;#::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__ws__web_socket" class="code inherited-link">web_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}send_recv=&gt;inst::T,{?}on_open=&gt;#::T,{?}on_error=&gt;#::T,{?}on_message=&gt;#::T,{?}on_close=&gt;#::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a websocket server which should be refined to implement protocol specs</p>
 </div>

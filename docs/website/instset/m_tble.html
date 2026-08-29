@@ -240,7 +240,7 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../skills/agent/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
@@ -253,7 +253,7 @@
                     </li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
@@ -271,7 +271,7 @@
                     </li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
@@ -585,7 +585,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/kv_count?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages native SELECT COUNT(*) FROM kv_store with LIKE-based pattern matching</p>
+    <p class="mb-0 text-light">[filter] leverages native SELECT COUNT(*) FROM kv_store with LIKE-based pattern matching
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">*</span> <span class="text-light">=&gt;</span> <a href="#kv_count(kv_store, WHERE furi LIKE ...)" class="text-success">kv_count(kv_store, WHERE furi LIKE ...)</a></pre>
 </div>
@@ -599,7 +600,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/kv_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages native SELECT ... FROM kv_store ... LIMIT n to avoid loading all KV entries</p>
+    <p class="mb-0 text-light">[filter] leverages native SELECT ... FROM kv_store ... LIMIT n to avoid loading all KV entries
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__col__+.take(5)" class="text-info">+.take(5)</a> <span class="text-light">=&gt;</span> <a href="#kv_limit(kv_store, WHERE furi LIKE ..., LIMIT n)" class="text-success">kv_limit(kv_store, WHERE furi LIKE ..., LIMIT n)</a></pre>
 </div>
@@ -613,7 +615,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_count?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages native SELECT COUNT(*) to count rows in a table</p>
+    <p class="mb-0 text-light">[filter] leverages native SELECT COUNT(*) to count rows in a table
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
@@ -627,7 +630,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_distinct?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages native SELECT DISTINCT to deduplicate rows in the database</p>
+    <p class="mb-0 text-light">[filter] leverages native SELECT DISTINCT to deduplicate rows in the database
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#*table__+.dedup(select(name))" class="text-info">+.dedup(select(name))</a> <span class="text-light">=&gt;</span> <a href="#sql_distinct(table, [name])" class="text-success">sql_distinct(table, [name])</a></pre>
 </div>
@@ -641,7 +645,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages native SELECT ... LIMIT to take first n rows from a table</p>
+    <p class="mb-0 text-light">[filter] leverages native SELECT ... LIMIT to take first n rows from a table
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
@@ -655,7 +660,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_mean?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages native SELECT AVG(column) to average entries in a table column</p>
+    <p class="mb-0 text-light">[filter] leverages native SELECT AVG(column) to average entries in a table column
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
@@ -669,7 +675,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_offset?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages native SELECT ... OFFSET to skip first n rows from a table</p>
+    <p class="mb-0 text-light">[filter] leverages native SELECT ... OFFSET to skip first n rows from a table
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#*table__+.skip(800)" class="text-info">+.skip(800)</a> <span class="text-light">=&gt;</span> <a href="#sql_offset(table, 800)" class="text-success">sql_offset(table, 800)</a></pre>
 </div>
@@ -683,7 +690,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_offset_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">fuses offset and limit into a single native SELECT ... LIMIT n OFFSET m</p>
+    <p class="mb-0 text-light">[filter] fuses offset and limit into a single native SELECT ... LIMIT n OFFSET m
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#sql_offset(table,800).take(10)" class="text-info">sql_offset(table,800).take(10)</a> <span class="text-light">=&gt;</span> <a href="#sql_offset_limit(table, 800, 10)" class="text-success">sql_offset_limit(table, 800, 10)</a></pre>
 </div>
@@ -697,7 +705,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_order?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages native SELECT ... ORDER BY to sort rows in the database</p>
+    <p class="mb-0 text-light">[filter] leverages native SELECT ... ORDER BY to sort rows in the database
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#*table__+.order(select(name))" class="text-info">+.order(select(name))</a> <span class="text-light">=&gt;</span> <a href="#sql_order(table, [name])" class="text-success">sql_order(table, [name])</a></pre>
 </div>
@@ -711,7 +720,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_select?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages native SELECT col1, col2 FROM table for projections</p>
+    <p class="mb-0 text-light">[filter] leverages native SELECT col1, col2 FROM table for projections
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#*table__+>>{name,age}" class="text-info">+&gt;&gt;{name,age}</a> <span class="text-light">=&gt;</span> <a href="#sql_select(table, [name,age])" class="text-success">sql_select(table, [name,age])</a></pre>
 </div>
@@ -725,7 +735,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_sum?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages native SELECT SUM(column) to sum entries in a table column</p>
+    <p class="mb-0 text-light">[filter] leverages native SELECT SUM(column) to sum entries in a table column
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
@@ -739,7 +750,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages native SELECT ... WHERE to filter rows in a table</p>
+    <p class="mb-0 text-light">[filter] leverages native SELECT ... WHERE to filter rows in a table
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
@@ -753,7 +765,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_count?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages native SELECT COUNT(*) ... WHERE to count filtered rows</p>
+    <p class="mb-0 text-light">[filter] leverages native SELECT COUNT(*) ... WHERE to count filtered rows
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
@@ -767,7 +780,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages native SELECT ... WHERE ... LIMIT to filter and limit rows in a table</p>
+    <p class="mb-0 text-light">[filter] leverages native SELECT ... WHERE ... LIMIT to filter and limit rows in a table
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
@@ -781,7 +795,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_offset?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">fuses where and offset into a single native SELECT ... WHERE ... OFFSET n</p>
+    <p class="mb-0 text-light">[filter] fuses where and offset into a single native SELECT ... WHERE ... OFFSET n
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#sql_where(table,cond).skip(800)" class="text-info">sql_where(table,cond).skip(800)</a> <span class="text-light">=&gt;</span> <a href="#sql_where_offset(table, cond, 800)" class="text-success">sql_where_offset(table, cond, 800)</a></pre>
 </div>
@@ -795,7 +810,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_offset_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">fuses where, offset, and limit into a single native SELECT ... WHERE ... LIMIT n OFFSET m</p>
+    <p class="mb-0 text-light">[filter] fuses where, offset, and limit into a single native SELECT ... WHERE ... LIMIT n OFFSET m
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#sql_where_offset(table,cond,800).take(10)" class="text-info">sql_where_offset(table,cond,800).take(10)</a> <span class="text-light">=&gt;</span> <a href="#sql_where_offset_limit(table, cond, 800, 10)" class="text-success">sql_where_offset_limit(table, cond, 800, 10)</a></pre>
 </div>
@@ -809,7 +825,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_order?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">fuses where and order into a single native SELECT ... WHERE ... ORDER BY</p>
+    <p class="mb-0 text-light">[filter] fuses where and order into a single native SELECT ... WHERE ... ORDER BY
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#sql_where(table,cond).order(select(name))" class="text-info">sql_where(table,cond).order(select(name))</a> <span class="text-light">=&gt;</span> <a href="#sql_where_order(table, cond, [name])" class="text-success">sql_where_order(table, cond, [name])</a></pre>
 </div>
@@ -823,7 +840,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_order_offset?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">fuses where, order, and offset into a single native SELECT ... WHERE ... ORDER BY ... OFFSET n</p>
+    <p class="mb-0 text-light">[filter] fuses where, order, and offset into a single native SELECT ... WHERE ... ORDER BY ... OFFSET n
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#sql_where_order(table,cond,[col]).skip(800)" class="text-info">sql_where_order(table,cond,[col]).skip(800)</a> <span class="text-light">=&gt;</span> <a href="#sql_where_order_offset(table, cond, [col], 800)" class="text-success">sql_where_order_offset(table, cond, [col], 800)</a></pre>
 </div>

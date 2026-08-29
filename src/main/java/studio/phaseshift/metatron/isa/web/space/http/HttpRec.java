@@ -68,7 +68,23 @@ public class HttpRec extends MRec {
     protected final GraphittyLogger LOG = Graphitty.log(this);
     protected final ObjJSONSerializer JSON = ObjJSONSerializer.simple();
 
-    protected HttpExchange exchange;
+    // The current request's exchange — thread-local, not a shared instance field:
+    // HttpRec instances are cached and SHARED across requests (see
+    // httpSpace.createHandlerRoute's session cache) while dispatch happens on a
+    // thread pool. A plain field gets clobbered when two requests land on the
+    // same handler, cross-wiring responses: "headers already sent",
+    // "stream closed", "insufficient bytes written", and orphaned sockets.
+    private final ThreadLocal<HttpExchange> EXCHANGE = new ThreadLocal<>();
+
+    /** The current request's exchange for this thread; null during type-checking. */
+    protected HttpExchange exchange() {
+        return EXCHANGE.get();
+    }
+
+    /** Bind the current request's exchange for the handling thread. */
+    protected void exchange(final HttpExchange ex) {
+        EXCHANGE.set(ex);
+    }
 
     public HttpRec(final Map<Obj, Obj> map, final fURI tid, final fURI vid) {
         super(map, tid, vid);
@@ -101,7 +117,7 @@ public class HttpRec extends MRec {
      * subclass overrides (OOP) or mtron-level handlers (ON_GET, ON_POST, etc.).
      */
     public void handle(final HttpExchange exchange) throws IOException {
-        this.exchange = exchange;
+        this.exchange(exchange);
         LOG.debug("handling %s %s [handler=%s]", exchange.getRequestMethod(),
                 exchange.getRequestURI(), this.vidOrTid());
         try {
@@ -254,12 +270,12 @@ public class HttpRec extends MRec {
      * Send a raw JSON string response.
      */
     protected void sendJsonString(final int status, final String json) throws IOException {
-        if (this.exchange == null)  // type-checking guard
+        if (this.exchange() == null)  // type-checking guard
             return;
         final byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
-        this.exchange.getResponseHeaders().set("Content-Type", "application/json");
-        this.exchange.sendResponseHeaders(status, bytes.length);
-        try (final OutputStream os = this.exchange.getResponseBody()) {
+        this.exchange().getResponseHeaders().set("Content-Type", "application/json");
+        this.exchange().sendResponseHeaders(status, bytes.length);
+        try (final OutputStream os = this.exchange().getResponseBody()) {
             os.write(bytes);
         }
     }
@@ -277,7 +293,7 @@ public class HttpRec extends MRec {
      * This is the HTTP analog of {@code WebSocketObj.send(Obj)}.
      */
     public void send(final Obj message) {
-        if (this.exchange == null) {
+        if (this.exchange() == null) {
             // exchange is null during type-checking of the isaPredicate
             // (rhs.test(cinst.rng()) evaluates insts to verify result types)
             return;
@@ -285,15 +301,15 @@ public class HttpRec extends MRec {
         try {
             final HttpIO io = getHttpIO();
             final byte[] bytes = io.output().serializer().outputBytes(message).array();
-            this.exchange.getResponseHeaders().set(MIME.MIMEType.VALUE, io.output().value);
-            this.exchange.sendResponseHeaders(200, bytes.length);
-            try (final OutputStream os = this.exchange.getResponseBody()) {
+            this.exchange().getResponseHeaders().set(MIME.MIMEType.VALUE, io.output().value);
+            this.exchange().sendResponseHeaders(200, bytes.length);
+            try (final OutputStream os = this.exchange().getResponseBody()) {
                 os.write(bytes);
             }
         } catch (final Exception e) {
             LOG.error("error sending response: %s", e.getMessage());
             try {
-                if (this.exchange != null)
+                if (this.exchange() != null)
                     sendError(500, "error sending response: " + e.getMessage());
             } catch (final IOException ignored) {
             }
@@ -306,21 +322,21 @@ public class HttpRec extends MRec {
      * (text/html, text/css, application/json, etc.) rather than the configured OUT type.
      */
     public void send(final Obj message, final MIME.MIMEType contentType) {
-        if (this.exchange == null) {
+        if (this.exchange() == null) {
             // exchange is null during type-checking of the isaPredicate
             return;
         }
         try {
             final byte[] bytes = contentType.toBytes(message);
-            this.exchange.getResponseHeaders().set(MIME.MIMEType.VALUE, contentType.value);
-            this.exchange.sendResponseHeaders(200, bytes.length);
-            try (final OutputStream os = this.exchange.getResponseBody()) {
+            this.exchange().getResponseHeaders().set(MIME.MIMEType.VALUE, contentType.value);
+            this.exchange().sendResponseHeaders(200, bytes.length);
+            try (final OutputStream os = this.exchange().getResponseBody()) {
                 os.write(bytes);
             }
         } catch (final Exception e) {
             LOG.error("error sending response: %s", e.getMessage());
             try {
-                if (this.exchange != null)
+                if (this.exchange() != null)
                     sendError(500, "error sending response: " + e.getMessage());
             } catch (final IOException ignored) {
             }
@@ -331,13 +347,17 @@ public class HttpRec extends MRec {
      * Close the underlying HttpExchange.
      */
     public void close() {
-        if (this.exchange != null) {
+        final HttpExchange ex = this.exchange();
+        if (ex != null) {
             try {
-                this.exchange.close();
+                ex.close();
             } catch (final Exception e) {
                 LOG.error("error closing exchange: %s", e.getMessage());
             }
         }
+        // drop the thread-local binding — the shared pool thread may next serve
+        // a request for a different session; a stale exchange would leak it
+        EXCHANGE.remove();
     }
 
     // ========================================

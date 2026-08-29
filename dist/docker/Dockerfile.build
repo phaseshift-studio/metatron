@@ -1,0 +1,8 @@
+# metatron build/test image: JDK 24 (CI-matching) + maven + patchelf.
+#   patchelf is required — the uber-jar ships a musl-built tree-sitter .so,
+#   and ObjJavaSerializer patches it against glibc at load (see the server
+#   Dockerfile).  Images without patchelf die with UnsatisfiedLinkError.
+FROM maven:3.9.9-eclipse-temurin-24
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends patchelf \
+    && rm -rf /var/lib/apt/lists/*

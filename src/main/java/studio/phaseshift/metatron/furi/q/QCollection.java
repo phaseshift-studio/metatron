@@ -802,7 +802,12 @@ public final class QCollection {
 
     public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc,
                                final Map<Obj, String> argDescription, final String description, final String... examples) {
-        internalDocWrap(inst, domDesc, rngDesc, argDescription, description, examples);
+        final Inst.Form form = Inst.Form.of(inst);
+        final String domPrepend = inst.tid().dom().isGeneric() ? "[generic] " : "";
+        final String rngPrepend = inst.tid().rng().isGeneric() ? "[generic] " : "";
+        final String descPrepend = form != Inst.Form.standard ? ("[" + form.name() + "] ") : "";
+        final String descAppend = form != Inst.Form.standard ? form.description : "";
+        internalDocWrap(inst, domPrepend + domDesc, rngPrepend + rngDesc, argDescription, descPrepend + description + (descAppend.isEmpty() || description.isEmpty() ? "" : "\n") + descAppend, examples);
         return inst;
     }
 
@@ -812,7 +817,7 @@ public final class QCollection {
     }
 
     public static Inst docWrap(final Inst inst, final String description, final String... examples) {
-        internalDocWrap(inst, inst.tid().dom().toString(), inst.tid().rng().toString(),
+        docWrap(inst, inst.tid().dom().toString(), inst.tid().rng().toString(),
                 inst.args().isRec() ?
                         inst.args().asRec().elements()
                                 .map(r -> Tuple.Pair.with(r.first(), r.second().tid().toString()))
