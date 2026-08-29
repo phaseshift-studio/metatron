@@ -152,6 +152,17 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
         return httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
     }
 
+    protected HttpResponse<String> httpPut(final String path, final String body)
+            throws IOException, InterruptedException {
+        final HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl() + path))
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(body))
+                .timeout(Duration.ofSeconds(10))
+                .build();
+        return httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+    }
+
     protected HttpResponse<String> httpDelete(final String path, final String sessionId)
             throws IOException, InterruptedException {
         final HttpRequest.Builder builder = HttpRequest.newBuilder()

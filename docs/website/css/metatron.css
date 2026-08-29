@@ -34,11 +34,11 @@ h1, h2, h3, h4 {
 }
 
 h1 {
-    font-size: 3.5rem;
+    font-size: 2.25rem;
 }
 
 h2 {
-    font-size: 2.25rem;
+    font-size: 2.0rem;
 }
 
 h3 {
@@ -1856,4 +1856,137 @@ h6:hover .heading-anchor {
         left: 0;
         bottom: 20px;
     }
+}
+
+/******************************************************************/
+/******************************************************************/
+/*************************** SKILL MARKDOWN ***********************/
+/******************************************************************/
+/******************************************************************/
+
+.markdown-body {
+    color: var(--white);
+    font-size: 1.1rem;
+    line-height: 1.7;
+}
+
+.markdown-body a {
+    color: var(--mmagenta);
+    text-decoration: none;
+}
+
+.markdown-body a:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+    color: var(--mheading);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.markdown-body code {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    color: var(--mblue);
+    background: rgba(70, 105, 221, 0.10);
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.markdown-body pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
+}
+
+.markdown-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+}
+
+.markdown-body th,
+.markdown-body td {
+    border: 1px solid rgba(122, 37, 24, 0.45);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+}
+
+.markdown-body th {
+    background: rgba(122, 37, 24, 0.16);
+    color: var(--white);
+    font-weight: 600;
+}
+
+.markdown-body blockquote {
+    border-left: 4px solid var(--mred);
+    margin: 1rem 0;
+    padding: 0.25rem 1rem;
+    color: var(--light);
+    background: rgba(122, 37, 24, 0.08);
+}
+
+.markdown-body ul,
+.markdown-body ol {
+    padding-left: 1.5rem;
+}
+
+.markdown-body hr {
+    border-color: rgba(122, 37, 24, 0.4);
+}
+
+.markdown-body img {
+    max-width: 100%;
+}
+
+/* ── AGENT SKILLS accordion dropdown ────────────────────────────────── */
+.skill-chevron {
+    background: transparent;
+    border: none;
+    color: var(--white);
+    padding: 0.5rem 0.85rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.skill-chevron:hover {
+    color: var(--primary);
+}
+
+.dropdown-menu-dark .skill-link:hover {
+    background: transparent;
+}
+
+.skill-chevron .bi-chevron-down {
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+
+.skill-chevron[aria-expanded="true"] .bi-chevron-down {
+    transform: rotate(180deg);
+}
+
+.skill-resources {
+    padding: 0.25rem 0 0.5rem;
+    background: rgba(122, 37, 24, 0.08);
+}
+
+.skill-resource-group {
+    color: var(--light);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.4rem 1.4rem 0.1rem;
+}
+
+.dropdown-menu-dark .skill-resource {
+    padding-left: 2.4rem;
+    font-size: 0.95rem;
 }

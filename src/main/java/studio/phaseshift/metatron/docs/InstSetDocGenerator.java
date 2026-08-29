@@ -1526,7 +1526,7 @@ public class InstSetDocGenerator {
     // TEMPLATE LOADING
     // ========================================================================
 
-    private static String loadWebsiteHeader(final String depth) {
+    static String loadWebsiteHeader(final String depth) {
         final Path p = INCLUDES_PATH.resolve("header.html");
         if (!Files.exists(p)) return "";
         try {
@@ -1537,14 +1537,15 @@ public class InstSetDocGenerator {
                     .replace("location.href='./articles/", "location.href='" + depth + "/articles/")
                     .replace("location.href='tractatus.html'", "location.href='" + depth + "/tractatus.html'")
                     .replace("location.href='index.html'", "location.href='" + depth + "/index.html'")
-                    .replace("location.href='./instset/", "location.href='" + depth + "/instset/");
+                    .replace("location.href='./instset/", "location.href='" + depth + "/instset/")
+                    .replace("location.href='./skills/", "location.href='" + depth + "/skills/");
             return content;
         } catch (final IOException e) {
             return "";
         }
     }
 
-    private static String loadWebsiteFooter(final String depth) {
+    static String loadWebsiteFooter(final String depth) {
         final Path p = INCLUDES_PATH.resolve("footer.html");
         if (!Files.exists(p)) return "";
         try {

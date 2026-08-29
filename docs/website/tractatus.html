@@ -163,6 +163,7 @@
             <!----------------------------------------------------------------------------------------------------------
             -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
             ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
             <li class="nav-item dropdown">
                 <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                    aria-expanded="false">
@@ -172,33 +173,43 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='./instset/index.html';">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
+                    <li><hr class="dropdown-divider"></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='./instset/m.html';"><img
                             src="./images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='./instset/m_dcmnt.html';"><img
+                            src="./images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='./instset/m_grph.html';"><img
+                            src="./images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='./instset/m_iot.html';"><img
+                            src="./images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='./instset/m_llm.html';"><img
+                            src="./images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                            alt="llm"/>/m/llm</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='./instset/m_mach.html';"><img
+                            src="./images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                            alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='./instset/m_math.html';"><img
+                            src="./images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='./instset/m_sys.html';"><img
                             src="./images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                             alt="sys"/>/m/sys</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='./instset/m_mach.html';"><img
-                            src="./images/icons/space/mach-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
-                    </li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='./instset/m_tble.html';"><img
-                            src="./images/icons/space/tble-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a>
-                    </li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='./instset/m_dcmnt.html';"><img
-                            src="./images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2" alt="dcmnt"/>/m/dcmnt</a>
-                    </li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='./instset/m_grph.html';"><img
-                            src="./images/icons/space/grph-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
-                    </li>
+                            src="./images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                            alt="tble"/>/m/tble</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='./instset/m_vec.html';"><img
                             src="./images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
@@ -207,22 +218,9 @@
                            onclick="location.href='./instset/m_web.html';"><img
                             src="./images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='./instset/m_llm.html';"><img
-                            src="./images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
-                            alt="llm"/>/m/llm</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='./instset/m_iot.html';"><img
-                            src="./images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
-                            alt="iot"/>/m/iot</a>
-                    </li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='./instset/m_math.html';"><img
-                            src="./images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
-                            alt="math"/>/m/math</a>
-                    </li>
                 </ul>
             </li>
+            <!-- INSTSET-MENU:END -->
             <!----------------------------------------------------------------------------------------------------------
              ----------------------------------- TRACTATUS LINK --------------------------------------------------------
              ---------------------------------------------------------------------------------------------------------->
@@ -231,10 +229,78 @@
                    onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/tractatus.html');return false;">the
                     tractatus</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="skills/"
-                   onclick="location.href='./skills/';">agent skills</a>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='./skills/agent/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item d-flex align-items-center flex-grow-1" href="#" onclick="location.href='./skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/drstynx/assets/drstynx.boot.mtron';">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/drstynx/assets/drstynx.sqlite';">drstynx.sqlite</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item d-flex align-items-center flex-grow-1" href="#" onclick="location.href='./skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/metatron/references/mcp-mtron.html';">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/metatron/references/rewrite-system-java.html';">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/metatron/references/tble-space-java.html';">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/metatron/references/type-system-java.html';">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/metatron/references/ui-instset-java.html';">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/metatron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item d-flex align-items-center flex-grow-1" href="#" onclick="location.href='./skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/references/answer-questions.html';">answer-questions</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/references/connecting-datasources.html';">connecting-datasources</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/references/dckrspace.html';">dckrspace</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/references/dsh-mtron.html';">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/references/http-page-fetching.html';">http-page-fetching</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/references/math_instset.html';">math_instset</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/references/mcp-server-architecture.html';">mcp-server-architecture</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/references/mcp-server-notifications.html';">mcp-server-notifications</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/references/mtron-fsspace.html';">mtron-fsspace</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/references/mtron-language-reference.html';">mtron-language-reference</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/references/type-system-mtron.html';">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/references/unsloth-training-mtron.html';">unsloth-training-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/scripts/unsloth_studio.py';">unsloth_studio.py</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/assets/README.md';">README.md</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/assets/dsh_memory_loader.py';">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='./skills/mtron/assets/mtron_training_dataset.jsonl';">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
             </li>
+            <!-- SKILLS-MENU:END -->
             <!----------------------------------------------------------------------------------------------------------
             ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
             ----------------------------------------------------------------------------------------------------------->
@@ -1970,24 +2036,24 @@ And since, metatron is able to map common data formats to `obj`, its possible to
 mtron>  *<fs:skills/mtron/SKILL.md>
 ==>markdown::"""---
    name: mtron
-   description: A Guide for Operating The Ever Evolving Metatron
+   description: a guide to the mtron language
    ---
 
-   # Metatron: The Structural Reflection Engine
+   # mtron: defining processes in metatron
 
-   Metatron is not just a database or a language; it is a **distributed virtual machine** operating on a **Cayley Graph of
-   Rings**. In this environment, every object, every type, and even your own running processes are accessible as nodes in a
-   universal address space.
+   metatron integrates various technologies, protocols, and standards within a single unified storage and processing
+   framework. At the highest level, metatron **storage** is a uri (uniform resource identifier) graph where any vertex in
+   the graph can have an associated obj (object). metatron **processing** is founded on a fluent, monadic, data flow model
+   aimed at graph traversal and obj manipulation.
 
-   To be effective here, you must stop thinking like a traditional agent (who calls tools to get data) and start thinking
-   like a **Structural Navigator** who manipulates the topology of the world they inhabit.
+   metatron's approach to computing yields a **reflective computing environment** where every denoted object can be reified
+   and referred to and thus, manipulated.
 
-   ## 1. The Core Realization: Reflective Autonomy
+   **if it exists, it has a uri. if it has a uri, it can be accessed.**
 
-   Metatron is designed to be perfectly reflective. Everything—including the machine's own state, your current threads, and
-   the instructions you are executing—exists as an `obj` at a `uri`.
+   ## space: storage
 
-   **If it exists, it has a uri. If it has a uri, you can access it.**
+   A system that supports the encoding of a uri/obj-graph is called a `space`. An example uri/obj-graph maintained by a
    ...
 ----
 
@@ -2944,7 +3010,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{y}}m{{g}}e{{b}}t{{y}}A{{b}}t{{y}}r{{y}}O{{b}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{y}}M{{c}}E{{m}}t{{b}}a{{r}}t{{m}}r{{g}}o{{b}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -6881,17 +6947,17 @@ mtron&gt; *fs:m     ​3​
 mtron&gt; */sys/space/localfs/script     ​2​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
 ==&gt;'[?25l'
-==&gt;{3}'⠙ resolving dependencies'
-==&gt;{3}'⠹ resolving dependencies'
-==&gt;{3}'⠸ resolving dependencies'
-==&gt;{3}'⠼ resolving dependencies'
+==&gt;{2}'⠙ resolving dependencies'
+==&gt;{2}'⠹ resolving dependencies'
+==&gt;{2}'⠸ resolving dependencies'
+==&gt;{2}'⠼ resolving dependencies'
 ==&gt;{2}'⠴ resolving dependencies'
 ==&gt;{2}'⠦ resolving dependencies'
 ==&gt;{2}'⠧ resolving dependencies'
-==&gt;{2}'⠇ resolving dependencies'
-==&gt;{2}'⠏ resolving dependencies'
-==&gt;{2}'⠋ resolving dependencies'
-==&gt;'⠴ resolving dependencies[?12l[?25h'
+==&gt;'⠇ resolving dependencies'
+==&gt;'⠏ resolving dependencies'
+==&gt;'⠋ resolving dependencies'
+==&gt;'⠇ resolving dependencies[?12l[?25h'
 ==&gt;'[K[0;32m✓[0m resolving dependencies'
 ==&gt;null
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
@@ -6954,16 +7020,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355856       6052   6349804   1% /run'
+==&gt;'tmpfs                    6355856       5908   6349948   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2         959786032  497339108 413618716  55% /'
-==&gt;'tmpfs                   31779268     262620  31516648   1% /dev/shm'
+==&gt;'/dev/nvme1n1p2         959786032  497563160 413394664  55% /'
+==&gt;'tmpfs                   31779268     213520  31565748   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779268          0  31779268   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        228   6355624   1% /run/user/1000'
+==&gt;'tmpfs                    6355852        232   6355620   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1413249160 507959384  74% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1413245788 507962756  74% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
@@ -7178,7 +7244,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.08:28/17/46/28/946?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.08:29/00/15/32/520?tz=-0600&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -10089,9 +10155,11 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
 mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
 ==&gt;'grant'
+==&gt;'alex'
 ==&gt;'marko'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
+==&gt;3
 ==&gt;2</code></pre>
 </div>
 </div>
