@@ -349,6 +349,13 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     fURI pretract(final int steps);
 
+    default fURI qprocLess() {
+        final Map<String, String> qs = this.qMap();
+        if (qs.isEmpty())
+            return this;
+        return this.q((Map<String, String>) qs.entrySet().stream().filter(kv -> !kv.getKey().endsWith("q")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, LinkedHashMap<String, String>::new)));
+    }
+
     /*default fURI removePrefix(final fURI prefix) {
         if (null == prefix)
             return this;

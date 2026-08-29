@@ -1,0 +1,26 @@
+#!/bin/bash
+# bin/serve-website — serve the docs website locally with the Cloudflare Pages
+# dev runtime.
+#
+# Why not a plain static server: docs/website/_headers sets .mtron → text/plain,
+# and only the Pages runtime honors that file — python/http.server and friends
+# would force a download for .mtron instead of rendering it as text.
+#
+# Usage:
+#   bin/serve-website                 # serve on http://localhost:8788
+# -------------------------------------------------------------------
+set -euo pipefail
+
+# ── resolve project root ───────────────────────────────────────────
+cd "$(dirname "$(readlink -f "$0")")/.."
+
+# ── wrangler runs via npx; fail early with a clear message ─────────
+if ! command -v npx >/dev/null 2>&1; then
+    echo "serve-website: npx not found — install Node.js first." >&2
+    exit 1
+fi
+
+# ── serve docs/website (the Pages asset root) ──────────────────────
+cd docs/website
+echo "serving docs/website at http://localhost:8788"
+exec npx wrangler pages dev .

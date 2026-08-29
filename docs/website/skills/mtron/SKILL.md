@@ -3,7 +3,7 @@ name: mtron
 description: a guide to the mtron language
 ---
 
-# metatron: The Structural Reflection Engine
+# mtron: defining processes in metatron
 
 metatron integrates various technologies, protocols, and standards within a single unified storage and processing
 framework. At the highest level, metatron **storage** is a uri (uniform resource identifier) graph where any vertex in
@@ -18,8 +18,7 @@ and referred to and thus, manipulated.
 ## space: storage
 
 A system that supports the encoding of a uri/obj-graph is called a `space`. An example uri/obj-graph maintained by a
-`space`
-responsible for the address pattern `/a/#` is diagrammed below.
+`space` responsible for the address pattern `/a/#` is diagrammed below.
 
 ```mtron
 mtron> memspace::[pattern=>/a/#]@/sys/space/a
@@ -82,7 +81,7 @@ that uri. Of particular importance, and of fundamental significance to metatron,
 `*/a/b`. The ability for "polys" (`lst`,`rec`,and `rel` objs) to maintain an internal uri scheme that interacts with the
 outer space's uri scheme is a reoccurring theme throughout metatron.
 
-## uri categories
+### uri categories
 
 . absolute: a uri with a / prefix -- `/a/b`. . relative: a uri with no / prefix -- `a/b`.
 
@@ -90,42 +89,62 @@ outer space's uri scheme is a reoccurring theme throughout metatron.
 
 An absolute branch is `/a/b/`. An absolute node is `/a/b`. A relative branch is `a/b/`. A relative node is `a/b`.
 
-## obj types
+### obj types
 
-### mono types
+#### mono types
 
-. `bool`
-. `bytes`
-. `int`
-. `real`
-. `str`
-. `uri`
+|    type    | examples                             |
+|:----------:|--------------------------------------|
+| `bool::T`  | `true` or `false`                    |                    
+| `bytes::T` | `0x[a-f\|A-F\|0-9]`                  |                  
+|  `int::T`  | `...,-2,-1,0,1,2,...`                |
+| `real::T`  | `...-2.0,-1.012,0.0,1.134,2.377,...` |
+|  `str::T`  | `"a b", 'a b', """multi line a b"""` |
+|  `uri::T`  | `mtron://host:8555/a/b/c?x=1&y=2`    |
 
-### poly types
+#### poly types
 
-. `rel`
-. `lst`
-. `rec`
+| type  | examples              |
+|:-----:|-----------------------|
+| `rel` | `(k=>v)`              |
+| `lst` | `[1,2,3,...]`,        |
+| `rec` | `[k1=>v1,k2=>v2,...]` |
 
-### call types
+#### call types
 
-. `inst`
-. `code`
+|  type  | examples                                           |
+|:------:|----------------------------------------------------|
+| `inst` | `inst?rng<=dom(arg0=>A::T,arg1=>B::T){ inst* }@op` |
+| `code` | `inst().inst(inst(a,b)).inst()`                    |
 
-Finally, there is `noobj` which is a mono/poly/call. A `space` is a type of `rec` and common spaces include:
+Finally, within the base types, there is `noobj` which is a mono/poly/call.
 
-memspace . httpspace . wsspace . fsspace . tblespace . grphspace . dcmntspace . dckrspace
+#### space types
 
-# machine: process
+A `space::T` refines `rec::T`. Common spaces include:
+
+|     type     | description                                                    |
+|:------------:|----------------------------------------------------------------|
+|  `memspace`  | in-memory trie data structure                                  |
+| `httpspace`  | the web as a metatron space                                    |
+|  `wsspace`   | web sockets as a space                                         | 
+|  `fsspace`   | file system as with nested directories and symlinks as a space |
+| `mqttspace`  | mqtt broker with nested topics and topic references as a space |
+| `tblespace`  | relational database with foreign key edges as a space          | 
+| `grphspace`  | graph database with native edges as a space                    |
+| `dcmntspace` | document $DBRef/JSON nest edges as a space                     |
+| `dckrspace`  | docker images, containers, volumes, networks, etc. as a space  |
+
+## machine: process
 
 The uri/obj-graph formed by the aggregate of all supporting spaces is processed using **ring-oriented machines**.
-Machine are constructed using the mtron language -- a ring-based language composed of a `*` monoid and a `+` groupoid.
-Practically speaking, mtron supports chained/nested functions composition where the user attends to every function's
-domain and range and argument types when writing an expression.
+Machine behavior is defined by the mtron language -- a ring-based language composed of a `*` monoid and a `+` groupoid.
+Practically speaking, mtron supports **chained/nested function composition**, where special attention is put to a
+function's domain, range, and argument types.
 
 ### traversing the uri graph splice
 
-First, the non-sugar'd, brute force way to express a uri space traversal.
+Given the previously constructed graph, a non-sugar'd brute force approach to uri graph traversal is presented below.
 
 ```mtron
 mtron> start(/a)
@@ -147,7 +166,7 @@ mtron> start(/a).rshift().rshift().rshift().rshift()
 ==>/a/b/d/e/2
 mtron> start(/a).rshift().rshift().rshift().rshift().rshift()
 ```
-Now, the sugar'd method followed by looping.
+Now, the the more terse, sugar'd way of expressing the same constructs above.
 
 ```mtron
 mtron> /a.>>
@@ -167,6 +186,30 @@ mtron> /a.>>.>>.>>.>>
 ==>/a/b/d/e/2
 mtron> /a.>>.>>.>>.>>.>>
 ```
+```mtron
+mtron> start(/a).rshift().rshift().rshift().rshift().rshift().explain()
+==>"""
+    op      dom          rng      args   f    desc      c_dom  c_rng 
+    start   noobj{0}::T  uri::T   /a     <j>  initial   {0}    {1}   
+    rshift  uri::T       #{*}::T  noobj  <j>  standard  {1}    {*}   
+    rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
+    rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
+    rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
+    rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
+   """
+mtron> /a.>>.>>.>>.>>.>>.explain()
+==>"""
+    op      dom          rng      args   f    desc      c_dom  c_rng 
+    start   noobj{0}::T  uri::T   /a     <j>  initial   {0}    {1}   
+    rshift  uri::T       #{*}::T  noobj  <j>  standard  {1}    {*}   
+    rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
+    rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
+    rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
+    rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
+   """
+```
+### state transformation, branch selection, and loop iteration
+
 For a programming language to be considered "universal" (able to express any type of computation), it must support:
 state, looping, and branching. Storing objs in uri space is satisfies the state requirement. For looping:
 
@@ -198,7 +241,62 @@ mtron> /a.repeat(code=>>>,until=>loop()?>2, emit=>false)
 ==>/a/b/d/e
 ==>/a/x/y/z
 ```
-## Reference & Learning
+## mtron language examples
+
+```mtron
+mtron> {1,1,1,2,2,3}.plus(2)
+==>{3}3
+==>{2}4
+==>5
+mtron> {1,1,1,2,2,3}.plus(2).sum()
+==>22
+mtron> {1,1,1,2,2,3}.plus(2).sum?int<=int{1,3}()
+==>9
+==>12
+==>5
+==>{-1}4
+```
+```mtron
+mtron> {1,2,3}-<[?>2 => '${_} is greater 2', ?<=2 => '${_} is less than 2']>-
+==>1=>'1 is less than 2'
+==>2=>'2 is less than 2'
+==>3=>'3 is greater 2'
+```
+```mtron
+mtron> [-- type definitons --]
+mtron> int::T[?>0]@nat
+mtron> rec::T[?[name=>str::T,age=>nat::T]]@person
+mtron> [-- value definitions --]
+mtron> person::[name=>'marko',age=>29]
+==>person::[name=>'marko',age=>29]
+mtron> person::[name=>'unnamed',age=>-1]
+==>fail::[obj does not match person::T
+     [name=>'unnamed',age=>-1]
+         X=>
+     rec::T[?[
+       name=>str::T,
+       age=>nat::T]]@person
+     --------------------------------------------------------------------
+     [name=>(==>name)=>'unnamed'=>==>str::T,age=>(/=>age)=>-1=>X=>nat::T]]@/sys/fail/158
+```
+### docq query processor to access documentation
+
+Any obj can have associated documentation of type `docs::T`. A good way to learn about an instruction is to resolve it
+with a `?docq` query processor.
+
+```mtron
+mtron> select?docq
+==>select?docq
+mtron> where?docq
+==>where?docq
+mtron> group?docq
+==>group?docq
+mtron> as?rng=int&docq
+==>as?rng=int&docq
+mtron> as?dom=int&docq
+==>as?dom=int&docq
+```
+## references
 
 Do not guess at instruction signatures. Every instruction has documentation attached to it via `?docq`. **Read the
 documentation of the code you are about to execute.**

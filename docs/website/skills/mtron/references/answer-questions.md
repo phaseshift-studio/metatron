@@ -86,15 +86,15 @@ mtron> */sys/env/+/.filter(not(<<.has(API))).take(5)  [-- first 5 environmental 
 ```mtron
 mtron> [-- SQL table (if pattern is "acme:#") --]
 mtron> *acme:${table}.*(_).limit(10)
-==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/132
+==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/174
 mtron> [-- Document collection (if pattern is "mongo:#") --]
 mtron> *mongo:${collection}.*(_).limit(10)
-==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/136
+==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/178
 mtron> [-- Graph vertices/edges (if pattern is "g:#") --]
 mtron> *g:V.*(_).limit(10)
-==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/140
+==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/182
 mtron> *g:E.*(_).limit(10)
-==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/144
+==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/186
 mtron> [-- File system (if pattern is "local:#") --]
 mtron> *<local:path/to/file>                    [-- Read file --]
 mtron> *<local:path/#>                          [-- List recursively --]

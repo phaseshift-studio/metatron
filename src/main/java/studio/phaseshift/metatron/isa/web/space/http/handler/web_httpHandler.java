@@ -29,14 +29,13 @@ import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.webInstSet;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.MIMEQ_PATTERN;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
@@ -69,7 +68,7 @@ public class web_httpHandler extends HttpRec {
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WEB_HTTP_TID), lst(T(REC_TID)), (lhs, inst) -> {
                 final Map<Obj, Obj> config = new LinkedHashMap<>(inst.arg(0).asRec().jvm());
                 config.putIfAbsent(uri(DEFAULT_PAGE), str("index.html"));
-                config.putIfAbsent(uri(READ_ONLY), bool(true));
+                config.putIfAbsent(uri(READ_ONLY), bool(false));
                 return new web_httpHandler(config, inst.arg(0).asRec().vid());
             })).create();
 
@@ -117,14 +116,14 @@ public class web_httpHandler extends HttpRec {
                 }
 
                 // 1 — Direct read from Router (space-agnostic: fsSpace, memSpace, etc.)
-                Obj requestObj = Router.global().read(requestURI);
+                Obj requestObj = Router.readFromSpace(requestURI.qprocLess());
 
                 // 1.5 — When the request URI looks like a directory (no file extension),
                 // try the DEFAULT_PAGE.  This handles / → local:web where fsSpace returns
                 // a directory listing (rec or lst) rather than a DIR_TID URI.
                 if (!requestObj.isNoObj() && !requestURI.name().contains(".")) {
                     final String defaultPage = this.at(uri(DEFAULT_PAGE)).orElse(str("index.html")).strValue();
-                    final Obj defaultObj = Router.global().read(requestURI.extend(defaultPage));
+                    final Obj defaultObj = Router.readFromSpace(requestURI.extend(defaultPage));
                     if (!defaultObj.isNoObj()) {
                         requestObj = defaultObj;
                     }
@@ -177,11 +176,13 @@ public class web_httpHandler extends HttpRec {
                 // Leaf values (str, jnt, bool, noobj, etc.) use APPLICATION_MTRON
                 // so type information is preserved through the serialization round-trip.
                 // fromType checks the obj's TID (works for both rec and typed str)
-                final MIME.MIMEType contentType = requestURI.hasQ(OUT) ?
-                        MIME.MIMEType.of(requestURI.q(OUT)) :
-                        MIME.MIMEType.fromType(requestObj,
-                                MIME.MIMEType.fromExtension(contentTypeHint.name(),
-                                        requestObj.isRec() ? MIME.MIMEType.TEXT_PLAIN : MIME.MIMEType.APPLICATION_MTRON));
+                final MIME.MIMEType contentType = requestURI.hasQ(MIMEQ_PATTERN) ?
+                        MIME.MIMEType.of(requestURI.q(MIMEQ_PATTERN)) :
+                        requestURI.hasQ(OUT) ?
+                                MIME.MIMEType.of(requestURI.q(OUT)) :
+                                MIME.MIMEType.fromType(requestObj,
+                                        MIME.MIMEType.fromExtension(contentTypeHint.name(),
+                                                requestObj.isRec() ? MIME.MIMEType.TEXT_PLAIN : MIME.MIMEType.APPLICATION_MTRON));
                 this.send(requestObj, contentType);
                 LOG.debug("served %s [contentType=%s, objTid=%s]", requestURI, contentType.value, requestObj.tid());
                 return requestObj;
@@ -222,22 +223,27 @@ public class web_httpHandler extends HttpRec {
                         ? webRoot
                         : webRoot.extend(f(relativePath));
 
-                final String bodyStr = readBody(exchange);
-                if (!bodyStr.isEmpty()) {
-                    final MIME.MIMEType ct = MIME.MIMEType.fromExtension(fileURI.name(), MIME.MIMEType.TEXT_PLAIN);
-                    final Obj bodyObj = ct.serializer().inputBytes(ByteBuffer.wrap(bodyStr.getBytes(StandardCharsets.UTF_8)));
-                    Router.writeToSpace(fileURI, bodyObj);
-                    try {
-                        this.exchange.sendResponseHeaders(201, -1);
-                    } catch (final IOException e) {
-                        LOG.warn("unable to send error response: %s", e.getMessage());
-                    }
-                } else {
+                // The request body was already consumed — exactly once — by
+                // HttpRec.buildRequest() (run by dispatchToMtron before this
+                // handler), deserialized with the handler's IN serializer
+                // (default application/json) and delivered as request.body in
+                // the inst's lhs.  The exchange's request stream is one-shot:
+                // a second readBody(exchange) here throws
+                // java.io.IOException("Stream is closed").
+                final Obj bodyObj = lhs.isRec() ? lhs.asRec().at(uri(BODY)) : noobj();
+                if (bodyObj.isNoObj()) {
                     try {
                         sendError(400, "No body");
                     } catch (final IOException e) {
                         LOG.warn("unable to send error response: %s", e.getMessage());
                     }
+                    return noobj();
+                }
+                Router.writeToSpace(fileURI, bodyObj);
+                try {
+                    this.exchange.sendResponseHeaders(201, -1);
+                } catch (final IOException e) {
+                    LOG.warn("unable to send response: %s", e.getMessage());
                 }
                 return noobj();
             } catch (final Exception e) {
@@ -270,7 +276,10 @@ public class web_httpHandler extends HttpRec {
                 return noobj();
             }
         }));
+
+        this.jvm().put(uri(ON_POST), this.jvm().get(uri(ON_PUT)));
     }
+
 
     /**
      * Checks whether an object is noobj or a directory — used by DEFAULT_PAGE fallback.

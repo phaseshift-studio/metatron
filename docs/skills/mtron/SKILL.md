@@ -3,7 +3,7 @@ name: mtron
 description: a guide to the mtron language
 ---
 
-# mtron: defining processes in metatron
+# defining structures and processes in metatron
 
 metatron integrates various technologies, protocols, and standards within a single unified storage and processing
 framework. At the highest level, metatron **storage** is a uri (uniform resource identifier) graph where any vertex in
@@ -18,8 +18,7 @@ and referred to and thus, manipulated.
 ## space: storage
 
 A system that supports the encoding of a uri/obj-graph is called a `space`. An example uri/obj-graph maintained by a
-`space`
-responsible for the address pattern `/a/#` is diagrammed below.
+`space` responsible for the address pattern `/a/#` is diagrammed below.
 
 ```mtron_pre
 memspace::[pattern=>/a/#]@/sys/space/a
@@ -71,7 +70,7 @@ that uri. Of particular importance, and of fundamental significance to metatron,
 `*/a/b`. The ability for "polys" (`lst`,`rec`,and `rel` objs) to maintain an internal uri scheme that interacts with the
 outer space's uri scheme is a reoccurring theme throughout metatron.
 
-## uri categories
+### uri categories
 
 . absolute: a uri with a / prefix -- `/a/b`. . relative: a uri with no / prefix -- `a/b`.
 
@@ -79,33 +78,53 @@ outer space's uri scheme is a reoccurring theme throughout metatron.
 
 An absolute branch is `/a/b/`. An absolute node is `/a/b`. A relative branch is `a/b/`. A relative node is `a/b`.
 
-## obj types
+### obj types
 
-### mono types
+#### mono types
 
-. `bool`
-. `bytes`
-. `int`
-. `real`
-. `str`
-. `uri`
+|    type    | examples                             |
+|:----------:|--------------------------------------|
+| `bool::T`  | `true` or `false`                    |                    
+| `bytes::T` | `0x[a-f\|A-F\|0-9]`                  |                  
+|  `int::T`  | `...,-2,-1,0,1,2,...`                |
+| `real::T`  | `...-2.0,-1.012,0.0,1.134,2.377,...` |
+|  `str::T`  | `"a b", 'a b', """multi line a b"""` |
+|  `uri::T`  | `mtron://host:8555/a/b/c?x=1&y=2`    |
 
-### poly types
+#### poly types
 
-. `rel`
-. `lst`
-. `rec`
+| type  | examples              |
+|:-----:|-----------------------|
+| `rel` | `(k=>v)`              |
+| `lst` | `[1,2,3,...]`,        |
+| `rec` | `[k1=>v1,k2=>v2,...]` |
 
-### call types
+#### call types
 
-. `inst`
-. `code`
+|  type  | examples                                           |
+|:------:|----------------------------------------------------|
+| `inst` | `inst?rng<=dom(arg0=>A::T,arg1=>B::T){ inst* }@op` |
+| `code` | `inst().inst(inst(a,b)).inst()`                    |
 
-Finally, there is `noobj` which is a mono/poly/call. A `space` is a type of `rec` and common spaces include:
+Finally, within the base types, there is `noobj` which is a mono/poly/call.
 
-memspace . httpspace . wsspace . fsspace . tblespace . grphspace . dcmntspace . dckrspace
+#### space types
 
-# machine: process
+A `space::T` refines `rec::T`. Common spaces include:
+
+|     type     | description                                                    |
+|:------------:|----------------------------------------------------------------|
+|  `memspace`  | in-memory trie data structure                                  |
+| `httpspace`  | the web as a metatron space                                    |
+|  `wsspace`   | web sockets as a space                                         | 
+|  `fsspace`   | file system as with nested directories and symlinks as a space |
+| `mqttspace`  | mqtt broker with nested topics and topic references as a space |
+| `tblespace`  | relational database with foreign key edges as a space          | 
+| `grphspace`  | graph database with native edges as a space                    |
+| `dcmntspace` | document $DBRef/JSON nest edges as a space                     |
+| `dckrspace`  | docker images, containers, volumes, networks, etc. as a space  |
+
+## machine: process
 
 The uri/obj-graph formed by the aggregate of all supporting spaces is processed using **ring-oriented machines**.
 Machine behavior is defined by the mtron language -- a ring-based language composed of a `*` monoid and a `+` groupoid.
@@ -151,7 +170,41 @@ state, looping, and branching. Storing objs in uri space is satisfies the state 
 /a.repeat(code=>>>,until=>loop()?>2, emit=>false)
 ```
 
-## Reference & Learning
+## mtron language examples
+
+```mtron_pre
+{1,1,1,2,2,3}.plus(2)
+{1,1,1,2,2,3}.plus(2).sum()
+{1,1,1,2,2,3}.plus(2).sum?int<=int{1,3}()
+```
+
+```mtron_pre
+{1,2,3}-<[?>2 => '${_} is greater 2', ?<=2 => '${_} is less than 2']>-
+```
+
+```mtron_pre
+[-- type definitons --]
+int::T[?>0]@nat
+rec::T[?[name=>str::T,age=>nat::T]]@person
+[-- value definitions --]
+person::[name=>'marko',age=>29]
+person::[name=>'unnamed',age=>-1]
+```
+
+### docq query processor to access documentation
+
+Any obj can have associated documentation of type `docs::T`. A good way to learn about an instruction is to resolve it
+with a `?docq` query processor.
+
+```mtron_pre
+*select?docq
+*where?docq
+*group?docq
+*as?rng=int&docq
+*as?dom=int&docq
+```
+
+## references
 
 Do not guess at instruction signatures. Every instruction has documentation attached to it via `?docq`. **Read the
 documentation of the code you are about to execute.**

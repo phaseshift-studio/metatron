@@ -85,8 +85,11 @@ fsspace::[
 httpspace::[host     => !*<boot/args/external/web/http>,
             q        => [mimeq::[=>]],
             pattern  => <http://#>,
-            route    => [/mcp     => mcp_mtron_http,
-                         /        => mfs:]]@/sys/space/web/http;   
+            route    => [/mcp       => mcp_mtron_http,
+                         /docker    => docker:,
+                         /dr        => /usr/dr,
+                         /marko     => /usr/marko,
+                         /          => mfs:docs/website/]]@/sys/space/web/http;   
 [==  
 *boot/args/external/ollama.mult(api/tags/models).*(_).>-.
   =?=[capabilities=>[embedding]].
@@ -124,6 +127,7 @@ httpspace::[host     => !*<boot/args/external/web/http>,
         [=====================]
 dckrspace::[host     => <unix:///var/run/docker.sock>,
             pattern  => docker:#,
+            q        => [mimeq::[=>]],
             progress => progress_table::[style => style::[body          => "{{y}}={{g}}",
                                                           pointer       => "{{g}}>{{X}}",
                                                           border        => continuous,
@@ -150,7 +154,7 @@ tblespace::[pattern    => </usr/dr/#>,
             host       => <sqlite:/home/killswitch/software/metatron/.metatron/skills/drstynx/assets/drstynx.sqlite>,
             driver     => <org.sqlite.JDBC>,
             table      => [,],
-            q          => [incrq::[=>],subq::[=>]],
+            q          => [incrq::[=>],subq::[=>],mimeq::[=>]],
             route      => [/usr/dr/ => <>]]@</sys/space/usr/dr>;
 wsspace::[host     => !*<boot/args/external/web/ws>,
           pattern  => <ws://#>,
@@ -250,7 +254,7 @@ scratch
 model::[provider     => ollama,
         protocol     => ollama,
         host         => <http://ginger.local:11434>,
-        llm          => <qwen3.8:27b>]@/usr/dr/model;
+        llm          => <venkataparswanadh/qwen3.8-27b:iq1_m>]@/usr/dr/model;
 /usr/dr/agent -> |!*dr;
 [-- tag::asciidoc_tag[] --]
 agent::[

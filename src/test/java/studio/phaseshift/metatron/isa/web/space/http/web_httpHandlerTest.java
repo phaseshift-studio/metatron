@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.isa.web.space.http;
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.SkipWhenPortUnavailable;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -200,6 +202,32 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
             assertNotNull(resp, "GET / should return a response");
             assertTrue(resp.statusCode() >= 200 && resp.statusCode() < 600,
                     "GET / should return a valid HTTP status, got: " + resp.statusCode());
+        }
+
+        // A PUT must round-trip through the *already-consumed* request body
+        // (read once by HttpRec.buildRequest) — a second readBody(exchange)
+        // threw java.io.IOException("Stream is closed") and surfaced as 500.
+        @ParameterizedTest(name = "PUT {0} -> 201, GET reads back {1}")
+        @CsvSource(value = {
+                "/put/int%6%6",
+                "/put/lst%[1, 2, 3]%1",
+                "/put/obj%{\"a\": [1, 2, 3]}%1"
+        }, delimiter = '%')
+        public void testPutWritesAndReadsBack(final String path, final String body, final String fragment) throws Exception {
+            final java.net.http.HttpResponse<String> put = httpPut(path, body);
+            assertEquals(201, put.statusCode(),
+                    "PUT " + path + " should return 201, got: " + put.statusCode() + " body=" + put.body());
+            final java.net.http.HttpResponse<String> get = httpGet(path + "?out=application/json");
+            assertEquals(200, get.statusCode(), "GET " + path + " should return 200, got: " + get.statusCode());
+            assertTrue(get.body().contains(fragment),
+                    "read-back of " + path + " should contain written content, got: " + get.body());
+        }
+
+        @Test
+        public void testPutEmptyBodyReturns400() throws Exception {
+            final java.net.http.HttpResponse<String> resp = httpPut("/put/empty", "");
+            assertEquals(400, resp.statusCode(),
+                    "PUT with empty body should return 400, got: " + resp.statusCode());
         }
     }
 }
