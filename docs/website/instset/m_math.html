@@ -358,8 +358,8 @@
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- type=&gt;[nat::T,data::T,bB::T,kB::T,mB::T,gB::T,tB::T,pB::T,currency::T,usd::T,...(6 more)],
- inst=&gt;[datetime_now?datetime&lt;=#{?}(),plus?datetime&lt;=datetime(time::T),minus?datetime&lt;=datetime(time::T),minus?/m/math/time&lt;=datetime(datetime::T),as?datetime&lt;=uri(uri::T),as?str&lt;=datetime(str::T),as?datetime&lt;=str(datetime::T),normalize?/m/math/time&lt;=/m/math/time(),normalize?data&lt;=data(),cos?real&lt;=#{?}(as(real::T)),...(12 more)],
+ type=&gt;[nat::T,data::T,bB::T,kB::T,mB::T,gB::T,tB::T,pB::T,currency::T,usd::T,...(7 more)],
+ inst=&gt;[datetime_now?datetime&lt;=#{?}(),as?/m/math/time&lt;=/m/math/time(time::T),plus?datetime&lt;=datetime(time::T),minus?datetime&lt;=datetime(time::T),minus?/m/math/time&lt;=datetime(datetime::T),as?datetime&lt;=uri(uri::T),as?str&lt;=datetime(str::T),as?datetime&lt;=str(datetime::T),normalize?/m/math/time&lt;=/m/math/time(),normalize?data&lt;=data(),...(13 more)],
  const=&gt;[2.7183@/m/math/e?constq,3.1416@/m/math/pi?constq]]@/m/math</code></pre>
                     </div>
                 </div>
@@ -368,7 +368,7 @@
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">16</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">16</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">17</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">16</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -420,7 +420,10 @@
 </a><a href="#__m__math__data__tB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">tB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">time</small></div><div class="d-flex flex-wrap"><a href="#__m__math__time__hour" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">time</small></div><div class="d-flex flex-wrap"><a href="#__m__math__time__day" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">day</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__time__hour" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">hour</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__math__time__millis" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -501,7 +504,7 @@
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">16</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">17</span></h3>
     <div class="card mb-3" id="__m__math__data__bB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -550,7 +553,20 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datetime</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a datetime as uri: //yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm</p>
+    <p class="mb-0 text-light">a datetime as uri: &lt;//yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm&gt;</p>
+</div>
+</div><div class="card mb-3" id="__m__math__time__day">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">day::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__time" class="instset-doc-small-code text-info code">/m/math/time::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/time/day</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?day&lt;=#{?}(#{*}::T)]@/m/math/time/day</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a day of time (24 hours)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__currency__euro">
     <div class="card-header d-flex justify-content-between align-items-center py-2">

@@ -495,11 +495,11 @@ public class Agent extends MRec {
                             // attached by the features themselves in their onCompleteResponse.
                             final long elapsed = (System.nanoTime() - startNanos) / 1_000_000;
                             final ChatResult result = ChatResult.chatResult()
-                                    .put("chat", chatObj)
-                                    .put("user", str(this.userMessage))
-                                    .put("time", mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)));
+                                    .put(CHAT, chatObj.apply(this))
+                                    .put(USER, str(this.userMessage))
+                                    .put(TIME, mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)));
                             if (!blocks.isEmpty())
-                                result.put("blocks", rec(blocks, null, null));
+                                result.put(BLOCK, rec(blocks, null, null));
                             this.currentResult = result;
                             this.logger().none("\n");
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_COMPLETE_RESPONSE, result));

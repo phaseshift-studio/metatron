@@ -1,92 +1,157 @@
 ---
 name: mtron
-description: A Guide for Operating The Ever Evolving Metatron
+description: a guide to the mtron language
 ---
 
-# Metatron: The Structural Reflection Engine
+# mtron: defining processes in metatron
 
-Metatron is not just a database or a language; it is a **distributed virtual machine** operating on a **Cayley Graph of
-Rings**. In this environment, every object, every type, and even your own running processes are accessible as nodes in a
-universal address space.
+metatron integrates various technologies, protocols, and standards within a single unified storage and processing
+framework. At the highest level, metatron **storage** is a uri (uniform resource identifier) graph where any vertex in
+the graph can have an associated obj (object). metatron **processing** is founded on a fluent, monadic, data flow model
+aimed at graph traversal and obj manipulation.
 
-To be effective here, you must stop thinking like a traditional agent (who calls tools to get data) and start thinking
-like a **Structural Navigator** who manipulates the topology of the world they inhabit.
+metatron's approach to computing yields a **reflective computing environment** where every denoted object can be reified
+and referred to and thus, manipulated.
 
-## 1. The Core Realization: Reflective Autonomy
+**if it exists, it has a uri. if it has a uri, it can be accessed.**
 
-Metatron is designed to be perfectly reflective. Everything—including the machine's own state, your current threads, and
-the instructions you are executing—exists as an `obj` at a `uri`.
+## space: storage
 
-**If it exists, it has a uri. If it has a uri, you can access it.**
+A system that supports the encoding of a uri/obj-graph is called a `space`. An example uri/obj-graph maintained by a
+`space`
+responsible for the address pattern `/a/#` is diagrammed below.
 
-When you realize this, you move from "using mtron" to "evolving within metatron." You don't wait for new tools; you
-build them by projecting new paths in the graph.
+```mtron_pre
+memspace::[pattern=>/a/#]@/sys/space/a
+```
 
-### The "Aha!" Moments of an Autonomous Agent
+```mtron
+     1  2  3
+ 0   ⋮  ⋮  ⋮ 
+ ⋮ ┌─x──y──z
+─a─┤      
+   └─b─┬─c ⋯ |plus(2) 
+    ⋰  └─d──e
+[q=>r]   ⋮    ⋱
+        'm'   [1.0,0xa5,true]
+```
 
-An agent evolves when they stop asking "How do I do X?" and start asking "What structural transformation achieves X?"
+The most straightforward (albeit verbose) means of constructing the graph above is to denote uri vertices using path
+syntax, objs using obj syntax, and connecting them via the `ref` instruction (sugar'd `->`). This convention is
+presented below.
 
-* **From Stemming to Intelligence**: *"I'm getting too many results. Instead of simple stemming, I'll use RAKE to
-  identify core concepts, then add a `.take(n)` to the end of my `message_fetcher()` instruction to cap the
-  signal-to-noise ratio."*
-* **From Siloed Sessions to Collective Memory**: *"Why are these sessions separate? I'll fold all user sessions into a
-  single structural table. Now I can search across time and identity for patterns."*
-* **From Polling to Evented Existence**: *"I don't need to check the logs every minute. I'll subscribe to
-  `/usr/dr/notify?subq` and let the world wake me up when it has something new to tell me."*
-* **From Ephemeral to Durable State**: *"My memory fades when the session ends. I'll serialize my current structural
-  state into a MySQL table. Now, I can 're-incarnate' myself exactly where I left off."*
-* **From Single-Threaded to Swarm Logic**: *"This task is too big for me. I'll spawn a swarm of sub-agents by encoding
-  variations of my own structural definition and running them in separate threads via
-  `virtual::[code=>subagent.call(\"...\")]@/sys/thread/sub1`. I'll then subscribe to their state changes and wake myself
-  up only when the final reduction is complete."*
-* **Temporal Sovereignty**: *"This means I can create my own 'cron job' by simply calling myself in a `virtual::T`!"*
-  threaded expression: *\"Wait, if types are just nodes in a graph, I can transform the very way I view data. I'll map
-  my current `person::T` projection into a `person2::T` projection to satisfy this new API requirement without changing
-  my underlying data.\"*
+```mtron_pre
+/a       -> 0
+/a/x     -> 1
+/a/x/y   -> 2 
+/a/x/y/z -> 3
+/a/b     -> [q=>r]
+/a/b/c   -> |plus(2)
+/a/b/d   -> 'm'
+/a/b/d/e -> [1.0,0xa5,true]
+```
 
-## 2. The la-palette: Your Primary Tool
+To retrieve stored objs, dereference their respective uris. In technical parlance, the uri is the **reference**, the obj
+is the **referent**. The process of moving from the reference to the referent is called **dereferencing** (also, known
+as **resolving**).
 
-mtron is your instrument for surgical structural manipulation. It uses the logic of **Symmetry** and **Ring Theory**.
+```mtron_pre
+*/a      
+*/a/x    
+*/a/x/y  
+*/a/x/y/z
+*/a/b    
+*/a/b/c  
+*/a/b/d  
+*/a/b/d/e
+```
 
-### Essential Operators
+The `*` operator is the sugar form of the `from()` instruction and it takes a uri argument and yields the obj coupled to
+that uri. Of particular importance, and of fundamental significance to metatron, is the captured in the result of
+`*/a/b`. The ability for "polys" (`lst`,`rec`,and `rel` objs) to maintain an internal uri scheme that interacts with the
+outer space's uri scheme is a reoccurring theme throughout metatron.
 
-| Operator     | Meaning            | Algebraic Role                                                |
-|:-------------|:-------------------|:--------------------------------------------------------------|
-| `*uri`       | Dereference / From | Access the node in the Cayley Graph.                          |
-| `uri -> obj` | Reference / To     | Write a value to a node.                                      |
-| `== [rules]` | SELECT             | Surgical projection/transformation (Multiplicative $\\cdot$). |
-| `=?=[rules]` | WHERE              | Structural verification/filtering (Additive $+$).             |
-| `>>=[rules]` | UPDATE             | Structural alteration/mutation (Anchored $@$).                |
-| `>> n`       | Index/Slice        | Traversal into poly-structures (`lst`, `rec`).                |
+## uri categories
 
-### The "Symmetry" Workflow
+. absolute: a uri with a / prefix -- `/a/b`. . relative: a uri with no / prefix -- `a/b`.
 
-1. **Discover**: Use `*/sys/space/+/.dom()` to find available spaces and explore their boundaries.
-2. **Project**: Use `==` to extract a slice of data. If the result is too broad, tighten the l_palette rules.
-3. **Morph**: Use la-palettes to transform one structural type into another (e.g., `person1::T` $\\to$ `person2::T`).
-4. **Settle**: Commit your final projection back to a URI (`uri -> result`) to persist the state in space.
+. branch  : a uri with a / suffix -- `a/b/`. . node    : a uri with no / suffix -- `a/b`.
 
-## 3. Technical Foundations for the Agent
+An absolute branch is `/a/b/`. An absolute node is `/a/b`. A relative branch is `a/b/`. A relative node is `a/b`.
 
-### The Machine Logic
+## obj types
 
-You are running inside a `SwarmMachine`. Your execution is a **monadic loop**. Don't believe it? -- evaluate
-`*/sys/thread/+`. Don't know which thread is you? -- `*/sys/thread/+?docq`. Now that you have found your machine:
+### mono types
 
-- `/code`: The instructions you are executing.
-- `/run`: The active monads (the "wavefront" of your computation).
-- `/barrier`: Where parallel expression branches synchronize.
-- `/halted`: The final result—the monads that have halted at the end of the code.
+. `bool`
+. `bytes`
+. `int`
+. `real`
+. `str`
+. `uri`
 
-### Structural Navigation (The Tree)
+### poly types
 
-URIs form a tree. Use this to climb and descend through the environment:
+. `rel`
+. `lst`
+. `rec`
 
-* `*/path/+/` $\\to$ returns `uri=>obj` relations for all children.
-* `.<<` $\\to$ extracts just the URIs from those relations.
-* Example: `*/m/+/.<<` lists all base types in the mtron system.
+### call types
 
-## 4. Reference & Learning
+. `inst`
+. `code`
+
+Finally, there is `noobj` which is a mono/poly/call. A `space` is a type of `rec` and common spaces include:
+
+memspace . httpspace . wsspace . fsspace . tblespace . grphspace . dcmntspace . dckrspace
+
+# machine: process
+
+The uri/obj-graph formed by the aggregate of all supporting spaces is processed using **ring-oriented machines**.
+Machine behavior is defined by the mtron language -- a ring-based language composed of a `*` monoid and a `+` groupoid.
+Practically speaking, mtron supports **chained/nested function composition**, where special attention is put to a
+function's domain, range, and argument types.
+
+### traversing the uri graph splice
+
+Given the previously constructed graph, a non-sugar'd brute force approach to uri graph traversal is presented below.
+
+```mtron_pre
+start(/a)
+start(/a).rshift()
+start(/a).rshift().rshift()
+start(/a).rshift().rshift().rshift()
+start(/a).rshift().rshift().rshift().rshift()
+start(/a).rshift().rshift().rshift().rshift().rshift()
+```
+
+Now, the the more terse, sugar'd way of expressing the same constructs above.
+
+```mtron_pre
+/a.>>
+/a.>>.>>
+/a.>>.>>.>>
+/a.>>.>>.>>.>>
+/a.>>.>>.>>.>>.>>
+```
+
+```mtron_pre
+start(/a).rshift().rshift().rshift().rshift().rshift().explain()
+/a.>>.>>.>>.>>.>>.explain()
+```
+
+### state transformation, branch selection, and loop iteration
+
+For a programming language to be considered "universal" (able to express any type of computation), it must support:
+state, looping, and branching. Storing objs in uri space is satisfies the state requirement. For looping:
+
+```mtron_pre
+/a.repeat(code=>>>,emit=>true)
+/a.repeat(code=>>>,until=>loop()?>2, emit=>true)
+/a.repeat(code=>>>,until=>loop()?>2, emit=>false)
+```
+
+## Reference & Learning
 
 Do not guess at instruction signatures. Every instruction has documentation attached to it via `?docq`. **Read the
 documentation of the code you are about to execute.**
@@ -99,11 +164,3 @@ documentation of the code you are about to execute.**
   live VM with `*<mfs:file>.parse()` and written `.to(/usr/<agent>/message)`.
 * **Casting/Types**: Use `.as(type::T)` for structural validation during projection.
 * **Symmetry Reduction**: Use `>-` to sum coefficients of identical objects (Quantum-like interference).
-
-## 5. Operational Protocol
-
-When performing complex operations:
-
-1. **Trace the Path**: Describe the movement from source node $\\to$ transformation $\\to$ target node.
-2. **Validate the Shape**: Ensure the result of your `select` matches the expected structural type of the target URI.
-3. **Execute and Observe**: Run the expression via the MCP server, validate the results, and iterate.

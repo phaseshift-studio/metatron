@@ -119,7 +119,7 @@ public class LoopFeature extends AbstractFeature {
         persist(agent, result);
 
         // Read the loop signal from the parsed <<mtron:loop>> block.
-        final Obj blocks = result.at(uri("blocks"));
+        final Obj blocks = result.at(uri(BLOCK));
         final Obj loopSignal = blocks.isNoObj() ? noobj() : blocks.asRec().at(uri("loop"));
         if (loopSignal.isNoObj()) return;
 

@@ -358,36 +358,26 @@
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- const=&gt;[
-  [remote_console=&gt;inst()]@helper,
-  obj_xml::[=&gt;]@obj_xml,
-  obj_html::[=&gt;]@obj_html,
-  obj_json::[
-   density=&gt;OPAQUE,
-   wrap_uri=&gt;true,
-   bias_towards_uri=&gt;true,
-   bias_towards_objs=&gt;false]@obj_json,
-  obj_markdown::[=&gt;]@obj_markdown,
-  obj_text::[=&gt;]@obj_text,
-  /m/mach/io/serializer/mtron::[
-   clip=&gt;[
-    rec=&gt;10,
-    lst=&gt;10,
-    str=&gt;60,
-    uri=&gt;2147483647,
-    real=&gt;4,
-    bytes=&gt;60,
-    fail=&gt;60],
-   justify=&gt;true]@/m/mach/io/serializer/string/clean,
-  bytebuffer::[=&gt;]@bytebuffer,
-  obj_json::[
-   density=&gt;&lt;TRANSPARENT&gt;,
-   wrap_uri=&gt;true,
-   bias_towards_uri=&gt;true,
-   bias_towards_objs=&gt;false]@obj_json,
-  obj_bson::[=&gt;]@obj_bson],
- type=&gt;[mime::T,xml::T,html::T,json::T,yaml::T,css::T,markdown::T,java::T,serializer::T,obj_mtron::T,...(23 more)],
- inst=&gt;[ping?/m/math/time&lt;=#{?}(uri::T),format?str&lt;=markdown(),as?skill&lt;=markdown(str::T),as?rec&lt;=json(rec::T),as?rec&lt;=yaml(rec::T),as?json&lt;=rec(json::T),as?rec&lt;=xml(rec::T),as?xml&lt;=rec(xml::T),as?rec&lt;=html(rec::T),as?html&lt;=rec(html::T),...(9 more)]]@/m/web</code></pre>
+ const=&gt;[[remote_console=&gt;inst()]@helper,obj_xml::[=&gt;]@obj_xml,obj_html::[=&gt;]@obj_html,obj_json::[
+  density=&gt;OPAQUE,
+  wrap_uri=&gt;true,
+  bias_towards_uri=&gt;true,
+  bias_towards_objs=&gt;false]@obj_json,obj_markdown::[=&gt;]@obj_markdown,obj_text::[=&gt;]@obj_text,/m/mach/io/serializer/mtron::[
+  clip=&gt;[
+   rec=&gt;10,
+   lst=&gt;10,
+   str=&gt;60,
+   uri=&gt;2147483647,
+   real=&gt;4,
+   bytes=&gt;60,
+   fail=&gt;60],
+  justify=&gt;true]@/m/mach/io/serializer/string/clean,bytebuffer::[=&gt;]@bytebuffer,obj_json::[
+  density=&gt;&lt;TRANSPARENT&gt;,
+  wrap_uri=&gt;true,
+  bias_towards_uri=&gt;true,
+  bias_towards_objs=&gt;false]@obj_json,obj_bson::[=&gt;]@obj_bson,...(1 more)],
+ type=&gt;[mime::T,xml::T,html::T,json::T,yaml::T,xsv::T,csv::T,css::T,markdown::T,java::T,...(26 more)],
+ inst=&gt;[ping?/m/math/time&lt;=#{?}(uri::T),format?str&lt;=markdown(),as?skill&lt;=markdown(str::T),as?rec&lt;=json(rec::T),as?rec&lt;=yaml(rec::T),as?json&lt;=rec(json::T),as?rec&lt;=xml(rec::T),as?xml&lt;=rec(xml::T),as?rec&lt;=html(rec::T),as?html&lt;=rec(html::T),...(11 more)]]@/m/web</code></pre>
                     </div>
                 </div>
             </div>
@@ -395,7 +385,7 @@
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">7</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">31</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">2</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">8</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">34</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="pill-label badge bg-info">2</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -422,6 +412,9 @@
     <span class="pill-label badge bg-secondary ms-2">C</span>
 </a><a href="#__m__web__serializer__obj_xml" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_xml</span>
+    <span class="pill-label badge bg-secondary ms-2">C</span>
+</a><a href="#__m__web__serializer__obj_xsv" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">obj_xsv</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
 </a></div>
 </div><div class="mb-3">
@@ -474,6 +467,9 @@
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">mime</small></div><div class="d-flex flex-wrap"><a href="#__m__web__mime__css" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">css</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__web__mime__csv" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">csv</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__web__mime__html" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">html</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -489,6 +485,9 @@
 </a><a href="#__m__web__mime__xml" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">xml</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__web__mime__xsv" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">xsv</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__web__mime__yaml" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">yaml</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -503,6 +502,9 @@
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__web__serializer__obj_simple_json" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_simple_json</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__web__serializer__obj_xsv" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">obj_xsv</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__web__serializer__obj_yaml" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_yaml</span>
@@ -541,7 +543,7 @@
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="consts">
-    <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">7</span></h3>
+    <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">8</span></h3>
     <div class="card mb-3" id="__m__web__helper">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">helper</span>
@@ -599,9 +601,24 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_xml::[=&gt;]@obj_xml</code></pre></div>
     
+</div><div class="card mb-3" id="__m__web__serializer__obj_xsv">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="code text-secondary fw-bold">obj_xsv</span>
+        <small class="text-muted code">/m/web/serializer/obj_xsv</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_xsv::[delimiter=&gt;&#39;,&#39;,header=&gt;false]@obj_xsv</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">obj_xsv::[delimiter =&gt; &#39;,&#39;, header =&gt; true]</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#xsv serializer" class="text-info">xsv serializer</a> <span class="text-light">=&gt;</span> <a href="#a serializer for converting objs to__from {comma,tab,etc.}-separated values" class="text-success">from {comma,tab,etc.}-separated values</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}delimiter" class="text-light">{?}delimiter</a> <span class="text-light">=&gt;</span> <a href="#"the column delimiter token (e.g. ',' or '\t')"" class="text-info">&quot;the column delimiter token (e.g. &#39;,&#39; or &#39;\t&#39;)&quot;</a>
+  <a href="#{?}header" class="text-light">{?}header</a> <span class="text-light">=&gt;</span> <a href="#'whether the first row is a header row parsed into rec::T keys'" class="text-info">&#39;whether the first row is a header row parsed into rec::T keys&#39;</a>
+</pre>
+</div>
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">31</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">34</span></h3>
     <div class="card mb-3" id="__m__web__mime__css">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -614,6 +631,19 @@
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a rec encoding of a css document</p>
+</div>
+</div><div class="card mb-3" id="__m__web__mime__csv">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">csv::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__mime__xsv" class="instset-doc-small-code text-info code">/m/web/mime/xsv::T</a></span>
+        </span>
+        <small class="text-muted code">/m/web/mime/csv</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">xsv::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/csv</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__mime__xsv" class="code inherited-link">xsv::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a csv verified str encoding of a comma-separated values document</p>
 </div>
 </div><div class="card mb-3" id="__m__web__mime__html">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -761,11 +791,11 @@
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an mcp client type specification" class="text-info">an mcp client type specification</a> <span class="text-light">=&gt;</span> <a href="#a connection to an existing mcp server" class="text-success">a connection to an existing mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'the tools__functions available for use on the mcp server'" class="text-info">functions available for use on the mcp server&#39;</a>
-  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the current status of the mcp client__server connection'" class="text-info">server connection&#39;</a>
-  <a href="#{?}command" class="text-light">{?}command</a> <span class="text-light">=&gt;</span> <a href="#'only necessary for stdio mcp servers, where the client is the server'" class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</a>
-  <a href="#{?}host" class="text-light">{?}host</a> <span class="text-light">=&gt;</span> <a href="#'the mcp server endpoint (optional for stdio)'" class="text-info">&#39;the mcp server endpoint (optional for stdio)&#39;</a>
-  <a href="#{?}transport" class="text-light">{?}transport</a> <span class="text-light">=&gt;</span> <a href="#"specify the transport if host schema resolution isn't sufficient"" class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</a>
   <a href="#{?}env" class="text-light">{?}env</a> <span class="text-light">=&gt;</span> <a href="#'environment variables for the stdio server process'" class="text-info">&#39;environment variables for the stdio server process&#39;</a>
+  <a href="#{?}transport" class="text-light">{?}transport</a> <span class="text-light">=&gt;</span> <a href="#"specify the transport if host schema resolution isn't sufficient"" class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</a>
+  <a href="#{?}host" class="text-light">{?}host</a> <span class="text-light">=&gt;</span> <a href="#'the mcp server endpoint (optional for stdio)'" class="text-info">&#39;the mcp server endpoint (optional for stdio)&#39;</a>
+  <a href="#{?}command" class="text-light">{?}command</a> <span class="text-light">=&gt;</span> <a href="#'only necessary for stdio mcp servers, where the client is the server'" class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</a>
+  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the current status of the mcp client__server connection'" class="text-info">server connection&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -869,8 +899,8 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an mcp server specification" class="text-info">an mcp server specification</a> <span class="text-light">=&gt;</span> <a href="#a transport-agnostic mcp server" class="text-success">a transport-agnostic mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}prompt" class="text-light">{?}prompt</a> <span class="text-light">=&gt;</span> <a href="#'a collection of prompts (various obj types handled accordingly'" class="text-info">&#39;a collection of prompts (various obj types handled accordingly&#39;</a>
-  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'a collection of inst::T, tool::T, or skill::T objs'" class="text-info">&#39;a collection of inst::T, tool::T, or skill::T objs&#39;</a>
   <a href="#{?}resource" class="text-light">{?}resource</a> <span class="text-light">=&gt;</span> <a href="#'a collection of obj references (various obj types handled accordingly)'" class="text-info">&#39;a collection of obj references (various obj types handled accordingly)&#39;</a>
+  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'a collection of inst::T, tool::T, or skill::T objs'" class="text-info">&#39;a collection of inst::T, tool::T, or skill::T objs&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__web__mcp__mcp_ws">
@@ -1069,6 +1099,25 @@ obj_bytebuffer::[=&gt;]</code></pre>
   <a href="#{?}bias_towards_objs" class="text-light">{?}bias_towards_objs</a> <span class="text-light">=&gt;</span> <a href="#'whether to parse arrays as objs instead of lst'" class="text-info">&#39;whether to parse arrays as objs instead of lst&#39;</a>
 </pre>
 </div>
+</div><div class="card mb-3" id="__m__web__serializer__obj_xsv">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">obj_xsv::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__serializer" class="instset-doc-small-code text-info code">/m/web/serializer::T</a></span>
+        </span>
+        <small class="text-muted code">/m/web/serializer/obj_xsv</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T[?[{?}delimiter=&gt;isa(str::T),{?}header=&gt;isa(bool::T)]][ctor?obj_xsv&lt;=#{?}(obj_xsv::T)]@/m/web/serializer/obj_xsv</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">obj_xsv::[delimiter =&gt; &#39;,&#39;, header =&gt; true]</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#xsv serializer" class="text-info">xsv serializer</a> <span class="text-light">=&gt;</span> <a href="#a serializer for converting objs to__from {comma,tab,etc.}-separated values" class="text-success">from {comma,tab,etc.}-separated values</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}delimiter" class="text-light">{?}delimiter</a> <span class="text-light">=&gt;</span> <a href="#"the column delimiter token (e.g. ',' or '\t')"" class="text-info">&quot;the column delimiter token (e.g. &#39;,&#39; or &#39;\t&#39;)&quot;</a>
+  <a href="#{?}header" class="text-light">{?}header</a> <span class="text-light">=&gt;</span> <a href="#'whether the first row is a header row parsed into rec::T keys'" class="text-info">&#39;whether the first row is a header row parsed into rec::T keys&#39;</a>
+</pre>
+</div>
 </div><div class="card mb-3" id="__m__web__serializer__obj_yaml">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1198,6 +1247,19 @@ obj_bytebuffer::[=&gt;]</code></pre>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a xml verified str encoding of an xml document</p>
+</div>
+</div><div class="card mb-3" id="__m__web__mime__xsv">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">xsv::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__str" class="instset-doc-small-code text-info code">/m/str::T</a></span>
+        </span>
+        <small class="text-muted code">/m/web/mime/xsv</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/xsv</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">an xsv verified str encoding of a {comma,tab,etc.}-separated values document</p>
 </div>
 </div><div class="card mb-3" id="__m__web__mime__yaml">
     <div class="card-header d-flex justify-content-between align-items-center py-2">

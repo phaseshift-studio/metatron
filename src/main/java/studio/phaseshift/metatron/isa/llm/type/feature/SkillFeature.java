@@ -8,6 +8,7 @@ import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
@@ -92,8 +93,16 @@ public class SkillFeature extends AbstractFeature {
                     "a lst[lst[str,str]] of skills",
                     Map.of(),
                     "generates a lst of available skills by name and description"));
-            if (this.requireFeature(agent, SYSTEM))
-                agent.feature(SYSTEM).<SystemFeature>as().addSystemMessage("skills accessible by calling list_skills() using the mtron eval tool");
+            if (this.requireFeature(agent, SYSTEM)) {
+                try (final TableWidget table = new TableWidget(List.of("name", "description"))) {
+                    allSkills.forEach(s -> table.addRow(List.of(s.name(), s.description())));
+                    agent.feature(SYSTEM).<SystemFeature>as()
+                            .addSystemMessage("""
+                                              The following skills are can be loaded using activate_skill tool:
+                                                %s
+                                              """.formatted(table.format()));
+                }
+            }
         } catch (final Exception e) {
             throw MTronException.of("unable to setup skills: %s", e);
         }

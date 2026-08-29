@@ -57,10 +57,10 @@ public class SummarizeFeatureTest extends AbstractFeatureTest {
 
     private static ChatResult chatResultWithSummarizeBlock() {
         return ChatResult.chatResult()
-                .put("chat", str("I've queued a summarization over the last two days."))
-                .put("user", str("test prompt"))
-                .put("time", jnt(42))
-                .put("blocks", rec(uri("summarize"), rec(
+                .put(CHAT, str("I've queued a summarization over the last two days."))
+                .put(USER, str("test prompt"))
+                .put(TIME, jnt(42))
+                .put(BLOCK, rec(uri("summarize"), rec(
                         uri(SCOPE), real(2.0, MATH_DAY_TID, null),
                         uri(KIND), lst(uri("decision")),
                         uri(CONCEPT), lst(str("AgentExtractor")))));

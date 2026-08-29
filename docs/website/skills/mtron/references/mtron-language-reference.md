@@ -30,7 +30,7 @@ mtron> '''mtron''' [-- str (triple single-quoted, multi-line --]
 ==>fail::[parse error at line 1, col 3:
      '''mtron''' 
        ^
-     could not parse at ''']@/sys/fail/294
+     could not parse at ''']@/sys/fail/352
 mtron> <a.b.c>     [-- uri (angle-bracket necessary of uri has . or space) --]
 ==><a.b.c>
 mtron> /foo/bar    [-- uri (path literal) --]
@@ -83,14 +83,14 @@ mtron> [1,2,3].0         [--
 ==>fail::[parse error at line 1, col 9:
      [1,2,3].0         
              ^
-     could not parse at '0']@/sys/fail/296
+     could not parse at '0']@/sys/fail/354
 mtron> [1,2,3]>>0        [--
 ==>1
 mtron> [a=>1,b=>2].a     [--
 ==>fail::[parse error at line 1, col 13:
      [a=>1,b=>2].a     
                  ^
-     could not parse at 'a']@/sys/fail/306
+     could not parse at 'a']@/sys/fail/364
 mtron> [a=>1,b=>2]>>a    [--
 ==>1
 ```
@@ -238,7 +238,7 @@ mtron> */path/to/obj              [-- read obj at uri (detached) --]
    	  \_pred │ []
    	[inst]   │ */path/to/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException<127>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/388
+   	 \_args  │ [/path/to/obj][MTronException<127>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/446
 mtron> @/path/to/obj              [-- real obj at uri (attached) --]
 ==>fail::[apply failure:
    	[lhs]    │ noobj
@@ -246,7 +246,7 @@ mtron> @/path/to/obj              [-- real obj at uri (attached) --]
    	  \_pred │ []
    	[inst]   │ at?rng=B{*}&dom=A{?}(/path/to/obj){<j>}
    	 \_dom   │ A{?}::T
-   	 \_args  │ [/path/to/obj][MTronException<127>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/390
+   	 \_args  │ [/path/to/obj][MTronException<127>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/448
 mtron> *local:software/           [-- read with trailing
        *</path/to/obj>            [-- angle-bracket handles special chars --]
 ==>fail::[apply failure:
@@ -255,7 +255,7 @@ mtron> *local:software/           [-- read with trailing
    	  \_pred │ []
    	[inst]   │ */path/to/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException<127>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/392
+   	 \_args  │ [/path/to/obj][MTronException<127>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/450
 ```
 Wildcards:
 ```mtron
@@ -266,7 +266,7 @@ mtron> */path/+/obj               [-- + matches one segment --]
    	  \_pred │ []
    	[inst]   │ */path/+/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/obj][MTronException<127>:no active space supports pattern /path/+/obj]][no active space supports pattern /path/+/obj]@/sys/fail/394
+   	 \_args  │ [/path/+/obj][MTronException<127>:no active space supports pattern /path/+/obj]][no active space supports pattern /path/+/obj]@/sys/fail/452
 mtron> */path/+/+                 [-- ++, children at depth 2 --]
 ==>fail::[apply failure:
    	[lhs]    │ noobj
@@ -274,12 +274,12 @@ mtron> */path/+/+                 [-- ++, children at depth 2 --]
    	  \_pred │ []
    	[inst]   │ */path/+/+
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/+][MTronException<127>:no active space supports pattern /path/+/+]][no active space supports pattern /path/+/+]@/sys/fail/396
+   	 \_args  │ [/path/+/+][MTronException<127>:no active space supports pattern /path/+/+]][no active space supports pattern /path/+/+]@/sys/fail/454
 mtron> */path/#                   [-- [-- matches all remaining segments (recursive) --] --]
 ==>fail::[parse error at line 1, col 9:
      */path/#                    --]
              ^
-     could not parse at ' ']@/sys/fail/398
+     could not parse at ' ']@/sys/fail/456
 ```
 **uri::T** type drives URI-specific operations:
 ```mtron
@@ -290,7 +290,7 @@ mtron> http://abc:123/a/b/c.>>scheme        [-- http --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&dom=uri(scheme){<j>}@<1>
    	 \_dom   │ uri::T
-   	 \_args  │ [scheme][MTronException<127>:no active space supports pattern http://abc:123/a/b/c/scheme]][no active space supports pattern http://abc:123/a/b/c/scheme]@/sys/fail/408
+   	 \_args  │ [scheme][MTronException<127>:no active space supports pattern http://abc:123/a/b/c/scheme]][no active space supports pattern http://abc:123/a/b/c/scheme]@/sys/fail/466
 mtron> http://abc:123/a/b/c.>>host          [-- abc --]
 ==>fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -298,7 +298,7 @@ mtron> http://abc:123/a/b/c.>>host          [-- abc --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&dom=uri(host){<j>}@<1>
    	 \_dom   │ uri::T
-   	 \_args  │ [host][MTronException<127>:no active space supports pattern http://abc:123/a/b/c/host]][no active space supports pattern http://abc:123/a/b/c/host]@/sys/fail/418
+   	 \_args  │ [host][MTronException<127>:no active space supports pattern http://abc:123/a/b/c/host]][no active space supports pattern http://abc:123/a/b/c/host]@/sys/fail/476
 mtron> http://abc:123/a/b/c.>>port          [-- 123 (noobj if no port) --]
 ==>fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -306,7 +306,7 @@ mtron> http://abc:123/a/b/c.>>port          [-- 123 (noobj if no port) --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&dom=uri(port){<j>}@<1>
    	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException<127>:no active space supports pattern http://abc:123/a/b/c/port]][no active space supports pattern http://abc:123/a/b/c/port]@/sys/fail/428
+   	 \_args  │ [port][MTronException<127>:no active space supports pattern http://abc:123/a/b/c/port]][no active space supports pattern http://abc:123/a/b/c/port]@/sys/fail/486
 mtron> http://abc:123/a/b/c.>>authority     [-- abc:123 --]
 ==>fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -314,7 +314,7 @@ mtron> http://abc:123/a/b/c.>>authority     [-- abc:123 --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&dom=uri(authority){<j>}@<1>
    	 \_dom   │ uri::T
-   	 \_args  │ [authority][MTronException<127>:no active space supports pattern http://abc:123/a/b/c/authority]][no active space supports pattern http://abc:123/a/b/c/authority]@/sys/fail/438
+   	 \_args  │ [authority][MTronException<127>:no active space supports pattern http://abc:123/a/b/c/authority]][no active space supports pattern http://abc:123/a/b/c/authority]@/sys/fail/496
 mtron> http://abc:123/a/b/c.>>{schema,path} [-- {http,/a/b/c} --]
 mtron> /a/b/c>>0                            [-- a --]
 ==>/a/b/c
@@ -346,7 +346,7 @@ mtron> int::T[?>0]@nat           [-- syntax sugar on is(gt(0)) --]
 mtron> nat::2                    [-- ok --]
 ==>nat::2
 mtron> nat::-1                   [-- <ERROR> --]
-==>fail::[-1 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/464
+==>fail::[-1 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/506
 ```
 ---
 
@@ -611,7 +611,7 @@ mtron> a/b/c.split(/).merge(/).mult(<.>)  [-- a/b/c  (identity) --]
 mtron> 1.plus('a').catch(34)                    [-- 34 --]
 ==>34
 mtron> 1.plus('a').catch(cause().cause())       [-- noobj --]
-==>fail::[class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Uri (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Uri are in unnamed module of loader 'app')]
+==>fail::[]
 mtron> 1.plus(mult(throw('bad'))).catch(34).plus(2)  [-- 36 --]
 ==>36
 ```
@@ -710,5 +710,5 @@ mtron> {1,2,3,4}.sum{2}().sum?int<=int{1,7}().sum()-<[_,_]>-.sum?int<=int{2}()  
 ==>fail::[parse error at line 1, col 74:
      ...,7}().sum()-<[_,_]>-.sum?int<=int{2}()  #
                                                 ^
-     could not parse at '#' — unclosed '<' — missing '>'?]@/sys/fail/674
+     could not parse at '#' — unclosed '<' — missing '>'?]@/sys/fail/716
 ```
