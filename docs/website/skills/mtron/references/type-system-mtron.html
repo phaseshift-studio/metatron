@@ -1,0 +1,983 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>type-system-mtron · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../../../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../../../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../../../lib/animate/animate.min.css" rel="stylesheet">
+    <link href="../../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../../css/termynal.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../../../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <script src="../../../lib/wow/wow.min.js" type="text/javascript"></script>
+    <script src="../../../lib/easing/easing.min.js" type="text/javascript"></script>
+    <script src="../../../lib/waypoints/waypoints.min.js" type="text/javascript"></script>
+    <script src="../../../lib/termynal/termynal.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../../../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .terminal-box.click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .terminal-box.click-to-copy:active {
+            background-color: var(--mred);
+        }
+
+        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
+        .terminal-box.click-to-copy .hljs-copy-button {
+            display: none;
+        }
+    </style>
+    <script src="../../../js/metatron.js" type="text/javascript"></script>
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 text-primary logo-text navbar-brand ms-4 ms-lg-0">
+        <a href="../../../index.html" class="text-primary" title="metatron"><i class="bi bi-soundwave me-3 icon-color"></i></a>
+        <a href="http://phaseshift.studio" class="text-primary">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="terminal-box click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box click-to-copy" title="click to copy">
+                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="start.html"
+                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/start.html');return false;">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/index.html';">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m.html';"><img
+                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_dcmnt.html';"><img
+                            src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_grph.html';"><img
+                            src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_iot.html';"><img
+                            src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_llm.html';"><img
+                            src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                            alt="llm"/>/m/llm</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_mach.html';"><img
+                            src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                            alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_math.html';"><img
+                            src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_sys.html';"><img
+                            src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_tble.html';"><img
+                            src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                            alt="tble"/>/m/tble</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_vec.html';"><img
+                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/vec</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_web.html';"><img
+                            src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../../../tractatus.html"
+                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/tractatus.html');return false;">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../skills/agent/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/drstynx/assets/drstynx.boot.mtron';">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/drstynx/assets/drstynx.sqlite';">drstynx.sqlite</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/mcp-mtron.html';">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/rewrite-system-java.html';">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/tble-space-java.html';">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/type-system-java.html';">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/ui-instset-java.html';">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/answer-questions.html';">answer-questions</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/connecting-datasources.html';">connecting-datasources</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/dckrspace.html';">dckrspace</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/dsh-mtron.html';">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/http-page-fetching.html';">http-page-fetching</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/math_instset.html';">math_instset</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mcp-server-architecture.html';">mcp-server-architecture</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mcp-server-notifications.html';">mcp-server-notifications</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mtron-fsspace.html';">mtron-fsspace</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mtron-language-reference.html';">mtron-language-reference</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/type-system-mtron.html';">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/unsloth-training-mtron.html';">unsloth-training-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/scripts/unsloth_studio.py';">unsloth_studio.py</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/README.md';">README.md</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/dsh_memory_loader.py';">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/mtron_training_dataset.jsonl';">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/stream-ring-theory.pdf';"><i
+                            class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/parametric-identities-in-ring-theory.html';"><i
+                            class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/mm-adt.pdf';"><i
+                            class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://opencollective.com/metatron';">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://github.com/phaseshift-studio/metatron';">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://huggingface.co/phaseshift-studio';">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://groups.google.com/u/1/g/metatron-phaseshift';">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../index.html';">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../index.html';">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="./console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target (no rollover copy button). The :active CSS turns the block
+    // red while pressed; this copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">
+    <div class="skill-doc mb-4">
+        <h1 class="skill-title mb-1">type-system-mtron: mtron type system fundamentals — vid/tid, base types, coefficients, isa vs non-isa predicates, nominal vs structural types, type definition syntax, pattern/generic types</h1>
+        <a href="type-system-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>type-system-mtron.md</a>
+    </div>
+    <div class="markdown-body">
+<h2>mtron Type System</h2>
+<h3>Core concepts</h3>
+<h4>vid and tid</h4>
+<p>Every type in mtron is defined by two URIs:</p>
+<table>
+<thead>
+<tr><th>Component</th><th>Meaning</th><th>Example</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>tid</strong></td><td>The <strong>type being refined</strong> (its base)</td><td><code>rec</code> in <code>rec::T[?[age=&gt;int::T]]</code></td></tr>
+<tr><td><strong>vid</strong></td><td>The <strong>type being defined/named</strong></td><td><code>person</code> in <code>rec::T[?[...]]@person</code></td></tr>
+</tbody>
+</table>
+<p>For <strong>values</strong> (instances), the roles are analogous:</p>
+<ul>
+<li><strong>tid</strong> = the value's type (what kind of thing it is)</li>
+<li><strong>vid</strong> = the value's location in space (its address/identity)</li>
+</ul>
+<pre><code>person::[name=&gt;'marko',age=&gt;29]@marko
+  ^^^^^                          ^^^^^
+  tid (what it is)               vid (where it is)
+</code></pre>
+<h4>The <code>::T</code> suffix</h4>
+<p><code>::T</code> lifts an object to the <strong>type-of</strong> that object. <code>int::T</code> means &quot;the type of integers.&quot; <code>person::T</code> means &quot;the type
+named person.&quot;</p>
+<p>Without <code>::T</code>, <code>int</code> is a value (the integer zero). <code>int::0</code> is a typed value (an integer zero). <code>int::T</code> is the integer
+type itself.</p>
+<h4>Base types (nominal)</h4>
+<p>The built-in primitive types. Every type ultimately refines one of these. Base types are <strong>nominal</strong> — their tid equals
+their vid (e.g., <code>int::T</code> = <code>int::T@int</code>). There is nothing structural distinguishing an <code>int</code> from a <code>str</code> save the
+name:</p>
+<table>
+<thead>
+<tr><th>Type</th><th>URI</th><th>Cardinality</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>int::T</code></td><td><code>/m/int</code></td><td>1</td><td>64-bit signed integer</td></tr>
+<tr><td><code>real::T</code></td><td><code>/m/real</code></td><td>1</td><td>64-bit IEEE 754 float</td></tr>
+<tr><td><code>str::T</code></td><td><code>/m/str</code></td><td>1</td><td>UTF-8 string</td></tr>
+<tr><td><code>bool::T</code></td><td><code>/m/bool</code></td><td>1</td><td>true / false</td></tr>
+<tr><td><code>uri::T</code></td><td><code>/m/uri</code></td><td>1</td><td>fURI reference</td></tr>
+<tr><td><code>bytes::T</code></td><td><code>/m/bytes</code></td><td>1</td><td>raw byte array</td></tr>
+<tr><td><code>rec::T</code></td><td><code>/m/rec</code></td><td>1</td><td>record (key-value map)</td></tr>
+<tr><td><code>lst::T</code></td><td><code>/m/lst</code></td><td>1</td><td>list (ordered collection)</td></tr>
+<tr><td><code>rel::T</code></td><td><code>/m/rel</code></td><td>1</td><td>relation (key=&gt;value pair)</td></tr>
+<tr><td><code>inst::T</code></td><td><code>/m/inst</code></td><td>1</td><td>instruction (function)</td></tr>
+<tr><td><code>code::T</code></td><td><code>/m/code</code></td><td>1</td><td>multi-instruction block</td></tr>
+<tr><td><code>objs::T</code></td><td><code>/m/objs</code></td><td>any</td><td>heterogeneous bag</td></tr>
+<tr><td><code>fail::T</code></td><td><code>/m/fail</code></td><td>?</td><td>error/failure</td></tr>
+<tr><td><code>noobj::T</code></td><td><code>noobj</code></td><td>0</td><td>nothing / empty</td></tr>
+</tbody>
+</table>
+<h3>Coefficients (cardinality)</h3>
+<p>Every type has a <strong>coefficient</strong> — a <code>[min,max]</code> range constraining cardinality. Written with braces:
+<code>type{min,max}::T</code>.</p>
+<table>
+<thead>
+<tr><th>Syntax</th><th>cInt range</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>int::T</code></td><td><code>{1,1}</code></td><td>exactly one (default)</td></tr>
+<tr><td><code>int{2}::T</code></td><td><code>{2,2}</code></td><td>exactly two integers</td></tr>
+<tr><td><code>int{2,5}::T</code></td><td><code>{2,5}</code></td><td>two to five integers</td></tr>
+<tr><td><code>int{?}::T</code></td><td><code>{0,1}</code></td><td>zero or one (maybe)</td></tr>
+<tr><td><code>int{*}::T</code></td><td><code>{0,∞}</code></td><td>zero or more (maybe some)</td></tr>
+<tr><td><code>int{+}::T</code></td><td><code>{1,∞}</code></td><td>one or more (some)</td></tr>
+<tr><td><code>int{#}::T</code></td><td><code>{-∞,∞}</code></td><td>any cardinality</td></tr>
+<tr><td><code>int{0}::T</code></td><td><code>{0,0}</code></td><td>zero (noobj)</td></tr>
+<tr><td><code>int{**,}::T</code></td><td><code>{-∞,0}</code></td><td>zero or negative</td></tr>
+</tbody>
+</table>
+<p>Coefficients compose through multiplication (<code>mult</code>), addition (<code>plus</code>), and spanning (<code>span</code>). Two types combine their
+coefficients when their values are combined — e.g., appending an <code>int{2}</code> to an <code>int{3}</code> yields <code>int{5}</code>.</p>
+<h3>Universal type</h3>
+<p><code>#{*}::T</code> is the <strong>universal type</strong> — the root of the type hierarchy. <code>#</code> matches any type VID (polymorphic wildcard),
+and <code>{*}</code> matches any cardinality (0 to ∞). Every value and every type is a <code>#{*}::T</code>. It has no predicate and accepts
+everything.</p>
+<p>Shorthand: <code>#::T</code> is often used when cardinality is known to be <code>{1}</code> (the default). <code>/+/+::T</code> is an alternate spelling.</p>
+<h3>Type definition</h3>
+<h4>Defining a named type</h4>
+<p>The full type syntax is <code>tid::T[predicate][constructor]@vid</code>:</p>
+<pre><code class="language-mtron">mtron&gt; [-- person is a record with age (int) and name (str) --]
+mtron&gt; person -&gt; rec::T[?[age=&gt;int::T,name=&gt;str::T]]@person
+mtron&gt; [-- nat is a positive integer (predicate only, no constructor) --]
+mtron&gt; nat -&gt; int::T[is(gt(0))]@nat
+mtron&gt; [-- nat with absolute-value constructor --]
+mtron&gt; nat -&gt; int::T[?&gt;0][-&lt;|[is(lt(0)) =&gt; * -1, _ =&gt; _]&gt;&gt;]@nat
+mtron&gt; [-- bignat refines nat, further constraining to &gt; 100 --]
+mtron&gt; bignat -&gt; nat::T[is(gt(100))]@bignat
+</code></pre>
+<p>The <code>-&gt;</code> syntax defines a type in the current space. The right side is the full type definition; the left side is the
+name under which it is stored.</p>
+<h4>Instantiation</h4>
+<pre><code class="language-mtron">mtron&gt; [-- Create a person with named address --]
+mtron&gt; person::[name=&gt;'enoch',age=&gt;365]@enoch
+==&gt;person::[name=&gt;'enoch',age=&gt;365]@enoch
+mtron&gt; [-- Create a value and then as-cast to a type --]
+mtron&gt; 23.as(nat::T)
+==&gt;nat::23
+mtron&gt; [-- Create with explicit tid/vid --]
+mtron&gt; int::42@the_answer
+==&gt;42@the_answer
+</code></pre>
+<h3>Predicates</h3>
+<p>A predicate is a <strong>constraint</strong> that values must satisfy to be members of the type. Two families:</p>
+<h4>Isa predicates (structural)</h4>
+<p>Created with <code>?[...]</code> — defines a required <strong>record structure</strong>:</p>
+<pre><code class="language-mtron">mtron&gt; [-- being requires an age field of type int --]
+mtron&gt; being -&gt; rec::T[?[age=&gt;int::T]]
+mtron&gt; [-- person refines being, adding a name field --]
+mtron&gt; person -&gt; being::T[?[name=&gt;str::T]]
+mtron&gt; [-- team requires a flag (2-char str) and at least one member --]
+mtron&gt; team -&gt; rec::T[?[flag=&gt;str{2}::T, member=&gt;being{+}::T]]
+</code></pre>
+<p>Field types can be optional with <code>?</code>:</p>
+<pre><code class="language-mtron">mtron&gt; [-- address is optional (maybe present) --]
+mtron&gt; rec::T[?[name=&gt;str::T, address=&gt;str{?}::T]]
+</code></pre>
+<p><strong>Multi-level stacking</strong>: a type inherits all isa constraints from its ancestors:</p>
+<pre><code class="language-mtron">mtron&gt; [-- mortal inherits being?[age=&gt;int::T] from person --]
+mtron&gt; mortal -&gt; person::T[?&lt;120]  [-- adds a non-isa constraint on top --]
+</code></pre>
+<p>The full predicate stack for <code>mortal</code> is: <code>[?&lt;120, isa([age=&gt;int::T,name=&gt;str::T])]</code>.</p>
+<h4>Non-isa predicates</h4>
+<p>Freeform functional constraints using instructions:</p>
+<pre><code class="language-mtron">mtron&gt; [-- value must be greater than 0 --]
+mtron&gt; int::T[is(gt(0))]
+mtron&gt; [-- shorthand: ?&gt;0 means &quot;is greater than 0&quot; --]
+mtron&gt; int::T[?&gt;0]
+mtron&gt; [-- value must match exactly 42 --]
+mtron&gt; int::T[?=42]
+mtron&gt; [-- composition: value must be &gt; 0 AND &lt; 120 --]
+mtron&gt; int::T[?&gt;0.?&lt;120]
+</code></pre>
+<p>The <code>.</code> operator chains predicates: <code>p1.p2</code> means &quot;apply p1, then apply p2 to the result.&quot; Both must succeed (AND
+semantics).</p>
+<p><strong>OR semantics</strong> use split/merge:</p>
+<pre><code class="language-mtron">mtron&gt; [-- value must be &gt; 0 OR &lt; 120 --]
+mtron&gt; int::T[-&lt;[?&gt;0,?&lt;120]&gt;-]
+</code></pre>
+<h4>Predicate vs no predicate</h4>
+<p>A type <strong>without</strong> a predicate is the most general type at its level — it accepts any value with the correct base type
+and coefficient:</p>
+<pre><code class="language-mtron">mtron&gt; int::T        [-- accepts any integer --]
+mtron&gt; int::T[?&gt;0]   [-- only accepts positive integers --]
+</code></pre>
+<h4>Type constructors</h4>
+<p>A type can also define a <strong>constructor</strong> — an instruction that transforms any value of the base type into a valid value
+of the defined type. The constructor sits alongside the predicate in the type definition:</p>
+<pre><code>int::T[?&gt;0][abs]@nat
+  │    │     │
+  │    │     └── constructor (transforms values to fit)
+  │    └──────── predicate (tests if values fit)
+  └───────────── tid (type being refined)
+</code></pre>
+<p>The predicate <strong>tests</strong> membership; the constructor <strong>produces</strong> membership:</p>
+<pre><code class="language-mtron">mtron&gt; nat -&gt; int::T[?&gt;0][-&lt;|[is(lt(0)) =&gt; * -1, _ =&gt; _]&gt;&gt;]
+mtron&gt; [-- Predicate test: is it &gt; 0? --]
+mtron&gt; 2.test(nat::T)        [-- true --]
+==&gt;fail::[unable to locate inst-f of test(nat::T)@&lt;1&gt;]@/sys/fail/752
+mtron&gt;  -2.test(nat::T)  [-- false --]
+==&gt;fail::[unable to locate inst-f of test(nat::T)@&lt;1&gt;]@/sys/fail/754
+mtron&gt; [-- Constructor application: coerce to fit --]
+mtron&gt; -2.as(nat::T)         [-- nat::2  (constructor applied: abs) --]
+==&gt;fail::[apply failure:
+   	[lhs]    │ -2
+   	 \_type  │ /m/int
+   	  \_pred │ []
+   	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@&lt;1&gt;
+   	 \_dom   │ int::T
+   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@/m/math/nat [structural]]][-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@/m/math/nat [structural]]@/sys/fail/756
+</code></pre>
+<p>The <code>as()</code> instruction applies the constructor. If the predicate passes, the value is returned as-is. If not, the
+constructor runs. If the constructor's result passes the predicate, the transformed value is returned. Otherwise, it
+fails.</p>
+<p>A type with no constructor is a pure constraint — values must already satisfy the predicate to be members.</p>
+<h3>Nominal vs structural types</h3>
+<p>The distinction depends solely on the existence of a <strong>predicate</strong>:</p>
+<table>
+<thead>
+<tr><th>Kind</th><th>Has predicate?</th><th>Has vid?</th><th>Example</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Structural</strong></td><td>yes</td><td>optional</td><td><code>int::T[?&gt;0]@nat</code> — constraint defines membership</td></tr>
+<tr><td><strong>Nominal</strong></td><td>no</td><td>yes (tid ≠ vid)</td><td><code>int::T@age</code> — label defines membership</td></tr>
+<tr><td><strong>Base type</strong> (nominal)</td><td>no</td><td>yes (tid == vid)</td><td><code>int::T</code> (= <code>int::T@int</code>) — primitive</td></tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Structural</strong> = any type with a predicate. The predicate specifies the structural requirements a value must satisfy.
+Isa predicates (<code>?[...]</code>) constrain record fields; non-isa predicates (<code>is(gt(0))</code>) constrain by computation.</li>
+<li><strong>Nominal</strong> (no predicate) = type distinguished purely by name/vid. When <code>B::T == A::T</code> structurally (same values) but
+have different vids, there exists only a nominal difference. A value of <code>int::T@age</code> is not the same type as a value
+of <code>int::T@zipcode</code>.</li>
+<li><strong>Base types</strong> are nominal: <code>int::T</code> = <code>int::T@int</code>. An <code>int</code> is an <code>int</code> because it is named <code>int</code>.</li>
+</ul>
+<p>A type can carry <strong>both</strong> a predicate and a VID: <code>rec::T[?[age=&gt;int::T]]@person</code>. This type is structural (has a
+predicate) AND named (has a VID). The predicate determines which values qualify; the vid allows nominal discrimination
+from other structurally-identical types.</p>
+<h4>Why nominal types matter</h4>
+<p>Structural types alone can over-match. A <code>rec::T</code> with name and age could represent both a human and a chicken. Nominal
+types prevent this:</p>
+<pre><code class="language-mtron">mtron&gt; being -&gt; rec::T[?[name=&gt;str::T,age=&gt;int::T]]@being
+mtron&gt; human -&gt; being::T@human
+mtron&gt; chicken -&gt; being::T@chicken
+mtron&gt; [-- A human is NOT a chicken, despite identical structure --]
+mtron&gt;  human::[name=&gt;'marko',age=&gt;29].as(chicken::T)
+==&gt;fail::[apply failure:
+   	[lhs]    │ human::[name=&gt;'marko',age=&gt;29]
+   	 \_type  │ human
+   	  \_pred │ [isa([name=&gt;str::T,age=&gt;int::T])]
+   	[inst]   │ as?rng=chicken&amp;dom=rec(chicken::T){&lt;j&gt;}@&lt;1&gt;
+   	 \_dom   │ rec::T
+   	 \_args  │ [chicken::T][MTronException&lt;127&gt;:human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal]]][human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal]]@/sys/fail/758
+</code></pre>
+<p>This is the difference between <strong>experiential knowledge</strong> (structural — what can be observed) and <strong>authoritative
+knowledge</strong> (nominal — what has been declared).</p>
+<h3>Type hierarchy and refinement</h3>
+<p>Types form a tree rooted at <code>#::T</code> (ALL). Each type has exactly one parent via <code>parentType()</code>:</p>
+<ul>
+<li>If <code>tid == vid</code> (base type or self-referential): parent is <code>#::T</code></li>
+<li>Otherwise: parent is <code>T(tid)</code> — the base type being refined</li>
+</ul>
+<pre><code>mortal::T  →  person::T  →  being::T  →  rec::T  →  #{*}::T
+[?&lt;120]        [?[name=&gt;]]   [?[age=&gt;]]   (base)     (root/universal)
+</code></pre>
+<h3>Pattern and generic types</h3>
+<p>URIs with wildcards create <strong>pattern types</strong> that match multiple concrete types:</p>
+<table>
+<thead>
+<tr><th>Pattern</th><th>Matches</th></tr>
+</thead>
+<tbody>
+<tr><td><code>#{*}::T</code></td><td>everything (universal: any vid × any cardinality)</td></tr>
+<tr><td><code>#::T</code></td><td>any type vid (default cardinality {1})</td></tr>
+<tr><td><code>/m/+::T</code></td><td>any base type under <code>/m/</code></td></tr>
+<tr><td><code>/m/+/+::T</code></td><td>any type two levels under <code>/m/</code></td></tr>
+<tr><td><code>int{*}::T</code></td><td>integers of any cardinality</td></tr>
+<tr><td><code>int{?}::T</code></td><td>zero or one integer</td></tr>
+</tbody>
+</table>
+<p><strong>Generic types</strong> use polymorphic URIs:</p>
+<pre><code class="language-mtron">mtron&gt; [-- a function from any type to maybe some of any type --]
+mtron&gt; /m/inst?#{*}&lt;=#{?}(#::T)
+==&gt;fail::[unable to determine inst function:
+   	noobj       =&gt; inst?rng=#{*}&amp;dom=#{?}(#::T)   | [inst]
+   	noobj       =&gt; #{?}::T   |  \_dom
+   	noobj      X=&gt; [#::T]   |  \_args]@/sys/fail/760
+</code></pre>
+<h3>Type checking and casting</h3>
+<h4><code>.test()</code> — predicate membership</h4>
+<p>Tests whether a value satisfies a type's predicate (and nominal ancestry):</p>
+<pre><code class="language-mtron">mtron&gt; [-- value vs type --]
+mtron&gt; 1.is(int::T)           [-- true --]
+==&gt;fail::[apply failure:
+   	[lhs]    │ 1
+   	 \_type  │ /m/int
+   	  \_pred │ []
+   	[inst]   │ is?rng=int{?}&amp;dom=int{?}(1){&lt;j&gt;}@&lt;1&gt;
+   	 \_dom   │ int{?}::T
+   	 \_args  │ [1][Obj$ObjType&lt;1266&gt;:unable to convert int::T to bool[Obj$ObjType&lt;1266&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert int::T to bool[Obj$ObjType&lt;1266&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/762
+mtron&gt; 'a string'.is(int::T)  [-- false --]
+==&gt;fail::[apply failure:
+   	[lhs]    │ 'a string'
+   	 \_type  │ /m/str
+   	  \_pred │ []
+   	[inst]   │ is?rng=str{?}&amp;dom=str{?}(int::T){&lt;j&gt;}@&lt;1&gt;
+   	 \_dom   │ str{?}::T
+   	 \_args  │ [int::T][Obj$ObjType&lt;1266&gt;:unable to convert type to bool[Obj$ObjType&lt;1266&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert type to bool[Obj$ObjType&lt;1266&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/764
+mtron&gt; 2.is(nat::T)           [-- true (2 &gt; 0) --]
+==&gt;fail::[apply failure:
+   	[lhs]    │ 2
+   	 \_type  │ /m/int
+   	  \_pred │ []
+   	[inst]   │ is?rng=int{?}&amp;dom=int{?}(2){&lt;j&gt;}@&lt;1&gt;
+   	 \_dom   │ int{?}::T
+   	 \_args  │ [2][Obj$ObjType&lt;1266&gt;:unable to convert int::T to bool[Obj$ObjType&lt;1266&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert int::T to bool[Obj$ObjType&lt;1266&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/766
+mtron&gt; -1.is(nat::T)          [-- false (-1 is not &gt; 0) --]
+==&gt;fail::[apply failure:
+   	[lhs]    │ -1
+   	 \_type  │ /m/int
+   	  \_pred │ []
+   	[inst]   │ is?rng=int{?}&amp;dom=int{?}(nat::T){&lt;j&gt;}@&lt;1&gt;
+   	 \_dom   │ int{?}::T
+   	 \_args  │ [nat::T][Obj$ObjType&lt;1266&gt;:unable to convert type to bool[Obj$ObjType&lt;1266&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert type to bool[Obj$ObjType&lt;1266&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/768
+mtron&gt; [-- type vs type (refinement check) --]
+mtron&gt; nat::T.is(int::T)      [-- true (nat is-a int) --]
+==&gt;fail::[mAChINe fAiLED][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/794
+mtron&gt; int::T.is(nat::T)      [-- false (int is not-a nat) --]
+==&gt;fail::[apply failure:
+   	[lhs]    │ int::T
+   	 \_type  │ /m/int
+   	  \_pred │ []
+   	[inst]   │ is?rng=int{?}&amp;dom=int{?}(nat::T){&lt;j&gt;}@&lt;1&gt;
+   	 \_dom   │ int{?}::T
+   	 \_args  │ [nat::T][Obj$ObjType&lt;1266&gt;:unable to convert type to bool[Obj$ObjType&lt;1266&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert type to bool[Obj$ObjType&lt;1266&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/804
+</code></pre>
+<h4><code>.as()</code> — constructor application</h4>
+<p>Applies the type's constructor to coerce a value into the type. If the value already satisfies the predicate, it is
+returned as-is. Otherwise, the constructor transforms it:</p>
+<pre><code class="language-mtron">mtron&gt; [-- nat has constructor: absolute value --]
+mtron&gt; 2.as(nat::T)             [-- nat::2  (already fits) --]
+==&gt;nat::2
+mtron&gt; -2.as(nat::T)            [-- nat::2  (constructor applied) --]
+==&gt;fail::[apply failure:
+   	[lhs]    │ -2
+   	 \_type  │ /m/int
+   	  \_pred │ []
+   	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@&lt;1&gt;
+   	 \_dom   │ int::T
+   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@/m/math/nat [structural]]][-2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@/m/math/nat [structural]]@/sys/fail/814
+mtron&gt; [-- Without a constructor, .as() is a pure test --]
+mtron&gt;  -2.as(int::T[?&gt;0])  [-- fails: no constructor to rescue --]
+==&gt;fail::[apply failure:
+   	[lhs]    │ -2
+   	 \_type  │ /m/int
+   	  \_pred │ []
+   	[inst]   │ as?rng=int&amp;dom=int(int::T){&lt;j&gt;}@&lt;1&gt;
+   	 \_dom   │ int::T
+   	 \_args  │ [int::T][MTronException&lt;127&gt;:-2 is not a int::T[is(gt(0))] [structural]]][-2 is not a int::T[is(gt(0))] [structural]]@/sys/fail/816
+</code></pre>
+<p><code>.as()</code> is also used for nominal type casting:</p>
+<pre><code class="language-mtron">mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)    [-- ok: structurally a chicken --]
+==&gt;chicken::[name=&gt;'fuzzy feet',age=&gt;2]
+mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T) [-- ERROR: nominally not a chicken --]
+==&gt;fail::[apply failure:
+   	[lhs]    │ human::[name=&gt;'marko',age=&gt;29]
+   	 \_type  │ human
+   	  \_pred │ [isa([name=&gt;str::T,age=&gt;int::T])]
+   	[inst]   │ as?rng=chicken&amp;dom=rec(chicken::T){&lt;j&gt;}@&lt;1&gt;
+   	 \_dom   │ rec::T
+   	 \_args  │ [chicken::T][MTronException&lt;127&gt;:human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal]]][human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal]]@/sys/fail/818
+</code></pre>
+<h3>LCD (Lowest Common Denominator)</h3>
+<p>The most specific type that subsumes a set of types. Two types always have an LCD:</p>
+<pre><code class="language-mtron">mtron&gt; [-- Mono with non-isa predicates: OR the constraints --]
+mtron&gt; int::T[?&gt;0] + int::T[?&lt;120]
+==&gt;fail::[apply failure:
+   	[lhs]    │ int::T[is(gt(0))]
+   	 \_type  │ /m/int
+   	  \_pred │ [is(gt(0))]
+   	[inst]   │ plus?rng=int&amp;dom=int(int::T){&lt;j&gt;}@&lt;1&gt;
+   	 \_dom   │ int::T
+   	 \_args  │ [int::T][MTronException&lt;127&gt;:int::T[is(gt(0))] [type] unable to convert int::T]][int::T[is(gt(0))] [type] unable to convert int::T]@/sys/fail/820
+mtron&gt; [-- Record with isa predicates: merge fields structurally --]
+mtron&gt; rec::T[?[age=&gt;int::T,name=&gt;str::T]]@person
+mtron&gt; + rec::T[?[age=&gt;int::T]]@artifact
+mtron&gt; [-- name becomes optional (str{?}) since not all inputs require it --]
+mtron&gt; [-- Disjoint hierarchies: fall back to universal type --]
+mtron&gt; int::T + str::T [-- {*}::T --]
+==&gt;fail::[apply failure:
+   	[lhs]    │ int::T
+   	 \_type  │ /m/int
+   	  \_pred │ []
+   	[inst]   │ plus?rng=str&amp;dom=int(str::T){&lt;j&gt;}
+   	 \_dom   │ int::T
+   	 \_args  │ [str::T][MTronException&lt;127&gt;:int::T [int::T] unable to convert str::T]][int::T [int::T] unable to convert str::T]@/sys/fail/822
+</code></pre>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

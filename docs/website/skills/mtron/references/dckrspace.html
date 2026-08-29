@@ -1,0 +1,1486 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>dckrspace · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../../../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../../../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../../../lib/animate/animate.min.css" rel="stylesheet">
+    <link href="../../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../../css/termynal.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../../../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <script src="../../../lib/wow/wow.min.js" type="text/javascript"></script>
+    <script src="../../../lib/easing/easing.min.js" type="text/javascript"></script>
+    <script src="../../../lib/waypoints/waypoints.min.js" type="text/javascript"></script>
+    <script src="../../../lib/termynal/termynal.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../../../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .terminal-box.click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .terminal-box.click-to-copy:active {
+            background-color: var(--mred);
+        }
+
+        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
+        .terminal-box.click-to-copy .hljs-copy-button {
+            display: none;
+        }
+    </style>
+    <script src="../../../js/metatron.js" type="text/javascript"></script>
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 text-primary logo-text navbar-brand ms-4 ms-lg-0">
+        <a href="../../../index.html" class="text-primary" title="metatron"><i class="bi bi-soundwave me-3 icon-color"></i></a>
+        <a href="http://phaseshift.studio" class="text-primary">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="terminal-box click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box click-to-copy" title="click to copy">
+                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="start.html"
+                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/start.html');return false;">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/index.html';">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m.html';"><img
+                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_dcmnt.html';"><img
+                            src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_grph.html';"><img
+                            src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_iot.html';"><img
+                            src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_llm.html';"><img
+                            src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                            alt="llm"/>/m/llm</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_mach.html';"><img
+                            src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                            alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_math.html';"><img
+                            src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_sys.html';"><img
+                            src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_tble.html';"><img
+                            src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                            alt="tble"/>/m/tble</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_vec.html';"><img
+                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/vec</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_web.html';"><img
+                            src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../../../tractatus.html"
+                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/tractatus.html');return false;">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../skills/agent/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/drstynx/assets/drstynx.boot.mtron';">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/drstynx/assets/drstynx.sqlite';">drstynx.sqlite</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/mcp-mtron.html';">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/rewrite-system-java.html';">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/tble-space-java.html';">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/type-system-java.html';">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/ui-instset-java.html';">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/answer-questions.html';">answer-questions</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/connecting-datasources.html';">connecting-datasources</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/dckrspace.html';">dckrspace</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/dsh-mtron.html';">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/http-page-fetching.html';">http-page-fetching</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/math_instset.html';">math_instset</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mcp-server-architecture.html';">mcp-server-architecture</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mcp-server-notifications.html';">mcp-server-notifications</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mtron-fsspace.html';">mtron-fsspace</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mtron-language-reference.html';">mtron-language-reference</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/type-system-mtron.html';">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/unsloth-training-mtron.html';">unsloth-training-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/scripts/unsloth_studio.py';">unsloth_studio.py</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/README.md';">README.md</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/dsh_memory_loader.py';">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/mtron_training_dataset.jsonl';">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/stream-ring-theory.pdf';"><i
+                            class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/parametric-identities-in-ring-theory.html';"><i
+                            class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/mm-adt.pdf';"><i
+                            class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://opencollective.com/metatron';">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://github.com/phaseshift-studio/metatron';">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://huggingface.co/phaseshift-studio';">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://groups.google.com/u/1/g/metatron-phaseshift';">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../index.html';">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../index.html';">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="./console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target (no rollover copy button). The :active CSS turns the block
+    // red while pressed; this copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">
+    <div class="skill-doc mb-4">
+        <h1 class="skill-title mb-1">dckrspace: Docker management through dckrSpace — pull, run, stop containers; manage images, volumes,</h1>
+        <a href="dckrspace.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>dckrspace.md</a>
+    </div>
+    <div class="markdown-body">
+<h2>dckrSpace — Docker in mtron</h2>
+<h3>Architecture</h3>
+<p><code>dckrspace::T</code> bridges a Docker daemon into metatron's URI space. Every Docker resource (container, image, volume,
+network)
+is a first-class uri-addressable <code>obj</code>. Writes trigger Docker CLI operations; reads refresh state from the daemon.</p>
+<p>The space maintains a bidirectional graph: containers link to their images, networks, and volumes, and each resource
+links back to its containers.</p>
+<pre><code>┌───────────────────────────────────────────────────────────────┐
+│                         dckrspace::T                          │
+│                                                               │
+│  docker:image/nginx:alpine ──── containers ──► [ref]          │
+│       ▲                                          │            │
+│       │ image                                    │            │
+│       │                                          ▼            │
+│  docker:container/web ──── networks ──► docker:network/bridge │
+│       │                                       ▲               │
+│       │ mounts                                │               │
+│       ▼                                       │               │
+│  docker:volume/data ───── containers ─────► [ref]             │
+│                                                               │
+│  docker:compose/stack ─── docker-compose.yml                  │
+└───────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3>Space Configuration</h3>
+<pre><code class="language-mtron">mtron&gt; dckrspace::T
+mtron&gt; !*dckrspace?docq
+==&gt;docs::[
+    obj=&gt;dckrspace::T,
+    desc=&gt;'a docker daemon space',
+    example=&gt;[
+     'docker:compose/my-stack -&gt; [services=&gt;[web=&gt;[image=&gt;&quot;nginx&quot;...',
+     '*docker:container/+',
+     '*docker:image/nginx/&lt;nginx:latest&gt;']]
+</code></pre>
+<pre><code class="language-mtron">dckrspace::[pattern   =&gt; docker:#,
+            route     =&gt; [docker: =&gt; &lt;&gt;],
+            host      =&gt; &lt;tcp://192.168.1.100:2375&gt;,   [-- optional remote host --]
+            progress  =&gt; progress_table::[=&gt;]]@/sys/space/docker
+</code></pre>
+<pre><code class="language-mtron">mtron&gt; dckrspace::[pattern   =&gt; docker:#,
+                   route     =&gt; [docker: =&gt; &lt;&gt;],
+                   progress  =&gt; progress_table::[=&gt;]]@/sys/space/docker
+</code></pre>
+<table>
+<thead>
+<tr><th>Field</th><th>Required</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>pattern</code></td><td>yes</td><td>URI prefix for this space</td></tr>
+<tr><td><code>route</code></td><td>yes</td><td>Maps pattern prefix into space</td></tr>
+<tr><td><code>host</code></td><td>no</td><td>Remote Docker daemon (<code>tcp://</code>, <code>unix://</code>). Omit for local socket.</td></tr>
+<tr><td><code>progress_table</code></td><td>no</td><td><code>ProgressTableWidget</code> for live pull-progress display</td></tr>
+</tbody>
+</table>
+<h3>URI Address Space</h3>
+<pre><code>docker:image/&lt;repository:tag&gt;        -- image by repo:tag
+docker:image/&lt;hash&gt;                  -- image by Docker hash (if available)
+docker:container/&lt;name&gt;              -- container by name
+docker:volume/&lt;name&gt;                 -- volume by name
+docker:network/&lt;name&gt;                -- network by name
+docker:compose/&lt;stack-name&gt;          -- compose config/stack
+</code></pre>
+<h3>Writing — Containers</h3>
+<h4>Run a container</h4>
+<pre><code class="language-mtron">mtron&gt; docker:container/web -&gt; [
+         image       =&gt; 'nginx:alpine',
+         ports       =&gt; [&lt;8080:80&gt;, &lt;443:443&gt;],
+         environment =&gt; [NGINX_HOST =&gt; localhost],
+         volumes     =&gt; ['myvol:/usr/share/nginx/html'],
+         network     =&gt; mynet]
+==&gt;fail::[apply failure:
+   	[lhs]    │ docker:container/web
+   	 \_type  │ /m/uri
+   	  \_pred │ []
+   	[inst]   │ ref?rng=#{*}&amp;dom=#([
+     image=&gt;'nginx:alpine',
+     ports=&gt;[&lt;8080:80&gt;,&lt;443:443&gt;],
+     environment=&gt;[NGINX_HOST=&gt;localhost],
+     volumes=&gt;['myvol:/usr/share/nginx/html'],
+     network=&gt;mynet]){&lt;j&gt;}@&lt;1&gt;
+   	 \_dom   │ #::T
+   	 \_args  │ [[
+    image=&gt;'nginx:alpine',
+    ports=&gt;[&lt;8080:80&gt;,&lt;443:443&gt;],
+    environment=&gt;[NGINX_HOST=&gt;localhost],
+    volumes=&gt;['myvol:/usr/share/nginx/html'],
+    network=&gt;mynet]][MTronException&lt;127&gt;:exit 125: docker run -d --name web -p 8080:80 -p 443:443 -e NGINX_HOST=localhost -v myvol:/usr/share/nginx/html --network mynet nginx:alpine...]][exit 125: docker run -d --name web -p 8080:80 -p 443:443 -e NGINX_HOST=localhost -v myvol:/usr/share/nginx/html --network mynet nginx:alpine
+   ]@/sys/fail/172
+</code></pre>
+<p>Image pull happens automatically via <code>docker run</code>. Pull progress streams through the <code>progress_table::T</code> widget if
+configured.</p>
+<table>
+<thead>
+<tr><th>Field</th><th>Type</th><th>Docker flag</th><th>Example</th></tr>
+</thead>
+<tbody>
+<tr><td><code>image</code></td><td>str (required)</td><td>positional</td><td><code>'nginx:alpine'</code></td></tr>
+<tr><td><code>ports</code></td><td>lst of str</td><td><code>-p</code> each</td><td><code>[&lt;8080:80&gt;]</code></td></tr>
+<tr><td><code>environment</code></td><td>rec</td><td><code>-e KEY=VALUE</code></td><td><code>[FOO =&gt; bar]</code></td></tr>
+<tr><td><code>volumes</code></td><td>lst of str</td><td><code>-v</code> each</td><td><code>['data:/data']</code></td></tr>
+<tr><td><code>network</code></td><td>str</td><td><code>--network</code></td><td><code>mynet</code></td></tr>
+</tbody>
+</table>
+<h3>Reading Summary</h3>
+<h4>List all resources</h4>
+<pre><code class="language-mtron">mtron&gt; *docker:image/+.take(5)              [-- first 5 images (keyed by repository:tag) --]
+==&gt;[
+    containers=&gt;0,
+    created_at=&gt;datetime::&lt;//2026.05:19/17/28/38/000?tz=-0600&gt;,
+    created_since=&gt;&lt;3 months ago&gt;,
+    id=&gt;acc96c360f47,
+    repository=&gt;node,
+    size=&gt;mB::227.0000,
+    tag=&gt;&lt;22-slim&gt;]
+==&gt;[
+    containers=&gt;0,
+    created_at=&gt;datetime::&lt;//2026.08:29/14/32/34/000?tz=-0600&gt;,
+    created_since=&gt;&lt;2 hours ago&gt;,
+    id=&gt;ab0c83888045,
+    repository=&gt;metatron-build,
+    size=&gt;mB::483.0000,
+    tag=&gt;24]
+==&gt;[
+    containers=&gt;1,
+    created_at=&gt;datetime::&lt;//2026.08:27/09/35/17/000?tz=-0600&gt;,
+    created_since=&gt;&lt;2 days ago&gt;,
+    id=&gt;a458e6353116,
+    repository=&gt;metatron,
+    size=&gt;mB::633.0000,
+    tag=&gt;dev,
+    container=&gt;[!*docker:container/metatron]]
+==&gt;[
+    containers=&gt;0,
+    created_at=&gt;datetime::&lt;//2026.08:13/13/16/08/000?tz=-0600&gt;,
+    created_since=&gt;&lt;2 weeks ago&gt;,
+    id=&gt;&lt;19d88319bea9&gt;,
+    repository=&gt;postgres,
+    size=&gt;mB::451.0000,
+    tag=&gt;16]
+==&gt;[
+    containers=&gt;0,
+    created_at=&gt;datetime::&lt;//2025.12:2/14/30/17/000?tz=-0700&gt;,
+    created_since=&gt;&lt;9 months ago&gt;,
+    id=&gt;dd2395ffc43b,
+    repository=&gt;openjdk,
+    size=&gt;mB::617.0000,
+    tag=&gt;&lt;26-ea-26-jdk&gt;]
+mtron&gt; *docker:container/+                  [-- all containers                           --]
+==&gt;[ command=&gt;&lt;/docker-entrypoint.sh nginx -g 'daemon off;&gt;,
+    created_at=&gt;datetime::&lt;//2026.08:29/16/08/01/000?tz=-0600&gt;,
+    id=&gt;&lt;5d2b2ba3034feeb925cc5dcf91bcbac67c5b1d7e7a6abd48e0a361bbc76dd598&gt;,
+    image=&gt;!*docker:image/nginx,
+    labels=&gt;[
+     &lt;com.docker.compose.config-hash&gt;=&gt;f3bd03ea666f08645557a71e46313f367713e950177918b309e8a1e5bde8397c,
+     &lt;com.docker.compose.container-number&gt;=&gt;1,
+     &lt;com.docker.compose.image&gt;=&gt;sha256:4e5db4761e0ff445f7fd29aad680ad28e8abf7d204895557f145d65535abcc1c,
+     &lt;com.docker.compose.oneoff&gt;=&gt;False,
+     &lt;com.docker.compose.project.config_files&gt;=&gt;&lt;/tmp/metatron-docker/my-stack/docker-compose.yml&gt;,
+     &lt;com.docker.compose.project.working_dir&gt;=&gt;/tmp/metatron-docker/my-stack,
+     &lt;com.docker.compose.project&gt;=&gt;my-stack,
+     &lt;com.docker.compose.service&gt;=&gt;web,
+     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;,
+     maintainer=&gt;'NGINX Docker Maintainers &lt;docker-maint@nginx.com&gt;'],
+    local_volumes=&gt;0,
+    names=&gt;my-stack-web-1,
+    ports=&gt;'0.0.0.0:8080-&gt;80/tcp, [::]:8080-&gt;80/tcp',
+    running_for=&gt;&lt;13 minutes ago&gt;,
+    size=&gt;bB::0.0000,
+    ...(3 more)]
+==&gt;[ command=&gt;&lt;java --enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/sun.nio.cs=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow -jar /app/metatron.jar [boot=&gt;&lt;boot/boot.mtron&gt;,log=&gt;info]&gt;,
+    created_at=&gt;datetime::&lt;//2026.08:26/06/48/14/000?tz=-0600&gt;,
+    id=&gt;&lt;0c62cb4b1bc232db84bb98c8f7b58d9ab8d8d3a06f306deb4ea3e119745ed054&gt;,
+    image=&gt;!*docker:image/sha256:480de7fa4a90c026913580f891d726e50318e263781ee9f003b0e3aac5fea50b,
+    labels=&gt;[
+     &lt;org.opencontainers.image.description&gt;=&gt;'A distributed data-oriented computing language and virtual ...',
+     &lt;org.opencontainers.image.licenses&gt;=&gt;&lt;AGPL-3.0&gt;,
+     &lt;org.opencontainers.image.source&gt;=&gt;&lt;https://github.com/phaseshift-studio/metatron&gt;,
+     &lt;org.opencontainers.image.title&gt;=&gt;metatron,
+     &lt;org.opencontainers.image.vendor&gt;=&gt;'PhaseShift Studio',
+     &lt;org.opencontainers.image.version&gt;=&gt;start(0.1000).minus(SNAPSHOT)],
+    local_volumes=&gt;0,
+    names=&gt;admiring_lalande,
+    running_for=&gt;&lt;3 days ago&gt;,
+    size=&gt;bB::0.0000,
+    state=&gt;exited,
+    ...(2 more)]
+==&gt;[ command=&gt;&quot;&quot;&quot;/sbin/tini -g -- sh -c 'sqlite3 /data/dr.sqlite \&quot;.database...&quot;&quot;&quot;,
+    created_at=&gt;datetime::&lt;//2026.08:6/13/44/53/000?tz=-0600&gt;,
+    id=&gt;&lt;92497c549f1fea0779b32c4c8c75c86a01277c198ac063d7a880dc90bea63d40&gt;,
+    image=&gt;!*docker:image/keinos/sqlite3:latest,
+    local_volumes=&gt;0,
+    mounts=&gt;&lt;/home/killswitch/.metatron&gt;,
+    names=&gt;dr_sqlite,
+    running_for=&gt;&lt;3 weeks ago&gt;,
+    size=&gt;bB::0.0000,
+    state=&gt;exited,
+    ...(2 more)]
+==&gt;[ command=&gt;&lt;/docker-entrypoint.sh nginx -g 'daemon off;&gt;,
+    created_at=&gt;datetime::&lt;//2026.08:29/16/21/45/000?tz=-0600&gt;,
+    id=&gt;bb0d3b258c2fa7f0e262d66322cb00b874e728e19d8618fb9c7ca22a62902d9c,
+    image=&gt;!*docker:image/nginx:alpine,
+    labels=&gt;[maintainer=&gt;'NGINX Docker Maintainers &lt;docker-maint@nginx.com&gt;'],
+    local_volumes=&gt;1,
+    names=&gt;web,
+    running_for=&gt;&lt;1 second ago&gt;,
+    size=&gt;bB::0.0000,
+    state=&gt;created,
+    ...(3 more)]
+==&gt;[ command=&gt;&quot;/bin/sh -c 'apt-get update     &amp;&amp; apt-get install -y --no-i...&quot;,
+    created_at=&gt;datetime::&lt;//2026.08:26/18/03/36/000?tz=-0600&gt;,
+    id=&gt;f194ebdf3c891dbf185394e7d03a3d5d67458e79f4644294c99ed308343ea154,
+    image=&gt;!*docker:image/sha256:a6e008c6cf7e3746e3d9aa2b4d9cebd80463124d39997e51cb8e1c2efec481e8,
+    labels=&gt;[
+     &lt;org.opencontainers.image.description&gt;=&gt;'a distributed data-oriented computing language and virtual ...',
+     &lt;org.opencontainers.image.licenses&gt;=&gt;&lt;AGPL-3.0&gt;,
+     &lt;org.opencontainers.image.source&gt;=&gt;&lt;https://github.com/phaseshift-studio/metatron&gt;,
+     &lt;org.opencontainers.image.title&gt;=&gt;metatron,
+     &lt;org.opencontainers.image.vendor&gt;=&gt;'PhaseShift Studio',
+     &lt;org.opencontainers.image.version&gt;=&gt;start(0.1000).minus(SNAPSHOT)],
+    local_volumes=&gt;0,
+    names=&gt;awesome_haibt,
+    running_for=&gt;&lt;2 days ago&gt;,
+    size=&gt;bB::0.0000,
+    state=&gt;exited,
+    ...(2 more)]
+==&gt;[ command=&gt;&quot;/bin/sh -c 'apt-get update     &amp;&amp; apt-get install -y --no-i...&quot;,
+    created_at=&gt;datetime::&lt;//2026.08:26/17/57/04/000?tz=-0600&gt;,
+    id=&gt;&lt;0461485aefc37a9895ac0cb3ee79e8bc73612029e59a7fac96037b131044e1e3&gt;,
+    image=&gt;!*docker:image/sha256:a6e008c6cf7e3746e3d9aa2b4d9cebd80463124d39997e51cb8e1c2efec481e8,
+    labels=&gt;[
+     &lt;org.opencontainers.image.description&gt;=&gt;'a distributed data-oriented computing language and virtual ...',
+     &lt;org.opencontainers.image.licenses&gt;=&gt;&lt;AGPL-3.0&gt;,
+     &lt;org.opencontainers.image.source&gt;=&gt;&lt;https://github.com/phaseshift-studio/metatron&gt;,
+     &lt;org.opencontainers.image.title&gt;=&gt;metatron,
+     &lt;org.opencontainers.image.vendor&gt;=&gt;'PhaseShift Studio',
+     &lt;org.opencontainers.image.version&gt;=&gt;start(0.1000).minus(SNAPSHOT)],
+    local_volumes=&gt;0,
+    names=&gt;stupefied_burnell,
+    running_for=&gt;&lt;2 days ago&gt;,
+    size=&gt;bB::0.0000,
+    state=&gt;exited,
+    ...(2 more)]
+==&gt;[ command=&gt;&quot;&quot;&quot;/sbin/tini -g -- sh -c 'sqlite3 /data/dr.sqlite \&quot;.database...&quot;&quot;&quot;,
+    created_at=&gt;datetime::&lt;//2026.08:6/14/10/11/000?tz=-0600&gt;,
+    id=&gt;&lt;461d48c7bd9c9a67a5723ff145de6814b89a84b1edd0bbf9c7ff703bac14f346&gt;,
+    image=&gt;!*docker:image/keinos/sqlite3:latest,
+    labels=&gt;[
+     &lt;com.docker.compose.config-hash&gt;=&gt;&lt;66b3453120ba0a109508db556cf836d0c09d14fea2283ee9f3a27167bc2ee06e&gt;,
+     &lt;com.docker.compose.container-number&gt;=&gt;1,
+     &lt;com.docker.compose.image&gt;=&gt;sha256:f7949ff704155043d694069c4ec579d237c22151fb3ca3e9fe25829d1c5d7ea7,
+     &lt;com.docker.compose.oneoff&gt;=&gt;False,
+     &lt;com.docker.compose.project.config_files&gt;=&gt;&lt;/tmp/metatron-docker/dr/docker-compose.yml&gt;,
+     &lt;com.docker.compose.project.working_dir&gt;=&gt;/tmp/metatron-docker/dr,
+     &lt;com.docker.compose.project&gt;=&gt;dr,
+     &lt;com.docker.compose.replace&gt;=&gt;sqlite-1,
+     &lt;com.docker.compose.service&gt;=&gt;sqlite,
+     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;],
+    local_volumes=&gt;0,
+    mounts=&gt;&lt;/home/killswitch/.metatron&gt;,
+    names=&gt;dr-sqlite-1,
+    running_for=&gt;&lt;3 weeks ago&gt;,
+    size=&gt;bB::0.0000,
+    ...(3 more)]
+==&gt;[ command=&gt;&lt;tail -f /dev/null&gt;,
+    created_at=&gt;datetime::&lt;//2026.08:27/08/33/01/000?tz=-0600&gt;,
+    id=&gt;&lt;14ffc8d6d3a69e2a2fa0070cd1dd8d0b1d748cb52555c594bbe42e79a55abce1&gt;,
+    image=&gt;!*docker:image/hibitdev/sqlite:latest,
+    labels=&gt;[
+     &lt;com.docker.compose.config-hash&gt;=&gt;c9c4e6a1111dc264bc25cd6ea400d6781d6073334ce4a5211f661f2469e9128d,
+     &lt;com.docker.compose.container-number&gt;=&gt;1,
+     &lt;com.docker.compose.image&gt;=&gt;sha256:5edbbb6fc06708277219996bdca7bd2921e2f340d8fac1156ae4615d4af2735c,
+     &lt;com.docker.compose.oneoff&gt;=&gt;False,
+     &lt;com.docker.compose.project.config_files&gt;=&gt;&lt;/tmp/metatron-docker/metatron_sqlite/docker-compose.yml&gt;,
+     &lt;com.docker.compose.project.working_dir&gt;=&gt;/tmp/metatron-docker/metatron_sqlite,
+     &lt;com.docker.compose.project&gt;=&gt;metatron_sqlite,
+     &lt;com.docker.compose.service&gt;=&gt;sqlite,
+     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;],
+    local_volumes=&gt;0,
+    mounts=&gt;/tmp/metatron_data,
+    names=&gt;metatron_sqlite-sqlite-1,
+    running_for=&gt;&lt;2 days ago&gt;,
+    size=&gt;bB::0.0000,
+    ...(3 more)]
+==&gt;[ command=&gt;'/app/entrypoint.sh [boot=&gt;&lt;boot/docker.boot.mtron&gt;,user=&gt;&lt;k...',
+    created_at=&gt;datetime::&lt;//2026.08:27/09/35/17/000?tz=-0600&gt;,
+    id=&gt;&lt;1e5de17716a878b68faad08cdeacdb85c16410ff515a358a1a56efb35a1571cb&gt;,
+    image=&gt;!*docker:image/metatron:dev,
+    labels=&gt;[
+     &lt;org.opencontainers.image.description&gt;=&gt;'a distributed data-oriented computing language and virtual ...',
+     &lt;org.opencontainers.image.licenses&gt;=&gt;&lt;AGPL-3.0&gt;,
+     &lt;org.opencontainers.image.source&gt;=&gt;&lt;https://github.com/phaseshift-studio/metatron&gt;,
+     &lt;org.opencontainers.image.title&gt;=&gt;metatron,
+     &lt;org.opencontainers.image.vendor&gt;=&gt;'PhaseShift Studio',
+     &lt;org.opencontainers.image.version&gt;=&gt;start(0.1000).minus(SNAPSHOT)],
+    local_volumes=&gt;0,
+    mounts=&gt;&lt;/home/killswitch/software/metatron/boot,/home/killswitch/software/metatron/conf,/var/run/docker.sock&gt;,
+    names=&gt;metatron,
+    running_for=&gt;&lt;2 days ago&gt;,
+    size=&gt;bB::0.0000,
+    ...(3 more)]
+==&gt;[ command=&gt;&lt;tail -f /dev/null&gt;,
+    created_at=&gt;datetime::&lt;//2026.08:6/14/41/18/000?tz=-0600&gt;,
+    id=&gt;&lt;940ada5b423fc56f3b0c5e946d2825d31a340b2b076ea086ecca8165e00c6bc8&gt;,
+    image=&gt;!*docker:image/hibitdev/sqlite:latest,
+    labels=&gt;[
+     &lt;com.docker.compose.config-hash&gt;=&gt;cd837e1126fb2ccc11ba09a68cba12778244699fd07e49790a70bcb69051fae6,
+     &lt;com.docker.compose.container-number&gt;=&gt;1,
+     &lt;com.docker.compose.image&gt;=&gt;sha256:5edbbb6fc06708277219996bdca7bd2921e2f340d8fac1156ae4615d4af2735c,
+     &lt;com.docker.compose.oneoff&gt;=&gt;False,
+     &lt;com.docker.compose.project.config_files&gt;=&gt;&lt;/tmp/metatron-docker/dr_sqlite/docker-compose.yml&gt;,
+     &lt;com.docker.compose.project.working_dir&gt;=&gt;/tmp/metatron-docker/dr_sqlite,
+     &lt;com.docker.compose.project&gt;=&gt;dr_sqlite,
+     &lt;com.docker.compose.replace&gt;=&gt;sqlite-1,
+     &lt;com.docker.compose.service&gt;=&gt;sqlite,
+     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;],
+    local_volumes=&gt;0,
+    mounts=&gt;&lt;/home/killswitch/.metatron&gt;,
+    names=&gt;dr_sqlite-sqlite-1,
+    running_for=&gt;&lt;3 weeks ago&gt;,
+    size=&gt;bB::0.0000,
+    ...(3 more)]
+==&gt;[ command=&gt;&lt;/sbin/tini -g -- sqlite3 /data/dr.sqlite .databases&gt;,
+    created_at=&gt;datetime::&lt;//2026.08:6/14/05/24/000?tz=-0600&gt;,
+    id=&gt;&lt;49194fe901ab03ee0936575362ff6f3121430d4dabf94d41f9f90ee2f985039e&gt;,
+    image=&gt;!*docker:image/keinos/sqlite3:latest,
+    labels=&gt;[
+     &lt;com.docker.compose.config-hash&gt;=&gt;&lt;8ec280f751ccdf65e1062e10096d6bd6252890da2d97db6dff207f1b6b7157cd&gt;,
+     &lt;com.docker.compose.container-number&gt;=&gt;1,
+     &lt;com.docker.compose.image&gt;=&gt;sha256:f7949ff704155043d694069c4ec579d237c22151fb3ca3e9fe25829d1c5d7ea7,
+     &lt;com.docker.compose.oneoff&gt;=&gt;False,
+     &lt;com.docker.compose.project.config_files&gt;=&gt;&lt;/tmp/metatron-docker/test_sqlite/docker-compose.yml&gt;,
+     &lt;com.docker.compose.project.working_dir&gt;=&gt;/tmp/metatron-docker/test_sqlite,
+     &lt;com.docker.compose.project&gt;=&gt;test_sqlite,
+     &lt;com.docker.compose.replace&gt;=&gt;sqlite-1,
+     &lt;com.docker.compose.service&gt;=&gt;sqlite,
+     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;],
+    local_volumes=&gt;0,
+    mounts=&gt;&lt;/home/killswitch/.metatron&gt;,
+    names=&gt;test_sqlite-sqlite-1,
+    running_for=&gt;&lt;3 weeks ago&gt;,
+    size=&gt;bB::0.0000,
+    ...(3 more)]
+mtron&gt; *docker:volume/+                     [-- all volumes                              --]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/0e43bb3fc84194a58954343e1f4d1a3420400d4c0b32f35cc6124a0610e6372f/_data,
+    name=&gt;&lt;0e43bb3fc84194a58954343e1f4d1a3420400d4c0b32f35cc6124a0610e6372f&gt;,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/dc1dc6d421ed0e3f554b65edcecb86267650a5030ba79be9fa3af4c039e15606/_data,
+    name=&gt;dc1dc6d421ed0e3f554b65edcecb86267650a5030ba79be9fa3af4c039e15606,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/f28b7ade1c140fc82c033f7e6c60860d460ae4467ed99b2a38436eb221596b95/_data,
+    name=&gt;f28b7ade1c140fc82c033f7e6c60860d460ae4467ed99b2a38436eb221596b95,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/6b5e0f05a976195281987a3e1e2f2c58ffc4068dfd93a0693bd82c647490e47b/_data,
+    name=&gt;&lt;6b5e0f05a976195281987a3e1e2f2c58ffc4068dfd93a0693bd82c647490e47b&gt;,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/4b55f5b2c0e56d658e7c291078459bb261e4cbd757b07030b166cc5ee3479c49/_data,
+    name=&gt;&lt;4b55f5b2c0e56d658e7c291078459bb261e4cbd757b07030b166cc5ee3479c49&gt;,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/8f6e4a6c76f65dce98045ff40d42e8e3497cb409587fe1354c6d72708dc46e21/_data,
+    name=&gt;&lt;8f6e4a6c76f65dce98045ff40d42e8e3497cb409587fe1354c6d72708dc46e21&gt;,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/0454140adc3aade618ce2082739cc046814093a4e10526d1d91698b5d2a8b7e5/_data,
+    name=&gt;&lt;0454140adc3aade618ce2082739cc046814093a4e10526d1d91698b5d2a8b7e5&gt;,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/7dc192fc64c983d86ea8d6f53b782d8ee091a12f1db9713e0b64e4a5b6115b0f/_data,
+    name=&gt;&lt;7dc192fc64c983d86ea8d6f53b782d8ee091a12f1db9713e0b64e4a5b6115b0f&gt;,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/548ab54c3a130e02e5ee38444dbc08e8fcc297415b55d5dd56e99aa2440d07b1/_data,
+    name=&gt;&lt;548ab54c3a130e02e5ee38444dbc08e8fcc297415b55d5dd56e99aa2440d07b1&gt;,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/c786241a6175764655894c69a0101f812766ec6056bd58d03509b62dd6f58478/_data,
+    name=&gt;c786241a6175764655894c69a0101f812766ec6056bd58d03509b62dd6f58478,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/7f082e531d5a480825d6f7f7ff262e1ee66c8e95a85834e3f47bd8e122a054c5/_data,
+    name=&gt;&lt;7f082e531d5a480825d6f7f7ff262e1ee66c8e95a85834e3f47bd8e122a054c5&gt;,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/c78a134e31ab93f90b8f2632cc767a78e8b755b1815822c1ae3e03d41391ea49/_data,
+    name=&gt;c78a134e31ab93f90b8f2632cc767a78e8b755b1815822c1ae3e03d41391ea49,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/ae92ac148d70046c73d0b5e94cd2713f417b09191d37e312574cced4e4496f3e/_data,
+    name=&gt;ae92ac148d70046c73d0b5e94cd2713f417b09191d37e312574cced4e4496f3e,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/bc5af4c60140cceea92b061e4bbfcad6f9d58b7b729b3c09f790bddfeb67cf34/_data,
+    name=&gt;bc5af4c60140cceea92b061e4bbfcad6f9d58b7b729b3c09f790bddfeb67cf34,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/1f7558809ec3879593daae1b898ca9d95187ccb282e8e710dcbd9c558085bf25/_data,
+    name=&gt;&lt;1f7558809ec3879593daae1b898ca9d95187ccb282e8e710dcbd9c558085bf25&gt;,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/ba4de75e457c5c6f2340f0c19650fcca3a1e3a14b15daf7fab7eecdc472815e3/_data,
+    name=&gt;ba4de75e457c5c6f2340f0c19650fcca3a1e3a14b15daf7fab7eecdc472815e3,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/4d4e411d7a6eb5e05c50cda6238f183d2dec5eeea8807648bcf429c142c9dafd/_data,
+    name=&gt;&lt;4d4e411d7a6eb5e05c50cda6238f183d2dec5eeea8807648bcf429c142c9dafd&gt;,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    mountpoint=&gt;/var/lib/docker/volumes/myvol/_data,
+    name=&gt;myvol,
+    scope=&gt;local,
+    container=&gt;[docker:container/web]]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/2e6937f5c4661d5f83b08cb451c05d6ce6df412e42ab5ad4b68abc220bf75100/_data,
+    name=&gt;&lt;2e6937f5c4661d5f83b08cb451c05d6ce6df412e42ab5ad4b68abc220bf75100&gt;,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/7bdaf667ce61d7ef1b033726edfaec05a20f77c7bb42a5f1959578d383b4993c/_data,
+    name=&gt;&lt;7bdaf667ce61d7ef1b033726edfaec05a20f77c7bb42a5f1959578d383b4993c&gt;,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/9000b84a39160189684fa7149b69a58c888808f0c74e09f88cd7dc621db5fe67/_data,
+    name=&gt;&lt;9000b84a39160189684fa7149b69a58c888808f0c74e09f88cd7dc621db5fe67&gt;,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/d5bd4e119597c8439b6992dd86e93518a456f43839fbac90d14e2013a90779a0/_data,
+    name=&gt;d5bd4e119597c8439b6992dd86e93518a456f43839fbac90d14e2013a90779a0,
+    scope=&gt;local]
+==&gt;[
+    driver=&gt;local,
+    labels=&gt;[=&gt;],
+    mountpoint=&gt;/var/lib/docker/volumes/a254d53a9c9a5f83c168448e5af5e5f3cc9c3d9e8a3532a1b4a69492293c98c0/_data,
+    name=&gt;a254d53a9c9a5f83c168448e5af5e5f3cc9c3d9e8a3532a1b4a69492293c98c0,
+    scope=&gt;local]
+mtron&gt; *docker:network/+                    [-- all networks                             --]
+==&gt;[
+    created_at=&gt;datetime::&lt;//2026.08:6/13/53/33/644?tz=+0000&gt;,
+    driver=&gt;bridge,
+    id=&gt;&lt;357c897ce4c7&gt;,
+    ipv4=&gt;true,
+    ipv6=&gt;false,
+    internal=&gt;false,
+    labels=&gt;[
+     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;,
+     &lt;com.docker.compose.config-hash&gt;=&gt;dcfdb94ed5044fb11e16ff38ab584fd0bda75806da995978e02547c50430328a,
+     &lt;com.docker.compose.network&gt;=&gt;default,
+     &lt;com.docker.compose.project&gt;=&gt;test_sqlite],
+    name=&gt;test_sqlite_default,
+    scope=&gt;local,
+    container=&gt;[!*docker:container/test_sqlite-sqlite-1]]
+==&gt;[
+    created_at=&gt;datetime::&lt;//2026.08:27/08/33/01/479?tz=+0000&gt;,
+    driver=&gt;bridge,
+    id=&gt;f1cc77f79643,
+    ipv4=&gt;true,
+    ipv6=&gt;false,
+    internal=&gt;false,
+    labels=&gt;[
+     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;,
+     &lt;com.docker.compose.config-hash&gt;=&gt;edf7769ebc38e22fe8be401f97ddeabc2328a412e6a2f42ed79e2e88fa012357,
+     &lt;com.docker.compose.network&gt;=&gt;default,
+     &lt;com.docker.compose.project&gt;=&gt;metatron_sqlite],
+    name=&gt;metatron_sqlite_default,
+    scope=&gt;local,
+    container=&gt;[!*docker:container/metatron_sqlite-sqlite-1]]
+==&gt;[
+    created_at=&gt;datetime::&lt;//2026.08:6/14/12/04/985?tz=+0000&gt;,
+    driver=&gt;bridge,
+    id=&gt;&lt;04cebb297272&gt;,
+    ipv4=&gt;true,
+    ipv6=&gt;false,
+    internal=&gt;false,
+    labels=&gt;[
+     &lt;com.docker.compose.config-hash&gt;=&gt;&lt;454211c5597511dbc4de2c2d7054ec34854741b9a0a3020c77fa2de25572c260&gt;,
+     &lt;com.docker.compose.network&gt;=&gt;default,
+     &lt;com.docker.compose.project&gt;=&gt;dr_sqlite,
+     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;],
+    name=&gt;dr_sqlite_default,
+    scope=&gt;local,
+    container=&gt;[!*docker:container/dr_sqlite-sqlite-1]]
+==&gt;[
+    created_at=&gt;datetime::&lt;//2026.08:29/16/08/01/176?tz=+0000&gt;,
+    driver=&gt;bridge,
+    id=&gt;a78cd8df9eb8,
+    ipv4=&gt;true,
+    ipv6=&gt;false,
+    internal=&gt;false,
+    labels=&gt;[
+     &lt;com.docker.compose.config-hash&gt;=&gt;&lt;58c75ad45450a419e19489859bceed95b344afac255832f7cedc5ea678321155&gt;,
+     &lt;com.docker.compose.network&gt;=&gt;default,
+     &lt;com.docker.compose.project&gt;=&gt;my-stack,
+     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;],
+    name=&gt;my-stack_default,
+    scope=&gt;local,
+    container=&gt;[!*docker:container/my-stack-web-1]]
+==&gt;[
+    created_at=&gt;datetime::&lt;//2025.11:8/13/37/14/409?tz=+0000&gt;,
+    driver=&gt;host,
+    id=&gt;be91c71a3135,
+    ipv4=&gt;true,
+    ipv6=&gt;false,
+    internal=&gt;false,
+    name=&gt;host,
+    scope=&gt;local]
+==&gt;[
+    created_at=&gt;datetime::&lt;//2026.08:28/08/55/54/969?tz=+0000&gt;,
+    driver=&gt;bridge,
+    id=&gt;&lt;1cfee6f07616&gt;,
+    ipv4=&gt;true,
+    ipv6=&gt;false,
+    internal=&gt;false,
+    name=&gt;bridge,
+    scope=&gt;local,
+    container=&gt;[
+     !*docker:container/metatron,
+     !*docker:container/awesome_haibt,
+     !*docker:container/stupefied_burnell,
+     !*docker:container/admiring_lalande,
+     !*docker:container/dr_sqlite]]
+==&gt;[
+    created_at=&gt;datetime::&lt;//2026.08:6/14/09/25/425?tz=+0000&gt;,
+    driver=&gt;bridge,
+    id=&gt;&lt;12f02ba20a4f&gt;,
+    ipv4=&gt;true,
+    ipv6=&gt;false,
+    internal=&gt;false,
+    labels=&gt;[
+     &lt;com.docker.compose.config-hash&gt;=&gt;b82bc38b085051212ab2999d5d8a56646d5a2f6cd18fb5f3cbf5d7d6624c75fc,
+     &lt;com.docker.compose.network&gt;=&gt;default,
+     &lt;com.docker.compose.project&gt;=&gt;dr,
+     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;],
+    name=&gt;dr_default,
+    scope=&gt;local,
+    container=&gt;[!*docker:container/dr-sqlite-1]]
+</code></pre>
+<h4>Inspect a resource</h4>
+<pre><code class="language-mtron">mtron&gt; *docker:image/nginx:alpine           [-- full image rec --]
+==&gt;[
+    containers=&gt;1,
+    created_at=&gt;datetime::&lt;//2026.07:15/17/57/33/000?tz=-0600&gt;,
+    created_since=&gt;&lt;6 weeks ago&gt;,
+    id=&gt;f0ba77f796e5,
+    repository=&gt;nginx,
+    size=&gt;mB::62.4000,
+    tag=&gt;alpine,
+    container=&gt;[!*docker:container/web]]
+mtron&gt; *docker:container/web                [-- full container rec --]
+==&gt;[ command=&gt;&lt;/docker-entrypoint.sh nginx -g 'daemon off;&gt;,
+    created_at=&gt;datetime::&lt;//2026.08:29/16/21/45/000?tz=-0600&gt;,
+    id=&gt;bb0d3b258c2fa7f0e262d66322cb00b874e728e19d8618fb9c7ca22a62902d9c,
+    image=&gt;!*docker:image/nginx:alpine,
+    labels=&gt;[maintainer=&gt;'NGINX Docker Maintainers &lt;docker-maint@nginx.com&gt;'],
+    local_volumes=&gt;1,
+    names=&gt;web,
+    running_for=&gt;&lt;3 seconds ago&gt;,
+    size=&gt;bB::0.0000,
+    state=&gt;created,
+    ...(3 more)]
+mtron&gt; *docker:image/nginx:alpine/size      [-- specific field --]
+==&gt;mB::62.4000
+mtron&gt; *docker:container/web/state          [-- container state (running, exited, ...) --]
+==&gt;created
+</code></pre>
+<h4>Graph navigation</h4>
+<pre><code class="language-mtron">mtron&gt; *docker:container/web/image           [-- uri ref to the container's image             --]
+==&gt;[
+    containers=&gt;1,
+    created_at=&gt;datetime::&lt;//2026.07:15/17/57/33/000?tz=-0600&gt;,
+    created_since=&gt;&lt;6 weeks ago&gt;,
+    id=&gt;f0ba77f796e5,
+    repository=&gt;nginx,
+    size=&gt;mB::62.4000,
+    tag=&gt;alpine,
+    container=&gt;[!*docker:container/web]]
+mtron&gt; *docker:image/nginx:alpine/containers [-- list of container refs using this image      --]
+==&gt;1
+mtron&gt; *docker:container/web/networks        [-- uri ref to the container's network           --]
+mtron&gt; *docker:network/bridge/containers     [-- list of container refs on this network       --]
+mtron&gt; *docker:container/web/mounts          [-- list of volume refs mounted on the container --]
+mtron&gt; *docker:volume/data/containers        [-- list of container refs using this volume     --]
+</code></pre>
+<p>The <code>image</code>, <code>networks</code>, and <code>mounts</code> fields on containers are <strong>uri refs</strong>. The <code>containers</code>
+field on images/networks/volumes is a <strong>lst of uri refs</strong>. This allows for graph navigation without accessing a single
+node in the graph and pulling the entire uri space into the result. uri auto-refs are lazy links that are resolved to
+their referent upon access.</p>
+<h4>Stop and remove a container</h4>
+<pre><code class="language-mtron">mtron&gt; docker:container/web -&gt; noobj       [-- stops and removes container --]
+</code></pre>
+<h3>Writing — Images</h3>
+<p>Images are read-only from Docker Hub. The space auto-discovers images from
+<code>docker image ls</code> and from containers' image references.</p>
+<pre><code class="language-mtron">mtron&gt; *docker:image/nginx:alpine/id          [-- Docker hash (f7949ff70415) --]
+==&gt;f0ba77f796e5
+mtron&gt; *docker:image/nginx:alpine/size        [-- mB::142.0 --]
+==&gt;mB::62.4000
+mtron&gt; *docker:image/nginx:alpine/repository  [-- nginx --]
+==&gt;nginx
+mtron&gt; *docker:image/nginx:alpine/tag         [-- alpine --]
+==&gt;alpine
+</code></pre>
+<h3>Writing — Volumes</h3>
+<h4>Create a volume</h4>
+<pre><code class="language-mtron">mtron&gt; docker:volume/myvol -&gt; [driver =&gt; local]
+==&gt;fail::[apply failure:
+   	[lhs]    │ docker:volume/myvol
+   	 \_type  │ /m/uri
+   	  \_pred │ []
+   	[inst]   │ ref?rng=#{*}&amp;dom=#([driver=&gt;local]){&lt;j&gt;}@&lt;1&gt;
+   	 \_dom   │ #::T
+   	 \_args  │ [[driver=&gt;local]][ProcessBuilder&lt;1065&gt;:fail[ProcessBuilder&lt;1065&gt;:(NullPointerException)] ← (NullPointerException)]][fail[ProcessBuilder&lt;1065&gt;:(NullPointerException)]][]@/sys/fail/174
+</code></pre>
+<h4>Remove a volume</h4>
+<pre><code class="language-mtron">mtron&gt; docker:volume/myvol -&gt; noobj
+==&gt;[
+    driver=&gt;local,
+    mountpoint=&gt;/var/lib/docker/volumes/myvol/_data,
+    name=&gt;myvol,
+    scope=&gt;local]
+</code></pre>
+<h3>Writing — Networks</h3>
+<h4>Create a network</h4>
+<pre><code class="language-mtron">mtron&gt; docker:network/mynet -&gt; [driver =&gt; bridge]
+==&gt;[
+    created_at=&gt;datetime::&lt;//2026.08:29/16/21/57/667?tz=+0000&gt;,
+    driver=&gt;bridge,
+    id=&gt;af0f1ac6f9d4,
+    ipv4=&gt;true,
+    ipv6=&gt;false,
+    internal=&gt;false,
+    name=&gt;mynet,
+    scope=&gt;local]
+</code></pre>
+<h4>Remove a network</h4>
+<pre><code class="language-mtron">mtron&gt; docker:network/mynet -&gt; noobj
+</code></pre>
+<h3>Docker Compose</h3>
+<h4>Start a stack</h4>
+<pre><code class="language-mtron">mtron&gt; docker:compose/my-stack -&gt; [
+         services =&gt; [
+           web =&gt; [
+             image =&gt; 'nginx:alpine',
+             ports =&gt; [&lt;8080:80&gt;]
+           ],
+           db =&gt; [
+             image =&gt; 'postgres:16',
+             environment =&gt; [POSTGRES_PASSWORD =&gt; secret]
+           ]
+         ]
+       ]
+==&gt;[services=&gt;[
+    web=&gt;[
+     image=&gt;'nginx:alpine',
+     ports=&gt;[&lt;8080:80&gt;]],
+    db=&gt;[
+     image=&gt;'postgres:16',
+     environment=&gt;[POSTGRES_PASSWORD=&gt;secret]]]]
+</code></pre>
+<p>Compose YAML is generated to <code>/tmp/metatron-docker/&lt;name&gt;/docker-compose.yml</code> and
+<code>docker compose up -d</code> is executed. Progress streams through the widget.</p>
+<h4>Stop a stack</h4>
+<pre><code class="language-mtron">mtron&gt; docker:compose/my-stack -&gt; noobj     [-- docker compose down + cleanup --]
+</code></pre>
+<h4>Read compose config</h4>
+<pre><code class="language-mtron">mtron&gt; *docker:compose/my-stack/services/web/image    [-- nginx:alpine --]
+mtron&gt; *docker:compose/my-stack/services              [-- all services --]
+</code></pre>
+<h3>Remote Docker Hosts</h3>
+<p>Connect to a remote Docker daemon by specifying <code>host</code> in the boot config:</p>
+<pre><code class="language-mtron">dockerspace::[host =&gt; &lt;tcp://192.168.1.100:2375&gt;, ...]@/sys/space/remote
+</code></pre>
+<p>All Docker CLI commands are prefixed with <code>-H &lt;host&gt;</code>. Supports <code>tcp://</code>, <code>unix://</code>, and <code>ssh://</code> schemes.</p>
+<h3>End-to-End: SQLite Container + tbleSpace</h3>
+<p>This example pulls a SQLite Docker image, runs it with a bind-mounted data directory, and exposes the database through
+tbleSpace — all from mtron.</p>
+<pre><code>┌────────────────────────────────────────┐
+│  Host filesystem                       │
+│  /tmp/mtron-dbs/                       │
+│  └── mydb.sqlite ◄── tbleSpace (JDBC)  │
+│       ▲                                │
+│       │ bind mount                     │
+│       │                                │
+│  ┌────┴───────────────┐                │
+│  │  Docker container  │                │
+│  │  keinos/sqlite3    │                │
+│  │  /data/            │                │
+│  │  └── mydb.sqlite   │                │
+│  └────────────────────┘                │
+└────────────────────────────────────────┘
+</code></pre>
+<h4>Step 1: Pull + run the SQLite container</h4>
+<pre><code class="language-mtron">mtron&gt; docker:container/sqlite -&gt; [
+         user    =&gt; root,
+         image   =&gt; 'keinos/sqlite3:latest',
+         command =&gt; ['sh', '-c', 'sqlite3 /data/mydb.sqlite &quot;.databases&quot; &amp;&amp; chmod 777 /data /data/mydb.sqlite'],
+         volumes =&gt; ['/tmp/mtron-dbs:/data']
+       ]
+==&gt;[ command=&gt;&quot;&quot;&quot;/sbin/tini -g -- sh -c 'sqlite3 /data/mydb.sqlite \&quot;.databa...&quot;&quot;&quot;,
+    created_at=&gt;datetime::&lt;//2026.08:29/16/22/10/000?tz=-0600&gt;,
+    id=&gt;a2eca72f1c18e89bd263eb6def421a3192512f9b08233c30c79b0562e2c1dd74,
+    image=&gt;!*docker:image/keinos/sqlite3:latest,
+    local_volumes=&gt;0,
+    mounts=&gt;/tmp/mtron-dbs,
+    names=&gt;sqlite,
+    running_for=&gt;&lt;Less than a second ago&gt;,
+    size=&gt;bB::0.0000,
+    state=&gt;running,
+    ...(2 more)]
+</code></pre>
+<p>The bind mount <code>'/tmp/mtron-dbs:/data'</code> maps the host directory into the container. The user <code>root</code> is necessary for
+command permissions.</p>
+<h4>Step 2: Mount the database via tbleSpace</h4>
+<pre><code class="language-mtron">mtron&gt; tblespace::[pattern =&gt; mydb:#,
+                   host    =&gt; &lt;sqlite:/tmp/mtron-dbs/mydb.sqlite&gt;,
+                   table   =&gt; [,],
+                   route   =&gt; [mydb: =&gt; &lt;&gt;],
+                   driver  =&gt; &lt;org.sqlite.JDBC&gt;]@/sys/space/mydb
+</code></pre>
+<h4>Step 3: Create tables and insert data</h4>
+<pre><code class="language-mtron">mtron&gt; [-- insert tble rows --]
+mtron&gt; mydb:people/1 -&gt; [name=&gt;'marko',role=&gt;architect]
+==&gt;[name=&gt;'marko',role=&gt;architect]
+mtron&gt; mydb:people/2 -&gt; [name=&gt;'stynx',role=&gt;developer]
+==&gt;[name=&gt;'stynx',role=&gt;developer]
+mtron&gt; mydb:people/3 -&gt; [name=&gt;'metis',role=&gt;oracle]
+==&gt;[name=&gt;'metis',role=&gt;oracle]
+</code></pre>
+<h4>Step 4: Query from mtron</h4>
+<pre><code class="language-mtron">mtron&gt; *mydb:people/+                                           [-- all rows              --]
+==&gt;[name=&gt;'marko',role=&gt;architect]
+==&gt;[name=&gt;'metis',role=&gt;oracle]
+==&gt;[name=&gt;'stynx',role=&gt;developer]
+mtron&gt; *mydb:people/+/                                          [-- all rows keyed by uri --]
+==&gt;mydb:people/1=&gt;[name=&gt;'marko',role=&gt;architect]
+==&gt;mydb:people/3=&gt;[name=&gt;'metis',role=&gt;oracle]
+==&gt;mydb:people/2=&gt;[name=&gt;'stynx',role=&gt;developer]
+mtron&gt; *mydb:people/+/name                                      [-- all names             --]
+==&gt;'stynx'
+==&gt;'marko'
+==&gt;'metis'
+mtron&gt; *mydb:people/+.=?=[role=&gt;developer]==[name=&gt;_]           [-- all developer names   --]
+==&gt;[name=&gt;'stynx']
+mtron&gt; *mydb:people/+.=?=[role=&gt;developer]==[name=&gt;_].explain() [-- sql rewrite usage     --]
+==&gt;&quot;&quot;&quot;
+    op         dom      rng      args                           f    desc    c_dom  c_rng 
+    sql_where  #{*}::T  #{*}::T  people/+,&quot;role = 'developer'&quot;  &lt;j&gt;  gather  {*}    {*}   
+    select     #::T     #::T     [name=&gt;id()]                   &lt;?&gt;  mapper  {1}    {1}   
+   &quot;&quot;&quot;
+mtron&gt; *mydb:people/+.count()                                   [-- number of rows        --]
+==&gt;3
+mtron&gt; *mydb:people/+.count().explain()                         [-- sql rewrite usage     --]
+==&gt;fail::[apply failure:
+   	[lhs]    │ noobj
+   	 \_type  │ noobj{0}
+   	  \_pred │ []
+   	[inst]   │ /m/inst/explain_compute?rng=str&amp;dom=noobj{0}(/m/tble/inst/rewrite/sql_count?int&lt;=#{0}(people/+)){&lt;j&gt;}@&lt;0&gt;
+   	 \_dom   │ noobj
+   	 \_args  │ [/m/tble/inst/rewrite/sql_count?int&lt;=#{0}(people/+)][MTronException&lt;162&gt;:fail[no stack element&lt;0&gt;:(ClassCastException)] ← (ClassCastException)]][fail[no stack element&lt;0&gt;:(ClassCastException)]][]@/sys/fail/176
+</code></pre>
+<h4>Step 5: The container sees the same data</h4>
+<p>The Docker container has the database mounted at <code>/data/mydb.sqlite</code>. Any process inside the container can read and
+write the same file. mtron-backed writes go through tbleSpace → JDBC → the file → visible inside the container.
+Container writes go to the file → visible to tbleSpace on next read.</p>
+<h4>Step 6: Tear down</h4>
+<pre><code class="language-mtron">mtron&gt; docker:container/sqlite -&gt; noobj     [-- stop + remove container --]
+</code></pre>
+<p>The database file persists at <code>/tmp/mtron-dbs/mydb.sqlite</code>. Re-mount <code>tblespace::T</code> later to pick up where the database
+state was left off.</p>
+<h4>How it works</h4>
+<table>
+<thead>
+<tr><th>Layer</th><th>Technology</th><th>Role</th></tr>
+</thead>
+<tbody>
+<tr><td><code>dckrspace::T</code></td><td>Docker CLI</td><td>Pulls image, runs container, bind-mounts volume</td></tr>
+<tr><td><code>tblespace::T</code></td><td>SQLite JDBC</td><td>Auto-creates <code>.sqlite</code> file, creates tables from record schemas, executes queries</td></tr>
+<tr><td>bind mount</td><td>Linux kernel</td><td>Shares filesystem between host and container</td></tr>
+<tr><td>mtron</td><td>URI graph</td><td>Uniform <code>mydb:people -&gt; [...]</code> write / <code>*mydb:people/+</code> read across both spaces</td></tr>
+</tbody>
+</table>
+<p>The key insight: <strong><code>dckrspace::T</code> manages the container lifecycle; <code>tblespace::T</code> manages the data</strong>. They meet at the
+bind-mounted directory. No <code>docker exec</code>, no separate SQL client, no out-of-band setup — the database is born from a
+mtron write.</p>
+<h3>Quick Reference</h3>
+<table>
+<thead>
+<tr><th>Task</th><th>Expression</th></tr>
+</thead>
+<tbody>
+<tr><td>Mount space</td><td><code>dockerspace::[pattern=&gt;docker:#,route=&gt;[docker:=&gt;...]]@/sys/space/docker</code></td></tr>
+<tr><td>Run container</td><td><code>docker:container/&lt;name&gt; -&gt; [image =&gt; 'img:tag']</code></td></tr>
+<tr><td>Run with ports</td><td><code>docker:container/&lt;name&gt; -&gt; [image =&gt; 'img', ports =&gt; [&lt;8080:80&gt;]]</code></td></tr>
+<tr><td>Run with env</td><td><code>[image =&gt; 'img', environment =&gt; [KEY =&gt; val]]</code></td></tr>
+<tr><td>Run with volume</td><td><code>[image =&gt; 'img', volumes =&gt; ['vol:/path']]</code></td></tr>
+<tr><td>Run with network</td><td><code>[image =&gt; 'img', network =&gt; netname]</code></td></tr>
+<tr><td>Stop container</td><td><code>docker:container/&lt;name&gt; -&gt; {0}id()</code></td></tr>
+<tr><td>List images</td><td><code>*docker:image/+</code></td></tr>
+<tr><td>List containers</td><td><code>*docker:container/+</code></td></tr>
+<tr><td>Inspect image</td><td><code>*docker:image/repo:tag</code></td></tr>
+<tr><td>Inspect container</td><td><code>*docker:container/&lt;name&gt;</code></td></tr>
+<tr><td>Container's image ref</td><td><code>*docker:container/&lt;name&gt;/image</code></td></tr>
+<tr><td>Image's containers</td><td><code>*docker:image/repo:tag/containers</code></td></tr>
+<tr><td>Container's network</td><td><code>*docker:container/&lt;name&gt;/networks</code></td></tr>
+<tr><td>Network's containers</td><td><code>*docker:network/&lt;name&gt;/containers</code></td></tr>
+<tr><td>Container's volumes</td><td><code>*docker:container/&lt;name&gt;/mounts</code></td></tr>
+<tr><td>Volume's containers</td><td><code>*docker:volume/&lt;name&gt;/containers</code></td></tr>
+<tr><td>Create volume</td><td><code>docker:volume/&lt;name&gt; -&gt; [driver =&gt; local]</code></td></tr>
+<tr><td>Remove volume</td><td><code>docker:volume/&lt;name&gt; -&gt; {0}id()</code></td></tr>
+<tr><td>Create network</td><td><code>docker:network/&lt;name&gt; -&gt; [driver =&gt; bridge]</code></td></tr>
+<tr><td>Remove network</td><td><code>docker:network/&lt;name&gt; -&gt; {0}id()</code></td></tr>
+<tr><td>Start compose stack</td><td><code>docker:compose/&lt;name&gt; -&gt; [services =&gt; [...]]</code></td></tr>
+<tr><td>Stop compose stack</td><td><code>docker:compose/&lt;name&gt; -&gt; {0}id()</code></td></tr>
+<tr><td>Remote host</td><td>Add <code>host =&gt; &lt;tcp://host:port&gt;</code> to space config</td></tr>
+</tbody>
+</table>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

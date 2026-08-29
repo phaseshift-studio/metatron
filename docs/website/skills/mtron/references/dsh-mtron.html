@@ -1,0 +1,809 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title> · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../../../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../../../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../../../lib/animate/animate.min.css" rel="stylesheet">
+    <link href="../../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../../css/termynal.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../../../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <script src="../../../lib/wow/wow.min.js" type="text/javascript"></script>
+    <script src="../../../lib/easing/easing.min.js" type="text/javascript"></script>
+    <script src="../../../lib/waypoints/waypoints.min.js" type="text/javascript"></script>
+    <script src="../../../lib/termynal/termynal.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../../../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .terminal-box.click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .terminal-box.click-to-copy:active {
+            background-color: var(--mred);
+        }
+
+        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
+        .terminal-box.click-to-copy .hljs-copy-button {
+            display: none;
+        }
+    </style>
+    <script src="../../../js/metatron.js" type="text/javascript"></script>
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 text-primary logo-text navbar-brand ms-4 ms-lg-0">
+        <a href="../../../index.html" class="text-primary" title="metatron"><i class="bi bi-soundwave me-3 icon-color"></i></a>
+        <a href="http://phaseshift.studio" class="text-primary">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="terminal-box click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box click-to-copy" title="click to copy">
+                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="start.html"
+                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/start.html');return false;">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/index.html';">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m.html';"><img
+                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_dcmnt.html';"><img
+                            src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_grph.html';"><img
+                            src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_iot.html';"><img
+                            src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_llm.html';"><img
+                            src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                            alt="llm"/>/m/llm</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_mach.html';"><img
+                            src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                            alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_math.html';"><img
+                            src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_sys.html';"><img
+                            src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_tble.html';"><img
+                            src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                            alt="tble"/>/m/tble</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_vec.html';"><img
+                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/vec</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_web.html';"><img
+                            src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../../../tractatus.html"
+                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/tractatus.html');return false;">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../skills/agent/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/drstynx/assets/drstynx.boot.mtron';">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/drstynx/assets/drstynx.sqlite';">drstynx.sqlite</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/mcp-mtron.html';">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/rewrite-system-java.html';">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/tble-space-java.html';">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/type-system-java.html';">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/ui-instset-java.html';">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/answer-questions.html';">answer-questions</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/connecting-datasources.html';">connecting-datasources</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/dckrspace.html';">dckrspace</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/dsh-mtron.html';">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/http-page-fetching.html';">http-page-fetching</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/math_instset.html';">math_instset</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mcp-server-architecture.html';">mcp-server-architecture</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mcp-server-notifications.html';">mcp-server-notifications</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mtron-fsspace.html';">mtron-fsspace</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mtron-language-reference.html';">mtron-language-reference</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/type-system-mtron.html';">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/unsloth-training-mtron.html';">unsloth-training-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/scripts/unsloth_studio.py';">unsloth_studio.py</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/README.md';">README.md</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/dsh_memory_loader.py';">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/mtron_training_dataset.jsonl';">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/stream-ring-theory.pdf';"><i
+                            class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/parametric-identities-in-ring-theory.html';"><i
+                            class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/mm-adt.pdf';"><i
+                            class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://opencollective.com/metatron';">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://github.com/phaseshift-studio/metatron';">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://huggingface.co/phaseshift-studio';">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://groups.google.com/u/1/g/metatron-phaseshift';">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../index.html';">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../index.html';">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="./console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target (no rollover copy button). The :active CSS turns the block
+    // red while pressed; this copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">
+    <div class="skill-doc mb-4">
+        <a href="dsh-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>dsh-mtron.md</a>
+    </div>
+    <div class="markdown-body">
+<h2>dhs→mtron — the harness memory bus, first adapter</h2>
+<p><code>--- name: dhs-mtron description: &gt; Migrate DSH harness session memory into a native metatron agent memory tree. The first adapter on the inter-harness memory bus: a zstd JSONL transcript becomes a lst of typed message recs (user, system, thinking, ai, tool_result) that load into a live VM and are written with a single .to() -- after which the migrated agent's history is addressable, queryable, and assertable in metatron. ---</code></p>
+<h3>What this is</h3>
+<p>AI harnesses each keep agent memory in their own format (DSH: zstd-compressed
+JSONL; others: markdown dirs, API JSON, ...). A harness-bound agent cannot
+query, assert over, or carry its memory in another tool. This adapter is the
+first link on a <strong>memory bus</strong>:</p>
+<pre><code>DSH transcript          mtron text (asset output)        the universal space
+~/.dsh/sessions/        [ user::[=&gt;], thinking::[=&gt;],    /usr/&lt;agent&gt;/message
+  */session.jsonl.zstd   system::[=&gt;], ai::[=&gt;],           (one typed rec per
+  (JSONL, one event      tool_result::[=&gt;] ]              conversation unit)
+    per line)
+      │  assets/dsh_memory_loader.py
+      │  (zstd -dc + JSON → map → emit)
+      ▼
+   *&lt;mfs:...&gt;.parse()   -- the file EVALUATES to the lst in a live VM --
+      ▼
+   .to(/usr/dr/message) -- and the agent is resident in metatron --
+</code></pre>
+<p><strong>Design principle:</strong> the <code>as</code>-map (here, the python asset + <code>parse</code>) is the
+unit of an adapter. N harnesses need N adapters — not N×N bridges — because
+the middle is the metatron message model, a typed contract that lives in the
+space. Anything that can produce the message recs lands; anything that can
+read them consumes.</p>
+<h3>The DSH side (source of truth)</h3>
+<p>DSH stores its memory under <code>DSH_HOME</code> (default <code>~/.dsh</code>):</p>
+<pre><code>~/.dsh/
+├── settings.yaml
+├── storages/workspace.json                [-- workspace → sessions index --]
+├── storages/session_projcache.json        [-- per-session identity/stats  --]
+└── sessions/&lt;workspace-slug&gt;*/session.jsonl.zstd   [-- the memory: one JSON event per line --]
+</code></pre>
+<p>Key env vars (read them, do not assume): <code>DSH_HOME</code>, <code>DSH_SESSION_ID</code>,
+<code>DSH_SESSION_JSONL</code> (the exact bundle of the running session),
+<code>DSH_SHELL=1</code>.</p>
+<p><code>session.jsonl.zstd</code> is <strong>zstd-compressed JSONL</strong> — every line a JSON object
+with <code>type</code>, <code>seq</code> (monotonic), <code>time</code> (epoch ms), <code>data</code>. A live census of
+one session (42,956 events):</p>
+<blockquote>
+<p><strong>Source formats (as of 2026-08):</strong> the installed DSH persists to this
+zstd-JSONL (verified live — the bundle keeps appending while running), with
+a supplementary TUI layer under <code>~/.dsh-tui/</code> (<code>session-index.json</code> derived
+index over the same session ids, <code>history.jsonl</code>, <code>effect-ledger.jsonl</code>).
+DSH has also been described as moving to a <strong>SQLite</strong> primary backend.
+The bus is unaffected by which reader is canonical: the pinned surface is
+the <em>emitted contract</em> (five TIDs, envelope, <code>contents</code> correlation), and a
+SQLite backend is simply a second reader (<code>sqlite rows → event dict → the same load()</code>) — nothing downstream changes.</p>
+</blockquote>
+<table>
+<thead>
+<tr><th align="right">events</th><th>type</th><th>migration</th></tr>
+</thead>
+<tbody>
+<tr><td align="right">1</td><td><code>session</code></td><td>folded into the synthesized <code>system::</code> (id, cwd, preset, createdAt)</td></tr>
+<tr><td align="right">109</td><td><code>user/message</code></td><td>→ <code>user::</code> (content[].text joined)</td></tr>
+<tr><td align="right">378</td><td><code>assistant/message</code></td><td>→ <code>thinking::</code> (reasoning blocks) + <code>ai::</code> (text blocks)</td></tr>
+<tr><td align="right">32,282</td><td><code>reasoning-chunks</code></td><td>dropped — superseded by the final <code>assistant/message</code> reasoning</td></tr>
+<tr><td align="right">4,214 + 3,961</td><td><code>assistant/chunk</code>, <code>text-chunks</code></td><td>dropped — streaming deltas of finals that exist</td></tr>
+<tr><td align="right">361</td><td><code>tool/call</code></td><td>→ <code>ai::</code> with <code>tool_requests=&gt;[tool_request::]</code> (name, args, contents=call-id)</td></tr>
+<tr><td align="right">377</td><td><code>tool/result</code></td><td>→ <code>tool_result::</code> (name, contents=same call-id, text)</td></tr>
+<tr><td align="right">388+387</td><td><code>step/start</code>, <code>step/end</code></td><td>dropped — grouping carried in <code>chat_id</code></td></tr>
+<tr><td align="right">72+71</td><td><code>turn/start</code>, <code>turn/end</code></td><td>dropped — <code>chat_id</code> = turn</td></tr>
+<tr><td align="right">266</td><td><code>agent/inbox/spliced</code></td><td>dropped — harness message edits, not conversation</td></tr>
+<tr><td align="right">22</td><td><code>compaction/*</code>, <code>request/*</code>, <code>permission/*</code>, <code>sandbox/*</code>, <code>command/*</code>, <code>llm/retry*</code>, <code>session/title*</code></td><td>dropped bookkeeping; <strong>unknown future types are NOT dropped</strong> — they emit as <code>system::[text=&gt;&quot;[unmapped event] …&quot;]</code> so nothing is silently lost</td></tr>
+</tbody>
+</table>
+<h3>The metatron side (the contract, learned from live memory)</h3>
+<p>The target shape was <strong>read from the live VM</strong>, not invented — <code>*/usr/dr/message/+</code>
+shows the contract; <code>*/usr/dr/message/+.tid()</code> gives the registry census:</p>
+<pre><code>/m/llm/message/user         × 4
+/m/llm/message/system       × 3
+/m/llm/message/thinking     × 4
+/m/llm/message/ai           × 6
+/m/llm/message/tool_result  × 2
+</code></pre>
+<p>Envelope (all variants): <code>text</code> (str, multi-line), <code>time</code>, <code>session</code> (uri, e.g.
+<code>/usr/dr/session/1</code>), <code>depth</code> (int), <code>chat_id</code> (int).
+Variant extras: <code>ai::</code> may carry <code>tool_requests =&gt; [ tool_request::[ name, args, contents, text ] ]</code>; <code>tool_result::</code> carries <code>name</code>, <code>contents</code> — where <strong><code>contents</code>
+is the call-id</strong> that correlates an emitted <code>tool_request</code> with its <code>tool_result</code>.</p>
+<h3>The asset — <code>assets/dsh_memory_loader.py</code></h3>
+<pre><code>python3 assets/dsh_memory_loader.py \
+  [--bundle PATH]...        [-- one or more session.jsonl.zstd (default: all under DSH_HOME/sessions) --]
+  [--out FILE]              [-- default &lt;assets&gt;/dsh_memory.mtron --]
+  [--agent NAME]            [-- target agent; session uri /usr/&lt;agent&gt;/session/N (default dr) --]
+  [--session N]             [-- metatron session number (default 1; bundles load N, N+1, ...) --]
+  [--min-chunks N]          [-- &gt;0: reconstruct thinking from streamed chunks if a final lacks it --]
+</code></pre>
+<p>Behavior and invariants (the loader is an assertion, printed each run):</p>
+<ol>
+<li><strong>Unwraps</strong> with <code>zstd -dc</code> (CLI; falls back to the <code>zstandard</code> module).</li>
+<li><strong>Joins</strong> reasoning into finals (chunks are deltas of messages that already exist as events).</li>
+<li><strong>Correlates</strong> <code>tool/call</code> → <code>tool/result</code> by call-id (<code>contents</code>); an unmatched
+result still loads (id falls back to the harness id).</li>
+<li><strong>Synthesizes exactly one <code>system::</code></strong> per session: provenance (session id,
+workspace, model(s) from <code>request/context</code>, agent preset, mapping note).</li>
+<li><strong>Drops nothing silently</strong> — every unknown event type is preserved as a
+<code>system::</code> &quot;[unmapped event]&quot; record instead of discarded.</li>
+<li><strong>Audits</strong> — prints per-bundle: events in, messages out, dropped bookkeeping,
+target session uri, last chat_id.</li>
+<li><strong>Time</strong> — epoch-ms becomes an ISO-8601 UTC <code>str</code>. (The live messages carry
+<code>datetime::</code> values; if the message types are ever re-typed to require a
+datetime, switch <code>iso()</code> to emit metatron datetime literals.)</li>
+</ol>
+<p><strong>Contract tests</strong> — <code>assets/tests/test_dsh_memory_loader.py</code> (stdlib unittest,
+no VM needed; needs the <code>zstd</code> CLI) pins the mapping against a synthetic
+bundle: variant census, call-id correlation, unknown-event preservation,
+bare-<code>name</code> emission, and the no-bare-<code>'…'</code>-strings rule.</p>
+<pre><code>python3 .metatron/skills/mtron/assets/tests/test_dsh_memory_loader.py   # 3/3 green
+</code></pre>
+<p>The emitted file is <strong>mtron source</strong>: a single <code>[ … ]</code> of typed recs
+(<code>user::[…], thinking::[…], system::[…], ai::[…], tool_result::[…], ai::[…, tool_requests=&gt;[…]]</code>). Nothing in the file is data-about-data — the
+file <strong>is</strong> the program that produces the memory list.</p>
+<p><strong>String rule (verified live, do not regress):</strong> mtron <code>'…'</code> strings have <strong>no
+escape mechanism</strong> — both <code>\'</code> and <code>''</code> fail to parse. Every emitted string is
+therefore a triple-quoted literal (three double quotes around the text), which
+provably carries apostrophes, backslashes, newlines, and quotes; in-text
+triple-quote runs are defused to smart quotes. <code>name</code> fields emit as <strong>bare uri
+tokens</strong> (the type is <code>uri::T</code>, never a str), and the nested <code>tool_request</code>
+carries the full <code>message::T</code> envelope (<code>text</code> + <code>session</code> required — it is a
+message refinement, not a bare sub-rec).</p>
+<p><strong><code>to</code> semantics (from <code>Obj.java</code>): <code>to(uri)</code> = <code>Router.writeToSpace(uri, lhs)</code>
+— it writes whatever the LHS evaluated to, with no internal materialization.</strong>
+So <code>*&lt;mfs:file&gt;.to(path)</code> writes the parsed+type-checked lst when the deref
+evaluates (as in the interactive console), and the one documented ambiguity is
+the <code>from</code> TODO (&quot;only resolves when explicit mono args (not code args)&quot;) —
+detect a wrong write immediately after with <code>*/path/+.tid()</code> (a stray <code>str::</code>
+entry means the raw text was written; recover by re-writing).</p>
+<h3>The workflow (the actual run)</h3>
+<pre><code># 1) zstd must be available (CLI or the python module) — one-time
+zstd -V
+
+# 2) emit the memory file (dry run, no VM touched)
+python3 .metatron/skills/mtron/assets/dsh_memory_loader.py \
+       --bundle ~/.dsh/sessions/&lt;slug&gt;*/&lt;session-id&gt;/session.jsonl.zstd \
+       --out target/dsh_memory.mtron
+
+# 3) load in metatron — the file evaluates to the lst
+mtron&gt; *&lt;mfs:target/dsh_memory.mtron&gt;.parse()
+
+# 4) the write — the agent becomes resident (confirm before firing:
+#    append vs overwrite of /usr/&lt;agent&gt;/message is the user's call)
+mtron&gt; *&lt;mfs:target/dsh_memory.mtron&gt;.parse().to(/usr/dr/message)
+
+# 5) verify — the memory should now be queryable like any other space
+mtron&gt; */usr/dr/message/+.tid()                       [-- variant census (expect new user/ai/thinking counts) --]
+mtron&gt; */usr/dr/message/+.(text=&gt;?has(&quot;WidgetCanvas&quot;))  [-- search the migrated history --]
+mtron&gt; *&lt;mfs:target/dsh_memory.mtron&gt;.parse().range(0,1)  [-- spot-check provenance system:: --]
+</code></pre>
+<p>Verified mechanics (live, session 2026-08): <code>parse(&quot;5+5&quot;)→10</code>;
+<code>parse('lst::[5,6]').range(0,1).count()→1</code>;
+<code>parse('user::[text=&gt;hi,time=&gt;6]').range(0,1).count()→1</code> (typed literals
+resolve against the live type registry; <code>rec(...)</code> is not a constructor — use
+<code>tid::[…]</code> literals); a 2.5 MB / 1,491-record file parses through the same
+pipe. Parse-failure is observable: the <code>rec(…)</code> control returned count 0.</p>
+<h3>Why this matters (the bus)</h3>
+<p>An agent's memory becomes <strong>addressable data</strong>: <code>session</code>, <code>depth</code>, <code>chat_id</code>
+are traversal keys, <code>text</code> is a regex surface, <code>contents</code> is a join key.
+Consequences that follow without new infrastructure:</p>
+<ul>
+<li><strong>Cross-tool identity</strong> — the migration writes to <code>/usr/&lt;agent&gt;/message</code>;
+the agent's name and history are the same address in metatron as anywhere
+else. A DSH session id becomes a <code>session</code> field, not a home-directory path.</li>
+<li><strong>Self-query</strong> — &quot;what did I say about X?&quot; is a <code>has(...)</code> over the space,
+the same idiom a build system uses over its own logs.</li>
+<li><strong>Assertable migration</strong> — counts in = counts out, printed per run; an
+adapter that cannot be checked is not an adapter, it is a copy.</li>
+<li><strong>N adapters, one contract</strong> — Claude <code>~/.claude/projects/*/memory/*.md</code>,
+OpenAI chat-completions JSONL, the <code>@Training</code> datasets already in
+<code>assets/</code> — each is another thin emitter into the same five TIDs.</li>
+</ul>
+<h3>Caveats / open calls</h3>
+<ul>
+<li><strong>Append vs overwrite</strong> on <code>.to(/usr/dr/message)</code> — confirm before firing; a
+dedicated tree (<code>/usr/dsh/message</code> or <code>/usr/&lt;agent&gt;/session/dsh-&lt;short&gt;</code>) is
+the less invasive default.</li>
+<li><strong><code>time</code> is a str</strong> in the emitted recs (see invariant 7).</li>
+<li><strong>User-message system-reminders</strong> (harness injections spliced into user
+turns) are preserved verbatim — faithful, but noisy for LLM re-consumption;
+a <code>filter</code> pass can strip them at read time without touching the data.</li>
+<li><strong><code>depth</code></strong> — DSH <code>delegationDepth</code> 0 → emitted as 1 (matching the live
+convention) for top-level sessions; multi-deep DSH delegations are not
+exercised yet.</li>
+<li><strong>Live append</strong> — a running DSH session keeps growing; snapshot the bundle
+(copy the <code>.zstd</code>) before migrating if a stable picture is required.</li>
+</ul>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>
