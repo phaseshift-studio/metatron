@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.space.http.HttpRec;
 import studio.phaseshift.metatron.isa.web.type.MIME;
@@ -38,6 +39,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.MIMEQ_PATTERN;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.update_;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -197,64 +199,31 @@ public class web_httpHandler extends HttpRec {
             }
         }));
 
-        // ── ON_PUT: write objects back through Router ──
-        this.jvm().put(uri(ON_PUT), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
-            try {
-                if (Boolean.TRUE.equals(this.at(uri(READ_ONLY)).orElse(bool(true)).jvm())) {
-                    try {
-                        sendError(403, "Read-only");
-                    } catch (final IOException e) {
-                        LOG.warn("unable to send error response: %s", e.getMessage());
-                    }
-                    return noobj();
-                }
-                final HttpExchange exchange = this.exchange;
-                if (exchange == null) {
-                    // exchange is null during type-checking of the isaPredicate
-                    return noobj();
-                }
-                final fURI webRoot = this.at(uri(WEB_ROOT)).uriValue();
-                final String mountPath = exchange.getHttpContext().getPath();
-                final String fullPath = exchange.getRequestURI().getPath();
-                final String relativePath = fullPath.startsWith(mountPath)
-                        ? fullPath.substring(mountPath.length())
-                        : fullPath;
-                final fURI fileURI = relativePath.isEmpty()
-                        ? webRoot
-                        : webRoot.extend(f(relativePath));
+        // ── Write verbs (verbs = read / replace / update / unlink · actions = qprocs) ──
+        //
+        //   PUT    — replace the address with the request body      (201)
+        //   POST   — alias of PUT: metatron's `->` idiom sends POST          (201)
+        //   PATCH  — the update verb: apply the `>>=` update algebra
+        //            to the existing object (body = delta)             (200)
+        //   DELETE — unlink the address (write noobj)                 (204)
+        //
+        // Create/append stays a client-side address choice (`.../_?incrq`),
+        // never a verb secret.  The request body was consumed — exactly
+        // once — by HttpRec.buildRequest() (run by dispatchToMtron before
+        // these handlers), deserialized with the handler's IN serializer
+        // and delivered as request.body in the inst's lhs; the exchange's
+        // request stream is one-shot and must never be re-read here
+        // (a second read throws java.io.IOException("Stream is closed")).
+        this.jvm().put(uri(ON_PUT), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)),
+                (lhs, inst) -> writeValue(lhs)));
 
-                // The request body was already consumed — exactly once — by
-                // HttpRec.buildRequest() (run by dispatchToMtron before this
-                // handler), deserialized with the handler's IN serializer
-                // (default application/json) and delivered as request.body in
-                // the inst's lhs.  The exchange's request stream is one-shot:
-                // a second readBody(exchange) here throws
-                // java.io.IOException("Stream is closed").
-                final Obj bodyObj = lhs.isRec() ? lhs.asRec().at(uri(BODY)) : noobj();
-                if (bodyObj.isNoObj()) {
-                    try {
-                        sendError(400, "No body");
-                    } catch (final IOException e) {
-                        LOG.warn("unable to send error response: %s", e.getMessage());
-                    }
-                    return noobj();
-                }
-                Router.writeToSpace(fileURI, bodyObj);
-                try {
-                    this.exchange.sendResponseHeaders(201, -1);
-                } catch (final IOException e) {
-                    LOG.warn("unable to send response: %s", e.getMessage());
-                }
-                return noobj();
-            } catch (final Exception e) {
-                LOG.error("error handling PUT: %s", e.getMessage());
-                try {
-                    sendError(500, "Internal Server Error");
-                } catch (final IOException ignored) {
-                }
-                return noobj();
-            }
-        }));
+        this.jvm().put(uri(ON_POST), this.jvm().get(uri(ON_PUT)));
+
+        this.jvm().put(uri(ON_PATCH), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)),
+                (lhs, inst) -> updateValue(lhs)));
+
+        this.jvm().put(uri(ON_DELETE), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)),
+                (lhs, inst) -> deleteValue()));
 
         // ── ON_ERROR: send the error ──
         this.jvm().put(uri(ON_ERROR), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
@@ -277,9 +246,181 @@ public class web_httpHandler extends HttpRec {
             }
         }));
 
-        this.jvm().put(uri(ON_POST), this.jvm().get(uri(ON_PUT)));
     }
 
+
+    // ──────────────────────────────────────────────
+    // Shared write-verb plumbing
+    // ──────────────────────────────────────────────
+
+    /** PUT / POST — replace the address with the request body. 201. */
+    private Obj writeValue(final Obj lhs) {
+        Obj value = lhs.isRec() ? lhs.asRec().at(uri(BODY)) : noobj();
+        if (readOnlyGate()) {
+            return noobj();
+        }
+        final HttpExchange exchange = this.exchange;
+        if (exchange == null) {
+            // exchange is null during type-checking of the isaPredicate
+            return noobj();
+        }
+        if (value.isNoObj()) {
+            sendErrorQuiet(400, "No body");
+            return noobj();
+        }
+        // A body the IN serializer couldn't parse arrives as a raw string —
+        // give it the mtron data grammar a parse (mtron's `->` write idiom
+        // sends mtron-rendered bodies); a body the mtron parser rejects is
+        // genuine text and stays a string.
+        if (value.isStr()) {
+            try {
+                value = ObjmtronSerializer.parse(value.strValue());
+            } catch (final Exception ignored) {
+                // keep the raw string — text bodies are legitimate
+            }
+        }
+        try {
+            Router.writeToSpace(resolveFileURI(exchange), value);
+            sendStatus(exchange, 201);
+        } catch (final Exception e) {
+            LOG.error("error handling write: %s", e.getMessage());
+            sendErrorQuiet(500, "Internal Server Error");
+        }
+        return noobj();
+    }
+
+    /**
+     * PATCH — the update verb.  The delta body is a mtron *expression* (the
+     * {@code >>=} algebra: overlay, {@code +N} numeric add, {@code +[v]} set
+     * promotion, {@code none} delete), not IN-serializer data — the data
+     * parsers have no reading for the operators and silently mangle them
+     * ({@code +[d=>100]} becomes the bare uri {@code <+>}).  Read it raw here
+     * — the one-shot request stream is consumed exactly once — and hand it to
+     * the ON_PATCH handler, which parses it with the full mtron parser.
+     */
+    @Override
+    protected void doPatch(final HttpExchange exchange) throws IOException {
+        final String bodyStr = readBody(exchange);
+        if (bodyStr.isEmpty()) {
+            sendError(400, "No body");
+            return;
+        }
+        final Obj handler = this.at(uri(ON_PATCH));
+        if (handler.isNoObj()) {
+            sendError(405, "PATCH not supported");
+            return;
+        }
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        map.put(uri(METHOD), str(exchange.getRequestMethod()));
+        map.put(uri(URI), uri(exchange.getRequestURI().toString()));
+        map.put(uri(BODY), str(bodyStr));
+        handler.apply(rec(map));
+    }
+
+    /**
+     * PUT / POST / PATCH: the mtron {@code >>=} update algebra applied to the
+     * existing object at the address (body = delta).  A plain value delta
+     * replaces the address wholesale; a structured delta merges recursively.
+     *  200.
+     */
+    private Obj updateValue(final Obj lhs) {
+        Obj delta = lhs.isRec() ? lhs.asRec().at(uri(BODY)) : noobj();
+        if (readOnlyGate()) {
+            return noobj();
+        }
+        final HttpExchange exchange = this.exchange;
+        if (exchange == null) {
+            // exchange is null during type-checking of the isaPredicate
+            return noobj();
+        }
+        if (delta.isNoObj()) {
+            sendErrorQuiet(400, "No body");
+            return noobj();
+        }
+        // A delta that arrived as a raw string (the IN serializer had no
+        // reading for it) is given the mtron update algebra a parse.
+        if (delta.isStr()) {
+            try {
+                delta = ObjmtronSerializer.parse(delta.strValue());
+            } catch (final Exception e) {
+                sendErrorQuiet(400, "Unparseable delta: " + e.getMessage());
+                return noobj();
+            }
+        }
+        final fURI fileURI = resolveFileURI(exchange);
+        try {
+            final Obj base = Router.readFromSpace(fileURI);
+            if (base.isNoObj()) {
+                sendErrorQuiet(404, "Not Found: " + fileURI);
+                return noobj();
+            }
+            final Obj updated = update_(delta).apply(base); // a >>= delta
+            Router.writeToSpace(fileURI, updated);
+            sendStatus(exchange, 200);
+        } catch (final Exception e) {
+            LOG.error("error handling update: %s", e.getMessage());
+            sendErrorQuiet(500, "Internal Server Error");
+        }
+        return noobj();
+    }
+
+    /** DELETE — unlink the address (metatron's clear idiom: write noobj).  204. */
+    private Obj deleteValue() {
+        if (readOnlyGate()) {
+            return noobj();
+        }
+        final HttpExchange exchange = this.exchange;
+        if (exchange == null) {
+            // exchange is null during type-checking of the isaPredicate
+            return noobj();
+        }
+        try {
+            Router.writeToSpace(resolveFileURI(exchange), noobj());
+            sendStatus(exchange, 204);
+        } catch (final Exception e) {
+            LOG.error("error handling delete: %s", e.getMessage());
+            sendErrorQuiet(500, "Internal Server Error");
+        }
+        return noobj();
+    }
+
+    /** The read_only gate — send 403 when set.  Returns true when handled. */
+    private boolean readOnlyGate() {
+        if (!Boolean.TRUE.equals(this.at(uri(READ_ONLY)).orElse(bool(false)).jvm())) {
+            return false;
+        }
+        sendErrorQuiet(403, "Read-only");
+        return true;
+    }
+
+    /** Mount-relative request path → space URI under web_root. */
+    private fURI resolveFileURI(final HttpExchange exchange) {
+        final fURI webRoot = this.at(uri(WEB_ROOT)).uriValue();
+        final String mountPath = exchange.getHttpContext().getPath();
+        final String fullPath = exchange.getRequestURI().getPath();
+        final String relativePath = fullPath.startsWith(mountPath)
+                ? fullPath.substring(mountPath.length())
+                : fullPath;
+        return relativePath.isEmpty()
+                ? webRoot
+                : webRoot.extend(f(relativePath));
+    }
+
+    private void sendStatus(final HttpExchange exchange, final int status) {
+        try {
+            exchange.sendResponseHeaders(status, -1);
+        } catch (final IOException e) {
+            LOG.warn("unable to send response: %s", e.getMessage());
+        }
+    }
+
+    private void sendErrorQuiet(final int status, final String message) {
+        try {
+            sendError(status, message);
+        } catch (final IOException e) {
+            LOG.warn("unable to send error response: %s", e.getMessage());
+        }
+    }
 
     /**
      * Checks whether an object is noobj or a directory — used by DEFAULT_PAGE fallback.

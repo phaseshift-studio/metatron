@@ -1345,6 +1345,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             final Obj detached = lhs.clone().selfVID(null);
                             final Obj result = Poly.Helper.updateRecursion(detached, inst.arg(0), IMMUTABLE);
                             return null != lhs.vid() ? Router.writeToSpace(lhs.vid(), result) : result;
+                            // TODO return result.vid(lhs.vid()) 
                         }
                     }),
                     instC(EXPLAIN_INST_TID.dom(A.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> {

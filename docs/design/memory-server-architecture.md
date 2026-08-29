@@ -285,12 +285,25 @@ closed tool family of §3.1 on the existing handlers
   qprocs (`?hasq`, …) as the retrieval surface. Measured live, the **verb**
   matrix:
 
-  | Verb | Status (2026-08-29, post-fix) |
+  | Verb | Semantics (implemented, 2026-08-29) |
   |------|--------|
-  | `GET /path` (+`?+` branches, `?out=` rendering, qproc filters) | ✅ the read door — the default |
-  | `PUT /path` | ✅ **the write verb, working** — body is read exactly once by `HttpRec.buildRequest()` (IN serializer, default `application/json`; set the handler's `in` for mtron-first) and written via `Router.writeToSpace`; `403 "Read-only"` gates it per-route. **Bug fixed:** `ON_PUT` used to re-read the exchange stream after `buildRequest()` had consumed it → `IOException("Stream is closed")` → 500 on every write; `ON_PUT` now takes `request.body` from the inst lhs (pinned by `testPutWritesAndReadsBack`) |
-  | `POST /path` | ✅ via `ON_POST → ON_PUT` alias, so mtron's `->` over http works; the "action" territory (append, auto-naming) is otherwise carried by qprocs in the URI (`?incrq`, `?limit`, …) |
-  | `DELETE /path` | 🚧 no `ON_DELETE` (405) |
+  | `GET /path` (+`?+` branches, `?out=` rendering, qproc filters) | ✅ **read** — the default door |
+  | `PUT /path` | ✅ **replace** — body (IN serializer, default `application/json`, and the raw string handed the mtron data grammar as a fallback) written via `Router.writeToSpace`. `403 read-only` gates it per-route |
+  | `POST /path` | ✅ **replace** — alias of PUT, so mtron's `->` write idiom (which sends POST) works unchanged |
+  | `PATCH /path` | ✅ **update** — the `>>=` update algebra: body is a mtron *expression* (overlay `{d=>5}`, numeric add `{d=>+10}`, set promotion `+[d=>100]`, key delete `{b=>none}`, or a plain value for wholesale replace), read **raw** (a data serializer mangles the operators: `+[d=>100]` → the bare uri `<+>`) and applied to the existing object. `404` when the address is absent |
+  | `DELETE /path` | ✅ **unlink** — the metatron clear idiom: `writeToSpace(uri, noobj())`. `204` |
+
+  Two bugs closed here: (1) `ON_PUT` re-read the exchange stream after
+  `HttpRec.buildRequest()` had already consumed it → `IOException("Stream is
+  closed")` → 500 on every write; the write verbs now take the body from the
+  request rec. (2) the update delta, if deserialized as data, silently
+  degraded (`+[d=>100]` → `<+>`); PATCH now reads the body raw and runs the
+  real `update_` (`>>=`) operator.  Both pinned by `web_httpHandlerTest`.
+
+  A note on fidelity: `ObjJSONSerializer.simple()` is **not** 1-to-1 with
+  mtron — the more faithful, reversible translation is `application/x-mtron`.
+  Complex types (sets, uris, insts, code) round-trip through the x-mtron
+  rendering but not through JSON; read those back with `?out=application/x-mtron`.
 
   Remaining M1 policy work: envelope stamping of §3.4 at the write door
   (`session`/`origin`/`tier` from the client identity, not the body) and auth.
