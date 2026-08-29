@@ -358,7 +358,7 @@
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- type=&gt;[model::T,tool::T,session{?}::T,iteration::T,claim::T,loose_end::T,system::T,chat_result::T,user::T,tool_request::T,...(21 more)],
+ type=&gt;[model::T,tool::T,session{?}::T,iteration::T,claim::T,loose_end::T,system::T,chat_result::T,user::T,tool_request::T,...(22 more)],
  inst=&gt;[
   as?model&lt;=rec(model::T),
   as?tool&lt;=docs(tool::T),
@@ -369,7 +369,7 @@
   embed?/m/vec/vec&lt;=model(#::T),
   interrupt?noobj{0}&lt;=agent(),
   chat?chat_result&lt;=agent(str::T,rec::T),
-  summarize?lst&lt;=session{?}(session=&gt;session{?}::T,model=&gt;choose([isa(model::T)=&gt;id(),isa(session{?}::T)=&gt;*rshift(agent).mult(model)]).rshift())]]@/m/llm</code></pre>
+  summary?rec&lt;=session{?}({?}session=&gt;session{?}::T,{?}model=&gt;choose([isa(model::T)=&gt;id(),isa(session{?}::T)=&gt;*rshift(agent).mult(model)]).rshift(),{?}scope=&gt;union([?time::T,?datetime::T]),{?}kind=&gt;lst::T,{?}concept=&gt;lst::T)]]@/m/llm</code></pre>
                     </div>
                 </div>
             </div>
@@ -377,7 +377,7 @@
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">31</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">5</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">32</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">5</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -450,6 +450,9 @@
 </a><a href="#__m__llm__feature__skill_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">skill_feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__llm__feature__summarize_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">summarize_feature</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__llm__feature__system_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">system_feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -489,14 +492,14 @@
 </a><a href="#__m__llm__inst__interrupt?rng=noobj{0}&dom=__m__llm__agent" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">interrupt</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__llm__inst__summarize?rng=__m__lst&dom=__m__llm__session{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">summarize</span>
+</a><a href="#__m__llm__inst__summary?rng=__m__rec&dom=__m__llm__session{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">summary</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a></div>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">31</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">32</span></h3>
     <div class="card mb-3" id="__m__llm__agent">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -512,8 +515,8 @@
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
-  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
+  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__message__ai">
@@ -938,6 +941,7 @@
   protocol=&gt;uri::T,
   llm=&gt;uri::T,
   {?}api_key=&gt;str::T,
+  {?}timeout=&gt;time::T,
   {?}size=&gt;data::T,
   {?}quant=&gt;int::T,
   {?}cost=&gt;{?}[
@@ -948,13 +952,13 @@
     <p class="mb-0 text-light">populate a model reference rec using data from the ai provider&#39;s http-endpoint</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
   <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
-  <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
-  <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
-  <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
-  <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
   <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
+  <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
+  <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
+  <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1064,6 +1068,27 @@
         <small class="text-muted code">/m/llm/feature/skill_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?skill_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/skill_feature</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
+ {?}skill=&gt;[skill::T],
+ {?}on_agent_ctor=&gt;#::T,
+ {?}on_before_chat=&gt;#::T,
+ {?}on_partial_response=&gt;#::T,
+ {?}on_partial_thinking=&gt;#::T,
+ {?}on_partial_tool_call=&gt;#::T,
+ {?}before_tool_execution=&gt;#::T,
+ {?}on_tool_executed=&gt;#::T,
+ {?}on_complete_response=&gt;#::T,
+ ...(1 more)]</code></div></div>
+    
+</div><div class="card mb-3" id="__m__llm__feature__summarize_feature">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">summarize_feature::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__llm__feature" class="instset-doc-small-code text-info code">/m/llm/feature::T</a></span>
+        </span>
+        <small class="text-muted code">/m/llm/feature/summarize_feature</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[root=&gt;uri::T]][ctor?summarize_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/summarize_feature</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[ {?}root=&gt;uri::T,
  {?}skill=&gt;[skill::T],
  {?}on_agent_ctor=&gt;#::T,
@@ -1308,20 +1333,20 @@
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__llm__agent" class="text-info">agent</a> <span class="text-light">=&gt;</span> <a href="#noobj{0}" class="text-success">noobj{0}</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__llm__inst__summarize?rng=__m__lst&dom=__m__llm__session{?}">
+</div><div class="card mb-3" id="__m__llm__inst__summary?rng=__m__rec&dom=__m__llm__session{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
-            <span class="code text-primary fw-bold">summarize</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__llm__session" data-bs-toggle="tooltip" title="domain" class="code text-info">session</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__lst" data-bs-toggle="tooltip" title="range" class="code text-success">lst</a></span></span>
+            <span class="code text-primary fw-bold">summary</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__llm__session" data-bs-toggle="tooltip" title="domain" class="code text-info">session</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
         </span>
-        <small class="text-muted code">/m/llm/inst/summarize?rng=/m/lst&amp;dom=/m/llm/session{?}</small>
+        <small class="text-muted code">/m/llm/inst/summary?rng=/m/rec&amp;dom=/m/llm/session{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__llm__inst__summarize?rng=__m__lst&dom=__m__llm__session{?}-doc-0-tab').click();document.getElementById('__m__llm__inst__summarize?rng=__m__lst&dom=__m__llm__session{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">summarize?rng=lst&dom=session{?}(session=>session{?}::T,model=>choose([isa(model::T)=>id(),isa(session{?}::T)=>*rshift(agent).mult(model)]).rshift()){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__llm__inst__summary?rng=__m__rec&dom=__m__llm__session{?}-doc-0-tab').click();document.getElementById('__m__llm__inst__summary?rng=__m__rec&dom=__m__llm__session{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">summary?rng=rec&dom=session{?}({?}session=>session{?}::T,{?}model=>choose([isa(model::T)=>id(),isa(session{?}::T)=>*rshift(agent).mult(model)]).rshift(),{?}scope=>union([?time::T,?datetime::T]),{?}kind=>lst::T,{?}concept=>lst::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">distill a session&#39;s message ledger into claim::T and loose_end::T recs via a mini-task; the model emits &lt;&lt;json:claim&gt;&gt; and &lt;&lt;json:loose_end&gt;&gt; blocks that are parsed and anchored at &lt;agent&gt;/claim/ and &lt;agent&gt;/loose_end/</p>
+    <p class="mb-0 text-light">distill a session&#39;s message ledger into claim::T and loose_end::T recs via a mini-task — the same call as the &lt;&lt;mtron:summarize&gt;&gt; block (they share the argument rec::T vocabulary: session, model, scope, kind, concept, to)</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a session to distill" class="text-info">a session to distill</a> <span class="text-light">=&gt;</span> <a href="#a lst of claim and loose_end vids distilled from the session" class="text-success">a lst of claim and loose_end vids distilled from the session</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a session to distill" class="text-info">a session to distill</a> <span class="text-light">=&gt;</span> <a href="#the applied constraints rec — [session, model, scope, kind, concept, to, claim=>[vids], loose_end=>[vids]]" class="text-success">the applied constraints rec — [session, model, scope, kind, concept, to, claim=&gt;[vids], loose_end=&gt;[vids]]</a></pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">@dr/session/1.summarize(_)  [-- fluent --]  |  summarize(@dr/session/1)  [-- function --]</code></pre>

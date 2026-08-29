@@ -464,7 +464,7 @@ public class ConceptFeature extends AbstractFeature {
         // explicit annotations count.  This lets the agent bookmark semantic
         // insights discovered during reasoning without surfacing them in the
         // final response.
-        final Obj blocks = result.at(uri("blocks"));
+        final Obj blocks = result.at(uri(BLOCK));
         final Obj thinking = blocks.isNoObj() ? noobj() : blocks.asRec().at(uri("thinking"));
         if (!thinking.isNoObj() && !thinking.strValue().isBlank()) {
             final Set<String> thoughtConcepts = new TaggingExtractor().extract(agent, thinking.strValue(), false);

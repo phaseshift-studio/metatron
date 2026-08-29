@@ -270,7 +270,7 @@ agent::[
                                                                          protocol     => ollama,
                                                                          host         => <http://ginger.local:11434>,
                                                                          llm          => <qwen3.8:27b>])),
-                        response      => [complete => -<modal::[title => '{{r}}agent response',
+                        response      => [complete => -<modal::[title => '{{r}}agent response{{b}}',
                                                                 body  => "{{y}}${>>chat}",
                                                                 style => style::[border    =>continuous,
                                                                                  background=>"{{[k]}}",

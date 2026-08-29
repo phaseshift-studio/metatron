@@ -96,7 +96,7 @@ public class SummarizeFeature extends AbstractFeature {
 
     @Override
     public void onCompleteResponse(final Agent agent, final ChatResult result) {
-        final Obj blocks = result.at(uri("blocks")).orElse(noobj());
+        final Obj blocks = result.at(uri(BLOCK)).orElse(noobj());
         if (blocks.isNoObj())
             return;
         final Obj signal = blocks.asRec().at(uri("summarize"));

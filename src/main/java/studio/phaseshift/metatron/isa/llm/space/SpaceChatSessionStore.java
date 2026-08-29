@@ -207,7 +207,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 // rode through LangChain4j's ChatMessage.attributes()
                 if (!msgRec.at(uri(WRITTEN_KEY)).isNoObj())
                     continue;
-
+                
                 msgRec.recValue().put(uri(TIME), mathInstSet.nowDatetime());
                 msgRec.recValue().put(uri(SESSION), uri(sesVID));
                 msgRec.recValue().put(uri(DEPTH), jnt(this.depth));

@@ -663,9 +663,9 @@ public class llmInstSet extends AbstractInstSet {
                                                         isa_(LLM_MODEL_TYPE).tryToInst(), id_().tryToInst(),
                                                         isa_(LLM_SESSION_TYPE).tryToInst(), from_(rshift_(uri(AGENT)).mult_(uri(MODEL))).tryToInst()))
                                                         .rshift_().tryToInst(),
-                                                uri(SCOPE).maybe().asUri(), T(ALL_STAR),
-                                                uri(KIND).maybe().asUri(), T(ALL_STAR),
-                                                uri(CONCEPT).maybe().asUri(), T(ALL_STAR)),
+                                                uri(SCOPE).maybe().asUri(), union_(lst(isa_(TIME_TYPE).tryToInst(), isa_(DATETIME_TYPE).tryToInst())).tryToInst(),
+                                                uri(KIND).maybe().asUri(), LST_TYPE,
+                                                uri(CONCEPT).maybe().asUri(), LST_TYPE),
                                         (lhs, inst) -> {
                                             // The session may arrive as the lhs (fluent: @dr/session/1.summarize(_))
                                             // or as arg 0 (function form: summarize(@dr/session/1)).
@@ -722,18 +722,19 @@ public class llmInstSet extends AbstractInstSet {
         final fURI outputBase = output.isNoObj() ? agentHome : output.uriValue();
         // 1. collect this session's messages from the ledger as rels
         //    (vid => rec) — the rel key IS the message vid (branch read)
-        final List<Rel> messages = Router.readFromSpace(agentHome.extend(MESSAGE).extend("+/"))
+        final fURI messagesLocation = agentHome.extend(MESSAGE).extend("+/");
+        final List<Rel> messages = Router.readFromSpace(messagesLocation)
                 .stream()
                 .map(Obj::asRel)
                 .filter(pair -> {
-                    final Obj sess = pair.second().asRec().at(uri(SESSION)).orElse(noobj());
-                    return sess.isUri() && sess.uriValue().equals(sessionVID);
+                    final Obj sessionUri = pair.second().asRec().at(SESSION);
+                    return sessionUri.isUri() && sessionUri.uriValue().equals(sessionVID);
                 })
                 .filter(pair -> withinScope(pair.second().asRec(), scope))
-                .sorted(Comparator.comparing(pair -> pair.first().uriValue().name()))
+                .sorted(Comparator.comparing(pair -> Integer.parseInt(pair.first().uriValue().name())))
                 .toList();
         if (messages.isEmpty())
-            return fail("no messages found for session %s", sessionVID);
+            return fail("no messages found for session %s at %s", sessionVID, messagesLocation);
         // 2. build the distill digest — vid ==> text so the model can cite real vids
         final String digest = messages.stream()
                 .filter(pair -> !Str.Helper.cleanString(pair.second().asRec().at(TEXT)).isBlank())
@@ -746,7 +747,7 @@ public class llmInstSet extends AbstractInstSet {
         // 5. parse the <<json:claim>> and <<json:loose_end>> blocks into vids
         final List<Obj> claimVids = new ArrayList<>();
         final List<Obj> looseEndVids = new ArrayList<>();
-        final Obj blocks = result.at(uri("blocks")).orElse(noobj());
+        final Obj blocks = result.at(uri(BLOCK)).orElse(noobj());
         if (!blocks.isNoObj()) {
             final Rec blocksRec = blocks.asRec();
             for (final Rel entry : blocksRec.elements().toList()) {
@@ -824,10 +825,10 @@ public class llmInstSet extends AbstractInstSet {
         if (time.isNoObj() || !time.isUri())
             return true;
         final long cutoff;
-        if (scope.isUri()) {
+        if (scope.test(DATETIME_TYPE)) {
             cutoff = datetimeToMillis(scope.asUri());
-        } else if (scope.tid().basePath().toString().startsWith(MATH_TIME_TID.toString())) {
-            cutoff = System.currentTimeMillis() - (long) timeToMillis(scope);
+        } else if (scope.test(TIME_TYPE)) {
+            cutoff = System.currentTimeMillis() - scope.tid(MATH_MILLIS_TID).realValue().longValue();
         } else {
             return true; // unrecognized scope — don't filter
         }
