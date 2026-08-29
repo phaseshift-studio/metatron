@@ -1,0 +1,807 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>math-instset · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../../../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../../../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../../../lib/animate/animate.min.css" rel="stylesheet">
+    <link href="../../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../../css/termynal.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../../../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <script src="../../../lib/wow/wow.min.js" type="text/javascript"></script>
+    <script src="../../../lib/easing/easing.min.js" type="text/javascript"></script>
+    <script src="../../../lib/waypoints/waypoints.min.js" type="text/javascript"></script>
+    <script src="../../../lib/termynal/termynal.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../../../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .terminal-box.click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .terminal-box.click-to-copy:active {
+            background-color: var(--mred);
+        }
+
+        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
+        .terminal-box.click-to-copy .hljs-copy-button {
+            display: none;
+        }
+    </style>
+    <script src="../../../js/metatron.js" type="text/javascript"></script>
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 text-primary logo-text navbar-brand ms-4 ms-lg-0">
+        <a href="../../../index.html" class="text-primary" title="metatron"><i class="bi bi-soundwave me-3 icon-color"></i></a>
+        <a href="http://phaseshift.studio" class="text-primary">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="terminal-box click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box click-to-copy" title="click to copy">
+                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="start.html"
+                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/start.html');return false;">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/index.html';">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m.html';"><img
+                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_dcmnt.html';"><img
+                            src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_grph.html';"><img
+                            src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_iot.html';"><img
+                            src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_llm.html';"><img
+                            src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                            alt="llm"/>/m/llm</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_mach.html';"><img
+                            src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                            alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_math.html';"><img
+                            src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_sys.html';"><img
+                            src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_tble.html';"><img
+                            src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                            alt="tble"/>/m/tble</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_vec.html';"><img
+                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/vec</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_web.html';"><img
+                            src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../../../tractatus.html"
+                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/tractatus.html');return false;">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../skills/agent/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/drstynx/assets/drstynx.boot.mtron';">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/drstynx/assets/drstynx.sqlite';">drstynx.sqlite</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/mcp-mtron.html';">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/rewrite-system-java.html';">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/tble-space-java.html';">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/type-system-java.html';">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/ui-instset-java.html';">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/answer-questions.html';">answer-questions</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/connecting-datasources.html';">connecting-datasources</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/dckrspace.html';">dckrspace</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/dsh-mtron.html';">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/http-page-fetching.html';">http-page-fetching</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/math_instset.html';">math_instset</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mcp-server-architecture.html';">mcp-server-architecture</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mcp-server-notifications.html';">mcp-server-notifications</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mtron-fsspace.html';">mtron-fsspace</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mtron-language-reference.html';">mtron-language-reference</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/type-system-mtron.html';">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/unsloth-training-mtron.html';">unsloth-training-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/scripts/unsloth_studio.py';">unsloth_studio.py</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/README.md';">README.md</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/dsh_memory_loader.py';">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/mtron_training_dataset.jsonl';">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/stream-ring-theory.pdf';"><i
+                            class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/parametric-identities-in-ring-theory.html';"><i
+                            class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/mm-adt.pdf';"><i
+                            class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://opencollective.com/metatron';">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://github.com/phaseshift-studio/metatron';">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://huggingface.co/phaseshift-studio';">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://groups.google.com/u/1/g/metatron-phaseshift';">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../index.html';">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../index.html';">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="./console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target (no rollover copy button). The :active CSS turns the block
+    // red while pressed; this copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">
+    <div class="skill-doc mb-4">
+        <h1 class="skill-title mb-1">math-instset: The /m/math instruction set — numeric constants, unit-of-measurement types (millis, kB, datetime), and the type registry.</h1>
+        <a href="math_instset.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>math_instset.md</a>
+    </div>
+    <div class="markdown-body">
+<h2>Math Instruction Set (<code>/m/math</code>)</h2>
+<p>The math instset provides numeric constants, unit-of-measurement types, and datetime handling. All types are registered under <code>/m/math/...</code> and available via the standard type resolution system.</p>
+<h3>Type Registry</h3>
+<table>
+<thead>
+<tr><th>Type</th><th>Base</th><th>VID</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>millis::T</code></td><td><code>real::T</code></td><td><code>/m/math/time/millis</code></td><td>Millisecond unit</td></tr>
+<tr><td><code>second::T</code></td><td><code>real::T</code></td><td><code>/m/math/time/second</code></td><td>Second unit (1000 millis)</td></tr>
+<tr><td><code>minute::T</code></td><td><code>real::T</code></td><td><code>/m/math/time/minute</code></td><td>Minute unit (60 seconds)</td></tr>
+<tr><td><code>hour::T</code></td><td><code>real::T</code></td><td><code>/m/math/time/hour</code></td><td>Hour unit (60 minutes)</td></tr>
+<tr><td><code>bB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/bB</code></td><td>Byte unit</td></tr>
+<tr><td><code>kB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/kB</code></td><td>Kilobyte (1024 bytes)</td></tr>
+<tr><td><code>mB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/mB</code></td><td>Megabyte (1024 kB)</td></tr>
+<tr><td><code>gB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/gB</code></td><td>Gigabyte (1024 mB)</td></tr>
+<tr><td><code>tB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/tB</code></td><td>Terabyte (1024 gB)</td></tr>
+<tr><td><code>pB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/pB</code></td><td>Petabyte (1024 tB)</td></tr>
+<tr><td><code>datetime::T</code></td><td><code>uri::T</code></td><td><code>/m/math/datetime</code></td><td>Calendar datetime URI</td></tr>
+</tbody>
+</table>
+<h3>Unit Conversions</h3>
+<p>All unit types (time, data) support bidirectional conversion via <code>.as()</code>:</p>
+<pre><code class="language-mtron">mtron&gt; millis::60000.0.as(minute::T)
+==&gt;minute::1.0000
+mtron&gt; hour::1.5.as(minute::T)
+==&gt;minute::90.0000
+mtron&gt; kB::1024.0.as(mB::T)
+==&gt;mB::1.0000
+mtron&gt; gB::2.0.as(mB::T)
+==&gt;mB::2048.0000
+</code></pre>
+<p>Equality comparisons auto-convert:</p>
+<pre><code class="language-mtron">mtron&gt; millis::1000.0.eq(second::1.0)
+==&gt;true
+mtron&gt; second::60.0.gt(millis::500.0)
+==&gt;true
+</code></pre>
+<h3>DateTime (<code>/m/math/datetime</code>)</h3>
+<h4>Structure</h4>
+<p><code>datetime::T</code> is a <code>uri::T</code> refinement with this layout:</p>
+<pre><code>//yyyy.MM:dd/HH/mm/ss/SSS?tz=±HHmm
+</code></pre>
+<table>
+<thead>
+<tr><th>Component</th><th>URI field</th><th>Range</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>year</td><td>host (pre-<code>.</code>)</td><td>0000+</td><td>Calendar year</td></tr>
+<tr><td>month</td><td>host (post-<code>.</code>)</td><td>01–12</td><td>Month</td></tr>
+<tr><td>day</td><td>port</td><td>01–31</td><td>Day of month</td></tr>
+<tr><td>hour</td><td>path[-4]</td><td>00–23</td><td>Hour</td></tr>
+<tr><td>minute</td><td>path[-3]</td><td>00–59</td><td>Minute</td></tr>
+<tr><td>second</td><td>path[-2]</td><td>00–59</td><td>Second</td></tr>
+<tr><td>millis</td><td>path[-1]</td><td>000–999</td><td>Millisecond</td></tr>
+<tr><td>tz</td><td>q <code>tz</code></td><td>±HHMM</td><td>Timezone offset</td></tr>
+</tbody>
+</table>
+<h4>Construction</h4>
+<pre><code class="language-mtron">mtron&gt; [-- Current system time --]
+mtron&gt; datetime_now()
+==&gt;datetime::&lt;//2026.08:29/16/22/28/572?tz=-0600&gt;
+mtron&gt; [-- From record (goes through .as(uri::T) first) --]
+mtron&gt; [host=&gt;&lt;2024.12&gt;,port=&gt;25,path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
+        c=&gt;[min=&gt;1,max=&gt;1],q=&gt;[tz=&gt;'-0500']].as(uri::T).as(datetime::T)
+==&gt;datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
+mtron&gt; [-- From string-encoded URI --]
+mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(datetime::T)
+==&gt;datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
+</code></pre>
+<h4>Typed vs Bare URIs</h4>
+<p>Bare URIs like <code>&lt;//2024.12:25/...&gt;</code> work with standard URI operations (<code>&gt;&gt;host</code>, <code>&gt;&gt;port</code>, <code>&gt;&gt;path</code>). The datetime vocabulary (<code>year</code>, <code>month</code>, <code>day</code>, etc.) only works on explicitly typed datetimes:</p>
+<pre><code class="language-mtron">mtron&gt; [-- Standard URI projections work on bare URIs --]
+mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;host
+==&gt;fail::[apply failure:
+   	[lhs]    │ &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
+   	 \_type  │ /m/uri
+   	  \_pred │ []
+   	[inst]   │ rshift?rng=#{*}&amp;dom=uri(host){&lt;j&gt;}@&lt;1&gt;
+   	 \_dom   │ uri::T
+   	 \_args  │ [host][MTronException&lt;127&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]@/sys/fail/216
+mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;port
+==&gt;fail::[apply failure:
+   	[lhs]    │ &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
+   	 \_type  │ /m/uri
+   	  \_pred │ []
+   	[inst]   │ rshift?rng=#{*}&amp;dom=uri(port){&lt;j&gt;}@&lt;1&gt;
+   	 \_dom   │ uri::T
+   	 \_args  │ [port][MTronException&lt;127&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/226
+mtron&gt; [-- Vocabulary projections require datetime:: prefix --]
+mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year
+==&gt;2024
+mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;month
+==&gt;12
+mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;day
+==&gt;25
+mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;tz
+==&gt;'-0500'
+</code></pre>
+<h4>Vocabulary Keys</h4>
+<p>Named <code>&gt;&gt;</code> projections for typed datetimes:</p>
+<table>
+<thead>
+<tr><th>Key</th><th>Returns</th><th>Source</th></tr>
+</thead>
+<tbody>
+<tr><td><code>year</code></td><td><code>int</code></td><td>host.split(&quot;.&quot;)[0]</td></tr>
+<tr><td><code>month</code></td><td><code>int</code></td><td>host.split(&quot;.&quot;)[1]</td></tr>
+<tr><td><code>day</code></td><td><code>int</code></td><td>port</td></tr>
+<tr><td><code>hour</code></td><td><code>int</code></td><td>path[-4]</td></tr>
+<tr><td><code>minute</code></td><td><code>int</code></td><td>path[-3]</td></tr>
+<tr><td><code>second</code></td><td><code>int</code></td><td>path[-2]</td></tr>
+<tr><td><code>millis</code></td><td><code>int</code></td><td>path[-1]</td></tr>
+<tr><td><code>tz</code></td><td><code>str</code></td><td>q(&quot;tz&quot;)</td></tr>
+</tbody>
+</table>
+<p>Non-vocabulary keys fall through to standard URI projections.</p>
+<pre><code class="language-mtron">mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;{year,month,day}
+==&gt;2024
+==&gt;12
+==&gt;25
+mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;host
+</code></pre>
+<h4>Predicate Validation</h4>
+<p>The Java predicate validates:</p>
+<ul>
+<li>No scheme (or empty)</li>
+<li>Host matches <code>\d{4}\.\d{2}</code> with month 01–12</li>
+<li>Port in 1–31</li>
+<li>Path has ≥4 integer segments with valid hour (0–23), minute (0–59), second (0–59)</li>
+<li>Query contains <code>tz</code> key</li>
+</ul>
+<pre><code class="language-mtron">mtron&gt; &lt;//2024.13:25/09/00/00/000?tz=-0500&gt;.matches(datetime::T) [-- month 13 --]
+==&gt;false
+mtron&gt; &lt;//2024.12:25/09/60/00/000?tz=-0500&gt;.matches(datetime::T) [-- second 60 --]
+==&gt;false
+mtron&gt; &lt;//2024.12:25/09/00/00&gt;.matches(datetime::T) [-- missing tz --]
+==&gt;false
+</code></pre>
+<h4>Mutation &amp; Filtering</h4>
+<p>All standard URI operations apply: <code>==</code> (select), <code>=?=</code> (where), plus <code>&gt;&gt;=</code> (rec update) after <code>.as(rec::T)</code>.</p>
+<pre><code class="language-mtron">mtron&gt; [-- Select mutation: change day --]
+mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;==[port=&gt;31]&gt;&gt;port
+==&gt;fail::[apply failure:
+   	[lhs]    │ &lt;//2024.12:31/09/00/00/000?tz=-0500&gt;
+   	 \_type  │ /m/uri
+   	  \_pred │ []
+   	[inst]   │ rshift?rng=#{*}&amp;dom=uri(port){&lt;j&gt;}@&lt;2&gt;
+   	 \_dom   │ uri::T
+   	 \_args  │ [port][MTronException&lt;127&gt;:no active space supports pattern &lt;//2024.12:31/09/00/00/000/port?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:31/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/284
+mtron&gt; [-- Where filter: match day 25 --]
+mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;=?=[port=&gt;25]
+==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
+mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;=?=[port=&gt;26]
+mtron&gt; [-- Rec update: change timezone --]
+mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)&gt;&gt;=[q=&gt;[tz=&gt;'+0000']]&gt;&gt;q&gt;&gt;tz
+==&gt;'+0000'
+</code></pre>
+<h3>Instructions</h3>
+<table>
+<thead>
+<tr><th>Instruction</th><th>Signature</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>datetime_now()</code></td><td><code># → datetime::T</code></td><td>Current system datetime</td></tr>
+<tr><td><code>normalize</code> (time)</td><td><code>time::T → time::T</code></td><td>Auto-scale time unit</td></tr>
+<tr><td><code>normalize</code> (data)</td><td><code>data::T → data::T</code></td><td>Auto-scale data unit</td></tr>
+<tr><td><code>cos</code>, <code>sin</code>, <code>tan</code></td><td><code>real → real</code></td><td>Trig functions</td></tr>
+<tr><td><code>sqrt</code>, <code>pow</code>, <code>log</code></td><td><code>real → real</code></td><td>Math functions</td></tr>
+<tr><td><code>abs</code>, <code>ceil</code>, <code>floor</code></td><td><code>real → real</code></td><td>Rounding functions</td></tr>
+</tbody>
+</table>
+<h3>Constants</h3>
+<table>
+<thead>
+<tr><th>Constant</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td><code>pi</code></td><td>3.141592653589793</td></tr>
+<tr><td><code>e</code></td><td>2.718281828459045</td></tr>
+</tbody>
+</table>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

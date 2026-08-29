@@ -1,0 +1,1328 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>metatron-ui-architecture · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../../../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../../../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../../../lib/animate/animate.min.css" rel="stylesheet">
+    <link href="../../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../../css/termynal.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../../../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <script src="../../../lib/wow/wow.min.js" type="text/javascript"></script>
+    <script src="../../../lib/easing/easing.min.js" type="text/javascript"></script>
+    <script src="../../../lib/waypoints/waypoints.min.js" type="text/javascript"></script>
+    <script src="../../../lib/termynal/termynal.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../../../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .terminal-box.click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .terminal-box.click-to-copy:active {
+            background-color: var(--mred);
+        }
+
+        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
+        .terminal-box.click-to-copy .hljs-copy-button {
+            display: none;
+        }
+    </style>
+    <script src="../../../js/metatron.js" type="text/javascript"></script>
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 text-primary logo-text navbar-brand ms-4 ms-lg-0">
+        <a href="../../../index.html" class="text-primary" title="metatron"><i class="bi bi-soundwave me-3 icon-color"></i></a>
+        <a href="http://phaseshift.studio" class="text-primary">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="terminal-box click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box click-to-copy" title="click to copy">
+                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="start.html"
+                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/start.html');return false;">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/index.html';">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m.html';"><img
+                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_dcmnt.html';"><img
+                            src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_grph.html';"><img
+                            src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_iot.html';"><img
+                            src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_llm.html';"><img
+                            src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                            alt="llm"/>/m/llm</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_mach.html';"><img
+                            src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                            alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_math.html';"><img
+                            src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_sys.html';"><img
+                            src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_tble.html';"><img
+                            src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                            alt="tble"/>/m/tble</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_vec.html';"><img
+                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/vec</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_web.html';"><img
+                            src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../../../tractatus.html"
+                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/tractatus.html');return false;">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../skills/agent/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/drstynx/assets/drstynx.boot.mtron';">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/drstynx/assets/drstynx.sqlite';">drstynx.sqlite</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/mcp-mtron.html';">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/rewrite-system-java.html';">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/tble-space-java.html';">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/type-system-java.html';">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/ui-instset-java.html';">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/answer-questions.html';">answer-questions</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/connecting-datasources.html';">connecting-datasources</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/dckrspace.html';">dckrspace</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/dsh-mtron.html';">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/http-page-fetching.html';">http-page-fetching</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/math_instset.html';">math_instset</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mcp-server-architecture.html';">mcp-server-architecture</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mcp-server-notifications.html';">mcp-server-notifications</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mtron-fsspace.html';">mtron-fsspace</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mtron-language-reference.html';">mtron-language-reference</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/type-system-mtron.html';">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/unsloth-training-mtron.html';">unsloth-training-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/scripts/unsloth_studio.py';">unsloth_studio.py</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/README.md';">README.md</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/dsh_memory_loader.py';">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/mtron_training_dataset.jsonl';">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/stream-ring-theory.pdf';"><i
+                            class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/parametric-identities-in-ring-theory.html';"><i
+                            class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/mm-adt.pdf';"><i
+                            class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://opencollective.com/metatron';">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://github.com/phaseshift-studio/metatron';">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://huggingface.co/phaseshift-studio';">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://groups.google.com/u/1/g/metatron-phaseshift';">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../index.html';">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../index.html';">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="./console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target (no rollover copy button). The :active CSS turns the block
+    // red while pressed; this copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">
+    <div class="skill-doc mb-4">
+        <h1 class="skill-title mb-1">metatron-ui-architecture: Architecture of the metatron UI subsystem (Widget, Style, FloatingSurface, JRec state bridge, uiInstSet type registration).  Reference for agents creating or modifying widgets.</h1>
+        <a href="ui-instset-java.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>ui-instset-java.md</a>
+    </div>
+    <div class="markdown-body">
+<h2>Metatron UI Architecture</h2>
+<h3>Package map</h3>
+<pre><code>isa.mach.type.ui
+  Widget.java              ← interface: run(), format(), style(), floatAt()
+  Stylable.java            ← Style inner class: border, anchor, width, top, left, zIndex, floatAt(), hasFloat()
+  Border.java              ← border constants (simple, continuous, rounded, none, hash, etc.)
+isa.mach.type.ui.widget
+  FloatingSurface.java     ← terminal-absolute rendering + Anchor enum + Slot + scroll tracking
+  AccordionWidget.java     ← collapsible text panel (primary example)
+  MenuBarWidget.java       ← top-pinned menu bar; renders at max z-index so it is never overlapped
+  PanelWidget.java         ← simple bordered text panel
+  TableWidget.java         ← tabular data
+  TreeWidget.java          ← tree display
+  SelectorWidget.java      ← interactive cursor-based selection
+  Selector.java             ← selector with attachment
+  AbstractWidget.java       ← base for interactive widgets (raw mode, key handling)
+  GridWidget.java           ← widget grid layout
+  CardWidget.java           ← simple card
+  WidgetCanvas.java         ← pane-bounded absolute/relative render helper
+  Utilities.java            ← runCursorLessWidget, key constants
+isa.mach.type.ui.console
+  Console.java              ← REPL, terminal, pane tree, FloatingSurface integration
+  StatusLine.java           ← terminal status bar
+  Highlighter.java          ← syntax highlighting + visualLength/unformat
+  ColonMenu.java            ← : commands including :float demo
+isa.mach.type.ui.console.menu
+  ColonMenu.java            ← see above
+isa.mach.type.ui.graphitty
+  Graphitty.java            ← {{macro}} DSL → ANSI escapes
+isa.mach.type.ui.tmux
+  Pane.java                 ← tmux-style split pane
+  PaneNode.java             ← pane tree interface
+  SplitContainer.java       ← pane split container
+  SplitLayout.java          ← HORIZONTAL/VERTICAL split direction
+isa.mach.type.ui.tool
+  ExplainTool.java         ← drill-down code inspector (Tab on code in REPL)
+  TraceTool.java           ← fail cause-chain explorer (:trace toggle)
+  ProfileTool.java         ← instruction profiler (ExplainTool delegate)
+  InstSelectorTool.java    ← instruction selector for dot-completion
+  fURISelectorTool.java    ← URI/folder selector for wildcard completion
+  TypeDiffTool.java        ← type diff visualizer
+  TreeSelectTool.java      ← interactive tree browser with nested obj inspection
+  SwipePanelWidgetTool.java ← left-right swipe panel for browsing a stream of objs
+  ModalTool.java          ← modal popup panel (title + body), dismiss on space/enter/ctrl-d
+isa.mach.ui
+  uiInstSet.java            ← mtron type/instruction registration for all UI types
+isa.m.type.reflect
+  JRec.java                 ← Java-backed mtron rec: jvmRead(), jvmWrite(), extractors
+</code></pre>
+<h3>1. Widget interface (<code>Widget.java</code>)</h3>
+<p>Every widget implements <code>Widget&lt;W&gt; extends Stylable&lt;W&gt;, AutoCloseable, Runnable</code>.</p>
+<p>Key methods:</p>
+<pre><code class="language-java">// Present this widget.  Default: checks style.hasFloat() →
+// floatAt() + surface.render()  OR  Graphitty.out(format()).
+// Interactive widgets (Selector, ExplainTool) override with modal loop.
+default void run()
+
+// String representation (for rendering).  Subclasses MUST override.
+String format()
+
+// CSS-style float positioning on any widget.
+default W floatAt(FloatingSurface surface, int row, int col)
+
+default W floatAt(FloatingSurface surface, Anchor anchor, int width)
+
+default W floatAt(FloatingSurface surface, Anchor anchor, int width, int top, int left)
+
+default W unfloat(FloatingSurface surface)
+</code></pre>
+<p><strong>Consolidation note:</strong> <code>display()</code> was removed — <code>run()</code> is the single presentation method.</p>
+<p><strong><code>chromeLines()</code></strong> — defaults to 1 if a border is configured, 0 otherwise. Widgets with column headers or status bars
+override to add their own. Used by <code>FloatingSurface</code> to preserve structural chrome when the <code>height</code> cap clips body
+lines.</p>
+<p><strong><code>rowCount()</code> / <code>rowString(int)</code> / <code>rowStrings()</code></strong> — defaults that split <code>format()</code> output by <code>\n</code>. Selectors iterate
+over these for cursor navigation; a widget that wants column-aware selection should either override them or attach a
+<code>TableWidget</code>.</p>
+<h3>2. JRec state bridge (<code>JRec.java</code>)</h3>
+<p>There are <strong>two</strong> state models in the widget tree, depending on when the widget was written:</p>
+<h4>Model A: JVM-as-source-of-truth (AccordionWidget — preferred for new widgets)</h4>
+<p>State lives in the <strong>persistent store</strong> (memSpace, tbleSpace, etc.). Java fields annotated with <code>@JRecElement</code> are
+<strong>metadata for mtron introspection only</strong> — never read by Java code. Mutators call <code>jvmWrite()</code>.  <code>format()</code> calls
+<code>jvmRead()</code>
+and extracts values fresh on every render.</p>
+<h4>Model B: Java-fields-as-storage (legacy — TableWidget, PanelWidget, TreeWidget)</h4>
+<p>Java fields ARE the data store. A private <code>sync()</code> method pulls initial state from JVM when the widget was constructed
+from mtron, but once Java fields are populated (by Java API or prior sync), JVM is never consulted again. Mutators use
+direct field assignment or builders (<code>addRow()</code>, <code>addMetadata()</code>).</p>
+<p><strong>Shared primitives</strong> (both models):</p>
+<pre><code class="language-java">// Read latest state from persistent store (if vid is set) or local JVM merge.
+jvmRead() → Router.
+
+global().
+
+read(vid) → freshObj.
+
+jvm()
+
+// Write a single field with &gt;&gt;=-style merge: read fresh, merge, write back.
+jvmWrite(key, value)
+
+// Static typed extractors — use with Map&lt;Obj,Obj&gt; from jvmRead():
+jvmStr(jvm, key)     →
+
+String
+jvmBool(jvm, key)    →
+
+boolean(defaults true if absent)
+
+jvmInt(jvm, key, fb) →
+
+int(with fallback)
+
+jvmBody(jvm, key)    → List&lt;String&gt;  (splits \\
+n and \n)
+</code></pre>
+<p><strong>Model A — JVM-as-source-of-truth</strong> (AccordionWidget; preferred for new widgets):</p>
+<pre><code class="language-java">// Constructor — reads style from JVM so run() sees it
+public MyWidget(Map&lt;Obj, Obj&gt; jvm, fURI tid, fURI vid) {
+    super(new HashMap&lt;&gt;(jvm), tid, vid);
+    readStyle(this.jvm());
+}
+
+// format() — one jvmRead(), all state extracted fresh
+@Override
+public String format() {
+    Map&lt;Obj, Obj&gt; jvm = jvmRead();
+    String title = jvmStr(jvm, keyTitle);
+    // ... render ...
+}
+
+// Mutators — write through to persistent store
+public void setTitle(String t) {
+    jvmWrite(kTitle, str(t));
+}
+</code></pre>
+<p><strong>Model B — Java-fields-as-storage</strong> (TableWidget, PanelWidget, TreeWidget; legacy):</p>
+<pre><code class="language-java">// The fool-proof version — tracking flag prevents JVM from overwriting Java data.
+private boolean javaPopulated = false;
+
+// Every Java API mutation sets the flag.
+public TableWidget addRow(final List&lt;Object&gt; entries) {
+    this.javaPopulated = true;
+    this.table.add(entries);
+    return this;
+}
+
+private void sync() {
+    if (this.style == null) return;    // construction guard
+    if (this.javaPopulated) return;    // Java API owns the data — skip
+    Map&lt;Obj, Obj&gt; jvm = jvmRead();     // snapshot JVM
+    // Populate Java fields FROM JVM (mtron-constructed tables only):
+    Obj h = jvm.get(uri(&quot;headers&quot;));
+    if (h != null &amp;&amp; !h.isNoObj())
+        h.stream().filter(Obj::isStr).forEach(o -&gt; this.headers.add(o.strValue()));
+    // ... rows, metadata ...
+}
+</code></pre>
+<p><strong>⚠️ History:</strong> Before 2026-07-26, <code>TableWidget.sync()</code> unconditionally <code>clear()</code>ed Java fields and repopulated from the
+JVM snapshot. This destroyed Java-constructed tables (ProfileTool, ExplainTool, TraceTool) because the JVM serialization
+round-trip through <code>MObjFactory.toObj()</code> changes container types (<code>Objs</code> vs <code>Lst</code>, <code>ListN</code> vs
+<code>ArrayList</code>). The <code>javaPopulated</code> flag (shown above) fixes this. It's safer than per-field <code>isEmpty()</code> guards because a
+Java-constructed table may legitimately have an empty field (e.g. headers-only table with no rows) — without the flag,
+sync would pull stale rows from a prior mtron construction.</p>
+<p><strong>Also: avoid <code>Stream.toList()</code> in sync ().</strong>  <code>Stream.toList()</code> (Java 16+) returns immutable
+<code>ImmutableCollections$ListN</code>. Use <code>Collectors.toCollection(ArrayList::new)</code>
+instead — it keeps rows on the mutable-<code>ArrayList</code> path the rest of the codebase expects.</p>
+<p><strong>When to use the legacy sync pattern vs. direct <code>jvmRead()</code>:</strong></p>
+<ul>
+<li><strong>New widgets</strong> (AccordionWidget): read from <code>jvmRead()</code> directly in <code>format()</code>. Java fields are metadata only.
+Mutators use <code>jvmWrite()</code>.</li>
+<li><strong>Legacy widgets</strong> (TableWidget, PanelWidget, TreeWidget): Java fields are the storage.  <code>sync()</code> populates them from
+JVM. Mutators use direct field assignment or <code>addRow()</code>/<code>addMetadata()</code> builders. The sync guard protects these from
+being overwritten.</li>
+</ul>
+<h3>3. Style system (<code>Stylable.Style</code>)</h3>
+<p>Style is a JVM-backed rec. Fields:</p>
+<table>
+<thead>
+<tr><th>Field</th><th>Type</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>border</code></td><td>uri</td><td>simple, continuous, rounded, none, thick, hash, asterisk, period</td></tr>
+<tr><td><code>background</code></td><td>str</td><td>Graphitty color macro e.g. <code>{{[R]}}</code></td></tr>
+<tr><td><code>foreground</code></td><td>str</td><td>Graphitty color macro e.g. <code>{{g}}</code></td></tr>
+<tr><td><code>divider</code></td><td>str</td><td>Column/row divider char</td></tr>
+<tr><td><code>headerDivider</code></td><td>str</td><td>Header divider char</td></tr>
+<tr><td><code>pointer</code></td><td>str</td><td>Selection pointer e.g. <code>{{r}}&gt;</code></td></tr>
+<tr><td><code>anchor</code></td><td>uri (coproduct)</td><td>top_left, top_middle, top_right, middle, bottom_left, bottom_middle, bottom_right</td></tr>
+<tr><td><code>width</code></td><td>int</td><td>Display width in columns; 0 = natural</td></tr>
+<tr><td><code>top</code></td><td>int</td><td>Row offset from anchor edge (CSS top)</td></tr>
+<tr><td><code>left</code></td><td>int</td><td>Column offset from anchor edge (CSS left)</td></tr>
+<tr><td><code>leftMargin</code></td><td>int</td><td>Left margin</td></tr>
+<tr><td><code>rightMargin</code></td><td>int</td><td>Right margin</td></tr>
+<tr><td><code>topMargin</code></td><td>int</td><td>Top margin</td></tr>
+<tr><td><code>bottomMargin</code></td><td>int</td><td>Bottom margin</td></tr>
+<tr><td><code>height</code></td><td>int</td><td>Display height cap in rows; 0 = unbounded. Content exceeding this cap keeps header/chrome lines and discards top body lines (scroll-up behavior)</td></tr>
+<tr><td><code>zIndex</code></td><td>int</td><td>Render order among floating widgets: higher = drawn later (on top). Default 0. Menu bars use <code>Integer.MAX_VALUE</code>.</td></tr>
+</tbody>
+</table>
+<p>Float-related:</p>
+<pre><code class="language-java">style.floatAt(anchor, width, top, left)  // configure floating
+style.
+
+hasFloat()                          // true if anchor is set
+style.
+
+anchor()                            // returns Anchor enum
+style.
+
+width()                             // display width override
+style.
+
+top() /style.
+
+left()                // offsets
+style.
+
+unfloat()                           // clear floating config
+style.
+
+zIndex(n)                           // render order: higher z = drawn on top of lower (default 0)
+</code></pre>
+<p>Text utility:</p>
+<pre><code class="language-java">Style.wrapLines(List&lt;String&gt; lines, int maxWidth) →List&lt;String&gt;
+// Splits lines at word boundaries to fit maxWidth visual chars.
+// Any widget with text content can call this.
+</code></pre>
+<h3>4. FloatingSurface + Anchor</h3>
+<pre><code class="language-java">// Terminal-absolute rendering surface.  Draw AFTER pane content.
+FloatingSurface surface = new FloatingSurface(terminal);
+
+// Pin a widget:
+surface.
+
+add(widget, row, col);                       // absolute
+surface.
+
+add(widget, anchor, width);                  // anchored
+surface.
+
+add(widget, anchor, width, top, left);       // anchored + offsets
+
+// Anchor enum: TOP_LEFT, TOP_MIDDLE, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_MIDDLE, BOTTOM_RIGHT
+// Anchor.parse(&quot;top_middle&quot;) → TOP_MIDDLE  (also &quot;tm&quot;, &quot;tl&quot;, &quot;tr&quot;, &quot;bl&quot;, &quot;bm&quot;, &quot;br&quot;)
+
+// Render cycle (automatic):
+surface.
+
+render();  // \033[s → draw all (z-sorted) → \033[u (preserves cursor)
+surface.
+
+remove(widget);  // unpin + clear area
+surface.
+
+clear();         // remove all
+</code></pre>
+<p><strong>Console integration</strong> is automatic:</p>
+<pre><code class="language-java">Console.LOCAL_INSTANCE.getFloatingSurface()  // shared instance
+// Rendered at every prepareForInput() + renderPanes()
+// Widget.run() also calls render() for immediate display
+</code></pre>
+<h4>Rendering semantics</h4>
+<ul>
+<li><strong>Width-scoped clearing</strong> — each widget's previous footprint is tracked as <code>prevHeight</code> <strong>and</strong> <code>prevWidth</code>. Stale
+content is cleared with width-bounded spaces, never <code>\033[K</code> (erase-to-end-of-line), so a widget anchored at one
+column can never blank a widget anchored at another column on the same rows (e.g. a tall <code>BOTTOM_RIGHT</code> accordion
+under a <code>TOP_LEFT</code> widget). Shrink (a taller/wider prior render) is cleaned within the old footprint only.</li>
+<li><strong>Scroll compensation</strong> — console output is written at the bottom and scrolls the terminal, carrying bottom-anchored
+widgets up the screen. The render thread counts newlines in every <code>writeToTerminal</code> write (all console output flows
+through the serialized bridge) and each render pass erases every widget's previous representation <em>at its scrolled
+position</em> (<code>oldLastRow − scroll</code>), width-scoped. Without this, stale copies rise row-by-row with each output line.</li>
+<li><strong>z-order</strong> — <code>renderInternal</code> draws widgets sorted by <code>style.zIndex()</code> ascending (stable sort — equal-z widgets keep
+their current order). Higher z paints on top when regions overlap. <code>MenuBarWidget.run()</code> sets
+<code>zIndex(Integer.MAX_VALUE)</code> so the bar is never overlapped.</li>
+</ul>
+<h3>5. Instruction registration (<code>uiInstSet.java</code>)</h3>
+<p>Widgets are mtron-constructable via <code>uiInstSet</code>.</p>
+<h4>Type registration</h4>
+<pre><code class="language-java">// Each widget type needs:
+public static final fURI UI_MYWIDGET_TID = UI_ISA_TID.extend(&quot;mywidget&quot;);
+public static Type UI_MYWIDGET_TYPE;
+
+// In setup():
+UI_MYWIDGET_TYPE =Type.Builder.
+
+build()
+    .
+
+tid(UI_WIDGET_TID)               // parent type
+    .
+
+vid(UI_MYWIDGET_TID)             // this type
+    .
+
+isaPredicate(rec(                // field declarations for mtron introspection
+        uri(&quot;title&quot;).
+
+maybe(),STR_TYPE,
+
+uri(&quot;body&quot;).
+
+maybe(),STR_TYPE
+    ))
+            .
+
+constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).
+
+rng(UI_MYWIDGET_TID),
+
+lst(T(REC_TID)),
+        (lhs,inst)-&gt;new
+
+MyWidget(inst.arg(0).
+
+as().
+
+jvm(),UI_MYWIDGET_TID,inst.
+
+arg(0).
+
+vid())))
+        .
+
+create();
+</code></pre>
+<h4>Instruction registration</h4>
+<pre><code class="language-java">// display — standard for all widgets
+docWrap(instC(UI_INST_TID.extend(&quot;display&quot;)
+        .
+
+dom(UI_WIDGET_TID).
+
+rng(NOOBJ_TID),
+
+lst(),
+        (lhs,inst)-&gt;{((Widget&lt;?&gt;)lhs).
+
+run(); ((Widget&lt;?&gt;)lhs).
+
+close(); return
+
+noobj(); }),
+        &quot;display the widget on the terminal&quot;);
+
+// Custom instructions (AccordionWidget example):
+// Register in the widget's format() method with a one-time guard:
+        if(!jvm.
+
+containsKey(uri(&quot;toggle&quot;))){
+        this.
+
+at(uri(&quot;toggle&quot;),instLambda((l,i)-&gt;{
+        this.
+
+toggle();
+        Graphitty.
+
+out(Console.getTerminal().
+
+output(), this.
+
+format() +&quot;\n&quot;);
+        return
+
+noobj();
+    }),MUTABLE);
+        }
+</code></pre>
+<h4>Coproduct types</h4>
+<pre><code class="language-java">// For closed-set URI values (like Anchor) — derived from the enum so they stay in sync:
+UI_ANCHOR_TYPE =Type.Builder.
+
+build()
+    .
+
+tid(URI_TID)
+    .
+
+vid(UI_ANCHOR_TID)
+    .
+
+isaPredicate(inside_(lst(Arrays.stream(FloatingSurface.Anchor.values())
+        .
+
+map(a -&gt;
+
+uri(a.name().
+
+toLowerCase()))
+        .
+
+toArray(Obj[]::new))))
+        .
+
+create();
+</code></pre>
+<h3>6. How to create a new Widget</h3>
+<ol>
+<li>
+<p><strong>Create the Java class</strong> in <code>isa.mach.type.ui.widget</code>:</p>
+<pre><code class="language-java">public class MyWidget extends JRec&lt;MyWidget&gt; implements Widget&lt;MyWidget&gt; {
+    // @JRecElement fields for mtron introspection
+    @JRecElement(key = &quot;title&quot;, rng = &quot;/m/str&quot;)
+    private String _title = &quot;&quot;;
+
+    // Obj key constants (uri-wrapped once for performance)
+    private static final Obj K_TITLE = uri(&quot;title&quot;);
+
+    private Style&lt;MyWidget&gt; style = Style.empty();
+
+    // JRec constructor
+    public MyWidget(Map&lt;Obj, Obj&gt; jvm, fURI tid, fURI vid) {
+        super(new HashMap&lt;&gt;(jvm), tid, vid);
+        readStyle(this.jvm());  // pull style from JVM before run()
+    }
+
+    private void readStyle(Map&lt;Obj, Obj&gt; jvm) {
+        Obj s = jvm.get(uri(&quot;style&quot;));
+        if (s != null &amp;&amp; s.isRec()) {
+            Style&lt;MyWidget&gt; st = Style.from(s.as());
+            st.stylable = this;
+            this.style(st);
+        }
+    }
+
+    // Mutations: write through to persistent store
+    public void setTitle(String t) { jvmWrite(K_TITLE, str(t)); }
+
+    // Accessors: read from persistent store
+    public String getTitle() { return jvmStr(jvmRead(), K_TITLE); }
+
+    // format() — one jvmRead(), extract all state
+    @Override public String format() {
+        Map&lt;Obj, Obj&gt; jvm = jvmRead();
+        String title = jvmStr(jvm, K_TITLE);
+        // ... build and return formatted string ...
+    }
+
+    // Style
+    @Override public Style&lt;MyWidget&gt; getStyle() { return style; }
+    @Override public MyWidget style(Style&lt;MyWidget&gt; s) {
+        this.style = s;
+        if (this.style.border() == Border.none)
+            this.style.border(Border.continuous);
+        return this;
+    }
+
+    // Widget contract
+    @Override public void close() {}
+    @Override public String renderInPlace() { return format() + &quot;\n&quot;; }
+    @Override public String renderFresh() { return format() + &quot;\n&quot;; }
+    @Override public MyWidget cursor(Cursor c) { return this; }
+}
+</code></pre>
+</li>
+<li>
+<p><strong>Register the type</strong> in <code>uiInstSet.java</code>:</p>
+<ul>
+<li>Add <code>public static final fURI UI_MYWIDGET_TID</code> and <code>public static Type UI_MYWIDGET_TYPE</code></li>
+<li>Add type definition in <code>setup()</code> with <code>.isaPredicate(rec(...))</code> and <code>.constructor(...)</code></li>
+<li>Add to <code>display</code> instruction if needed</li>
+</ul>
+</li>
+<li>
+<p><strong>For floating support</strong>: nothing extra — <code>Widget.run()</code> already checks <code>style.hasFloat()</code></p>
+</li>
+<li>
+<p><strong>For word-wrap</strong>: call <code>Stylable.Style.wrapLines(lines, maxWidth)</code> in <code>format()</code></p>
+</li>
+<li>
+<p><strong>For interactive widgets</strong> (keyboard input): extend <code>AbstractWidget</code>, override <code>run()</code> with a modal loop using
+<code>BindingReader</code></p>
+</li>
+<li>
+<p><strong>Choose the right state model</strong>:</p>
+<table>
+<thead>
+<tr><th>If your widget…</th><th>Use</th></tr>
+</thead>
+<tbody>
+<tr><td>Has simple key/value fields, built from mtron or Java</td><td><strong>Model A</strong> (JVM-as-source-of-truth).  Mutators call <code>jvmWrite()</code>, <code>format()</code> calls <code>jvmRead()</code>.  See AccordionWidget.</td></tr>
+<tr><td>Has list/table data populated via Java builders (<code>addRow()</code>, etc.)</td><td><strong>Model B</strong> (Java-fields-as-storage) with the <code>javaPopulated</code> tracking flag.  See TableWidget.</td></tr>
+<tr><td>Is a pure display widget with no mutable state</td><td>Either — Model A is simpler.</td></tr>
+</tbody>
+</table>
+</li>
+</ol>
+<h3>7. Key patterns</h3>
+<h4>Read style from JVM before run ()</h4>
+<pre><code class="language-java">public MyWidget(...) {
+    super(...);
+    readStyle(this.jvm());  // ← CRITICAL: run() checks style.hasFloat() before format()
+}
+</code></pre>
+<h4>@JRecElement fields are metadata, NOT state</h4>
+<pre><code class="language-java">
+@JRecElement(key = &quot;title&quot;, rng = &quot;/m/str&quot;)
+private String _title = &quot;&quot;;  // never read by Java code — jvmStr() is the source of truth
+</code></pre>
+<h4>One jvmRead () per render</h4>
+<pre><code class="language-java">Map&lt;Obj, Obj&gt; jvm = jvmRead();  // single roundtrip
+String a = jvmStr(jvm, &quot;a&quot;);
+boolean b = jvmBool(jvm, &quot;b&quot;);
+List&lt;String&gt; c = jvmBody(jvm, &quot;c&quot;);
+</code></pre>
+<h4>Anchor naming</h4>
+<pre><code class="language-java">// mtron: anchor=&gt;top_middle  (URI, not string)
+// Java:  FloatingSurface.Anchor.TOP_MIDDLE
+// Full:  top_left, top_middle, top_right, bottom_left, bottom_middle, bottom_right
+// Short: tl, tm, tr, bl, bm, br
+</code></pre>
+<h4>Border defaults</h4>
+<pre><code class="language-java">if(this.style.border() ==Border.none)
+        this.style.
+
+border(Border.continuous);  // Unicode box-drawing characters
+</code></pre>
+<h3>8. Tool package (<code>isa.mach.type.ui.tool</code>)</h3>
+<p>Tools are higher-level compositions of widgets for specific REPL interactions. They extend <code>AbstractWidget</code> and override
+<code>run()</code> with a modal input loop. Unlike display-only widgets (which use <code>Widget.run()</code> default → float or inline
+<code>format()</code>), tools own their entire render cycle via <code>beginRedraw()</code> → <code>WidgetCanvas</code>.</p>
+<h4>Lifecycle</h4>
+<pre><code class="language-java">// In Console.java — triggered by Tab, Enter on code, colon commands, etc.
+ExplainTool explain = new ExplainTool(code.as());
+Utilities.
+
+runCursorLessWidget(explain, true);
+</code></pre>
+<p><code>Utilities.runCursorLessWidget()</code> hides the cursor, calls <code>widget.run()</code>, then calls
+<code>widget.close()</code>:</p>
+<pre><code class="language-java">public static void runCursorLessWidget(Widget&lt;?&gt; widget, boolean close) {
+    int height = widget.height();
+    Graphitty.log(Widget.class).none(&quot;{{.}}&quot;);   // hide cursor
+    widget.run();
+    Graphitty.log(Widget.class).none(&quot;{{*}}{{^%d}}&quot;, height); // show cursor, move up
+    if (close) widget.close();
+}
+</code></pre>
+<h4>Rendering pattern</h4>
+<p>Tools use <code>beginRedraw()</code> → <code>WidgetCanvas</code> (relative mode when no pane bounds are set):</p>
+<pre><code class="language-java">private void redrawStack() {
+    WidgetCanvas canvas = beginRedraw(totalHeightUsed);
+    for (String line : table.rowStrings()) {
+        canvas.line(line);
+    }
+    canvas.statusLine(&quot;{{w}}ctrl-d{{g}}:close {{X}}&quot;);
+    totalHeightUsed = canvas.finish();
+}
+</code></pre>
+<p><code>WidgetCanvas</code> handles two modes transparently:</p>
+<ul>
+<li><strong>Absolute</strong> (pane bounds set): ANSI cursor-positioning inside the pane's content area. Lines exceeding
+<code>contentMaxLines</code> are silently dropped.</li>
+<li><strong>Relative</strong> (no pane bounds): cursor-up to previous height → clear line → print → <code>\r\n</code>.  <code>previousHeight</code> is used
+to clear leftover lines from taller prior renders.</li>
+</ul>
+<h4>Tool → Widget dependencies</h4>
+<table>
+<thead>
+<tr><th>Tool</th><th>Widgets used</th></tr>
+</thead>
+<tbody>
+<tr><td><code>ExplainTool</code></td><td><code>ProfileTool</code> → <code>TableWidget</code> (instruction table)</td></tr>
+<tr><td><code>TraceTool</code></td><td><code>TableWidget</code> (cause chain + stack frames)</td></tr>
+<tr><td><code>InstSelectorTool</code></td><td><code>SelectorWidget</code> → <code>TableWidget</code> (instruction pairs)</td></tr>
+<tr><td><code>fURISelectorTool</code></td><td><code>SelectorWidget</code> → <code>TableWidget</code> (URI pairs)</td></tr>
+<tr><td><code>TreeSelectTool</code></td><td><code>TreeWidget</code> (navigable tree) + <code>PanelWidget</code> (detail panel)</td></tr>
+<tr><td><code>SwipePanelWidgetTool</code></td><td><code>PanelWidget</code> (obj display panel, docq + Highlighter formatting)</td></tr>
+<tr><td><code>ModalTool</code></td><td><code>PanelWidget</code> (title + body popup panel)</td></tr>
+</tbody>
+</table>
+<p><strong>Important:</strong> These tools populate their <code>TableWidget</code>s via Java API (<code>addRow()</code>,
+<code>addMetadata()</code>). They rely on the <code>sync()</code> guard pattern (section 2) to prevent data corruption — without it,
+<code>TableWidget.format()</code> → <code>sync()</code> would clear Java-populated rows and replace them with JVM-serialized representations
+that don't preserve the exact column structure.</p>
+<h4>Selector vs SelectorWidget</h4>
+<p>Two selection widgets exist with different rendering approaches:</p>
+<ul>
+<li><strong><code>Selector</code></strong> (older): Uses JLine's <code>Display.updateAnsi()</code> for rendering. Navigates an attached widget's
+<code>rowString()</code> output.</li>
+<li><strong><code>SelectorWidget</code></strong> (newer): Uses <code>beginRedraw()</code> → <code>WidgetCanvas</code> for rendering. Manages its own <code>TableWidget</code> with
+item pairs. Preferred for new tool development.</li>
+</ul>
+<h4>applyStyle () vs apply () — real-world footgun</h4>
+<pre><code class="language-java">// WRONG — .apply() calls Obj.apply() (identity function — returns the Style, not the widget):
+widget.style().
+
+border(...).
+
+apply();
+// ^^ compiles, runs without error, but does NOT wire the style to the widget.
+//    ProfileTool.java line 63 still uses this pattern (as of 2026-07-26).
+
+// RIGHT — .applyStyle() calls stylable.style(this):
+widget.
+
+style().
+
+border(...).
+
+applyStyle();
+</code></pre>
+<p>The default <code>Obj.apply()</code> (no-arg) returns <code>this</code> — the <code>Style</code> object. The return value is discarded, so the chain
+silently no-ops. The compiler can't catch this because <code>Style extends MRec extends MObj implements Obj</code>, and <code>Obj</code> has
+<code>default Obj apply() { return this.apply(noobj()); }</code>.</p>
+<h3>9. Graphitty — terminal markup DSL (<code>Graphitty.java</code>)</h3>
+<p>Graphitty is a lightweight macro-to-ANSI preprocessor used throughout the UI layer. Tags are written <code>{{...}}</code> and are
+stripped by <code>Graphitty.strip()</code> for visual-length calculations. The DSL supports three families of tags:</p>
+<h4>Colour / effect tags</h4>
+<table>
+<thead>
+<tr><th>Tag</th><th>ANSI equivalent</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>{{X}}</code></td><td><code>\033[m</code></td><td>reset all attributes</td></tr>
+<tr><td><code>{{k}}</code> / <code>{{r}}</code> / <code>{{g}}</code> / <code>{{y}}</code> / <code>{{b}}</code> / <code>{{m}}</code> / <code>{{c}}</code> / <code>{{w}}</code></td><td><code>\033[30..37m</code></td><td>foreground: black, red, green, yellow, blue, magenta, cyan, white</td></tr>
+<tr><td><code>{{d}}</code></td><td><code>\033[39m</code></td><td>default foreground</td></tr>
+<tr><td><code>{{[k]}}</code> / <code>{{[r]}}</code> / <code>{{[g]}}</code> / <code>{{[y]}}</code> / <code>{{[b]}}</code> / <code>{{[m]}}</code> / <code>{{[c]}}</code> / <code>{{[w]}}</code></td><td><code>\033[40..47m</code></td><td>background colours</td></tr>
+<tr><td><code>{{[X]}}</code></td><td><code>\033[49m</code></td><td>default background</td></tr>
+<tr><td><code>{{R}}</code> / <code>{{G}}</code> / <code>{{Y}}</code> / <code>{{B}}</code> / <code>{{M}}</code> / <code>{{C}}</code> / <code>{{W}}</code></td><td><code>\033[1;3xm</code></td><td>bold foregrounds</td></tr>
+<tr><td><code>{{~}}</code></td><td><code>\033[3m</code></td><td>italics</td></tr>
+<tr><td><code>{{_}}</code></td><td><code>\033[4m</code></td><td>underline</td></tr>
+<tr><td><code>{{-}}</code></td><td><code>\033[9m</code></td><td>strikethrough</td></tr>
+</tbody>
+</table>
+<h4>Cursor / screen tags</h4>
+<table>
+<thead>
+<tr><th>Tag</th><th>ANSI equivalent</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>{{@}}</code></td><td><code>\033[H</code></td><td>cursor home (row 1, col 1)</td></tr>
+<tr><td><code>{{^N}}</code></td><td><code>\033[NA</code></td><td>up N lines (e.g. <code>{{^5}}</code>; N=1 when omitted)</td></tr>
+<tr><td><code>{{vN}}</code></td><td><code>\033[NB</code></td><td>down N lines</td></tr>
+<tr><td><code>{{&lt;N}}</code></td><td><code>\033[ND</code></td><td>left N columns</td></tr>
+<tr><td><code>{{&gt;N}}</code></td><td><code>\033[NC</code></td><td>right N columns</td></tr>
+<tr><td><code>{{\|N}}</code></td><td><code>\033[NG</code></td><td>absolute column N (1-based)</td></tr>
+<tr><td><code>{{-N}}</code></td><td><code>\033[NH</code></td><td>absolute row N (1-based)</td></tr>
+<tr><td><code>{{^&lt;N}}</code></td><td><code>\033[NF</code></td><td>beginning of Nth previous line</td></tr>
+<tr><td><code>{{v&lt;N}}</code></td><td><code>\033[NE</code></td><td>beginning of Nth next line</td></tr>
+<tr><td><code>{{-X-}}</code></td><td><code>\033[2K</code></td><td>clear entire current line</td></tr>
+<tr><td><code>{{X-}}</code></td><td><code>\033[0K</code></td><td>clear from cursor to end of line</td></tr>
+<tr><td><code>{{-X}}</code></td><td><code>\033[1K</code></td><td>clear from beginning of line to cursor</td></tr>
+<tr><td><code>{{XX}}</code></td><td><code>\033[2J</code></td><td>clear entire screen</td></tr>
+<tr><td><code>{{Xv}}</code></td><td><code>\033[0J</code></td><td>clear from cursor to bottom of screen</td></tr>
+<tr><td><code>{{X^}}</code></td><td><code>\033[1J</code></td><td>clear from top of screen to cursor</td></tr>
+<tr><td><code>{{(s)}}</code></td><td><code>\033[s</code></td><td>save cursor position</td></tr>
+<tr><td><code>{{(e)}}</code></td><td><code>\033[u</code></td><td>restore cursor position</td></tr>
+<tr><td><code>{{*}}</code></td><td><code>\033[?25h</code></td><td>show cursor</td></tr>
+<tr><td><code>{{.}}</code></td><td><code>\033[?25l</code></td><td>hide cursor</td></tr>
+</tbody>
+</table>
+<h4>Stack and chaining</h4>
+<p>Every opened tag is <strong>pushed onto a stack</strong>. Closing with <code>{{/rule}}</code> pops the most-recently-opened matching rule and
+restores the previous style. If the popped rule had a parent still on the stack, the parent's escape is re-emitted with
+a
+<code>\033[0;…</code> prefix so the parent style &quot;wins&quot; over the default reset.</p>
+<p>Tags separated by <code>&amp;</code> are <strong>chained</strong> — <code>{{r&amp;_}}</code> emits red-foreground (<code>\033[31m</code>)
+followed by underline (<code>\033[4m</code>), pushing both rules in left-to-right order.</p>
+<pre><code class="language-java">// Stack example — closing restores the previous colour:
+&quot;{{B}}blue title{{/B}} and normal text&quot;   // bold blue → reset → normal
+
+// Chaining example — multiple effects in one tag:
+        &quot;{{r&amp;_}}red underlined{{/r&amp;_}}&quot;            // red + underline → reset both
+
+// Combined:
+        &quot;{{b}}a {{R}}bold red{{/R}} then back to blue{{/b}}.&quot;  // bold red → blue → normal
+</code></pre>
+<h4>Static helpers</h4>
+<table>
+<thead>
+<tr><th>Method</th><th>Purpose</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Graphitty.string(f, args...)</code></td><td>Convert a Graphitty format string to ANSI.  Used everywhere in widget <code>format()</code> methods.</td></tr>
+<tr><td><code>Graphitty.strip(str)</code></td><td>Remove all ANSI escapes (and Graphitty tags) to measure <strong>visual length</strong>.  Used by <code>Highlighter.visualLength()</code> and <code>WidgetCanvas</code> for width clipping.</td></tr>
+<tr><td><code>Graphitty.out(stream, f, args...)</code></td><td>Write a Graphitty string directly to an output stream.  Used by <code>WidgetCanvas.finish()</code> for the final flush.</td></tr>
+<tr><td><code>Graphitty.writeToTerminal(f, args...)</code></td><td>Write through the serialized terminal-writer bridge (FloatingSurface-safe).</td></tr>
+<tr><td><code>Graphitty.viewLength(str)</code></td><td>Alias for <code>strip(str).length()</code>.</td></tr>
+</tbody>
+</table>
+<h4>Typical widget usage</h4>
+<p>Widgets emit <strong>Graphitty-markup strings</strong> from <code>format()</code>. The caller is responsible for converting them to ANSI before
+writing to the terminal:</p>
+<pre><code class="language-java">// In a widget format() method — return Graphitty markup:
+@Override
+public String format() {
+    return &quot;{{b}}Welcome{{X}} to the {{w}}Machine{{X}}&quot;;
+}
+
+// At the call site — convert to ANSI and flush:
+Graphitty.
+
+out(terminal.output(),widget.
+
+format());
+// or: terminal.writer().write(Graphitty.string(widget.format()));
+</code></pre>
+<p><code>WidgetCanvas</code> handles this automatically: <code>canvas.line(content)</code> stores the raw markup, and <code>canvas.finish()</code> passes
+the entire buffer through <code>Graphitty.out()</code>
+in one batch.  <code>canvas.statusLine()</code> pre-converts its argument with
+<code>Graphitty.string()</code> immediately (because it needs to measure the stripped length for pane-width clipping in absolute
+mode).</p>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

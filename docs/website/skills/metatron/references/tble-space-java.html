@@ -1,0 +1,1013 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>tble-space-java · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../../../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../../../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../../../lib/animate/animate.min.css" rel="stylesheet">
+    <link href="../../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../../css/termynal.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../../../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <script src="../../../lib/wow/wow.min.js" type="text/javascript"></script>
+    <script src="../../../lib/easing/easing.min.js" type="text/javascript"></script>
+    <script src="../../../lib/waypoints/waypoints.min.js" type="text/javascript"></script>
+    <script src="../../../lib/termynal/termynal.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../../../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .terminal-box.click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .terminal-box.click-to-copy:active {
+            background-color: var(--mred);
+        }
+
+        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
+        .terminal-box.click-to-copy .hljs-copy-button {
+            display: none;
+        }
+    </style>
+    <script src="../../../js/metatron.js" type="text/javascript"></script>
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 text-primary logo-text navbar-brand ms-4 ms-lg-0">
+        <a href="../../../index.html" class="text-primary" title="metatron"><i class="bi bi-soundwave me-3 icon-color"></i></a>
+        <a href="http://phaseshift.studio" class="text-primary">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="terminal-box click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box click-to-copy" title="click to copy">
+                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="start.html"
+                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/start.html');return false;">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/index.html';">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m.html';"><img
+                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_dcmnt.html';"><img
+                            src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_grph.html';"><img
+                            src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_iot.html';"><img
+                            src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_llm.html';"><img
+                            src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                            alt="llm"/>/m/llm</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_mach.html';"><img
+                            src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                            alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_math.html';"><img
+                            src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_sys.html';"><img
+                            src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_tble.html';"><img
+                            src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                            alt="tble"/>/m/tble</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_vec.html';"><img
+                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/vec</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../instset/m_web.html';"><img
+                            src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../../../tractatus.html"
+                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/tractatus.html');return false;">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../skills/agent/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/drstynx/assets/drstynx.boot.mtron';">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/drstynx/assets/drstynx.sqlite';">drstynx.sqlite</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/mcp-mtron.html';">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/rewrite-system-java.html';">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/tble-space-java.html';">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/type-system-java.html';">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/ui-instset-java.html';">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/answer-questions.html';">answer-questions</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/connecting-datasources.html';">connecting-datasources</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/dckrspace.html';">dckrspace</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/dsh-mtron.html';">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/http-page-fetching.html';">http-page-fetching</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/math_instset.html';">math_instset</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mcp-server-architecture.html';">mcp-server-architecture</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mcp-server-notifications.html';">mcp-server-notifications</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mtron-fsspace.html';">mtron-fsspace</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mtron-language-reference.html';">mtron-language-reference</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/type-system-mtron.html';">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/unsloth-training-mtron.html';">unsloth-training-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/scripts/unsloth_studio.py';">unsloth_studio.py</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/README.md';">README.md</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/dsh_memory_loader.py';">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/mtron_training_dataset.jsonl';">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/stream-ring-theory.pdf';"><i
+                            class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/parametric-identities-in-ring-theory.html';"><i
+                            class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../../articles/mm-adt.pdf';"><i
+                            class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://opencollective.com/metatron';">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://github.com/phaseshift-studio/metatron';">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://huggingface.co/phaseshift-studio';">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://groups.google.com/u/1/g/metatron-phaseshift';">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../index.html';">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../index.html';">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="./console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target (no rollover copy button). The :active CSS turns the block
+    // red while pressed; this copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">
+    <div class="skill-doc mb-4">
+        <h1 class="skill-title mb-1">tble-space-java: Java-side tbleSpace architecture — relational-database space, dual-path reads (table-mapped + KV store), ExistingTableSchema lifecycle, SQL rewrite pushdown, schema generation, dialect handling, VID stamping</h1>
+        <a href="tble-space-java.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>tble-space-java.md</a>
+    </div>
+    <div class="markdown-body">
+<h2>tbleSpace (Java)</h2>
+<h3>Package map</h3>
+<pre><code>isa/tble/tbleSpace.java              ← space implementation (Constructor, directReader, addQ, close)
+isa/tble/tbleInstSet.java            ← instruction set + SQL rewrite registration
+isa/tble/KVStoreUtil.java            ← key-value URI-to-SQL LIKE translation
+isa/tble/schema/SQLRewriteUtils.java ← SQL condition formatting (equality, comparison, AND-joiner)
+isa/tble/space/ExistingTableSchema.java  ← table metadata, ALTER TABLE, type coercion
+isa/tble/space/SQLSchemaGenerator.java   ← generates per-database SQLSchemaInstSet
+isa/tble/space/SQLSchemaInstSet.java     ← per-database schema instset (Types for table columns)
+isa/tble/space/tbleIncrQ.java            ← DB-backed increment queue
+isa/tble/schema/storage/TableSchema.java ← table-mapped read path
+isa/tble/schema/storage/TypedKeyValueSchema.java  ← KV-store read path with type coercion
+isa/tble/schema/storage/fURIAwareIndexedSchema.java ← URI-indexed KV reads
+isa/tble/schema/storage/SimpleKeyValueSchema.java   ← raw KV reads
+</code></pre>
+<h3>Architecture overview</h3>
+<p><code>tbleSpace</code> bridges metatron's URI-graph model to relational databases. It extends <code>AbstractSpace&lt;Connection&gt;</code> (JDBC
+connection is the raw state) and implements <code>SchemaSpace</code>, giving it a schema-backed read path with metadata-driven type
+coercion.</p>
+<pre><code>┌───────────────────────────────────────────────────┐
+│                    tbleSpace                      │
+│  extends AbstractSpace&lt;Connection&gt;                │
+│  implements SchemaSpace                           │
+├───────────────────────────────────────────────────┤
+│  sjvm         → JDBC Connection                   │
+│  backend      → &quot;sqlite&quot; | &quot;postgresql&quot; | &quot;mysql&quot; │
+│  databaseName → catalog name                      │
+│  schema       → TableSchema | TypedKeyValueSchema │
+│  existingTableSchema → ExistingTableSchema        │
+│  schemaGenerator     → SQLSchemaGenerator         │
+│  schemaInstset       → SQLSchemaInstSet           │
+│  routes              → URI-prefix routing map     │
+├───────────────────────────────────────────────────┤
+│  directReader:  dual-path (table-mapped + KV)     │
+│  directWriter:  routed through schema             │
+│  rewrites:      registered in tbleInstSet         │
+└───────────────────────────────────────────────────┘
+</code></pre>
+<h3>Constructor and initialization</h3>
+<pre><code class="language-java">public tbleSpace(final Connection sjvm, final Map&lt;Obj, Obj&gt; config,
+                 final fURI tid, final fURI vid)
+</code></pre>
+<p><strong>Initialization sequence:</strong></p>
+<ol>
+<li><strong>Store JDBC connection</strong> as <code>sjvm</code> (raw state via <code>AbstractSpace&lt;Connection&gt;</code>)</li>
+<li><strong>Extract backend name</strong> from <code>DatabaseMetaData.getDatabaseProductName().toLowerCase()</code></li>
+<li><strong>Initialize schema</strong>: introspects existing tables via <code>ExistingTableSchema</code>, builds <code>TableSchema</code> for known tables
+and <code>TypedKeyValueSchema</code> for KV paths</li>
+<li><strong>Initialize table mapping</strong>: scans <code>_mtron_meta</code> for TID entries, maps table names to their declared metatron types</li>
+<li><strong>Generate schema instset</strong>: <code>SQLSchemaGenerator.generateSchemaInstset()</code> creates a per-database <code>SQLSchemaInstSet</code>
+with <code>Type</code> objects for every table column, registered as a Router space for type resolution</li>
+<li><strong>Wire SCHEMA</strong>: stores the schema instset at <code>uri(SCHEMA)</code> on the space itself (<code>SchemaSpace.schema()</code> resolves from
+here)</li>
+</ol>
+<pre><code class="language-java">// Backend detection
+public String backend() {
+    return this.backend;
+}
+
+public boolean isSqlite() {
+    return this.backend != null &amp;&amp; this.backend.contains(&quot;sqlite&quot;);
+}
+</code></pre>
+<h3>Dual-path read: table-mapped vs key-value</h3>
+<p><code>directReader()</code> is the heart of tbleSpace. It dispatches reads to one of two paths based on the URI:</p>
+<pre><code>read(pattern)
+    │
+    ├─ URI matches a known table?  ──→  TableSchema.read()
+    │   (collection name in existingTableSchema.getTableNames())
+    │   • Column-level type coercion via ExistingTableSchema
+    │   • VID stamping from primary key columns
+    │   • Poly unrolling for wildcard patterns
+    │
+    └─ URI doesn't match any table?  ──→  TypedKeyValueSchema.read()
+        (or SimpleKeyValueSchema)
+        • fURIAwareIndexedSchema for URI-prefix matching
+        • Translate URI patterns to SQL LIKE clauses via KVStoreUtil
+        • Deserialize JSON from kv_store.obj column
+</code></pre>
+<p><strong>Key difference:</strong> table-mapped reads return rows as <code>Rec</code> objects with typed columns. KV-store reads return rows
+serialized as JSON blobs, deserialized on read.</p>
+<p><strong>Table guard predicate</strong> (<code>tableGuard</code> in <code>tbleInstSet</code>):</p>
+<pre><code class="language-java">final BiPredicate&lt;tbleSpace, List&lt;Inst&gt;&gt; tableGuard = (space, matches) -&gt; {
+    final Obj ref = matches.getFirst().arg(0);
+    if (!ref.isUri()) return true;
+    final fURI resolved = space.redirect(ref.uriValue(), true);
+    final DataPath dp = DataPath.withoutDB(resolved);
+    if (!dp.hasCollection() || dp.collectionIsWildcard()) return false;
+    return space.existingTableSchema != null
+            &amp;&amp; space.existingTableSchema.getTableNames()
+            .contains(dp.collection().toLowerCase());
+};
+</code></pre>
+<p>Guards SQL rewrite pushdown: only fires when the URI's collection name matches an actual table in the database.</p>
+<h3>ExistingTableSchema</h3>
+<p>Manages table metadata discovered at construction time. Key capabilities:</p>
+<ul>
+<li><strong><code>getTableNames()</code></strong> — all table names in the database</li>
+<li><strong><code>getColumnTypes(tableName)</code></strong> — column name → metatron type URI (from <code>_mtron_meta</code>)</li>
+<li><strong><code>coerceRow(tableName, rawRow)</code></strong> — apply column types to a raw JDBC row</li>
+<li><strong><code>addColumnOnTheFly(tableName, columnName, value)</code></strong> — <code>ALTER TABLE ADD COLUMN</code> when a write introduces a new field
+(race-safe: falls back to <code>DatabaseMetaData</code> re-read on concurrent column add)</li>
+</ul>
+<p>Column types are stored in <code>_mtron_meta</code> as <code>$table</code> sentinel rows. When a table has no meta row, the schema generator
+infers types from JDBC metadata.</p>
+<h3>SQL rewrite pushdown</h3>
+<p>Registered in <code>tbleInstSet.setup()</code> under <code>uri(REWRITE)</code>. All rewrites follow the <code>RewriteBuilder</code> pattern (space-aware
+native pushdown).</p>
+<table>
+<thead>
+<tr><th>Rewrite</th><th>Match pattern</th><th>SQL generated</th></tr>
+</thead>
+<tbody>
+<tr><td><code>sql_count</code></td><td><code>from(uri).count()</code></td><td><code>SELECT COUNT(*) FROM table</code></td></tr>
+<tr><td><code>sql_sum</code></td><td><code>from(uri).sum()</code></td><td><code>SELECT SUM(column) FROM table</code></td></tr>
+<tr><td><code>sql_mean</code></td><td><code>from(uri).mean()</code></td><td><code>SELECT AVG(column) FROM table</code></td></tr>
+<tr><td><code>sql_limit</code></td><td><code>from(uri).take(n)</code></td><td><code>SELECT * FROM table LIMIT n</code></td></tr>
+<tr><td><code>sql_offset</code></td><td><code>from(uri).skip(n)</code></td><td><code>SELECT * FROM table OFFSET n</code></td></tr>
+<tr><td><code>sql_offset_limit</code></td><td><code>sql_offset.take(m)</code></td><td><code>SELECT * FROM table LIMIT m OFFSET n</code></td></tr>
+<tr><td><code>sql_has</code></td><td><code>from(uri).has()</code></td><td><code>SELECT EXISTS(SELECT 1 FROM table LIMIT 1)</code></td></tr>
+<tr><td><code>sql_where</code></td><td><code>from(uri).where(pred)</code></td><td><code>SELECT * FROM table WHERE conditions</code></td></tr>
+<tr><td><code>sql_where_count</code></td><td><code>sql_where.count()</code></td><td><code>SELECT COUNT(*) FROM table WHERE conditions</code></td></tr>
+<tr><td><code>sql_where_limit</code></td><td><code>sql_where.take(n)</code></td><td><code>SELECT * FROM table WHERE conditions LIMIT n</code></td></tr>
+<tr><td><code>sql_where_offset</code></td><td><code>sql_where.skip(n)</code></td><td><code>SELECT * FROM table WHERE conditions OFFSET n</code></td></tr>
+<tr><td><code>sql_where_offset_limit</code></td><td><code>sql_where_offset.take(m)</code></td><td><code>SELECT * FROM table WHERE conditions LIMIT m OFFSET n</code></td></tr>
+<tr><td><code>sql_order</code></td><td><code>from(uri).order(select(col))</code></td><td><code>SELECT * FROM table ORDER BY col1, col2</code></td></tr>
+<tr><td><code>sql_distinct</code></td><td><code>from(uri).dedup(select(col))</code></td><td><code>SELECT DISTINCT col1, col2 FROM table</code></td></tr>
+<tr><td><code>sql_select</code></td><td><code>from(uri)&gt;&gt;{cols}</code></td><td><code>SELECT col1, col2 FROM table</code></td></tr>
+<tr><td><code>kv_count</code></td><td><code>from(kvPattern).count()</code></td><td><code>SELECT COUNT(*) FROM kv_store WHERE furi LIKE ...</code></td></tr>
+<tr><td><code>kv_limit</code></td><td><code>from(kvPattern).take(n)</code></td><td><code>SELECT furi, obj FROM kv_store WHERE furi LIKE ... LIMIT n</code></td></tr>
+</tbody>
+</table>
+<p><strong>Composition:</strong> Multiple rewrites can chain via the <code>Code.rewrite()</code> fixed-point loop. Simple example —
+<code>from(uri).skip(100).take(10)</code> fires two rewrites in sequence:</p>
+<ol>
+<li><code>sql_offset</code>: <code>from(uri).skip(100)</code> → <code>sql_offset(uri, 100)</code></li>
+<li><code>sql_offset_limit</code>: <code>sql_offset(uri, 100).take(10)</code> → <code>sql_offset_limit(uri, 100, 10)</code></li>
+</ol>
+<p>Result: a single <code>SELECT * FROM table LIMIT 10 OFFSET 100</code>.</p>
+<p>A more complex chain — <code>from(uri).where(pred).skip(n).take(m)</code> fires three rewrites:</p>
+<ol>
+<li><code>sql_where</code>: <code>from(uri).where(pred)</code> → <code>sql_where(uri, pred)</code></li>
+<li><code>sql_where_offset</code>: <code>sql_where(uri, pred).skip(n)</code> → <code>sql_where_offset(uri, pred, n)</code></li>
+<li><code>sql_where_offset_limit</code>: <code>sql_where_offset(uri, pred, n).take(m)</code> → <code>sql_where_offset_limit(uri, pred, n, m)</code></li>
+</ol>
+<p>Result: a single <code>SELECT * FROM table WHERE pred LIMIT m OFFSET n</code>.</p>
+<h4>Dialect handling</h4>
+<p>The standalone <code>sql_offset</code> and <code>sql_where_offset</code> rewrites need per-backend SQL because
+<code>OFFSET</code> without <code>LIMIT</code> is dialect-specific:</p>
+<pre><code class="language-java">if(space.isSqlite()){
+sql =&quot;SELECT * FROM &quot;+tableName +&quot; LIMIT -1 OFFSET &quot;+skip;
+}else if(space.
+
+backend() !=null
+        &amp;&amp;(space.
+
+backend().
+
+contains(&quot;mysql&quot;) ||space.
+
+backend().
+
+contains(&quot;mariadb&quot;))){
+sql =&quot;SELECT * FROM &quot;+tableName
+        +&quot; LIMIT 18446744073709551615 OFFSET &quot;+skip;  // max BIGINT UNSIGNED
+}else{
+sql =&quot;SELECT * FROM &quot;+tableName +&quot; OFFSET &quot;+skip;  // PostgreSQL
+}
+</code></pre>
+<p>The combined <code>sql_offset_limit</code>, <code>sql_where_offset_limit</code> rewrites don't need dialect handling —
+<code>LIMIT m OFFSET n</code> is standard SQL across all backends.</p>
+<h4>How order/dedup extract columns</h4>
+<p>Both <code>order()</code> and <code>dedup()</code> take a column spec wrapped in a <code>select()</code> (<code>==</code>) or <code>rshift()</code> (<code>&gt;&gt;</code>)
+instruction. The <code>OrderRewriteBuilder</code> and <code>DedupRewriteBuilder</code> unwrap the wrapper and extract column names via
+<code>CommonRewrites.extractColumnNames()</code>, which handles all legal mtron forms (in desugared and sugar notation):</p>
+<table>
+<thead>
+<tr><th>mtron (desugared)</th><th>mtron (sugar)</th><th>extracted columns</th></tr>
+</thead>
+<tbody>
+<tr><td><code>order(select(name))</code></td><td><code>order(==name)</code></td><td><code>[&quot;name&quot;]</code></td></tr>
+<tr><td><code>order(select([name=&gt;_,age=&gt;_]))</code></td><td><code>order(==[name=&gt;_,age=&gt;_])</code></td><td><code>[&quot;name&quot;, &quot;age&quot;]</code></td></tr>
+<tr><td><code>order(rshift(name))</code></td><td><code>order(&gt;&gt;name)</code></td><td><code>[&quot;name&quot;]</code></td></tr>
+<tr><td><code>order(rshift({name, age}))</code></td><td><code>order(&gt;&gt;{name,age})</code></td><td><code>[&quot;name&quot;, &quot;age&quot;]</code></td></tr>
+<tr><td><code>dedup(select(name))</code></td><td><code>dedup(==name)</code></td><td><code>[&quot;name&quot;]</code></td></tr>
+<tr><td><code>dedup(select([name=&gt;_,age=&gt;_]))</code></td><td><code>dedup(==[name=&gt;_,age=&gt;_])</code></td><td><code>[&quot;name&quot;, &quot;age&quot;]</code></td></tr>
+<tr><td><code>dedup(rshift(name))</code></td><td><code>dedup(&gt;&gt;name)</code></td><td><code>[&quot;name&quot;]</code></td></tr>
+<tr><td><code>dedup(rshift({name, age}))</code></td><td><code>dedup(&gt;&gt;{name,age})</code></td><td><code>[&quot;name&quot;, &quot;age&quot;]</code></td></tr>
+</tbody>
+</table>
+<h4>DISTINCT return types</h4>
+<p>Single-column <code>dedup(select(name))</code> returns scalar values (strings or numbers). Multi-column
+<code>dedup(select([name=&gt;_, value=&gt;_]))</code> returns <code>Rec</code> objects with column-name keys.</p>
+<h4>VID stamping</h4>
+<p>Every row-returning SQL rewrite stamps routable VIDs so the Router can locate the space for subsequent operations. The
+<code>sql_distinct</code> rewrite is the exception — it returns scalar values or lightweight recs, not full database rows with
+VIDs.</p>
+<pre><code class="language-java">// Discover primary key columns
+final DatabaseMetaData dbMeta = space.sjvm().getMetaData();
+final List&lt;String&gt; pkColumns = new ArrayList&lt;&gt;();
+try(
+final ResultSet pkRs = dbMeta.getPrimaryKeys(null, null, tableName)){
+        while(pkRs.
+
+next())pkColumns.
+
+add(pkRs.getString(&quot;COLUMN_NAME&quot;));
+        }
+
+// Stamp VID on each row
+        while(rs.
+
+next()){
+final Rec rawRow = ObjSQLSerializer.readCurrentAsRec(rs);
+final fURI rowVID = Space.Helper.routeToSpace(
+        pkColumns.isEmpty()
+                ? space.vid().extend(tableName).extend(rawRow.at(uri(&quot;id&quot;)).toString())
+                : pkColumns.stream()
+                .map(col -&gt; rawRow.at(uri(col)).toString())
+                .reduce(space.vid().extend(tableName),
+                        (vid, seg) -&gt; vid.extend(seg), (a, b) -&gt; b),
+        space.routes());
+    rows.
+
+append(rawRow.selfVID(rowVID));
+        }
+</code></pre>
+<h3>SQLSchemaInstSet</h3>
+<p>A per-database <code>InstSet</code> that holds <code>Type</code> objects for every table column. Generated by
+<code>SQLSchemaGenerator.generateSchemaInstset()</code> during construction:</p>
+<pre><code class="language-java">// VID is in /m/ namespace → writes route to memSpace, not back into tbleSpace
+public SQLSchemaInstSet(final fURI schemaVid, final Collection&lt;Type&gt; types) {
+    super(mutableMap(
+            uri(PATTERN), uri(schemaVid.extend(ALL)),
+            uri(TYPE), lst(types.stream().map(t -&gt; (Obj) t).toList())
+    ), INSTSET_TID, schemaVid);
+}
+</code></pre>
+<p>The generated Types encode column-level metatron types (int, str, bool, etc.) and foreign key references in their
+<code>isaPredicate</code>. The schema instset is registered as a Router space so type resolution can find it.</p>
+<h3>KVStoreUtil</h3>
+<p>Translates URI patterns into SQL <code>LIKE</code> clauses for the key-value storage path:</p>
+<pre><code class="language-java">// URI: /col/user123/profile/email
+// → WHERE furi LIKE '/col/user123/profile/email' OR furi LIKE '/col/user123/profile/email/%'
+public static String translateKVPatternToSQL(final fURI stored)
+</code></pre>
+<p>Handles wildcard patterns (<code>+</code>, <code>#</code>), exact matches, and hierarchical prefix matching.</p>
+<h3>SQLRewriteUtils</h3>
+<p>SQL-specific formatting for predicate translation. Used by <code>sql_where</code>:</p>
+<pre><code class="language-java">public static final CommonRewrites.ConditionFormatter CONDITION_FORMATTER =
+        new CommonRewrites.ConditionFormatter() {
+            @Override
+            public String equality(String field, String value) {
+                return field + &quot; = &quot; + value;
+            }
+
+            @Override
+            public String comparison(String field, ComparisonOp op, String value) {
+                return field + &quot; &quot; + op.symbol() + &quot; &quot; + value;
+            }
+
+            @Override
+            public String exists(String field) {
+                return field + &quot; IS NOT NULL&quot;;
+            }
+
+            @Override
+            public String escapeLiteral(String s) {
+                return s.replace(&quot;'&quot;, &quot;''&quot;);
+            }
+        };
+
+public static final CommonRewrites.PredicateJoiner PREDICATE_JOINER =
+        conds -&gt; String.join(&quot; AND &quot;, conds);
+</code></pre>
+<h3>Increment queue (tbleIncrQ)</h3>
+<p>Replaces the default in-memory <code>?incrq</code> with a database-backed implementation:</p>
+<pre><code class="language-java">
+@Override
+public Space addQ(final QProc qProc) {
+    final QProc toAdd = qProc.pattern().equals(QCollection.INCRQ_PATTERN)
+            ? new tbleIncrQ(this) : qProc;
+    // ... register in QPROC list
+}
+</code></pre>
+<p>Uses <code>RETURN_GENERATED_KEYS</code> for auto-increment — the database assigns the VID, which propagates back through the
+<code>?incrq</code> instruction.</p>
+<h3>Close lifecycle</h3>
+<pre><code class="language-java">
+@Override
+public void close() {
+    try {
+        this.sjvm().close();     // close JDBC connection
+        SchemaSpace.super.close(); // close schema instset
+    } catch (final Exception e) {
+        LOG.error(e);
+    } finally {
+        super.close();           // remove from Router, close QProcs
+    }
+}
+</code></pre>
+<p><code>SchemaSpace.super.close()</code> handles closing the schema instset and cleaning up Router registrations.</p>
+<h3>Test infrastructure</h3>
+<pre><code>AbstractTbleSpaceTest           ← shared test base (schema setup, rewrite tests)
+├── PostgreSQLTbleSpaceTest     ← PostgreSQL backend
+├── MariaDBTbleSpaceTest         ← MariaDB backend
+├── MySQLTbleSpaceTest           ← MySQL backend
+└── SqliteTbleSpaceTest          ← SQLite backend (in-memory)
+</code></pre>
+<p>Each backend provides a <code>DatabaseConfig</code> with DDL templates, boolean literal representation, and connection setup. Tests
+use <code>@ParameterizedTest</code> with a static <code>@BeforeAll</code> that seeds 10 rows into <code>rewrite_test(id, value, name, active)</code> plus
+additional tables (<code>users</code>, <code>products</code>, <code>companies</code>, <code>people</code>).</p>
+<h3>Foreign key inference</h3>
+<p><code>ExistingTableSchema</code> infers foreign key relationships through three mechanisms and wraps FK column values
+in <code>auto_from_()</code> on read so they resolve lazily to the referenced row.</p>
+<h4>Discovery mechanisms</h4>
+<ol>
+<li><strong>JDBC metadata</strong> (<code>discoverReferencesAndRegister</code>): reads <code>DatabaseMetaData.getImportedKeys()</code> for SQL-level
+<code>REFERENCES</code> constraints.</li>
+<li><strong><code>_mtron_meta</code> persistence</strong> (<code>loadMetaTable</code>): reads FK registrations persisted by <code>persistColumnType()</code>.
+Survives restarts.</li>
+<li><strong>Naming convention</strong> (<code>discoverFKByConvention</code> + <code>inferFKByConvention</code>): a column whose name matches another
+table name (case-insensitive, with or without trailing &quot;s&quot;) is treated as a FK.  Examples:
+<ul>
+<li><code>people.company</code> → table <code>companies</code></li>
+<li><code>message.session</code> → table <code>session</code></li>
+</ul>
+</li>
+</ol>
+<p>The lazy path (<code>inferFKByConvention</code>) fires at <strong>read time</strong> — if a column hasn't been registered as a FK yet,
+it checks naming convention on the first read and registers the FK permanently.</p>
+<h4>FK target path</h4>
+<p><code>FKTarget.targetPath</code> is <code>&quot;tableName/+/columnName&quot;</code> — e.g. <code>&quot;session/+/id&quot;</code>.  <code>buildFKReferencePath()</code> strips the
+<code>/+columnName</code> suffix to get the target table, then prepends the space's pattern to build the full reference path.</p>
+<h4>Path construction and the scheme-vs-path trap</h4>
+<p><code>buildFKReferencePath()</code> constructs the FK reference path by prepending <code>space.pattern().retractPattern()</code> (the
+space's base path) to the target table name and row ID:</p>
+<pre><code class="language-java">// For space pattern &lt;/usr/dr/#&gt;:
+this.space.pattern().retractPattern()  // → /usr/dr/
+    .extend(refTable)                   // → /usr/dr/session
+    .extend(rowId);                     // → /usr/dr/session/1   ← correct when rowId is bare PK
+</code></pre>
+<p><strong>Critical distinction</strong>: scheme-based patterns (<code>drdb:#</code>) vs path-based patterns (<code>/usr/dr/#</code>):</p>
+<table>
+<thead>
+<tr><th>Pattern</th><th>Bare PK <code>1</code> → FK path</th><th>Absolute value <code>/usr/dr/session/1</code> in column</th><th>Problem</th></tr>
+</thead>
+<tbody>
+<tr><td><code>drdb:#</code></td><td><code>drdb:session/1</code></td><td><code>drdb:session/1</code> (scheme prefix distinguishes)</td><td>None — easy to distinguish</td></tr>
+<tr><td><code>/usr/dr/#</code></td><td><code>/usr/dr/session/1</code></td><td><code>/usr/dr/session//usr/dr/session/1</code></td><td><strong>Path doubling</strong> — can't tell bare PK from absolute path</td></tr>
+</tbody>
+</table>
+<p>When callers store full URIs (e.g. <code>uri(/usr/dr/session/1)</code>) in FK columns instead of bare primary keys (e.g. <code>1</code>),
+the path-based pattern can't distinguish them — both look like path segments.</p>
+<h4><code>readColumnWithMetadata</code> guards</h4>
+<p>Three guards prevent FK miswrapping in <code>readColumnWithMetadata()</code>:</p>
+<table>
+<thead>
+<tr><th>Guard</th><th>Value example</th><th>Action</th><th>Why</th></tr>
+</thead>
+<tbody>
+<tr><td>Starts with <code>/</code></td><td><code>/usr/dr/session/1</code></td><td>Return plain <code>uri()</code> — no FK wrapping</td><td>Caller stored a full URI, not a bare PK</td></tr>
+<tr><td>Contains <code>:</code></td><td><code>drdb:session/1</code></td><td>Return plain <code>uri()</code> — no FK wrapping</td><td>Scheme-based absolute path</td></tr>
+<tr><td>Starts with <code>[</code></td><td><code>[!*/usr/dr/msg/4,...]</code></td><td>Skip FK, fall through to type reader</td><td>JSON list of references, not a single FK</td></tr>
+</tbody>
+</table>
+<p>Without these guards, three bugs occur:</p>
+<ol>
+<li>Absolute paths get doubled (<code>/usr/dr/session//usr/dr/session/1</code>)</li>
+<li>Plain URIs get wrapped in unnecessary <code>auto_from_</code> (<code>session=&gt;!*/usr/dr/session/1</code> instead of <code>session=&gt;/usr/dr/session/1</code>)</li>
+<li>JSON lists get treated as single FK path segments (<code>!*/usr/dr/message/[...]</code>)</li>
+</ol>
+<h4>FK persistence in <code>_mtron_meta</code></h4>
+<p><code>persistColumnType()</code> writes FK info to <code>_mtron_meta.ref_table</code>. When reading rows, <code>processMetaRow()</code> calls
+<code>registerOrPendingFK()</code> which registers with <code>SQLSchemaGenerator.registerFK()</code>. The <code>ref_table</code> column stores
+only the target table name (e.g. <code>&quot;session&quot;</code>), not a full path — <code>buildFKReferencePath()</code> reconstructs the path
+at read time.</p>
+<h4>When to avoid FK columns</h4>
+<p>If a column stores a <strong>list</strong> of references (e.g. <code>message =&gt; [!*/usr/dr/msg/1, !*/usr/dr/msg/2]</code>), the column
+should NOT have a FK inferred. The naming convention may still match (e.g. column <code>message</code> matches table <code>message</code>),
+but the <code>[</code> guard in <code>readColumnWithMetadata</code> prevents miswrapping. For new schemas, consider naming list-of-reference
+columns differently from their target tables to avoid the convention match entirely.</p>
+<h3>See also</h3>
+<ul>
+<li><code>rewrite-system-java.md</code> — RewriteBuilder, Rewriter, Code.rewrite () loop</li>
+<li><code>type-system-java.md</code> — Type interface, MType, Fluent API</li>
+<li><code>mtron-skill-reference.md</code> — mtron expression syntax (from, skip, take, where, count)</li>
+</ul>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>
