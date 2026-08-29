@@ -488,7 +488,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
          */
         static Obj parseQ(final String value) {
             try {
-                return ObjmtronSerializer.parse(value);
+                return value.isEmpty() ? Obj.none() : ObjmtronSerializer.parse(value);
             } catch (final Exception e) {
                 return str(value);
             }

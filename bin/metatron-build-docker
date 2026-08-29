@@ -1,0 +1,119 @@
+#!/bin/sh
+# metatron-build-docker — the isolated BUILD-TEST-DOCS loop, in docker.
+#
+# The live server (host VM or the `metatron` dev container) owns the host's
+# metaT ROn ports (8555/8777).  This loop runs in its own container, with
+# NO published ports and the repo mounted as a volume, so a build/test/docs
+# pass can never collide with — or be collided with by — the running server.
+#
+# Usage:
+#   bin/metatron-build-docker build                 # mvn package (skip tests)
+#   bin/metatron-build-docker test [mvn test args]  # e.g. test -Dtest=MIMETest
+#   bin/metatron-build-docker docs [dir|file.md]    # MarkdownRunner (+ SkillHtmlRenderer)
+#       dir      — a skill root (default docs/skills/mtron)
+#       file.md  — single probe mode: a file under docs/skills/ lands in the
+#                  matching .metatron/skills/ slot; any other .md goes to _probe/
+#   bin/metatron-build-docker run '<cmd>'           # raw shell inside the container
+#
+# Env:
+#   METATRON_BUILD_IMAGE   image (default metatron-build:24 — JDK 24 per CI + patchelf;
+#                          a custom image MUST provide patchelf or tree-sitter fails to load)
+#   METATRON_BUILD_NAME    container name (default metatron-build)
+#
+# The maven local repository defaults to the repo's .build/m2/repository so the
+# host's populated cache is reused; override with MAVEN_REPO (path inside repo).
+
+set -eu
+
+cd "$(dirname "$(readlink -f "$0")")/.."
+
+IMAGE="${METATRON_BUILD_IMAGE:-metatron-build:24}"   # maven + JDK24 + patchelf (see dist/docker/Dockerfile.build)
+# unique suffix so concurrent or stale containers from a killed run can't collide on the name
+NAME="${METATRON_BUILD_NAME:-metatron-build}-$(date +%s)-$$"
+REPO="$(pwd)"
+MAVEN_REPO="${MAVEN_REPO:-.build/m2/repository}"
+JAR="target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar"
+DOCS=studio.phaseshift.metatron.docs
+
+JVM_FLAGS="--enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector \
+--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED \
+--add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED \
+--add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED \
+--add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED \
+--add-opens java.base/sun.nio.cs=ALL-UNNAMED"
+
+# note: the repo is mounted at /work inside the container — maven repo paths
+# must be /work-relative, not the host path (MAVEN_REPO is repo-relative).
+MVN_OPTS="-B -Dmaven.repo.local=/work/$MAVEN_REPO"
+
+# common docker run flags: repo volume, host user ownership, no ports, ephemeral.
+# trailing args ("$@") are appended as the container command.
+docker_run() {
+    docker run --rm --name "$NAME" \
+        --user "$(id -u):$(id -g)" \
+        -e HOME=/work \
+        -v "$REPO":/work -w /work \
+        "$IMAGE" "$@"
+}
+
+command -v docker >/dev/null 2>&1 || { echo "error: docker not found on PATH" >&2; exit 1; }
+
+# ensure the build image exists (maven + JDK24 + patchelf).  patchelf is
+# required: the uber-jar ships a musl-built tree-sitter .so that
+# ObjJavaSerializer patches against glibc at load.  Built once, then cached.
+if [ "${1-}" != "run" ] && ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
+    echo "==> building $IMAGE (maven + JDK24 + patchelf)"
+    docker build -q -f dist/docker/Dockerfile.build -t "$IMAGE" .
+fi
+
+case "${1-}" in
+    build)
+        docker_run sh -c "mvn $MVN_OPTS -DskipTests package"
+        ;;
+    test)
+        shift
+        # shellcheck disable=SC2046
+        docker_run sh -c "mvn $MVN_OPTS test $* || exit 1"
+        ;;
+    docs)
+        target="${2:-docs/skills/mtron}"
+        probe=0
+        case "$target" in
+            *.md)
+                case "$target" in
+                    docs/skills/*.md)
+                        rel="${target#docs/skills/}"
+                        case "$rel" in
+                            */*) sub="${rel%/*}";;
+                            *)   sub="";;
+                        esac
+                        out_dir=".metatron/skills${sub:+/$sub}"
+                        ;;
+                    *)
+                        probe=1
+                        out_dir="_probe"
+                        ;;
+                esac
+                ;;
+            *)
+                out_dir=".metatron/skills/$(basename "$target")"
+                ;;
+        esac
+        cmd="set -eu
+            [ -f $JAR ] || mvn $MVN_OPTS -DskipTests package
+            java $JVM_FLAGS -cp $JAR $DOCS.MarkdownRunner $target -o $out_dir"
+        if [ "$probe" = "0" ]; then
+            cmd="$cmd
+            java -cp $JAR $DOCS.SkillHtmlRenderer -s docs/website/skills"
+        fi
+        docker_run sh -c "$cmd"
+        ;;
+    run)
+        shift
+        docker_run sh -c "$*"
+        ;;
+    *)
+        sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'
+        exit 1
+        ;;
+esac

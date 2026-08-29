@@ -336,5 +336,42 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
             assertTrue(get.statusCode() >= 400,
                     "GET after DELETE should be 4xx, got: " + get.statusCode());
         }
+
+        // ========================================
+        // CONCURRENCY — every request on / hits the SAME cached handler
+        // instance (httpSpace session cache) on the shared thread pool.
+        // HttpRec must keep the HttpExchange per-thread, not per-instance,
+        // or concurrent requests cross-wire each other's sockets:
+        // "headers already sent", "stream closed", orphaned requests.
+        // ========================================
+
+        @Test
+        public void testConcurrentGetsDoNotCrossWireResponses() throws Exception {
+            final int workers = 8, rounds = 5;
+            final java.util.concurrent.ExecutorService pool =
+                    java.util.concurrent.Executors.newFixedThreadPool(workers);
+            final java.util.concurrent.CyclicBarrier barrier = new java.util.concurrent.CyclicBarrier(workers);
+            final java.util.List<java.util.concurrent.Future<java.net.http.HttpResponse<String>>> futures =
+                    new java.util.ArrayList<>();
+            try {
+                for (int i = 0; i < workers; i++) {
+                    futures.add(pool.submit(() -> {
+                        barrier.await();
+                        for (int r = 0; r < rounds; r++)
+                            return httpGet("/index.html");
+                        throw new IllegalStateException("unreachable");
+                    }));
+                }
+                for (final java.util.concurrent.Future<java.net.http.HttpResponse<String>> future : futures) {
+                    final java.net.http.HttpResponse<String> resp = future.get(15, java.util.concurrent.TimeUnit.SECONDS);
+                    assertEquals(200, resp.statusCode(),
+                            "concurrent GET /index.html should each return 200, got: " + resp.statusCode());
+                    assertTrue(resp.body().contains("<h1>Hello World</h1>"),
+                            "each concurrent response must carry the full index body, got: " + resp.body());
+                }
+            } finally {
+                pool.shutdownNow();
+            }
+        }
     }
 }

@@ -37,11 +37,20 @@ mtron> <ws://localhost:8555/mcp/+/notifications/#?subq> -> sub::[
                params  => *message>>1].inst(payload=>_){
                  *<ws://localhost:8555/mcp/${*message>>0>>1}>>>send.apply(*payload)}}]
 ==>fail::[obj does not match /m/web/mime/json::T
-     [jsonrpc=>'2.0',method=>rshift(0).minus(<ws://localhost:8555/mcp/${*message>>0>>1}${/}>),params=>*message.rshift(1)]
+     [
+      jsonrpc=>'2.0',
+      method=>rshift(0).minus(<ws://localhost:8555/mcp/${*message>>0>>1}${/}>),
+      params=>*message.rshift(1)]
          X=>
      str::T[/m/inst/pred?rng=#{?}&dom=#{?}(#{*}::T){<j>}]@/m/web/mime/json
-     ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-     [json::[jsonrpc=>'2.0',method=>rshift(0).minus(<ws://localhost:8555/mcp/${*message>>0>>1}${/}>),params=>*message.rshift(1)]=>json::[jsonrpc=>'2.0',method=>rshift(0).minus(<ws://localhost:8555/mcp/${*message>>0>>1}${/}>),params=>*message.rshift(1)]=>==>/m/inst/pred?#{?}<=#{?}(#{*}::T)]]@/sys/fail/342
+     --------------------------------------------------------------------------
+     [json::[
+      jsonrpc=>'2.0',
+      method=>rshift(0).minus(<ws://localhost:8555/mcp/${*message>>0>>1}${/}>),
+      params=>*message.rshift(1)]=>json::[
+      jsonrpc=>'2.0',
+      method=>rshift(0).minus(<ws://localhost:8555/mcp/${*message>>0>>1}${/}>),
+      params=>*message.rshift(1)]=>==>/m/inst/pred?#{?}<=#{?}(#{*}::T)]]@/sys/fail/326
 ```
 This lives in `boot/boot.mtron` lines 82-88 and is injected at boot time.
 
@@ -74,11 +83,17 @@ Ensures JSON serialization (`{"jsonrpc":"2.0",...}`) rather than mtron record sy
 mtron> [-- WRONG — sends literal source code, not evaluated JSON --]
 mtron> json::[jsonrpc => '2.0', params => *message>>1]
 ==>fail::[obj does not match /m/web/mime/json::T
-     [jsonrpc=>'2.0',params=>*message.rshift(1)]
+     [
+      jsonrpc=>'2.0',
+      params=>*message.rshift(1)]
          X=>
      str::T[/m/inst/pred?rng=#{?}&dom=#{?}(#{*}::T){<j>}]@/m/web/mime/json
-     -------------------------------------------------------------------------------------------------------------------------------------------
-     [json::[jsonrpc=>'2.0',params=>*message.rshift(1)]=>json::[jsonrpc=>'2.0',params=>*message.rshift(1)]=>==>/m/inst/pred?#{?}<=#{?}(#{*}::T)]]@/sys/fail/352
+     ---------------------------------------------------------------------
+     [json::[
+      jsonrpc=>'2.0',
+      params=>*message.rshift(1)]=>json::[
+      jsonrpc=>'2.0',
+      params=>*message.rshift(1)]=>==>/m/inst/pred?#{?}<=#{?}(#{*}::T)]]@/sys/fail/336
 ```**Symptom**: Client receives raw expression text instead of evaluated values.
 **Fix**: Use `-<json::[...]` to force evaluation.
 
@@ -89,7 +104,7 @@ mtron> *srv>>>send.apply(-<json::[...])
 ==>fail::[parse error at line 1, col 7:
      *srv>>>send.apply(-<json::[...])
            ^
-     unexpected '>' — URI brackets don't match, or extra '>'?]@/sys/fail/354
+     unexpected '>' — URI brackets don't match, or extra '>'?]@/sys/fail/338
 ```**Symptom**: `fail::[unable to determine inst function:]`
 **Fix**: Separate JSON builder from send call using `.inst()` split-pattern.
 
@@ -102,7 +117,7 @@ mtron> <ws://.../?subq> -> sub::[...]                       [-- re-register subs
 ==>fail::[parse error at line 1, col 17:
      <ws://.../?subq> -> sub::[...]                       
                      ^
-     could not parse at ' ']@/sys/fail/356
+     could not parse at ' ']@/sys/fail/340
 ```
 ## Boot Integration
 
@@ -112,7 +127,7 @@ mtron> wsspace::[q => [subq::[=>]], ...]@/sys/space/web/ws
 ==>fail::[parse error at line 1, col 1:
      wsspace::[q => [subq::[=>]], ...]@/sys/s...
      ^
-     could not parse at 'w']@/sys/fail/358
+     could not parse at 'w']@/sys/fail/342
 ```
 The `q => [subq::[=>]]` adds declarative pub/sub semantics to the space.
 

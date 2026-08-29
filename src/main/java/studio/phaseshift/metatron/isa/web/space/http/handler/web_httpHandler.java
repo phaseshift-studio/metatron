@@ -82,7 +82,7 @@ public class web_httpHandler extends HttpRec {
         // ── ON_GET: serve objects from any Router-backed space ──
         this.jvm().put(uri(ON_GET), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
-                final HttpExchange exchange = this.exchange;
+                final HttpExchange exchange = this.exchange();
                 if (exchange == null) {
                     // exchange is null during type-checking of the isaPredicate
                     return noobj();
@@ -259,7 +259,7 @@ public class web_httpHandler extends HttpRec {
         if (readOnlyGate()) {
             return noobj();
         }
-        final HttpExchange exchange = this.exchange;
+        final HttpExchange exchange = this.exchange();
         if (exchange == null) {
             // exchange is null during type-checking of the isaPredicate
             return noobj();
@@ -328,7 +328,7 @@ public class web_httpHandler extends HttpRec {
         if (readOnlyGate()) {
             return noobj();
         }
-        final HttpExchange exchange = this.exchange;
+        final HttpExchange exchange = this.exchange();
         if (exchange == null) {
             // exchange is null during type-checking of the isaPredicate
             return noobj();
@@ -369,7 +369,7 @@ public class web_httpHandler extends HttpRec {
         if (readOnlyGate()) {
             return noobj();
         }
-        final HttpExchange exchange = this.exchange;
+        final HttpExchange exchange = this.exchange();
         if (exchange == null) {
             // exchange is null during type-checking of the isaPredicate
             return noobj();

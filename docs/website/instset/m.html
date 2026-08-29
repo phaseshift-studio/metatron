@@ -240,7 +240,7 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../skills/agent/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
@@ -253,7 +253,7 @@
                     </li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
@@ -271,7 +271,7 @@
                     </li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
@@ -423,10 +423,10 @@
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- const=&gt;[noobj],
  type=&gt;[#::T,bool::T,int::T,real::T,bytes::T,str::T,uri::T,rel::T,lst::T,rec::T,...(29 more)],
- rewrite=&gt;[/m/inst/rewrite/id_removal?code{?}&lt;=code(),/m/inst/rewrite/map_nest?code{?}&lt;=code(),/m/inst/rewrite/map_inst?code{?}&lt;=code(),/m/inst/rewrite/else_after_count?code{?}&lt;=code(),/m/inst/rewrite/plus_zero?code{?}&lt;=code(),/m/inst/rewrite/mult_one?code{?}&lt;=code(),/m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),/m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),/m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code(),/m/inst/rewrite/range_skip_take?code{?}&lt;=code(),...(1 more)],
+ const=&gt;[noobj],
  inst=&gt;[as?bool&lt;=bool(bool::T),as?bytes&lt;=bool(bytes::T),as?int&lt;=bool(int::T),as?real&lt;=bool(real::T),as?str&lt;=bool(str::T),plus?bool&lt;=bool(bool::T),mult?bool&lt;=bool(bool::T),not?bool&lt;=bool(),as?bool&lt;=bytes(bool::T),as?str&lt;=bytes(str::T),...(230 more)],
+ rewrite=&gt;[/m/inst/rewrite/id_removal?code{?}&lt;=code(),/m/inst/rewrite/map_nest?code{?}&lt;=code(),/m/inst/rewrite/map_inst?code{?}&lt;=code(),/m/inst/rewrite/else_after_count?code{?}&lt;=code(),/m/inst/rewrite/plus_zero?code{?}&lt;=code(),/m/inst/rewrite/mult_one?code{?}&lt;=code(),/m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),/m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),/m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code(),/m/inst/rewrite/range_skip_take?code{?}&lt;=code(),...(1 more)],
  space=&gt;[sub=&gt;{!*/m/sys,!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}]]@/m</code></pre>
                     </div>
                 </div>
@@ -577,7 +577,7 @@
 </a><a href="#__m__inst__args?rng=__m__lst&dom=__m__inst" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">args</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__inst__as?rng=__m__bool&dom=__m__bool" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__inst__as?rng=__m__real&dom=__m__int" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">as</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__at?rng=B{*}&dom=A{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -712,7 +712,7 @@
 </a><a href="#__m__inst__mean?rng=__m__real&dom=__m__real{*}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mean</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__inst__merge?rng=__m__rec&dom=__m__rel{*}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__inst__merge?rng=__m__str&dom=__m__str{*}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">merge</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__minus?rng=__m__int&dom=__m__int" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -757,7 +757,7 @@
 </a><a href="#__m__inst__path?rng=__m__uri&dom=__m__uri" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">path</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__inst__plus?rng=__m__int&dom=__m__int" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__inst__plus?rng=__m__bool&dom=__m__bool" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">plus</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__port?rng=__m__int{?}&dom=__m__uri" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -814,7 +814,7 @@
 </a><a href="#__m__inst__scheme?rng=__m__uri{?}&dom=__m__uri" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">scheme</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__inst__select?rng=__m__str&dom=__m__str" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__inst__select?rng=__m__lst{?}&dom=__m__lst" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">select</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__serialize?rng=B&dom=A" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -935,12 +935,15 @@
         <span class="code text-secondary fw-bold">rdf</span>
         <small class="text-muted code">/m/rdf</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">instset::[pattern=&gt;/m/rdf/#,q=&gt;[docq::[
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">instset::[
+ pattern=&gt;/m/rdf/#,
+ q=&gt;[docq::[
  pattern=&gt;docq,
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m]]@/m/rdf</code></pre></div>
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[super=&gt;!*/m]]@/m/rdf</code></pre></div>
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
@@ -1062,14 +1065,7 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
         </span>
         <small class="text-muted code">/m/qproc/docq/docs</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  {?}obj=&gt;#{*}::T,
-  {?}dom=&gt;str::T,
-  {?}rng=&gt;str::T,
-  {?}args=&gt;#::T,
-  desc=&gt;str::T,
-  {?}build=&gt;str::T,
-  {?}example=&gt;lst::T]][ctor?docs&lt;=#{?}(#{*}::T)]@/m/qproc/docq/docs</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}obj=&gt;#{*}::T,{?}dom=&gt;str::T,{?}rng=&gt;str::T,{?}args=&gt;#::T,desc=&gt;str::T,{?}build=&gt;str::T,{?}example=&gt;lst::T]][ctor?docs&lt;=#{?}(#{*}::T)]@/m/qproc/docq/docs</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__qproc__embedq">
@@ -1139,7 +1135,8 @@ fail::[dah] + 2 + catch(9)  [-- fail flattened to 9     --]</code></pre>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">inst::T</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">creates a remote console connection</p>
+    <p class="mb-0 text-light">[mapper] creates a remote console connection
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#</span> <span class="text-light">=&gt;</span> <span class="text-success">#</span></pre>
 </div>
@@ -1151,13 +1148,7 @@ fail::[dah] + 2 + catch(9)  [-- fail flattened to 9     --]</code></pre>
         </span>
         <small class="text-muted code">/m/instset</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  {?}pattern=&gt;uri::T,
-  {?}const=&gt;[#{?}::T],
-  {?}type=&gt;{?}[#{*}::T],
-  {?}inst=&gt;{?}[inst::T],
-  {?}rewrite=&gt;{?}[inst::T],
-  {?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(#{*}::T)]@/m/instset</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[#{?}::T],{?}type=&gt;{?}[#{*}::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(#{*}::T)]@/m/instset</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an aggregate of consts, types, insts, rewrites, and sugars structuring a domain of discourse</p>
@@ -1356,11 +1347,7 @@ qprocs must be attached to a space before use. a space&#39;s qprocs are accessib
         </span>
         <small class="text-muted code">/m/rdf/space/quad</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/rdf/space/triple::T[?[
-  uri::T,
-  uri::T,
-  uri::T,
-  uri::T]]@/m/rdf/space/quad</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/rdf/space/triple::T[?[uri::T,uri::T,uri::T,uri::T]]@/m/rdf/space/quad</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__real">
@@ -1679,9 +1666,10 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__and?rng=__m__bool&dom=A-doc-0-tab').click();document.getElementById('__m__inst__and?rng=__m__bool&dom=A-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">and?rng=bool&dom=<span class="code text-info">A</span>(bool::T,bool::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">logical \(\texttt{and}\) function \(f(X)\to \tt{true}\) if all \(X\) are true</p>
+    <p class="mb-0 text-light">[mapper] logical \(\texttt{and}\) function \(f(X)\to \tt{true}\) if all \(X\) are true
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#true if all objs are true" class="text-success">true if all objs are true</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any objs" class="text-info">[generic] any objs</a> <span class="text-light">=&gt;</span> <a href="#true if all objs are true" class="text-success">true if all objs are true</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__apply?rng=#{*}&dom=#">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -1705,168 +1693,152 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__args?rng=__m__lst&dom=__m__inst-doc-0-tab').click();document.getElementById('__m__inst__args?rng=__m__lst&dom=__m__inst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">args?rng=lst&dom=inst(){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="__m__inst__as?rng=__m__bool&dom=__m__bool">
+</div><div class="card mb-3" id="__m__inst__as?rng=__m__real&dom=__m__int">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">as</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__bool" data-bs-toggle="tooltip" title="domain" class="code text-info">bool</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__bool" data-bs-toggle="tooltip" title="range" class="code text-success">bool</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__int" data-bs-toggle="tooltip" title="domain" class="code text-info">int</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/as?rng=/m/bool&amp;dom=/m/bool</small>
+        <small class="text-muted code">/m/inst/as?rng=/m/real&amp;dom=/m/int</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bool&dom=bool(bool::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&dom=bool(bytes::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=int&dom=bool(int::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=int(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=code&dom=lst(code::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=uri(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=<span class="code text-success">B</span>&dom=<span class="code text-info">A</span>(<span class="code text-success">B</span>::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=yaml(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=<span class="code text-info">A</span>(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=skill&dom=agent(skill::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=image&dom=bytes(image::T,else(1.0000)){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=xml(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-1-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=html(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=markdown&dom=rec(markdown::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=java&dom=str(java::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=json(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&dom=rec(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&dom=code(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=real&dom=bool(real::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=csv&dom=str(csv::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=markdown(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=datetime&dom=uri(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=datetime(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-2-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&dom=docs(tool::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-3-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=skill&dom=uri(skill::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-4-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=mcp_server&dom=skill(mcp_server::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=str(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=uri(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=real(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&dom=str(bytes::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=<span class="code text-success">noobj{0}</span>&dom=<span class="code text-info">A</span>(){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=int&dom=str(int::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-3-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=uri(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&dom=rec(html::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=java&dom=rec(java::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=json&dom=mcp_client(json::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&dom=markdown(html::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=lst(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=xsv&dom=str(xsv::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=mcp_client{+}&dom=json(mcp_client::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=int&dom=uri(int::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=java(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=<span class="code text-success">B</span>&dom=<span class="code text-info">A</span>(#::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&dom=file(bytes::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=skill&dom=markdown(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-5-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-5').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&dom=inst(tool::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=datetime&dom=str(datetime::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=real&dom=str(real::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=bool(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bool&dom=bytes(bool::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=int&dom=real(int::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-6-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-6').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=model&dom=rec(model::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=rel(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=<a href="m_math.html#__m__math__time" data-bs-toggle="tooltip" title="domain" class="code text-info">time</a>&dom=<a href="m_math.html#__m__math__time" data-bs-toggle="tooltip" title="domain" class="code text-info">time</a>(time::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=rec(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=bytes(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bool&dom=int(bool::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=lst(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bool&dom=str(bool::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=xml&dom=rec(xml::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=json&dom=rec(json::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&dom=rel(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&dom=int(bytes::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&dom=lst(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=real&dom=int(real::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=int(str::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=real&dom=int(real::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=bytes(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bool&dom=bool(bool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=int&dom=uri(int::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=str(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&dom=bool(bytes::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=int&dom=bool(int::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=real&dom=bool(real::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=int(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=datetime&dom=uri(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=xsv&dom=str(xsv::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=model&dom=rec(model::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=json&dom=mcp_client(json::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=json&dom=rec(json::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=real(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&dom=markdown(html::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=bool(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=uri(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=datetime&dom=str(datetime::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&dom=str(bytes::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=code&dom=lst(code::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=markdown(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=<span class="code text-info">A</span>(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=yaml(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&dom=lst(lst::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-1-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&dom=docs(tool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=<span class="code text-success">noobj{0}</span>&dom=<span class="code text-info">A</span>(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=xml(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-2-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=uri(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=rel(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bool&dom=bytes(bool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=real&dom=str(real::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=rec(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=json(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-2-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=skill&dom=uri(skill::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&dom=rel(lst::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bool&dom=int(bool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&dom=rec(html::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-3-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=mcp_server&dom=skill(mcp_server::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=mcp_client{+}&dom=json(mcp_client::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=lst(lst::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&dom=int(bytes::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=java(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=int&dom=str(int::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bool&dom=str(bool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&dom=code(lst::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=image&dom=bytes(image::T,else(1.0000)){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=xml&dom=rec(xml::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=<a href="m_math.html#__m__math__time" data-bs-toggle="tooltip" title="domain" class="code text-info">time</a>&dom=<a href="m_math.html#__m__math__time" data-bs-toggle="tooltip" title="domain" class="code text-info">time</a>(time::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=java&dom=str(java::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=<span class="code text-success">B</span>&dom=<span class="code text-info">A</span>(<span class="code text-success">B</span>::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-4-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=html(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=csv&dom=str(csv::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=datetime(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=markdown&dom=rec(markdown::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&dom=uri(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=<span class="code text-success">B</span>&dom=<span class="code text-info">A</span>(#::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=skill&dom=markdown(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=int&dom=real(int::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&dom=rec(lst::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&dom=lst(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&dom=file(bytes::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=java&dom=rec(java::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-5-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-5').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=skill&dom=agent(skill::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-6-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-6').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&dom=inst(tool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__real&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&dom=int(str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top p-0">
-    <ul class="nav nav-pills p-2 bg-dark" id="__m__inst__as?rng=__m__bool&dom=__m__bool-pills" role="tablist">
+    <ul class="nav nav-pills p-2 bg-dark" id="__m__inst__as?rng=__m__real&dom=__m__int-pills" role="tablist">
         <li class="nav-item disabled me-2">
             <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
         </li>
         <li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2 active text-start h-100"
-        id="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0"
+        id="__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__real&dom=__m__int-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
-        id="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__bool&dom=__m__bool-doc-1"
+        id="__m__inst__as?rng=__m__real&dom=__m__int-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__real&dom=__m__int-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
-        id="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__bool&dom=__m__bool-doc-2"
+        id="__m__inst__as?rng=__m__real&dom=__m__int-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__real&dom=__m__int-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 3
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
-        id="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__bool&dom=__m__bool-doc-3"
+        id="__m__inst__as?rng=__m__real&dom=__m__int-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__real&dom=__m__int-doc-3"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 4
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
-        id="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-4-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__bool&dom=__m__bool-doc-4"
+        id="__m__inst__as?rng=__m__real&dom=__m__int-doc-4-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__real&dom=__m__int-doc-4"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 5
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
-        id="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-5-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__bool&dom=__m__bool-doc-5"
+        id="__m__inst__as?rng=__m__real&dom=__m__int-doc-5-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__real&dom=__m__int-doc-5"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 6
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
-        id="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-6-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__bool&dom=__m__bool-doc-6"
+        id="__m__inst__as?rng=__m__real&dom=__m__int-doc-6-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as?rng=__m__real&dom=__m__int-doc-6"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 7
     </button>
 </li>
     </ul>
-    <div class="tab-content" id="__m__inst__as?rng=__m__bool&dom=__m__bool-content">
-        <div class="tab-pane fade show active" id="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-0-tab">
+    <div class="tab-content" id="__m__inst__as?rng=__m__real&dom=__m__int-content">
+        <div class="tab-pane fade show active" id="__m__inst__as?rng=__m__real&dom=__m__int-doc-0" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__real&dom=__m__int-doc-0-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">maps an agent to a skill by aggregating its features&#39; tools and resources</p>
+    <p class="mb-0 text-light">[mapper] maps a rec to a model
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an agent" class="text-info">an agent</a> <span class="text-light">=&gt;</span> <a href="#a skill aggregating the agent's capabilities" class="text-success">a skill aggregating the agent&#39;s capabilities</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the skill type'" class="text-info">&#39;the skill type&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;ollama:qwen3:latest&gt;+[response=&gt;[to=&gt;print(_)]].as(skill::T)</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-1" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-1-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">html::[html=&gt;
-       [head=&gt;
-        [title=&gt;&quot;metatron&quot;]],
-        body=&gt;
-         [out=&gt;[
-          [tag=&gt;a,href=&gt;...],
-          [tag...]]]]</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mime__html" class="text-info">html</a> <span class="text-light">=&gt;</span> <a href="#__m__rec" class="text-success">rec</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__rec'" class="text-info">rec&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a rec" class="text-info">a rec</a> <span class="text-light">=&gt;</span> <a href="#a model" class="text-success">a model</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'a rec shaped like a model'" class="text-info">&#39;a rec shaped like a model&#39;</a>
 </pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-2" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-2-tab">
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__real&dom=__m__int-doc-1" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__real&dom=__m__int-doc-1-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">maps an instruction doc to a tool specification for llm use</p>
+    <p class="mb-0 text-light">[mapper] maps an instruction doc to a tool specification for llm use
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#instruction documentation" class="text-info">instruction documentation</a> <span class="text-light">=&gt;</span> <a href="#a tool specification" class="text-success">a tool specification</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -1876,9 +1848,10 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval?docq.as(tool::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-3" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-3-tab">
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__real&dom=__m__int-doc-2" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__real&dom=__m__int-doc-2-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">maps a directory to an llm skill where the dir follows the standard SKILL.md structure</p>
+    <p class="mb-0 text-light">[mapper] maps a directory to an llm skill where the dir follows the standard SKILL.md structure
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a dir uri containing the llm SKILL.md file" class="text-info">a dir uri containing the llm SKILL.md file</a> <span class="text-light">=&gt;</span> <a href="#a mtron encoding of the specified skill" class="text-success">a mtron encoding of the specified skill</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -1888,9 +1861,10 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;local:.agent/skills&gt;.as(skill::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-4" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-4-tab">
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__real&dom=__m__int-doc-3" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__real&dom=__m__int-doc-3-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">maps a skill to an mcp server exposing its tools and resources</p>
+    <p class="mb-0 text-light">[mapper] maps a skill to an mcp server exposing its tools and resources
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a skill" class="text-info">a skill</a> <span class="text-light">=&gt;</span> <a href="#an mcp server" class="text-success">an mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -1900,9 +1874,39 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">skill.as(mcp_server::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-5" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-5-tab">
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__real&dom=__m__int-doc-4" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__real&dom=__m__int-doc-4-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">maps an instruction to a tool specification for llm use</p>
+    <p class="mb-0 text-light">[mapper] html::[html=&gt;
+       [head=&gt;
+        [title=&gt;&quot;metatron&quot;]],
+        body=&gt;
+         [out=&gt;[
+          [tag=&gt;a,href=&gt;...],
+          [tag...]]]]
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mime__html" class="text-info">html</a> <span class="text-light">=&gt;</span> <a href="#__m__rec" class="text-success">rec</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__rec'" class="text-info">rec&#39;</a>
+</pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__real&dom=__m__int-doc-5" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__real&dom=__m__int-doc-5-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[mapper] maps an agent to a skill by aggregating its features&#39; tools and resources
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an agent" class="text-info">an agent</a> <span class="text-light">=&gt;</span> <a href="#a skill aggregating the agent's capabilities" class="text-success">a skill aggregating the agent&#39;s capabilities</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the skill type'" class="text-info">&#39;the skill type&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;ollama:qwen3:latest&gt;+[response=&gt;[to=&gt;print(_)]].as(skill::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__real&dom=__m__int-doc-6" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__real&dom=__m__int-doc-6-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[mapper] maps an instruction to a tool specification for llm use
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an instruction" class="text-info">an instruction</a> <span class="text-light">=&gt;</span> <a href="#a tool specification" class="text-success">a tool specification</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -1911,15 +1915,6 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval.as(tool::T)</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-6" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__bool&dom=__m__bool-doc-6-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">maps a rec to a model</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a rec" class="text-info">a rec</a> <span class="text-light">=&gt;</span> <a href="#a model" class="text-success">a model</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'a rec shaped like a model'" class="text-info">&#39;a rec shaped like a model&#39;</a>
-</pre>
 </div>
 </div>
     </div>
@@ -2000,7 +1995,8 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__barrier?rng=__m__lst&dom=#{*}-doc-0-tab').click();document.getElementById('__m__inst__barrier?rng=__m__lst&dom=#{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">barrier?rng=<span class="code text-info"><span class="code text-success">A{*}</span></span>&dom=<span class="code text-info"><span class="code text-success">A{*}</span></span>(<span class="code text-info"><span class="code text-success">A{*}</span></span>::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a rec merging function \(f(X)\to X\)</p>
+    <p class="mb-0 text-light">[reducer] a rec merging function \(f(X)\to X\)
+gathers multiple inputs and produces a single output (range coefficient is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the objs as a rec" class="text-success">the objs as a rec</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -2021,7 +2017,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <p class="mb-0 text-light">the lhs obj is halted and the arg is the rhs obj</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#the arg without an applied lhs" class="text-success">the arg without an applied lhs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] maybe an obj" class="text-info">[generic] maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#[generic] the arg without an applied lhs" class="text-success">[generic] the arg without an applied lhs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the unapplied rhs'" class="text-info">&#39;the unapplied rhs&#39;</a>
 </pre>
 </div>
@@ -2036,10 +2032,11 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__catch?rng=C{*}&dom=A-doc-0-tab').click();document.getElementById('__m__inst__catch?rng=C{*}&dom=A-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">catch?rng=<span class="code text-success">C{*}</span>&dom=<span class="code text-info">A</span>(B{*}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a catch function f(x)-&gt;x</p>
+    <p class="mb-0 text-light">[catcher] a catch function f(x)-&gt;x
+handles fail objs, intercepting fail propagation</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#uncaught fails go to arg, others mapped by identity" class="text-success">uncaught fails go to arg, others mapped by identity</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any obj" class="text-info">[generic] any obj</a> <span class="text-light">=&gt;</span> <a href="#[generic] uncaught fails go to arg, others mapped by identity" class="text-success">[generic] uncaught fails go to arg, others mapped by identity</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the obj triggered on an uncaught fail'" class="text-info">&#39;the obj triggered on an uncaught fail&#39;</a>
 </pre>
 </div>
@@ -2089,16 +2086,17 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <div class="tab-content" id="__m__inst__cc?rng=__m__int&dom=A{*}-content">
         <div class="tab-pane fade show active" id="__m__inst__cc?rng=__m__int&dom=A{*}-doc-0" role="tabpanel" aria-labelledby="__m__inst__cc?rng=__m__int&dom=A{*}-doc-0-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">maps an obj to it&#39;s coefficient with a function f(lhs^c)-&gt;c</p>
+    <p class="mb-0 text-light">[reducer] maps an obj to it&#39;s coefficient with a function f(lhs^c)-&gt;c
+gathers multiple inputs and produces a single output (range coefficient is one)</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj coefficient" class="text-success">the lhs obj coefficient</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any obj" class="text-info">[generic] any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj coefficient" class="text-success">the lhs obj coefficient</a></pre>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__cc?rng=__m__int&dom=A{*}-doc-1" role="tabpanel" aria-labelledby="__m__inst__cc?rng=__m__int&dom=A{*}-doc-1-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">sets the coefficient of the lhs obj via f(lhs,c)-&gt;lhs^c</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj with new coefficient" class="text-success">the lhs obj with new coefficient</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any obj" class="text-info">[generic] any obj</a> <span class="text-light">=&gt;</span> <a href="#[generic] the lhs obj with new coefficient" class="text-success">[generic] the lhs obj with new coefficient</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'a coefficient for lhs obj'" class="text-info">&#39;a coefficient for lhs obj&#39;</a>
 </pre>
 </div>
@@ -2134,9 +2132,10 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__count?rng=__m__int&dom=A{*}-doc-0-tab').click();document.getElementById('__m__inst__count?rng=__m__int&dom=A{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">count?rng=int&dom=<span class="code text-info">A{*}</span>(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">counts the number of objs</p>
+    <p class="mb-0 text-light">[reducer] counts the number of objs
+gathers multiple inputs and produces a single output (range coefficient is one)</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the count of objs" class="text-success">the count of objs</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any objs" class="text-info">[generic] any objs</a> <span class="text-light">=&gt;</span> <a href="#the count of objs" class="text-success">the count of objs</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__ctor?dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -2160,9 +2159,10 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__dedup?rng=A{*}&dom=A{*}-doc-0-tab').click();document.getElementById('__m__inst__dedup?rng=A{*}&dom=A{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">dedup?rng=<span class="code text-info"><span class="code text-success">A{*}</span></span>&dom=<span class="code text-info"><span class="code text-success">A{*}</span></span>(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a deduplication function \(f({c}X) \to {1&lt;=c}X\)</p>
+    <p class="mb-0 text-light">[gather] a deduplication function \(f({c}X) \to {1&lt;=c}X\)
+accepts multiple inputs; domain max coefficient is unbounded</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the deduplicated objs" class="text-success">the deduplicated objs</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any objs" class="text-info">[generic] any objs</a> <span class="text-light">=&gt;</span> <a href="#[generic] the deduplicated objs" class="text-success">[generic] the deduplicated objs</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__div?rng=__m__real&dom=__m__real">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -2216,7 +2216,8 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__end?rng=noobj{0}&dom=#{*}-doc-0-tab').click();document.getElementById('__m__inst__end?rng=noobj{0}&dom=#{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">end?rng=<span class="code text-success">noobj{0}</span>&dom=<span class="code text-info">#{*}</span>(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">the terminal function \(f(x)\to \emptyset\)</p>
+    <p class="mb-0 text-light">[terminal] the terminal function \(f(x)\to \emptyset\)
+renders objs to nothing; range coefficient is zero</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#terminal objs" class="text-info">terminal objs</a> <span class="text-light">=&gt;</span> <a href="#noobj" class="text-success">noobj</a></pre>
 </div>
@@ -2231,10 +2232,11 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__eq?rng=__m__bool&dom=A-doc-0-tab').click();document.getElementById('__m__inst__eq?rng=__m__bool&dom=A-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">eq?rng=bool&dom=<span class="code text-info">A</span>(<span class="code text-info">A</span>::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">an equality function \[ f(\tt{lhs}) = \left\{ \begin{aligned} \tt{true} &amp; \quad \text{if } \tt{lhs} == \tt{arg}_0 \\ \tt{false} &amp; \quad \text{otherwise.} \end{aligned} \right. \]</p>
+    <p class="mb-0 text-light">[mapper] an equality function \[ f(\tt{lhs}) = \left\{ \begin{aligned} \tt{true} &amp; \quad \text{if } \tt{lhs} == \tt{arg}_0 \\ \tt{false} &amp; \quad \text{otherwise.} \end{aligned} \right. \]
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#true if lhs equals rhs" class="text-success">true if lhs equals rhs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any objs" class="text-info">[generic] any objs</a> <span class="text-light">=&gt;</span> <a href="#true if lhs equals rhs" class="text-success">true if lhs equals rhs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the rhs obj'" class="text-info">&#39;the rhs obj&#39;</a>
 </pre>
 </div>
@@ -2303,7 +2305,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#39;d writing/reading a --]</code><
     <p class="mb-0 text-light">dereferences a uri to an obj (sugar&#39;d *)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the obj referred to by the arg uri" class="text-success">the obj referred to by the arg uri</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#[generic] the obj referred to by the arg uri" class="text-success">[generic] the obj referred to by the arg uri</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the uri to dereference'" class="text-info">&#39;the uri to dereference&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
@@ -2349,7 +2351,8 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__gt?rng=__m__bool&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__gt?rng=__m__bool&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">gt?rng=bool&dom=str(str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">check whether the lhs int is greater than the argument int</p>
+    <p class="mb-0 text-light">[mapper] check whether the lhs int is greater than the argument int
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs int" class="text-info">the lhs int</a> <span class="text-light">=&gt;</span> <a href="#whether the lhs is greater than the rhs" class="text-success">whether the lhs is greater than the rhs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -2369,7 +2372,8 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__gte?rng=__m__bool&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__gte?rng=__m__bool&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">gte?rng=bool&dom=str(str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">check whether the lhs int is greater than or equal to the argument int</p>
+    <p class="mb-0 text-light">[mapper] check whether the lhs int is greater than or equal to the argument int
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs int" class="text-info">the lhs int</a> <span class="text-light">=&gt;</span> <a href="#whether the lhs is greater than or equal to the rhs" class="text-success">whether the lhs is greater than or equal to the rhs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -2392,7 +2396,8 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__has?rng=__m__str{?}&dom=__m__str-doc-0-tab').click();document.getElementById('__m__inst__has?rng=__m__str{?}&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">has?rng=rec{?}&dom=rec(#::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">check whether the lhs str matches the regex arg</p>
+    <p class="mb-0 text-light">[filter] check whether the lhs str matches the regex arg
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an str to check" class="text-info">an str to check</a> <span class="text-light">=&gt;</span> <a href="#whether the domain matches arg" class="text-success">whether the domain matches arg</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -2423,9 +2428,10 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__id?rng=A&dom=A-doc-0-tab').click();document.getElementById('__m__inst__id?rng=A&dom=A-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">id?rng=<span class="code text-info"><span class="code text-success">A{*}</span></span>&dom=<span class="code text-info"><span class="code text-success">A{*}</span></span>(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">the obj identity function \(f(x)\to x\)</p>
+    <p class="mb-0 text-light">[mapper] the obj identity function \(f(x)\to x\)
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an rhs obj" class="text-info">an rhs obj</a> <span class="text-light">=&gt;</span> <a href="#an lhs obj" class="text-success">an lhs obj</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] an rhs obj" class="text-info">[generic] an rhs obj</a> <span class="text-light">=&gt;</span> <a href="#[generic] an lhs obj" class="text-success">[generic] an lhs obj</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__import?rng=__m__space{*}&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -2463,7 +2469,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
     <p class="mb-0 text-light">filters the lhs obj</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj if arg is true" class="text-success">the lhs obj if arg is true</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any obj" class="text-info">[generic] any obj</a> <span class="text-light">=&gt;</span> <a href="#[generic] the lhs obj if arg is true" class="text-success">[generic] the lhs obj if arg is true</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'filter lhs if false'" class="text-info">&#39;filter lhs if false&#39;</a>
 </pre>
 </div>
@@ -2532,7 +2538,8 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__lt?rng=__m__bool&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__lt?rng=__m__bool&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">lt?rng=bool&dom=str(str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">check whether the lhs int is less than the argument int</p>
+    <p class="mb-0 text-light">[mapper] check whether the lhs int is less than the argument int
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs int" class="text-info">the lhs int</a> <span class="text-light">=&gt;</span> <a href="#whether the lhs is less than the rhs" class="text-success">whether the lhs is less than the rhs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -2552,7 +2559,8 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__lte?rng=__m__bool&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__lte?rng=__m__bool&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">lte?rng=bool&dom=str(str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">check whether the lhs int is less than or equal to the argument int</p>
+    <p class="mb-0 text-light">[mapper] check whether the lhs int is less than or equal to the argument int
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs int" class="text-info">the lhs int</a> <span class="text-light">=&gt;</span> <a href="#whether the lhs is less than or equal to the rhs" class="text-success">whether the lhs is less than or equal to the rhs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -2573,7 +2581,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
     <p class="mb-0 text-light">applies the lhs obj to the arg obj to yield the rhs obj</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe some obj" class="text-info">maybe some obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj applied to the arg obj" class="text-success">the lhs obj applied to the arg obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] maybe some obj" class="text-info">[generic] maybe some obj</a> <span class="text-light">=&gt;</span> <a href="#[generic] the lhs obj applied to the arg obj" class="text-success">[generic] the lhs obj applied to the arg obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'any obj'" class="text-info">&#39;any obj&#39;</a>
 </pre>
 </div>
@@ -2610,34 +2618,36 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__mean?rng=__m__real&dom=__m__real{*}-doc-0-tab').click();document.getElementById('__m__inst__mean?rng=__m__real&dom=__m__real{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mean?rng=real&dom=real{*}(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">the mean of a stream of reals</p>
+    <p class="mb-0 text-light">[reducer] the mean of a stream of reals
+gathers multiple inputs and produces a single output (range coefficient is one)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a stream of reals" class="text-info">a stream of reals</a> <span class="text-light">=&gt;</span> <a href="#the mean of the lhs real stream" class="text-success">the mean of the lhs real stream</a></pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">{1.0,2.0,3.0}.mean() [-- 2.0 --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__merge?rng=__m__rec&dom=__m__rel{*}">
+</div><div class="card mb-3" id="__m__inst__merge?rng=__m__str&dom=__m__str{*}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">merge</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__rel{*}" data-bs-toggle="tooltip" title="maybe some domain" class="code text-info">rel{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__str{*}" data-bs-toggle="tooltip" title="maybe some domain" class="code text-info">str{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__str" data-bs-toggle="tooltip" title="range" class="code text-success">str</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/merge?rng=/m/rec&amp;dom=/m/rel{*}</small>
+        <small class="text-muted code">/m/inst/merge?rng=/m/str&amp;dom=/m/str{*}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=rec&dom=rel{*}(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=str&dom=str{*}(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=uri&dom=uri{*}(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-info"><span class="code text-success">A{*}</span></span>&dom=<span class="code text-info"><span class="code text-success">A{*}</span></span>(<span class="code text-info"><span class="code text-success">A{*}</span></span>::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-success">A{*}</span>&dom=lst(){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-success">A{*}</span>&dom=lst(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-success">A{*}</span>&dom=lst(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-success">#{*}</span>&dom=<span class="code text-info">A{*}</span>(<span class="code text-success">#{*}</span>::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=rel{*}&dom=rec(){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__rec&dom=__m__rel{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=lst&dom=<span class="code text-info">A{*}</span>(lst::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=str&dom=str{*}(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=uri&dom=uri{*}(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-success">#{*}</span>&dom=<span class="code text-info">A{*}</span>(<span class="code text-success">#{*}</span>::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=rec&dom=rel{*}(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-info"><span class="code text-success">A{*}</span></span>&dom=<span class="code text-info"><span class="code text-success">A{*}</span></span>(<span class="code text-info"><span class="code text-success">A{*}</span></span>::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-success">A{*}</span>&dom=lst(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-success">A{*}</span>&dom=lst(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=<span class="code text-success">A{*}</span>&dom=lst(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=rel{*}&dom=rec(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rng=lst&dom=<span class="code text-info">A{*}</span>(lst::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">join the barrier given the str arg</p>
+    <p class="mb-0 text-light">[join] join the barrier given the str arg
+merges parallel streams of objs into a single stream</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an str barrier" class="text-info">an str barrier</a> <span class="text-light">=&gt;</span> <a href="#the join of the str barrier" class="text-success">the join of the str barrier</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -2659,7 +2669,8 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__minus?rng=__m__int&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__minus?rng=__m__int&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">minus?rng=<a href="m_math.html#__m__math__time" data-bs-toggle="tooltip" title="range" class="code text-success">time</a>&dom=datetime(datetime::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">subtract the argument int from the lhs int</p>
+    <p class="mb-0 text-light">[mapper] subtract the argument int from the lhs int
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs int" class="text-info">the lhs int</a> <span class="text-light">=&gt;</span> <a href="#the result of the subtraction" class="text-success">the result of the subtraction</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -2704,7 +2715,8 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__mult?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__mult?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mult?rng=lst&dom=lst(lst::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">multiply the lhs int by the argument int</p>
+    <p class="mb-0 text-light">[mapper] multiply the lhs int by the argument int
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs int" class="text-info">the lhs int</a> <span class="text-light">=&gt;</span> <a href="#the result of the multiplication" class="text-success">the result of the multiplication</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -2746,10 +2758,11 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__neq?rng=__m__bool&dom=A-doc-0-tab').click();document.getElementById('__m__inst__neq?rng=__m__bool&dom=A-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">neq?rng=bool&dom=<span class="code text-info">A</span>(<span class="code text-info">A</span>::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">an inequality function \[ f(\tt{lhs}) = \left\{ \begin{aligned} \tt{true} &amp; \quad \text{if } \tt{lhs} \neq 	t{arg}_0 \\ \tt{false} &amp; \quad \text{otherwise.} \end{aligned} \right. \]</p>
+    <p class="mb-0 text-light">[mapper] an inequality function \[ f(\tt{lhs}) = \left\{ \begin{aligned} \tt{true} &amp; \quad \text{if } \tt{lhs} \neq 	t{arg}_0 \\ \tt{false} &amp; \quad \text{otherwise.} \end{aligned} \right. \]
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#true if lhs does not equal rhs" class="text-success">true if lhs does not equal rhs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any objs" class="text-info">[generic] any objs</a> <span class="text-light">=&gt;</span> <a href="#true if lhs does not equal rhs" class="text-success">true if lhs does not equal rhs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the rhs obj'" class="text-info">&#39;the rhs obj&#39;</a>
 </pre>
 </div>
@@ -2789,9 +2802,10 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__or?rng=__m__bool&dom=A-doc-0-tab').click();document.getElementById('__m__inst__or?rng=__m__bool&dom=A-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">or?rng=bool&dom=<span class="code text-info">A</span>(bool::T,bool::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">logical \(\texttt{or}\) function \(f(X)\to \tt{true}\) if any \(X\) are true</p>
+    <p class="mb-0 text-light">[mapper] logical \(\texttt{or}\) function \(f(X)\to \tt{true}\) if any \(X\) are true
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#true if any objs are true" class="text-success">true if any objs are true</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any objs" class="text-info">[generic] any objs</a> <span class="text-light">=&gt;</span> <a href="#true if any objs are true" class="text-success">true if any objs are true</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__order?rng=__m__lst&dom=__m__int{*}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -2806,10 +2820,11 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__order?rng=__m__lst&dom=__m__int{*}-doc-0-tab').click();document.getElementById('__m__inst__order?rng=__m__lst&dom=__m__int{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">order?rng=<span class="code text-info"><span class="code text-success">A{*}</span></span>&block&dom=<span class="code text-info"><span class="code text-success">A{*}</span></span>(#::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a sorting function \(f(X)\to X&#39;\)</p>
+    <p class="mb-0 text-light">[gather] a sorting function \(f(X)\to X&#39;\)
+accepts multiple inputs; domain max coefficient is unbounded</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the objs sorted by the arg obj" class="text-success">the objs sorted by the arg obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any objs" class="text-info">[generic] any objs</a> <span class="text-light">=&gt;</span> <a href="#[generic] the objs sorted by the arg obj" class="text-success">[generic] the objs sorted by the arg obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the obj to sort by'" class="text-info">&#39;the obj to sort by&#39;</a>
 </pre>
 </div>
@@ -2859,27 +2874,28 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__path?rng=__m__uri&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__inst__path?rng=__m__uri&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">path?rng=uri&dom=uri(uri::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="__m__inst__plus?rng=__m__int&dom=__m__int">
+</div><div class="card mb-3" id="__m__inst__plus?rng=__m__bool&dom=__m__bool">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">plus</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__int" data-bs-toggle="tooltip" title="domain" class="code text-info">int</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__int" data-bs-toggle="tooltip" title="range" class="code text-success">int</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__bool" data-bs-toggle="tooltip" title="domain" class="code text-info">bool</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__bool" data-bs-toggle="tooltip" title="range" class="code text-success">bool</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/plus?rng=/m/int&amp;dom=/m/int</small>
+        <small class="text-muted code">/m/inst/plus?rng=/m/bool&amp;dom=/m/bool</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=int&dom=int(int::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=bool&dom=bool(bool::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=bytes&dom=bytes(bytes::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=real&dom=real(real::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=datetime&dom=datetime(time::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=str&dom=str(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=uri{?}&dom=uri(uri{?}::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=rel{*}&dom=rel(rel{*}::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=lst&dom=lst(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__int&dom=__m__int-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=rec&dom=rec(rec{??}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=bool&dom=bool(bool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=bytes&dom=bytes(bytes::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=int&dom=int(int::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=real&dom=real(real::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=str&dom=str(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=uri{?}&dom=uri(uri{?}::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=rel{*}&dom=rel(rel{*}::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=lst&dom=lst(lst::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=datetime&dom=datetime(time::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bool&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rng=rec&dom=rec(rec{??}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">add the argument int to the lhs int</p>
+    <p class="mb-0 text-light">[mapper] add the argument int to the lhs int
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs int" class="text-info">the lhs int</a> <span class="text-light">=&gt;</span> <a href="#the result of the addition" class="text-success">the result of the addition</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -3000,10 +3016,11 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__reduce?rng=A&dom=A{*}-doc-0-tab').click();document.getElementById('__m__inst__reduce?rng=A&dom=A{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">reduce?rng=<span class="code text-success">A</span>&dom=<span class="code text-info"><span class="code text-success">A</span>{*}</span>(#{?}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a reduce function \(f(X) \to x\)</p>
+    <p class="mb-0 text-light">[reducer] a reduce function \(f(X) \to x\)
+gathers multiple inputs and produces a single output (range coefficient is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the result of applying the arg inst to each obj" class="text-success">the result of applying the arg inst to each obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any objs" class="text-info">[generic] any objs</a> <span class="text-light">=&gt;</span> <a href="#[generic] the result of applying the arg inst to each obj" class="text-success">[generic] the result of applying the arg inst to each obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the inst to apply to each obj'" class="text-info">&#39;the inst to apply to each obj&#39;</a>
 </pre>
 </div>
@@ -3036,7 +3053,8 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__regex?rng=__m__lst&dom=__m__str-doc-0-tab').click();document.getElementById('__m__inst__regex?rng=__m__lst&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">regex?rng=lst&dom=str(str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">split the lhs str by regex matches; if the regex has capture groups, each match is a lst of [fullMatch, group1, group2, ...], otherwise a flat lst of full matches</p>
+    <p class="mb-0 text-light">[mapper] split the lhs str by regex matches; if the regex has capture groups, each match is a lst of [fullMatch, group1, group2, ...], otherwise a flat lst of full matches
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a str to split by regex" class="text-info">a str to split by regex</a> <span class="text-light">=&gt;</span> <a href="#the regex capture groups (or full matches) of the lhs str" class="text-success">the regex capture groups (or full matches) of the lhs str</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -3142,22 +3160,22 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__scheme?rng=__m__uri{?}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__inst__scheme?rng=__m__uri{?}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">scheme?rng=uri&dom=uri(uri::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="__m__inst__select?rng=__m__str&dom=__m__str">
+</div><div class="card mb-3" id="__m__inst__select?rng=__m__lst{?}&dom=__m__lst">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">select</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__str" data-bs-toggle="tooltip" title="domain" class="code text-info">str</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__str" data-bs-toggle="tooltip" title="range" class="code text-success">str</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__lst" data-bs-toggle="tooltip" title="domain" class="code text-info">lst</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__lst{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">lst{?}</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/select?rng=/m/str&amp;dom=/m/str</small>
+        <small class="text-muted code">/m/inst/select?rng=/m/lst{?}&amp;dom=/m/lst</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__str&dom=__m__str-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__str&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=str&dom=str(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__str&dom=__m__str-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__str&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=uri&dom=uri(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__str&dom=__m__str-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__str&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=rel{?}&dom=rel(rel::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__str&dom=__m__str-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__str&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=<span class="code text-success">B{*}</span>&dom=lst(A{+}::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__str&dom=__m__str-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__str&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=lst{?}&dom=lst(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__str&dom=__m__str-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__str&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=lst&dom=lst(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__str&dom=__m__str-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__str&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=<span class="code text-success">B{*}</span>&dom=rec(A{+}::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__str&dom=__m__str-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__str&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=rec{?}&dom=rec(rec::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__lst{?}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__lst{?}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=lst{?}&dom=lst(lst::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__lst{?}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__lst{?}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=str&dom=str(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__lst{?}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__lst{?}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=uri&dom=uri(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__lst{?}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__lst{?}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=rel{?}&dom=rel(rel::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__lst{?}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__lst{?}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=<span class="code text-success">B{*}</span>&dom=lst(A{+}::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__lst{?}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__lst{?}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=lst&dom=lst(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__lst{?}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__lst{?}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=<span class="code text-success">B{*}</span>&dom=rec(A{+}::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__select?rng=__m__lst{?}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__select?rng=__m__lst{?}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">select?rng=rec{?}&dom=rec(rec::T){<j>}</code></pre>
 </div>
     
 </div><div class="card mb-3" id="__m__inst__serialize?rng=B&dom=A">
@@ -3182,10 +3200,11 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__side?rng=A&dom=A-doc-0-tab').click();document.getElementById('__m__inst__side?rng=A&dom=A-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">side?rng=<span class="code text-info"><span class="code text-success">A</span></span>&dom=<span class="code text-info"><span class="code text-success">A</span></span>(#::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">passes lhs obj through after applying itself to inst arg obj</p>
+    <p class="mb-0 text-light">[mapper] passes lhs obj through after applying itself to inst arg obj
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj" class="text-success">the lhs obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any obj" class="text-info">[generic] any obj</a> <span class="text-light">=&gt;</span> <a href="#[generic] the lhs obj" class="text-success">[generic] the lhs obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'any obj applied by lhs obj'" class="text-info">&#39;any obj applied by lhs obj&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
@@ -3203,10 +3222,11 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__skip?rng=A{*}&dom=A{*}-doc-0-tab').click();document.getElementById('__m__inst__skip?rng=A{*}&dom=A{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">skip?rng=<span class="code text-info"><span class="code text-success">A{*}</span></span>&dom=<span class="code text-info"><span class="code text-success">A{*}</span></span>(int::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">skips the first n objs</p>
+    <p class="mb-0 text-light">[gather] skips the first n objs
+accepts multiple inputs; domain max coefficient is unbounded</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the objs after skipping" class="text-success">the objs after skipping</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any objs" class="text-info">[generic] any objs</a> <span class="text-light">=&gt;</span> <a href="#[generic] the objs after skipping" class="text-success">[generic] the objs after skipping</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the number of objs to skip'" class="text-info">&#39;the number of objs to skip&#39;</a>
 </pre>
 </div>
@@ -3242,7 +3262,7 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
     <p class="mb-0 text-light">evaluates source code</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#result of evaluating source code" class="text-success">result of evaluating source code</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] maybe an obj" class="text-info">[generic] maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#[generic] result of evaluating source code" class="text-success">[generic] result of evaluating source code</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the source code to evaluate'" class="text-info">&#39;the source code to evaluate&#39;</a>
 </pre>
 </div>
@@ -3263,7 +3283,8 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__split?rng=__m__lst&dom=__m__str-doc-0-tab').click();document.getElementById('__m__inst__split?rng=__m__lst&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">split?#<=#(lst::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">split the lhs string according to the token arg and insert components into an ordered lst</p>
+    <p class="mb-0 text-light">[fork] split the lhs string according to the token arg and insert components into an ordered lst
+splits objs across parallel streams</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a str to split" class="text-info">a str to split</a> <span class="text-light">=&gt;</span> <a href="#lst encoded components of the split lhs str" class="text-success">lst encoded components of the split lhs str</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -3281,10 +3302,11 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__start?rng=A{**}&dom=noobj{0}-doc-0-tab').click();document.getElementById('__m__inst__start?rng=A{**}&dom=noobj{0}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">start?rng=<span class="code text-success">A{**}</span>&dom=<span class="code text-info">noobj{0}</span>(<span class="code text-success">A{**}</span>::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">the initial function f()-&gt;x</p>
+    <p class="mb-0 text-light">[initial] the initial function f()-&gt;x
+generates objs from nothing; domain coefficient is zero</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#noobj" class="text-info">noobj</a> <span class="text-light">=&gt;</span> <a href="#initial objs" class="text-success">initial objs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#noobj" class="text-info">noobj</a> <span class="text-light">=&gt;</span> <a href="#[generic] initial objs" class="text-success">[generic] initial objs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'initial objs'" class="text-info">&#39;initial objs&#39;</a>
 </pre>
 </div>
@@ -3304,7 +3326,8 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__sum?rng=__m__int&dom=__m__int{*}-doc-0-tab').click();document.getElementById('__m__inst__sum?rng=__m__int&dom=__m__int{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sum?rng=rec&dom=rec{*}(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">adds the lhs int stream into a single int</p>
+    <p class="mb-0 text-light">[reducer] adds the lhs int stream into a single int
+gathers multiple inputs and produces a single output (range coefficient is one)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#zero or more ints" class="text-info">zero or more ints</a> <span class="text-light">=&gt;</span> <a href="#a single plus reduced int" class="text-success">a single plus reduced int</a></pre>
 </div><div class="card-body border-top py-2">
@@ -3322,12 +3345,13 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__swap?rng=A&dom=A-doc-0-tab').click();document.getElementById('__m__inst__swap?rng=A&dom=A-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">swap?rng=<span class="code text-info"><span class="code text-success">A</span></span>&dom=<span class="code text-info"><span class="code text-success">A</span></span>(B::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">takes the swap argument and makes it the lhs obj.
+    <p class="mb-0 text-light">[mapper] takes the swap argument and makes it the lhs obj.
 if the argument is an inst, then the original lhs becomes the inst arg and the inst arg becomes the lhs.
-if an inst arg is wanted for the swap application, then it must be blocked (|) so as to delay its evaluation.</p>
+if an inst arg is wanted for the swap application, then it must be blocked (|) so as to delay its evaluation.
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs to swap for the swap arg" class="text-info">the lhs to swap for the swap arg</a> <span class="text-light">=&gt;</span> <a href="#the result of applying the swap arg to the lhs" class="text-success">the result of applying the swap arg to the lhs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] the lhs to swap for the swap arg" class="text-info">[generic] the lhs to swap for the swap arg</a> <span class="text-light">=&gt;</span> <a href="#[generic] the result of applying the swap arg to the lhs" class="text-success">[generic] the result of applying the swap arg to the lhs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'a obj to make the lhs'" class="text-info">&#39;a obj to make the lhs&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
@@ -3347,10 +3371,11 @@ abc.swap(|mult(xyz))      [-- xyz/abc --]
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__take?rng=A{*}&dom=A{*}-doc-0-tab').click();document.getElementById('__m__inst__take?rng=A{*}&dom=A{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">take?rng=<span class="code text-info"><span class="code text-success">A{*}</span></span>&dom=<span class="code text-info"><span class="code text-success">A{*}</span></span>(int::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">takes the first n objs</p>
+    <p class="mb-0 text-light">[gather] takes the first n objs
+accepts multiple inputs; domain max coefficient is unbounded</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the objs before skipping" class="text-success">the objs before skipping</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any objs" class="text-info">[generic] any objs</a> <span class="text-light">=&gt;</span> <a href="#[generic] the objs before skipping" class="text-success">[generic] the objs before skipping</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the number of objs to take'" class="text-info">&#39;the number of objs to take&#39;</a>
 </pre>
 </div>
@@ -3387,7 +3412,8 @@ abc.swap(|mult(xyz))      [-- xyz/abc --]
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__tid?rng=__m__uri&dom=#-doc-0-tab').click();document.getElementById('__m__inst__tid?rng=__m__uri&dom=#-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">tid?rng=uri&dom=<span class="code text-info">#</span>(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">the spatial location of the lhs obj [equivalent to f(x) ~ vid(type())]</p>
+    <p class="mb-0 text-light">[mapper] the spatial location of the lhs obj [equivalent to f(x) ~ vid(type())]
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj type id" class="text-success">the lhs obj type id</a></pre>
 </div>
@@ -3405,7 +3431,7 @@ abc.swap(|mult(xyz))      [-- xyz/abc --]
     <p class="mb-0 text-light">associates the lhs obj to the arg uri</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#writes the lhs obj to the arg uri" class="text-success">writes the lhs obj to the arg uri</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any obj" class="text-info">[generic] any obj</a> <span class="text-light">=&gt;</span> <a href="#[generic] writes the lhs obj to the arg uri" class="text-success">[generic] writes the lhs obj to the arg uri</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the uri to write to'" class="text-info">&#39;the uri to write to&#39;</a>
 </pre>
 </div>
@@ -3420,7 +3446,8 @@ abc.swap(|mult(xyz))      [-- xyz/abc --]
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__type?rng=#&dom=#-doc-0-tab').click();document.getElementById('__m__inst__type?rng=#&dom=#-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">type?rng=<span class="code text-info"><span class="code text-success">#</span></span>&dom=<span class="code text-info"><span class="code text-success">#</span></span>(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">the type of the lhs obj</p>
+    <p class="mb-0 text-light">[mapper] the type of the lhs obj
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj type" class="text-success">the lhs obj type</a></pre>
 </div><div class="card-body border-top py-2">
@@ -3460,7 +3487,20 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__update?rng=B{*}&dom=A-doc-0-tab').click();document.getElementById('__m__inst__update?rng=B{*}&dom=A-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">update?rng=<span class="code text-success">B{*}</span>&dom=<span class="code text-info">A</span>(<span class="code text-success">B{*}</span>::T){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">selectively mutate a poly component or an entire mono</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] A" class="text-info">[generic] A</a> <span class="text-light">=&gt;</span> <a href="#[generic] B{*}" class="text-success">[generic] B{*}</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <span class="text-info">&#39;B{*}&#39;</span>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">@a &gt;&gt;= [b=&gt;[c=&gt;2]]      [-- [b=&gt;[c=&gt;2]]@a     --]
+@a &gt;&gt;= [b=&gt;[c=&gt;+3]]     [-- [b=&gt;[c=&gt;5]]@a     --]
+@a &gt;&gt;= [b=&gt;+[c=&gt;4]]     [-- [b=&gt;[c=&gt;{5,4}]]@a --]
+@a &gt;&gt;= [b=&gt;[c=&gt;sum()]]  [-- [b=&gt;[c=&gt;9]]@a     --]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__inst__uri:c?rng=__m__lst&dom=__m__uri">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -3521,7 +3561,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     <p class="mb-0 text-light">specifies the spatial location of the lhs obj</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#a spatial location for the lhs obj" class="text-success">a spatial location for the lhs obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any obj" class="text-info">[generic] any obj</a> <span class="text-light">=&gt;</span> <a href="#a spatial location for the lhs obj" class="text-success">a spatial location for the lhs obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the value id for the lhs obj'" class="text-info">&#39;the value id for the lhs obj&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
@@ -3530,10 +3570,11 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div>
 </div><div class="tab-pane fade " id="__m__inst__vid?rng=__m__uri{?}&dom=A-doc-1" role="tabpanel" aria-labelledby="__m__inst__vid?rng=__m__uri{?}&dom=A-doc-1-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">specifies the spatial location of the lhs obj</p>
+    <p class="mb-0 text-light">[mapper] specifies the spatial location of the lhs obj
+one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#a spatial location for the lhs obj" class="text-success">a spatial location for the lhs obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any obj" class="text-info">[generic] any obj</a> <span class="text-light">=&gt;</span> <a href="#[generic] a spatial location for the lhs obj" class="text-success">[generic] a spatial location for the lhs obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the value id for the lhs obj'" class="text-info">&#39;the value id for the lhs obj&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
@@ -3560,10 +3601,11 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__where?rng=__m__uri{?}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__inst__where?rng=__m__uri{?}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">where?rng=<span class="code text-info">A</span>{?}&dom=<span class="code text-info">A</span>(B::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a filter function \(f(x)\to \{\emptyset \cup x\}\)</p>
+    <p class="mb-0 text-light">[filter] a filter function \(f(x)\to \{\emptyset \cup x\}\)
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#filter the lhs obj based on whether the arg yields noobj or not" class="text-success">filter the lhs obj based on whether the arg yields noobj or not</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] any obj" class="text-info">[generic] any obj</a> <span class="text-light">=&gt;</span> <a href="#[generic] filter the lhs obj based on whether the arg yields noobj or not" class="text-success">[generic] filter the lhs obj based on whether the arg yields noobj or not</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the inst to filter objs by'" class="text-info">&#39;the inst to filter objs by&#39;</a>
 </pre>
 </div>
@@ -3621,7 +3663,8 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/explain_profile?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">rewrites a().b().c().explain() to explain_rewrite(a().b().c())</p>
+    <p class="mb-0 text-light">[filter] rewrites a().b().c().explain() to explain_rewrite(a().b().c())
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre>
 </div>
@@ -3635,7 +3678,8 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">removes identity instructions</p>
+    <p class="mb-0 text-light">[filter] removes identity instructions
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre>
 </div>
@@ -3649,7 +3693,8 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/map_inst?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">flattens a mapping of an inst to the inst</p>
+    <p class="mb-0 text-light">[filter] flattens a mapping of an inst to the inst
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre>
 </div>
@@ -3663,7 +3708,8 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/map_nest?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">flattens nested map instructions</p>
+    <p class="mb-0 text-light">[filter] flattens nested map instructions
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre>
 </div>
@@ -3697,7 +3743,8 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/range_skip_take?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">rewrites virtual range inst rewritten to skip/take</p>
+    <p class="mb-0 text-light">[filter] rewrites virtual range inst rewritten to skip/take
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre>
 </div>
@@ -3711,7 +3758,8 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_collapse?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">applies abelian monoid law on split code paths</p>
+    <p class="mb-0 text-light">[filter] applies abelian monoid law on split code paths
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre>
 </div>
@@ -3725,7 +3773,8 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_left_factor?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages distributive ring law to pull common monoidally bound components to the right</p>
+    <p class="mb-0 text-light">[filter] leverages distributive ring law to pull common monoidally bound components to the right
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre>
 </div>
@@ -3739,7 +3788,8 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_right_factor?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">leverages distributive ring law to pull common monoidally bound components to the left</p>
+    <p class="mb-0 text-light">[filter] leverages distributive ring law to pull common monoidally bound components to the left
+conditionally passes or drops objs (range coefficient is maybe)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{?}" class="text-success">code{?}</a></pre>
 </div>

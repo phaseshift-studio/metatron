@@ -240,7 +240,7 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../skills/agent/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
@@ -253,7 +253,7 @@
                     </li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
@@ -271,7 +271,7 @@
                     </li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
@@ -566,10 +566,10 @@
     <p class="mb-0 text-light">run a concurrent core thread</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
-  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
   <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code the thread will execute'" class="text-info">&#39;the code the thread will execute&#39;</a>
-  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
+  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -723,10 +723,10 @@ the objs referenced by the monads that halt are the result of the machine execut
     <p class="mb-0 text-light">run a concurrent virtual thread</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
-  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
   <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code the thread will execute'" class="text-info">&#39;the code the thread will execute&#39;</a>
-  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
+  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -740,7 +740,10 @@ the objs referenced by the monads that halt are the result of the machine execut
         <a href="m_mach_space_fsspace.html" class="code text-primary fw-bold text-decoration-none">fsspace</a>
         <small class="text-muted code">/m/mach/space/fsspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[pattern=&gt;uri::T,route=&gt;[uri::T=&gt;uri::T],{?}script=&gt;[uri::T=&gt;uri::T]]][inst?fsspace&lt;=#{?}(rec::T)]@/m/mach/space/fsspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[
+  pattern=&gt;uri::T,
+  route=&gt;[uri::T=&gt;uri::T],
+  {?}script=&gt;[uri::T=&gt;uri::T]]][inst?fsspace&lt;=#{?}(rec::T)]@/m/mach/space/fsspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  pattern=&gt;uri::T,
  {?}q=&gt;[qproc{?}::T],

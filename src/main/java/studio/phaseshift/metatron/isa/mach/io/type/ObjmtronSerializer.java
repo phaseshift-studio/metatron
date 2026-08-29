@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -51,7 +52,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     private static final String NOOBJ_STRING = "noobj";
     public static final int INDENT_SIZE = 1;
-    public static final int NESTED_STRING_THRESHOLD = 35;
+    public static final int NESTED_STRING_THRESHOLD = 40;
 
     // ── Config key URIs ───────────────────────────────────────────
     private static final fURI KEY_CLIP = fURI.Singleton.f("clip");
@@ -441,18 +442,19 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         if (!poly.isLst() && !poly.isRec())
             return false;
         final long count = poly.count();
-        return count != 1 && (count > 3 || (poly.isLst() ?
-                poly.lstValue().stream() : (poly.isRel() ?
+        if (count < 2) return false;
+        if (Graphitty.viewLength(poly.jvm().toString()) > NESTED_STRING_THRESHOLD)
+            return true;
+        return (poly.isLst() ?
+                poly.lstValue().stream().filter(Obj::isPoly).anyMatch(x -> isNested(x.as())) :
+                poly.recValue().values().stream().filter(Obj::isPoly).anyMatch(x -> isNested(x.as())));
+              /*  (poly.isLst() ?
+                poly.lstValue().stream() : poly.isRel() ?
                 poly.relValue().get1().stream() :
-                poly.recValue().values().stream())).anyMatch(o ->
-                (null != o.vid() && o.vid().toString().length() > NESTED_STRING_THRESHOLD) ||
-                        (o.isPoly() && o.<Poly<?, ?>>as().count() > 2) ||
-                        (o.isObjCall() && o.asCall().insts().size() > 2) ||
-                        (o.isStr() && o.strValue().length() > NESTED_STRING_THRESHOLD) ||
-                        (o.isUri() && o.uriValue().toString().length() > NESTED_STRING_THRESHOLD) ||
-                        (o.isBytes() && o.bytesValue().capacity() > NESTED_STRING_THRESHOLD) ||
-                        isComplexType(o)));
+                poly.recValue().values().stream()).anyMatch(o ->
+                null != o.vid() && o.vid().toString().length() > NESTED_STRING_THRESHOLD || o.isPoly() && o.<Poly<?, ?>>as().count() > 2 || o.isObjCall() && o.asCall().insts().size() > 2 || o.isStr() && o.strValue().length() > NESTED_STRING_THRESHOLD || o.isUri() && o.uriValue().toString().length() > NESTED_STRING_THRESHOLD || o.isBytes() && o.bytesValue().capacity() > NESTED_STRING_THRESHOLD || isComplexType(o)); */
     }
+
 
     // ── List generation ──────────────────────────────────────────
 

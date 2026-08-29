@@ -56,12 +56,46 @@ The root filesystem is read-only (`HOME=/root`, `/usr` not writable), so the too
 - `.build/jdk21` exists for reference, but **tests must run on the default JDK 24**: the pom's surefire `argLine`
   includes `--sun-misc-unsafe-memory-access=allow`, a JDK 23+ flag that JDK 21 rejects (this is why CI uses JDK 24).
 
+### Docker Build Loop (the agent standard)
+
+Agents doing builds, tests, or docs-pipeline work should run them in docker rather than on the host:
+a live server (host VM or the `metatron` dev container) owns the host's 8555/8777 and gets
+rebuilt/restarted constantly, so host-side VM boots collide with it. The loop is isolated — no
+published ports, ephemeral unique-named containers, artifacts land back host-owned.
+
+```bash
+bin/metatron-build-docker build                     # mvn package (skip tests)
+bin/metatron-build-docker test -Dtest=memSpaceTest  # test run in the container
+bin/metatron-build-docker docs [dir|file.md]        # MarkdownRunner + SkillHtmlRenderer
+bin/metatron-build-docker run '<cmd>'               # raw shell in the container
+```
+
+- Image `metatron-build:24` auto-builds on first use from `dist/docker/Dockerfile.build`
+  (maven + Temurin 24 + **patchelf** — patchelf is mandatory: the uber-jar ships a musl-built
+  tree-sitter `.so` that `ObjJavaSerializer` re-points at glibc on load; without it the VM dies
+  with `UnsatisfiedLinkError` and parks forever on the `/sys/thread/main` latch instead of
+  exiting — a hung, non-terminating java process is the symptom).
+- The repo mounts at `/work`; the container runs as the host user; **no ports are published** —
+  the VM's 8555/8777 exist only in the container's netns, never on the host.
+- Maven cache is shared with `.build/m2/repository`; every run gets a unique container name —
+  never hardcode a docker `--name` around these (a stale container from a killed run collides).
+- Docs pipeline (`docs` subcommand): `MarkdownRunner` evaluates the ` ```mtron_pre ` blocks of
+  `docs/skills/*` and writes the single processed copy via `.metatron/skills`, which is a
+  **symlink to `docs/website/skills`**; `SkillHtmlRenderer` renders the HTML. `docs` also takes a
+  single `.md` file (probe mode): a `docs/skills/...` file lands in its `.metatron/skills/` slot,
+  any other file goes to `_probe/`.
+  Rule: every example in a skill doc must be verified through this pipeline before shipping —
+  `fail::` lines in the processed output are broken examples.
+- Never kill the live server's java process or the `metatron` dev container.
+
 ### Code Style
 
 - In general, adopt existing patterns in the codebase.
 - Use American English spelling in variables and documentation (e.g. color not colour).
 - `final` all variables and method arguments. Rarely should non-final variables be used.
 - `this.` should be used when referencing fields.
+- Short text lines in log messages, terminal output, etc. should NOT capitalize the first letter of the sentence.
+  In general, lowercase text.
 - Leverage existing `XXXUtil`, `XXX.Helper`, etc. style static method providers for common algorithms.
 - Don't use "Hello World" or "foo bar" in examples and test cases. Come up with something more clever and unique.
 - Don't create new terms for rec keys unless you absolutely have to. Instead, review `Tokens.java` as that is our

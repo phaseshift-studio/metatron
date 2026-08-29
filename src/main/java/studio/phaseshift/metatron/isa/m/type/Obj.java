@@ -1338,16 +1338,19 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any objs", "the objs before skipping", Map.of(jnt(0), "the number of objs to take"), "takes the first n objs"),
                     // Mutation box: detach the anchor (no auto-write during compute),
                     // compute in-memory (IMMUTABLE), then atomically write the result.
-                    instC(UPDATE_INST_TID.dom(A).rng(B.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> {
-                        if (lhs.hasVID() && !inst.arg(0).isPoly() && !inst.arg(0).isCall()) {
-                            return Router.writeToSpace(lhs.vid(), inst.arg(0));
-                        } else {
-                            final Obj detached = lhs.clone().selfVID(null);
-                            final Obj result = Poly.Helper.updateRecursion(detached, inst.arg(0), IMMUTABLE);
-                            return null != lhs.vid() ? Router.writeToSpace(lhs.vid(), result) : result;
-                            // TODO return result.vid(lhs.vid()) 
-                        }
-                    }),
+                    docWrap(instC(UPDATE_INST_TID.dom(A).rng(B.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> {
+                                if (lhs.hasVID() && !inst.arg(0).isPoly() && !inst.arg(0).isCall())
+                                    return Router.writeToSpace(lhs.vid(), inst.arg(0));
+                                final Obj detached = lhs.clone().selfVID(null);
+                                final Obj result = Poly.Helper.updateRecursion(detached, inst.arg(0), IMMUTABLE);
+                                if (lhs.hasVID())
+                                    Router.writeToSpace(lhs.vid(), result);
+                                return result;//.selfVID(lhs.vid());
+                            }), "selectively mutate a poly component or an entire mono",
+                            "@a >>= [b=>[c=>2]]      [-- [b=>[c=>2]]@a     --]",
+                            "@a >>= [b=>[c=>+3]]     [-- [b=>[c=>5]]@a     --]",
+                            "@a >>= [b=>+[c=>4]]     [-- [b=>[c=>{5,4}]]@a --]",
+                            "@a >>= [b=>[c=>sum()]]  [-- [b=>[c=>9]]@a     --]"),
                     instC(EXPLAIN_INST_TID.dom(A.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> {
                         // explain_rewrite handles normal case; bare explain() is a no-op
                         return lhs;

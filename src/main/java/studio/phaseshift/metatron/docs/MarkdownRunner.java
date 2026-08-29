@@ -58,9 +58,15 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * markdown is written to the output directory ({@code .metatron/skills} by
  * default), mirroring the input layout — the raw source is never modified.</p>
  *
+ * <p>A <em>single</em> {@code .md} file may also be given (the iterate-on-one-doc
+ * probe mode): it is processed on its own and written to
+ * {@code <out>/<file-basename>}, so pair it with an {@code -o} that resolves to
+ * the directory the file belongs to.</p>
+ *
  * <h3>Usage</h3>
  * <pre>
- * java studio.phaseshift.metatron.docs.MarkdownRunner [&lt;input-dir&gt;] [-b &lt;boot&gt;] [-o &lt;out&gt;]
+ * java studio.phaseshift.metatron.docs.MarkdownRunner &lt;input-dir&gt; [-b &lt;boot&gt;] [-o &lt;out&gt;]
+ * java studio.phaseshift.metatron.docs.MarkdownRunner &lt;file.md&gt;  [-b &lt;boot&gt;] [-o &lt;out&gt;]
  * </pre>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -103,20 +109,32 @@ public class MarkdownRunner {
                     + "  input:  " + skillDir + "\n"
                     + "  output: " + out);
         }
-        if (!Files.isDirectory(skillDir)) {
-            LOG.error("not a directory: " + skillDir);
+        final boolean singleFile = Files.isRegularFile(skillDir);
+        if (!singleFile && !Files.isDirectory(skillDir)) {
+            LOG.error("not a file or directory: " + skillDir);
             return;
+        }
+        if (singleFile && !skillDir.getFileName().toString().endsWith(".md")) {
+            LOG.error("expected a .md file: " + skillDir);
+            return;
+        }
+        if (singleFile && out.resolve(skillDir.getFileName()).equals(skillDir)) {
+            throw new IllegalArgumentException("output would overwrite the source file: " + skillDir);
         }
         Files.createDirectories(out);
 
-        // ── Collect SKILL.md + references/*.md ──────────────────────────
+        // ── Collect: a single probe .md, or a skill dir's SKILL.md + references/*.md
         final List<Path> files = new ArrayList<>();
-        try (var stream = Files.walk(skillDir)) {
-            stream.filter(Files::isRegularFile)
-                    .filter(p -> p.getFileName().toString().endsWith(".md"))
-                    .filter(MarkdownRunner::isSkillDoc)
-                    .sorted()
-                    .forEach(files::add);
+        if (singleFile) {
+            files.add(skillDir);
+        } else {
+            try (var stream = Files.walk(skillDir)) {
+                stream.filter(Files::isRegularFile)
+                        .filter(p -> p.getFileName().toString().endsWith(".md"))
+                        .filter(MarkdownRunner::isSkillDoc)
+                        .sorted()
+                        .forEach(files::add);
+            }
         }
         if (files.isEmpty()) {
             LOG.info("no skill markdown files found in " + skillDir);
@@ -135,18 +153,19 @@ public class MarkdownRunner {
             // Fresh VM per file by default; with --single-boot the VM was booted once above.
             if (!singleBoot) bootVM(boot);
 
-            LOG.info(Graphitty.sillyPrint("\n\nprocessing " + skillDir.relativize(file) + "...\n\n", true, true));
+            final Path rel = rel(skillDir, file);
+            LOG.info(Graphitty.sillyPrint("\n\nprocessing " + rel + "...\n\n", true, true));
             final long t0 = System.nanoTime();
             final String content = Files.readString(file);
             final String processed = new MtronPreprocessor(MtronPreprocessor.MARKDOWN_HEADER).process(content);
 
             if (!processed.equals(content)) {
-                final Path target = out.resolve(skillDir.relativize(file));
+                final Path target = out.resolve(rel);
                 Files.createDirectories(target.getParent());
                 Files.writeString(target, processed.stripTrailing());
-                LOG.info("  processed " + skillDir.relativize(file) + " (" + elapsedMs(t0) + "ms)");
+                LOG.info("  processed " + rel + " (" + elapsedMs(t0) + "ms)");
             } else {
-                LOG.info("  unchanged " + skillDir.relativize(file) + " (" + elapsedMs(t0) + "ms)");
+                LOG.info("  unchanged " + rel + " (" + elapsedMs(t0) + "ms)");
             }
             ThreadExecutor.instance().shutdownNow();
         }
@@ -188,6 +207,15 @@ public class MarkdownRunner {
         // hardcode type checker in support of runtime inst resolution
         TypeCheck.enable(TypeCheck.values());
         TypeCheck.disable(TypeCheck.code_resolve);
+    }
+
+    /**
+     * Path of {@code file} relative to {@code root}; in single-file probe mode
+     * {@code root} <em>is</em> the file, and {@code Path.relativize} would give
+     * the empty path — return the file's own name instead.
+     */
+    private static Path rel(final Path root, final Path file) {
+        return root.equals(file) ? file.getFileName() : root.relativize(file);
     }
 
     /**
