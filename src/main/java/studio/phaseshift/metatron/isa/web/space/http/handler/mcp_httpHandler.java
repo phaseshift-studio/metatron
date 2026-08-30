@@ -46,6 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.type.MIME.MIMEType.APPLICATION_JSON;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * Streamable HTTP MCP transport handler. Composes a {@link mcpServer} for JSON-RPC
@@ -85,6 +86,10 @@ public class mcp_httpHandler extends HttpRec {
     public mcp_httpHandler(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
         this.mcp = new mcpServer(jvm, tid, vid);
+    }
+
+    public mcp_httpHandler(final Rec recClone) {
+        this(mutableMap(recClone.jvm()), recClone.tid(), recClone.vid());
     }
 
     // ========================================

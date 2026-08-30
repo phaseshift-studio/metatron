@@ -23,6 +23,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -34,8 +35,8 @@ import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -81,8 +82,9 @@ public abstract class AbstractMcpHandlerTest extends AbstractMetatronTest {
     @BeforeEach
     public void setupTestSpace() {
         InstSet.importInstSet(WEB_ISA_TID);
-        this.testSpace = memSpace.of(
-                rec(uri(PATTERN), uri(testSpacePattern())),
+        this.testSpace = memSpace.of(rec(
+                        uri(PATTERN), uri(testSpacePattern()),
+                        uri(QPROC), lst(QCollection.incrQ())),
                 f("/sys/space/test"));
         this.mcp = createMcpServer();
     }

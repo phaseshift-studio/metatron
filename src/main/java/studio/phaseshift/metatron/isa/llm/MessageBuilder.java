@@ -27,7 +27,9 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore.WRITTEN_KEY;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATETIME_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -75,6 +77,26 @@ public class MessageBuilder {
         return new MessageBuilder(tid);
     }
 
+    public static MessageBuilder buildUserMessage() {
+        return MessageBuilder.build(USER_MESSAGE_TID);
+    }
+
+    public static MessageBuilder buildAIMessage() {
+        return MessageBuilder.build(AI_MESSAGE_TID);
+    }
+
+    public static MessageBuilder buildToolResultMessage() {
+        return MessageBuilder.build(TOOL_RESULT_MESSAGE_TID);
+    }
+
+    public static MessageBuilder buildThinkingMessage() {
+        return MessageBuilder.build(THINKING_MESSAGE_TID);
+    }
+
+    public static MessageBuilder buildCompactionMessage() {
+        return MessageBuilder.build(COMPACTION_MESSAGE_TID);
+    }
+
     /**
      * Set the {@code text} field.
      */
@@ -98,6 +120,11 @@ public class MessageBuilder {
      */
     public MessageBuilder time() {
         this.map.put(uri(TIME), mathInstSet.nowDatetime());
+        return this;
+    }
+
+    public MessageBuilder time(final fURI dateTime) {
+        this.map.put(uri(TIME), uri(dateTime, MATH_DATETIME_TID, null));
         return this;
     }
 

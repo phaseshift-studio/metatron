@@ -29,7 +29,10 @@ import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.IncrQTest;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -2735,7 +2738,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
                 // --- where + order rewrite (rows with VIDs, sorted) ---
                 final Obj whereOrderResult = ObjmtronSerializer.parse(
-                        "@" + fullBase + "/+.where([val=>?>20]).order(select(val))").apply();
+                        "@" + fullBase + "/+.where([val=>?>20]).order(select(val))>-").apply();
                 final List<Obj> whereOrderRows = whereOrderResult.stream().toList();
                 assertEquals(3, whereOrderRows.size(),
                         label + ": @ where val>20 order by val should return 3 rows");
@@ -2795,8 +2798,11 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             LOG.info("@ anchor count rewrite test PASSED on {}",
                     staticDbConfig.getDatabaseName());
         } finally {
-            try { space.sql("DROP TABLE IF EXISTS at_count_test"); }
-            catch (final Exception ex) { LOG.warn("[ignored] %s", ex); }
+            try {
+                space.sql("DROP TABLE IF EXISTS at_count_test");
+            } catch (final Exception ex) {
+                LOG.warn("[ignored] %s", ex);
+            }
             Router.global().removeSpace(space.vid());
             space.close();
         }

@@ -33,7 +33,7 @@ import org.apache.lucene.util.BytesRef;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
-import studio.phaseshift.metatron.isa.llm.type.Model;
+import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -536,7 +536,7 @@ public class ConceptFeature extends AbstractFeature {
         public Set<String> extract(final Agent agent, final String text, final boolean blocking) {
             if (!agent.feature(CONCEPT).asRec().has(MODEL))
                 return Set.of();
-            final Model model = Model.model(agent.feature(CONCEPT).asRec().at(MODEL).asRec());
+            final mModel model = mModel.model(agent.feature(CONCEPT).asRec().at(MODEL).asRec());
             final Set<String> conceptStrings = new LinkedHashSet<>();
             try {
                 LOG.info("using agent to extract concepts from text length=%d", text.length());

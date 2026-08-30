@@ -23,7 +23,6 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -38,16 +37,16 @@ import static studio.phaseshift.metatron.isa.vec.type.MVec.vec;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Model extends MRec {
+public class mModel extends MRec {
     public record Provider(String name, fURI host, String apiKey) {
     }
 
-    public Model(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+    public mModel(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
 
-    public static Model model(final Rec modelRec) {
-        return new Model(modelRec.jvm(), modelRec.tid(), modelRec.vid());
+    public static mModel model(final Rec modelRec) {
+        return new mModel(modelRec.jvm(), modelRec.tid(), modelRec.vid());
     }
 
     public Uri llm() {

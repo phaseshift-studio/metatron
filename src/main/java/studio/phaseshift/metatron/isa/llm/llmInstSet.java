@@ -41,8 +41,10 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
-import static studio.phaseshift.metatron.isa.llm.type.Model.model;
+import static studio.phaseshift.metatron.isa.llm.type.mModel.model;
 import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
+import static studio.phaseshift.metatron.isa.llm.type.mcp.mcpMessageServer.MCP_MESSAGE_HTTP_TYPE;
+import static studio.phaseshift.metatron.isa.llm.type.mcp.mcpMessageServer.MCP_MESSAGE_WS_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -90,6 +92,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI TOOL_REQUEST_MESSAGE_TID = MESSAGE_TID.extend("tool_request");
     public static final fURI TOOL_RESULT_MESSAGE_TID = MESSAGE_TID.extend("tool_result");
     public static final fURI THINKING_MESSAGE_TID = MESSAGE_TID.extend("thinking");
+    public static final fURI COMPACTION_MESSAGE_TID = MESSAGE_TID.extend("compaction");
     //public static final fURI MCP_TOOL_TID = LLM_ISA_TID.extend("mcp");
     // public static Obj MTRON_EVAL_TOOL = mModel.Helper.mtronInstToolSpecification(ObjType.insts().stream().filter(i -> i.tid().equals(EVAL_INST_TID)).findFirst().orElse(null));    
     public static final fURI LLM_CHAT_FEATURE_TID = LLM_FEATURE_TID.extend("chat_feature");
@@ -125,6 +128,7 @@ public class llmInstSet extends AbstractInstSet {
     public static Type LLM_TOOL_RESULT_MESSAGE_TYPE;
     public static Type LLM_TOOL_REQUEST_MESSAGE_TYPE;
     public static Type LLM_THINKING_MESSAGE_TYPE;
+    public static Type LLM_COMPACTION_MESSAGE_TYPE;
     public static Type LLM_NOTES_TYPE;
     public static Type LLM_CHAT_RESULT_TYPE;
     public static ObjFactory LLM_OBJ_FACTORY = MObjFactory.of().addExtension(MVec.class, x -> lst(x.jvm().stream().toList()));
@@ -391,6 +395,15 @@ public class llmInstSet extends AbstractInstSet {
                                 null, null,
                                 Map.of(uri(TEXT), "the model's internal reasoning text"),
                                 "a thinking/reasoning trace message — stored in the ledger but excluded from the LC4j chat window"),
+                        docWrap(LLM_COMPACTION_MESSAGE_TYPE = Type.Builder.build()
+                                        .tid(MESSAGE_TID)
+                                        .vid(COMPACTION_MESSAGE_TID)
+                                        .isaPredicate(rec(
+                                                uri(TEXT), STR_TYPE))
+                                        .create(),
+                                null, null,
+                                Map.of(uri(TEXT), "the summary of all previous messages and compactions"),
+                                "a compaction represents a stop point for message retrieval and provides a summary of all previous messages"),
                         docWrap(LLM_MESSAGE_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(MESSAGE_TID)
@@ -593,7 +606,10 @@ public class llmInstSet extends AbstractInstSet {
                                         .create(),
                                 null, null, mutableMap(),
                                 "overlays an iteration graph on the message ledger — each chat turn creates a linked iteration node with prev/next pointers and message back-references",
-                                "iteration_feature::[]")),
+                                "iteration_feature::[]"),
+                        //////////////////////////////////////////////////////////
+                        MCP_MESSAGE_HTTP_TYPE,
+                        MCP_MESSAGE_WS_TYPE),
                 uri(INST), lst(
                         docWrap(instC(AS_INST_TID.dom(REC_TID).rng(LLM_MODEL_TID),
                                         lst(LLM_MODEL_TYPE),
@@ -741,7 +757,7 @@ public class llmInstSet extends AbstractInstSet {
                 .map(pair -> Str.Helper.cleanString(pair.first()) + "==>" + Str.Helper.cleanString(pair.second().asRec().at(TEXT).orElse(str(""))))
                 .collect(Collectors.joining("\n"));
         // 3. the model — from the agent home (matches <agent>/model)
-        final Model model = modelArg.isNoObj() ? Model.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec()) : Model.model(modelArg.asRec());
+        final mModel model = modelArg.isNoObj() ? mModel.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec()) : mModel.model(modelArg.asRec());
         // 4. distill via a mini-task
         final ChatResult result = Agent.Helper.miniTask("session_summarizer", model(model.at(TIMEOUT, real(5.0, MATH_MINUTE_TID, null))), SUMMARIZE_PROMPT.formatted(digest));
         // 5. parse the <<json:claim>> and <<json:loose_end>> blocks into vids

@@ -38,7 +38,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.parser.JsonSchemaGenerator;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.Model;
+import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -296,7 +296,7 @@ public final class LLMFactory {
         };
     }
 
-    public static EmbeddingModel createEmbeddingInteraction(final Model model) {
+    public static EmbeddingModel createEmbeddingInteraction(final mModel model) {
         final String modelName = Str.Helper.cleanString(model.llm());
         return switch (model.protocol().uriValue().toString().toLowerCase()) {
             case LOCALAI -> LocalAiEmbeddingModel.builder()

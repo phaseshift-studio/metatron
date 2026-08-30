@@ -42,6 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_SERVER_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -98,7 +99,7 @@ public class mcp_wsHandler extends WebSocketRec {
 
     public mcp_wsHandler(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.mcp = new mcpServer(jvm, tid, vid);
+        this.mcp = new mcpServer(jvm, MCP_SERVER_TID, vid);
         this.jvm().put(uri(ON_MESSAGE), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 LOG.debug("incoming mcp message from %s: %s", this.getOtherVID(), lhs);

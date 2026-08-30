@@ -23,10 +23,7 @@ import dev.langchain4j.model.chat.request.json.*;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Poly;
-import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -191,7 +188,7 @@ public class mcpServer extends MRec {
                 return mcpError(id, jnt(-32603), str(toolResult.asFail().message()));
             return mcpResponse(id, rec(uri(CONTENT), lst(rec(
                     uri(TYPE), str(TEXT),
-                    uri(TEXT), str(toolResult.toCleanString())))));
+                    uri(TEXT), str(Str.Helper.stripQuotes(toolResult.toString()))))));
         }
     }
 
