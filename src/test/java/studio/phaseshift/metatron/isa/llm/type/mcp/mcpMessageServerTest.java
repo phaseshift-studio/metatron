@@ -24,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -34,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -41,6 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+
 
 /**
  * Protocol-level tests for the {@code mcp_message_server} tools
@@ -54,8 +57,10 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
 
     private static String LEDGER;
     private static String MESSAGE_ROOT = "mcpmsg";
-    private static final String DSH_SESSION = "dsh-4f2a-harbor";
-    private static final String STORM_SESSION = "dsh-storm";
+    // sessions are vids under the agent root — the native topology (<root>/session/<id>)
+    private static final String DSH_SESSION = "mcpmsg/session/dsh-4f2a-harbor";
+    private static final String STORM_SESSION = "mcpmsg/session/dsh-storm";
+    private static final String FROST_SESSION = "mcpmsg/session/dsh-frost";
 
     @Override
     protected fURI testSpacePattern() {
@@ -67,6 +72,8 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
         InstSet.importInstSet(LLM_ISA_TID);
         InstSet.importInstSet(MATH_ISA_TID);
         LEDGER = this.testSpacePattern().retractPattern().toString();
+        // the bus is (root, session) over the space — no agent rec needed at
+        // the root (the live /usr/dr topology has no record at its root either)
         // apply(Obj) on a Type is the predicate test — instantiation goes through the constructor
         final Obj server = mcpMessageServer.wsHandler().constructor().apply(rec());
         if (server.isFail())
@@ -123,7 +130,8 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
         final String written = callText(mcp.at(TOOL).asRec().keys().filter(r -> r.uriValue().name().contains("add_message")).findFirst().get().uriValue().toString(), rec(
                 uri(ROOT), str(LEDGER),
                 uri(KIND), str(kind),
-                uri(TEXT), str(text)));
+                uri(TEXT), str(text),
+                uri(SESSION), str(DSH_SESSION)));
         assertTrue(written.contains(text), "written message should carry its text: " + written);
         assertTrue(written.contains("depth=>1"), "envelope should carry depth 1: " + written);
     }
@@ -137,7 +145,8 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
                 uri(TOOL_REQUESTS), lst(rec(
                         uri(NAME), str("m_tble_inst_sql"),
                         uri(ARGS), str("{\"0\":\"select count(*) from bulbs\"}"),
-                        uri(CONTENTS), str("call_lighthouse_1")))));
+                        uri(CONTENTS), str("call_lighthouse_1"))),
+                uri(SESSION), str(DSH_SESSION)));
         assertTrue(written.contains("tool_requests"), "ai message should carry tool_requests: " + written);
         assertTrue(written.contains("call_lighthouse_1"), "tool_request should carry its call id: " + written);
         assertTrue(written.contains("{\"0\":\"select count(*) from bulbs\"}"), "tool_request should carry its args: " + written);
@@ -152,7 +161,8 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
                 uri(KIND), str("tool_result"),
                 uri(TEXT), str("lighthouse log: two bulbs, one spare on the shelf"),
                 uri(NAME), str("m_tble_inst_sql"),
-                uri(CONTENTS), str("call_lighthouse_1")));
+                uri(CONTENTS), str("call_lighthouse_1"),
+                uri(SESSION), str(DSH_SESSION)));
         assertTrue(written.contains("lighthouse log: two bulbs"), "tool_result should carry its text: " + written);
         assertTrue(written.contains("m_tble_inst_sql"), "tool_result should carry the executed tool name: " + written);
         assertTrue(written.contains("call_lighthouse_1"), "tool_result should carry its call id: " + written);
@@ -164,7 +174,7 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
     public void addMessageRejectsUnknownKind(final String kind) {
         final Obj res = this.mcp.handleMessage(request(9, "tools/call", rec(
                 uri(NAME), str(mcp.at(TOOL).asRec().keys().filter(r -> r.uriValue().name().contains("add_message")).findFirst().get().uriValue().toString()),
-                uri("arguments"), rec(uri(ROOT), str(LEDGER), uri(KIND), str(kind), uri(TEXT), str("no such kind")))));
+                uri("arguments"), rec(uri(ROOT), str(LEDGER), uri(KIND), str(kind), uri(TEXT), str("no such kind"), uri(SESSION), str(DSH_SESSION)))));
         final boolean signaled = res.isFail()
                 || (res.isRec() && !res.asRec().at(uri("error")).isNoObj());
         assertTrue(signaled, "unknown kind should produce an error: " + res);
@@ -192,7 +202,50 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
         assertTrue(all.indexOf("beacon check 3") < all.indexOf("beacon check 1"),
                 "latest should come first: " + all);
         assertTrue(all.contains("dsh-4f2a-harbor"), "session envelope should be written: " + all);
+        assertTrue(all.contains("message/"), "bus records should carry their ledger vids: " + all);
+        assertFalse(all.contains("message/noobj"), "bus records should carry their ledger ids, not noobj: " + all);
         assertFalse(all.contains("harbor light blinks"), "session filter should exclude other sessions: " + all);
+    }
+
+    @Test
+    public void getMessagesShowsThinkingTraces() {
+        callTool(mcp.at(TOOL).asRec().keys().filter(r -> r.uriValue().name().contains("add_message")).findFirst().get().uriValue().toString(), rec(
+                uri(ROOT), str(LEDGER),
+                uri(KIND), str("thinking"),
+                uri(TEXT), str("the keeper suspected the fog, not the lamp"),
+                uri(SESSION), str(DSH_SESSION)));
+
+        final String out = callText(mcp.at(TOOL).asRec().keys().filter(r -> r.uriValue().name().contains("get_messages")).findFirst().get().uriValue().toString(), rec(
+                uri(ROOT), str(LEDGER),
+                uri(SESSION), str(DSH_SESSION)));
+        assertTrue(out.contains("the keeper suspected the fog"), "the bus is full-fidelity — thinking traces are visible: " + out);
+    }
+
+    @Test
+    public void getMessagesStopsAtTheCompactionSentinel() {
+        final String add = mcp.at(TOOL).asRec().keys().filter(r -> r.uriValue().name().contains("add_message")).findFirst().get().uriValue().toString();
+        final String get = mcp.at(TOOL).asRec().keys().filter(r -> r.uriValue().name().contains("get_messages")).findFirst().get().uriValue().toString();
+        // tide + gulls, then the roll, then two more entries
+        callTool(add, rec(uri(ROOT), str(LEDGER), uri(KIND), str("user"), uri(TEXT), str("tide recorded before the roll"), uri(SESSION), str(DSH_SESSION)));
+        callTool(add, rec(uri(ROOT), str(LEDGER), uri(KIND), str("user"), uri(TEXT), str("gulls counted before the roll"), uri(SESSION), str(DSH_SESSION)));
+        MessageBuilder.buildCompactionMessage()
+                .text("rolled the log: tide and gulls, summarized")
+                .session(f(DSH_SESSION))
+                .depth(1)
+                .time()
+                .create(f(LEDGER).extend(MESSAGE).extend("_").addQ(INCRQ));
+        callTool(add, rec(uri(ROOT), str(LEDGER), uri(KIND), str("user"), uri(TEXT), str("first light after the roll"), uri(SESSION), str(DSH_SESSION)));
+        callTool(add, rec(uri(ROOT), str(LEDGER), uri(KIND), str("user"), uri(TEXT), str("second light after the roll"), uri(SESSION), str(DSH_SESSION)));
+
+        final String out = callText(get, rec(uri(ROOT), str(LEDGER), uri(SESSION), str(DSH_SESSION)));
+        assertTrue(out.contains("second light after the roll") && out.contains("first light after the roll"),
+                "post-compaction messages expected in the window: " + out);
+        assertTrue(out.contains("rolled the log"),
+                "the compaction sentinel should close the (latest-first) window: " + out);
+        assertFalse(out.contains("tide recorded before the roll"),
+                "pre-compaction messages should stay summarized away: " + out);
+        assertFalse(out.contains("gulls counted before the roll"),
+                "pre-compaction messages should stay summarized away: " + out);
     }
 
     @Test
@@ -202,11 +255,11 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
                     uri(ROOT), str(LEDGER),
                     uri(KIND), str("user"),
                     uri(TEXT), str("frost rings " + chat),
-                    uri(SESSION), uri("dsh-frost")));
+                    uri(SESSION), str(FROST_SESSION)));
 
         final String out = callText(mcp.at(TOOL).asRec().keys().filter(r -> r.uriValue().name().contains("get_messages")).findFirst().get().uriValue().toString(), rec(
                 uri(ROOT), str(LEDGER),
-                uri(SESSION), uri("dsh-frost"),
+                uri(SESSION), str(FROST_SESSION),
                 uri(MAX), jnt(2)));
         assertTrue(out.contains("frost rings 3") && out.contains("frost rings 2"), "latest two expected: " + out);
         assertFalse(out.contains("frost rings 1"), "max=2 should drop the oldest: " + out);

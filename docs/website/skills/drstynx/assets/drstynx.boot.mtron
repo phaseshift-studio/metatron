@@ -256,7 +256,7 @@ scratch
 model::[provider     => ollama,
         protocol     => ollama,
         host         => <http://ginger.local:11434>,
-        llm          => <venkataparswanadh/qwen3.8-27b:iq1_m>]@/usr/dr/model;
+        llm          => <qwen3.8:27b>]@/usr/dr/model;
 /usr/dr/agent -> |!*dr;
 [-- tag::asciidoc_tag[] --]
 agent::[
