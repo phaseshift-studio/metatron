@@ -126,7 +126,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
 
         // SessionFeature.onBeforeChat() persists the session policy row on first chat
         this.agent = buildAgent();
-        this.sessionStore = new SpaceChatSessionStore(this.agent, this.space, 1, 1);
+        this.sessionStore = new SpaceChatSessionStore(this.agent, this.space, 1, 1, SpaceChatSessionStore.memoryRootOf(sessionVID()));
     }
 
     @AfterEach
@@ -145,14 +145,8 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     public void testSessionAcrossTurns() {
         // org.junit.jupiter.api.Assumptions.assumeFalse(isConnectionRefused());
         // ── Turn 1: "remember the word DOG" ──────────────────────────
-        try {
-            agent.chat("Remember the word DOG. Just say 'ok' and nothing else.");
-        } catch (final MTronException e) {
-            if (isConnectionRefused(e))
-                return; // Ollama not running — skip test
-            throw e;
-        }
-
+        agent.chat("Remember the word DOG. Just say 'ok' and nothing else.");
+            
         // Verify session after turn 1: should have user + ai messages
         final List<ChatMessage> messages1 = sessionStore.getMessages(sessionVID());
         assertTrue(messages1.size() >= 2,
@@ -228,7 +222,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         // Build agent with matching small max
         // Session is pre-seeded via createSession above; onBeforeChat will use it as-is
         this.agent = buildAgentWithMax(smallMax);
-        this.sessionStore = new SpaceChatSessionStore(this.agent, this.space, 1, 1);
+        this.sessionStore = new SpaceChatSessionStore(this.agent, this.space, 1, 1, SpaceChatSessionStore.memoryRootOf(sessionVID()));
 
         // Chat 5 times — MessageWindowChatMemory evicts beyond max internally
         for (int i = 1; i <= 5; i++) {

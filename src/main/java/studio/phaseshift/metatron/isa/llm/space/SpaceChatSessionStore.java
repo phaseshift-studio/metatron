@@ -32,7 +32,6 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
@@ -56,6 +55,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     private final Space space;
     private final int depth;
     private final int chatId;
+    private final fURI memoryRoot;
 
     /**
      * Messages written by this store instance, keyed by TID.
@@ -63,12 +63,42 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
      */
     private final Set<fURI> currentMessages = new HashSet<>();
 
+    /**
+     * The ledger scope: {@code (agent, space, depth, chatId, memoryRoot)}.
+     * <p>
+     * The {@code memoryRoot} is the root of the memory system this ledger
+     * lives in: sessions are at {@code <memoryRoot>/session/<id>}, the
+     * message ledger at {@code <memoryRoot>/message/<id>}.  It is
+     * deliberately NOT derived from the agent's {@code root} (which points
+     * at the agent) — each feature owns the root of its own subgraph, and
+     * the caller says which root this store serves.
+     * <p>
+     * The agent is optional: the message-bus path (the gateway reading and
+     * writing without an LLM turn) carries no agent.
+     */
     public SpaceChatSessionStore(final Agent agent, final Space space, final int depth,
-                                 final int chatId) {
-        this.agent = Objects.requireNonNull(agent, "agent must not be null");
+                                 final int chatId, final fURI memoryRoot) {
+        this.agent = agent; // optional — bus paths carry no agent
         this.space = Objects.requireNonNull(space, "space must not be null");
         this.depth = depth;
         this.chatId = chatId;
+        this.memoryRoot = Objects.requireNonNull(memoryRoot, "memoryRoot must not be null");
+    }
+
+    public fURI memoryRoot() {
+        return this.memoryRoot;
+    }
+
+    /**
+     * The session-home convention: the session of this ledger lives at
+     * {@code <memoryRoot>/session/<id>}, so the memory root is the session
+     * vid retracted by two components (the parent's parent — the grandparent).
+     */
+    public static fURI memoryRootOf(final fURI sessionVID) {
+        // retract clamps gracefully: on the tble layout (sqlite:llm_session/1)
+        // it lands on the space base — the ledger's home — the same convention
+        // the test agents used for their root
+        return sessionVID.retract(2);
     }
 
     public Space space() {
@@ -86,39 +116,30 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     // the session's parent path.  The rec{*} is append-only; the sliding window
     // is a read-time view.
     //
-    // URI topology:
-    //   .../llm_session/1           → session policy (agent, user, algorithm)
-    //   .../llm_message/_?incrq     → unified append-only message ledger
+    // URI topology (rooted at the store's memoryRoot):
+    //   <memoryRoot>/session/1      → session policy (agent, user, algorithm)
+    //   <memoryRoot>/message/_?incrq → unified append-only message ledger
+    //
+    // The memoryRoot is the memory system's root — a different concept from
+    // the agent's root (which points at the agent); each feature owns the
+    // root of the subgraph it structures (features as gatekeepers of their
+    // subgraph), and the store is told which root it serves.
 
     /// ////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public List<ChatMessage> getMessages(final Object sessionVID) {
-        if (!(sessionVID instanceof fURI sesVID))
-            return new ArrayList<>();
-        final fURI msgBase = this.agent.at(ROOT).uriValue().extend(MESSAGE);
-
-        // ── Read all session messages (no skip yet — we adjust for pairs) ─
-        final AtomicReference<Rel> SYSTEM_MESSAGE_HOLDER = new AtomicReference<>();
-        final List<Rel> allMessages = Router.readFromSpace(msgBase.extend("+/"))
+    /**
+     * Session-scoped ledger rels of every message kind, sorted oldest →
+     * newest by ledger id.  The shared read core of {@link #Query}
+     * (and, through it, {@link #busWindow} and {@link #getMessages}):
+     * scope only — session, depth, and — for depth &gt; 1 — chat id —
+     * with no kind filtering.
+     */
+    private List<Rel> sessionRels(final fURI sesVID) {
+        final fURI msgBase = this.memoryRoot.extend(MESSAGE);
+        return Router.readFromSpace(msgBase.extend("+/"))
                 .stream()
                 .map(Obj::asRel)
-                // find the last unique system message generated
-                .peek(pair -> {
-                    if (pair.second().tid().equals(SYSTEM_MESSAGE_TID)) {
-                        final Rel previous = SYSTEM_MESSAGE_HOLDER.get();
-                        final int previousId = null == previous ? -1 : Integer.parseInt(previous.first().uriValue().name());
-                        final int currentId = Integer.parseInt(pair.first().uriValue().name());
-                        if (previousId < currentId) {
-                            SYSTEM_MESSAGE_HOLDER.set(pair);
-                        }
-                    }
-                })
-                // only include user/ai/and tool_request messages
-                .filter(pair -> pair.second().isRec()
-                        && (pair.second().asRec().tid().equals(USER_MESSAGE_TID)
-                        || pair.second().asRec().tid().equals(AI_MESSAGE_TID)
-                        || pair.second().asRec().tid().equals(TOOL_RESULT_MESSAGE_TID)))
+                .filter(pair -> pair.second().isRec())
                 .filter(pair -> {
                     final Obj sessionField = pair.second().asRec().at(uri(SESSION)).orElse(noobj());
                     final fURI stored = sessionField.isUri() ? sessionField.uriValue()
@@ -145,32 +166,171 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 })
                 .sorted(Comparator.comparing(a -> Integer.parseInt(a.first().uriValue().name())))
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
-        // if there was a system message, prepend it to the list of messages to provide to the agent
-        if (SYSTEM_MESSAGE_HOLDER.get() != null)
-            allMessages.addFirst(SYSTEM_MESSAGE_HOLDER.get());
+    }
 
-        // ── Pair-aware window: don't break AiMessage(tool_calls) /
-        //     ToolExecutionResultMessage groups ──────────────────────
-        final int max = this.getMaxMessages();
-        final int rawSkip = Math.max(0, allMessages.size() - max);
-        final int skip = adjustSkipToPreservePairs(allMessages, rawSkip);
+    /**
+     * A query over the session's message stream — the gateway to the ledger
+     * for metatron-world consumers (MCP servers, mtron code, features; the
+     * LC4j {@link #getMessages} is one such projection).
+     * <p>
+     * {@code apply()} composes, in order:
+     * <ol>
+     *   <li>every message of the session (session/depth scope via the store),</li>
+     *   <li>the kind projection — {@code exclude}d tids dropped and, when
+     *       {@code include} is used, unlisted tids dropped,</li>
+     *   <li>sort by ledger id (append order),</li>
+     *   <li>the window bound from the newest side — first at the newest
+     *       {@code stopAt} sentinel (inclusive — it summarizes everything
+     *       before it, back to the previous one), then at
+     *       {@code maxFromCurrent},</li>
+     *   <li>pair integrity — the boundary never tears an {@code ai} message
+     *       from its {@code tool_result}s and the window starts on a turn
+     *       boundary.</li>
+     * </ol>
+     * The result: native records, vids preserved, oldest → newest.
+     */
+    public final class Query {
 
-        return allMessages.stream()
-                .skip(skip)
-                .peek(pair -> {
-                    if (!pair.second().tid().equals(AI_MESSAGE_TID) || !pair.second().asRec().has(TOOL_REQUESTS))
-                        this.currentMessages.add(pair.first().uriValue());
-                })
-                .map(pair -> pair.second().asRec())
-                .map(m -> {
-                    try {
-                        m.recValue().put(uri(WRITTEN_KEY), BOOL_TRUE);
-                        return SERIALIZER.write(m.vid(null));
-                    } catch (final Exception e) {
-                        LOG.warn("error converting stored message to ChatMessage (ignoring): %s", e);
-                        return null;
+        private int max = Integer.MAX_VALUE;
+        private fURI stopTid = null;
+        private final Set<fURI> include = new LinkedHashSet<>();
+        private final Set<fURI> exclude = new LinkedHashSet<>();
+
+        public Query maxFromCurrent(final int n) {
+            this.max = Math.max(1, n);
+            return this;
+        }
+
+        /**
+         * Keep only these tids in the window (empty = every kind;
+         * {@code ALL} matches every kind).
+         */
+        public Query include(final fURI... tids) {
+            Collections.addAll(this.include, tids);
+            return this;
+        }
+
+        public Query exclude(final fURI... tids) {
+            Collections.addAll(this.exclude, tids);
+            return this;
+        }
+
+        /**
+         * The window starts at the newest record of this tid — a sentinel
+         * summarizing everything before it — and never crosses it (inclusive).
+         */
+        public Query stopAt(final fURI tid) {
+            this.stopTid = tid;
+            return this;
+        }
+
+        public List<Rec> apply() {
+            final boolean allKinds = this.include.isEmpty() || this.include.contains(fURI.Singleton.ALL);
+            final List<Rel> projected = new ArrayList<>();
+            for (final Rel r : SpaceChatSessionStore.this.sessionRels(this.sessionVID)) {
+                final fURI tid = r.second().tid();
+                if (!allKinds && !this.include.contains(tid))
+                    continue;
+                if (this.exclude.contains(tid))
+                    continue;
+                projected.add(r);
+            }
+            if (projected.isEmpty())
+                return new ArrayList<>();
+            int start = Math.max(0, projected.size() - this.max);
+            boolean sentinelStopsHere = false;
+            if (null != this.stopTid)
+                for (int i = projected.size() - 1; i >= 0; i--)
+                    if (projected.get(i).second().tid().equals(this.stopTid)) {
+                        if (i >= start) {
+                            start = i;
+                            sentinelStopsHere = true;
+                        }
+                        break; // a sentinel is the end of this window — it summarizes what came before it
                     }
-                }).filter(Objects::nonNull).toList();
+            // a sentinel-stopped window is a clean boundary — the summarizer
+            // writes it at a turn boundary, so the pair pull-in rules (which
+            // would reach behind the sentinel) do not apply
+            if (!sentinelStopsHere)
+                start = adjustSkipToPreservePairs(projected, start);
+            final List<Rec> window = new ArrayList<>();
+            for (int i = start; i < projected.size(); i++)
+                window.add(projected.get(i).second().asRec());
+            return window;
+        }
+
+        private final fURI sessionVID;
+
+        Query(final fURI sessionVID) {
+            this.sessionVID = sessionVID;
+        }
+    }
+
+    public Query query(final fURI sessionVID) {
+        return new Query(sessionVID);
+    }
+
+    /**
+     * The message-bus view of the session — full fidelity (every kind,
+     * vids), bounded from the newest side, and stopping at the newest
+     * compaction sentinel (the bus contract, held here so bus consumers —
+     * MCP and friends — never name the sentinel themselves).
+     */
+    public List<Rec> busWindow(final fURI sessionVID, final int max) {
+        return this.query(sessionVID).maxFromCurrent(max).stopAt(COMPACTION_MESSAGE_TID).apply();
+    }
+
+    @Override
+    public List<ChatMessage> getMessages(final Object sessionVID) {
+        if (!(sessionVID instanceof fURI sesVID))
+            return new ArrayList<>();
+        // The model's chat view as a query: bounded, sentinel-stopped, no
+        // metatron-only kinds; the most recent system record is pinned first.
+        final List<Rec> window = this.query(sesVID)
+                .maxFromCurrent(this.getMaxMessages())
+                .stopAt(COMPACTION_MESSAGE_TID)
+                .exclude(THINKING_MESSAGE_TID)
+                .exclude(COMPACTION_MESSAGE_TID)
+                .apply();
+
+        // The model's chat view over the native window: user/ai/tool_result
+        // records with the most recent system record pinned first; thinking
+        // and compaction are metatron-world records and are not projected
+        // into the LC4j chat window.
+        Rec system = null;
+        for (final Rec message : window)
+            if (message.tid().equals(SYSTEM_MESSAGE_TID))
+                system = message; // newest — the window is oldest → newest
+
+        final List<ChatMessage> chat = new ArrayList<>();
+        if (null != system)
+            chat.add(this.toChatMessage(system));
+        for (final Rec message : window) {
+            if (!message.tid().equals(USER_MESSAGE_TID) && !message.tid().equals(AI_MESSAGE_TID)
+                    && !message.tid().equals(TOOL_RESULT_MESSAGE_TID))
+                continue;
+            final ChatMessage converted = this.toChatMessage(message);
+            if (null == converted)
+                continue;
+            if (!message.tid().equals(AI_MESSAGE_TID) || !message.has(TOOL_REQUESTS))
+                this.currentMessages.add(message.vid());
+            chat.add(converted);
+        }
+        return chat;
+    }
+
+    /**
+     * Stamp the in-memory {@code _w} marker (the updateMessages dedup key,
+     * riding LC4j attributes) and convert a ledger record to its ChatMessage.
+     */
+    private ChatMessage toChatMessage(final Rec message) {
+        try {
+            message.recValue().put(uri(WRITTEN_KEY), BOOL_TRUE);
+            return SERIALIZER.write(message.vid(null));
+        } catch (final Exception e) {
+            LOG.warn("error converting stored message to ChatMessage (ignoring): %s", e);
+            return null;
+        }
     }
 
     /**
@@ -194,7 +354,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (!(sessionVID instanceof fURI sesVID) || messages == null || messages.isEmpty())
             return;
 
-        final fURI writePath = this.agent.at(ROOT).uriValue().extend(MESSAGE)
+        final fURI writePath = this.memoryRoot.extend(MESSAGE)
                 .extend("_").addQ(INCRQ);
 
         for (final ChatMessage msg : messages) {
@@ -224,7 +384,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (!(sessionVID instanceof fURI sesVID))
             return;
 
-        final fURI msgBase = this.agent.at(ROOT).uriValue().extend(MESSAGE);
+        final fURI msgBase = this.memoryRoot.extend(MESSAGE);
         for (int id = 1; ; id++) {
             try {
                 final Obj msgObj = Router.readFromSpace(msgBase.extend(String.valueOf(id)));
@@ -261,6 +421,8 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     private static final int STORE_WINDOW_FACTOR = 3;
 
     private int getMaxMessages() {
+        if (null == this.agent)
+            return 150; // no agent — the bus path never sizes from session policy
         try {
             final Obj sessFeature = this.agent.feature(SESSION);
             if (!sessFeature.isNoObj()) {

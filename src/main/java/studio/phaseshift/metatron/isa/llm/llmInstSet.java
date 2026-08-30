@@ -411,7 +411,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .create(),
                                 null, null,
                                 mutableMap(),
-                                "polymorphic chat message — one of system, user, ai, tool_result, or thinking; discriminated by _tid column"),
+                                "polymorphic chat message — one of system, user, ai, tool_result, thinking, or compaction; discriminated by _tid column"),
                         //////////////////////////////////////////////////
                         docWrap(LLM_SKILL_TYPE = Type.Builder.build()
                                         .tid(REC_TID)

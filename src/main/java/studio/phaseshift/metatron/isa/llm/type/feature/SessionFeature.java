@@ -79,7 +79,10 @@ public class SessionFeature extends AbstractFeature {
             agent.setCurrentChatId(chatId);
 
             final Space space = Router.global().getSpaceFor(sessionID);
-            final SpaceChatSessionStore store = new SpaceChatSessionStore(agent, space, agent.chatDepth(), chatId);
+            // the session's home <memoryRoot>/session/<id> is the ledger's root —
+            // the store is told which memory system it serves (not derived
+            // from the agent's own root)
+            final SpaceChatSessionStore store = new SpaceChatSessionStore(agent, space, agent.chatDepth(), chatId, SpaceChatSessionStore.memoryRootOf(sessionID));
             this.store = store;
             // Ensure session exists in space with required fields
             if (session.at(ALGORITHM).isNoObj()) {

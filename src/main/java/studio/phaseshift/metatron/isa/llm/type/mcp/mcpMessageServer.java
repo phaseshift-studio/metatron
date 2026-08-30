@@ -19,8 +19,11 @@
 package studio.phaseshift.metatron.isa.llm.type.mcp;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
+import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler;
@@ -51,6 +54,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler.HTTP_MCP_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -62,8 +66,17 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * ({@code <root>/message}) over MCP so that remote harness memory can be
  * appended ({@code add_message}), read back (latest first,
  * {@code get_messages}), and searched by pattern ({@code
- * search_messages}). Reads are bounded: default window {@value
- * #DEFAULT_MAX_MESSAGES}, hard ceiling {@value #HARD_MAX_MESSAGES}.
+ * search_messages}).
+ * <p>
+ * Reads go through the ledger gateway —
+ * {@code SpaceChatSessionStore.busWindow}: the stream is scoped by
+ * session (a required argument; a vid under the agent's root such as
+ * {@code <root>/session/<id>}), turns and {@code ai}/{@code tool_result}
+ * pairs stay intact at the window boundary, and the window never crosses
+ * the newest compaction (which summarizes everything before it). Records
+ * come back full-fidelity — vids, thinking, envelope — newest first.
+ * Windows are bounded: default {@value #DEFAULT_MAX_MESSAGES}, hard
+ * ceiling {@value #HARD_MAX_MESSAGES}.
  * <p>
  * The ledger is discriminated by the message tid and carries the envelope
  * {@code text, time, session, depth, chat_id}:
@@ -139,7 +152,7 @@ public class mcpMessageServer {
                 ROOT, URI_TYPE,
                 KIND, isa_(union_(lst(uri(USER), uri(AI), uri(SYSTEM), uri("thinking"), uri("tool_result")))).tryToInst(),
                 TEXT, STR_TYPE,
-                SESSION, T(URI_TID.maybe()),
+                SESSION, URI_TYPE,
                 NAME, T(STR_TID.maybe()),
                 CONTENTS, T(STR_TID.maybe()),
                 CHAT_ID, T(INT_TID.maybe()),
@@ -149,13 +162,13 @@ public class mcpMessageServer {
         ), (lhs, inst) -> addMessage(inst)), "add a chat message");
         final Inst getMessages = docWrap(instC(vid.extend("get_messages").dom(ALL.maybe()).rng(LST_TID), rec(
                 ROOT, URI_TYPE,
-                SESSION, T(URI_TID.maybe()),
+                SESSION, URI_TYPE,
                 MAX, T(INT_TID.maybe())
         ), (lhs, inst) -> readMessages(inst, 1, 2)), "get chat messages");
         final Inst searchMessages = docWrap(instC(vid.extend("search_messages").dom(ALL.maybe()).rng(LST_TID), rec(
                 ROOT, URI_TYPE,
                 PATTERN, STR_TYPE,
-                SESSION, T(URI_TID.maybe()),
+                SESSION, URI_TYPE,
                 MAX, T(INT_TID.maybe())
         ), (lhs, inst) -> searchMessages(inst)), "search chat messages");
         tools.at(mTool.toolName(addMessage.asInst().tid()), addMessage, MUTABLE);
@@ -245,40 +258,46 @@ public class mcpMessageServer {
         //  idiom is unverified, so that dual write is withheld until the idiom is found
     }
 
+    /**
+     * The bus store for this ledger — the top-level (depth 1) session view;
+     * the chat id never isolates at depth 1.  The store is told the memory
+     * root it serves: the bus is (root, session) over the space and needs
+     * no agent (the agent's root points at the agent — a different thing).
+     */
+    private static SpaceChatSessionStore storeAt(final fURI rootF, final fURI sessF) {
+        final Space space = Router.global().getSpaceFor(rootF);
+        if (null == space)
+            throw MTronException.of("no space serves the ledger root: %s", rootF);
+        return new SpaceChatSessionStore(null, space, 1, 0, rootF);
+    }
+
     private static Obj readMessages(final Inst inst, final int sessionIdx, final int maxIdx) {
-        final fURI path = f(Str.Helper.cleanString(inst.arg(ROOT, 0))).extend(MESSAGE).extend("+");
-        final Obj session = inst.arg(SESSION, sessionIdx);
+        final fURI rootF = f(Str.Helper.cleanString(inst.arg(ROOT, 0), true));
+        final fURI sessF = f(Str.Helper.cleanString(inst.arg(SESSION, sessionIdx), true));
         final int max = Math.min(inst.arg(MAX, maxIdx).orElse(jnt(DEFAULT_MAX_MESSAGES)).asInt().intValue().intValue(), HARD_MAX_MESSAGES);
-        final Obj ordered = session.isNoObj()
-                ? at_(uri(path))/*.order_(rshift_(uri(TIME)))*/.apply()
-                : at_(uri(path)).where_(rec(SESSION, uri(Str.Helper.cleanString(session, true))))/*.order_(rshift_(uri(TIME)))*/.apply();
-        // The stream is relied on to be in the ledger's natural (append) order — the
-        // ledger is append-only and the space returns records in insertion order.
-        // (An explicit order_(rshift_(TIME)) clause is kept commented out above as an
-        // alternative; order_ sorts ascending, so the latest N is still the tail, reversed.)
-        return newestFirst(ordered, max);
+        // The store owns the window — session scope, turn/tool-pair integrity,
+        // and the bus sentinel — and hands back full-fidelity records (vids,
+        // thinking, envelope); the bus sees them newest-first
+        final List<Rec> window = storeAt(rootF, sessF).busWindow(sessF, max);
+        Collections.reverse(window);
+        return lst(window.stream().<Obj>map(m -> m).toList());
     }
 
     private static Obj searchMessages(final Inst inst) {
-        final fURI path = f(Str.Helper.cleanString(inst.arg(ROOT, 0), true)).extend(MESSAGE).extend("+");
+        final fURI rootF = f(Str.Helper.cleanString(inst.arg(ROOT, 0), true));
         final String pattern = Str.Helper.cleanString(inst.arg(PATTERN, 1), true);
-        final Obj session = inst.arg(SESSION, 2);
+        final fURI sessF = f(Str.Helper.cleanString(inst.arg(SESSION, 2), true));
         final int max = Math.min(inst.arg(MAX, 3).orElse(jnt(DEFAULT_MAX_MESSAGES)).asInt().intValue().intValue(), HARD_MAX_MESSAGES);
-        // `has` is a regex find() (case-sensitive) — the pattern matches against the record
-        final Obj searched = session.isNoObj()
-                ? at_(uri(path)).where_(rec(TEXT, instB(HAS_INST_TID, lst(str(pattern)))))/*.order_(rshift_(uri(TIME)))*/.apply()
-                : at_(uri(path)).where_(rec(SESSION, uri(Str.Helper.cleanString(session, true)))).where_(rec(TEXT, instB(HAS_INST_TID, lst(str(pattern)))))/*.order_(rshift_(uri(TIME)))*/.apply();
-        return searched.isNoObj() ? lst() : newestFirst(searched, max);
-    }
-
-    private static Obj newestFirst(final Obj ordered, final int max) {
-        if (ordered.isNoObj())
-            return lst();
-        final List<Obj> all = ordered.stream().sorted(Comparator.comparing(o -> mathInstSet.datetimeToMillis(o.asRec().at(TIME).asUri()))).toList();
-        final int n = Math.min(max, all.size());
-        final List<Obj> newest = new ArrayList<>(all.subList(all.size() - n, all.size()));
-        Collections.reverse(newest);
-        return lst(newest);
+        // search over the bus window (sentinel-safe, pair-safe) — a
+        // case-sensitive regex find() against each record's text
+        final java.util.regex.Pattern rx = java.util.regex.Pattern.compile(pattern);
+        final List<Rec> window = storeAt(rootF, sessF).busWindow(sessF, max);
+        final List<Obj> hits = new ArrayList<>();
+        for (final Rec message : window)
+            if (message.at(uri(TEXT)).isStr() && rx.matcher(Str.Helper.cleanString(message.at(uri(TEXT)))).find())
+                hits.add(message);
+        Collections.reverse(hits);
+        return lst(hits);
     }
 
 }
