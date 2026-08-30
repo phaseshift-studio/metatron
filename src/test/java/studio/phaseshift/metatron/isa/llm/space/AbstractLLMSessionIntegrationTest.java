@@ -30,10 +30,10 @@ import studio.phaseshift.metatron.SkipWhenPortUnavailable;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.Model;
 import studio.phaseshift.metatron.isa.llm.type.feature.ChatFeature;
 import studio.phaseshift.metatron.isa.llm.type.feature.SessionFeature;
 import studio.phaseshift.metatron.isa.llm.type.feature.SystemFeature;
+import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -416,7 +416,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
      */
     private Agent buildAgentWithMax(final int max) {
         // Build features directly as Feature instances — no ISA lookup needed
-        final Model model = Model.model(rec(
+        final mModel model = mModel.model(rec(
                 NAME, uri(MODEL_NAME),
                 PROVIDER, uri("ollama"),
                 PROTOCOL, uri("ollama"),

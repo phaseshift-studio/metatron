@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
@@ -453,12 +453,12 @@ public interface CommonRewritesTestContract {
         final String p = getTestDataUriPrefix().toString();
         return Stream.of(
                 // order + count verifies the rewrite fires (ordering doesn't change count)
-                Arguments.of("order: by name count", "*" + p + "/+.order(select(name)).count()", jnt(10)),
+                Arguments.of("order: by name count", "*" + p + "/+.order(select(name))>-.count()", jnt(10)),
                 // order + take
-                Arguments.of("order: by name take(3)", "*" + p + "/+.order(select(name)).take(3).count()", jnt(3)),
-                Arguments.of("order: by value take(5)", "*" + p + "/+.order(select(value)).take(5).count()", jnt(5)),
+                Arguments.of("order: by name take(3)", "*" + p + "/+.order(select(name))>-.take(3).count()", jnt(3)),
+                Arguments.of("order: by value take(5)", "*" + p + "/+.order(select(value))>-.take(5).count()", jnt(5)),
                 // order + where + take (order before where)
-                Arguments.of("order: by name take(1)", "*" + p + "/+.order(select(name)).take(1).count()", jnt(1))
+                Arguments.of("order: by name take(1)", "*" + p + "/+.order(select(name))>-.take(1).count()", jnt(1))
         );
     }
 
@@ -471,12 +471,12 @@ public interface CommonRewritesTestContract {
         return Stream.of(
                 // where+order — chain .count() to verify row count (order doesn't change it)
                 Arguments.of("where+order: >5 order by value count",
-                        "*" + p + "/+.where([value=>?>5]).order(select(value)).count()", jnt(5)),
+                        "*" + p + "/+.where([value=>?>5]).order(select(value))>-.count()", jnt(5)),
                 Arguments.of("where+order: >3 order by name count",
-                        "*" + p + "/+.where([value=>?>3]).order(select(name)).count()", jnt(7)),
+                        "*" + p + "/+.where([value=>?>3]).order(select(name))>-.count()", jnt(7)),
                 // @ (anchor) — verify VID stamping through composed rewrite
                 Arguments.of("where+order: @ >5 order by value count",
-                        "@" + p + "/+.where([value=>?>5]).order(select(value)).count()", jnt(5))
+                        "@" + p + "/+.where([value=>?>5]).order(select(value))>-.count()", jnt(5))
         );
     }
 
@@ -489,14 +489,14 @@ public interface CommonRewritesTestContract {
         return Stream.of(
                 // where+order+offset — chain .count() to verify row count after skip
                 Arguments.of("where+order+offset: >3 order by value skip(2)",
-                        "*" + p + "/+.where([value=>?>3]).order(select(value)).skip(2).count()", jnt(5)),
+                        "*" + p + "/+.where([value=>?>3]).order(select(value))>-.skip(2).count()", jnt(5)),
                 Arguments.of("where+order+offset: >5 order by name skip(1)",
-                        "*" + p + "/+.where([value=>?>5]).order(select(name)).skip(1).count()", jnt(4)),
+                        "*" + p + "/+.where([value=>?>5]).order(select(name))>-.skip(1).count()", jnt(4)),
                 Arguments.of("where+order+offset: >3 order by value skip(10) past end",
-                        "*" + p + "/+.where([value=>?>3]).order(select(value)).skip(10).count()", jnt(0)),
+                        "*" + p + "/+.where([value=>?>3]).order(select(value))>-.skip(10).count()", jnt(0)),
                 // @ (anchor)
                 Arguments.of("where+order+offset: @ >3 order by value skip(2)",
-                        "@" + p + "/+.where([value=>?>3]).order(select(value)).skip(2).count()", jnt(5))
+                        "@" + p + "/+.where([value=>?>3]).order(select(value))>-.skip(2).count()", jnt(5))
         );
     }
 

@@ -223,7 +223,7 @@ public class Agent extends MRec {
          * @param prompt the task instruction sent to the translator agent
          * @return the resulting {@code chat_result::T} as a {@link ChatResult}
          */
-        public static ChatResult miniTask(final String agentName, final Model model, final String prompt) {
+        public static ChatResult miniTask(final String agentName, final mModel model, final String prompt) {
             final Agent translator = new Agent(mutableMap(
                     uri(NAME), str(agentName),
                     uri(FEATURE), lst(new ChatFeature(mutableMap(
@@ -564,7 +564,7 @@ public class Agent extends MRec {
     public Lst embed(final Obj toEmbed) {
         if (this.first.getAndSet(false))
             this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
-        final EmbeddingModel agent = LLMFactory.createEmbeddingInteraction(Model.model(this.at(MODEL).asRec()));
+        final EmbeddingModel agent = LLMFactory.createEmbeddingInteraction(mModel.model(this.at(MODEL).asRec()));
        /* final Obj costObj = this.at(feat(COST));
         if (!costObj.isNoObj())
             agent.addListener(new CostCalculator(costObj.asRec().at(RATE));*/

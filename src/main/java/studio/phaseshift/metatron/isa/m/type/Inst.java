@@ -161,6 +161,10 @@ public interface Inst extends Call {
         return this.args().isRec() ? this.args().<Rec>as().at(key.toUri()) : this.arg(index);
     }
 
+    default Obj arg(final String key, final int index) {
+        return this.arg(fURI.Singleton.f(key), index);
+    }
+
     default Inst.f f() {
         return null == this.jvm() ? null : this.jvm().get1();
     }

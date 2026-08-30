@@ -268,7 +268,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 return false;
         }
         while (!lhsType.isRootType()) {
-            if (lhsType.vid().test(rhsType.vid()))
+            if (lhsType.hasVID() && lhsType.vid().test(rhsType.vid()))
                 return true;
             if (rhsType.tid().isGeneric())
                 return lhsType.vid().c().within(rhsType.tid().c());
@@ -794,12 +794,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default String toCleanString() {
-        if (this.isStr())
-            return this.strValue();
-        if (this.isUri())
-            return this.uriValue().toString();
-        else
-            return this.toString();
+        return Str.Helper.cleanString(this, true);
     }
 
     default String toShortString() {
@@ -1134,8 +1129,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         return lhs;
                     }),
                     instC(RANGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(INT_TYPE, isa_(INT_TYPE).else_(jnt(0)).tryToInst()), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1().take(cInt.of(inst.arg(1).intValue())).get0()),
-                    docWrap(instC(ORDER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()).q(BLOCK, null), lst(ALL_TYPE), (lhs, inst) -> lhs.isNoObj() ? noobj() : objs(lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))))),
-                            "any objs", "the objs sorted by the arg obj", Map.of(jnt(0), "the obj to sort by"), "a sorting function \\(f(X)\\to X'\\)"),
+                    docWrap(instC(ORDER_INST_TID.dom(A.maybeSome()).rng(LST_TID.maybe()).q(BLOCK, null), lst(ALL_TYPE), (lhs, inst) -> lhs.isNoObj() ? noobj() : lst(lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))).toList())),
+                            "maybe some objs", "maybe a lst sorted by the arg obj", Map.of(jnt(0), "the obj to sort by"), "a sorting function \\(f(X)\\to X'\\)"),
                     instC(M_ISA_INST_TID.extend("via").dom(A).rng(B), lst(REL_TYPE), (lhs, inst) -> {
                         Rel currentTransform = inst.arg(0).asRel();
                         Obj currentObj = lhs;
