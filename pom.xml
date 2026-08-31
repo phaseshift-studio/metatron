@@ -64,7 +64,7 @@
         <testcontainers.version>2.0.5</testcontainers.version>
         <java-websocket.version>1.6.0</java-websocket.version>
         <mariadb.version>3.5.10</mariadb.version>
-        <mongodb.version>5.10.0</mongodb.version>
+        <mongodb.version>5.11.0</mongodb.version>
         <langchain4j.version>1.19.0</langchain4j.version>
         <jlama.version>0.8.4</jlama.version>
         <langchain4j.beta.version>1.19.0-beta29</langchain4j.beta.version>
@@ -80,7 +80,7 @@
         <slf4j.version>2.0.18</slf4j.version>
         <hive.version>1.4.0</hive.version>
         <jakarta.version>2.2.0</jakarta.version>
-        <jsoup.version>1.23.1</jsoup.version>
+        <jsoup.version>1.23.2</jsoup.version>
         <asciidoctor.version>3.2.0</asciidoctor.version>
         <asciidoctorj.version>3.0.1</asciidoctorj.version>
         <exp4j.version>0.4.8</exp4j.version>
@@ -92,7 +92,7 @@
         <jserialcomm.version>2.11.4</jserialcomm.version>
         <rhino.version>1.9.1</rhino.version>
         <rhino.j2r223.version>1.7.14</rhino.j2r223.version>
-        <sqlite.version>3.53.2.1</sqlite.version>
+        <sqlite.version>3.53.4.0</sqlite.version>
         <mcp.version>2.0.1</mcp.version>
         <zt.version>1.13.0</zt.version>
         <lucene.version>10.5.1</lucene.version>
