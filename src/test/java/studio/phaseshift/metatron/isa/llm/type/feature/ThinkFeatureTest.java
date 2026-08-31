@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_THINK_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.type.Str.pendingTemplateTail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -35,7 +35,9 @@ public class ThinkFeatureTest extends AbstractFeatureTest {
 
     @Override
     protected ThinkFeature feature() {
-        return new ThinkFeature(mutableMap(uri("root"), uri("/usr/test/think")), feat("think"), null);
+        // the canonical feature tid — ThinkFeature's lifecycle hooks look
+        // the feature up on the agent by exact tid
+        return new ThinkFeature(mutableMap(uri("root"), uri("/usr/test/think")), LLM_THINK_FEATURE_TID, null);
     }
 
     @Test

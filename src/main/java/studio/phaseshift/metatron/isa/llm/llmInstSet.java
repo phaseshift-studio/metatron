@@ -105,6 +105,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_SKILL_FEATURE_TID = LLM_FEATURE_TID.extend("skill_feature");
     public static final fURI LLM_THINK_FEATURE_TID = LLM_FEATURE_TID.extend("think_feature");
     public static final fURI LLM_CONCEPT_FEATURE_TID = LLM_FEATURE_TID.extend("concept_feature");
+    public static final fURI LLM_COMPACTION_FEATURE_TID = LLM_FEATURE_TID.extend("compaction_feature");
     public static final fURI LLM_COMMENT_FEATURE_TID = LLM_FEATURE_TID.extend("comment_feature");
     public static final fURI LLM_SUMMARIZE_FEATURE_TID = LLM_FEATURE_TID.extend("summarize_feature");
     public static final fURI LLM_COST_FEATURE_TID = LLM_FEATURE_TID.extend("cost_feature");
@@ -505,7 +506,7 @@ public class llmInstSet extends AbstractInstSet {
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_TOOL_FEATURE_TID)
-                                .isaPredicate(rec(TOOL, LST_TYPE))
+                                .isaPredicate(rec(uri(f(TOOL).maybe()), T(LST_TID.maybe())))
                                 .constructor(arg -> createStageLambdas(new ToolFeature(arg.asRec().jvm(), LLM_TOOL_FEATURE_TID, arg.vid())))
                                 .create(),
                         Type.Builder.build()
@@ -519,11 +520,13 @@ public class llmInstSet extends AbstractInstSet {
                                 .vid(LLM_SYSTEM_FEATURE_TID)
                                 .constructor(arg -> createStageLambdas(new SystemFeature(arg.asRec().jvm(), LLM_SYSTEM_FEATURE_TID, arg.vid())))
                                 .create(),
-                        Type.Builder.build()
-                                .tid(LLM_FEATURE_TID)
-                                .vid(LLM_RECALL_FEATURE_TID)
-                                .constructor(arg -> createStageLambdas(new SimilarityRecallFeature(arg.asRec().jvm(), LLM_RECALL_FEATURE_TID, arg.vid())))
-                                .create(),
+                        // [parked stub] SimilarityRecall — out of the active roster during the
+                        // channel refactor (skill/tool/message owners); un-comment to revive.
+//                         Type.Builder.build()
+//                                 .tid(LLM_FEATURE_TID)
+//                                 .vid(LLM_RECALL_FEATURE_TID)
+//                                 .constructor(arg -> createStageLambdas(new SimilarityRecallFeature(arg.asRec().jvm(), LLM_RECALL_FEATURE_TID, arg.vid())))
+//                                 .create(),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_THINK_FEATURE_TID)
@@ -540,13 +543,15 @@ public class llmInstSet extends AbstractInstSet {
                                 null, null,
                                 mutableMap(),
                                 "extracts and normalizes concepts from the agent response and thinking stream"),
-                        docWrap(Type.Builder.build()
-                                        .tid(LLM_FEATURE_TID)
-                                        .vid(LLM_COMMENT_FEATURE_TID)
-                                        .constructor(arg -> createStageLambdas(new CommentFeature(arg.asRec().jvm(), LLM_COMMENT_FEATURE_TID, arg.vid())))
-                                        .create(),
-                                null, null, mutableMap(),
-                                "allows user to interject with a comment in the current chat lifecycle of the agent"),
+                        // [parked stub] Comment — out of the active roster during the
+                        // channel refactor (skill/tool/message owners); un-comment to revive.
+//                         docWrap(Type.Builder.build()
+//                                         .tid(LLM_FEATURE_TID)
+//                                         .vid(LLM_COMMENT_FEATURE_TID)
+//                                         .constructor(arg -> createStageLambdas(new CommentFeature(arg.asRec().jvm(), LLM_COMMENT_FEATURE_TID, arg.vid())))
+//                                         .create(),
+//                                 null, null, mutableMap(),
+//                                 "allows user to interject with a comment in the current chat lifecycle of the agent"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_COST_FEATURE_TID)
@@ -564,6 +569,15 @@ public class llmInstSet extends AbstractInstSet {
                                 ),
                                 "tracks real token-based LLM costs via CostCalculator, persists in/out/total to space",
                                 "cost_feature::[root=>/usr/dr/cost,cost=>[in_cost=>usd_currency::0.065,out_cost=>usd_currency::0.001]]"),
+                        docWrap(Type.Builder.build()
+                                        .tid(LLM_FEATURE_TID)
+                                        .vid(LLM_COMPACTION_FEATURE_TID)
+                                        .isaPredicate(rec(
+                                                uri(MODEL).maybe().asUri(), LLM_MODEL_TYPE))
+                                        .constructor(arg -> createStageLambdas(new CostFeature(arg.asRec().jvm(), LLM_COST_FEATURE_TID, arg.vid())))
+                                        .create(),
+                                null, null, mutableMap(uri(MODEL), "the model to analyze message history"),
+                                "compacts historic messages and inserts a compaction message into message stream which acts as a stop sentinel for agents history introspection"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_AUDIT_FEATURE_TID)
@@ -588,25 +602,29 @@ public class llmInstSet extends AbstractInstSet {
                                         uri("preserve").maybe(), "fields to carry forward across iterations"),
                                 "multi-pass reasoning loop with iteration control and polling",
                                 "loop_feature::[max_loop=>5,delay=>second::2]"),
-                        docWrap(Type.Builder.build()
-                                        .tid(LLM_FEATURE_TID)
-                                        .vid(LLM_LEDGER_FEATURE_TID)
-                                        .isaPredicate(rec(uri("init").maybe().asUri(), LST_TYPE))
-                                        .constructor(arg -> createStageLambdas(new LedgerFeature(arg.asRec().jvm(), LLM_LEDGER_FEATURE_TID, arg.vid())))
-                                        .create(),
-                                "ledger feature — persistent agent-owned scratchpad for cross-turn task tracking",
-                                "", mutableMap(
-                                        uri("init").maybe(), "optional pre-populated task list"),
-                                "Never cleared between chat calls. Agent reads via system message injection, writes via <<mtron:ledger>> blocks. Survives the entire session.",
-                                "ledger_feature::[init=>['task 1','task 2']]"),
-                        docWrap(Type.Builder.build()
-                                        .tid(LLM_FEATURE_TID)
-                                        .vid(LLM_ITERATION_FEATURE_TID)
-                                        .constructor(arg -> createStageLambdas(new IterationFeature(arg.asRec().jvm(), LLM_ITERATION_FEATURE_TID, arg.vid())))
-                                        .create(),
-                                null, null, mutableMap(),
-                                "overlays an iteration graph on the message ledger — each chat turn creates a linked iteration node with prev/next pointers and message back-references",
-                                "iteration_feature::[]"),
+                        // [parked stub] Ledger — out of the active roster during the
+                        // channel refactor (skill/tool/message owners); un-comment to revive.
+//                         docWrap(Type.Builder.build()
+//                                         .tid(LLM_FEATURE_TID)
+//                                         .vid(LLM_LEDGER_FEATURE_TID)
+//                                         .isaPredicate(rec(uri("init").maybe().asUri(), LST_TYPE))
+//                                         .constructor(arg -> createStageLambdas(new LedgerFeature(arg.asRec().jvm(), LLM_LEDGER_FEATURE_TID, arg.vid())))
+//                                         .create(),
+//                                 "ledger feature — persistent agent-owned scratchpad for cross-turn task tracking",
+//                                 "", mutableMap(
+//                                         uri("init").maybe(), "optional pre-populated task list"),
+//                                 "Never cleared between chat calls. Agent reads via system message injection, writes via <<mtron:ledger>> blocks. Survives the entire session.",
+//                                 "ledger_feature::[init=>['task 1','task 2']]"),
+                        // [parked stub] Iteration — out of the active roster during the
+                        // channel refactor (skill/tool/message owners); un-comment to revive.
+//                         docWrap(Type.Builder.build()
+//                                         .tid(LLM_FEATURE_TID)
+//                                         .vid(LLM_ITERATION_FEATURE_TID)
+//                                         .constructor(arg -> createStageLambdas(new IterationFeature(arg.asRec().jvm(), LLM_ITERATION_FEATURE_TID, arg.vid())))
+//                                         .create(),
+//                                 null, null, mutableMap(),
+//                                 "overlays an iteration graph on the message ledger — each chat turn creates a linked iteration node with prev/next pointers and message back-references",
+//                                 "iteration_feature::[]"),
                         //////////////////////////////////////////////////////////
                         MCP_MESSAGE_HTTP_TYPE,
                         MCP_MESSAGE_WS_TYPE),

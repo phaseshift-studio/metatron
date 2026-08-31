@@ -93,6 +93,47 @@ public class mTool extends MRec {
     }
 
     /**
+     * Normalize any tool element — a bare inst, a docs wrapping an inst
+     * (the shape {@code skill::T} recs carry in their {@code tool} field), or
+     * an {@code mTool} — into a canonical {@code mTool} ready for the
+     * {@code ToolFeature} registry.
+     *
+     * @param element the tool element to normalize
+     * @return the canonical mTool
+     */
+    public static mTool toolElement(final Obj element) {
+        if (element instanceof mTool mt)
+            return mt;
+        if (element instanceof Inst inst) {
+            final QCollection.Docs docs = mtronInstToTool(inst);
+            final Map<Obj, Obj> jvm = new java.util.LinkedHashMap<>(docs.jvm());
+            jvm.putIfAbsent(uri(INST), docs.atDirect(uri(OBJ)));
+            jvm.putIfAbsent(uri(NAME), uri(toolName(inst.tid())));
+            jvm.putIfAbsent(uri(DESC), str("a tool forwarded from a skill"));
+            return new mTool(jvm, LLM_TOOL_TID, inst.vid());
+        }
+        final Obj obj = (element.asRec().has(uri(OBJ)) ? element.asRec().atDirect(uri(OBJ)) : element);
+        if (obj.isObjInst())
+            return tool(mtronInstToTool(obj.asInst()));
+        return tool(element.asRec());
+    }
+
+    /**
+     * Identity of this tool for registry upserts: the {@code name} field
+     * when present, otherwise the flattened tid of the wrapped inst.
+     *
+     * @return the canonical name of this tool
+     */
+    public fURI name() {
+        if (this.has(NAME))
+            return this.at(NAME).uriValue();
+        final Obj obj = this.atDirect(uri(OBJ));
+        if (obj.isObjInst())
+            return f(mTool.toolName(obj.asInst().tid()));
+        return this.tid();
+    }
+
+    /**
      * The single source of truth for mapping an instruction's tid to its MCP
      * tool name: flatten the base path, dropping leading slashes and replacing
      * {@code '/'} with {@code '_'}.  e.g. {@code /m/llm/feature/chat_feature/inst/agent_chat}

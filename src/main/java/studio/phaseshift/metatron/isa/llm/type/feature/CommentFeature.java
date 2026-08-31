@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -33,6 +34,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_COMMENT_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -84,9 +86,15 @@ public class CommentFeature extends AbstractFeature {
                         "inserts a comment into the agent's thinking process"));
     }
 
-    @Override
-    public Lst skill(final Agent agent) {
-        return lst(rec(mutableMap(uri(NAME), uri(LLM_COMMENT_FEATURE_TID.name()),
+    /**
+     * Register this feature's skill with the SkillFeature gateway — degrades
+     * quietly when the gateway is absent (this feature is parked and does not
+     * hard-require it).
+     */
+    public void registerSkill(final Agent agent) {
+        if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
+            return;
+        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(mutableMap(uri(NAME), uri(LLM_COMMENT_FEATURE_TID.name()),
                 uri(DESC), str("inject a note to the agent mid-interaction"),
                 uri(CONTENT), str("""
                                   allows an agent to receive and read comments left by a user mid-interaction.
@@ -110,6 +118,12 @@ public class CommentFeature extends AbstractFeature {
                                 "maybe an obj",
                                 "maybe a comment str",
                                 Map.of(),
-                                "retrieves a comment from the agent's comment stack should one exist")))));
+                                "retrieves a comment from the agent's comment stack should one exist"))))));
+    }
+
+    @Override
+    public Obj onBeforeChat(final Agent agent) {
+        this.registerSkill(agent);
+        return noobj();
     }
 }

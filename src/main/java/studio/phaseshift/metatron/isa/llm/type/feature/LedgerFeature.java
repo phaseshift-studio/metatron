@@ -2,6 +2,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -9,6 +10,8 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.Map;
 
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -57,16 +60,23 @@ public class LedgerFeature extends AbstractFeature {
         super(jvm, tid, vid);
     }
 
-    @Override
-    public Lst skill(final Agent agent) {
+    /**
+     * Register this feature's skill with the SkillFeature gateway — degrades
+     * quietly when the gateway is absent (this feature is parked and does not
+     * hard-require it).
+     */
+    public void registerSkill(final Agent agent) {
+        if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
+            return;
         final fURI ledgerVID = this.at(LEDGER).uriValue();
-        return lst(rec(uri(NAME), uri(LEDGER),
+        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(uri(NAME), uri(LEDGER),
                 uri(DESC), str("persistent agent-owned scratchpad for cross-turn task tracking"),
-                uri(CONTENT), str(INSTRUCTIONS.replaceAll("%%%", ledgerVID.toString()))));
+                uri(CONTENT), str(INSTRUCTIONS.replaceAll("%%%", ledgerVID.toString())))));
     }
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
+        this.registerSkill(agent);
         // Pre-populate from init config if ledger is empty and init is set
         final fURI ledgerVID = this.at(LEDGER).uriValue();
         final fURI archiveVID = ledgerVID.retract(1).extend("archive");
@@ -82,8 +92,8 @@ public class LedgerFeature extends AbstractFeature {
                                  """.replaceAll("%%%", ledgerVID.toString())).apply();
         // Cross-feature communication: SystemFeature owns the system-message channel.
         // If the agent lacks it, this feature is debilitated — log and proceed.
-        if (this.requireFeature(agent, SYSTEM))
-            agent.feature(SYSTEM).<SystemFeature>as().addSystemMessage("ledger keys: " + ledger.asRec().keys().toList());
+        if (this.requireFeature(agent, LLM_SYSTEM_FEATURE_TID))
+            agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage("ledger keys: " + ledger.asRec().keys().toList());
         return noobj();
     }
 }

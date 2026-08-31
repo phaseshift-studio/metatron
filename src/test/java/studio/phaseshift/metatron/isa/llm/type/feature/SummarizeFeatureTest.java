@@ -118,7 +118,9 @@ public class SummarizeFeatureTest extends AbstractFeatureTest {
         final Map<Obj, Obj> agentMap = new LinkedHashMap<>();
         agentMap.put(uri(NAME), str("test-agent"));
         agentMap.put(uri(ROOT), uri(TEST_AGENT_ROOT.toString()));
-        agentMap.put(uri(FEATURE), lst(summarize, rec(uri(ROOT), uri("/usr/test/concept")).tid(LLM_CONCEPT_FEATURE_TID)));
+        agentMap.put(uri(FEATURE), lst(summarize, rec(uri(ROOT), uri("/usr/test/concept")).tid(LLM_CONCEPT_FEATURE_TID),
+                new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null),
+                new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null)));
         final Agent agent = Agent.agent(rec(agentMap, LLM_AGENT_TID, null));
         final Rec config = rec(uri(KIND), lst(uri("decision")), uri(CONCEPT), lst(str("AgentExtractor")));
 

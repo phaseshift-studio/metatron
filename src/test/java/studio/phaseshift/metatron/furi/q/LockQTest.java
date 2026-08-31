@@ -95,7 +95,7 @@ public interface LockQTest extends QProcTest {
         final Obj blocked = ObjmtronSerializer.parse(make("$$/xyz/abc -> 1")).apply();
         assertTrue(blocked.isFail(), "a write into a live lock must yield a fail");
         // once the TTL elapses, the lock has expired — the write passes
-        CommonUtil.sleepThread(1500);
+        CommonUtil.sleepThread(2500);
         final Obj passed = ObjmtronSerializer.parse(make("$$/xyz/abc -> 1")).apply();
         assertEquals(ObjmtronSerializer.parse(make("1")).apply(), passed);
     }

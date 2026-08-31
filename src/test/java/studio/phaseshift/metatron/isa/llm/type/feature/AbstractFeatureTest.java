@@ -33,14 +33,18 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.incrQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AGENT_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_RESULT_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -119,9 +123,14 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
     }
 
     @Test
-    public void skillIsNoobjOrWellFormed() {
+    public void registeredSkillsAreWellFormed() {
         final AbstractFeature f = feature();
-        for (final Obj skill : f.skill(agentWith(f)).lstValue()) {
+        final Agent a = agentWith(f);
+        f.onAgentCtor(a);
+        f.onBeforeChat(a);
+        if (!a.hasFeature(LLM_SKILL_FEATURE_TID))
+            return;
+        for (final Obj skill : a.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().skills().lstValue()) {
             assertTrue(skill.isRec(), "skill must be a rec");
             final Rec r = skill.asRec();
             assertFalse(r.at(uri(NAME)).isNoObj(), "skill must have a name");
@@ -150,15 +159,14 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
     @Test
     public void requiresAreResolvable() {
         final AbstractFeature f = feature();
-        final Lst reqs = f.requires();
-        if (reqs.lstValue().isEmpty())
+        final Set<fURI> reqs = f.requires();
+        if (reqs.isEmpty())
             return;
+        // Hard requires are validated (and enforced) at agent construction, so
+        // a carrying agent that exists here must already resolve every one.
         final Agent a = agentWith(f);
-        for (final Obj req : reqs.lstValue()) {
-            final fURI reqTid = req.isUri() ? req.uriValue() : req.tid();
-            assertTrue(a.features().lstValue().stream().anyMatch(feat -> feat.tid().equals(reqTid)),
-                    "required feature %s not present".formatted(reqTid));
-        }
+        for (final fURI req : reqs)
+            assertTrue(a.hasFeature(req), "required feature %s not present".formatted(req));
     }
 
     // ── The lifecycle loop ─────────────────────────────────────────
@@ -220,8 +228,35 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
         map.put(uri(ROOT), uri(TEST_AGENT_ROOT.toString()));
         final List<Obj> featureObjs = new ArrayList<>();
         for (final AbstractFeature f : features) featureObjs.add(f);
+        featureObjs.addAll(gatekeepersFor(features));
         map.put(uri(FEATURE), lst(featureObjs));
         return Agent.agent(rec(map, LLM_AGENT_TID, null));
+    }
+
+    /**
+     * The gateway features the given feature set requires — gatekeepers last
+     * in hook order, and the tool gateway after the skill gateway (tool
+     * forwarding happens in the skill gateway's {@code onBeforeChat}).
+     */
+    private static List<Obj> gatekeepersFor(final AbstractFeature... features) {
+        final Set<fURI> needs = new LinkedHashSet<>();
+        for (final AbstractFeature f : features)
+            needs.addAll(f.requires());
+        if (needs.contains(LLM_SKILL_FEATURE_TID))
+            needs.add(LLM_TOOL_FEATURE_TID);
+        final List<Obj> gate = new ArrayList<>();
+        if (needs.contains(LLM_SKILL_FEATURE_TID) && !hasTid(LLM_SKILL_FEATURE_TID, features))
+            gate.add(new SkillFeature(new LinkedHashMap<Obj, Obj>(), LLM_SKILL_FEATURE_TID, null));
+        if (needs.contains(LLM_TOOL_FEATURE_TID) && !hasTid(LLM_TOOL_FEATURE_TID, features))
+            gate.add(new ToolFeature(new LinkedHashMap<Obj, Obj>(), LLM_TOOL_FEATURE_TID, null));
+        return gate;
+    }
+
+    private static boolean hasTid(final fURI tid, final AbstractFeature... features) {
+        for (final AbstractFeature f : features)
+            if (tid.equals(f.tid()))
+                return true;
+        return false;
     }
 
     /**

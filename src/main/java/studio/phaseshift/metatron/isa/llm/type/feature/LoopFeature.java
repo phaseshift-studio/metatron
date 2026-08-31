@@ -3,6 +3,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -12,10 +13,12 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_LOOP_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -85,18 +88,30 @@ public class LoopFeature extends AbstractFeature {
     }
 
     @Override
-    public Lst skill(final Agent agent) {
+    public Set<fURI> requires() {
+        return Set.of(LLM_SKILL_FEATURE_TID);
+    }
+
+    /**
+     * Register this feature's skill with the SkillFeature gateway — the
+     * gateway is the owner of the skill channel; this feature is a
+     * contributor.
+     */
+    public void registerSkill(final Agent agent) {
+        if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
+            return;
         final String instructions = LOOP_FEATURE_INSTRUCTIONS
                 .replace("%%%1", this.maxLoops > 0 ? this.maxLoops + "" : "<no limit>")
                 .replace("%%%2", this.maxTimeMillis > 0 ? this.maxTimeMillis + "" : "<no limit>");
-        return lst(rec(
+        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(
                 uri(NAME), uri(LLM_LOOP_FEATURE_TID.name()),
                 uri(DESC), str("multi-pass reasoning loop with iteration control and polling support"),
-                uri(CONTENT), str(instructions)));
+                uri(CONTENT), str(instructions))));
     }
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
+        this.registerSkill(agent);
         // New user prompt: no continuation → reset counters.  A loop
         // continuation is this feature's own recursive chat call.
         if (!this.isContinuation) {

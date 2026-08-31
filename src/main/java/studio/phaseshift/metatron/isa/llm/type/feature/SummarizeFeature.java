@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -31,7 +32,11 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CONCEPT_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SUMMARIZE_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.summarizeSession;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -60,8 +65,19 @@ public class SummarizeFeature extends AbstractFeature {
     }
 
     @Override
-    public Lst skill(final Agent agent) {
-        return lst(rec(mutableMap(uri(NAME), uri(LLM_SUMMARIZE_FEATURE_TID.name()),
+    public Set<fURI> requires() {
+        return Set.of(LLM_SKILL_FEATURE_TID);
+    }
+
+    /**
+     * Register this feature's skill with the SkillFeature gateway — the
+     * gateway is the owner of the skill channel; this feature is a
+     * contributor.
+     */
+    public void registerSkill(final Agent agent) {
+        if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
+            return;
+        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(mutableMap(uri(NAME), uri(LLM_SUMMARIZE_FEATURE_TID.name()),
                 uri(DESC), str("summarize a session into claims and loose ends, recalling them on demand"),
                 uri(CONTENT), str("""
                                   When a session becomes overly complex or you need to recall decisions, problems, and observations
@@ -91,7 +107,7 @@ public class SummarizeFeature extends AbstractFeature {
                                   
                                   **IMPORTANT**: This skill is about formatting your response, not calling a function. The block
                                   is stripped from what the user sees.
-                                  """))));
+                                  """)))));
     }
 
     @Override
@@ -103,11 +119,11 @@ public class SummarizeFeature extends AbstractFeature {
         if (signal.isNoObj())
             return;
         final Rec block = signal.asRec();
-        if (!agent.hasFeature(SESSION)) {
+        if (!agent.hasFeature(LLM_SESSION_FEATURE_TID)) {
             LOG.warn("summarize requires the session feature");
             return;
         }
-        final fURI sessionVID = agent.feature(SESSION).asRec().at(SESSION).uriValue();
+        final fURI sessionVID = agent.feature(LLM_SESSION_FEATURE_TID).asRec().at(SESSION).uriValue();
         if (null == sessionVID || sessionVID.isEmpty()) {
             LOG.warn("summarize requires an anchored session");
             return;
@@ -137,11 +153,12 @@ public class SummarizeFeature extends AbstractFeature {
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
+        this.registerSkill(agent);
         final fURI outputBase = this.outputBase(agent);
         // always-on loose-end reminder
         final Obj looseEnds = Router.readFromSpace(outputBase.extend("loose_end").extend("+"));
-        if (!looseEnds.isNoObj() && agent.hasFeature(SYSTEM)) {
-            agent.feature(SYSTEM).<SystemFeature>as().addSystemMessage("""
+        if (!looseEnds.isNoObj() && agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
+            agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage("""
                                                                        An analysis of the last summarization identified the following loose ends:
                                                                        
                                                                        %s
@@ -153,10 +170,10 @@ public class SummarizeFeature extends AbstractFeature {
         if (task != null && task.isDone()) {
             try {
                 final Obj applied = task.get();
-                if (!applied.isNoObj() && !applied.isFail() && agent.hasFeature(SYSTEM)) {
+                if (!applied.isNoObj() && !applied.isFail() && agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
                     final Obj briefing = this.buildBriefing(agent, applied.asRec());
                     if (!briefing.isNoObj())
-                        agent.feature(SYSTEM).<SystemFeature>as().addSystemMessage(ObjmtronSerializer.compact().write(briefing));
+                        agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage(ObjmtronSerializer.compact().write(briefing));
                 }
             } catch (final Exception e) {
                 LOG.warn("summarize briefing unavailable: %s", e.getMessage());
@@ -205,8 +222,8 @@ public class SummarizeFeature extends AbstractFeature {
         // concept → message uris (ConceptFeature root; each concept rec's
         // message field holds !* refs to the ledger messages that used it)
         final Set<fURI> conceptMessages = new HashSet<>();
-        if (!concepts.isEmpty() && agent.hasFeature(CONCEPT)) {
-            final fURI conceptRoot = agent.feature(CONCEPT).asRec().at(ROOT).uriValue();
+        if (!concepts.isEmpty() && agent.hasFeature(LLM_CONCEPT_FEATURE_TID)) {
+            final fURI conceptRoot = agent.feature(LLM_CONCEPT_FEATURE_TID).asRec().at(ROOT).uriValue();
             for (final Obj concept : concepts.elements().toList()) {
                 final fURI conceptURI = concept.isUri()
                         ? concept.uriValue()

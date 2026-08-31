@@ -33,6 +33,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_THINK_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.THINKING_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -73,7 +75,7 @@ public class ThinkFeature extends AbstractFeature {
             if (!renderable.isEmpty()) {
                 final Str rendered = (Str) str(renderable).apply(agent);
                 if (!rendered.strValue().equals(this.lastRendered)) {
-                    agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(rendered);
+                    agent.feature(LLM_THINK_FEATURE_TID).asRec().at(f(THINK).extend(TO)).apply(rendered);
                     this.lastRendered = rendered.strValue();
                 }
             }
@@ -84,11 +86,11 @@ public class ThinkFeature extends AbstractFeature {
     @Override
     public void onPartialResponse(final Agent agent, final Str text) {
         if (!this.thinkDone.getAndSet(true)) {
-            agent.feature(THINK).asRec().at(f(THINK).extend(TO)).apply(str(Str.Helper.cleanString(str(this.buffer.toString()).apply(agent))));
-            final fURI thinkWriteURI = agent.feature(THINK).asRec().at(ROOT).orElse(agent.at(ROOT).uriValue().extend(THINK).toUri()).uriValue().extend("_").addQ(INCRQ);
+            agent.feature(LLM_THINK_FEATURE_TID).asRec().at(f(THINK).extend(TO)).apply(str(Str.Helper.cleanString(str(this.buffer.toString()).apply(agent))));
+            final fURI thinkWriteURI = agent.feature(LLM_THINK_FEATURE_TID).asRec().at(ROOT).orElse(agent.at(ROOT).uriValue().extend(THINK).toUri()).uriValue().extend("_").addQ(INCRQ);
             final Rec thought = rec(mutableMap(uri(TEXT), str(this.full.toString().trim())), THINKING_MESSAGE_TID, null);
             thought.recValue().put(uri(TIME), mathInstSet.nowDatetime());
-            thought.recValue().put(uri(SESSION), agent.feature(SESSION).orElse(rec()).at(SESSION));
+            thought.recValue().put(uri(SESSION), agent.feature(LLM_SESSION_FEATURE_TID).orElse(rec()).at(SESSION));
             thought.recValue().put(uri(DEPTH), jnt(agent.chatDepth()));
             thought.recValue().put(uri(CHAT_ID), jnt(agent.chatId()));
             this.buffer = new StringBuilder();

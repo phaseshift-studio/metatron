@@ -81,7 +81,7 @@ public abstract class AbstractFeature extends MRec implements Feature {
      * requires the target feature to be present.  This is the canonical phrasing for
      * "feature X requires feature Y" — used by all features so the message is uniform.
      */
-    protected MTronException missingFeatureException(final String required) {
+    protected MTronException missingFeatureException(final fURI required) {
         return MTronException.of("%s requires the agent to have a %s feature", this.tid(), required);
     }
 
@@ -94,7 +94,7 @@ public abstract class AbstractFeature extends MRec implements Feature {
      * @param required the feature key to check (e.g. {@code SYSTEM})
      * @return {@code true} if the feature is present, {@code false} if absent (debilitated)
      */
-    protected boolean requireFeature(final Agent agent, final String required) {
+    protected boolean requireFeature(final Agent agent, final fURI required) {
         if (agent.hasFeature(required))
             return true;
         LOG.warn("%s", this.missingFeatureException(required).getMessage());

@@ -4,11 +4,14 @@
   desc    => 'a test agent for the agent-to-skill mapping',
   root    => /usr/test,
   feature => [
+    system_feature:::::[session=>/usr/test/1],
     loop_feature:::::::[max_loop => 3],
     iteration_feature::[=>],
     concept_feature::::[root      => /usr/test/concept,
                         extractor => tag],
     comment_feature::::[=>],
+    skill_feature::::::[=>],
+    tool_feature:::::::[tool=>[plus(2)]],
     chat_feature:::::::[model    => model::[host => <http://localhost:11434>, protocol => ollama, llm => qwen3:8b],
                        response  => [to => print(_)]]
   ]

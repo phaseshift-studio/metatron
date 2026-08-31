@@ -54,9 +54,12 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -69,6 +72,10 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AGENT_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -144,6 +151,30 @@ public class Agent extends MRec {
 
     public Agent(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(new ConcurrentHashMap<>(jvm), tid, vid);
+        this.validateFeatures();
+    }
+
+    /**
+     * The agent is the integrator of features.  At construction it ensures
+     * that every attached feature's hard dependencies
+     * ({@link Feature#requires()}) are attached as well — a missing
+     * dependency is a composition error (fail fast here), not a "debilitated"
+     * feature discovered mid-chat.  Only features actually attached are
+     * checked, so the requirement closure is validated without any
+     * transitive computation.
+     */
+    private void validateFeatures() {
+        final Set<fURI> attached = new HashSet<>();
+        for (final Obj f : this.features().elements().toList())
+            if (!f.isNoObj())
+                attached.add(f.typeId());
+        for (final Obj f : this.features().elements().toList()) {
+            if (!(f instanceof Feature feature) || feature.requires().isEmpty())
+                continue;
+            for (final fURI required : feature.requires())
+                if (!attached.contains(required))
+                    throw MTronException.of("feature %s requires feature %s to function properly", f.typeId(), required);
+        }
     }
 
     // ── User message ───────────────────────────────────────────────
@@ -177,8 +208,8 @@ public class Agent extends MRec {
      * Resolve the session VID from this agent's {@code session_feature} config.
      */
     private fURI resolveSessionVID() {
-        if (this.hasFeature(SESSION)) {
-            final Obj sessionFeature = this.feature(SESSION);
+        if (this.hasFeature(LLM_SESSION_FEATURE_TID)) {
+            final Obj sessionFeature = this.feature(LLM_SESSION_FEATURE_TID);
             if (!sessionFeature.isNoObj() && sessionFeature.isRec()) {
                 final Obj sessionField = sessionFeature.asRec().at(uri(SESSION));
                 if (sessionField.isUri())
@@ -236,17 +267,52 @@ public class Agent extends MRec {
     }
 
     // ── Feature query (generic, no feature is privileged) ──────────
+    //
+    // Identity is the feature's FULL tid (e.g. LLM_CHAT_FEATURE_TID) —
+    // verbose on purpose: exact matching, no substring collisions.
 
-    public boolean hasFeature(final String feature) {
-        return this.features().elements().anyMatch(f -> f.typeId().name().toLowerCase().contains(feature));
+    public boolean hasFeature(final fURI featureTid) {
+        return this.features().elements().anyMatch(f -> f.typeId().equals(featureTid));
     }
 
-    public Obj feature(final String feature) {
-        return objs(this.features().elements().filter(f -> f.typeId().name().toLowerCase().contains(feature)));
+    public Obj feature(final fURI featureTid) {
+        return objs(this.features().elements().filter(f -> f.typeId().equals(featureTid)));
     }
 
     public Lst features() {
         return this.at(FEATURE).orElse(lst());
+    }
+
+    /**
+     * Phase-1 {@code onBeforeChat} dispatch order, enforced regardless of the stored
+     * feature-list order. Rank (lower runs first):
+     * <ul>
+     *   <li>0 — registrants: every other feature (publishers, Tool, Session, …) that
+     *       populates the Skill/Tool gateways — they run first so the registry is complete</li>
+     *   <li>1 — {@code Skill}: the composer — runs after all registrants have registered
+     *       their capability skills, so the skills table it emits is complete and stable</li>
+     *   <li>2 — {@code System}: the consumer — runs last, so write-on-change sees the
+     *       final composed text and records exactly one ledger row for unchanged chats</li>
+     * </ul>
+     */
+    protected static int chatPhaseRank(final Obj feat) {
+        final fURI tid = feat.typeId();
+        if (tid.equals(LLM_SYSTEM_FEATURE_TID))
+            return 2;   // consumer: last
+        if (tid.equals(LLM_SKILL_FEATURE_TID))
+            return 1;   // composer: after all registrants
+        return 0;       // registrants and neutral features: first
+    }
+
+    /**
+     * The agent's features in Phase-1 chat order — a stable sort by {@link #chatPhaseRank},
+     * so contributors run before the gatekeepers they register onto, Skill before Tool, and
+     * consumers last.  Preserves the original relative order within each phase.
+     */
+    protected List<Obj> orderedFeatures() {
+        return this.features().lstValue().stream()
+                .sorted(Comparator.comparingInt(Agent::chatPhaseRank))
+                .toList();
     }
 
     // ── Path builders ──────────────────────────────────────────────
@@ -335,11 +401,14 @@ public class Agent extends MRec {
             final AtomicReference<MTronException> isError = new AtomicReference<>();
             final long startNanos = System.nanoTime();
             try {
-                final List<Obj> features = this.features().lstValue();
                 if (message.isBlank())
                     throw MTronException.of("no message provided: %s", this.vid());
 
                 // ── Phase 1: onBeforeChat — features prepare per-chat state ──
+                // Dispatch in contributor→Skill→Tool→consumer order regardless of the
+                // stored feature-list order, so the gatekeepers compose from a fully
+                // registered registry and System's write-on-change sees the final text.
+                final List<Obj> features = this.orderedFeatures();
                 this.userMessage = message;
 
                 for (final Obj feat : features) {
@@ -351,7 +420,7 @@ public class Agent extends MRec {
                         return ChatResult.chatResult().put(CHAT, result);
                     }
                 }
-                this.feature(CHAT).ifPresent(chat -> chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE));
+                this.feature(LLM_CHAT_FEATURE_TID).ifPresent(chat -> chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE));
                 // ── Phase 2: Build LC4j service from Agent's own JVM state ──
                 final AiServices<AgentServices> service = AiServices.builder(AgentServices.class)
                         //.executeToolsConcurrently(ThreadExecutor.instance())
@@ -359,8 +428,8 @@ public class Agent extends MRec {
                         .storeRetrievedContentInChatMemory(true)
                         .toolProvider(this.toolProvider)
                         .toolExecutionErrorHandler((error, context) -> {
-                            if (this.has(TOOL) && this.feature(TOOL).asRec().has(ON_ERROR)) {
-                                this.feature(TOOL).asRec().at(ON_ERROR).asInst().args(lst(this, fail(error)));
+                            if (this.has(TOOL) && this.feature(LLM_TOOL_FEATURE_TID).asRec().has(ON_ERROR)) {
+                                this.feature(LLM_TOOL_FEATURE_TID).asRec().at(ON_ERROR).asInst().args(lst(this, fail(error)));
                             } else {
                                 LOG.error(error);
                             }
@@ -370,11 +439,11 @@ public class Agent extends MRec {
                 // AgentUtility.buildService(this, service);
                 //////////////////////////////////////////////////////////////////////////////////
                 // ADD ANOTHER FEATURE HOOK -- onSetup
-                final Obj chatFeature = this.feature(CHAT);
+                final Obj chatFeature = this.feature(LLM_CHAT_FEATURE_TID);
                 if (chatFeature.isNoObj())
                     throw MTronException.of("agent has no chat feature: %s", this.vidOrTid());
                 final Rec chat = chatFeature.asRec();
-                if (this.hasFeature(SESSION))
+                if (this.hasFeature(LLM_SESSION_FEATURE_TID))
                     SessionFeature.buildSession(this, service);
                 //if (this.hasFeature(SKILL))
                 //    SkillFeature.buildSkills(this, service);
@@ -388,8 +457,8 @@ public class Agent extends MRec {
                 // Capture it now — AFTER all onBeforeChat hooks ran — then append to the
                 // model's base system prompt.  SystemFeature.clearSystemMessages() runs in
                 // the finally below after this chat completes.
-                final String systemText = this.hasFeature(SYSTEM)
-                        ? this.feature(SYSTEM).<SystemFeature>as().systemMessage()
+                final String systemText = this.hasFeature(LLM_SYSTEM_FEATURE_TID)
+                        ? this.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().systemMessage()
                         : "";
                 final AgentServices agent = service
                         .systemMessageTransformer(current -> current + systemText)
@@ -398,7 +467,7 @@ public class Agent extends MRec {
                                 chat.at(uri(RESPONSE)),
                                 chat.at(uri(FORMAT)))).build();
                 // ── Phase 3: Stream — write events to result blackboard, dispatch hooks ──
-                LOG.debug("processed message: %s %s", this.userMessage, this.feature(CHAT).asRec().at(FORMAT).orElse(rec(uri(FORMAT), uri("none"))));
+                LOG.debug("processed message: %s %s", this.userMessage, this.feature(LLM_CHAT_FEATURE_TID).asRec().at(FORMAT).orElse(rec(uri(FORMAT), uri("none"))));
                 spinnerMessage(waiting, "waiting for agent response...");
                 agent.chat(Str.Helper.stripString(str(this.userMessage)))
                         .onToolExecuted(tool -> {
@@ -528,7 +597,7 @@ public class Agent extends MRec {
             this.currentResult = null;
             this.currentHook.set(null);
             if (null != result) {
-                this.feature(CHAT).ifPresent(chat -> {
+                this.feature(LLM_CHAT_FEATURE_TID).ifPresent(chat -> {
                     if (chat.asRec() instanceof ChatFeature cf)
                         cf.persist(this, result);
                 });
@@ -539,8 +608,8 @@ public class Agent extends MRec {
             closeSpinner(waiting);
             // SystemFeature owns the per-chat system-message state — clear it so the
             // next chat re-surfaces its own system context.
-            if (this.hasFeature(SYSTEM))
-                this.feature(SYSTEM).<SystemFeature>as().clearSystemMessages();
+            if (this.hasFeature(LLM_SYSTEM_FEATURE_TID))
+                this.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().clearSystemMessages();
             counter.decrementAndGet();
             this.currentDepth = 0;
 

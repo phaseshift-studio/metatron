@@ -33,6 +33,7 @@ import org.commonmark.parser.Parser;
 import studio.phaseshift.metatron.TokenMapper;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
+import studio.phaseshift.metatron.isa.llm.type.feature.SkillFeature;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -50,6 +51,7 @@ import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -153,20 +155,30 @@ public class mSkill extends MRec {
     }
 
     /**
-     * Resolve the skills attached to every feature of an agent into a flat
-     * {@code Lst<mSkill>}.  Each feature exposes skills either as mtron-native
-     * recs ({@link Feature#skill(Agent)}) or as a {@code skill} field of URIs/
-     * recs; a URI element is loaded from its SKILL.md directory.
+     * Resolve the skills attached to an agent into a flat
+     * {@code Lst<mSkill>}.  Primary source: the {@code SkillFeature} gateway
+     * registry (features publish via {@code addSkill} in
+     * {@code onBeforeChat}); fallback: rec-configured skills — a
+     * {@code skill} field of URIs/recs, where a URI element is loaded from
+     * its SKILL.md directory.
      *
-     * @param agent the agent whose features are traversed
+     * @param agent the agent whose skills are resolved
      * @return a flat list of resolved skills
      */
     public static Lst skills(final Agent agent) {
-        return lst(agent.features().elements()
-                .flatMap(entry -> (entry instanceof Feature feat ? feat.skill(agent) : entry.asRec().at(SKILL).orElse(lst()))
-                        .elements()
-                        .map(s -> (Obj) (s.isUri() ? mSkill.of(fsSpace.staticObjToFile(s)) : mSkill.of(s.apply().asRec()))))
-                .toList());
+        if (agent.hasFeature(LLM_SKILL_FEATURE_TID)) {
+            final Lst registry = agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().skills();
+            if (registry.lstValue() != null && !registry.lstValue().isEmpty())
+                return registry;
+        }
+        final List<Obj> resolved = new ArrayList<>();
+        for (final Obj entry : agent.features().elements().toList()) {
+            if (!entry.isRec())
+                continue;
+            for (final Obj s : entry.asRec().at(SKILL).orElse(lst()).elements().toList())
+                resolved.add(s.isUri() ? (Obj) mSkill.of(fsSpace.staticObjToFile(s)) : (Obj) mSkill.of(s.apply().asRec()));
+        }
+        return lst(resolved);
     }
 
     /**
@@ -183,23 +195,21 @@ public class mSkill extends MRec {
         final Obj desc = agent.at(uri(DESC));
         final List<Obj> tools = new ArrayList<>();
         final List<Obj> resources = new ArrayList<>();
-        for (final Obj entry : agent.features().elements().toList()) {
-            final Lst featureSkills = entry instanceof Feature feat ? feat.skill(agent) : entry.asRec().at(SKILL).orElse(lst());
-            for (final Obj s : featureSkills.elements().toList()) {
-                final mSkill skill = (s.isUri() ? mSkill.of(fsSpace.staticObjToFile(s)) : mSkill.of(s.apply().asRec()));
-                tools.addAll(skill.tools().elements().toList());
-                if (skill.has(RESOURCE))
-                    resources.addAll(skill.at(RESOURCE).asLst().elements().toList());
-                // each feature's own skill (its usage instructions) becomes a resource
-                if (skill.has(CONTENT)) {
-                    final Map<Obj, Obj> r = mutableMap(
-                            uri(URI), uri(entry.tid()),
-                            uri(NAME), str(entry.tid().name()));
-                    if (skill.has(DESC))
-                        r.put(uri(DESC), skill.at(uri(DESC)));
-                    r.put(uri(TEXT), skill.at(uri(CONTENT)));
-                    resources.add(rec(r));
-                }
+        for (final Obj s : skills(agent).elements().toList()) {
+            final mSkill skill = s.<mSkill>as();
+            tools.addAll(skill.tools().elements().toList());
+            if (skill.has(RESOURCE))
+                resources.addAll(skill.at(RESOURCE).asLst().elements().toList());
+            // each skill's usage instructions become a resource
+            if (skill.has(CONTENT)) {
+                final Obj skillName = skill.at(uri(NAME));
+                final Map<Obj, Obj> r = mutableMap(
+                        uri(URI), skillName,
+                        uri(NAME), str(skillName.uriValue().name()));
+                if (skill.has(DESC))
+                    r.put(uri(DESC), skill.at(uri(DESC)));
+                r.put(uri(TEXT), skill.at(uri(CONTENT)));
+                resources.add(rec(r));
             }
         }
         final Map<Obj, Obj> jvm = mutableMap(

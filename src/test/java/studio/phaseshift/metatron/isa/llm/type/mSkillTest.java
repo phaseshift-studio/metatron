@@ -4,6 +4,8 @@ import dev.langchain4j.skills.Skill;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.llm.type.feature.AbstractFeature;
 import studio.phaseshift.metatron.isa.llm.type.feature.IterationFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.SkillFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.ToolFeature;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 
@@ -15,6 +17,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AGENT_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ITERATION_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -134,11 +139,16 @@ public class mSkillTest extends studio.phaseshift.metatron.AbstractMetatronTest 
 
     @Test
     public void testToSkillWithTools() {
-        final IterationFeature iteration = new IterationFeature(new LinkedHashMap<>(), feat("iteration"), null) {
-        };
-        final mSkill skill = mSkill.of(iteration.skill(agent("test-agent", null)).asLst().at(0).asRec());
+        final IterationFeature iteration = new IterationFeature(new LinkedHashMap<>(), LLM_ITERATION_FEATURE_TID, null);
+        final SkillFeature gateway = new SkillFeature(new LinkedHashMap<>(), LLM_SKILL_FEATURE_TID, null);
+        final ToolFeature tools = new ToolFeature(new LinkedHashMap<>(), LLM_TOOL_FEATURE_TID, null);
+        final Agent a = agent("test-agent", null, iteration, gateway, tools);
+        iteration.registerSkill(a);
+        gateway.onBeforeChat(a);
+        tools.onBeforeChat(a);
         // The tool field folds prev + next as two tool insts; LC4j wraps them all
         // in a single ToolProvider, so assert at the mSkill level.
+        final mSkill skill = mSkill.skills(a).at(0).<mSkill>as();
         assertEquals(2, skill.tools().elements().count(), "the tool field folds prev + next tools");
         final Skill lc4j = skill.toSkill();
         assertNotNull(lc4j, "must build an LC4j Skill");
@@ -148,9 +158,14 @@ public class mSkillTest extends studio.phaseshift.metatron.AbstractMetatronTest 
 
     @Test
     public void testToolsFromToolField() {
-        final IterationFeature iteration = new IterationFeature(new LinkedHashMap<>(), feat("iteration"), null) {
-        };
-        final mSkill skill = mSkill.of(iteration.skill(agent("test-agent", null)).asLst().at(0).asRec());
+        final IterationFeature iteration = new IterationFeature(new LinkedHashMap<>(), LLM_ITERATION_FEATURE_TID, null);
+        final SkillFeature gateway = new SkillFeature(new LinkedHashMap<>(), LLM_SKILL_FEATURE_TID, null);
+        final ToolFeature tools = new ToolFeature(new LinkedHashMap<>(), LLM_TOOL_FEATURE_TID, null);
+        final Agent a = agent("test-agent", null, iteration, gateway, tools);
+        iteration.registerSkill(a);
+        gateway.onBeforeChat(a);
+        tools.onBeforeChat(a);
+        final mSkill skill = mSkill.skills(a).at(0).<mSkill>as();
         assertEquals(2, skill.tools().elements().count(), "tools() flattens the tool field");
     }
 

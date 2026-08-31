@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -95,7 +95,7 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
         final Obj m = this.at(uri(MAX));
         final int max = (m != null && m.isInt()) ? m.asInt().intValue().intValue() : 0;
         final Obj c = this.at(uri(CODE));
-        final Call code = (c != null && c.isInst()) ? c.as() : id_().tryToInst();
+        final Call code = (c != null && c.isObjCall()) ? c.as() : noobj();
         final Border border = this.style.border();
 
         if (this.flatten()) {
@@ -108,7 +108,7 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
                 final int d = entry.depth();
                 if (d > 0) lastStack[d - 1] = entry.isLast();
                 final String prefix = treePrefix(d, lastStack, entry.isLast(), border);
-                final Obj mapped = code.apply(entry.obj());
+                final Obj mapped = code.isNoObj() ? noobj() : code.apply(entry.obj());
                 final String suffix = stringSuffix(mapped);
                 rows.add(new TreeRow(entry, prefix, entry.name(), suffix));
             });
