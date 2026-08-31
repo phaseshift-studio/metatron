@@ -56,6 +56,7 @@ import java.util.Optional;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MODEL_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_THINK_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
@@ -213,11 +214,13 @@ public final class LLMFactory {
         final Rec responseFormat = fmt.isNoObj() ? rec0().c(cInt::zero).as() : fmt.asRec();
         final fURI provider = model.at(f(PROTOCOL)).uriValue();
         final String host = model.at(HOST).uriValue().toString();
-        final boolean thinking = agent.hasFeature(THINK);
+        final boolean thinking = agent.hasFeature(LLM_THINK_FEATURE_TID);
         final Str api_key = model.at(API_KEY).orElse(str0());//model.at(f(PROVIDER)).asRec().at(API_KEY).orElse(str0());
         // final Str organization = model.at(f(PROVIDER)).asRec().at(ORG).orElse(str0());
         final String name = Str.Helper.cleanString(model.at(LLM));
-        final Rec responseFormat2 = responseFormat.isNoObj() ? agent.feature(f(RESPONSE).extend(FORMAT).toString()).orElse(noobjRec()) : responseFormat;
+        // (the old agent.feature("response/format") lookup never matched a
+        // feature by construction — features are identified by their full tid)
+        final Rec responseFormat2 = responseFormat;
         final boolean hasResponseFormat = !responseFormat2.isNoObj() && !responseFormat2.isEmpty();
         return switch (provider.toString().toLowerCase()) {
             case LOCALAI -> LocalAiStreamingChatModel.builder()

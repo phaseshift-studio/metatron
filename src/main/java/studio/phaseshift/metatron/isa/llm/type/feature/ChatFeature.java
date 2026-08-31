@@ -6,13 +6,14 @@ import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.mModel;
-import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.Map;
+import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -47,6 +48,7 @@ public class ChatFeature extends AbstractFeature {
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
+        this.registerSkill(agent);
         final String userMessage = agent.userMessage();
         if (userMessage == null || userMessage.isBlank())
             return noobj();
@@ -58,8 +60,8 @@ public class ChatFeature extends AbstractFeature {
                         .text(Str.Helper.cleanString(str(userMessage).apply()))
                         .contents(userMessage)
                         .time()
-                        .session(agent.hasFeature(SESSION)
-                                ? agent.feature(SESSION).asRec().at(SESSION).uriValue()
+                        .session(agent.hasFeature(LLM_SESSION_FEATURE_TID)
+                                ? agent.feature(LLM_SESSION_FEATURE_TID).asRec().at(SESSION).uriValue()
                                 : null)
                         .depth(agent.chatDepth())
                         .chatId(agent.chatId())
@@ -76,12 +78,12 @@ public class ChatFeature extends AbstractFeature {
 
     @Override
     public void onPartialResponse(final Agent agent, final Str text) {
-        agent.feature(CHAT).asRec().at(f(RESPONSE).extend(TO)).apply(text);
+        agent.feature(LLM_CHAT_FEATURE_TID).asRec().at(f(RESPONSE).extend(TO)).apply(text);
     }
 
     @Override
     public void onCompleteResponse(final Agent agent, final ChatResult result) {
-        agent.feature(CHAT).asRec().at(f(RESPONSE).extend("complete")).apply(result);
+        agent.feature(LLM_CHAT_FEATURE_TID).asRec().at(f(RESPONSE).extend("complete")).apply(result);
     }
 
     /**
@@ -104,15 +106,23 @@ public class ChatFeature extends AbstractFeature {
 
     private static final fURI CHAT_INST_TID = LLM_CHAT_FEATURE_TID.extend(INST).extend("agent_chat");
 
-    /**
-     * Expose the agent's primary capability — {@code chat} — as a tool, so that
-     * an agent reduced to a {@code skill::T} (and ultimately an MCP server) can
-     * be chatted with.  The agent is captured from the {@code skill(agent)}
-     * argument; the tool's lhs is noobj.
-     */
     @Override
-    public Lst skill(final Agent agent) {
-        return lst(rec(mutableMap(
+    public Set<fURI> requires() {
+        return Set.of(LLM_SKILL_FEATURE_TID);
+    }
+
+    /**
+     * Register this feature's skill with the SkillFeature gateway — the
+     * gateway is the owner of the skill channel; this feature is a
+     * contributor.  Exposing the agent's primary capability — {@code chat} —
+     * as a tool lets an agent reduced to a {@code skill::T} (and ultimately
+     * an MCP server) be chatted with; the gateway forwards the tool to the
+     * ToolFeature gateway.
+     */
+    public void registerSkill(final Agent agent) {
+        if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
+            return;
+        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(mutableMap(
                 uri(NAME), uri(LLM_CHAT_FEATURE_TID.name()),
                 uri(DESC), str("chat with the agent"),
                 uri(CONTENT), str("""
@@ -137,6 +147,6 @@ public class ChatFeature extends AbstractFeature {
                         "the agent's chat response",
                         Map.of(jnt(0), "the message to send the agent"),
                         "chat with the agent and receive its response",
-                        "chat('what is a database?')"))), LLM_SKILL_TID, null));
+                        "chat('what is a database?')"))))));
     }
 }

@@ -30,9 +30,7 @@ import studio.phaseshift.metatron.SkipWhenPortUnavailable;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.feature.ChatFeature;
-import studio.phaseshift.metatron.isa.llm.type.feature.SessionFeature;
-import studio.phaseshift.metatron.isa.llm.type.feature.SystemFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -146,7 +144,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         // org.junit.jupiter.api.Assumptions.assumeFalse(isConnectionRefused());
         // ── Turn 1: "remember the word DOG" ──────────────────────────
         agent.chat("Remember the word DOG. Just say 'ok' and nothing else.");
-            
+
         // Verify session after turn 1: should have user + ai messages
         final List<ChatMessage> messages1 = sessionStore.getMessages(sessionVID());
         assertTrue(messages1.size() >= 2,
@@ -166,12 +164,8 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         assertTrue(aiMsg1.isPresent(), "turn 1: should have an AI message");
 
         // ── Turn 2: "what word?" ─────────────────────────────────────
-        try {
-            agent.chat("What word were you asked to remember? Just say the word and nothing else.");
-        } catch (final MTronException e) {
-            if (isConnectionRefused(e)) return;
-            throw e;
-        }
+        agent.chat("What word were you asked to remember? Just say the word and nothing else.");
+
 
         final String turn2Response = readLastAiText();
         assertNotNull(turn2Response, "turn 2: should have an AI response");
@@ -186,12 +180,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
                         + messages1.size() + " → " + messages2.size());
 
         // ── Turn 3: "what letter does it start with?" ──────────────
-        try {
-            agent.chat("What letter does the word DOG start with? Just say the letter.");
-        } catch (final MTronException e) {
-            if (isConnectionRefused(e)) return;
-            throw e;
-        }
+        agent.chat("What letter does the word DOG start with? Just say the letter.");
 
         final String turn3Response = readLastAiText();
         assertNotNull(turn3Response, "turn 3: should have an AI response");
@@ -226,15 +215,10 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
 
         // Chat 5 times — MessageWindowChatMemory evicts beyond max internally
         for (int i = 1; i <= 5; i++) {
-            try {
-                agent.chat("Say 'turn" + i + "' and nothing else.");
-            } catch (final MTronException e) {
-                if (isConnectionRefused(e)) return;
-                throw e;
-            }
+            agent.chat("Say 'turn" + i + "' and nothing else.");
         }
 
-        final List<ChatMessage> windowed = agent.feature(SESSION).<SessionFeature>as().memory().messages();
+        final List<ChatMessage> windowed = agent.feature(LLM_SESSION_FEATURE_TID).<SessionFeature>as().memory().messages();
         assertTrue(windowed.size() <= smallMax,
                 "window max=" + smallMax + ": expected <= " + smallMax
                         + " messages, got " + windowed.size());
@@ -253,15 +237,9 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     @Test
     public void testTypedCollectionPopulation() {
         // Chat three times to exercise the per-type collection mirrors
-        try {
-            agent.chat("Remember the word DOG. Just say 'ok'.");
-            agent.chat("What word were you asked to remember? Just say the word.");
-            agent.chat("How many letters are in that word? Just say the number.");
-        } catch (final MTronException e) {
-            if (isConnectionRefused(e)) return;
-            throw e;
-        }
-
+        agent.chat("Remember the word DOG. Just say 'ok'.");
+        agent.chat("What word were you asked to remember? Just say the word.");
+        agent.chat("How many letters are in that word? Just say the number.");
         final fURI basePath = this.agent.at(ROOT).uriValue();  // strip entry + collection → scheme/prefix root
 
         // ── Verify unified message table ──────────────────────
@@ -423,11 +401,13 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
                 uri(ALGORITHM), rec(mutableMap(uri(NAME), uri("message_window"), uri(MAX), jnt(max))));
         final SessionFeature session = new SessionFeature(sessionConfig.jvm(), LLM_SESSION_FEATURE_TID, null);
         final SystemFeature system = new SystemFeature(mutableMap(uri("base"), str("you are a helpful assistant")), LLM_SYSTEM_FEATURE_TID, null);
+        final SkillFeature skill = new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null);
+        final ToolFeature tool = new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null);
         final Rec agentRec = rec(mutableMap(
                 uri(NAME), str("llm-session-test-agent"),
                 uri(DESC), str("testing llm-session implementation"),
                 uri(ROOT), sessionVID().retract(2).toUri(),
-                uri(FEATURE), lst(mutableList(system, chat, session))), LLM_AGENT_TID, null);
+                uri(FEATURE), lst(mutableList(tool, skill, system, chat, session))), LLM_AGENT_TID, null);
         return Agent.agent(agentRec);
     }
 

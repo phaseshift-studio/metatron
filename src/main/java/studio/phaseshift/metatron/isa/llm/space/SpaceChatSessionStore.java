@@ -105,6 +105,11 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         return this.space;
     }
 
+    public Rec addMessage(final Rec message) {
+        final Rec message2 = Router.writeToSpace(this.memoryRoot.extend("_").addQ(INCRQ), message).asRec();
+        return message2;
+    }
+
     public Set<fURI> getCurrentMessages() {
         return this.currentMessages;
     }
@@ -367,7 +372,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 // rode through LangChain4j's ChatMessage.attributes()
                 if (!msgRec.at(uri(WRITTEN_KEY)).isNoObj())
                     continue;
-                
+
                 msgRec.recValue().put(uri(TIME), mathInstSet.nowDatetime());
                 msgRec.recValue().put(uri(SESSION), uri(sesVID));
                 msgRec.recValue().put(uri(DEPTH), jnt(this.depth));
@@ -424,7 +429,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (null == this.agent)
             return 150; // no agent — the bus path never sizes from session policy
         try {
-            final Obj sessFeature = this.agent.feature(SESSION);
+            final Obj sessFeature = this.agent.feature(LLM_SESSION_FEATURE_TID);
             if (!sessFeature.isNoObj()) {
                 final Obj algo = sessFeature.asRec().at(ALGORITHM);
                 if (!algo.isNoObj() && algo.isRec()) {

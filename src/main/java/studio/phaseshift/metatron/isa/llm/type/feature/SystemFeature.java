@@ -13,6 +13,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.SYSTEM_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
@@ -121,14 +122,14 @@ public class SystemFeature extends AbstractFeature {
     @Override
     public Obj onBeforeChat(final Agent agent) {
         final String text = this.systemMessage();
-        if (text.isBlank() || !agent.hasFeature(SESSION))
+        if (text.isBlank() || !agent.hasFeature(LLM_SESSION_FEATURE_TID))
             return noobj();
 
         final String lastText = this.at(uri(LAST)).orElse(str("")).strValue();
         if (text.equals(lastText))
             return noobj();
 
-        final fURI sessionVID = agent.feature(SESSION).asRec().at(SESSION).uriValue();
+        final fURI sessionVID = agent.feature(LLM_SESSION_FEATURE_TID).asRec().at(SESSION).uriValue();
         try {
             MessageBuilder.build(SYSTEM_MESSAGE_TID)
                     .text(text)

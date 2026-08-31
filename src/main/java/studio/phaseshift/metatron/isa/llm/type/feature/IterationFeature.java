@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -32,6 +33,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ITERATION_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ITERATION_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -102,9 +105,10 @@ public class IterationFeature extends AbstractFeature {
      */
     @Override
     public Obj onBeforeChat(final Agent agent) {
-        if (!agent.hasFeature(SESSION)) return noobj();
+        this.registerSkill(agent);
+        if (!agent.hasFeature(LLM_SESSION_FEATURE_TID)) return noobj();
         try {
-            final SessionFeature sessionFeature = agent.feature(SESSION).as();
+            final SessionFeature sessionFeature = agent.feature(LLM_SESSION_FEATURE_TID).as();
             final fURI sessionVID = sessionFeature.at(SESSION).uriValue();
             final Rec iteration = createIteration(sessionVID);
             this.iterationVid = iteration.vid();
@@ -122,9 +126,9 @@ public class IterationFeature extends AbstractFeature {
      */
     @Override
     public void onCompleteResponse(final Agent agent, final ChatResult result) {
-        if (!agent.hasFeature(SESSION)) return;
+        if (!agent.hasFeature(LLM_SESSION_FEATURE_TID)) return;
         try {
-            final SessionFeature sessionFeature = agent.feature(SESSION).as();
+            final SessionFeature sessionFeature = agent.feature(LLM_SESSION_FEATURE_TID).as();
             final SpaceChatSessionStore store = sessionFeature.store();
             if (store == null) return;
 
@@ -151,9 +155,15 @@ public class IterationFeature extends AbstractFeature {
      * walk the iteration linked list.  Each tool takes an iteration VID and
      * returns the linked iteration Rec (or noobj at the ends of the chain).
      */
-    @Override
-    public Lst skill(final Agent agent) {
-        return lst(rec(
+    /**
+     * Register this feature's skill with the SkillFeature gateway — degrades
+     * quietly when the gateway is absent (this feature is parked and does not
+     * hard-require it).
+     */
+    public void registerSkill(final Agent agent) {
+        if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
+            return;
+        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(
                 uri(NAME), uri(ITERATION),
                 uri(DESC), str("Iteration graph overlay with prev/next linked-list navigation"),
                 uri(TOOL), lst(
@@ -173,7 +183,7 @@ public class IterationFeature extends AbstractFeature {
                                 Map.<Obj, String>of(jnt(0), "an iteration uri"),
                                 "navigate to the next iteration in the session",
                                 NEXT_INST_TID + "(iteration_1) [-- returns the iteration after iteration_1 --]"))
-        ));
+        )));
     }
 
     // =========================================================================

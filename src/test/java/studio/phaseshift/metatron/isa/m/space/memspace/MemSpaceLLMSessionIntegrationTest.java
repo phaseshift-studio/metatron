@@ -60,7 +60,7 @@ public class MemSpaceLLMSessionIntegrationTest extends AbstractLLMSessionIntegra
     private memSpace space;
 
     @Override
-    protected Space createSessionSpace() throws Exception {
+    protected Space createSessionSpace() {
         this.space = memSpace.of(
                 rec(
                         uri(PATTERN), uri("/mem/example/#"),

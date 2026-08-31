@@ -399,7 +399,13 @@ public class mInstSet extends AbstractInstSet {
                                 useful for debugging native java issues that mtron instructions
                                 trigger but cannot introspect.
                                 """),
-                        docWrap(SPACE_TYPE, "storage systems structured as uri addressed objs"),
+                        docWrap(SPACE_TYPE, null, null, Map.of(
+                                        uri(PATTERN), "the uri address region the space will manage",
+                                        uri(QPROC).maybe(), "query processors (qproc) that augment space capabilities",
+                                        uri(ROUTE).maybe(), "a secondary router after global router for inter and intra-space redirects",
+                                        uri(SCHEME).maybe(), "an instset defining the type structure of the space objs"),
+                                "storage systems structured as uri addressed objs",
+                                "memspace::[pattern=>/usr/marko/#,q=>[mimeq::[=>]]]@/sys/space/usr/marko"),
                         docWrap(MEM_SPACE_TYPE = Type.Builder.build()
                                         .tid(SPACE_TID)
                                         .vid(MEM_SPACE_TID)
@@ -420,7 +426,7 @@ public class mInstSet extends AbstractInstSet {
                                                         (lhs, inst) -> estoreSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create(), "", "",
                                 Map.of(uri(DATA).maybe(), "a file location to save space state (reads on creation and writes on close)"),
                                 "an in-memory space with objs indexed by a topic trie"),*/
-                        docWrap(STACK_SPACE_TYPE, "a thread local stack used for global variables and machine inst frames",
+                        docWrap(STACK_SPACE_TYPE, "a thread local stack used for global variables and machine inst call frames",
                                 "2.to(a).plus(from(a))     [-- 4 via writing/reading a         --]",
                                 "a->2+*a                   [-- 4 via sugar'd writing/reading a --]"),
                         docWrap(QPROC_TYPE, """

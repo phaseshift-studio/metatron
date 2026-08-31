@@ -19,9 +19,12 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.m.type.*;
+
+import java.util.Set;
 
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -51,21 +54,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
  * </ol>
  */
 public interface Feature {
-
-    // ── Skill ─────────────────────────────────────────────────────
-
-    /**
-     * Optional skill description for features that have a user-facing
-     * interaction model.  Returns {@code noobj()} by default — features
-     * with no interaction model (observational, internal) return noobj.
-     * <p>
-     * When non-noobj, the SkillFeature registers this as a lazy-loadable
-     * skill so the agent can learn usage details on demand rather than
-     * carrying them in every system prompt.
-     */
-    default Lst skill(final Agent agent) {
-        return lst().c(cInt::zero);
-    }
 
     /**
      * Whether this feature is active.  Defaults to checking the
@@ -128,11 +116,17 @@ public interface Feature {
     default void onError(final Agent agent, final Fail fail) {
     }
 
-    /*
-    A lst of feature tids required to also be active with this feature
+    /**
+     * The full feature tids this feature requires to function properly —
+     * they must be attached to the same agent.  The agent is the integrator
+     * of features: it validates these at construction time, and a missing
+     * dependency is a composition error (a canonical
+     * {@code MTronException}), not a "debilitated" feature discovered
+     * mid-chat.  Features needing an *optional* collaboration keep their
+     * own runtime check and simply do not declare it here.
      */
-    default Lst requires() {
-        return lst();
+    default Set<fURI> requires() {
+        return Set.of();
     }
 }
     

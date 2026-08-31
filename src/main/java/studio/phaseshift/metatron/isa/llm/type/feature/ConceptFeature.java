@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.mModel;
+import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -57,9 +58,8 @@ import java.util.stream.Collectors;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.*;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CONCEPT_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TID;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -69,7 +69,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
@@ -228,16 +227,28 @@ public class ConceptFeature extends AbstractFeature {
     // Skill
     // =========================================================================
 
-    public Lst skill(final Agent agent) {
+    @Override
+    public Set<fURI> requires() {
+        return Set.of(LLM_SKILL_FEATURE_TID);
+    }
+
+    /**
+     * Register this feature's skill with the SkillFeature gateway — the
+     * gateway forwards its tools to the ToolFeature gateway, so no local
+     * addTool loop is needed here.
+     */
+    public void registerSkill(final Agent agent) {
         this.loaded.set(true);
+        if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
+            return;
         final String content = switch (this.extractor) {
             case TaggingExtractor ignored -> CONCEPT_EXTRACTOR_TAG_SYSTEM_MESSAGE;
             case AgentExtractor ignored -> CONCEPT_EXTRACTOR_AGENT_SYSTEM_MESSAGE;
             case LuceneExtractor ignored -> CONCEPT_EXTRACTOR_LUCENE_SYSTEM_MESSAGE;
             case null, default -> null;
         };
-        if (content == null) return lst();
-        final Lst skills = lst(rec(mutableMap(uri(NAME), uri(LLM_CONCEPT_FEATURE_TID.name()),
+        if (content == null) return;
+        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(mutableMap(uri(NAME), uri(LLM_CONCEPT_FEATURE_TID.name()),
                 uri(DESC), str("in situ concept graph construction w/ spreading activation recommendation"),
                 uri(CONTENT), str(content),
                 uri(TOOL), lst(
@@ -255,32 +266,7 @@ public class ConceptFeature extends AbstractFeature {
                                 "maybe an obj",
                                 "a lst of related concept auto_froms",
                                 Map.of(jnt(0), "a concept uri"),
-                                "fetches concepts associated with the provided concept"))), LLM_SKILL_TID, null));
-        skills.elements().map(s -> s.asRec().at(TOOL).orElse(lst0())).flatMap(t -> t.asLst().elements()).forEach(t -> {
-            Router.readFromSpace(((Obj) t).tid().addQ(DOCQ)).stream().forEach(doc -> {
-                agent.addTool((Docs) doc);
-            });
-        });
-        return skills;
-        
-            /*
-          docWrap(instC(LLM_CONCEPT_FEATURE_TID.extend(INST).extend("messages").dom(ALL.maybe()).rng(STR_TID.maybeSome()),
-                                        lst(MType.T(URI_TID.some())),
-                                        from_(uri("0")).swap_(block_(mult_(uri(this.getBaseURI())))).from_(id_()).select_(uri(f("message").extend("+").extend("text"))).split_(lst(id_().tryToInst())).sum_().tryToInst()),
-                                "maybe an obj",
-                                "a stream of message texts",
-                                Map.of(jnt(0), "a concept uri"),
-                                "fetches past messages associated with the concept",
-                                "messages(metatron) [-- returns messages discussing metatron --]"),
-                        docWrap(instC(LLM_CONCEPT_FEATURE_TID.extend(INST).extend("concepts").dom(ALL.maybe()).rng(LST_TID.maybeSome()),
-                                        lst(MType.T(URI_TID.some())),
-                                        from_(uri("0")).swap_(block_(mult_(uri(this.getBaseURI())))).from_(id_()).select_(uri("concept")).sum_().tryToInst()),
-                                "maybe an obj",
-                                "a lst of related concepts",
-                                Map.of(jnt(0), "a concept uri"),
-                                "fetches concepts associated with the provided concept"))));
-         */
-
+                                "fetches concepts associated with the provided concept"))))));
     }
 
     // =========================================================================
@@ -360,8 +346,8 @@ public class ConceptFeature extends AbstractFeature {
                         .map(c -> auto_from_(this.getRootUri().extend(c)).tryToInst()).toList());
                 if (conceptLinkList.size() > conceptLinkListSize) {
                     conceptRec.jvm().put(uri(CONCEPT), lst(new ArrayList<>(conceptLinkList)));
-                    if (agent.hasFeature(CHAT)) {
-                        final Rec message = agent.feature(CHAT).<ChatFeature>as().lastMessage();
+                    if (agent.hasFeature(LLM_CHAT_FEATURE_TID)) {
+                        final Rec message = agent.feature(LLM_CHAT_FEATURE_TID).<ChatFeature>as().lastMessage();
                         //if (agent.hasFeature(SESSION)) {
                         //final SessionFeature sessionFeature = (SessionFeature) agent.feature(SESSION);
                         //LOG.debug("concept feature has located session feature");
@@ -437,14 +423,15 @@ public class ConceptFeature extends AbstractFeature {
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
-        final Rec lastMessage = agent.feature(CHAT).<ChatFeature>as().lastMessage();
+        this.registerSkill(agent);
+        final Rec lastMessage = agent.feature(LLM_CHAT_FEATURE_TID).<ChatFeature>as().lastMessage();
         final Set<fURI> concepts = this.processConcepts(agent, Str.Helper.cleanString(lastMessage.at(TEXT), true), true);
         this.injectConceptRecommendations(agent, concepts);
         if (!this.conceptRecommendations.isEmpty()) {
             // Cross-feature communication: SystemFeature owns the system-message channel.
             // If the agent lacks it, this feature is debilitated — log and proceed.
-            if (agent.hasFeature(SYSTEM))
-                agent.feature(SYSTEM).<SystemFeature>as().addSystemMessage(CONCEPT_FEATURE_SYSTEM_TEMPLATE
+            if (agent.hasFeature(LLM_SYSTEM_FEATURE_TID))
+                agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage(CONCEPT_FEATURE_SYSTEM_TEMPLATE
                         .formatted(this.conceptRecommendations.stream().reduce("", (a, b) -> a + b + "\n"),
                                 MESSAGES_INST_TID,
                                 CONCEPTS_INST_TID));
@@ -534,9 +521,9 @@ public class ConceptFeature extends AbstractFeature {
     private class AgentExtractor implements Extractor {
         @Override
         public Set<String> extract(final Agent agent, final String text, final boolean blocking) {
-            if (!agent.feature(CONCEPT).asRec().has(MODEL))
+            if (!agent.feature(LLM_CONCEPT_FEATURE_TID).asRec().has(MODEL))
                 return Set.of();
-            final mModel model = mModel.model(agent.feature(CONCEPT).asRec().at(MODEL).asRec());
+            final mModel model = mModel.model(agent.feature(LLM_CONCEPT_FEATURE_TID).asRec().at(MODEL).asRec());
             final Set<String> conceptStrings = new LinkedHashSet<>();
             try {
                 LOG.info("using agent to extract concepts from text length=%d", text.length());

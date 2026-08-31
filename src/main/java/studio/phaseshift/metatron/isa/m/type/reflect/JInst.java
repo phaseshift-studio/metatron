@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -52,15 +52,15 @@ public @interface JInst {
 
     Attach attach();
 
-    public static enum Attach {
+    enum Attach {
         OBJ
     }
 
-    public static class Helper {
+    class Helper {
         private Helper() {
             // do nothing
         }
-
+        
         public static void processInst(final Object source) {
             Arrays.stream(source.getClass().getMethods())
                     .filter(m -> m.isAnnotationPresent(JInst.class))
@@ -77,7 +77,7 @@ public @interface JInst {
                                         try {
                                             if (m.getParameterCount() == 0)
                                                 return (Obj) m.invoke(source);
-                                            else if(m.getParameterCount() == 1)
+                                            else if (m.getParameterCount() == 1)
                                                 return (Obj) m.invoke(source, inst.arg(0));
                                             return (Obj) m.invoke(source, lhs, inst.args());
                                         } catch (final Exception e) {

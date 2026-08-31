@@ -29,6 +29,7 @@ import static studio.phaseshift.metatron.Tokens.CONTENT;
 import static studio.phaseshift.metatron.Tokens.NAME;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_LEDGER_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -67,7 +68,10 @@ public class LedgerFeatureTest extends AbstractFeatureTest {
     @Test
     public void testLedgerSkillWellFormed() {
         final LedgerFeature ledger = feature();
-        final Rec skill = ledger.skill(agentWith(ledger)).asLst().at(0).asRec();
+        final SkillFeature gateway = new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null);
+        final Agent a = agentWith(ledger, gateway);
+        ledger.registerSkill(a);
+        final Rec skill = gateway.skills().at(0).asRec();
         assertEquals("ledger", skill.at(uri(NAME)).uriValue().name(), "skill name should be 'ledger'");
         assertFalse(skill.at(uri(CONTENT)).strValue().isBlank(), "skill should have content");
     }

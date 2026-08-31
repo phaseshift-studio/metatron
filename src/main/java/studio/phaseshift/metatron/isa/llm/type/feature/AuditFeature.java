@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AUDIT_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -66,12 +68,12 @@ public class AuditFeature extends AbstractFeature {
         this.partialThinkings = 0;
         snapshot(agent, "before_chat",
                 rec(uri("features"), jnt(agent.features().lstValue().size()),
-                        uri("systemMsgs"), jnt(agent.hasFeature(SYSTEM) ? agent.feature(SYSTEM).<SystemFeature>as().getSystemMessages().size() : 0),
+                        uri("systemMsgs"), jnt(agent.hasFeature(LLM_SYSTEM_FEATURE_TID) ? agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().getSystemMessages().size() : 0),
                         uri("userMessage"), str(null == agent.userMessage() ? "" : agent.userMessage())));
-        agent.feature(AUDIT).asRec().at(TO).apply(str("""
+        agent.feature(LLM_AUDIT_FEATURE_TID).asRec().at(TO).apply(str("""
                                                       {{_}}{{g}}system{{/g}}{{/_}}: %s
                                                       {{_}}{{g}}prompt{{/g}}{{/_}}: %s
-                                                      """.formatted(agent.hasFeature(SYSTEM) ? agent.feature(SYSTEM).<SystemFeature>as().getSystemMessages().stream().collect(Collectors.joining()) : "", agent.userMessage())));
+                                                      """.formatted(agent.hasFeature(LLM_SYSTEM_FEATURE_TID) ? agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().getSystemMessages().stream().collect(Collectors.joining()) : "", agent.userMessage())));
         return noobj();
     }
 

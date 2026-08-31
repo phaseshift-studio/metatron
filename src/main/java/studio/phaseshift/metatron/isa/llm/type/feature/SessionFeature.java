@@ -19,6 +19,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -45,8 +46,8 @@ public class SessionFeature extends AbstractFeature {
     }
 
     public static void buildSession(final Agent agent, final AiServices<AgentServices> service) {
-        if (agent.hasFeature(SESSION))
-            service.chatMemory(agent.feature(SESSION).<SessionFeature>as().memory()).storeRetrievedContentInChatMemory(true);
+        if (agent.hasFeature(LLM_SESSION_FEATURE_TID))
+            service.chatMemory(agent.feature(LLM_SESSION_FEATURE_TID).<SessionFeature>as().memory()).storeRetrievedContentInChatMemory(true);
     }
 
     /**

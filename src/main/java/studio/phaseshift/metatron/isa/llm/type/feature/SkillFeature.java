@@ -5,79 +5,121 @@ import dev.langchain4j.skills.Skills;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
+import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
+import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import static studio.phaseshift.metatron.Tokens.NAME;
 import static studio.phaseshift.metatron.Tokens.SKILL;
-import static studio.phaseshift.metatron.Tokens.SYSTEM;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrapDocs;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
+/**
+ * The gateway of the agent's skill channel.
+ *
+ * <p>One owner per channel: {@code SkillFeature} owns the
+ * {@code Collection<mSkill>} of skills (markdown content);
+ * {@link ToolFeature} owns the {@code Collection<mTool>} of inst
+ * registrations.  Contributors publish by calling
+ * {@link #addSkill(mSkill)}.</p>
+ *
+ * <p>A skill may carry tools in its {@code tool} field.  This gateway is the
+ * single composition point for that coupling: on each chat it forwards every
+ * registered skill's tools to the {@code ToolFeature} gateway, which
+ * registers and projects them — skill content stays here, inst registration
+ * stays there.</p>
+ */
 public class SkillFeature extends AbstractFeature {
+
+    /**
+     * The registered skills — mSkill elements, upserted by name.
+     */
+    private final List skillRegistry = new ArrayList();
+    /**
+     * whether the seeds from our rec config have been hydrated yet
+     */
+    private boolean seeded = false;
 
     public SkillFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
 
-   /* public static void buildSkills(final Agent agent, final AiServices<AgentServices> service) {
-        final List<Skill> allSkills = agent.features().asLst()
-                .elements()
-                .flatMap(entry -> (entry instanceof Feature feat ?
-                        feat.skill(agent) :
-                        entry.asRec().at(SKILL).orElse(lst()))
-                        .elements()
-                        .map(s -> s.isUri() ?
-                                mSkill.of(fsSpace.staticObjToFile(s)).toSkill() :
-                                mSkill.of(s.apply().asRec()).toSkill()))
-                .toList();
-        if (allSkills.isEmpty()) {
-            agent.logger().warn("no skills available");
-            return;
-        }
-        try {
-            final Skills skills = new Skills.Builder().skills(allSkills).build();
-            agent.addToolProvider(skills.toolProvider());
-            agent.addTool(docWrapDocs(instC(f("list_skills").dom(NOOBJ.zero()).rng(LST_TID), lst(),
-                            (lhs, inst) -> lst(allSkills.stream().map(s -> (Obj) lst(str(s.name()), str(s.description()))).toList())),
-                    "no domain",
-                    "a lst[lst[str,str]] of skills",
-                    Map.of(),
-                    "generates a lst of available skills by name and description"));
-            /*service.systemMessage(
-                    "\nYou have access to the following skills:\n" +
-                            skills.formatAvailableSkills()
-                            + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");*/
-    //  } catch (final Exception e) {
-    //    throw MTronException.of("unable to setup skills: %s", e);
-    // }
-    //}*/
+    @Override
+    public Set<fURI> requires() {
+        return Set.of(LLM_TOOL_FEATURE_TID);
+    }
+
+    /**
+     * Register a skill with this feature — the single entry point to the
+     * agent's skill registry.  Upsert semantics: re-registering under the
+     * same name replaces the earlier entry, so per-chat registration is
+     * idempotent.
+     *
+     * @param skill the skill to register
+     */
+    public void addSkill(final mSkill skill) {
+        final fURI key = key(skill);
+        this.skillRegistry.removeIf(s -> key(((Obj) s).<mSkill>as()).equals(key));
+        this.skillRegistry.add(skill);
+    }
+
+    /**
+     * The skills currently registered with this feature.
+     *
+     * @return the registered skills
+     */
+    public Lst skills() {
+        return lst((List) this.skillRegistry);
+    }
 
     @Override
-    public Lst skill(final Agent agent) {
-        return lst(this.at(SKILL).elements().toList());
+    public void onAgentCtor(final Agent agent) {
+        if (this.seeded)
+            return;
+        this.seeded = true;
+        // hydrate our rec-config seeds as the initial registry state
+        if (!this.has(SKILL))
+            return;
+        this.at(SKILL).elements().forEach(s -> {
+            try {
+                this.addSkill(s.isUri() ? mSkill.of(fsSpace.staticObjToFile(s)) : mSkill.of(s.apply().asRec()));
+            } catch (final Exception e) {
+                this.logger().warn("unable to seed skill %s (ignoring): %s", s, e.getMessage());
+            }
+        });
     }
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
-        final List<Skill> allSkills = agent.features().asLst()
-                .elements()
-                .flatMap(entry -> (entry instanceof Feature feat ? feat.skill(agent) : entry.asRec().at(SKILL).orElse(lst()))
-                        .elements()
-                        .map(s -> s.isUri() ?
-                                mSkill.of(fsSpace.staticObjToFile(s)).toSkill() :
-                                mSkill.of(s.apply().asRec()).toSkill()))
+        // ── 1. forward each skill's tools to the tool gateway (the single composition point) ──
+        if (agent.hasFeature(LLM_TOOL_FEATURE_TID)) {
+            final ToolFeature toolFeature = agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as();
+            this.skillRegistry.forEach(skill -> ((Obj) skill).<mSkill>as().tools().elements().forEach(t -> {
+                try {
+                    toolFeature.addTool(mTool.toolElement(t));
+                } catch (final Exception e) {
+                    this.logger().warn("unable to forward tool %s of skill %s to tool feature: %s", t, skill, e.getMessage());
+                }
+            }));
+        }
+        // ── 2. project the registry to LC4j skills (the markdown channel) ──
+        final List<Skill> allSkills = this.skillRegistry.stream()
+                .map(e -> ((Obj) e).<mSkill>as().toSkill())
                 .toList();
         if (allSkills.isEmpty())
             return noobj();
@@ -85,18 +127,18 @@ public class SkillFeature extends AbstractFeature {
         try {
             final Skills skills = new Skills.Builder().skills(allSkills).build();
             agent.addToolProvider(skills.toolProvider());
-            // Cross-feature communication: SystemFeature owns the system-message channel.
-            // If the agent lacks it, this feature is debilitated — log and proceed.
             agent.addTool(docWrapDocs(instC(f("list_skills").dom(NOOBJ.zero()).rng(LST_TID), lst(),
                             (lhs, inst) -> lst(allSkills.stream().map(s -> (Obj) lst(str(s.name()), str(s.description()))).toList())),
                     "no domain",
                     "a lst[lst[str,str]] of skills",
                     Map.of(),
                     "generates a lst of available skills by name and description"));
-            if (this.requireFeature(agent, SYSTEM)) {
-                try (final TableWidget table = new TableWidget(List.of("name", "description"))) {
+            // Cross-feature communication: SystemFeature owns the system-message channel.
+            // If the agent lacks it, this feature is debilitated — log and proceed.
+            if (this.requireFeature(agent, LLM_SYSTEM_FEATURE_TID)) {
+                try (final TableWidget table = new TableWidget(List.of("name", "description")).style().border(Border.continuous).applyStyle()) {
                     allSkills.forEach(s -> table.addRow(List.of(s.name(), s.description())));
-                    agent.feature(SYSTEM).<SystemFeature>as()
+                    agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as()
                             .addSystemMessage("""
                                               The following skills are can be loaded using activate_skill tool:
                                                 %s
@@ -107,5 +149,12 @@ public class SkillFeature extends AbstractFeature {
             throw MTronException.of("unable to setup skills: %s", e);
         }
         return noobj();
+    }
+
+    private static fURI key(final mSkill skill) {
+        final Obj name = skill.atDirect(uri(NAME));
+        if (!name.isNoObj())
+            return name.uriValue();
+        return f(UUID.nameUUIDFromBytes("skill@%d".formatted(System.identityHashCode(skill)).getBytes()).toString());
     }
 }
