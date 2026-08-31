@@ -108,17 +108,6 @@ trim() {
 scriptDir="$(dirname "$0")"
 scriptName="$(basename "$0")"
 
-# ----------------------------------------------------------------------------
-# metatron container patch: the root filesystem is read-only in this
-# environment (HOME and /usr are not writable), so the JDK and Maven caches
-# live inside the repo under <repo>/.build.  Relocate with METATRON_BUILD_DIR.
-# ----------------------------------------------------------------------------
-_buildDir="${METATRON_BUILD_DIR:-$scriptDir/.build}"
-if [ -z "${JAVA_HOME-}" ] && [ -x "$_buildDir/jdk/bin/java" ]; then
-  JAVA_HOME="$_buildDir/jdk"
-  export JAVA_HOME
-fi
-
 # parse distributionUrl and optional distributionSha256Sum, requires .mvn/wrapper/maven-wrapper.properties
 while IFS="=" read -r key value; do
   case "${key-}" in
@@ -153,14 +142,11 @@ esac
 distributionUrlName="${distributionUrl##*/}"
 distributionUrlNameMain="${distributionUrlName%.*}"
 distributionUrlNameMain="${distributionUrlNameMain%-bin}"
-MAVEN_USER_HOME="${MAVEN_USER_HOME:-$_buildDir/m2}"
+MAVEN_USER_HOME="${MAVEN_USER_HOME:-${HOME}/.m2}"
 MAVEN_HOME="${MAVEN_USER_HOME}/wrapper/dists/${distributionUrlNameMain-}/$(hash_string "$distributionUrl")"
 
 exec_maven() {
   unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL || :
-  if [ -f "$_buildDir/m2/settings.xml" ]; then
-    exec "$MAVEN_HOME/bin/$MVN_CMD" -s "$_buildDir/m2/settings.xml" "$@" || die "cannot exec $MAVEN_HOME/bin/$MVN_CMD"
-  fi
   exec "$MAVEN_HOME/bin/$MVN_CMD" "$@" || die "cannot exec $MAVEN_HOME/bin/$MVN_CMD"
 }
 
