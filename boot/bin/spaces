@@ -1,0 +1,29 @@
+#!/bin/bash
+# bin/spaces — metatron space sampler.
+#
+# Template: to create your own app, copy this file and change:
+#   1. The banner (or remove the cat<<'EOF' block)
+#   2. BOOT_FILE and BOOT_ARGS below
+#
+# All build logic (compile, classpath, JVM flags) lives in bin/metatron.
+# -------------------------------------------------------------------
+set -euo pipefail
+
+# ── banner (app-specific — remove or replace) ──────────────────────
+cat <<'EOF'
+ ______   ______   ______   ______  ______                         
+/ |      | |  | \ | |  | | | |     | |                             
+'------. | |__|_/ | |__| | | |     | |----                         
+ ____|_/ |_|      |_|  |_| |_|____ |_|____    PhaseShift Studio                                                      
+   ______   ______   _________   ______   _        ______  ______  
+  / |      | |  | | | | | | | \ | |  | \ | |      | |     | |  | \ 
+  '------. | |__| | | | | | | | | |__|_/ | |   _  | |---- | |__| | 
+   ____|_/ |_|  |_| |_| |_| |_| |_|      |_|__|_| |_|____ |_|  \_\ 
+   
+EOF
+
+# ── launch (app-specific: change these) ─────────────────────────────
+BOOT_FILE="boot/spaces.boot.mtron"
+BOOT_ARGS="[log=>info]"
+
+exec "$(dirname "$(readlink -f "$0")")/../../bin/metatron" -b "$BOOT_FILE" "$BOOT_ARGS"

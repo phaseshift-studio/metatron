@@ -73,6 +73,16 @@ public class mModel extends MRec {
         return this.at(SIZE);
     }
 
+    /**
+     * The model's context window size in tokens (an {@code int::T}), when the
+     * provider advertises one.  Ollama exposes it via the model card's
+     * {@code general.context_length}; other vendors leave it noobj and the
+     * user supplies {@code context} on their model rec.
+     */
+    public Obj context() {
+        return this.at(CONTEXT);
+    }
+
     public Obj quant() {
         return this.at(QUANT);
     }
@@ -89,7 +99,7 @@ public class mModel extends MRec {
         final EmbeddingModel embeddingModel = LLMFactory.createEmbeddingInteraction(this);
         // if (this.cost().isPresent())
         //     agent.addListener(new CostCalculator(this.cost().get()));
-        final TextSegment embeddingString = TextSegment.from(Str.Helper.cleanString(toEmbed));
+        final TextSegment embeddingString = TextSegment.from(toEmbed.toCleanString());
         final Response<Embedding> response = embeddingModel.embed(embeddingString);
         if (null != response.tokenUsage())
             this.logger().info("embedding token usage: %s", response.tokenUsage());

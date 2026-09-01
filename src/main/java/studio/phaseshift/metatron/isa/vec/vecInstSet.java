@@ -29,7 +29,9 @@ import studio.phaseshift.metatron.util.MTronException;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.mult_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.plus_;
+import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -49,17 +51,27 @@ public class vecInstSet extends AbstractInstSet {
     public static final fURI MTRX_TID = VEC_ISA_TID.extend("mtrx");
     public static final fURI CMPLX_TID = VEC_ISA_TID.extend("cmplx");
     public static final fURI IMAGINARY_TID = VEC_ISA_TID.extend("imaginary");
+    public static final fURI VEC_EMBEDDING_TID = VEC_ISA_TID.extend("embedding");
     /// ////////////////////////////////////////////////////////////
     public static final fURI INST_TID = VEC_ISA_TID.extend("inst");
     public static final fURI DOT_TID = INST_TID.extend("dot");
     public static final fURI TRANSPOSE_INST_TID = INST_TID.extend("transpose");
     public static final fURI SQRT_TID = INST_TID.extend("sqrt");
 
+
     public static final Type VEC_TYPE = Type.Builder.build().tid(LST_TID).vid(VEC_TID).create();
     public static final Type CMPLX_TYPE = Type.Builder.build().tid(LST_TID).vid(CMPLX_TID).isaPredicate(lst(REAL_TYPE, REAL_TYPE)).create();
     public static final Type MTRX_TYPE = Type.Builder.build()
             .tid(LST_TID)
             .vid(MTRX_TID)
+            .create();
+    public static Type VEC_EMBEDDING_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(VEC_EMBEDDING_TID)
+            .isaPredicate(rec(
+                    uri(OBJ), ALL_TYPE,
+                    uri(EMBED), LST_TYPE,
+                    uri(META).maybe(), REC_TYPE.maybe()))
             .create();
 
 
@@ -84,7 +96,8 @@ public class vecInstSet extends AbstractInstSet {
                                     return result;
                                 }
                         )),
-                uri(TYPE), lst(VEC_TYPE, CMPLX_TYPE, MTRX_TYPE, vecSpace.VCTR_SPACE_TYPE)));
+                uri(TYPE), lst(
+                        VEC_EMBEDDING_TYPE, VEC_TYPE, CMPLX_TYPE, MTRX_TYPE, vecSpace.VCTR_SPACE_TYPE)));
         super.setup();
     }
 }

@@ -748,7 +748,11 @@ mtron> docker:compose/my-stack -> [
      environment=>[POSTGRES_PASSWORD=>secret]]]]
 ```
 Compose YAML is generated to `/tmp/metatron-docker/<name>/docker-compose.yml` and
-`docker compose up -d` is executed. Progress streams through the widget.
+`docker compose up -d --wait` is executed — the write blocks until the stack
+reports healthy.  Give each service a `healthcheck` (e.g. `test =>
+['CMD','mysqladmin','ping','--silent']`) so a boot file can register a space on
+the backend immediately after the up returns; without a healthcheck `--wait`
+satisfies on container start. Progress streams through the widget.
 
 ### Stop a stack
 

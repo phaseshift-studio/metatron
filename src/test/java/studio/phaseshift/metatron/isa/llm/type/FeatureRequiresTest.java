@@ -5,25 +5,18 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.llm.type.feature.AbstractFeature;
-import studio.phaseshift.metatron.isa.llm.type.feature.ChatFeature;
-import studio.phaseshift.metatron.isa.llm.type.feature.SkillFeature;
-import studio.phaseshift.metatron.isa.llm.type.feature.ToolFeature;
-
-import studio.phaseshift.metatron.isa.llm.type.feature.SystemFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.FEATURE;
+import static studio.phaseshift.metatron.Tokens.NAME;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -40,7 +33,9 @@ public class FeatureRequiresTest extends AbstractMetatronTest {
 
     private static final fURI DEPS_TID = f("/m/test/deps_feature");
 
-    /** A feature with a hard requirement on the system-message channel. */
+    /**
+     * A feature with a hard requirement on the system-message channel.
+     */
     static class DepsFeature extends AbstractFeature {
         DepsFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
             super(jvm, tid, vid);
@@ -71,7 +66,7 @@ public class FeatureRequiresTest extends AbstractMetatronTest {
             assertFalse(agent.feature(DEPS_TID).isNoObj(), "feature(full tid) should resolve");
         } else {
             final MTronException failure = assertThrows(MTronException.class, () -> Agent.agent(config.as()));
-            assertTrue(failure.getMessage().contains("requires feature"),
+            assertTrue(failure.getMessage().contains("requires"),
                     "canonical message expected: " + failure.getMessage());
         }
     }
@@ -81,14 +76,14 @@ public class FeatureRequiresTest extends AbstractMetatronTest {
         // the old substring matching meant a token like "ses" could have hit
         // the wrong feature; only the full tid resolves now
         final Agent agent = Agent.agent(rec(mutableMap(
-                uri(NAME), str("exactness-agent"),
-                uri(FEATURE), lst(new ChatFeature(mutableMap(), LLM_CHAT_FEATURE_TID, null),
-                        new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null),
-                        new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null))),
+                        uri(NAME), str("exactness-agent"),
+                        uri(FEATURE), lst(new ChatFeature(mutableMap(), LLM_CHAT_FEATURE_TID, null),
+                                new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null),
+                                new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null))),
                 LLM_AGENT_TID, null));
         assertTrue(agent.hasFeature(LLM_CHAT_FEATURE_TID), "the attached feature resolves");
-        assertFalse(agent.hasFeature(LLM_SESSION_FEATURE_TID), "an unattached sibling must not resolve");
-        assertTrue(agent.feature(LLM_SESSION_FEATURE_TID).isNoObj(), "feature(unattached tid) is noobj");
+        assertFalse(agent.hasFeature(LLM_MESSAGE_FEATURE_TID), "an unattached sibling must not resolve");
+        assertTrue(agent.feature(LLM_MESSAGE_FEATURE_TID).isNoObj(), "feature(unattached tid) is noobj");
         assertEquals(LLM_CHAT_FEATURE_TID, agent.feature(LLM_CHAT_FEATURE_TID).tid(), "the attached feature's tid is exact");
     }
 

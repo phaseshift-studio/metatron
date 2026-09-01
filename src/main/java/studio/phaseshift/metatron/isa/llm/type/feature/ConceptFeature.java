@@ -177,20 +177,7 @@ public class ConceptFeature extends AbstractFeature {
                                                                     %s(c1,c2,...)
                                                                   Both tools can take 1 or more concept arguments.
                                                                   """;
-
-
-   /* public AiServices<AgentServices> build(final Agent agent, final AiServices<AgentServices> service) {
-        final List<Skill> skillList = this.skill(agent).elements()
-                .map(s -> s.isUri() ?
-                        mSkill.of(fsSpace.staticObjToFile(s)).toSkill() :
-                        mSkill.of(s.apply().asRec()).toSkill()).toList();
-        final Skills skills = new Skills.Builder().skills(skillList).build();
-        final ToolProvider skillToolProvider = skills.toolProvider();
-        agent.addToolProvider(skillToolProvider);
-        this.onBeforeChat(agent);
-        return service;
-    }*/
-
+    
     // =========================================================================
     // Constructor
     // =========================================================================
@@ -237,7 +224,7 @@ public class ConceptFeature extends AbstractFeature {
      * gateway forwards its tools to the ToolFeature gateway, so no local
      * addTool loop is needed here.
      */
-    public void registerSkill(final Agent agent) {
+    private void registerSkill(final Agent agent) {
         this.loaded.set(true);
         if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
             return;
@@ -528,7 +515,7 @@ public class ConceptFeature extends AbstractFeature {
             try {
                 LOG.info("using agent to extract concepts from text length=%d", text.length());
                 final CoreThread thread = CoreThread.core(instLambda((lhs, inst) -> {
-                    final Obj result = Agent.Helper.miniTask("concept_extractor",
+                    final Obj result = Agent.Helper.miniChat("concept_extractor",
                             model,
                             """
                             Rewrite the following text where key concepts are wrapped in <<concept:a key concept>> tags.

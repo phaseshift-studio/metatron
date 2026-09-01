@@ -21,9 +21,11 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.llm.type.mSkill;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.time.Instant;
@@ -32,10 +34,7 @@ import java.util.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ITERATION_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ITERATION_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -59,7 +58,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * messages written during that turn.
  * <p>
  * This feature is purely an overlay — it reads message VIDs from
- * {@link SessionFeature}'s {@link SpaceChatSessionStore} but never modifies
+ * {@link MessageFeature}'s {@link SpaceChatSessionStore} but never modifies
  * the message schema.  Deleting iterations has no effect on messages.
  *
  * <h3>URI topology</h3>
@@ -87,7 +86,9 @@ public class IterationFeature extends AbstractFeature {
     private static final fURI PREV_INST_TID = LLM_ITERATION_FEATURE_TID.extend(INST).extend("prev");
     private static final fURI NEXT_INST_TID = LLM_ITERATION_FEATURE_TID.extend(INST).extend("next");
 
-    /** The iteration record created for the current chat — attached to the chat_result as a ref. */
+    /**
+     * The iteration record created for the current chat — attached to the chat_result as a ref.
+     */
     private fURI iterationVid;
 
     public IterationFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -106,10 +107,10 @@ public class IterationFeature extends AbstractFeature {
     @Override
     public Obj onBeforeChat(final Agent agent) {
         this.registerSkill(agent);
-        if (!agent.hasFeature(LLM_SESSION_FEATURE_TID)) return noobj();
+        if (!agent.hasFeature(LLM_MESSAGE_FEATURE_TID)) return noobj();
         try {
-            final SessionFeature sessionFeature = agent.feature(LLM_SESSION_FEATURE_TID).as();
-            final fURI sessionVID = sessionFeature.at(SESSION).uriValue();
+            final MessageFeature messageFeature = agent.feature(LLM_MESSAGE_FEATURE_TID).as();
+            final fURI sessionVID = messageFeature.at(SESSION).uriValue();
             final Rec iteration = createIteration(sessionVID);
             this.iterationVid = iteration.vid();
             LOG.debug("created iteration %s for session %s", iteration.vid(), sessionVID);
@@ -126,10 +127,10 @@ public class IterationFeature extends AbstractFeature {
      */
     @Override
     public void onCompleteResponse(final Agent agent, final ChatResult result) {
-        if (!agent.hasFeature(LLM_SESSION_FEATURE_TID)) return;
+        if (!agent.hasFeature(LLM_MESSAGE_FEATURE_TID)) return;
         try {
-            final SessionFeature sessionFeature = agent.feature(LLM_SESSION_FEATURE_TID).as();
-            final SpaceChatSessionStore store = sessionFeature.store();
+            final MessageFeature messageFeature = agent.feature(LLM_MESSAGE_FEATURE_TID).as();
+            final SpaceChatSessionStore store = messageFeature.store();
             if (store == null) return;
 
             final Set<fURI> messageVIDs = store.getCurrentMessages();

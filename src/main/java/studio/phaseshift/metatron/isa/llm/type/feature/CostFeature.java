@@ -33,7 +33,7 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MESSAGE_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -80,7 +80,7 @@ public class CostFeature extends AbstractFeature {
         // Create calculator and store on Agent; LLMFactory will pick it up
         Router.readFromSpace(this.at(ROOT).uriValue().extend("+")).stream().filter(x -> x.asRec().has(SESSION)).filter(x -> x.asRec().at(SESSION).uriValue().equals(this.sessionVID)).findFirst().orElse(rec());
         this.calculator.setCost(this.at(f(COST).extend(IN)).orElse(real(0.0)).realValue(), this.at(f(COST).extend(IN)).orElse(real(0.0)).realValue());
-        this.sessionVID = agent.feature(LLM_SESSION_FEATURE_TID).orElse(rec()).at(SESSION).orElse(uri("")).uriValue();
+        this.sessionVID = agent.feature(LLM_MESSAGE_FEATURE_TID).orElse(rec()).at(SESSION).orElse(uri("")).uriValue();
         agent.costCalculator().set(this.calculator);
     }
 

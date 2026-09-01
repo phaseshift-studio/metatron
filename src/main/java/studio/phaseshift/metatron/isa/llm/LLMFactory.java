@@ -28,6 +28,7 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.localai.LocalAiEmbeddingModel;
 import dev.langchain4j.model.localai.LocalAiStreamingChatModel;
 import dev.langchain4j.model.ollama.OllamaEmbeddingModel;
+import dev.langchain4j.model.ollama.OllamaModelCard;
 import dev.langchain4j.model.ollama.OllamaModels;
 import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
@@ -51,6 +52,7 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -61,6 +63,7 @@ import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.str0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -121,7 +124,8 @@ public final class LLMFactory {
                                         //uri(LICENSE), Optional.ofNullable(m.get1().getLicense()).map(MStr::str).map(o -> (Obj) o).orElse(noobj()),
                                         //uri(THINK), m.get1().getCapabilities().contains(THINKING) ? rec() : noobj(),
                                         uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
-                                        uri(SIZE), normalizeData(real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null))));
+                                        uri(SIZE), normalizeData(real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null)),
+                                        uri(CONTEXT), ollamaContextLength(m.get1())));
                                 postModel.jvm().putAll(preModel.jvm());
                                 return postModel;
                             } catch (final Exception e) {
@@ -165,6 +169,22 @@ public final class LLMFactory {
             }
             default -> throw MTronException.of("unsupported llm protocol: %s in %s", preModel.at(PROTOCOL), preModel);
         };
+    }
+
+    /**
+     * Extract the context window size (in tokens) from an Ollama model card's
+     * {@code model_info}, which carries it as a dotted key like
+     * {@code general.context_length} (or {@code <arch>.context_length}).  Returns
+     * {@code noobj()} when the server does not advertise it — other vendors leave
+     * the model's {@code context} field for the user to supply.
+     */
+    private static Obj ollamaContextLength(final OllamaModelCard card) {
+        if (null == card || null == card.getModelInfo())
+            return noobj();
+        for (final Map.Entry<String, Object> entry : card.getModelInfo().entrySet())
+            if (entry.getKey().endsWith(".context_length") && entry.getValue() instanceof Number number)
+                return jnt(number.intValue());
+        return noobj();
     }
 
     /**

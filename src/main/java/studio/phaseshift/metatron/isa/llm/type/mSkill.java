@@ -32,7 +32,6 @@ import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import studio.phaseshift.metatron.TokenMapper;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
 import studio.phaseshift.metatron.isa.llm.type.feature.SkillFeature;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -50,8 +49,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -107,7 +106,7 @@ public class mSkill extends MRec {
         if (this.has(TOOL)) {
             // atDirect — at() would auto-resolve (apply) the tool insts; they are
             // specifications and must be read raw.
-            final Map<ToolSpecification, ToolExecutor> tools = this.atDirect(uri(TOOL)).asLst().elements().map(i -> mTool.mtronInstToTool(i.asInst())).map(mTool::mtronInstToolSpecification).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1));
+            final Map<ToolSpecification, ToolExecutor> tools = this.atDirect(uri(TOOL)).asLst().elements().map(i -> mTool.mtronInstToDocs(i.asInst())).map(mTool::mtronInstToolSpecification).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1));
             skill = skill.tools(tools);
         }
         if (null != this.skill && !this.skill.toolProviders().isEmpty())

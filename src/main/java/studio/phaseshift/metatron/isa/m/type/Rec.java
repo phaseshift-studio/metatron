@@ -409,6 +409,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(LSHIFT_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs.parent()),
                     instC(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID.maybeMaybe())), (lhs, inst) -> lhs.jvm(lhs.asRec().plus(inst.arg(0).asRec()).recValue())),
                     instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().at(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),
+                    instC(MAPP_INST_TID.dom(REC_TID).rng(REC_TID), rec(uri(KEY), ALL_TYPE, uri(VALUE), ALL_TYPE), (lhs, inst) -> lhs.asRec().elements().map(r -> rel(inst.arg(KEY, 0).apply(r.first()), inst.arg(VALUE, 1).apply(r.second()))).collect(new CommonUtil.RecCollector())),
                     //instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> rec(Rec.Helper.project(lhs.asRec(), inst.arg(0).asRec(), false), inst.arg(0).tid(), inst.arg(0).vid())),
                     //instC(SELECT_INST_TID.dom(REC_TID).rng(ALL.maybe()), lst(URI_TYPE), (lhs, inst) -> lhs.asRec().at(inst.arg(0))),
                     //  instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(URI_TYPE.c(cInt.of(2,null)).asType()), (lhs, inst) -> inst.args().elements().map(u -> rel(u,lhs.asRec().at(u))).collect(new CommonUtil.RecCollector())),

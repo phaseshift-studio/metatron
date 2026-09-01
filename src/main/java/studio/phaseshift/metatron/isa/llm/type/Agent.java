@@ -34,7 +34,7 @@ import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.llm.mToolProvider;
 import studio.phaseshift.metatron.isa.llm.type.feature.ChatFeature;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
-import studio.phaseshift.metatron.isa.llm.type.feature.SessionFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.MessageFeature;
 import studio.phaseshift.metatron.isa.llm.type.feature.SystemFeature;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
@@ -54,12 +54,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -70,12 +65,7 @@ import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AGENT_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -173,7 +163,7 @@ public class Agent extends MRec {
                 continue;
             for (final fURI required : feature.requires())
                 if (!attached.contains(required))
-                    throw MTronException.of("feature %s requires feature %s to function properly", f.typeId(), required);
+                    throw MTronException.of("{{b}}%s{{X}} requires {{b}}%s{{X}} to function properly", f.typeId(), required);
         }
     }
 
@@ -208,8 +198,8 @@ public class Agent extends MRec {
      * Resolve the session VID from this agent's {@code session_feature} config.
      */
     private fURI resolveSessionVID() {
-        if (this.hasFeature(LLM_SESSION_FEATURE_TID)) {
-            final Obj sessionFeature = this.feature(LLM_SESSION_FEATURE_TID);
+        if (this.hasFeature(LLM_MESSAGE_FEATURE_TID)) {
+            final Obj sessionFeature = this.feature(LLM_MESSAGE_FEATURE_TID);
             if (!sessionFeature.isNoObj() && sessionFeature.isRec()) {
                 final Obj sessionField = sessionFeature.asRec().at(uri(SESSION));
                 if (sessionField.isUri())
@@ -254,15 +244,15 @@ public class Agent extends MRec {
          * @param prompt the task instruction sent to the translator agent
          * @return the resulting {@code chat_result::T} as a {@link ChatResult}
          */
-        public static ChatResult miniTask(final String agentName, final mModel model, final String prompt) {
-            final Agent translator = new Agent(mutableMap(
+        public static ChatResult miniChat(final String agentName, final mModel model, final String prompt) {
+            final Agent chatter = new Agent(mutableMap(
                     uri(NAME), str(agentName),
                     uri(FEATURE), lst(new ChatFeature(mutableMap(
                             uri(MODEL), model,
                             uri(RESPONSE), rec(uri(TO), noobj())),
                             LLM_CHAT_FEATURE_TID, null))), LLM_AGENT_TID, null);
             //model.logger().status(DEBUG, "mini-task launched by %s over %s", agentName, model.llm());
-            return translator.chat(prompt);
+            return chatter.chat(prompt);
         }
     }
 
@@ -443,8 +433,8 @@ public class Agent extends MRec {
                 if (chatFeature.isNoObj())
                     throw MTronException.of("agent has no chat feature: %s", this.vidOrTid());
                 final Rec chat = chatFeature.asRec();
-                if (this.hasFeature(LLM_SESSION_FEATURE_TID))
-                    SessionFeature.buildSession(this, service);
+                if (this.hasFeature(LLM_MESSAGE_FEATURE_TID))
+                    MessageFeature.buildSession(this, service);
                 //if (this.hasFeature(SKILL))
                 //    SkillFeature.buildSkills(this, service);
                 //if (this.hasFeature(TOOL))
@@ -630,18 +620,17 @@ public class Agent extends MRec {
 
     // ── Embed ──────────────────────────────────────────────────────
 
-    public Lst embed(final Obj toEmbed) {
+    public Lst embed(final String toEmbed) {
         if (this.first.getAndSet(false))
             this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
         final EmbeddingModel agent = LLMFactory.createEmbeddingInteraction(mModel.model(this.at(MODEL).asRec()));
        /* final Obj costObj = this.at(feat(COST));
         if (!costObj.isNoObj())
             agent.addListener(new CostCalculator(costObj.asRec().at(RATE));*/
-        final TextSegment embeddingString = TextSegment.from(Str.Helper.cleanString(toEmbed));
+        final TextSegment embeddingString = TextSegment.from(toEmbed);
         final Response<Embedding> response = agent.embed(embeddingString);
         if (null != response.tokenUsage())
             this.logger().info("embedding token usage: %s", response.tokenUsage());
-
         return vec(response.content().vectorAsDoubleArray());
     }
 

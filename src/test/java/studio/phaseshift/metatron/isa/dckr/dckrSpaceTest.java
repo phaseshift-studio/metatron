@@ -43,6 +43,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.dckr.dckrInstSet.DCKR_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -264,8 +265,16 @@ public class dckrSpaceTest extends AbstractSpaceTest {
         assumeDockerAvailable();
         final String stackName = "mtron-test-cud-" + System.currentTimeMillis() % 100000;
 
+        // The healthcheck exercises the compose `up -d --wait` path: the write
+        // must block until the service reports healthy before returning.
         final Obj config = rec(uri("services"),
-                rec(uri("nginx"), rec(uri("image"), str("nginx:alpine"))));
+                rec(uri("nginx"), rec(
+                        uri("image"), str("nginx:alpine"),
+                        uri("healthcheck"), rec(
+                                uri("test"), lst(str("CMD"), str("nginx"), str("-v")),
+                                uri("interval"), str("2s"),
+                                uri("retries"), jnt(30),
+                                uri("start_period"), str("2s")))));
         space.write(f("dtest:compose/" + stackName), config);
 
         final Path yamlFile = Path.of("/tmp", "metatron-docker", stackName, "docker-compose.yml");

@@ -151,10 +151,10 @@ public class mcpServer extends MRec {
                         .map(kv -> {
                             final Obj toolEntry = kv.second();
                             if (!toolEntry.isObjInst())
-                                return (Obj) rec(uri(NAME), str(kv.first().uriValue().toString()),
+                                return rec(uri(NAME), str(kv.first().uriValue().toString()),
                                         uri(DESCRIPTION), str(toolEntry.toShortString()),
                                         uri("inputSchema"), rec(uri(TYPE), str(OBJECT), uri("properties"), rec()));
-                            final ToolSpecification spec = mTool.mtronInstToolSpecification(mTool.mtronInstToTool(toolEntry.asInst())).get0();
+                            final ToolSpecification spec = mTool.mtronInstToolSpecification(mTool.mtronInstToDocs(toolEntry.asInst())).get0();
                             return (Obj) rec(uri(NAME), str(spec.name()),
                                     uri(DESCRIPTION), str(null == spec.description() ? "<no description>" : spec.description()),
                                     uri("inputSchema"), jsonSchemaToRec(spec.parameters()));
@@ -182,7 +182,7 @@ public class mcpServer extends MRec {
             final Poly<?, ?> args = toolInst.args().isNoObj() ? lst() : (toolInst.args().isLst() ?
                     lst(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).map(e -> normArg(e.getValue())).collect(Collectors.toList())) :
                     rec(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).collect(Collectors.toMap(e -> uri(e.getKey().toString()), e -> normArg(e.getValue())))));
-            final Obj toolLhs = argMap.containsKey(uri(LHS)) ? normArg(argMap.get(uri(LHS))) : noobj();
+            final Obj toolLhs = argMap.containsKey(uri(LHS)) && argMap.get(uri(LHS)) != null ? normArg(argMap.get(uri(LHS))) : noobj();
             final Obj toolResult = toolInst.args(args).apply(toolLhs);
             if (toolResult.isFail())
                 return mcpError(id, jnt(-32603), str(toolResult.asFail().message()));

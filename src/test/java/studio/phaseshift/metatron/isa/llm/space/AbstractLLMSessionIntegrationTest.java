@@ -23,6 +23,7 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -32,6 +33,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.llm.type.mModel;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -116,7 +118,10 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     /* ------------------------------------------------------------
      * Lifecycle
      * ---------------------------------------------------------- */
-
+    @BeforeAll
+    public static void setup() {
+        InstSet.importInstSet(f("/m/llm"));
+    }
 
     @BeforeEach
     void initSession() throws Exception {
@@ -205,7 +210,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     public void testWindowEnforcement() {
         // Write session with tight window before first chat
         final int smallMax = 3;
-        Router.writeToSpace(sessionVID(), SessionFeature.createSession(
+        Router.writeToSpace(sessionVID(), MessageFeature.createSession(
                 "test-agent", "test-user", "message_window", smallMax).selfVID(sessionVID()));
 
         // Build agent with matching small max
@@ -218,7 +223,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
             agent.chat("Say 'turn" + i + "' and nothing else.");
         }
 
-        final List<ChatMessage> windowed = agent.feature(LLM_SESSION_FEATURE_TID).<SessionFeature>as().memory().messages();
+        final List<ChatMessage> windowed = agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as().memory().messages();
         assertTrue(windowed.size() <= smallMax,
                 "window max=" + smallMax + ": expected <= " + smallMax
                         + " messages, got " + windowed.size());
@@ -399,7 +404,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
                 SESSION, uri(sessionVID()),
                 uri("mem"), auto_at_(sessionVID()).tryToInst(),
                 uri(ALGORITHM), rec(mutableMap(uri(NAME), uri("message_window"), uri(MAX), jnt(max))));
-        final SessionFeature session = new SessionFeature(sessionConfig.jvm(), LLM_SESSION_FEATURE_TID, null);
+        final MessageFeature session = new MessageFeature(sessionConfig.jvm(), LLM_MESSAGE_FEATURE_TID, null);
         final SystemFeature system = new SystemFeature(mutableMap(uri("base"), str("you are a helpful assistant")), LLM_SYSTEM_FEATURE_TID, null);
         final SkillFeature skill = new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null);
         final ToolFeature tool = new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null);

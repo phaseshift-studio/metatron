@@ -206,7 +206,7 @@ public interface QProc extends Rec {
                 final List<String> qSpace = space.qs().lstValue().stream().map(q -> q.asRec().at(PATTERN).uriValue()).map(fURI::toString).toList();
                 vid.qMap().keySet().stream().filter(k -> k.endsWith("q")).filter(k -> !k.equals(DOCQ)).forEach(k -> {
                     if (!qSpace.contains(k)) {
-                        throw MTronException.of("no %s query processor attached to %s", k, space.vidOrTid());
+                        throw MTronException.of("no %s query processor attached to %s [%s]", k, space.vidOrTid(), space.pattern());
                         //space.logger().warn("no %s query processor attached", k);
                         //check.set(false);
                     }

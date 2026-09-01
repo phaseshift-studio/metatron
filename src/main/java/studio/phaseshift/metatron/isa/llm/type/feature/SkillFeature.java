@@ -49,7 +49,7 @@ public class SkillFeature extends AbstractFeature {
     /**
      * The registered skills — mSkill elements, upserted by name.
      */
-    private final List skillRegistry = new ArrayList();
+    private final Map<fURI, mSkill> skillRegistry = new LinkedHashMap<>();
     /**
      * whether the seeds from our rec config have been hydrated yet
      */
@@ -73,9 +73,7 @@ public class SkillFeature extends AbstractFeature {
      * @param skill the skill to register
      */
     public void addSkill(final mSkill skill) {
-        final fURI key = key(skill);
-        this.skillRegistry.removeIf(s -> key(((Obj) s).<mSkill>as()).equals(key));
-        this.skillRegistry.add(skill);
+        this.skillRegistry.put(key(skill), skill);
     }
 
     /**
@@ -84,7 +82,7 @@ public class SkillFeature extends AbstractFeature {
      * @return the registered skills
      */
     public Lst skills() {
-        return lst((List) this.skillRegistry);
+        return lst(new ArrayList<>(this.skillRegistry.values()));
     }
 
     @Override
@@ -97,7 +95,7 @@ public class SkillFeature extends AbstractFeature {
             return;
         this.at(SKILL).elements().forEach(s -> {
             try {
-                this.addSkill(s.isUri() ? mSkill.of(fsSpace.staticObjToFile(s)) : mSkill.of(s.apply().asRec()));
+                this.addSkill(s.isUri() ? mSkill.of(fsSpace.staticObjToFile(s)) : mSkill.of(s.asRec()));
             } catch (final Exception e) {
                 this.logger().warn("unable to seed skill %s (ignoring): %s", s, e.getMessage());
             }
@@ -109,18 +107,16 @@ public class SkillFeature extends AbstractFeature {
         // ── 1. forward each skill's tools to the tool gateway (the single composition point) ──
         if (agent.hasFeature(LLM_TOOL_FEATURE_TID)) {
             final ToolFeature toolFeature = agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as();
-            this.skillRegistry.forEach(skill -> ((Obj) skill).<mSkill>as().tools().elements().forEach(t -> {
+            this.skillRegistry.values().forEach(skill -> skill.tools().elements().forEach(t -> {
                 try {
-                    toolFeature.addTool(mTool.toolElement(t));
+                    toolFeature.addTool(mTool.tool(t));
                 } catch (final Exception e) {
                     this.logger().warn("unable to forward tool %s of skill %s to tool feature: %s", t, skill, e.getMessage());
                 }
             }));
         }
         // ── 2. project the registry to LC4j skills (the markdown channel) ──
-        final List<Skill> allSkills = this.skillRegistry.stream()
-                .map(e -> ((Obj) e).<mSkill>as().toSkill())
-                .toList();
+        final List<Skill> allSkills = this.skillRegistry.values().stream().map(mSkill::toSkill).toList();
         if (allSkills.isEmpty())
             return noobj();
 

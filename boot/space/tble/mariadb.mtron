@@ -1,0 +1,35 @@
+[== mariadb — a tble space on a mariadb container aggregated through dckrspace.
+     a running container is left in place; a missing or stopped one is brought
+     up via docker:compose (healthcheck + up --wait) so the server is accepting
+     connections before the space is built.  the only host requirement is docker.
+     args (the caller supplies the defaults from boot/args; s* = server, db* = db):
+       saddr, sport, simg, db, dbuser, dbpass ==]
+||inst?#{?}<=#{?}(saddr=>uri::T,sport=>int::T,simg=>str::T,database=>str::T,dbuser=>str::T,password=>str::T){
+  print("mariadb: pulling container for ${!*database}").
+  from(docker:container/metatron_mariadb).
+  else(
+    *simg -< [services => -< [mariadb => -< [
+                                    image       => ${!*simg},
+                                    restart     => 'unless-stopped',
+                                    environment => -< [MYSQL_ROOT_PASSWORD=>${!*password},
+                                                        MYSQL_DATABASE    =>${!*database},
+                                                        MYSQL_USER        =>${!*dbuser},
+                                                        MYSQL_PASSWORD    =>${!*password}],
+                                    ports       => -< ['${!*sport}:3306'],
+                                    healthcheck => -< [test         => -< ['CMD','mariadb-admin','ping','--silent',
+                                                                           '-h','127.0.0.1',
+                                                                           '-u${!*dbuser}','-p${!*password}'],
+                                                        interval     => '5s',
+                                                        retries      => 60,
+                                                        start_period => '5s'],
+                                    volumes     => -< ['metatron_mariadb:/var/lib/mysql']]
+                                  ],
+  volumes => -< [metatron_mariadb => -< [driver => 'local']] ]
+    .to(docker:compose/metatron_mariadb)).
+  print("mariadb: container loaded ${_}").
+  -<[pattern => metatron:#,
+     host    => <mariadb://${!*saddr}:${!*sport}/${!*database}?user=${!*dbuser}&password=${!*password}>,
+     driver  => <org.mariadb.jdbc.Driver>,
+     table   => [,],
+     q       => [incrq::[=>],subq::[=>]],
+     route   => -< [metatron: => <>]]@</sys/space/mariadb>.as(tblespace::T) }

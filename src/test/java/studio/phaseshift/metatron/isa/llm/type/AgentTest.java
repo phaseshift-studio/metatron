@@ -106,7 +106,7 @@ public class AgentTest extends AbstractMetatronTest {
                                 uri(ALGORITHM), rec(mutableMap(
                                         uri(MAX), jnt(15)
                                 ))
-                        )))).tid(LLM_SESSION_FEATURE_TID),
+                        )))).tid(LLM_MESSAGE_FEATURE_TID),
                 rec(mutableMap(uri(MODEL), rec(mutableMap(
                         uri(LLM), uri("qwen3:8b"),
                         uri(PROTOCOL), uri(PROVIDER_NAME),
@@ -132,7 +132,7 @@ public class AgentTest extends AbstractMetatronTest {
         assertFalse(agent.feature(LLM_NOTE_FEATURE_TID).isNoObj());
         assertFalse(agent.feature(LLM_CHAT_FEATURE_TID).isNoObj());
         assertFalse(agent.feature(LLM_FEATURE_TID.extend("rag")).isNoObj());
-        assertFalse(agent.feature(LLM_SESSION_FEATURE_TID).isNoObj());
+        assertFalse(agent.feature(LLM_MESSAGE_FEATURE_TID).isNoObj());
     }
 
     @Test

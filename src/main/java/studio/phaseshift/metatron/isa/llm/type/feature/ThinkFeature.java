@@ -33,9 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_THINK_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.THINKING_MESSAGE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -49,7 +47,9 @@ public class ThinkFeature extends AbstractFeature {
     private StringBuilder full = new StringBuilder();
     private String lastRendered = "";
     private final AtomicBoolean thinkDone = new AtomicBoolean(false);
-    /** The thought row persisted for the current chat — attached to the chat_result as a ref. */
+    /**
+     * The thought row persisted for the current chat — attached to the chat_result as a ref.
+     */
     private Obj lastThink;
 
     public ThinkFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -90,7 +90,7 @@ public class ThinkFeature extends AbstractFeature {
             final fURI thinkWriteURI = agent.feature(LLM_THINK_FEATURE_TID).asRec().at(ROOT).orElse(agent.at(ROOT).uriValue().extend(THINK).toUri()).uriValue().extend("_").addQ(INCRQ);
             final Rec thought = rec(mutableMap(uri(TEXT), str(this.full.toString().trim())), THINKING_MESSAGE_TID, null);
             thought.recValue().put(uri(TIME), mathInstSet.nowDatetime());
-            thought.recValue().put(uri(SESSION), agent.feature(LLM_SESSION_FEATURE_TID).orElse(rec()).at(SESSION));
+            thought.recValue().put(uri(SESSION), agent.feature(LLM_MESSAGE_FEATURE_TID).orElse(rec()).at(SESSION));
             thought.recValue().put(uri(DEPTH), jnt(agent.chatDepth()));
             thought.recValue().put(uri(CHAT_ID), jnt(agent.chatId()));
             this.buffer = new StringBuilder();

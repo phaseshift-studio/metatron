@@ -75,6 +75,9 @@ public final class Tokens {
     public static final String IN = "in";
     public static final String OUT = "out";
     public static final String TOTAL = "total";
+    public static final String CONTEXT = "context";
+    public static final String THRESHOLD = "threshold";
+    public static final String COMPRESSION = "compression";
     public static final String COEFFICIENT = "coefficient";
     public static final String QUERY = "query";
     public static final String DOM = "dom";
@@ -275,6 +278,7 @@ public final class Tokens {
     public static final String STYLE = "style";
     public static final String ROW = "row";
     public static final String METADATA = "metadata";
+    public static final String META = "meta";
     public static final String HR = "hr";
     //public static final String ON_RECV = "on_recv";
     public static final String HOSTNAME = "HOSTNAME";

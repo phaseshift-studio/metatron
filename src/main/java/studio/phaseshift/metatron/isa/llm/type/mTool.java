@@ -30,13 +30,11 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -46,20 +44,16 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.Docs.doc;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_TID;
 import static studio.phaseshift.metatron.isa.llm.parser.JsonSchemaGenerator.objToSchema;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -72,24 +66,8 @@ public class mTool extends MRec {
      */
     public static final ConcurrentHashMap<String, Obj> resultStash = new ConcurrentHashMap<>();
 
-    public static final Type LLM_TOOL_TYPE = docWrap(Type.Builder.build().tid(REC_TID).vid(LLM_TOOL_TID).isaPredicate(rec(
-                    uri(INST), T(ALL),
-                    uri(NAME), URI_TYPE,
-                    uri(DESC), STR_TYPE,
-                    uri(ARG).maybe(), T(ALL) /*rec(URI_TYPE, T(ALL)).maybe())*/)).create(),
-            "a tool specification", "",
-            Map.of(
-                    uri(NAME), "tool name",
-                    uri(DESC), "tool description",
-                    uri(ARG).maybe(), "tool arguments"),
-            "a tool function for the llm to use");
-
     public mTool(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-    }
-
-    public static mTool tool(final Rec tool) {
-        return new mTool(tool.jvm(), LLM_TOOL_TID, tool.vid());
     }
 
     /**
@@ -101,21 +79,33 @@ public class mTool extends MRec {
      * @param element the tool element to normalize
      * @return the canonical mTool
      */
-    public static mTool toolElement(final Obj element) {
+    public static mTool tool(final Obj element) {
         if (element instanceof mTool mt)
             return mt;
+        if (element instanceof QCollection.Docs toolDocs) {
+            final Map<Obj, Obj> newJVM = new LinkedHashMap<>();
+            newJVM.put(uri(INST), toolDocs.at(uri(OBJ)));
+            newJVM.put(uri(NAME), uri(toolName(toolDocs.at(uri(OBJ)).tid())));
+            newJVM.put(uri(DESC), toolDocs.at(uri(DESC)));
+            newJVM.put(uri(ARGS), toolDocs.at(ARG));
+            return new mTool(newJVM, LLM_TOOL_TID, null);
+        }
         if (element instanceof Inst inst) {
-            final QCollection.Docs docs = mtronInstToTool(inst);
+            final QCollection.Docs docs = mtronInstToDocs(inst);
             final Map<Obj, Obj> jvm = new java.util.LinkedHashMap<>(docs.jvm());
-            jvm.putIfAbsent(uri(INST), docs.atDirect(uri(OBJ)));
+            jvm.putIfAbsent(uri(INST), inst);
             jvm.putIfAbsent(uri(NAME), uri(toolName(inst.tid())));
             jvm.putIfAbsent(uri(DESC), str("a tool forwarded from a skill"));
+            jvm.putIfAbsent(uri(ARGS), docs.at(ARG));
             return new mTool(jvm, LLM_TOOL_TID, inst.vid());
         }
         final Obj obj = (element.asRec().has(uri(OBJ)) ? element.asRec().atDirect(uri(OBJ)) : element);
         if (obj.isObjInst())
-            return tool(mtronInstToTool(obj.asInst()));
-        return tool(element.asRec());
+            return tool(mtronInstToDocs(obj.asInst()));
+        if (element.isRec()) {
+            return new mTool(element.jvm(), LLM_TOOL_TID, element.vid());
+        }
+        throw MTronException.of("unknown object can not be converted to tool: %s", element);
     }
 
     /**
@@ -127,7 +117,7 @@ public class mTool extends MRec {
     public fURI name() {
         if (this.has(NAME))
             return this.at(NAME).uriValue();
-        final Obj obj = this.atDirect(uri(OBJ));
+        final Obj obj = this.atDirect(uri(INST));
         if (obj.isObjInst())
             return f(mTool.toolName(obj.asInst().tid()));
         return this.tid();
@@ -143,8 +133,12 @@ public class mTool extends MRec {
         return tid.basePath().toString().replaceAll("^/+", "").replace("/", "_");
     }
 
+    public Tuple.Pair<ToolSpecification, ToolExecutor> toolSpecification() {
+        return mtronInstToolSpecification(doc(this.at(INST).asInst()));
+    }
+
     public static Tuple.Pair<ToolSpecification, ToolExecutor> mtronInstToolSpecification(final QCollection.Docs doc) {
-        final Inst inst = doc.at(OBJ);
+        final Inst inst = doc.atDirect(uri(OBJ));
         JsonObjectSchema.Builder parameters = new JsonObjectSchema.Builder();
         List<String> required = new ArrayList<>();
         if (!inst.tid().dom().isZero()) {
@@ -184,25 +178,17 @@ public class mTool extends MRec {
                     rec(arguments.entrySet().stream().filter(e -> !e.getKey().equals(LHS)).collect(Collectors.toMap(e -> uri(e.getKey()), e -> ObjmtronSerializer.parse(e.getValue().toString())))));
             final Obj result = inst
                     .args(args)
-                    .apply(arguments.containsKey(LHS) ? ObjmtronSerializer.compact().read(arguments.get(LHS).toString()) : noobj());
-            inst.logger().debug("evaluating mtron_inst tool: %s => %s => %s", arguments.getOrDefault(LHS, noobj()), inst, result);
+                    .apply(ObjmtronSerializer.compact().read(Optional.ofNullable(arguments.get(LHS)).orElse(noobj()).toString()));
+            inst.logger().debug("evaluating mtron_inst tool: %s => %s => %s", Optional.ofNullable(arguments.get(LHS)).orElse(noobj()), inst, result);
             // Stash the raw Obj so ToolFeature can embed it in the monad tree
             resultStash.put(toolExecutionRequest.id(), result);
-            final String stringResult = ObjmtronSerializer.compact().write(result);
+            final String stringResult = result.toCleanString();
             return (null == stringResult || stringResult.isBlank()) ? "noobj" : stringResult; // prevents llm protocol from failing on empty or null results
         };
         return Tuple.Pair.with(toolSpecBuilder.build(), toolExecutor);
     }
 
-    public static Rec mtronDocToTool(final QCollection.Docs doc) {
-        // atDirect — the Docs stores the inst at OBJ (not INST) and at() would
-        // auto-resolve it; it must be read raw.
-        final Inst inst = doc.atDirect(uri(OBJ));
-        return rec(mutableMap(uri(INST), inst, uri(NAME), uri(inst.tid().basePath()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
-    }
-
-
-    public static QCollection.Docs mtronInstToTool(final Inst inst) {
+    public static QCollection.Docs mtronInstToDocs(final Inst inst) {
         final Obj found = Router.readFromSpace(inst.tid().addQ(DOCQ)).stream().findFirst().orElse(noobj());
         final QCollection.Docs doc = QCollection.isNoDocs(found) ? doc(inst,
                 inst.dom().tid().toString(),
@@ -211,7 +197,7 @@ public class mTool extends MRec {
                         Rel::first,
                         e -> e.second().tid().toString()
                 )),
-                "<no description>") : (QCollection.Docs) found;
+                "<no description>") : doc(found.asRec());
         inst.logger().debug("building ai compliant tool from mtron inst: %s", inst.tid());
         return doc;//rec(mutableMap(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
     }

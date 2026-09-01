@@ -1,0 +1,100 @@
+[== spaces.boot.mtron — the docker-only boot profile.
+     metatron is installed on the host (the curl installer); the only thing
+     this boot needs from the system is DOCKER.  every space backend runs as
+     a container aggregated through dckrspace, and each backend gets its
+     space registered on top:
+
+       metatron:#   tble space   mariadb  container (127.0.0.1:3308 -> 3306)
+       g:#          grph space   gremlin  container (ws://127.0.0.1:8182/gremlin)
+       embed:#      vec  space   chromadb container (http://127.0.0.1:8025/api/v2)
+
+     launch:
+       bin/metatron -b boot/spaces.boot.mtron "[log=>info]"
+
+     override anything in boot/args:
+       bin/metatron -b boot/spaces.boot.mtron "[log=>info,
+                                                user=>><name>,
+                                                mariadb/port=>3310,
+                                                chroma/port=>8026]"
+ ==]
+[== every value has a default; override freely ==]
+[== boot args ==]
+[user     => 'metatron',
+ mariadb  =>
+  [host     => <127.0.0.1>,
+   port     => 3308,
+   image    => 'mariadb:11.2',
+   database => 'metatron',
+   user     => 'metatron',
+   password => 'metatron'],
+ gremlin  =>
+  [host => <127.0.0.1>,
+   port => 8182,
+   image=> 'janusgraph/janusgraph:1.1.0'],
+ chroma   =>
+  [host => <127.0.0.1>,
+   port => 8025,
+   image=> 'chromadb/chroma:1.5.3'],
+ header   => """
+{{y}} ______   ______   ______   ______  ______                         
+/ |      | |  | \ | |  | | | |     | |                             
+'------. | |__|_/ | |__| | | |     | |----                         
+ ____|_/ |_|  {{r}}    |_|  |_| |_|____ |_|____    {{c}}PhaseShift Studio{{/c}}                                                                               
+   ______   ______ {{w}}  _________   ______   _        ______  ______  
+  / |      | |  | | | | | | | \ | |{{y}}  | \ | |      | |     | |  | \ 
+  '------. | |__| | | | | | | | | |__|_/ | | {{r}}  _  | |---- | |__| | 
+   ____|_/ |_|  |_| |_| |_| |_| |_|      |_|__|_| |_|____ |_|  \_\ {{X}}                                                                         
+"""]
+[===============]
+print(*boot/args/header);
+print("{{r}}----{{y}}----{{r}}----\n{{g}}*{{y}}boot/args{{X}}: ",
+      *boot/args,
+      "\n{{y}}----{{r}}----{{y}}----{{X}}\n");
+[== instruction sets ==]
+print("{{y}}loading instruction sets\n{{X}}");
+import(/m/mach/io);
+import(/m/mach/ui,ui);
+import(/m/tble);
+import(/m/grph);
+import(/m/vec);
+import(/m/dckr);
+[== module files — pull the boot modules out of the repo (cwd under bin/metatron) ==]
+fsspace::[pattern => fs:#,
+          q       => [mimeq::[=>]],
+          route   => [fs: => <.>]]@/sys/space/fs/root;
+[== the docker space itself ==]
+print("{{y}}dckrspace via the docker socket\n{{X}}");
+<unix:///var/run/docker.sock>.<fs:boot/space/dckr/socket.mtron>();
+[== space backends — container via dckr, then the space ==]
+print("{{y}}mariadb : tble space\n{{X}}");
+<fs:boot/space/tble/mariadb.mtron>(host    => !*boot/args/mariadb/host,
+                                   port    => !*boot/args/mariadb/port,
+                                   image   => !*boot/args/mariadb/image,
+                                   database=> !*boot/args/mariadb/database,
+                                   user    => !*boot/args/mariadb/user,
+                                   password=> !*boot/args/mariadb/password);
+print("{{y}}gremlin : grph space\n{{X}}");
+<fs:boot/space/grph/gremlin.mtron>(host => !*boot/args/gremlin/host,
+                                   port => !*boot/args/gremlin/port,
+                                   image=> !*boot/args/gremlin/image);
+print("{{y}}chromadb: vec space\n{{X}}");
+<fs:boot/space/vec/chromadb.mtron>(host => !*boot/args/chroma/host,
+                                   port => !*boot/args/chroma/port,
+                                   image=> !*boot/args/chroma/image);
+[== home ==]
+!*boot/args/user.<fs:boot/space/mem/home.mtron>();
+[== sample probes — prove each backend is actually answering ==]
+print("{{y}}probing the backends\n{{X}}");
+metatron:welcome -> [note=>'metatron docker boot', n=>1];
+print("g:          |V|=", *g:V.count(), " |E|=", *g:E.count(), "\n");
+embed:notes -> [msg=>'metatron docker boot', n=>1];
+[== console ==]
+console::[header=>!*boot/args/header]@/usr/avatar/console;
+["",
+ "*/sys/space/+/+/.<<",
+ "*g:V.count()",
+ "*/sys/space/+/.<<"].mapp(|plus("\n"))>-.sum?str<=str{*}().to(body);
+panel::[title=>"{{y}}expression to explore{{b}}",
+        style=>[border=>continuous,foreground=>"{{b}}"],
+        body=>!*body].display();
+

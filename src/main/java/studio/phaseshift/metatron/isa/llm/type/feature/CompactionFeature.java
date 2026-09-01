@@ -19,107 +19,204 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
-import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
+import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
-import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
-import static studio.phaseshift.metatron.isa.llm.type.mModel.model;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class CompactionFeature extends AbstractFeature {
 
-    private static final String COMPACTION_PROMPT_1 =
-            """
-            Summarize the following conversation history concisely.
-            
-            ## Capture:
-            1. **User's Objective** - What the user wants to achieve (be specific and detailed)
-            2. **Key Decisions** - What was decided or agreed upon
-            3. **Files/Resources** - Files, directories, URLs mentioned
-            4. **Actions Taken** - File edits, commands run, etc.
-            
-            Output a summary message directly. No preamble or explanation.
-            
-            ## Conversation:
-            %s
-            """;
-
-    private static final String COMPACTION_PROMPT_2 =
-            """
-            You have been working on the task described above but have not yet completed it.
-            Write a continuation summary that will allow you (or another instance of yourself) to resume work efficiently 
-            in a future context window where the conversation history will be replaced with this summary.
-            
-            Your summary should be structured, concise, and actionable. Include:
-            1. **Task Overview**: The user's core request, success criteria, and constraints.
-            2. **Current State**: What has been completed, current progress, and any pending steps.\s
-            3. **Key Details**: User preferences, domain-specific details, or promises made to the user.\s
-            
-            Write in a way that enables immediate resumption of the task. Wrap your summary in <summary> tags.\s
-            
-            ## Conversation:
-            %s
-            """;
-
-    private static final int EXTRA_MESSAGE_OVERFLOW = 5;
-
-    private Inst compact() {
-        return instC(LLM_COMPACTION_FEATURE_TID.extend("compact").dom(ALL.maybe()).rng(COMPACTION_MESSAGE_TID), lst(LLM_AGENT_TYPE, LLM_MODEL_TYPE, lst(LLM_MESSAGE_TYPE)), (lhs, inst) -> {
-            // create the conversation history by appending message history together
-            final StringBuilder conversationHistory = new StringBuilder();
-            final List<Obj> messages = inst.arg(2).lstValue();
-            for (final Obj message : messages) {
-                final Rec msg = message.asRec();
-                conversationHistory.append(msg.toCleanString()).append("\n-----\n");
-            }
-            // create prompt by using one of the static templates and appending conversation history to it
-            final Agent agent = agent(inst.arg(0).asRec());
-            final ChatResult result = Agent.Helper.miniTask(agent.at(NAME).strValue() + ":compaction", model(inst.arg(1).asRec()), COMPACTION_PROMPT_2.formatted(conversationHistory.toString()));
-            // create compaction message and write it to message store
-            final SessionFeature sessionFeature = (SessionFeature) agent.feature(LLM_SESSION_FEATURE_TID);
-            final Rec compactionMessage = sessionFeature.store()
-                    .addMessage(MessageBuilder
-                            .buildCompactionMessage()
-                            .time()
-                            .text(result.at(RESPONSE).asRec().at(CHAT).toCleanString())
-                            .create());
-            // add the last n-messages from previous conversation after compaction feature so current context is preserved
-            final int messageRange = Math.min(messages.size(), EXTRA_MESSAGE_OVERFLOW);
-            for (int i = 0; i < messageRange; i++) {
-                sessionFeature.store().addMessage(messages.get(i).asRec());
-            }
-            return compactionMessage;
-        });
-    }
+    /**
+     * The background compaction currently running, if any.  Queued in
+     * {@link #onCompleteResponse} when the agent appends a
+     * {@code <<mtron:compaction>>} block or the context passes the auto
+     * threshold; the sentinel it writes is picked up by the store's
+     * {@code stopAt} on the next chat.
+     */
+    final AtomicReference<FutureObj<Obj>> compactionTask = new AtomicReference<>();
 
     public CompactionFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
 
     @Override
-    public void onAgentCtor(final Agent agent) {
-        // create mSkill with compact() tool and register with SkillFeature
+    public Set<fURI> requires() {
+        return Set.of(LLM_SKILL_FEATURE_TID, LLM_MESSAGE_FEATURE_TID);
+    }
+
+    /**
+     * Register this feature's skill with the SkillFeature gateway — the
+     * gateway owns the skill channel; this feature is a contributor.  The
+     * skill teaches the model to emit a {@code <<mtron:compaction>>} block,
+     * whose body is the same argument rec the {@code compact()} instruction
+     * takes.
+     */
+    public void registerSkill(final Agent agent) {
+        if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
+            return;
+        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(mutableMap(
+                uri(NAME), uri(LLM_COMPACTION_FEATURE_TID.name()),
+                uri(DESC), str("compact the conversation history into a resume summary when the context grows large"),
+                uri(CONTENT), str("""
+                                  When the conversation history is getting large, you can append a `<<mtron:compaction>>`
+                                  block to your response — a deferred `compact()` call, where the block rec is the same
+                                  argument rec `compact()` takes (all optional):
+                                  
+                                      <<mtron:compaction>>[=>]<</mtron:compaction>>
+                                  
+                                  The compaction runs in the background — acknowledge that it is queued and respond
+                                  normally. On the next chat, the conversation history is replaced with a resume summary
+                                  plus the most recent messages. Prefer this over continuing with an unwieldy history.
+                                  
+                                  **IMPORTANT**: This skill is about formatting your response, not calling a function. The
+                                  block is stripped from what the user sees.
+                                  """)))));
     }
 
     @Override
-    public Set<fURI> requires() {
-        return Set.of(LLM_SKILL_FEATURE_TID);
+    public Obj onBeforeChat(final Agent agent) {
+        this.registerSkill(agent);
+        this.surfaceResumeSummary(agent);
+        return noobj();
     }
 
+    /**
+     * Surface the resume summary from the newest compaction sentinel as a
+     * system-message contribution — the sentinel bounds the window (stopAt)
+     * but is not itself a message, so its summary rides the system channel
+     * (LC4j has no compaction message type).
+     */
+    private void surfaceResumeSummary(final Agent agent) {
+        if (!agent.hasFeature(LLM_MESSAGE_FEATURE_TID) || !agent.hasFeature(LLM_SYSTEM_FEATURE_TID))
+            return;
+        final MessageFeature messageFeature = agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as();
+        final fURI sessionVID = messageFeature.at(SESSION).uriValue();
+        if (null == sessionVID || null == messageFeature.store())
+            return;
+        final List<Rec> window = messageFeature.store().query(sessionVID).stopAt(COMPACTION_MESSAGE_TID).apply();
+        if (window.isEmpty() || !window.get(0).tid().equals(COMPACTION_MESSAGE_TID))
+            return;
+        final String summary = Str.Helper.cleanString(window.get(0).at(TEXT).orElse(str("")));
+        if (summary.isBlank())
+            return;
+        agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage("""
+                                                                                   resume summary from a prior compaction:
+                                                                                   
+                                                                                   %s
+                                                                                   """.formatted(summary));
+    }
 
+    @Override
+    public void onCompleteResponse(final Agent agent, final ChatResult result) {
+        // 1. detect the <<mtron:compaction>> watermark the model emitted
+        Rec block = null;
+        final Obj blocks = result.at(uri(BLOCK)).orElse(noobj());
+        if (!blocks.isNoObj()) {
+            final Obj signal = blocks.asRec().at(uri("compaction"));
+            if (!signal.isNoObj())
+                block = signal.asRec();
+        }
+        if (!agent.hasFeature(LLM_MESSAGE_FEATURE_TID)) {
+            if (null != block)
+                LOG.warn("compaction requires the session feature");
+            return;
+        }
+        final MessageFeature messageFeature = agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as();
+        final fURI sessionVID = messageFeature.at(SESSION).uriValue();
+        if (null == sessionVID || sessionVID.isEmpty()) {
+            if (null != block)
+                LOG.warn("compaction requires an anchored session");
+            return;
+        }
+        // 2. auto-trigger when there is no watermark and the context is past threshold
+        if (null == block && !this.shouldAutoCompact(messageFeature, sessionVID))
+            return;
+        // 3. don't queue a second compaction while one is still running
+        final FutureObj<Obj> running = this.compactionTask.get();
+        if (null != running && !running.isDone())
+            return;
+        // 4. queue the background compaction — the block rec is a deferred compact() call
+        final fURI agentHome = agent.at(ROOT).uriValue();
+        final Rec config = this.resolveConfig(agent, null == block ? rec() : block);
+        final fURI home = agentHome;
+        final fURI sess = sessionVID;
+        final CoreThread thread = CoreThread.core(instLambda((lhs, inst) -> {
+            try {
+                final Obj applied = compactSession(home, sess, config);
+                if (applied.isFail())
+                    LOG.warn("compaction failed: %s", Str.Helper.cleanString(applied));
+                return applied;
+            } catch (final Exception e) {
+                LOG.error("compaction failed: %s", e.getMessage());
+                return noobj();
+            }
+        }));
+        this.compactionTask.set(thread.applyAsync());
+        LOG.info("compaction queued for session %s", sess);
+    }
+
+    /**
+     * The argument rec for compact() — the block rec (model/prompt) merged
+     * over the feature's model default.  The agent/session are resolved by the
+     * caller, so the block is exactly a deferred compact() call.
+     */
+    Rec resolveConfig(final Agent agent, final Rec block) {
+        return rec(uri(MODEL), block.at(uri(MODEL)).orElse(this.at(uri(MODEL))),
+                uri(PROMPT), block.at(uri(PROMPT)));
+    }
+
+    /**
+     * Whether the message payload has reached the compaction threshold — the
+     * estimated token count of the sentinel-stopped window divided by the
+     * model's context window size.  Disabled when the context size is unknown.
+     */
+    private boolean shouldAutoCompact(final MessageFeature messageFeature, final fURI sessionVID) {
+        final double threshold = this.at(THRESHOLD).orElse(real(0.8)).realValue();
+        final int contextWindow = this.resolveContextWindow();
+        if (contextWindow <= 0)
+            return false;
+        final MessageFeature.DefaultTokenCountEstimator estimator = MessageFeature.DefaultTokenCountEstimator.singleton();
+        final int payloadTokens = messageFeature.store().query(sessionVID).stopAt(COMPACTION_MESSAGE_TID).apply()
+                .stream().mapToInt(r -> estimator.estimateTokenCountInText(Str.Helper.cleanString(r.at(TEXT).orElse(str(""))))).sum();
+        return ((double) payloadTokens / (double) contextWindow) >= threshold;
+    }
+
+    /**
+     * The model's context window size in tokens: the feature's explicit
+     * {@code context}, else the model rec's advertised {@code context} (Ollama
+     * populates it), else 0 (unknown — auto-compaction disabled).
+     */
+    private int resolveContextWindow() {
+        final Obj featureContext = this.at(uri(CONTEXT));
+        if (featureContext.isInt())
+            return featureContext.intValue().intValue();
+        final Obj model = this.at(uri(MODEL));
+        if (model.isRec()) {
+            final Obj context = model.asRec().at(uri(CONTEXT));
+            if (context.isInt())
+                return context.intValue().intValue();
+        }
+        return 0;
+    }
 }

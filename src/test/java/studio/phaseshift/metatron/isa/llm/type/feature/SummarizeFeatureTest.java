@@ -76,7 +76,7 @@ public class SummarizeFeatureTest extends AbstractFeatureTest {
     @Test
     public void testBlockDispatchQueuesTask() {
         final SummarizeFeature summarize = summarize();
-        final SessionFeature session = new SessionFeature(mutableMap(uri(SESSION), uri("/usr/test/session/1")), LLM_SESSION_FEATURE_TID, null);
+        final MessageFeature session = new MessageFeature(mutableMap(uri(SESSION), uri("/usr/test/session/1")), LLM_MESSAGE_FEATURE_TID, null);
         final Agent agent = agentWith(summarize, session);
         summarize.onCompleteResponse(agent, chatResultWithSummarizeBlock());
         assertNotNull(summarize.summaryTask.get(), "a summarize block should queue a background task");
@@ -108,7 +108,7 @@ public class SummarizeFeatureTest extends AbstractFeatureTest {
         Router.writeToSpace(claim2, rec(uri(TEXT), str("the problem claim"), uri(KIND), uri("problem"),
                 uri(SOURCE), lst(auto_from_(uri("/usr/test/message/31")).tryToInst())).tid(LLM_CLAIM_TID).selfVID(claim2));
         final fURI looseEnd = f("/usr/test/sum/loose_end/1");
-        Router.writeToSpace(looseEnd, rec(uri(TITLE), str("open thread"), uri(DESC), str("...")).tid(LLM_LOOSE_END_TID).selfVID(looseEnd));
+        Router.writeToSpace(looseEnd, rec(uri(TITLE), str("open thread"), uri(STATUS), uri("open"), uri(DESC), str("...")).tid(LLM_LOOSE_END_TID).selfVID(looseEnd));
         final fURI concept = f("/usr/test/concept/AgentExtractor");
         Router.writeToSpace(concept, rec(uri(MESSAGE), lst(auto_from_(uri("/usr/test/message/28")).tryToInst())).selfVID(concept));
 

@@ -128,7 +128,7 @@ public final class QCollection {
             .create();
     //
     public static final String INCRQ = "incrq";
-    public static final fURI INCRQ_PATTERN = f("incrq");
+    public static final fURI INCRQ_PATTERN = f(INCRQ);
     public static final fURI INCRQ_TID = QPROC_TID.extend(INCRQ_PATTERN);
     public static final Type INCRQ_TYPE = Type.Builder.build()
             .tid(QPROC_TID)
@@ -136,7 +136,8 @@ public final class QCollection {
             .constructor(QCollection::incrQ)
             .create();
     //
-    public static final fURI EMBEDQ_PATTERN = f("embedq");
+    public static final String EMBEDQ = "embedq";
+    public static final fURI EMBEDQ_PATTERN = f(EMBEDQ);
     public static final fURI EMBEDQ_TID = QPROC_TID.extend(EMBEDQ_PATTERN);
     public static final Type EMBEDQ_TYPE = Type.Builder.build()
             .tid(QPROC_TID)
@@ -888,6 +889,10 @@ public final class QCollection {
                     uri(ARGS), null == argDescription || argDescription.isEmpty() ? noobj() : rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
                     uri(DESC), null == description || description.isBlank() ? noobj() : str(description),
                     uri(EXAMPLE), (ex.isEmpty() ? noobj() : lst((List) ex))), DOCS_TID, null);
+        }
+
+        public static Docs doc(final Inst inst) {
+            return Router.readFromSpace(inst.tid().addQ(DOCQ)).orElse(NO_DOCS).as();
         }
     }
 }

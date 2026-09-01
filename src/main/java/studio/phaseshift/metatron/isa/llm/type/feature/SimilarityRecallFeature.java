@@ -7,7 +7,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 public class SimilarityRecallFeature extends AbstractFeature {
     public SimilarityRecallFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -19,7 +18,7 @@ public class SimilarityRecallFeature extends AbstractFeature {
         final String rawMessage = agent.userMessage();
         if (rawMessage == null || rawMessage.isBlank()) return noobj();
         try {
-            final Obj queryVec = agent.embed(str(rawMessage));
+            final Obj queryVec = agent.embed(rawMessage);
             if (queryVec == null || queryVec.isNoObj()) {
                 agent.logger().debug("similarity recall: embed returned noobj");
                 return noobj();

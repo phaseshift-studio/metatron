@@ -4,10 +4,13 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.service.tool.ToolExecutor;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.Tuple;
@@ -37,13 +40,18 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /**
  * Tests for the {@code tool::T} type ({@link mTool}) — {@link mTool#toolName}
  * tid flattening, the mtron↔LC4j tool conversions in both directions
- * ({@link mTool#mtronInstToolSpecification}, {@link mTool#mtronInstToTool},
- * {@link mTool#toolToMtronDoc}, {@link mTool#mtronDocToTool}), the generated
+ * ({@link mTool#mtronInstToolSpecification}, {@link mTool#mtronInstToDocs},
+ * {@link mTool#toolToMtronDoc}s, the generated
  * executor (evaluation + {@link mTool#resultStash}), and the tool::T shape.
  */
-public class mToolTest extends studio.phaseshift.metatron.AbstractMetatronTest {
+public class mToolTest extends AbstractMetatronTest {
 
     private static final fURI TOOL_TID = f("/m/test/tool");
+
+    @BeforeAll
+    public static void setup() {
+        InstSet.importInstSet(f("/m/llm"));
+    }
 
     /**
      * A tool inst: optional str dom (lhs), one named {@code query} str arg.
@@ -72,7 +80,7 @@ public class mToolTest extends studio.phaseshift.metatron.AbstractMetatronTest {
     public void testMtronInstToToolBuildsDefaultDocs() {
         final Inst inst = instC(f("/m/test/undocumented").dom(ALL.maybe()).rng(STR_TID.maybeSome()), lst(STR_TYPE),
                 (lhs, i) -> str("ok"));
-        final QCollection.Docs docs = mTool.mtronInstToTool(inst);
+        final QCollection.Docs docs = mTool.mtronInstToDocs(inst);
         assertNotNull(docs, "an inst without docq docs still yields a Docs");
         assertEquals(inst, docs.at(OBJ), "the Docs carries the inst");
         assertEquals("<no description>", docs.description(), "undocumented inst gets a default description");
@@ -110,9 +118,9 @@ public class mToolTest extends studio.phaseshift.metatron.AbstractMetatronTest {
 
     @Test
     public void testMtronDocToToolRec() {
-        final Rec toolRec = mTool.mtronDocToTool(testToolDoc());
+        final Rec toolRec = mTool.tool(testToolDoc());
         assertEquals(LLM_TOOL_TID, toolRec.tid(), "the rec is a tool::T");
-        assertEquals("/m/test/tool", toolRec.at(uri(NAME)).uriValue().toString(), "name is the inst's base path");
+        assertEquals("m_test_tool", toolRec.at(uri(NAME)).uriValue().toString(), "name is the inst's base path");
         assertEquals("a test tool", toolRec.at(uri(DESC)).strValue(), "description from the doc");
         assertFalse(toolRec.at(uri(INST)).isNoObj(), "the inst is carried on the rec");
     }
@@ -173,7 +181,13 @@ public class mToolTest extends studio.phaseshift.metatron.AbstractMetatronTest {
         final Map<Obj, Obj> noInst = new LinkedHashMap<>();
         noInst.put(uri(NAME), uri("n"));
         noInst.put(uri(DESC), str("d"));
-        assertThrows(Exception.class, () -> rec(noInst, LLM_TOOL_TID, null),
+        assertThrows(Exception.class, () -> {
+                    LOG.warn(rec(Map.of(), LLM_TOOL_TID, null));
+                },
+                "inst is required by tool::T");
+        assertThrows(Exception.class, () -> {
+                    LOG.warn(rec(noInst, LLM_TOOL_TID, null));
+                },
                 "inst is required by tool::T");
     }
 }
