@@ -75,6 +75,37 @@ install_dependencies() {
     fi
 }
 
+# Check for docker — required for the docker boot profile (boot/spaces.boot.mtron),
+# which runs the space backends as containers.  The maven build itself does not
+# need docker, so a "no" here warns and continues rather than aborting the install.
+if ! command_exists docker; then
+    echo -e "docker ${RED}not installed${NC}"
+    echo -e "  useful for self-contained bootstrapping with dckerspace::T"
+    read -p "would you like to download and install docker now? (y/n): " confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+      echo -e "installing docker..."
+      if command_exists apt-get; then
+        sudo apt-get update
+        sudo apt-get install -y docker.io
+      elif command_exists dnf; then
+        sudo dnf install -y docker
+      elif command_exists brew; then
+        brew install --cask docker
+      else
+        echo -e "${YELLOW}no known package manager found — see https://docs.docker.com/get-docker/${NC}"
+      fi
+      if command -v docker >/dev/null 2>&1; then
+        echo -e "${CHECKMARK} docker ${GREEN}installed${NC}"
+      else
+        echo -e "${YELLOW}docker still not found after install — check your docker daemon${NC}"
+      fi
+    else
+      echo -e "${YELLOW}continuing with remaining metatron install${NC}"
+    fi
+else
+    echo -e "${CHECKMARK} docker ${GREEN}already installed${NC}"
+fi
+
 # Check for Java 21
 if ! command_exists java; then
     install_dependencies "openjdk-21-jdk"

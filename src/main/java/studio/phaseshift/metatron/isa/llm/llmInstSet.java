@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.llm;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
@@ -42,7 +43,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
 import static studio.phaseshift.metatron.isa.llm.type.mModel.model;
-import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.llm.type.mcp.mcpMessageServer.MCP_MESSAGE_HTTP_TYPE;
 import static studio.phaseshift.metatron.isa.llm.type.mcp.mcpMessageServer.MCP_MESSAGE_WS_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -52,6 +52,7 @@ import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -96,12 +97,13 @@ public class llmInstSet extends AbstractInstSet {
     //public static final fURI MCP_TOOL_TID = LLM_ISA_TID.extend("mcp");
     // public static Obj MTRON_EVAL_TOOL = mModel.Helper.mtronInstToolSpecification(ObjType.insts().stream().filter(i -> i.tid().equals(EVAL_INST_TID)).findFirst().orElse(null));    
     public static final fURI LLM_CHAT_FEATURE_TID = LLM_FEATURE_TID.extend("chat_feature");
-    public static final fURI LLM_SESSION_FEATURE_TID = LLM_FEATURE_TID.extend("session_feature");
+    public static final fURI LLM_MESSAGE_FEATURE_TID = LLM_FEATURE_TID.extend("message_feature");
     public static final fURI LLM_TOOL_FEATURE_TID = LLM_FEATURE_TID.extend("tool_feature");
     public static final fURI LLM_SYSTEM_FEATURE_TID = LLM_FEATURE_TID.extend("system_feature");
     public static final fURI LLM_NOTE_FEATURE_TID = LLM_FEATURE_TID.extend("note_feature");
     public static final fURI LLM_RECALL_FEATURE_TID = LLM_FEATURE_TID.extend("recall_feature");
     public static final fURI LLM_EMBED_FEATURE_TID = LLM_FEATURE_TID.extend("embed_feature");
+    //public static final fURI LLM_MESSAGE_FEATURE_TID = f(LLM_MESSAGE_FEATURE_TID_STRING);
     public static final fURI LLM_SKILL_FEATURE_TID = LLM_FEATURE_TID.extend("skill_feature");
     public static final fURI LLM_THINK_FEATURE_TID = LLM_FEATURE_TID.extend("think_feature");
     public static final fURI LLM_CONCEPT_FEATURE_TID = LLM_FEATURE_TID.extend("concept_feature");
@@ -131,6 +133,7 @@ public class llmInstSet extends AbstractInstSet {
     public static Type LLM_THINKING_MESSAGE_TYPE;
     public static Type LLM_COMPACTION_MESSAGE_TYPE;
     public static Type LLM_NOTES_TYPE;
+    public static Type LLM_TOOL_TYPE;
     public static Type LLM_CHAT_RESULT_TYPE;
     public static ObjFactory LLM_OBJ_FACTORY = MObjFactory.of().addExtension(MVec.class, x -> lst(x.jvm().stream().toList()));
     public static Type LLM_FEATURE_TYPE;
@@ -178,6 +181,29 @@ public class llmInstSet extends AbstractInstSet {
                                                   %s
                                                   """;
 
+    /**
+     * Distill prompt for {@code compact()}: asks the model to write a
+     * continuation summary that replaces the conversation history in a future
+     * context window.  The summary becomes the {@code text} of the
+     * {@code compaction_message::T} sentinel — the model never sees the raw
+     * transcript again, only the resume summary.
+     */
+    public static final String COMPACT_PROMPT = """
+                                                You have been working on the task described above but have not yet completed it.
+                                                Write a continuation summary that will allow you (or another instance of yourself) to resume work efficiently
+                                                in a future context window where the conversation history will be replaced with this summary.
+                                                
+                                                Your summary should be structured, concise, and actionable. Include:
+                                                1. **Task Overview**: The user's core request, success criteria, and constraints.
+                                                2. **Current State**: What has been completed, current progress, and any pending steps.
+                                                3. **Key Details**: User preferences, domain-specific details, or promises made to the user.
+                                                
+                                                Write in a way that enables immediate resumption of the task.
+                                                
+                                                ## Conversation:
+                                                %s
+                                                """;
+
 
     public llmInstSet() {
         super(mutableMap(uri(PATTERN), uri(LLM_ISA_TID.extend(ALL))), INSTSET_TID, LLM_ISA_TID);
@@ -199,6 +225,7 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(TIMEOUT).maybe(), TIME_TYPE,
                                                 uri(SIZE).maybe(), DATA_SIZE_TYPE,
                                                 uri(QUANT).maybe(), INT_TYPE,
+                                                uri(CONTEXT).maybe(), INT_TYPE,
                                                 uri(COST).maybe(), rec(uri(IN), MATH_CURRENCY_TYPE, uri(OUT), MATH_CURRENCY_TYPE).maybe()))
                                         .constructor(arg -> LLMFactory.createModel(arg.asRec()))
                                         .create(),
@@ -209,10 +236,26 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(LLM), "the name of a model offered by the ai provider",
                                         uri(SIZE).maybe(), "the size of the model",
                                         uri(QUANT).maybe(), "the level of quantization of the model",
+                                        uri(CONTEXT).maybe(), "the model's context window size in tokens",
                                         uri(COST).maybe(), "the cost per million tokens to use this llm (in/out costs)"),
                                 "populate a model reference rec using data from the ai provider's http-endpoint",
                                 "model::[provider=>deepseek,host=><http://deepseek.com/api>,protocol=>openai,llm=>deepseek-v4-pro]"),
-                        LLM_TOOL_TYPE,
+                        docWrap(LLM_TOOL_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_TOOL_TID)
+                                        .isaPredicate(rec(
+                                                uri(INST), ALL_TYPE,
+                                                uri(NAME), URI_TYPE,
+                                                uri(DESC), STR_TYPE,
+                                                uri(ARG).maybe(), ALL_TYPE /*rec(URI_TYPE, T(ALL)).maybe())*/))
+                                        .create(),
+                                "a tool specification", "",
+                                Map.of(
+                                        uri(INST), "tool instruction",
+                                        uri(NAME), "tool name",
+                                        uri(DESC), "tool description",
+                                        uri(ARG).maybe(), "tool arguments"),
+                                "a tool function for the llm to use"),
                         //////////////////////////////////////////////////
                         docWrap(LLM_SESSION_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
@@ -289,7 +332,7 @@ public class llmInstSet extends AbstractInstSet {
                                                         uri("abandoned"))).tryToInst(),
                                                 uri(SOURCE).maybe(), lst(T(ALL.maybe())),
                                                 uri("claim").maybe(), lst(T(ALL.maybe())),
-                                                uri(TIME), DATETIME_TYPE))
+                                                uri(TIME).maybe(), DATETIME_TYPE))
                                         .create(),
                                 null, null, mutableMap(
                                         uri(TITLE), "short actionable title",
@@ -400,10 +443,16 @@ public class llmInstSet extends AbstractInstSet {
                                         .tid(MESSAGE_TID)
                                         .vid(COMPACTION_MESSAGE_TID)
                                         .isaPredicate(rec(
-                                                uri(TEXT), STR_TYPE))
+                                                uri(TEXT), STR_TYPE,
+                                                uri(IN).maybe(), INT_TYPE,
+                                                uri(OUT).maybe(), INT_TYPE,
+                                                uri(COMPRESSION).maybe(), REAL_TYPE))
                                         .create(),
                                 null, null,
-                                Map.of(uri(TEXT), "the summary of all previous messages and compactions"),
+                                Map.of(uri(TEXT), "the summary of all previous messages and compactions",
+                                        uri(IN).maybe(), "total tokens processed (the input digest estimate)",
+                                        uri(OUT).maybe(), "total tokens generated (the summary estimate)",
+                                        uri(COMPRESSION).maybe(), "fraction of tokens removed — 1 - out/in (0.0 to 1.0)"),
                                 "a compaction represents a stop point for message retrieval and provides a summary of all previous messages"),
                         docWrap(LLM_MESSAGE_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
@@ -472,7 +521,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri(NAME), STR_TYPE,
                                                 uri(DESC).maybe(), STR_TYPE,
-                                                uri(FEATURE).maybe(), lst(LLM_FEATURE_TYPE)))
+                                                uri(FEATURE).maybe(), LST_TYPE))
                                         .constructor(arg -> new Agent(arg.recValue(), LLM_AGENT_TID, arg.vid()))
                                         .create(), null, null, Map.of(
                                         uri(NAME), "a convenient name for the agent",
@@ -499,15 +548,23 @@ public class llmInstSet extends AbstractInstSet {
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
-                                .vid(LLM_SESSION_FEATURE_TID)
+                                .vid(LLM_MESSAGE_FEATURE_TID)
                                 .isaPredicate(rec(SESSION, URI_TYPE))
-                                .constructor(arg -> createStageLambdas(new SessionFeature(arg.asRec().jvm(), LLM_SESSION_FEATURE_TID, arg.vid())))
+                                .constructor(arg -> createStageLambdas(new MessageFeature(arg.asRec().jvm(), LLM_MESSAGE_FEATURE_TID, arg.vid())))
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_TOOL_FEATURE_TID)
-                                .isaPredicate(rec(uri(f(TOOL).maybe()), T(LST_TID.maybe())))
+                                .isaPredicate(rec(uri(f(TOOL)).maybe().asUri(), T(LST_TID.maybe())))
                                 .constructor(arg -> createStageLambdas(new ToolFeature(arg.asRec().jvm(), LLM_TOOL_FEATURE_TID, arg.vid())))
+                                .create(),
+                        Type.Builder.build()
+                                .tid(LLM_FEATURE_TID)
+                                .vid(LLM_EMBED_FEATURE_TID)
+                                .isaPredicate(rec(
+                                        uri(ROOT), URI_TYPE,
+                                        uri(f(MODEL)).maybe(), LLM_MODEL_TYPE))
+                                .constructor(arg -> createStageLambdas(new EmbedFeature(arg.asRec().jvm(), LLM_EMBED_FEATURE_TID, arg.vid())))
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
@@ -573,10 +630,14 @@ public class llmInstSet extends AbstractInstSet {
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_COMPACTION_FEATURE_TID)
                                         .isaPredicate(rec(
-                                                uri(MODEL).maybe().asUri(), LLM_MODEL_TYPE))
-                                        .constructor(arg -> createStageLambdas(new CostFeature(arg.asRec().jvm(), LLM_COST_FEATURE_TID, arg.vid())))
+                                                uri(MODEL).maybe().asUri(), LLM_MODEL_TYPE,
+                                                uri(THRESHOLD).maybe().asUri(), REAL_TYPE,
+                                                uri(CONTEXT).maybe().asUri(), INT_TYPE))
+                                        .constructor(arg -> createStageLambdas(new CompactionFeature(arg.asRec().jvm(), LLM_COMPACTION_FEATURE_TID, arg.vid())))
                                         .create(),
-                                null, null, mutableMap(uri(MODEL), "the model to analyze message history"),
+                                null, null, mutableMap(uri(MODEL), "the model to analyze message history",
+                                        uri(THRESHOLD), "auto-compaction trigger — fraction of the model context window full (default 0.8)",
+                                        uri(CONTEXT), "context window size in tokens, overriding the model's advertised value"),
                                 "compacts historic messages and inserts a compaction message into message stream which acts as a stop sentinel for agents history introspection"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
@@ -638,13 +699,13 @@ public class llmInstSet extends AbstractInstSet {
                                 "maps a rec to a model"),
                         docWrap(instC(AS_INST_TID.dom(DOCS_TID).rng(LLM_TOOL_TID),
                                         lst(LLM_TOOL_TYPE),
-                                        (lhs, inst) -> mTool.mtronDocToTool(QCollection.Docs.doc(lhs.asRec()))),
+                                        (lhs, inst) -> mTool.tool(QCollection.Docs.doc(lhs.asRec()))),
                                 "instruction documentation",
                                 "a tool specification",
                                 mutableMap(jnt(0), "the tool type"),
                                 "maps an instruction doc to a tool specification for llm use",
                                 "*eval?docq.as(tool::T)"),
-                        docWrap(instC(AS_INST_TID.dom(M_ISA_INST_TID).rng(LLM_TOOL_TID), lst(LLM_TOOL_TYPE), (lhs, inst) -> mTool.mtronInstToTool(inst.asInst())),
+                        docWrap(instC(AS_INST_TID.dom(M_ISA_INST_TID).rng(LLM_TOOL_TID), lst(LLM_TOOL_TYPE), (lhs, inst) -> mTool.mtronInstToDocs(inst.asInst())),
                                 "an instruction",
                                 "a tool specification",
                                 mutableMap(jnt(0), "the tool type"),
@@ -664,10 +725,10 @@ public class llmInstSet extends AbstractInstSet {
                                 "*<ollama:qwen3:latest>+[response=>[to=>print(_)]].as(skill::T)"),
                         // CHAT INSTRUCTION
                         docWrap(instC(LLM_INST_TID.extend("chat").dom(LLM_AGENT_TID).rng(LLM_CHAT_RESULT_TID), lst(STR_TYPE), (lhs, inst) -> agent(lhs.asRec()).chat(inst.arg(0).strValue())),
-                                "a model to chat with",  // dom
+                                "an agent to chat with",  // dom
                                 "chat result rec — monos inline (chat, user, time), feature outputs as !* refs", // rng
-                                mutableMap(jnt(0), "the message to send the model"), // args
-                                "communicate with an llm that may be enriched with a tool, skill, etc.", // desc
+                                mutableMap(jnt(0), "the message to send the agent"), // args
+                                "communicate with an agent that may be enriched with a tool, skill, etc.", // desc
                                 "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts/_?incrq)].chat('what is a database?')"),
                         docWrap(instC(LLM_INST_TID.extend("embed").dom(LLM_MODEL_TID).rng(VEC_TID), lst(ALL_TYPE), (lhs, inst) -> model(lhs.asRec()).embed(inst.arg(0))),
                                 "a model to embed arg into",  // dom
@@ -722,7 +783,33 @@ public class llmInstSet extends AbstractInstSet {
                                 "the applied constraints rec — [session, model, scope, kind, concept, to, claim=>[vids], loose_end=>[vids]]",
                                 mutableMap(),
                                 "distill a session's message ledger into claim::T and loose_end::T recs via a mini-task — the same call as the <<mtron:summarize>> block (they share the argument rec::T vocabulary: session, model, scope, kind, concept, to)",
-                                "@dr/session/1.summarize(_)  [-- fluent --]  |  summarize(@dr/session/1)  [-- function --]"))));
+                                "@dr/session/1.summarize(_)  [-- fluent --]  |  summarize(@dr/session/1)  [-- function --]"),
+                        // COMPACT INSTRUCTION — compact a session's ledger into a resume sentinel
+                        docWrap(instC(LLM_INST_TID.extend("compact").dom(LLM_AGENT_TID.maybe()).rng(REC_TID), rec(
+                                                uri(AGENT).maybe().asUri(), LLM_AGENT_TYPE,
+                                                uri(MODEL).maybe().asUri(), LLM_MODEL_TYPE,
+                                                uri(PROMPT).maybe().asUri(), STR_TYPE),
+                                        (lhs, inst) -> {
+                                            // The agent may arrive as the lhs (fluent: @dr.compact())
+                                            // or as arg 0 (function form: compact(@dr)).
+                                            final Rec agentRec = inst.arg(f(AGENT), 0).orElse(lhs.asRec());
+                                            final Agent a = agent(agentRec);
+                                            if (!a.hasFeature(LLM_MESSAGE_FEATURE_TID))
+                                                return fail("compact requires the agent to have a session feature");
+                                            final fURI agentHome = a.at(ROOT).uriValue();
+                                            final fURI sessionVID = a.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION).uriValue();
+                                            final Rec config = rec(uri(MODEL), inst.arg(f(MODEL), 1),
+                                                    uri(PROMPT), inst.arg(f(PROMPT), 2),
+                                                    uri(TO), uri(agentHome));
+                                            return compactSession(agentHome, sessionVID, config);
+                                        }),
+                                "an agent to compact",
+                                "the applied constraints rec — [to, compaction=>vid, in, out, compression]",
+                                mutableMap(jnt(0), "the agent to compact (defaults to the lhs)",
+                                        jnt(1), "the summarizer model (default: the agent home model)",
+                                        jnt(2), "the summarizer prompt template"),
+                                "compact a session's message ledger into a resume summary sentinel — the same call as the <<mtron:compaction>> block (they share the argument rec::T vocabulary: agent, model, prompt)",
+                                "@dr.compact()  [-- fluent --]  |  compact(@dr)  [-- function --]"))));
         docWrap(this, "large language model think and reason within the metatron");
         super.setup();
     }
@@ -777,7 +864,7 @@ public class llmInstSet extends AbstractInstSet {
         // 3. the model — from the agent home (matches <agent>/model)
         final mModel model = modelArg.isNoObj() ? mModel.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec()) : mModel.model(modelArg.asRec());
         // 4. distill via a mini-task
-        final ChatResult result = Agent.Helper.miniTask("session_summarizer", model(model.at(TIMEOUT, real(5.0, MATH_MINUTE_TID, null))), SUMMARIZE_PROMPT.formatted(digest));
+        final ChatResult result = Agent.Helper.miniChat("session_summarizer", model(model.at(TIMEOUT, real(5.0, MATH_MINUTE_TID, null))), SUMMARIZE_PROMPT.formatted(digest));
         // 5. parse the <<json:claim>> and <<json:loose_end>> blocks into vids
         final List<Obj> claimVids = new ArrayList<>();
         final List<Obj> looseEndVids = new ArrayList<>();
@@ -845,6 +932,115 @@ public class llmInstSet extends AbstractInstSet {
                 uri(TO), uri(outputBase),
                 uri("claim"), lst(claimVids),
                 uri("loose_end"), lst(looseEndVids));
+    }
+
+    /**
+     * Compact a session's message ledger into a single {@code compaction_message::T}
+     * sentinel whose {@code text} is a resume summary, stamped with the token
+     * compression stats ({@code in}, {@code out}, {@code compression}).  The
+     * trailing few messages are re-appended after the sentinel so the immediate
+     * context is not lost in the summary.  Shared by the {@code compact} inst and
+     * the CompactionFeature's background thread — the config rec has the same
+     * vocabulary as the {@code <<mtron:compaction>>} block (agent, model, prompt).
+     *
+     * @param agentHome  the agent root — the model rec is resolved from
+     *                   {@code <agentHome>/model} when the config's model is noobj
+     * @param sessionVID the session whose ledger messages are compacted
+     * @param config     the argument/block rec — {@code model} and {@code prompt}
+     *                   override the summarizer's model and prompt template
+     * @return the applied-constraints rec — the resolved [to, compaction=>vid]
+     * plus the [in, out, compression] stats; a fail::T on error
+     */
+    public static Obj compactSession(final fURI agentHome, final fURI sessionVID, final Rec config) {
+        final Obj modelArg = config.at(uri(MODEL));
+        final Obj promptArg = config.at(uri(PROMPT));
+        final Obj output = config.at(uri(TO));
+        final fURI outputBase = output.isNoObj() ? agentHome : output.uriValue();
+        // 1. collect this session's messages from the ledger, oldest -> newest
+        final fURI messagesLocation = agentHome.extend(MESSAGE).extend("+/");
+        final List<Rel> messages = Router.readFromSpace(messagesLocation)
+                .stream()
+                .map(Obj::asRel)
+                .filter(pair -> {
+                    final Obj sessionUri = pair.second().asRec().at(SESSION);
+                    return sessionUri.isUri() && sessionUri.uriValue().equals(sessionVID);
+                })
+                .sorted(Comparator.comparing(pair -> Integer.parseInt(pair.first().uriValue().name())))
+                .toList();
+        if (messages.isEmpty())
+            return fail("no messages found for session %s at %s", sessionVID, messagesLocation);
+        // 2. build the conversation digest — text only, so the model sees content not vids
+        final String digest = messages.stream()
+                .map(pair -> Str.Helper.cleanString(pair.second().asRec().at(TEXT).orElse(str(""))))
+                .filter(s -> !s.isBlank())
+                .collect(Collectors.joining("\n-----\n"));
+        // 3. the summarizer model (agent home model when not given) and prompt
+        final mModel model = modelArg.isNoObj()
+                ? mModel.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec())
+                : mModel.model(modelArg.asRec());
+        final String prompt = promptArg.isNoObj() ? COMPACT_PROMPT : promptArg.strValue();
+        // 4. distill via a mini-task
+        final ChatResult result = Agent.Helper.miniChat("session_compactor", model(model.at(TIMEOUT, real(5.0, MATH_MINUTE_TID, null))), prompt.formatted(digest));
+        final String summary = Str.Helper.cleanString(result.at(CHAT).orElse(str("")));
+        // 5. write the sentinel + pair-safe recent-tail
+        final Rec sentinel = writeCompaction(agentHome, sessionVID, messages, digest, summary);
+        return rec(uri(TO), uri(outputBase),
+                uri("compaction"), uri(sentinel.vid()),
+                uri(IN), sentinel.at(uri(IN)),
+                uri(OUT), sentinel.at(uri(OUT)),
+                uri(COMPRESSION), sentinel.at(uri(COMPRESSION)));
+    }
+
+    /**
+     * Write the compaction sentinel — its {@code text} is the resume summary,
+     * stamped with {@code in}/{@code out}/{@code compression} token stats — then
+     * re-append the recent-tail after it, pair-safe (a {@code tool_result} is
+     * never orphaned from its {@code ai} message).  Extracted from
+     * {@link #compactSession} so the write-path is testable without an LLM
+     * round-trip.
+     *
+     * @param agentHome  the agent root — the sentinel/tail write under {@code <agentHome>/message/}
+     * @param sessionVID the session the sentinel belongs to
+     * @param messages   the session's messages, oldest -> newest, as ledger rels
+     * @param digest     the conversation digest (drives the {@code in} token stat)
+     * @param summary    the resume summary (the sentinel's {@code text})
+     * @return the written sentinel rec (text + in/out/compression + session/depth)
+     */
+    public static Rec writeCompaction(final fURI agentHome, final fURI sessionVID, final List<Rel> messages, final String digest, final String summary) {
+        final MessageFeature.DefaultTokenCountEstimator estimator = MessageFeature.DefaultTokenCountEstimator.singleton();
+        final int tokensIn = estimator.estimateTokenCountInText(digest);
+        final int tokensOut = estimator.estimateTokenCountInText(summary);
+        final double compression = tokensIn == 0 ? 0.0 : 1.0 - ((double) tokensOut / (double) tokensIn);
+        final fURI writePath = agentHome.extend(MESSAGE).extend("_").addQ(INCRQ);
+        final Rec sentinel = MessageBuilder.build(COMPACTION_MESSAGE_TID)
+                .text(summary)
+                .time()
+                .session(sessionVID)
+                .depth(1)
+                .put(IN, jnt(tokensIn))
+                .put(OUT, jnt(tokensOut))
+                .put(COMPRESSION, real(compression))
+                .create(writePath);
+        final int SPILL_OVER = 5; // recent-tail — keep the immediate context raw, not just in the summary
+        // only re-append the conversational kinds — system/thinking/compaction
+        // are metatron-world records (SystemFeature re-writes the system message
+        // each turn), and a system message in the tail would break the model's
+        // "system message must be at the beginning" invariant
+        final List<Rel> conversational = messages.stream()
+                .filter(pair -> {
+                    final fURI tid = pair.second().tid();
+                    return tid.equals(USER_MESSAGE_TID) || tid.equals(AI_MESSAGE_TID) || tid.equals(TOOL_RESULT_MESSAGE_TID);
+                })
+                .toList();
+        int skip = Math.max(0, conversational.size() - SPILL_OVER);
+        // pull in more (never fewer) messages so the tail never starts on an
+        // orphaned tool_result or an ai message without its user message
+        skip = SpaceChatSessionStore.adjustSkipToPreservePairs(conversational, skip);
+        for (int i = skip; i < conversational.size(); i++) {
+            final Rec tail = conversational.get(i).second().asRec();
+            MessageBuilder.build(tail.tid()).copy(tail.jvm()).create(writePath);
+        }
+        return sentinel;
     }
 
     /**

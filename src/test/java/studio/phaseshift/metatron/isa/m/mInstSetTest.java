@@ -71,8 +71,8 @@ public class mInstSetTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "a=>b=>c.rng()                                                                    % b=>c",
-            "a=>b=>c.dom()                                                                     % a",
+            "a=>b=>c.rng()                                                                  % b=>c",
+            "a=>b=>c.dom()                                                                  % a",
             "a=>b=>c>-                                                                      % {a,b=>c}",
             "a=>b=>c>-.>-                                                                   % {a,b,c}",
             "a=>b=>c.count()                                                                % 1",

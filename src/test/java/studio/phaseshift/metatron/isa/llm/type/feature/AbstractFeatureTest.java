@@ -26,26 +26,18 @@ import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.incrQ;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AGENT_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_RESULT_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -79,6 +71,7 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
 
     @BeforeAll
     public static void mountFeatureTestSpace() {
+        InstSet.importInstSet(f("/m/llm"));
         memSpace.of(f("/usr/test/#"), f("/sys/space/usr/test")).addQ(incrQ());
     }
 
@@ -219,7 +212,9 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
         return agentWith("test-agent", null, features);
     }
 
-    /** An agent with a name/desc and the given features. */
+    /**
+     * An agent with a name/desc and the given features.
+     */
     protected static Agent agentWith(final String name, final String desc, final AbstractFeature... features) {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
         map.put(uri(NAME), str(name));
@@ -227,7 +222,10 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
             map.put(uri(DESC), str(desc));
         map.put(uri(ROOT), uri(TEST_AGENT_ROOT.toString()));
         final List<Obj> featureObjs = new ArrayList<>();
-        for (final AbstractFeature f : features) featureObjs.add(f);
+        for (final AbstractFeature f : features) {
+            if (!f.isNoObj())
+                featureObjs.add(f);
+        }
         featureObjs.addAll(gatekeepersFor(features));
         map.put(uri(FEATURE), lst(featureObjs));
         return Agent.agent(rec(map, LLM_AGENT_TID, null));

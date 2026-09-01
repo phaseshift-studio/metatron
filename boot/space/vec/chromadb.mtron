@@ -1,0 +1,29 @@
+[== chromadb — a vec space on a chromadb server container aggregated through
+     dckrspace (v2 api, persistence under /data).  a running container is left
+     in place; a missing one is brought up via docker:compose (healthcheck +
+     up --wait) before the space is built.
+     args (the caller supplies the defaults from boot/args):
+       saddr, sport, simg ==]
+||inst?#{?}<=#{?}(saddr=>uri::T,sport=>int::T,simg=>str::T){
+  print("chromadb: pulling container from ${!*simg}").
+  from(docker:container/metatron_chroma).
+  else(*simg -< [services => -< [chroma => -< [
+                          image       => ${!*simg},
+                          restart     => 'unless-stopped',
+                          environment => -< [IS_PERSISTENT        => 'TRUE',
+                                            ANONYMIZED_TELEMETRY => 'FALSE'],
+                          ports       => -< ['${!*sport}:8000'],
+                          healthcheck => -< [test         => -< ['CMD-SHELL','bash -c "exec 3<>/dev/tcp/127.0.0.1/8000" || exit 1'],
+                                            interval     => '5s',
+                                            retries      => 60,
+                                            start_period => '5s'],
+                          volumes     => -< ['metatron_chroma:/data']]
+                        ],
+   volumes => -< [metatron_chroma => -< [driver => 'local']] ]
+    .to(docker:compose/metatron_chroma))
+  print("chromadb: container loaded ${_}").
+  -<[pattern  => embed:#,
+     host     => <http://${!*saddr}:${!*sport}/api/v2>,
+     driver   => <studio.phaseshift.metatron.isa.vec.space.ChromaV2Client>,
+     q        => [incrq::[=>],embedq::[=>]],
+     route    => -< [embed: => <>]]@</sys/space/vec/chroma>.as(vecspace::T) }

@@ -106,6 +106,11 @@ public class MessageBuilder {
         return this;
     }
 
+    public MessageBuilder copy(final Map<Obj, Obj> kvs) {
+        this.map.putAll(kvs);
+        return this;
+    }
+
     /**
      * Set the {@code contents} field.
      */

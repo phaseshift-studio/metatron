@@ -19,21 +19,21 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MESSAGE_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-public class SessionFeature extends AbstractFeature {
+public class MessageFeature extends AbstractFeature {
 
     private SpaceChatSessionStore store = null;
     private ChatMemory memory = null;
 
-    public SessionFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+    public MessageFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
 
@@ -46,8 +46,8 @@ public class SessionFeature extends AbstractFeature {
     }
 
     public static void buildSession(final Agent agent, final AiServices<AgentServices> service) {
-        if (agent.hasFeature(LLM_SESSION_FEATURE_TID))
-            service.chatMemory(agent.feature(LLM_SESSION_FEATURE_TID).<SessionFeature>as().memory()).storeRetrievedContentInChatMemory(true);
+        if (agent.hasFeature(LLM_MESSAGE_FEATURE_TID))
+            service.chatMemory(agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as().memory()).storeRetrievedContentInChatMemory(true);
     }
 
     /**

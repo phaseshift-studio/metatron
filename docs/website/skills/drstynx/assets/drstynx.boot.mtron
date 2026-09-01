@@ -4,12 +4,7 @@
   [ sys          => /sys,
     agent_home   => /usr/dr,
     user_home    => /usr/marko,
-    session_id   => 1,
-    typer/stage  => [inst_dom     => false,
-                     inst_rng     => false,
-                     type_ctor    => true,
-                     obj_write    => true,
-                     code_resolve => false]],
+    session_id   => 1],
  external     =>
   [ web       => [ http => <http://localhost:8777>,
                    ws   => <ws://0.0.0.0:8555> ],
@@ -19,6 +14,11 @@
     session   => <sqlite:/home/killswitch/.metatron/dr.sqlite>,
     localfs   => </home/killswitch/.hermes_clone>],
  tracer/stage => [stack=>false],
+ typer/stage  => [inst_dom     => false,
+                  inst_rng     => false,
+                  type_ctor    => false,
+                  obj_write    => true,
+                  code_resolve => false],
  header       => """
    ______          _______ __   {{r}}PhaseShift Studio                    
   |   _  \ .----. |   _   |  |_.--.--.-----.--.--.
@@ -91,26 +91,9 @@ httpspace::[host     => !*<boot/args/external/web/http>,
                          /marko     => /usr/marko,
                          /message   => mcp_message_http,
                          /          => mfs:docs/website/]]@/sys/space/web/http;   
-[==  
-*boot/args/external/ollama.mult(api/tags/models).*(_).>-.
-  =?=[capabilities=>[embedding]].
-  -<[llm     => >>name.as(uri::T),
-    protocol => ollama,
-    provider => ollama,
-    host     => *boot/args/external/ollama].
-  as(model::T).
-  to(/usr/dr/model/embedding/_?incrq)
-==]        
-[=="""
-{
-     "type": "sse",
-     "url": "http://127.0.0.1:64342/sse",
-     "headers": {
-       "IJ_MCP_SERVER_PROJECT_PATH": "/home/killswitch/software/metatron"
-     }
-   }
-""".as(json::T).as(mcp_client::T).at(abc)
-"""
+
+[==
+json::"""
 {
   "mcpServers": {
     "codegraph": {
@@ -121,8 +104,10 @@ httpspace::[host     => !*<boot/args/external/web/http>,
       ]
     }
   }
-}""".as(json::T).as(mcp_client::T).to(codegraph)
+}
+"""@codegraph.as(mcp_client::T);
 ==]
+
         [=====================]
         [======= DOCKER ======]
         [=====================]
@@ -170,18 +155,17 @@ mqttspace::[host    => <mqtt://ginger.local:1883>,
         [=====================]
         [======== LLM ========]
         [=====================]                
-[==            
-vecspace::[pattern     => v:#,
+         
+vecspace::[pattern     => embed:#,
            host        => !*<boot/args/external/embedding>,
            q           => [incrq::[=>],embedq::[=>]],
            driver      => <studio.phaseshift.metatron.isa.vec.space.ChromaV2Client>,
-           route       => [v: => <>],
+           route       => [embed: => <>],
            config      => [embed => [
  [------------------------------------^--]
- abc => inst?lst[real]<=#{?}(doc=>#::T){ */usr/dr/model/embedding/+.=?=[llm=>embeddinggemma:latest].embed(*doc)}
+ chat_result => inst?lst[real]<=#{?}(doc=>#::T){ *dr/feature/+.filter(tid().has(embed)).>>model.embed(*doc) }
  [------------------------------------^--]                                  
-                          ]]]@/sys/space/vec/embed
-==]
+                          ]]]@/sys/space/vec/embed;
 grphspace::[pattern   => h:#,
              host     => !*<boot/args/external/knowgraph>,
              q        => [incrq::[=>],subq::[=>]],
@@ -264,14 +248,13 @@ agent::[
   desc     => 'the agent dr.stynx is here to be of use in the metatron',
   root     => !*boot/args/internal/agent_home,
   feature  => [
-    session_feature::::[on_agent_ctor => inst(a=>agent::T){ *</usr/dr/session/1>.else(
+    message_feature::::[on_agent_ctor => inst(a=>agent::T){ *</usr/dr/session/1>.else(
                                            session::[agent     => !*boot/args/internal/agent_home,
                                                      user      => !*boot/args/internal/user_home,
                                                      name      => 'general chat',
                                                      algorithm => [name=><message_window>, max=>20]]
                                                            ==[_=>_].to(/usr/dr/session/1)) },
-                        session       => /usr/dr/session/1,
-                        tool          => [forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
+                        session       => /usr/dr/session/1],
     chat_feature:::::::[model         => !(*</usr/dr/model>.else(model::[provider     => ollama,
                                                                          protocol     => ollama,
                                                                          host         => <http://ginger.local:11434>,
@@ -290,6 +273,8 @@ agent::[
                        on_before_chat => inst(){ @<think_widget> >>= [body=>""] },
                        root           => /usr/dr/message,
                        think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
+    compaction_feature::[model        => !*/usr/dr/model,
+                         threshold    => 0.8],
     loop_feature:::::::[max_loop      => 100,
                         root          => /usr/dr/loop],
     comment_feature::::[              => ],
@@ -297,7 +282,6 @@ agent::[
                                            <mfs:.metatron/skills/mtron> ]],
     concept_feature::::[root          => /usr/dr/concept,
                         extractor     => lucene],
-    tool_feature:::::::[tool          => [!*eval,!*sql,!*codegraph]],
     audit_feature::::::[on_agent_ctor => inst(a=>agent::T) {   
                                            accordion::[title  => "audit",
                                                        body   => "",
@@ -306,7 +290,14 @@ agent::[
                         to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() },
                         root          => /usr/dr/audit],
     summarize_feature::[root          => /usr/dr],
+    embed_feature::::::[root          => embed:chat_result,
+                        model         => model::[provider     => ollama,
+                                                 protocol     => ollama,
+                                                 host         => <http://ginger.local:11434>,
+                                                 llm          => <qwen3-embedding:4b>]],
     system_feature:::::[              => ],
+    tool_feature:::::::[tool          => [!*eval,!*sql,!*codegraph,
+                                          forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
     cost_feature:::::::[root          => /usr/dr/cost,
                         to            => inst(in_cost=>real::T,out_cost=>real::T,total_cost=>real::T){ 
                                            /usr/marko/console/status("cost total: ${*2} [in: ${*0} out: ${*1}]") },

@@ -512,7 +512,7 @@ Design decisions that crystallized during implementation:
 
 Extracted from `ConceptFeature.AgentExtractor` into `Agent.Helper`. Synchronous; threading is the caller's concern.
 `Agent.chat()` now returns `ChatResult` (typed), and `mModel` gained the optional spec accessors (`size`, `quant`,
-`cost`, `skill`). `miniTask` constructs a fresh translator agent (a single ChatFeature over the given model), calls
+`cost`, `skill`). `miniChat` constructs a fresh translator agent (a single ChatFeature over the given model), calls
 `chat(prompt)`, returns the `ChatResult`.
 
 ### 9.3 The `summarize()` inst (claims + loose ends) — [DONE]

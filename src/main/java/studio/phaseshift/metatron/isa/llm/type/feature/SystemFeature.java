@@ -13,10 +13,9 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MESSAGE_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.SYSTEM_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -56,7 +55,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class SystemFeature extends AbstractFeature {
 
-    /** Key in this feature's jvm holding the last-written system message text. */
+    /**
+     * Key in this feature's jvm holding the last-written system message text.
+     */
     private static final String LAST = "last_system_text";
 
     private final List<String> systemMessages = new ArrayList<>();
@@ -88,7 +89,7 @@ public class SystemFeature extends AbstractFeature {
      *   &lt;contribution 1&gt;
      *   ...
      * </pre>
-     *
+     * <p>
      * Called by {@code Agent.chat()} at service-build time, after all {@code onBeforeChat}
      * hooks have run.
      */
@@ -122,14 +123,14 @@ public class SystemFeature extends AbstractFeature {
     @Override
     public Obj onBeforeChat(final Agent agent) {
         final String text = this.systemMessage();
-        if (text.isBlank() || !agent.hasFeature(LLM_SESSION_FEATURE_TID))
+        if (text.isBlank() || !agent.hasFeature(LLM_MESSAGE_FEATURE_TID))
             return noobj();
 
         final String lastText = this.at(uri(LAST)).orElse(str("")).strValue();
         if (text.equals(lastText))
             return noobj();
 
-        final fURI sessionVID = agent.feature(LLM_SESSION_FEATURE_TID).asRec().at(SESSION).uriValue();
+        final fURI sessionVID = agent.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION).uriValue();
         try {
             MessageBuilder.build(SYSTEM_MESSAGE_TID)
                     .text(text)

@@ -26,15 +26,16 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.LinkedHashMap;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /**
  * {@code ToolFeature} — the gateway to the agent's tool registry: a single
@@ -72,7 +73,7 @@ public class ToolFeatureTest extends AbstractFeatureTest {
         final Agent a = agentWith(gateway, tf);
         tf.onBeforeChat(a);
         assertTrue(gateway.skills().lstValue().stream()
-                .anyMatch(s -> "tool_feature".equals(s.asRec().at(uri(NAME)).uriValue().name())),
+                        .anyMatch(s -> "tool_feature".equals(s.asRec().at(uri(NAME)).uriValue().name())),
                 "onBeforeChat should publish the tool feature's usage skill to the skill gateway");
     }
 

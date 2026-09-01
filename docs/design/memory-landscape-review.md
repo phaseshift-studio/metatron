@@ -84,9 +84,9 @@ Current feature roster and memory relevance:
 | `space/SpaceContentRetriever`                                     | —                                                        | **RAG** — minimal `ContentRetriever` over a URI pattern                             |
 | `feature/AuditFeature`, `CostFeature`                             | audit / cost                                             | Memory-adjacent: audit trail, token cost ledger                                     |
 
-### 2.2 Working memory — `SessionFeature` + `SpaceChatSessionStore`
+### 2.2 Working memory — `MessageFeature` + `SpaceChatSessionStore`
 
-`SessionFeature` (`type/feature/SessionFeature.java`) owns a LangChain4j
+`MessageFeature` (`type/feature/SessionFeature.java`) owns a LangChain4j
 `ChatMemory`. `onBeforeChat()` resolves the session policy rec from the space
 (`session => {agent, user, algorithm: {name, max}}`), bumps a **monotonic `chat_id`** that survives restarts, and
 constructs either a
@@ -153,7 +153,7 @@ whether to dig, not the harness.
   (`applyAsync`) — **the turn returns immediately**; this is genuine sleep-time compute, not inline summarization.
 - **Distill.** `summarizeSession` collects the session's ledger messages (optionally scope-filtered by time), renders
   them as a
-  `vid==>text` digest, and runs a `miniTask` with `SUMMARIZE_PROMPT`: the model emits `<<json:claim>>` /
+  `vid==>text` digest, and runs a `miniChat` with `SUMMARIZE_PROMPT`: the model emits `<<json:claim>>` /
   `<<json:loose_end>>` blocks. *Provenance is stamped by the inst, not the model* — the model picks message vids from
   the digest, and the inst converts them to `!*` auto_from refs under `source`.
 - **Outputs** — `claim::T` (`text, kind∈{decision, problem, solution,
@@ -217,7 +217,7 @@ regex surface, `contents` is a join key — assertable migrations (counts in = c
 
 A "geodesic" here means: a direction that is short in *conceptual* distance — it rides substrate metatron already has
 (URI space, auto_from links,
-`CoreThread`, subq, `miniTask`, `MVec`) rather than importing a new infrastructure. The three geodesics below are
+`CoreThread`, subq, `miniChat`, `MVec`) rather than importing a new infrastructure. The three geodesics below are
 ordered by payoff-per-new-concept.
 
 ### G1 — Vector recall: finish the lane that is already started

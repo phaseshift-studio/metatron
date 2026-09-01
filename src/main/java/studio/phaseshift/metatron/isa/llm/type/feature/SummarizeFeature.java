@@ -32,12 +32,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CONCEPT_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SESSION_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SUMMARIZE_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.summarizeSession;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -119,11 +114,11 @@ public class SummarizeFeature extends AbstractFeature {
         if (signal.isNoObj())
             return;
         final Rec block = signal.asRec();
-        if (!agent.hasFeature(LLM_SESSION_FEATURE_TID)) {
+        if (!agent.hasFeature(LLM_MESSAGE_FEATURE_TID)) {
             LOG.warn("summarize requires the session feature");
             return;
         }
-        final fURI sessionVID = agent.feature(LLM_SESSION_FEATURE_TID).asRec().at(SESSION).uriValue();
+        final fURI sessionVID = agent.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION).uriValue();
         if (null == sessionVID || sessionVID.isEmpty()) {
             LOG.warn("summarize requires an anchored session");
             return;
@@ -159,10 +154,10 @@ public class SummarizeFeature extends AbstractFeature {
         final Obj looseEnds = Router.readFromSpace(outputBase.extend("loose_end").extend("+"));
         if (!looseEnds.isNoObj() && agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
             agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage("""
-                                                                       An analysis of the last summarization identified the following loose ends:
-                                                                       
-                                                                       %s
-                                                                       """.formatted(String.join("\n", looseEnds.stream().map(Str.Helper::cleanString).toList())));
+                                                                                       An analysis of the last summarization identified the following loose ends:
+                                                                                       
+                                                                                       %s
+                                                                                       """.formatted(String.join("\n", looseEnds.stream().map(Str.Helper::cleanString).toList())));
         }
         // gated recall briefing — once the queued summarization has completed,
         // the applied-constraints rec returned by summary() drives the briefing

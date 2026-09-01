@@ -555,8 +555,15 @@ public class dckrSpace extends AbstractMemorySpace {
             final Path yamlFile = dir.resolve("docker-compose.yml");
             Files.writeString(yamlFile, YAML_SERIALIZER.write(config), StandardCharsets.UTF_8);
             LOG.info("wrote compose file {{y}}%s", yamlFile);
-            exec(dockerCmd("compose", "--progress=plain", "-f", yamlFile.toString(), "-p", name, "up", "-d"));
-            LOG.info("compose {{b}}%s{{X}} up", name);
+            // --wait: block until the stack reports healthy (per-service
+            // healthchecks) so a boot file can register spaces that must be
+            // accepting connections right after the up returns.  --timeout:
+            // compose's default wait timeout (10s) is too short for long-
+            // starting backends.  exec timeout (30m): covers cold pulls +
+            // healthcheck retries.
+            exec(1800, dockerCmd("compose", "--progress=plain", "-f", yamlFile.toString(),
+                    "-p", name, "up", "-d", "--wait", "--timeout", "600"));
+            LOG.info("compose {{b}}%s{{X}} up (healthy)", name);
             if (null != this.pullWidget)
                 this.pullWidget.close();
             this.pullWidget = null;

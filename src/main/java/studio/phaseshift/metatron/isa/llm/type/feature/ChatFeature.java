@@ -6,26 +6,19 @@ import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.mModel;
-import studio.phaseshift.metatron.isa.llm.type.mSkill;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.Map;
-import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -48,7 +41,6 @@ public class ChatFeature extends AbstractFeature {
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
-        this.registerSkill(agent);
         final String userMessage = agent.userMessage();
         if (userMessage == null || userMessage.isBlank())
             return noobj();
@@ -56,12 +48,22 @@ public class ChatFeature extends AbstractFeature {
         try {
             final Space space = Router.global().getSpaceFor(agent.at(ROOT).uriValue().extend(MESSAGE));
             if (space.hasQ(f(INCRQ))) {
+                if (agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
+                    agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage(
+                            """
+                            str::T template expansion is supported using $\\{ code \\}.
+                              $\\{ 1.-<[+2,_]>-.sum() \\}
+                            """.formatted(METATRON_VERSION, mathInstSet.nowDatetime()));
+                }
+                if (agent.hasFeature(LLM_TOOL_FEATURE_TID)) {
+                    // add chat inst
+                }
                 this.lastMessage = MessageBuilder.build(USER_MESSAGE_TID)
                         .text(Str.Helper.cleanString(str(userMessage).apply()))
                         .contents(userMessage)
                         .time()
-                        .session(agent.hasFeature(LLM_SESSION_FEATURE_TID)
-                                ? agent.feature(LLM_SESSION_FEATURE_TID).asRec().at(SESSION).uriValue()
+                        .session(agent.hasFeature(LLM_MESSAGE_FEATURE_TID)
+                                ? agent.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION).uriValue()
                                 : null)
                         .depth(agent.chatDepth())
                         .chatId(agent.chatId())
@@ -106,10 +108,10 @@ public class ChatFeature extends AbstractFeature {
 
     private static final fURI CHAT_INST_TID = LLM_CHAT_FEATURE_TID.extend(INST).extend("agent_chat");
 
-    @Override
-    public Set<fURI> requires() {
-        return Set.of(LLM_SKILL_FEATURE_TID);
-    }
+    // @Override
+    // public Set<fURI> requires() {
+    //       return Set.of(LLM_SKILL_FEATURE_TID);
+    //  }
 
     /**
      * Register this feature's skill with the SkillFeature gateway — the
@@ -119,7 +121,7 @@ public class ChatFeature extends AbstractFeature {
      * an MCP server) be chatted with; the gateway forwards the tool to the
      * ToolFeature gateway.
      */
-    public void registerSkill(final Agent agent) {
+    /*public void registerSkill(final Agent agent) {
         if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
             return;
         agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(mutableMap(
@@ -148,5 +150,5 @@ public class ChatFeature extends AbstractFeature {
                         Map.of(jnt(0), "the message to send the agent"),
                         "chat with the agent and receive its response",
                         "chat('what is a database?')"))))));
-    }
+    }*/
 }

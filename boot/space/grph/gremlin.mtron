@@ -1,0 +1,36 @@
+[== gremlin — a grph space on a janusgraph container (ws endpoint, binary
+     serializer) aggregated through dckrspace.  a running container is left
+     in place; a missing one is brought up via docker:compose (healthcheck +
+     up --wait) before the space is built.
+     args (the caller supplies the defaults from boot/args):
+       saddr, sport, simg ==]
+||inst?#{?}<=#{?}(saddr=>uri::T,sport=>int::T,simg=>str::T){
+  print("gremlin: pulling container from ${!*simg}").
+  from(docker:container/metatron_gremlin).
+  else(*simg -< [services => -< [gremlin => -< [
+                          image       => ${!*simg},
+                          restart     => 'unless-stopped',
+                          environment => -< [<janusgraph.storage.backend> => 'inmemory',
+                                            <janusgraph.storage.hostname> => '0.0.0.0',
+                                            GREMLIN_REMOTE_HOSTS          => 'localhost',
+                                            JANUS_PROPS_TEMPLATE          => 'inmemory'],
+                          ports       => -< ['${!*sport}:8182'],
+                          healthcheck => -< [test         => -< ['CMD-SHELL','bash -c "exec 3<>/dev/tcp/127.0.0.1/8182" || exit 1'],
+                                            interval     => '5s',
+                                            retries      => 60,
+                                            start_period => '30s'],
+                          volumes     => -< ['metatron_gremlin:/janusgraph/inmemory']]
+                        ],
+   volumes => -< [metatron_gremlin => -< [driver => 'local']] ]
+    .to(docker:compose/metatron_gremlin))
+  print("gremlin: container loaded ${_}").
+  -<[pattern => g:#,
+     host    => <ws://${!*saddr}:${!*sport}/gremlin>,
+     q       => [incrq::[=>],subq::[=>]],
+     schema  => noobj,
+     config  => [
+      <serializer.className>                     => <org.apache.tinkerpop.gremlin.util.ser.GraphBinaryMessageSerializerV1>,
+      <serializer.config.ioRegistries>           => [<org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry>],
+      <gremlin.remote.remoteConnectionClass>     => <org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection>,
+      <gremlin.remote.remoteTraversalSourceName> => g],
+     route   => -< [g: => <>]]@</sys/space/grph/gremlin>.as(grphspace::T) }

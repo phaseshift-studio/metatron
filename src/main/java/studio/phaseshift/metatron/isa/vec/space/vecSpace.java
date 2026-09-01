@@ -25,10 +25,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -49,6 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.vec.vecInstSet.VEC_EMBEDDING_TYPE;
 import static studio.phaseshift.metatron.isa.vec.vecInstSet.VEC_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -299,31 +297,37 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
     @Override
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
+            LOG.info("writing to %s: %s", pattern, obj);
             try {
                 final fURI aligned = Space.Helper.routeFromSpace(pattern, this.routes());
                 final DataPath dp = DataPath.withoutDB(aligned);
-
+                LOG.info("furi aligned: %s", aligned);
                 if (!dp.hasCollection())
                     throw MTronException.of("vecspace write requires a collection: %s", aligned);
 
                 // ── DELETE ──
                 if (obj.isNoObj()) {
                     if (dp.hasEntry() && !dp.entryIsWildcard()) {
+                        LOG.info("deleting %s", dp);
                         final fURI collId = resolveCollectionId(dp.collection(), false);
-                        this.sjvm().delete(collId, List.of(aligned.toString()));
+                        this.sjvm().delete(collId, List.of(dp.entry()));
                     }
                     return noobj();
                 }
 
                 // ── WRITE: docId = routed path (e.g. "test/a") ──
                 final fURI collId = resolveCollectionId(dp.collection(), true);
-                final Obj embedding = this.sjvm().embeddingFunction(f(dp.collection())).apply(obj);
+                boolean isAlreadyEmbedded = obj.test(VEC_EMBEDDING_TYPE);
+                final Obj rawObj = isAlreadyEmbedded ? obj.asRec().at(OBJ) : obj;
+                final Lst embedding = isAlreadyEmbedded ? obj.asRec().at(EMBED) : this.sjvm().embeddingFunction(f(dp.collection())).apply(obj).as();
+                final Rec metadata = isAlreadyEmbedded ? obj.asRec().at(META).orElse(rec0()) : rec0();
                 if (embedding.isFail())
                     throw embedding.asFail().asException();
-                final VectorDBClient.EntityData entity = new VectorDBClient.EntityData(f(aligned.name()), obj, rec0(), embedding.asLst());
-                this.sjvm().upsert(collId, f(dp.collection()), entity);
+                final VectorDBClient.EntityData entity = new VectorDBClient.EntityData(f(aligned.name()), rawObj, metadata, embedding);
+                this.sjvm().upsert(collId, f(dp.entry()), entity);
                 LOG.debug("wrote: %s => %s", collId, entity);
                 return obj;
+                //return pattern.hasPattern() ? obj : obj.selfVID(pattern);
 
             } catch (final Exception e) {
                 throw MTronException.of(e);

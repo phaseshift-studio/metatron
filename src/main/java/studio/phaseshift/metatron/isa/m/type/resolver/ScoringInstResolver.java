@@ -24,17 +24,16 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.MONAD;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -108,6 +107,48 @@ public class ScoringInstResolver implements InstResolver {
         return resolve(lhs, userInst, fetched.stream());
     }
 
+    private boolean checkArgs(final Poly<?, ?> userInstArgs, final Poly<?, ?> instArgs) {
+        if (instArgs.isEmpty()) // user_args and inst_args have no values, easy true
+            return userInstArgs.isEmpty();
+        if (userInstArgs.count() > instArgs.count()) // user_args can be less dude to {?}-zeroable inst_args
+            return false;
+        if (instArgs.isLst()) {
+            final List<Obj> instList = instArgs.lstValue();
+            final List<Obj> userList = userInstArgs.lstValue();
+            for (int i = 0; i < instList.size(); i++) {
+                final Obj instArg = instList.get(i);
+                if (instArg.isObjCall())
+                    continue;
+                if (userList.size() <= i) {
+                    if (!instList.get(i).tid().isZeroable())
+                        return false;
+                } else {
+                    final Obj userArg = userList.get(i);
+                    if (userArg.isObjCall())
+                        continue;
+                    if (!Obj.Helper.specificType(userArg).baseTypeID().bimatches(Obj.Helper.specificType(instArg).baseTypeID()))
+                        return false;
+                }
+            }
+        } else {
+            int counter = -1; // rec inst_args, but lst user_args (index by counter) 
+            for (final Map.Entry<Obj, Obj> entry : instArgs.recValue().entrySet()) {
+                counter++;
+                if (entry.getValue().isObjCall())
+                    continue;
+                final Obj userValue = userInstArgs.at(entry.getKey()).orElse(userInstArgs.at(jnt(counter)));
+                if (userValue.isObjCall())
+                    continue;
+                if (userValue.isNoObj()) {
+                    if (!entry.getKey().tid().isZeroable())
+                        return false;
+                } else if (!Obj.Helper.specificType(userValue).baseTypeID().bimatches(Obj.Helper.specificType(entry.getValue()).baseTypeID()))
+                    return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public Inst resolve(final Obj lhs, final Inst userInst, final Stream<Obj> candidates) {
         //final GraphittyLogger LOG = Graphitty.log(lhs);
@@ -118,7 +159,10 @@ public class ScoringInstResolver implements InstResolver {
         final List<Inst> viable = candidates
                 .filter(Obj::isObjInst)
                 .map(Obj::asInst)
-                .filter(i -> (i.args().isEmpty() && userInst.args().isEmpty()) || i.args().isRec() || i.args().count() >= userInst.args().count())
+                .filter(i -> (userInst.tid().basePath().equals(AS_INST_TID) && 1 == i.args().count() && userInst.args().count() == 1) ||
+                        i.tid().hasQ(MONAD) ||
+                        this.checkArgs(userInst.args(), i.args()))
+                //.filter(i -> (i.args().isEmpty() && userInst.args().isEmpty()) || i.args().count() >= userInst.args().count())
                 .filter(i -> !lhs.isInst() || (i.dom().baseTypeID().equals(M_ISA_INST_TID)))
                 .toList();
 
@@ -132,6 +176,11 @@ public class ScoringInstResolver implements InstResolver {
 
         // Multiple candidates: score by specificity and select best
         return viable.stream()
+                /* .filter(apiInst ->
+                         apiInst.dom().isGeneric() ||
+                                 !userInst.hasDom() ||
+                                 userInst.dom().test(apiInst.dom()))*/
+                //.filter(apiInst -> apiInst.rng().isGeneric() || !userInst.hasRng() || userInst.rng().test(apiInst.rng()))
                 .map(apiInst -> {
                     final int score = scoreSpecificity(lhs, userInst, apiInst);
                     Inst transformed = userInst.hasDom() ? apiInst.dom(userInst.dom()) : apiInst;

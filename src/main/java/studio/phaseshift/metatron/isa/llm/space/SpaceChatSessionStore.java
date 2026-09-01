@@ -291,17 +291,15 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             return new ArrayList<>();
         // The model's chat view as a query: bounded, sentinel-stopped, no
         // metatron-only kinds; the most recent system record is pinned first.
+        // The compaction sentinel bounds the window (stopAt) but is not
+        // projected — its resume summary is surfaced via the system-message
+        // channel (CompactionFeature), not as a message here.
         final List<Rec> window = this.query(sesVID)
                 .maxFromCurrent(this.getMaxMessages())
                 .stopAt(COMPACTION_MESSAGE_TID)
                 .exclude(THINKING_MESSAGE_TID)
-                .exclude(COMPACTION_MESSAGE_TID)
                 .apply();
 
-        // The model's chat view over the native window: user/ai/tool_result
-        // records with the most recent system record pinned first; thinking
-        // and compaction are metatron-world records and are not projected
-        // into the LC4j chat window.
         Rec system = null;
         for (final Rec message : window)
             if (message.tid().equals(SYSTEM_MESSAGE_TID))
@@ -429,7 +427,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (null == this.agent)
             return 150; // no agent — the bus path never sizes from session policy
         try {
-            final Obj sessFeature = this.agent.feature(LLM_SESSION_FEATURE_TID);
+            final Obj sessFeature = this.agent.feature(LLM_MESSAGE_FEATURE_TID);
             if (!sessFeature.isNoObj()) {
                 final Obj algo = sessFeature.asRec().at(ALGORITHM);
                 if (!algo.isNoObj() && algo.isRec()) {
@@ -458,7 +456,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
      * @param skip     the initial skip index (may be 0)
      * @return adjusted skip index, {@code <= skip}
      */
-    static int adjustSkipToPreservePairs(final List<Rel> messages, int skip) {
+    public static int adjustSkipToPreservePairs(final List<Rel> messages, int skip) {
         if (skip <= 0 || skip >= messages.size())
             return skip;
 
