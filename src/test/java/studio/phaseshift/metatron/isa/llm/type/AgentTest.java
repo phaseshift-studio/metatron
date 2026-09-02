@@ -355,7 +355,7 @@ public class AgentTest extends AbstractMetatronTest {
 
         // The transformer appends these to the model's base prompt — the join is
         // exactly what Agent.chat() feeds to systemMessageTransformer.
-        assertEquals("first\nsecond", sf.systemMessage());
+        assertTrue(sf.systemMessage().contains("first\nsecond"));
     }
 
     /**

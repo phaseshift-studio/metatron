@@ -66,6 +66,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler.HTTP_MCP_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.web_httpHandler.WEB_HTTP_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -138,6 +139,13 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                 Obj target = Space.Helper.resolveApply(this, r.second());
                 if (target.isUri())
                     target = Router.global().read(target.uriValue());
+                // ── mcp_server type: materialize it so the transport wraps it ──
+                if (target.isType() && target.asType().hasConstructor()
+                        && Obj.Helper.specificType(target).test(MCP_SERVER_TYPE)) {
+                    final Obj mcp = target.asType().constructor().apply(rec0()).as();
+                    if (!mcp.isFail())
+                        target = mcp;
+                }
                 if (target.isType()) {
                     // Type route: construct handler via type system (MCP, mtron, web_http, etc.)
                     LOG.info("handling as handler route: %s => %s", left, target.vid());

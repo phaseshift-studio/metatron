@@ -43,8 +43,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
 import static studio.phaseshift.metatron.isa.llm.type.mModel.model;
-import static studio.phaseshift.metatron.isa.llm.type.mcp.mcpMessageServer.MCP_MESSAGE_HTTP_TYPE;
-import static studio.phaseshift.metatron.isa.llm.type.mcp.mcpMessageServer.MCP_MESSAGE_WS_TYPE;
+import static studio.phaseshift.metatron.isa.llm.type.mcp.mcpMessageServer.MCP_MESSAGE_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -687,8 +686,7 @@ public class llmInstSet extends AbstractInstSet {
 //                                 "overlays an iteration graph on the message ledger — each chat turn creates a linked iteration node with prev/next pointers and message back-references",
 //                                 "iteration_feature::[]"),
                         //////////////////////////////////////////////////////////
-                        MCP_MESSAGE_HTTP_TYPE,
-                        MCP_MESSAGE_WS_TYPE),
+                        MCP_MESSAGE_SERVER_TYPE),
                 uri(INST), lst(
                         docWrap(instC(AS_INST_TID.dom(REC_TID).rng(LLM_MODEL_TID),
                                         lst(LLM_MODEL_TYPE),

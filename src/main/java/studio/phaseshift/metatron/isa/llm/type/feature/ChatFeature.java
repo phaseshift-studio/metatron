@@ -6,7 +6,6 @@ import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.mModel;
-import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
@@ -51,9 +50,12 @@ public class ChatFeature extends AbstractFeature {
                 if (agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
                     agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage(
                             """
-                            str::T template expansion is supported using $\\{ code \\}.
-                              $\\{ 1.-<[+2,_]>-.sum() \\}
-                            """.formatted(METATRON_VERSION, mathInstSet.nowDatetime()));
+                            your underlying inferencing model is:
+                            %s
+                            you have access to mtron eval tool which allows you to evaluate any mtron expression in metatron.
+                            moreover, the messages you produce may contain str::T templates $\\{ code \\}.
+                              $\\{ 1.-<[+2,_]>-.sum() \\}   =>  5
+                            """.formatted(this.at(MODEL)));
                 }
                 if (agent.hasFeature(LLM_TOOL_FEATURE_TID)) {
                     // add chat inst

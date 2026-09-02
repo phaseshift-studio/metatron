@@ -2,5 +2,5 @@
 ||inst?wsspace<=uri() {
   -<([host    => _,
       pattern => <ws://#>,
-      route   => [/mcp   => mcp_mtron_ws,
+      route   => [/mcp   => mcp_mtron,
                   /mtron => mtron_ws]]@/sys/space/web/ws).as(wsspace::T) }

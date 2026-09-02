@@ -1,0 +1,20 @@
+# cordis patch overlay — load the metatron-mirror plugin into a dsh run.
+#
+# Load with the patch flag (disposable / per-invocation):
+#
+#   pnpm dsh web --patch /home/killswitch/software/metatron/dsh-plugins/metatron-mirror/cordis.yml
+#
+# or install permanently into a profile, e.g.:
+#
+#   dsh plugin --profile web add /home/killswitch/software/metatron/dsh-plugins/metatron-mirror
+#
+# Config below is optional — the plugin falls back to env vars
+# (METATRON_MIRROR_WS / METATRON_MIRROR_ROOT) and then to defaults
+# (ws://127.0.0.1:8555/message and /usr/dsh).
+- insert:
+    - id: metatron-mirror
+      name: '/home/killswitch/software/metatron/dsh-plugins/metatron-mirror/metatron-mirror.ts'
+      config:
+        url: 'ws://127.0.0.1:8555/message'
+        root: '/usr/dsh'
+        enabled: true

@@ -63,7 +63,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
              pattern  => <http://#>,
              route    => [/          => <>,
                           /emulator  => mcp_emulator_http,
-                          /mcp       => mcp_mtron_http, 
+                          /mcp       => mcp_mtron,
                           /docs      => <metatronfs:docs/website>,
                           /console   => <metatronfs:src/main/resources/web/console>]]@/sys/space/web/http;
    wsspace::[host     => !*boot/args/web/ws/host,
@@ -71,7 +71,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
              q        => [docq::[=>],subq::[=>]],
              route    => [/emulator => mcp_emulator_ws, 
                           /mtron    => mtron_ws,
-                          /mcp      => mcp_mtron_ws]]@/sys/space/web/ws;
+                          /mcp      => mcp_mtron]]@/sys/space/web/ws;
   [-- support for server->client notifications --]
    !*boot/args/web/ws/host * /mcp/+/notifications/#?subq -> sub::[                                           
       on_recv => inst?#<=lst(message=>?lst::T){                    

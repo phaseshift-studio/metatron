@@ -76,15 +76,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_emulator_httpHandler.HTTP_MCP_EMULTATOR_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler.HTTP_MCP_HANDLER_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_mtron_httpHandler.HTTP_MCP_MTRON_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mtron_httpHandler.HTTP_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.web_httpHandler.WEB_HTTP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.*;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_emulator_wsHandler.WS_MCP_EMULTATOR_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_mtron_wsHandler.WS_MCP_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
+import static studio.phaseshift.metatron.isa.web.type.mcpMetatronBuilder.MCP_MTRON_SERVER_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -378,7 +377,6 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(WS_CLIENT_TYPE, "an websocket client which should be refined to implement protocol specs"),
                         docWrap(WS_MCP_HANDLER_TYPE, "an abstract mcp websocket handler providing necessary json-rpc infrastructure for mcp servers to leverage"),
                         docWrap(WS_MCP_EMULTATOR_TYPE, "a websocket mcp emulator server that provides an agent a stateful environment of mcp server access"),
-                        docWrap(WS_MCP_MTRON_HANDLER_TYPE, "an mcp handler server with built-in mtron eval, space listing, router info and instruction listing tools"),
                         docWrap(WS_MTRON_HANDLER_TYPE, "a simple websocket handler accepting mtron expressions and return mtron results", "mtron_ws::[=>]"),
                         /// //////////////////////////////
                         docWrap(HTTP_SOCKET_TYPE, "a generic http obj which can be refined with useful behaviors"),
@@ -387,9 +385,9 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(HTTP_MCP_EMULTATOR_TYPE, "an http mcp emulator server that provides an agent a stateful environment of mcp server access"),
                         docWrap(HTTP_MTRON_HANDLER_TYPE, "a simple http handler accepting mtron expressions and return mtron results", "mtron_http::[=>]"),
                         docWrap(HTTP_MCP_HANDLER_TYPE, "an abstract mcp http handler providing necessary json-rpc infrastructure for mcp servers to leverage"),
-                        docWrap(HTTP_MCP_MTRON_TYPE, "mcp streamable http transport handler with built-in metatron tools"),
                         docWrap(WEB_HTTP_HANDLER_TYPE, "a http handler serving web content from a router-backed space"),
                         /// //////////////////////////////
+                        docWrap(MCP_MTRON_SERVER_TYPE, "a transport-agnostic mcp server exposing metatron-native tools (eval_mtron, list_space, router_info, find_inst)"),
                         docWrap(MCP_SERVER_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(MCP_SERVER_TID)

@@ -42,12 +42,12 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_SERVER_TID;
 /**
  * Transport-agnostic base for the metatron-native MCP server.
  * <p>
- * Both {@code mcp_mtron_httpHandler} and {@code mcp_mtron_wsHandler} compose a
- * {@link mcpServer} whose tools/resources are populated by
- * {@link mcpMetatronBuilder#build(Map, fURI)}.  Because that protocol handler is
- * the same object regardless of HTTP vs WebSocket transport, the JSON-RPC
- * request/response behaviour is identical — so the direct-invocation tests live
- * here, once, and are inherited by every transport's test.
+ * The {@code mcp_mtron} server type materializes a {@link mcpServer} whose
+ * tools/resources are populated by {@link mcpMetatronBuilder#build(Map, fURI)}.
+ * Because that protocol handler is the same object regardless of HTTP vs
+ * WebSocket transport (the spaces wrap it), the JSON-RPC request/response
+ * behaviour is identical — so the direct-invocation tests live here, once, and
+ * are inherited by every transport's test.
  * <p>
  * Subclasses supply nothing further for the direct-invocation suite; they only
  * add transport-specific type checks and live round-trip tests.

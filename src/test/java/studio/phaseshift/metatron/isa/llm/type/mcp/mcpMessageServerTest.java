@@ -43,10 +43,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_SERVER_TYPE;
 
 
 /**
- * Protocol-level tests for the {@code mcp_message_server} tools
+ * Protocol-level tests for the {@code mcp_message} tools
  * (add_message / get_messages / search_messages), driven straight through
  * {@link mcpServer#handleMessage(Obj)} — no transport involved.
  * <p>
@@ -74,11 +75,19 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
         LEDGER = this.testSpacePattern().retractPattern().toString();
         // the bus is (root, session) over the space — no agent rec needed at
         // the root (the live /usr/dr topology has no record at its root either)
-        // apply(Obj) on a Type is the predicate test — instantiation goes through the constructor
-        final Obj server = mcpMessageServer.wsHandler().constructor().apply(rec());
+        // the mcp_message type's constructor directly materializes the transport-agnostic mcpServer
+        final Obj server = mcpMessageServer.server().constructor().apply(rec());
         if (server.isFail())
-            throw new IllegalStateException("mcp_message_server constructor failed: " + server.toCleanString());
-        return new mcpServer(server.recValue(), server.tid(), server.vid());
+            throw new IllegalStateException("mcp_message constructor failed: " + server.toCleanString());
+        return server.as();
+    }
+
+    @Test
+    public void serverIsAnMcpServerType() {
+        // the spaces wrap a route target that is an mcp_server — verify mcp_message
+        // registers as one so both httpSpace and wsSpace pick it up automatically
+        assertTrue(Obj.Helper.specificType(mcpMessageServer.server()).test(MCP_SERVER_TYPE),
+                "mcp_message must be an mcp_server type so the spaces wrap it");
     }
 
     // ========================================
@@ -125,6 +134,7 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
             "user        % the harbor light blinks twice before dawn",
             "system      % answer in the voice of a lighthouse keeper",
             "thinking    % the keeper meant the twin lamps, not the single one",
+            "compaction  % resume — the keeper tallied the spare bulbs and lit the fog lamp",
     }, delimiter = '%')
     public void addMessageAcceptsEveryKind(final String kind, final String text) {
         final String written = callText(mcp.at(TOOL).asRec().keys().filter(r -> r.uriValue().name().contains("add_message")).findFirst().get().uriValue().toString(), rec(
@@ -134,6 +144,8 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
                 uri(SESSION), str(DSH_SESSION)));
         assertTrue(written.contains(text), "written message should carry its text: " + written);
         assertTrue(written.contains("depth=>1"), "envelope should carry depth 1: " + written);
+        if (kind.equals("compaction"))
+            assertTrue(written.contains("compaction"), "compaction kind should write the sentinel tid: " + written);
     }
 
     @Test
@@ -152,6 +164,26 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
         assertTrue(written.contains("{\"0\":\"select count(*) from bulbs\"}"), "tool_request should carry its args: " + written);
         assertTrue(written.contains("m_tble_inst_sql({\"0\":\"select count(*) from bulbs\"})"),
                 "tool_request text should be the name(args) summary: " + written);
+    }
+
+    // json wire arguments — an mcp client may deliver tool_requests as a json
+    // string; add_message decodes it with the json serializer (the mtron
+    // parser garbles json: list-of-recs lands as objs, not recs)
+    @ParameterizedTest(name = "add_message decodes json tool_requests: {0}")
+    @CsvSource(value = {
+            "a lone call  % [{\"name\":\"m_tble_inst_sql\",\"contents\":\"call_tide_1\"}] % call_tide_1",
+            "a paired call % [{\"name\":\"m_tble_inst_sql\",\"contents\":\"call_tide_2\"},{\"name\":\"m_probe_buoy\",\"contents\":\"call_tide_3\"}] % call_tide_3",
+    }, delimiter = '%', quoteCharacter = '\'')
+    public void addMessageDecodesJsonToolRequests(final String desc, final String json, final String marker) {
+        final String written = callText(mcp.at(TOOL).asRec().keys().filter(r -> r.uriValue().name().contains("add_message")).findFirst().get().uriValue().toString(), rec(
+                uri(ROOT), str(LEDGER),
+                uri(KIND), str("ai"),
+                uri(TEXT), str("let the tide ledger keep the tally"),
+                uri(TOOL_REQUESTS), str(json),
+                uri(SESSION), str(DSH_SESSION)));
+        assertTrue(written.contains("tool_requests"), "ai message should carry tool_requests: " + written);
+        assertTrue(written.contains(marker), "the json argument should decode to a typed tool_request: " + written);
+        assertTrue(written.contains("m_tble_inst_sql"), "the decoded tool_request should keep the tool name: " + written);
     }
 
     @Test

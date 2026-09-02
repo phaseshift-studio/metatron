@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -52,9 +53,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_SERVER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -68,6 +72,30 @@ public final class mcpMetatronBuilder {
 
     private mcpMetatronBuilder() {
         // do nothing
+    }
+
+    /**
+     * The single transport-agnostic MCP server type exposing the metatron-native
+     * tools ({@code eval_mtron}, {@code list_space}, {@code router_info}, …).
+     * Both {@code httpSpace} and {@code wsSpace} wrap this {@link mcpServer} in
+     * their respective transport handler ({@code mcp_httpHandler} /
+     * {@code mcp_wsHandler}).
+     */
+    public static final fURI MCP_MTRON_SERVER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_mtron");
+    public static final Type MCP_MTRON_SERVER_TYPE = mcpMetatronBuilder.server();
+
+    public static Type server() {
+        return Type.Builder.build()
+                .tid(MCP_SERVER_TID)
+                .vid(MCP_MTRON_SERVER_TID)
+                .isaPredicate(rec(
+                        uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
+                        uri(RESOURCE).maybe().asUri(), T(ALL),
+                        uri(PROMPT).maybe().asUri(), T(ALL)))
+                .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_MTRON_SERVER_TID), lst(T(REC_TID)), (lhs, inst) -> {
+                    final Rec config = inst.arg(0).asRec();
+                    return new mcpServer(build(config.jvm(), config.vid()), MCP_SERVER_TID, config.vid());
+                })).create();
     }
 
     /**
@@ -110,7 +138,8 @@ public final class mcpMetatronBuilder {
      * supplied jvm map.  Caller-supplied entries always win — this method
      * never overwrites existing keys.
      * <p>
-     * Shared by {@code mcp_wsHandler} and {@code mcp_mtron_httpHandler}.
+     * Shared by the transport-agnostic {@code mcp_mtron} server (wrapped by
+     * {@code mcp_httpHandler} / {@code mcp_wsHandler} at the space level).
      *
      * @param base the caller-supplied jvm map (may contain tools/resources/prompts)
      * @param vid  the type VID for tool TID namespacing
@@ -249,24 +278,26 @@ public final class mcpMetatronBuilder {
         if (!jvm.containsKey(uri(RESOURCE))) {
             final Rec resources = rec(mutableMap());
             final Path skillDir = Path.of(".metatron/skills/mtron");
-            mSkill.of(skillDir.toFile()).toSkill().resources().forEach(sr -> {
-                try {
-                    final Map<String, List<String>> frontMatter = mSkill.parseFrontMatter(sr.content());
-                    final Rec resource = rec(
-                            uri(URI), uri(sr.relativePath()),
-                            uri(NAME), str(frontMatter.getOrDefault("name", List.of(Path.of(sr.relativePath()).getFileName().toString())).getFirst()),
-                            uri(DESC), str(frontMatter.getOrDefault("description", List.of("no description")).getFirst()));
-                    if (sr.content().length() > LARGE_RESOURCE_THRESHOLD) {
-                        // large resource — expose a reference to the file, not its inline content
-                        resource.at(uri(REFERENCE), str(skillDir.resolve(sr.relativePath()).toAbsolutePath().toString()), MUTABLE);
-                    } else {
-                        resource.at(uri(TEXT), str(sr.content()), MUTABLE);
-                    }
-                    resources.jvm().put(uri(sr.relativePath()), resource);
-                } catch (final Exception e) {
-                    LOG.warn("unable to build resource: %s", e);
-                }
-            });
+            mSkill.of(skillDir.toFile()).toSkill().resources().stream()
+                    .filter(sr -> sr.relativePath().endsWith("md")) // for now, only allow markdown files
+                    .forEach(sr -> {
+                        try {
+                            final Map<String, List<String>> frontMatter = mSkill.parseFrontMatter(sr.content());
+                            final Rec resource = rec(
+                                    uri(URI), uri(sr.relativePath()),
+                                    uri(NAME), str(frontMatter.getOrDefault("name", List.of(Path.of(sr.relativePath()).getFileName().toString())).getFirst()),
+                                    uri(DESC), str(frontMatter.getOrDefault("description", List.of("no description")).getFirst()));
+                            if (sr.content().length() > LARGE_RESOURCE_THRESHOLD) {
+                                // large resource — expose a reference to the file, not its inline content
+                                resource.at(uri(REFERENCE), str(skillDir.resolve(sr.relativePath()).toAbsolutePath().toString()), MUTABLE);
+                            } else {
+                                resource.at(uri(TEXT), str(sr.content()), MUTABLE);
+                            }
+                            resources.jvm().put(uri(sr.relativePath()), resource);
+                        } catch (final Exception e) {
+                            LOG.warn("unable to build resource: %s", e);
+                        }
+                    });
             jvm.put(uri(RESOURCE), resources);
         }
 
