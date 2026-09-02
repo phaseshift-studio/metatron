@@ -13,4 +13,6 @@ public interface Operation {
      * @return the result
      */
     int apply(int a, int b);
+
+    int apply(float a, float b);
 }

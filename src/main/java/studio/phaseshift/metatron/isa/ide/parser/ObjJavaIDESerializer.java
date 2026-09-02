@@ -24,6 +24,8 @@ import ch.usi.si.seart.treesitter.Parser;
 import ch.usi.si.seart.treesitter.Tree;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
 import studio.phaseshift.metatron.util.MTronException;
@@ -32,6 +34,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import static studio.phaseshift.metatron.isa.ide.ideInstSet.IDE_JAVA_TID;
 import static studio.phaseshift.metatron.isa.ide.ideInstSet.OBJ_IDE_JAVA_SERIALIZER_TID;
@@ -48,31 +51,27 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_SERIALIZER_TID;
  * TreeSitter statement/expression tree is collapsed into complete text spans
  * at the declaration level — the skeleton an agent conceptualizes code by.
  *
- * <p>Lossless by construction: members are stored in document order, each
- * member's {@code text} folds in the whitespace preceding it, and the class
- * {@code header} (up to and including the opening brace) and {@code footer}
- * (from after the last member to end) account for every byte.  Concatenating
- * {@code header + members.text + footer} reproduces the class source exactly.</p>
+ * <p><b>The rec is the URI graph.</b> The name is the addressing face and the
+ * structure carries the order: the {@code classes} slot is a named rec (a
+ * file's top-level names are structurally unique — each maps to the ranked
+ * {@code lst::T} of the class recs with that name), and {@code members} is an
+ * ordered {@code lst::T} of single-field wrapper recs —
+ * {@code {name => memberRec}} — where the list position is the print order
+ * and the wrapper key is the named slot.  Dereference is the router's job:
+ * {@code code/0/classes/Greeter/0/members/1/apply/text} derefs right there,
+ * and the wildcard {@code members/+/apply} pulls every apply in document
+ * order.  There is no lookup table and no parallel identifier scheme: the
+ * name IS the key, the order IS the list.  Nameless members (comments, static
+ * initializers) take their kind word as the wrapper key —
+ * {@code members/1/comment/...} — so they stay named and addressable.</p>
  *
- * <p><b>Addressing and editing — the shared schema:</b> everything
- * language-agnostic about the coarse rec lives in {@link ObjIDESchema}.  On
- * every parse, {@code decorate} derives two fields per node —
- * {@code ordinal} (rank among its same-named siblings, document order: a
- * lone {@code apply} is {@code apply/0}, the second duplicate is
- * {@code apply/1}) and {@code path} (the node's own address,
- * {@code classes/{name}/{ordinal}/members/{kind}/{name}/{ordinal}}, nameless
- * members dropping the name slot).  Never stored, so never stale.
- * {@code locate} turns an address back into the node rec; {@link #edit}
- * replaces a node's span in the source and reparses — an unparseable
- * replacement is rejected with its first syntax error instead of saved;
- * the rec that comes back rewrites byte-for-byte to the edited source.
- * Nested classes parse through the same schema as {@code kind=>class}
- * members carrying their own {@code members}.</p>
- *
- * <p>Child lists ({@code imports}, {@code classes}, {@code members}) are
- * {@code lst::T} — ordered, duplicate-allowed — matching source order and the
- * mtron container semantics ({@code rec::T} is keyed, {@code lst::T} is
- * ordered, {@code #{*}::T} is unordered/bulkable).</p>
+ * <p>Lossless by construction: each member's {@code text} folds in the
+ * whitespace preceding it, and the class {@code header} (up to and including
+ * the opening brace) and {@code footer} (from after the last member to end)
+ * account for every byte.  Concatenating {@code header + members + footer}
+ * reproduces the class source exactly — the walk follows the list, so any
+ * member order, even same-named ones interleaved with other members,
+ * round-trips byte-for-byte.</p>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -139,9 +138,13 @@ public class ObjJavaIDESerializer extends AbstractObjSerializer<String> {
             if (preambleSet) {
                 result = result.at(uri("postscript"), str(programContent.substring(prevClassEnd)));
             }
-            // the shared addressing contract (ordinal + path per node) —
-            // language-agnostic, so it lives in the schema, not the adapter
-            return ObjIDESchema.decorate(result).selfTID(IDE_JAVA_TID);
+            // classes/{name}/{rank} — the same named-slot shape, one level up
+            final Obj classes = result.at(uri("classes"));
+            if (!classes.isNoObj() && classes.isLst()) {
+                result = result.at(uri("classes"),
+                        groupBy(classes.asLst().elements().toList(), ObjJavaIDESerializer::classSlot));
+            }
+            return result.selfTID(IDE_JAVA_TID);
         } catch (final MTronException e) {
             throw e;
         } catch (final Exception e) {
@@ -155,9 +158,6 @@ public class ObjJavaIDESerializer extends AbstractObjSerializer<String> {
     }
 
     // ── write: coarse Rec → Java source ─────────────────────────────────
-    // the emit is pure contract concatenation, shared with every other
-    // language adapter — the schema owns it (and extends it with the
-    // nested-type dispatch)
 
     @Override
     public ByteBuffer outputBytes(final Obj obj) throws MTronException {
@@ -166,42 +166,79 @@ public class ObjJavaIDESerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String write(final Obj obj) throws MTronException {
-        return ObjIDESchema.write(obj);
-    }
+        if (!obj.isRec()) return Str.Helper.cleanString(obj);
+        final Rec root = obj.asRec();
+        final StringBuilder sb = new StringBuilder();
 
-    // ── edit by address (span-replace + parse gate) ────────────────────
+        final Obj preamble = root.at(uri("preamble"));
+        final Obj classes = root.at(uri("classes"));
+        final Obj postscript = root.at(uri("postscript"));
 
-    /**
-     * Replace the node named by {@code address}
-     * ({@code classes/{name}/{ordinal}[/members/{kind}/{name}/{ordinal}...]})
-     * with {@code newText} and return the fresh, fully-reparsed rec.
-     *
-     * <p>The span is located in the source by text (a document-order walk —
-     * never index arithmetic), the replacement spliced into that span, and
-     * the result must parse before anything is returned: an unparseable
-     * replacement is rejected with its first syntax error (line, column),
-     * not saved.  The rec that comes back is the parse of the new source,
-     * so {@code write(edit(src, a, t))} reproduces the edited source
-     * byte-for-byte.</p>
-     */
-    public static Obj edit(final String source, final String address, final String newText) {
-        final Rec rooted = single().read(source).asRec();
-        final Rec target = ObjIDESchema.locate(rooted, address);
-        final int[] span = ObjIDESchema.spanOf(source, rooted, target);
-        final String newSource = source.substring(0, span[0]) + newText + source.substring(span[1]);
-        final String error = firstError(newSource);
-        if (null != error) {
-            throw MTronException.of("edit at %s aborted: %s", address, error);
+        if (!preamble.isNoObj()) {
+            sb.append(preamble.strValue());
+        } else {
+            // class-less fallback: reconstruct package + imports
+            final Obj pkg = root.at(uri("package"));
+            if (!pkg.isNoObj()) sb.append(pkg.strValue()).append("\n\n");
+            final Obj imports = root.at(uri("imports"));
+            if (!imports.isNoObj() && imports.isLst()) {
+                imports.asLst().elements().forEach(i -> sb.append(i.strValue()).append("\n"));
+                sb.append("\n");
+            }
         }
-        return single().read(newSource);
+
+        if (!classes.isNoObj() && classes.isRec()) {
+            // the rec key order is document order — no order bookkeeping, the
+            // structure IS the order
+            for (final Rel nameSlot : classes.asRec().elements().toList()) {
+                for (final Obj c : nameSlot.second().asLst().elements().toList()) {
+                    if (!c.isRec()) continue;
+                    final Rec cls = c.asRec();
+                    final Obj sep = cls.at(uri("sep"));
+                    if (!sep.isNoObj()) sb.append(sep.strValue());
+                    writeType(cls, sb);
+                }
+            }
+        }
+
+        if (!postscript.isNoObj()) sb.append(postscript.strValue());
+        return sb.toString();
+    }
+
+    private static void writeType(final Rec type, final StringBuilder sb) {
+        final Obj header = type.at(uri("header"));
+        final Obj members = type.at(uri("members"));
+        final Obj footer = type.at(uri("footer"));
+        if (!header.isNoObj()) sb.append(header.strValue());
+        if (!members.isNoObj() && members.isLst()) {
+            // the list position is the print order — walk the wrappers in order
+            for (final Obj wrap : members.asLst().elements().toList()) {
+                if (!wrap.isRec()) continue;
+                final Rel slot = wrap.asRec().elements().toList().get(0);
+                final Obj m = slot.second();
+                if (m.isRec()) writeMember(m.asRec(), sb);
+            }
+        }
+        if (!footer.isNoObj()) sb.append(footer.strValue());
     }
 
     /**
-     * The first tree-sitter syntax error in the source — line and column —
-     * or null if it parses clean.
+     * Emit a member.  Methods/constructors decompose into header + body + footer
+     * (so a body edit writes through without a stale full-text); everything else
+     * emits its complete text span directly.
      */
-    public static String firstError(final String source) {
-        return ObjIDESchema.firstError(Language.JAVA, source);
+    private static void writeMember(final Rec m, final StringBuilder sb) {
+        final Obj header = m.at(uri("header"));
+        final Obj body = m.at(uri("body"));
+        final Obj footer = m.at(uri("footer"));
+        if (!header.isNoObj()) {
+            sb.append(header.strValue());
+            if (!body.isNoObj()) sb.append(body.strValue());
+            if (!footer.isNoObj()) sb.append(footer.strValue());
+        } else {
+            final Obj text = m.at(uri("text"));
+            if (!text.isNoObj()) sb.append(text.strValue());
+        }
     }
 
     // ── structural helpers ──────────────────────────────────────────────
@@ -258,7 +295,13 @@ public class ObjJavaIDESerializer extends AbstractObjSerializer<String> {
                     members.add(member(m, leadingGap));
                     cursor = relStart + content.length();
                 }
-                if (!members.isEmpty()) typeRec = typeRec.at(uri("members"), lst(members));
+                if (!members.isEmpty()) {
+                    // members/{i}/{name} — ordered single-field wrappers: the list
+                    // position IS the print order, the wrapper key IS the named slot
+                    final List<Obj> wrapped = new ArrayList<>();
+                    for (final Obj m : members) wrapped.add(rec(uri(memberSlot(m)), m));
+                    typeRec = typeRec.at(uri("members"), lst(wrapped));
+                }
                 // footer: from after the last member to end of class (the closing brace + trailing)
                 typeRec = typeRec.at(uri("footer"), str(classContent.substring(cursor)));
             }
@@ -306,19 +349,6 @@ public class ObjJavaIDESerializer extends AbstractObjSerializer<String> {
                 if (fname != null) m = m.at(uri("name"), str(fname.getContent()));
                 yield m;
             }
-            case "class_declaration", "interface_declaration", "enum_declaration",
-                 "record_declaration", "annotation_type_declaration" -> {
-                // a nested type — the same schema, one level down; kind is
-                // normalized to 'class' (the members/ address slot) and the
-                // leading gap folds into the header, so the write stays
-                // byte-exact
-                Rec nested = typeDeclaration(node).asRec().at(uri("kind"), uri("class"));
-                final Obj nestedHeader = nested.at(uri("header"));
-                if (!nestedHeader.isNoObj()) {
-                    nested = nested.at(uri("header"), str(leadingGap + nestedHeader.strValue()));
-                }
-                yield nested.at(uri("text"), str(text));
-            }
             case "line_comment", "block_comment" -> rec().at(uri("kind"), uri("comment"))
                     .at(uri("text"), str(text));
             default -> rec().at(uri("kind"), uri("other")).at(uri("text"), str(text));
@@ -349,5 +379,51 @@ public class ObjJavaIDESerializer extends AbstractObjSerializer<String> {
         final List<Obj> list = new ArrayList<>(existing.asLst().elements().toList());
         list.add(value);
         return rec.at(key, lst(list));
+    }
+
+    /**
+     * Group a document-ordered list of recs into the named-slot form: each
+     * slot (per {@link #slotOf}) maps to the ranked list of the recs in
+     * document order — the list position is the ordinal (0 when unique, N
+     * only because of a duplicate).  The rec keys are inserted in first-seen
+     * document order, which is the order {@code write} walks.
+     */
+    private static Rec groupBy(final List<Obj> ordered, final Function<Obj, String> slotOf) {
+        Rec out = rec();
+        for (final Obj element : ordered) {
+            final Obj key = uri(slotOf.apply(element));
+            final Obj existing = out.at(key);
+            if (existing.isNoObj() || !existing.isLst()) {
+                out = out.at(key, lst(List.of(element)));
+            } else {
+                final List<Obj> list = new ArrayList<>(existing.asLst().elements().toList());
+                list.add(element);
+                out = out.at(key, lst(list));
+            }
+        }
+        return out;
+    }
+
+    /**
+     * A class's slot is its name (a Java file's top-level names are
+     * structurally unique, so its rank is invariant 0 — cross-package
+     * duplicates are separate files, i.e. separate code slots).
+     */
+    private static String classSlot(final Obj cls) {
+        final Obj name = cls.asRec().at(uri("name"));
+        return name.isNoObj() ? "unnamed" : name.strValue();
+    }
+
+    /**
+     * A member's slot is its name; a nameless member (comment, static
+     * initializer, nested type) takes its kind word, so it still ranks
+     * somewhere addressable: {@code members/comment/0}, {@code members/other/1}.
+     */
+    private static String memberSlot(final Obj m) {
+        final Rec mr = m.asRec();
+        final Obj name = mr.at(uri("name"));
+        if (!name.isNoObj()) return name.strValue();
+        final Obj kind = mr.at(uri("kind"));
+        return kind.isNoObj() ? "unnamed" : kind.uriValue().toString();
     }
 }

@@ -55,6 +55,8 @@ public final class Tokens {
     public static final String EMBED = "embed";
     public static final String SRC = "src";
     public static final String TARGET = "target";
+    public static final String CLASS = "class";
+    public static final String MEMBER = "member";
     public static final String USR = "usr";
     public static final String EXPIRE = "expire";
     public static final String INCR = "incr";

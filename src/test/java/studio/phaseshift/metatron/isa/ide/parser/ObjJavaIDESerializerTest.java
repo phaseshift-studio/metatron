@@ -22,13 +22,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractJavaSerializerTest;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +36,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.ide.ideInstSet.IDE_JAVA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -46,8 +45,15 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * Shared round-trip coverage lives in {@link AbstractJavaSerializerTest}.
  *
  * <p>The schema is defined in {@code docs/design/codespaces/codespace-functor.md §0}:
- * a file parses to {@code rec(package, imports:lst, classes:lst)} where each class is
- * {@code rec(kind, name, superclass, interfaces, header, members:lst, footer, [sep])}.
+ * a file parses to {@code rec(preamble, package, imports:lst, classes, postscript)}
+ * where {@code classes} is a named rec — each class name maps to the ranked {@code lst}
+ * of that class's recs ({@code rec(kind, name, header, members, footer, [sep])}) — and
+ * {@code members} is an ordered {@code lst} of single-field wrapper recs
+ * ({@code {name => memberRec}}, kind word when nameless): the list position is the
+ * print order, the wrapper key is the named slot — e.g.
+ * {@code classes/Greeter/0/members/1/apply/text}, with {@code members/+/apply} as the
+ * wildcard name query.  The structure IS the address; there is no parallel identifier
+ * scheme.
  * Methods/constructors decompose into {@code header}/{@code body}/{@code footer} so the
  * body is the directly-editable unit; fields/comments are complete {@code text} spans.</p>
  *
@@ -91,54 +97,63 @@ public class ObjJavaIDESerializerTest extends AbstractJavaSerializerTest {
     private static Rec firstClass(final Rec root) {
         final Obj classes = root.at(uri("classes"));
         assertFalse(classes.isNoObj(), "root must have classes");
-        assertTrue(classes.isLst(), "classes must be a lst");
-        return classes.asLst().elements().toList().get(0).asRec();
+        assertTrue(classes.isRec(), "classes must be a rec of named slots");
+        final Rel nameSlot = classes.asRec().elements().toList().get(0);
+        return nameSlot.second().asLst().elements().toList().get(0).asRec();
     }
 
     private static Rec findMember(final Rec cls, final String kind, final String name) {
         final Obj members = cls.at(uri("members"));
         if (members.isNoObj() || !members.isLst()) return null;
-        for (final Obj m : members.asLst().elements().toList()) {
-            if (!m.isRec()) continue;
-            final Rec mr = m.asRec();
+        for (final Obj wrap : members.asLst().elements().toList()) {
+            if (!wrap.isRec()) continue;
+            final Rel slot = wrap.asRec().elements().toList().get(0);
+            if (!name.equals(slot.first().uriValue().toString())) continue;
+            final Rec mr = slot.second().asRec();
             final String k = mr.at(uri("kind")).orElse(uri("")).uriValue().toString();
-            final String n = mr.at(uri("name")).orElse(str("")).strValue();
-            if (kind.equals(k) && name.equals(n)) return mr;
+            if (kind.equals(k)) return mr;
         }
         return null;
     }
 
     /**
-     * Replace a member (by name) within a class rec, returning a new class rec.
+     * Replace a member (by name; the first match of that kind) within its named
+     * slot, returning a new class rec.
      */
     private static Rec replaceMember(final Rec cls, final String name, final Rec newMember) {
-        final Obj members = cls.at(uri("members"));
-        if (members.isNoObj() || !members.isLst()) return cls;
+        final Obj membersObj = cls.at(uri("members"));
+        if (membersObj.isNoObj() || !membersObj.isLst()) return cls;
+        boolean replaced = false;
         final List<Obj> list = new ArrayList<>();
-        for (final Obj m : members.asLst().elements().toList()) {
-            if (m.isRec() && name.equals(m.asRec().at(uri("name")).orElse(str("")).strValue()))
-                list.add(newMember);
-            else
-                list.add(m);
+        for (final Obj wrap : membersObj.asLst().elements().toList()) {
+            if (!replaced && wrap.isRec()) {
+                final Rel slot = wrap.asRec().elements().toList().get(0);
+                if (name.equals(slot.first().uriValue().toString())) {
+                    list.add(rec(uri(name), newMember));
+                    replaced = true;
+                    continue;
+                }
+            }
+            list.add(wrap);
         }
         return cls.at(uri("members"), lst(list));
     }
 
     /**
-     * Replace a class (by name) within the root, returning a new root rec.
+     * Replace a class (by name) within its named slot, returning a new root rec.
      */
     private static Rec replaceClass(final Rec root, final Rec newClass) {
-        final Obj classes = root.at(uri("classes"));
-        if (classes.isNoObj() || !classes.isLst()) return root;
+        final Obj classesObj = root.at(uri("classes"));
+        if (classesObj.isNoObj() || !classesObj.isRec()) return root;
+        final Rec classes = classesObj.asRec();
         final String name = newClass.at(uri("name")).strValue();
+        final Obj bucket = classes.at(uri(name));
+        if (bucket.isNoObj() || !bucket.isLst()) return root;
         final List<Obj> list = new ArrayList<>();
-        for (final Obj c : classes.asLst().elements().toList()) {
-            if (c.isRec() && name.equals(c.asRec().at(uri("name")).orElse(str("")).strValue()))
-                list.add(newClass);
-            else
-                list.add(c);
+        for (final Obj c : bucket.asLst().elements().toList()) {
+            list.add(c.isRec() && name.equals(c.asRec().at(uri("name")).orElse(str("")).strValue()) ? newClass : c);
         }
-        return root.at(uri("classes"), lst(list));
+        return root.at(uri("classes"), classes.at(uri(name), lst(list)));
     }
 
     private static final String REPRESENTATIVE = """
@@ -329,8 +344,116 @@ public class ObjJavaIDESerializerTest extends AbstractJavaSerializerTest {
     }
 
     // ===================================================================
-    //  Type chain: str -> java::T -> cs_java::T -> rec::T -> cs_java::T
-    //  cs_java::T is a rec::T refinement — as(cs_java::T) IS the parse.
+    //  Wrapper addressing: members is an ordered lst of {name => memberRec}
+    // ===================================================================
+
+    private static List<Rec> membersNamed(final Rec cls, final String name) {
+        final Obj members = cls.at(uri("members"));
+        if (members.isNoObj() || !members.isLst()) return List.of();
+        final List<Rec> out = new ArrayList<>();
+        for (final Obj wrap : members.asLst().elements().toList()) {
+            if (!wrap.isRec()) continue;
+            final Rel slot = wrap.asRec().elements().toList().get(0);
+            if (name.equals(slot.first().uriValue().toString())) out.add(slot.second().asRec());
+        }
+        return out;
+    }
+
+    @Test
+    public void testOverloadsNamedWithDocumentOrder() {
+        final String src = "public class Greeter { int apply(int a){return a;} int apply(long a){return (int)a;} }";
+        final Rec root = serializer.read(src).asRec();
+        final List<Rec> applies = membersNamed(firstClass(root), "apply");
+        assertEquals(2, applies.size(), "two applies = two wrapped members keyed apply, in document order");
+        assertEquals("int apply(int a)", applies.get(0).at(uri("signature")).strValue(),
+                "document order preserved: apply(int) first");
+        assertEquals("int apply(long a)", applies.get(1).at(uri("signature")).strValue(),
+                "apply(long) second");
+        assertEquals(src, serializer.write(root), "the named wrappers must write back byte-for-byte");
+    }
+
+    @Test
+    public void testInterleavedMembersRoundTripByteExact() {
+        // the case no name-grouping can hold: same-named members straddling
+        // other members — the wrappers keep the source order, so the round-trip
+        // is exact instead of regrouped
+        final String src = "class Mix { int x; int apply(int a){return a;} int y; int apply(long a){return (int)a;} }";
+        final Obj root = serializer.read(src);
+        assertEquals(src, serializer.write(root), "interleaved members must not be regrouped on write");
+    }
+
+    @Test
+    public void testAddressablePathThroughTheStructure() {
+        // classes/Greeter/0/members/0/apply/text — the space derefs straight
+        // through the structure: the wrapper key IS the named slot
+        final String src = "public class Greeter { int apply(int a){return a;} }";
+        final Rec root = serializer.read(src).asRec();
+        final Rec cls = root
+                .at(uri("classes")).asRec().at(uri("Greeter")).asLst()
+                .elements().toList().get(0).asRec();
+        final Rel slot = cls.at(uri("members")).asLst().elements().toList().get(0)
+                .asRec().elements().toList().get(0);
+        assertEquals("apply", slot.first().uriValue().toString(), "the wrapper key names the member");
+        final Rec viaAddress = slot.second().asRec();
+        assertSame(findMember(cls, "method", "apply"), viaAddress,
+                "dereferencing the wrapper lands on the very rec the name names");
+        assertTrue(viaAddress.at(uri("text")).strValue().contains("int apply(int a)"));
+    }
+
+    @Test
+    public void testFieldNameMethodSameName() {
+        // legal java: a field and a method may share a name — two wrapped
+        // members keyed count, and the kind field on each tells them apart
+        final String src = "class B { int count; int count(){return 0;} }";
+        final Rec root = serializer.read(src).asRec();
+        final List<Rec> counts = membersNamed(firstClass(root), "count");
+        assertEquals(2, counts.size(), "the shared name wraps both members");
+        assertEquals("field", counts.get(0).at(uri("kind")).uriValue().toString());
+        assertEquals("method", counts.get(1).at(uri("kind")).uriValue().toString());
+        assertEquals(src, serializer.write(root));
+    }
+
+    @Test
+    public void testNamelessMembersKeyedByKind() {
+        // comments and friends carry no name — their kind word is the wrapper
+        // key, so they stay named and addressable: members/0/comment, members/1/comment
+        final String src = "class C {\n    // note one\n    /* note two */\n    int x;\n}";
+        final Rec root = serializer.read(src).asRec();
+        assertEquals(2, membersNamed(firstClass(root), "comment").size(), "both comments keyed comment");
+        assertEquals(src, serializer.write(root), "kind-keyed wrappers must write back byte-for-byte");
+    }
+
+    @Test
+    public void testWildcardNameQuery() {
+        // members/+/apply — the metatron wildcard pulls every wrapped member
+        // keyed apply — the durable reference form.  The read returns the
+        // matches as a #{*} set (no order contract; name is the key)
+        final String src = "public class WR { int fillA(){return 1;} int apply(int x){return x;} "
+                + "int fillB(){return 2;} int apply(long y){return (int)y;} }";
+        eval("'" + src + "'.as(web:java::T).as(ide:java::T).to(wr)");
+        final Obj found = eval("*wr/classes/WR/0/members/+/apply");
+        final List<String> sigs = found.stream()
+                .map(o -> o.asRec().at(uri("signature")).strValue())
+                .sorted()
+                .toList();
+        assertEquals(List.of("int apply(int x)", "int apply(long y)"), sigs,
+                "the wildcard must resolve exactly the two members named apply");
+    }
+
+    @Test
+    public void testMultiClassFile() {
+        // two classes, one file: each gets its named slot; the gap between
+        // them rides along as the second class's sep and must survive
+        final String src = "class Alpha {\n    int one(){return 1;}\n}\nclass Beta {\n    int two(){return 2;}\n}";
+        final Rec root = serializer.read(src).asRec();
+        final Rec classes = root.at(uri("classes")).asRec();
+        assertFalse(classes.at(uri("Alpha")).isNoObj(), "first class under its own named slot");
+        assertFalse(classes.at(uri("Beta")).isNoObj(), "second class under its own named slot");
+        assertEquals(src, serializer.write(root), "multi-class files must round-trip with their gaps");
+    }
+
+    // ===================================================================
+    //  Type chain: the full chain round-trips byte-for-byte
     // ===================================================================
 
     @Test
@@ -377,165 +500,14 @@ public class ObjJavaIDESerializerTest extends AbstractJavaSerializerTest {
         assertFalse(cs.at(uri("classes")).isNoObj(), "must expose classes");
     }
 
-    // ===================================================================
-    //  Addressing — name + ordinal (the shared code schema)
-    // ===================================================================
-
     @Test
-    public void testAddressMatchesTheScheme() {
-        // the canonical shape: code/{file}/classes/Greeter/0/members/method/greet/0 —
-        // the file slot is the host space's, the rest is the schema's
-        final Rec root = serializer.read("class Greeter {public void greet() {}}").asRec();
-        assertEquals("classes/Greeter/0", firstClass(root).at(uri("path")).strValue());
-        final Rec greet = findMember(firstClass(root), "method", "greet");
-        assertEquals("classes/Greeter/0/members/method/greet/0", greet.at(uri("path")).strValue());
-        assertEquals(0, greet.at(uri("ordinal")).asInt().intValue(), "a lone member is ordinal 0");
-        assertEquals(greet, ObjIDESchema.locate(root, "classes/Greeter/0/members/method/greet/0"),
-                "locate must resolve the derived path of every node");
-    }
-
-    @ParameterizedTest()
-    @CsvSource(value = {
-            // overloads: ordinal = rank among same-named siblings, document order
-            "class A {int apply(int a){return a;}int apply(long a){return (int)a;}} % classes/A/0/members/method/apply/0 % apply % 0 % int apply(int a)",
-            "class A {int apply(int a){return a;}int apply(long a){return (int)a;}} % classes/A/0/members/method/apply/1 % apply % 1 % int apply(long a)",
-            // field and method may legally share a name — the kind slot separates them
-            "class B {int count;int count(){return 0;}} % classes/B/0/members/field/count/0 % count % 0 % int count;",
-            "class B {int count;int count(){return 0;}} % classes/B/0/members/method/count/0 % count % 0 % int count()",
-            // constructor overloads key on the class name
-            "class E {E(int a){this.a = a;}E(long a){this.a = a;}private int a;} % classes/E/0/members/constructor/E/1 % E % 1 % E(long a)",
-            // nameless members rank within their kind — the name slot is dropped
-            "class C {int x;/** a */int y;/** b */int z;} % classes/C/0/members/comment/0 % - % 0 % a",
-            "class C {int x;/** a */int y;/** b */int z;} % classes/C/0/members/comment/1 % - % 1 % b",
-            // anonymous constructs rank within 'other'
-            "class G {static{System.out.print(1);}int x;} % classes/G/0/members/other/0 % - % 0 % static",
-            // a nested type: the same grammar one level down
-            "class D {int top(){return 1;}class Nested{int inner(){return 2;}}} % classes/D/0/members/class/Nested/0 % Nested % 0 % class Nested",
-            "class D {int top(){return 1;}class Nested{int inner(){return 2;}}} % classes/D/0/members/class/Nested/0/members/method/inner/0 % inner % 0 % int inner(){return 2;}"
-    }, delimiter = '%')
-    public void testAddressResolution(final String src, final String address,
-                                      final String expectedName, final int expectedOrdinal,
-                                      final String textFragment) {
-        final Rec root = serializer.read(src).asRec();
-        final Rec node = ObjIDESchema.locate(root, address);
-        if ("-".equals(expectedName)) {
-            assertTrue(node.at(uri("name")).isNoObj(), "expect a nameless member at " + address);
-        } else {
-            assertEquals(expectedName, node.at(uri("name")).strValue());
-        }
-        assertEquals(expectedOrdinal, node.at(uri("ordinal")).asInt().intValue());
-        assertTrue(node.at(uri("text")).strValue().contains(textFragment),
-                address + " expected to contain '" + textFragment + "' — got: " + node.at(uri("text")).strValue());
-        assertEquals(address, node.at(uri("path")).strValue(),
-                "the derived path must be the addressing path itself");
-    }
-
-    @Test
-    public void testLocateMissingListsCandidates() {
-        final Rec root = serializer.read("class A {int apply(int a){return a;}int apply(long a){return (int)a;}}").asRec();
-        final MTronException e = assertThrows(MTronException.class,
-                () -> ObjIDESchema.locate(root, "classes/A/0/members/method/nope/0"));
-        assertTrue(e.getMessage().contains("apply"),
-                "a miss must list what does exist, so the agent can re-aim: " + e.getMessage());
-    }
-
-    @Test
-    public void testLocateUnknownClass() {
-        final Rec root = serializer.read("class A {int x;}").asRec();
-        final MTronException e = assertThrows(MTronException.class,
-                () -> ObjIDESchema.locate(root, "classes/B/0"));
-        assertTrue(e.getMessage().contains("A"), "class candidates must be listed: " + e.getMessage());
-    }
-
-    // ===================================================================
-    //  edit by address — span-replace, parse-gated, byte-exact
-    // ===================================================================
-
-    @Test
-    public void testEditMethodByAddress() {
-        final String src = "class A {int apply(int a){return a;}int apply(long a){return (int)a;}}";
-        final Obj edited = ObjJavaIDESerializer.edit(src, "classes/A/0/members/method/apply/0",
-                "int apply(int a){return a + 1;}");
-        assertEquals("class A {int apply(int a){return a + 1;}int apply(long a){return (int)a;}}",
-                serializer.write(edited.asRec()),
-                "edit must replace exactly the addressed span and nothing else");
-    }
-
-    @Test
-    public void testEditSecondOverloadLeavesFirstUntouched() {
-        final String src = "class A {int apply(int a){return a;}int apply(long a){return (int)a;}}";
-        final Obj edited = ObjJavaIDESerializer.edit(src, "classes/A/0/members/method/apply/1",
-                "int apply(long a){return (int)(a / 2);}");
-        final String out = serializer.write(edited.asRec());
-        assertEquals("class A {int apply(int a){return a;}int apply(long a){return (int)(a / 2);}}", out);
-    }
-
-    @Test
-    public void testEditNestedMember() {
-        final String src = "class D {int top(){return 1;}class Nested{int inner(){return 2;}}}";
-        final Obj edited = ObjJavaIDESerializer.edit(src,
-                "classes/D/0/members/class/Nested/0/members/method/inner/0",
-                "int inner(){return 3;}");
-        assertEquals("class D {int top(){return 1;}class Nested{int inner(){return 3;}}}",
-                serializer.write(edited.asRec()));
-    }
-
-    @Test
-    public void testEditRejectsUnparseable() {
-        final String src = "class A {int x(){return 0;}}";
-        final MTronException e = assertThrows(MTronException.class,
-                () -> ObjJavaIDESerializer.edit(src, "classes/A/0/members/method/x/0", "def broken ("));
-        assertTrue(e.getMessage().contains("line"),
-                "a rejected edit must say where the parse breaks: " + e.getMessage());
-    }
-
-    @Test
-    public void testEditRenameRecoversViaAddress() {
-        final String src = "class A {int apply(int a){return a;}}";
-        final Obj edited = ObjJavaIDESerializer.edit(src, "classes/A/0/members/method/apply/0",
-                "int changed(int a){return a;}");
-        final Rec root = edited.asRec();
-        final MTronException e = assertThrows(MTronException.class,
-                () -> ObjIDESchema.locate(root, "classes/A/0/members/method/apply/0"));
-        assertTrue(e.getMessage().contains("changed"),
-                "the recovery message must name what replaced it: " + e.getMessage());
-        assertEquals(0, ObjIDESchema.locate(root, "classes/A/0/members/method/changed/0")
-                .at(uri("ordinal")).asInt().intValue(), "the rename is rank 0 of its new name");
-    }
-
-    // ===================================================================
-    //  nested types — structure + lossless round-trip
-    // ===================================================================
-
-    private static final String NESTED = """
-                                         class D {
-                                             int top() {
-                                                 return 1;
-                                             }
-                                             class Nested {
-                                                 int inner() {
-                                                     return 2;
-                                                 }
-                                             }
-                                         }
-                                         """;
-
-    @Test
-    public void testNestedClassStructure() {
-        final Rec root = serializer.read(NESTED).asRec();
-        final Rec cls = firstClass(root);
-        final Rec nested = findMember(cls, "class", "Nested");
-        assertNotNull(nested, "a nested class must surface as a member of kind 'class'");
-        assertFalse(nested.at(uri("members")).isNoObj(), "a nested class carries its own members");
-        assertNotNull(findMember(nested, "method", "inner"), "the nested class must expose its own method");
-        assertTrue(nested.at(uri("header")).strValue().contains("class Nested"));
-        assertEquals("classes/D/0/members/class/Nested/0", nested.at(uri("path")).strValue());
-    }
-
-    @Test
-    public void testNestedClassRoundTripExact() {
-        assertEquals(NESTED, serializer.write(serializer.read(NESTED).asRec()),
-                "nested types must round-trip byte-for-byte");
+    public void testChainRoundTripByteExact() {
+        // the full type chain, both directions — str in, same str out:
+        // '...'.as(web:java::T).as(ide:java::T) -> the named-slot rec
+        //      .as(web:java::T).as(str::T)      -> the source, byte-for-byte
+        final String src = "public class Greeter { int apply(int a){return a;} int apply(long a){return (int)a;} }";
+        final Obj out = eval("'" + src + "'.as(web:java::T).as(ide:java::T).as(web:java::T).as(str::T)");
+        assertEquals(src, out.strValue(), "the type chain must round-trip the named-slot rec byte-for-byte — got: " + out);
     }
 
     @Test
@@ -543,7 +515,8 @@ public class ObjJavaIDESerializerTest extends AbstractJavaSerializerTest {
         // the write direction — a coarse rec serializes back to source via as(web:java::T).
         // a surgical body edit must appear in the output and the rest of the source survive.
         eval("'public class WR { int one() { return 1; } }'.as(web:java::T).as(ide:java::T).to(wr)");
-        eval("wr/classes/0/members/0/body -> 'return 42;'");
+        // the member address: list position, then the named slot
+        eval("wr/classes/WR/0/members/0/one/body -> 'return 42;'");
         final Obj out = eval("*wr.as(web:java::T)");
         assertTrue(out.isStr(), "as(web:java::T) on a coarse rec must yield the source str — %s".formatted(out));
         assertTrue(out.strValue().contains("return 42;"), "the edited body must appear — %s".formatted(out));
