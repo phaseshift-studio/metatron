@@ -329,6 +329,10 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     fURI extend(final String segment);
 
+    default fURI extend(final int indexSegment) {
+        return this.extend("" + indexSegment);
+    }
+
     default fURI extend(final fURI segments) {
         return this.extend(null == segments ? null : segments.toString());
     }

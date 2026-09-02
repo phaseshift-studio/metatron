@@ -1,0 +1,8 @@
+[== counter.mtron — a boot-style module, mirroring boot/space/*.mtron.
+    Pulled through a cross-file feed (<test:module/counter.mtron>()), the body
+    must evaluate exactly once per pull.  Every application writes an
+    incrementing marker into the test: space; the historical double-eval bug
+    (fsSpaceTest#testModulePullEvaluatesOnce) would bump the count to 2. ==]
+||inst?counter<=uri(){
+  test:scratch/count -> !*test:scratch/count.else(0) + 1
+}

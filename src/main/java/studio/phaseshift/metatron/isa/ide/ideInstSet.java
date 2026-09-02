@@ -163,6 +163,7 @@ public class ideInstSet extends AbstractInstSet {
                                     final Rec project = inst.arg(0).isType() ? rec() : inst.arg(0).asRec();
                                     if (!project.has(SRC)) {
                                         final String scheme = lhs.uriValue().scheme();
+                                        final CommonUtil.Spinner spinner = CommonUtil.spinner("loading project", true);
                                         try (final Stream<Path> walk = Files.find(
                                                 Path.of(lhs.uriValue().scheme(null).toString()),
                                                 100,
@@ -175,8 +176,43 @@ public class ideInstSet extends AbstractInstSet {
                                                     //.peek(f -> LOG.info("{{-X-&|0&y}}processing {{b}}%s{{^1}}", f))
                                                     .map(e -> rel(uri(e.name().replace(".java", "")), instLambda((lhs2, inst2) -> {
                                                         final Obj javaSource = Router.readFromSpace(e.scheme(scheme));
-                                                        final Rec code = ObjJavaIDESerializer.parse(javaSource.strValue()).asRec().at(uri("location"), uri(e.scheme(scheme)), MUTABLE);
-                                                        return Router.readFromSpace(lhs.vid().extend(CODE)).orElse(lst()).add(code, MUTABLE);
+                                                        final Rec ideJava = ObjJavaIDESerializer.parse(javaSource.strValue()).asRec().at(uri("location"), uri(e.scheme(scheme)), MUTABLE);
+                                                        final Lst codeLst = Router.readFromSpace(lhs.vid().extend(CODE)).orElse(lst());
+                                                        final int c = (int) codeLst.count();
+                                                        final fURI codeID = lhs.vid().extend(CODE).extend(c);
+                                                        Router.writeToSpace(lhs.vid().extend(CODE), codeLst.add(ideJava, MUTABLE));
+                                                        //////////////////////////////////////////////////////////////////////////
+                                                        final Rec idx = Router.readFromSpace(lhs.vid().extend("idx")).orElse(rec());
+                                                        for (int cc = 0; cc < 1000; cc++) {
+                                                            final fURI classSegment = f("classes").extend("+").extend(cc);
+                                                            final Obj classStream = ideJava.at(classSegment);
+                                                            if (classStream.isNoObj())
+                                                                break;
+                                                            final int finalCC = cc;
+                                                            classStream.stream()
+                                                                    //.peek(o -> LOG.info("H1: %s", o))
+                                                                    .map(Obj::asRec)
+                                                                    .forEach(r -> {
+                                                                        final String className = r.at(NAME).strValue();
+                                                                        Rec members = rec();
+                                                                        for (int mc = 0; mc < 1000; mc++) {
+                                                                            final Obj memberStream = r.at("members/" + mc + "/+");
+                                                                            if (memberStream.isNoObj())
+                                                                                break;
+                                                                            final fURI memberSegment = classSegment.retract(2).extend(className).extend(finalCC).extend("members").extend(mc);
+                                                                            memberStream.stream().map(Obj::asRec).forEach(m -> {
+                                                                                final fURI kind = m.at(KIND).uriValue();
+                                                                                final Rec kindRec = members.at(kind).orElse(rec());
+                                                                                final Obj membersObjs = kindRec.at(m.at(NAME).strValue());
+                                                                                members.at(kind, kindRec.at(m.at(NAME).strValue(),
+                                                                                        membersObjs.append(auto_at_(codeID.extend(memberSegment).extend(m.at(NAME).strValue()))),
+                                                                                        MUTABLE), MUTABLE);
+                                                                            });
+                                                                        }
+                                                                        idx.at(f(r.at(NAME).strValue()), members, MUTABLE);
+                                                                    });
+                                                        }
+                                                        return Router.writeToSpace(lhs.vid().extend("idx"), idx);
                                                     }))).collect(new CommonUtil.RecCollector()), MUTABLE);
                                            /* project.at(CODE, lst(start_(lhs).repeat_(rshift_(), BOOL_FALSE, BOOL_TRUE).apply()
                                                     .stream()
@@ -188,13 +224,17 @@ public class ideInstSet extends AbstractInstSet {
                                         } catch (final Exception e) {
                                             throw MTronException.of(e);
                                         }
+                                        spinner.close();
                                     }
                                     if (!project.has(CODE))
                                         project.at(CODE, lst(), MUTABLE);
+                                    if (!project.has("idx"))
+                                        project.at("idx", rec(), MUTABLE);
                                     if (!project.has(NAME))
                                         project.at(NAME, str(lhs.uriValue().basePath().name()), MUTABLE);
                                     if (!project.has(ROOT))
                                         project.at(ROOT, lhs.vid(null), MUTABLE);
+
                                     return project.selfTID(IDE_PROJECT_TID);
                                 }),
                                 "a project source root",
