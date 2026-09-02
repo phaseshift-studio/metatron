@@ -23,25 +23,32 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.ide.parser.ObjJavaIDESerializer;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -154,15 +161,36 @@ public class ideInstSet extends AbstractInstSet {
                 uri(INST), lst(
                         docWrap(instC(AS_INST_TID.dom(URI_TID).rng(IDE_PROJECT_TID), lst(IDE_PROJECT_TYPE), (lhs, inst) -> {
                                     final Rec project = inst.arg(0).isType() ? rec() : inst.arg(0).asRec();
-                                    if (!project.has(CODE)) {
-                                        project.at(CODE, lst(start_(lhs).repeat_(rshift_(), BOOL_FALSE, BOOL_TRUE).apply()
-                                                .stream()
-                                                .filter(e -> e.uriValue().toString().contains(".java"))
-                                                .map(e -> Tuple.Pair.with(e, Router.readFromSpace(e.uriValue())))
-                                                .map(e -> Tuple.Pair.with(e.get0(), start_(e.get1()).as_(JAVA_TYPE).apply()))
-                                                .map(e -> (Obj) start_(e.get1()).as_(IDE_JAVA_TYPE).apply().asRec().at(uri("location"), e.get0(), MUTABLE))
-                                                .toList()), MUTABLE);
+                                    if (!project.has(SRC)) {
+                                        final String scheme = lhs.uriValue().scheme();
+                                        try (final Stream<Path> walk = Files.find(
+                                                Path.of(lhs.uriValue().scheme(null).toString()),
+                                                100,
+                                                (a, b) -> (b.isDirectory() && !a.toFile().isHidden()))) {
+                                            project.at(SRC, walk
+                                                    .filter(d -> d.toFile().isDirectory())
+                                                    .flatMap(d -> Arrays.stream(Objects.requireNonNull(d.toFile().listFiles(f -> f.getName().endsWith(".java")))))
+                                                    .filter(f -> f.toPath().startsWith("src"))
+                                                    .map(f -> f(f.getPath()))
+                                                    //.peek(f -> LOG.info("{{-X-&|0&y}}processing {{b}}%s{{^1}}", f))
+                                                    .map(e -> rel(uri(e.name().replace(".java", "")), instLambda((lhs2, inst2) -> {
+                                                        final Obj javaSource = Router.readFromSpace(e.scheme(scheme));
+                                                        final Rec code = ObjJavaIDESerializer.parse(javaSource.strValue()).asRec().at(uri("location"), uri(e.scheme(scheme)), MUTABLE);
+                                                        return Router.readFromSpace(lhs.vid().extend(CODE)).orElse(lst()).add(code, MUTABLE);
+                                                    }))).collect(new CommonUtil.RecCollector()), MUTABLE);
+                                           /* project.at(CODE, lst(start_(lhs).repeat_(rshift_(), BOOL_FALSE, BOOL_TRUE).apply()
+                                                    .stream()
+                                                    .filter(e -> e.uriValue().toString().contains(".java"))
+                                                    .map(e -> Tuple.Pair.with(e, Router.readFromSpace(e.uriValue())))
+                                                    .map(e -> Tuple.Pair.with(e.get0(), start_(e.get1()).as_(JAVA_TYPE).apply()))
+                                                    .map(e -> (Obj) start_(e.get1()).as_(IDE_JAVA_TYPE).apply().asRec().at(uri("location"), e.get0(), MUTABLE))
+                                                    .toList()), MUTABLE);*/
+                                        } catch (final Exception e) {
+                                            throw MTronException.of(e);
+                                        }
                                     }
+                                    if (!project.has(CODE))
+                                        project.at(CODE, lst(), MUTABLE);
                                     if (!project.has(NAME))
                                         project.at(NAME, str(lhs.uriValue().basePath().name()), MUTABLE);
                                     if (!project.has(ROOT))
