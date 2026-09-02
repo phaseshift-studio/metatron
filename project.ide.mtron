@@ -1,4 +1,0 @@
-ide:project::[
- root=>/home/killswitch/software/metatron,
- name=>'metatron',
- desc=>'a ring-based virtual machine and language']
