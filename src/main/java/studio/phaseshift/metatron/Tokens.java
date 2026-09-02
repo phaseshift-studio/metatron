@@ -71,6 +71,7 @@ public final class Tokens {
     public static final String RAG = "rag";
     public static final String FEATURE = "feature";
     public static final String ALGORITHM = "algorithm";
+    public static final String WATERMARK = "watermark";
     public static final String ID = "id";
     public static final String IN = "in";
     public static final String OUT = "out";
@@ -229,6 +230,7 @@ public final class Tokens {
     public static final String SYSTEM = "system";
     public static final String PASS = "pass";
     public static final String NAME = "name";
+    public static final String ORDINAL = "ordinal";
     public static final String BUILD = "build";
     public static final String TEST = "test";
     public static final String DEFAULT = "default";

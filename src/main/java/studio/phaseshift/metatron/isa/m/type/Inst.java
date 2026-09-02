@@ -214,21 +214,25 @@ public interface Inst extends Call {
     }
 
     default boolean isBlocking() {
-        return this.tid().basePath().equals(BLOCK_INST_TID) ||
-                // this.tid().basePath().equals(AUTO_TID) ||
-                this.tid().basePath().equals(FORK_INST_TID) ||
-                this.tid().basePath().equals(THREAD_INST_TID) ||
-                this.tid().basePath().equals(ORDER_INST_TID) ||
-                this.tid().basePath().equals(AS_INST_TID) ||
-                this.tid().basePath().equals(WITHIN_INST_TID) ||
-                this.tid().basePath().equals(ISA_INST_TID) ||
-                //this.tid().basePath().equals(SELECT_INST_TID) ||
-                this.tid().basePath().equals(UPDATE_INST_TID) ||
-                //this.tid().basePath().equals(WHERE_INST_TID) ||
-                this.tid().basePath().equals(GROUP_INST_TID) ||
-                this.tid().basePath().equals(REPEAT_INST_TID) ||
-                this.tid().basePath().equals(ELSE_INST_TID) ||
-                this.tid().basePath().equals(CATCH_INST_TID);
+        if (this.tid().hasQ(BLOCK))
+            return true;
+        final fURI base = this.tid().basePath();
+        return base.equals(BLOCK_INST_TID) ||
+                // base.equals(AUTO_TID) ||
+                base.equals(MAPP_INST_TID) ||
+                base.equals(FORK_INST_TID) ||
+                base.equals(THREAD_INST_TID) ||
+                base.equals(ORDER_INST_TID) ||
+                base.equals(AS_INST_TID) ||
+                base.equals(WITHIN_INST_TID) ||
+                base.equals(ISA_INST_TID) ||
+                //base.equals(SELECT_INST_TID) ||
+                base.equals(UPDATE_INST_TID) ||
+                //base.equals(WHERE_INST_TID) ||
+                base.equals(GROUP_INST_TID) ||
+                base.equals(REPEAT_INST_TID) ||
+                base.equals(ELSE_INST_TID) ||
+                base.equals(CATCH_INST_TID);
     }
 
     @Override

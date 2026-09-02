@@ -144,7 +144,7 @@ public class ideInstSet extends AbstractInstSet {
                         docWrap(IDE_RESULT_TYPE,
                                 "the standardized build/test/status outcome — rec::T with a union status verdict",
                                 "x>>status",
-                                "x>>output.limit(10)",
+                                "x>>output.take(10)",
                                 "x>>runtime.normalize()"),
                         docWrap(IDE_PROJECT_TYPE,
                                 "the project descriptor (the pom.xml of a metatron ide) — a project.mtron file at the project root",
@@ -160,6 +160,7 @@ public class ideInstSet extends AbstractInstSet {
                                                 .map(e -> Tuple.Pair.with(e.get0(), start_(e.get1()).as_(JAVA_TYPE).apply()))
                                                 .map(e -> (Obj) start_(e.get1()).as_(IDE_JAVA_TYPE).apply().asRec().at(uri("location"), e.get0(), MUTABLE))
                                                 .toList()), MUTABLE);
+                                        //   .map(e -> (Obj) auto_(from_(e).as_(JAVA_TYPE).as_(IDE_JAVA_TYPE).update_(rec(LOCATION, e))).tryToInst())
                                     }
                                     if (!project.has(NAME))
                                         project.at(NAME, str(lhs.uriValue().basePath().name()), MUTABLE);

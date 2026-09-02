@@ -24,7 +24,6 @@ import ch.usi.si.seart.treesitter.Parser;
 import ch.usi.si.seart.treesitter.Tree;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
 import studio.phaseshift.metatron.util.MTronException;
@@ -54,6 +53,21 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_SERIALIZER_TID;
  * {@code header} (up to and including the opening brace) and {@code footer}
  * (from after the last member to end) account for every byte.  Concatenating
  * {@code header + members.text + footer} reproduces the class source exactly.</p>
+ *
+ * <p><b>Addressing and editing — the shared schema:</b> everything
+ * language-agnostic about the coarse rec lives in {@link ObjIDESchema}.  On
+ * every parse, {@code decorate} derives two fields per node —
+ * {@code ordinal} (rank among its same-named siblings, document order: a
+ * lone {@code apply} is {@code apply/0}, the second duplicate is
+ * {@code apply/1}) and {@code path} (the node's own address,
+ * {@code classes/{name}/{ordinal}/members/{kind}/{name}/{ordinal}}, nameless
+ * members dropping the name slot).  Never stored, so never stale.
+ * {@code locate} turns an address back into the node rec; {@link #edit}
+ * replaces a node's span in the source and reparses — an unparseable
+ * replacement is rejected with its first syntax error instead of saved;
+ * the rec that comes back rewrites byte-for-byte to the edited source.
+ * Nested classes parse through the same schema as {@code kind=>class}
+ * members carrying their own {@code members}.</p>
  *
  * <p>Child lists ({@code imports}, {@code classes}, {@code members}) are
  * {@code lst::T} — ordered, duplicate-allowed — matching source order and the
@@ -125,7 +139,9 @@ public class ObjJavaIDESerializer extends AbstractObjSerializer<String> {
             if (preambleSet) {
                 result = result.at(uri("postscript"), str(programContent.substring(prevClassEnd)));
             }
-            return result.selfTID(IDE_JAVA_TID);
+            // the shared addressing contract (ordinal + path per node) —
+            // language-agnostic, so it lives in the schema, not the adapter
+            return ObjIDESchema.decorate(result).selfTID(IDE_JAVA_TID);
         } catch (final MTronException e) {
             throw e;
         } catch (final Exception e) {
@@ -139,6 +155,9 @@ public class ObjJavaIDESerializer extends AbstractObjSerializer<String> {
     }
 
     // ── write: coarse Rec → Java source ─────────────────────────────────
+    // the emit is pure contract concatenation, shared with every other
+    // language adapter — the schema owns it (and extends it with the
+    // nested-type dispatch)
 
     @Override
     public ByteBuffer outputBytes(final Obj obj) throws MTronException {
@@ -147,71 +166,42 @@ public class ObjJavaIDESerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String write(final Obj obj) throws MTronException {
-        if (!obj.isRec()) return Str.Helper.cleanString(obj);
-        final Rec root = obj.asRec();
-        final StringBuilder sb = new StringBuilder();
-
-        final Obj preamble = root.at(uri("preamble"));
-        final Obj classes = root.at(uri("classes"));
-        final Obj postscript = root.at(uri("postscript"));
-
-        if (!preamble.isNoObj()) {
-            sb.append(preamble.strValue());
-        } else {
-            // class-less fallback: reconstruct package + imports
-            final Obj pkg = root.at(uri("package"));
-            if (!pkg.isNoObj()) sb.append(pkg.strValue()).append("\n\n");
-            final Obj imports = root.at(uri("imports"));
-            if (!imports.isNoObj() && imports.isLst()) {
-                imports.asLst().elements().forEach(i -> sb.append(i.strValue()).append("\n"));
-                sb.append("\n");
-            }
-        }
-
-        if (!classes.isNoObj() && classes.isLst()) {
-            for (final Obj c : classes.asLst().elements().toList()) {
-                if (!c.isRec()) continue;
-                final Rec cls = c.asRec();
-                final Obj sep = cls.at(uri("sep"));
-                if (!sep.isNoObj()) sb.append(sep.strValue());
-                writeType(cls, sb);
-            }
-        }
-
-        if (!postscript.isNoObj()) sb.append(postscript.strValue());
-        return sb.toString();
+        return ObjIDESchema.write(obj);
     }
 
-    private static void writeType(final Rec type, final StringBuilder sb) {
-        final Obj header = type.at(uri("header"));
-        final Obj members = type.at(uri("members"));
-        final Obj footer = type.at(uri("footer"));
-        if (!header.isNoObj()) sb.append(header.strValue());
-        if (!members.isNoObj() && members.isLst()) {
-            members.asLst().elements().forEach(m -> {
-                if (m.isRec()) writeMember(m.asRec(), sb);
-            });
+    // ── edit by address (span-replace + parse gate) ────────────────────
+
+    /**
+     * Replace the node named by {@code address}
+     * ({@code classes/{name}/{ordinal}[/members/{kind}/{name}/{ordinal}...]})
+     * with {@code newText} and return the fresh, fully-reparsed rec.
+     *
+     * <p>The span is located in the source by text (a document-order walk —
+     * never index arithmetic), the replacement spliced into that span, and
+     * the result must parse before anything is returned: an unparseable
+     * replacement is rejected with its first syntax error (line, column),
+     * not saved.  The rec that comes back is the parse of the new source,
+     * so {@code write(edit(src, a, t))} reproduces the edited source
+     * byte-for-byte.</p>
+     */
+    public static Obj edit(final String source, final String address, final String newText) {
+        final Rec rooted = single().read(source).asRec();
+        final Rec target = ObjIDESchema.locate(rooted, address);
+        final int[] span = ObjIDESchema.spanOf(source, rooted, target);
+        final String newSource = source.substring(0, span[0]) + newText + source.substring(span[1]);
+        final String error = firstError(newSource);
+        if (null != error) {
+            throw MTronException.of("edit at %s aborted: %s", address, error);
         }
-        if (!footer.isNoObj()) sb.append(footer.strValue());
+        return single().read(newSource);
     }
 
     /**
-     * Emit a member.  Methods/constructors decompose into header + body + footer
-     * (so a body edit writes through without a stale full-text); everything else
-     * emits its complete text span directly.
+     * The first tree-sitter syntax error in the source — line and column —
+     * or null if it parses clean.
      */
-    private static void writeMember(final Rec m, final StringBuilder sb) {
-        final Obj header = m.at(uri("header"));
-        final Obj body = m.at(uri("body"));
-        final Obj footer = m.at(uri("footer"));
-        if (!header.isNoObj()) {
-            sb.append(header.strValue());
-            if (!body.isNoObj()) sb.append(body.strValue());
-            if (!footer.isNoObj()) sb.append(footer.strValue());
-        } else {
-            final Obj text = m.at(uri("text"));
-            if (!text.isNoObj()) sb.append(text.strValue());
-        }
+    public static String firstError(final String source) {
+        return ObjIDESchema.firstError(Language.JAVA, source);
     }
 
     // ── structural helpers ──────────────────────────────────────────────
@@ -315,6 +305,19 @@ public class ObjJavaIDESerializer extends AbstractObjSerializer<String> {
                 final Node fname = declarator != null ? declarator.getChildByFieldName("name") : null;
                 if (fname != null) m = m.at(uri("name"), str(fname.getContent()));
                 yield m;
+            }
+            case "class_declaration", "interface_declaration", "enum_declaration",
+                 "record_declaration", "annotation_type_declaration" -> {
+                // a nested type — the same schema, one level down; kind is
+                // normalized to 'class' (the members/ address slot) and the
+                // leading gap folds into the header, so the write stays
+                // byte-exact
+                Rec nested = typeDeclaration(node).asRec().at(uri("kind"), uri("class"));
+                final Obj nestedHeader = nested.at(uri("header"));
+                if (!nestedHeader.isNoObj()) {
+                    nested = nested.at(uri("header"), str(leadingGap + nestedHeader.strValue()));
+                }
+                yield nested.at(uri("text"), str(text));
             }
             case "line_comment", "block_comment" -> rec().at(uri("kind"), uri("comment"))
                     .at(uri("text"), str(text));
