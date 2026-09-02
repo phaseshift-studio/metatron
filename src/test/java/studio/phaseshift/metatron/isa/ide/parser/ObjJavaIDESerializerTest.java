@@ -22,10 +22,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractJavaSerializerTest;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -372,6 +375,167 @@ public class ObjJavaIDESerializerTest extends AbstractJavaSerializerTest {
         assertTrue(cs.isRec());
         assertEquals(IDE_JAVA_TID, cs.tid());
         assertFalse(cs.at(uri("classes")).isNoObj(), "must expose classes");
+    }
+
+    // ===================================================================
+    //  Addressing — name + ordinal (the shared code schema)
+    // ===================================================================
+
+    @Test
+    public void testAddressMatchesTheScheme() {
+        // the canonical shape: code/{file}/classes/Greeter/0/members/method/greet/0 —
+        // the file slot is the host space's, the rest is the schema's
+        final Rec root = serializer.read("class Greeter {public void greet() {}}").asRec();
+        assertEquals("classes/Greeter/0", firstClass(root).at(uri("path")).strValue());
+        final Rec greet = findMember(firstClass(root), "method", "greet");
+        assertEquals("classes/Greeter/0/members/method/greet/0", greet.at(uri("path")).strValue());
+        assertEquals(0, greet.at(uri("ordinal")).asInt().intValue(), "a lone member is ordinal 0");
+        assertEquals(greet, ObjIDESchema.locate(root, "classes/Greeter/0/members/method/greet/0"),
+                "locate must resolve the derived path of every node");
+    }
+
+    @ParameterizedTest()
+    @CsvSource(value = {
+            // overloads: ordinal = rank among same-named siblings, document order
+            "class A {int apply(int a){return a;}int apply(long a){return (int)a;}} % classes/A/0/members/method/apply/0 % apply % 0 % int apply(int a)",
+            "class A {int apply(int a){return a;}int apply(long a){return (int)a;}} % classes/A/0/members/method/apply/1 % apply % 1 % int apply(long a)",
+            // field and method may legally share a name — the kind slot separates them
+            "class B {int count;int count(){return 0;}} % classes/B/0/members/field/count/0 % count % 0 % int count;",
+            "class B {int count;int count(){return 0;}} % classes/B/0/members/method/count/0 % count % 0 % int count()",
+            // constructor overloads key on the class name
+            "class E {E(int a){this.a = a;}E(long a){this.a = a;}private int a;} % classes/E/0/members/constructor/E/1 % E % 1 % E(long a)",
+            // nameless members rank within their kind — the name slot is dropped
+            "class C {int x;/** a */int y;/** b */int z;} % classes/C/0/members/comment/0 % - % 0 % a",
+            "class C {int x;/** a */int y;/** b */int z;} % classes/C/0/members/comment/1 % - % 1 % b",
+            // anonymous constructs rank within 'other'
+            "class G {static{System.out.print(1);}int x;} % classes/G/0/members/other/0 % - % 0 % static",
+            // a nested type: the same grammar one level down
+            "class D {int top(){return 1;}class Nested{int inner(){return 2;}}} % classes/D/0/members/class/Nested/0 % Nested % 0 % class Nested",
+            "class D {int top(){return 1;}class Nested{int inner(){return 2;}}} % classes/D/0/members/class/Nested/0/members/method/inner/0 % inner % 0 % int inner(){return 2;}"
+    }, delimiter = '%')
+    public void testAddressResolution(final String src, final String address,
+                                      final String expectedName, final int expectedOrdinal,
+                                      final String textFragment) {
+        final Rec root = serializer.read(src).asRec();
+        final Rec node = ObjIDESchema.locate(root, address);
+        if ("-".equals(expectedName)) {
+            assertTrue(node.at(uri("name")).isNoObj(), "expect a nameless member at " + address);
+        } else {
+            assertEquals(expectedName, node.at(uri("name")).strValue());
+        }
+        assertEquals(expectedOrdinal, node.at(uri("ordinal")).asInt().intValue());
+        assertTrue(node.at(uri("text")).strValue().contains(textFragment),
+                address + " expected to contain '" + textFragment + "' — got: " + node.at(uri("text")).strValue());
+        assertEquals(address, node.at(uri("path")).strValue(),
+                "the derived path must be the addressing path itself");
+    }
+
+    @Test
+    public void testLocateMissingListsCandidates() {
+        final Rec root = serializer.read("class A {int apply(int a){return a;}int apply(long a){return (int)a;}}").asRec();
+        final MTronException e = assertThrows(MTronException.class,
+                () -> ObjIDESchema.locate(root, "classes/A/0/members/method/nope/0"));
+        assertTrue(e.getMessage().contains("apply"),
+                "a miss must list what does exist, so the agent can re-aim: " + e.getMessage());
+    }
+
+    @Test
+    public void testLocateUnknownClass() {
+        final Rec root = serializer.read("class A {int x;}").asRec();
+        final MTronException e = assertThrows(MTronException.class,
+                () -> ObjIDESchema.locate(root, "classes/B/0"));
+        assertTrue(e.getMessage().contains("A"), "class candidates must be listed: " + e.getMessage());
+    }
+
+    // ===================================================================
+    //  edit by address — span-replace, parse-gated, byte-exact
+    // ===================================================================
+
+    @Test
+    public void testEditMethodByAddress() {
+        final String src = "class A {int apply(int a){return a;}int apply(long a){return (int)a;}}";
+        final Obj edited = ObjJavaIDESerializer.edit(src, "classes/A/0/members/method/apply/0",
+                "int apply(int a){return a + 1;}");
+        assertEquals("class A {int apply(int a){return a + 1;}int apply(long a){return (int)a;}}",
+                serializer.write(edited.asRec()),
+                "edit must replace exactly the addressed span and nothing else");
+    }
+
+    @Test
+    public void testEditSecondOverloadLeavesFirstUntouched() {
+        final String src = "class A {int apply(int a){return a;}int apply(long a){return (int)a;}}";
+        final Obj edited = ObjJavaIDESerializer.edit(src, "classes/A/0/members/method/apply/1",
+                "int apply(long a){return (int)(a / 2);}");
+        final String out = serializer.write(edited.asRec());
+        assertEquals("class A {int apply(int a){return a;}int apply(long a){return (int)(a / 2);}}", out);
+    }
+
+    @Test
+    public void testEditNestedMember() {
+        final String src = "class D {int top(){return 1;}class Nested{int inner(){return 2;}}}";
+        final Obj edited = ObjJavaIDESerializer.edit(src,
+                "classes/D/0/members/class/Nested/0/members/method/inner/0",
+                "int inner(){return 3;}");
+        assertEquals("class D {int top(){return 1;}class Nested{int inner(){return 3;}}}",
+                serializer.write(edited.asRec()));
+    }
+
+    @Test
+    public void testEditRejectsUnparseable() {
+        final String src = "class A {int x(){return 0;}}";
+        final MTronException e = assertThrows(MTronException.class,
+                () -> ObjJavaIDESerializer.edit(src, "classes/A/0/members/method/x/0", "def broken ("));
+        assertTrue(e.getMessage().contains("line"),
+                "a rejected edit must say where the parse breaks: " + e.getMessage());
+    }
+
+    @Test
+    public void testEditRenameRecoversViaAddress() {
+        final String src = "class A {int apply(int a){return a;}}";
+        final Obj edited = ObjJavaIDESerializer.edit(src, "classes/A/0/members/method/apply/0",
+                "int changed(int a){return a;}");
+        final Rec root = edited.asRec();
+        final MTronException e = assertThrows(MTronException.class,
+                () -> ObjIDESchema.locate(root, "classes/A/0/members/method/apply/0"));
+        assertTrue(e.getMessage().contains("changed"),
+                "the recovery message must name what replaced it: " + e.getMessage());
+        assertEquals(0, ObjIDESchema.locate(root, "classes/A/0/members/method/changed/0")
+                .at(uri("ordinal")).asInt().intValue(), "the rename is rank 0 of its new name");
+    }
+
+    // ===================================================================
+    //  nested types — structure + lossless round-trip
+    // ===================================================================
+
+    private static final String NESTED = """
+                                         class D {
+                                             int top() {
+                                                 return 1;
+                                             }
+                                             class Nested {
+                                                 int inner() {
+                                                     return 2;
+                                                 }
+                                             }
+                                         }
+                                         """;
+
+    @Test
+    public void testNestedClassStructure() {
+        final Rec root = serializer.read(NESTED).asRec();
+        final Rec cls = firstClass(root);
+        final Rec nested = findMember(cls, "class", "Nested");
+        assertNotNull(nested, "a nested class must surface as a member of kind 'class'");
+        assertFalse(nested.at(uri("members")).isNoObj(), "a nested class carries its own members");
+        assertNotNull(findMember(nested, "method", "inner"), "the nested class must expose its own method");
+        assertTrue(nested.at(uri("header")).strValue().contains("class Nested"));
+        assertEquals("classes/D/0/members/class/Nested/0", nested.at(uri("path")).strValue());
+    }
+
+    @Test
+    public void testNestedClassRoundTripExact() {
+        assertEquals(NESTED, serializer.write(serializer.read(NESTED).asRec()),
+                "nested types must round-trip byte-for-byte");
     }
 
     @Test

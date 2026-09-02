@@ -78,6 +78,23 @@ For the common single-public-class file, the class level is often elided in conv
 
 The `rec::T ↔ cs_java::T` as-paths re-tag (downgrade/upgrade the tag). Onboarding a language is `CS_{LANG}_TID` + `CS_{LANG}_TYPE` (a `rec::T` refinement) + `as?cs_{lang}<= {lang}(cs_{lang}::T)` + the `CS_{LANG}_TID ↔ REC_TID` as-paths.
 
+### Addressing — name + ordinal (the shared code schema)
+
+The coarse rec is **the contract every language adapter fills** (Java first, via `ObjJavaIDESerializer`; python/rust/go the same way). On top of the contract, the language-agnostic machinery — `ObjIDESchema` (`isa/ide/parser/`), with no source language inside it — gives every node two **derived** fields, computed by `decorate` on every parse: never stored, never stale.
+
+| field | type | rule |
+|---|---|---|
+| `ordinal` | `int` | rank of the node among its same-named siblings, document order — a named member groups by `(kind, name)`, a nameless member by `kind`, a class by `name`. A node with no same-named sibling is `0`; `N > 0` exists only because of a duplicate |
+| `path` | `str` | the node's own address (below) |
+
+**Address grammar** — `classes/{name}/{ordinal}` · `.../members/{kind}/{name}/{ordinal}` · nameless members drop the name slot: `.../members/{kind}/{ordinal}` · repeat `members/...` for nested types (a nested class is a `kind=>class` member carrying its own `members`). The top-level class ordinal is invariant 0 (Java forbids duplicate top-level names in a file); overload rank is document order — and because Java forbids two methods of the same name+erasure, `(kind, name, rank-in-source)` is a unique identity. **Same class name in different packages is the file slot's job** — the host space prepends `code/{name}/{ordinal}` (ordinal = rank among same-named files); the serializer never sees a filename.
+
+`locate(rec, address)` resolves an address back to the node rec; every miss throws with the candidates that *do* exist at that level, so a miss is recoverable (re-aim), never silent (mis-targeted).
+
+**Lossless.** `write` is pure concatenation (preamble → each type `header + members + footer` → postscript; a member's `text` folds in its leading whitespace) — `write(parse(src)) == src` byte-for-byte, nested types included.
+
+**Span-edit + gate.** `spanOf` finds a node's span inside the source (document-order walk — exact even for repeated spans); `firstError` reports the first tree-sitter syntax error with line and column; an adapter's `edit(src, address, newText)` = locate → splice the span → **parse gate** → fresh rec. An unparseable replacement is rejected with its diagnostic instead of saved — *parse before commit, fail soft with the diagnostic*.
+
 **Type-reference traversal (the source tree as a graph):** the serializer emits `superclass`/`interfaces` as **bare type names** (`AbstractSpace<Map<Obj, Obj>>`, no `extends`/`implements` keyword). The codespace layer — which has the project's file index — upgrades them into `!*` redirects to the referenced class's own cs rec:
 
 ```
