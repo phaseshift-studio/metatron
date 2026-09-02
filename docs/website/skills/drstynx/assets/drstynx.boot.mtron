@@ -148,6 +148,12 @@ tblespace::[pattern    => </usr/dsh/#>,
             table      => [,],
             q          => [incrq::[=>],subq::[=>],mimeq::[=>]],
             route      => [/usr/dsh/ => <>]]@</sys/space/usr/dsh>;
+tblespace::[pattern    => </log/metatron/#>,
+            host       => <sqlite:/home/killswitch/.metatron/log_metatron.sqlite>,
+            driver     => <org.sqlite.JDBC>,
+            table      => [,],
+            q          => [incrq::[=>],subq::[=>],mimeq::[=>]],
+            route      => [/log/metatron/ => <>]]@</sys/space/log/metatron>;
 wsspace::[host     => !*<boot/args/external/web/ws>,
           pattern  => <ws://#>,
           route    => [/drstynx => *dr.as(skill::T).as(mcp_server::T),
@@ -203,7 +209,7 @@ grphspace::[pattern   => h:#,
         >>=[_=>dedup()].
         to(<mfs:metatron.ide.mtron>)).
   to(/usr/marko/metatron).
-  side(temp -> 'home/killswitch/software/metatron')
+  side(temp -> '/home/killswitch/software/metatron')
   -<[mvn_build => mvn_build -> ide:command('mvn -f ${*temp} compile'),
      mvn_clean => mvn_clean -> ide:command('mvn -f ${*temp} clean'),
      mvn_exec  => mvn_exec  -> ide:command('mvn -f ${*temp} compile exec:java'),
@@ -211,7 +217,7 @@ grphspace::[pattern   => h:#,
   to(/usr/marko/metatron/command);
   /usr/marko/metatron/code/#?subq -> sub::[code=> >>0.as(rec::T)>>path==[_,_,_,_,_,_].
                                                  as?uri<=lst(uri::T).to(x).*(_).>>=[location=>none].as(web:java::T).
-                                                 to(*(*x.>>location))];
+                                                 to(*(*x.>>location).side(-<[location=>_,user=>/usr/marko,status=>saved,time=>!math:datetime_now()].to(/log/metatron/event/_?incrq)))];
                                                  
 [== 
 *<mfs:src/test/resources/scratch/project.ide.mtron>.

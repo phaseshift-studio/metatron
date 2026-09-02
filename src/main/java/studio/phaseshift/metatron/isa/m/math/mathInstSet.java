@@ -92,7 +92,6 @@ public class mathInstSet extends AbstractInstSet {
     public static final String MATH_PBYTE_STRING = "/m/math/data/pB";
     /// ///////////////////////
     public static final fURI MATH_TIME_TID = MATH_ISA_TID.extend("time");
-    public static final fURI MATH_NOW_INST_TID = MATH_INST_TID.extend("now");
     public static final fURI MATH_MILLIS_TID = MATH_TIME_TID.extend("millis");
     public static final fURI MATH_SECOND_TID = MATH_TIME_TID.extend("second");
     public static final fURI MATH_MINUTE_TID = MATH_TIME_TID.extend("minute");
