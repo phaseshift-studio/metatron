@@ -89,13 +89,13 @@ public interface LockQTest extends QProcTest {
         // lock the region with a ~1 second expiry — the future datetime is built on the Java
         // side (the mtron datetime arithmetic inst isn't resolving in the test suite's /m/math
         // load; it works in the console).  A literal datetime URI stores cleanly in the lock.
-        final String expire = mathInstSet.buildDatetimeUri(ZonedDateTime.now().plusSeconds(1)).uriValue().toString();
+        final String expire = mathInstSet.buildDatetimeUri(ZonedDateTime.now().plusSeconds(5)).uriValue().toString();
         ObjmtronSerializer.parse(make("$$/xyz/abc?lockq -> lock::[usr=>/usr/agent1,expire=>datetime::<" + expire + ">]")).apply();
         // while the lock is live, a write into it is blocked
         final Obj blocked = ObjmtronSerializer.parse(make("$$/xyz/abc -> 1")).apply();
         assertTrue(blocked.isFail(), "a write into a live lock must yield a fail");
         // once the TTL elapses, the lock has expired — the write passes
-        CommonUtil.sleepThread(2500);
+        CommonUtil.sleepThread(5000);
         final Obj passed = ObjmtronSerializer.parse(make("$$/xyz/abc -> 1")).apply();
         assertEquals(ObjmtronSerializer.parse(make("1")).apply(), passed);
     }

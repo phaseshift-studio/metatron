@@ -115,7 +115,7 @@ mtron> *<local:config.json?mimeq=application/x-mtron>/database/host
 ==>fail::[parse error at line 1, col 47:
      ...l:config.json?mimeq=application/x-mtron>/database/host
                                                 ^
-     could not parse at '/']@/sys/fail/344
+     could not parse at '/']@/sys/fail/334
 ```
 ### Binary Files
 
@@ -125,7 +125,7 @@ are treated as `inst::T` and can be invoked directly:
 ```mtron
 mtron> *<local:script.sh>        [-- bytes::T if binary, str::T if text                    --]
 mtron> <local:script.sh>.exec()  [-- execute (shell scripts, via application/x-mtron exec) --]
-==>fail::[unable to locate inst-f of exec()@<1>]@/sys/fail/346
+==>fail::[unable to locate inst-f of exec()@<1>]@/sys/fail/336
 ```
 ## Pattern-Based Access
 
@@ -140,7 +140,7 @@ mtron> *<local:+/+>.where([name => where(^(>>is(hasPostfix(.txt))))])
 ==>fail::[parse error at line 1, col 14:
      *<local:+/+>.where([name => where(^(>>is(hasPostfix(....
                   ^
-     could not parse at 'w']@/sys/fail/348
+     could not parse at 'w']@/sys/fail/338
 ```
 ## Line-Level Editing with `lineq`
 
@@ -156,7 +156,7 @@ mtron> *<local:src/main.java?lineq=10..20>
    	  \_pred │ []
    	[inst]   │ *<local:src/main.java?lineq=10..20>
    	 \_dom   │ #{?}::T
-   	 \_args  │ [<local:src/main.java?lineq=10..20>][NumberFormatException<67>:For input string: "10..20"[NumberFormatException<67>:For input string: "10..20"] ← For input string: "10..20"]][For input string: "10..20"[NumberFormatException<67>:For input string: "10..20"]][For input string: "10..20"]@/sys/fail/350
+   	 \_args  │ [<local:src/main.java?lineq=10..20>][NumberFormatException<67>:For input string: "10..20"[NumberFormatException<67>:For input string: "10..20"] ← For input string: "10..20"]][For input string: "10..20"[NumberFormatException<67>:For input string: "10..20"]][For input string: "10..20"]@/sys/fail/340
 mtron> [-- Replace lines 5-10 with new content --]
 mtron> <local:src/main.java?lineq=5..10> -> """
          public void newMethod() {
@@ -177,7 +177,7 @@ mtron> <local:src/main.java?lineq=5..10> -> """
    public void newMethod() {
    // new implementation
    }
-   """][NumberFormatException<67>:For input string: "5..10"[NumberFormatException<67>:For input string: "5..10"] ← For input string: "5..10"]][For input string: "5..10"[NumberFormatException<67>:For input string: "5..10"]][For input string: "5..10"]@/sys/fail/352
+   """][NumberFormatException<67>:For input string: "5..10"[NumberFormatException<67>:For input string: "5..10"] ← For input string: "5..10"]][For input string: "5..10"[NumberFormatException<67>:For input string: "5..10"]][For input string: "5..10"]@/sys/fail/342
 ```
 ### Boot Configuration Example
 
@@ -194,12 +194,12 @@ mtron> *<local:Main.java?lineq=1..50>
    	  \_pred │ []
    	[inst]   │ *<local:Main.java?lineq=1..50>
    	 \_dom   │ #{?}::T
-   	 \_args  │ [<local:Main.java?lineq=1..50>][NumberFormatException<67>:For input string: "1..50"[NumberFormatException<67>:For input string: "1..50"] ← For input string: "1..50"]][For input string: "1..50"[NumberFormatException<67>:For input string: "1..50"]][For input string: "1..50"]@/sys/fail/354
+   	 \_args  │ [<local:Main.java?lineq=1..50>][NumberFormatException<67>:For input string: "1..50"[NumberFormatException<67>:For input string: "1..50"] ← For input string: "1..50"]][For input string: "1..50"[NumberFormatException<67>:For input string: "1..50"]][For input string: "1..50"]@/sys/fail/344
 mtron> <local:index.html?mimeq=application/x-mtron>/html/head/title
 ==>fail::[parse error at line 1, col 45:
      ...al:index.html?mimeq=application/x-mtron>/html/head/title
                                                 ^
-     could not parse at '/']@/sys/fail/356
+     could not parse at '/']@/sys/fail/346
 ```
 ## Type Round-Trip
 
@@ -216,7 +216,7 @@ mtron> <local:page.html> -> *<local:page.html?mimeq=application/x-mtron>
    	  \_pred │ []
    	[inst]   │ at?rng=B{*}&dom=A{?}('New Title'){<j>}@<2>
    	 \_dom   │ A{?}::T
-   	 \_args  │ ['New Title'][MTronException<127>:'New Title' [str::T] unable to convert uri::T]]['New Title' [str::T] unable to convert uri::T]@/sys/fail/366
+   	 \_args  │ ['New Title'][MTronException<127>:'New Title' [str::T] unable to convert uri::T]]['New Title' [str::T] unable to convert uri::T]@/sys/fail/356
 mtron> [-- Read JSON config, modify a value, write back --]
 mtron> <local:config.json> -> *<local:config.json?mimeq=application/x-mtron>
          .at(database/host -> 'new-host')
@@ -227,7 +227,7 @@ mtron> <local:config.json> -> *<local:config.json?mimeq=application/x-mtron>
    	  \_pred │ []
    	[inst]   │ at?rng=B{*}&dom=A{?}('new-host'){<j>}@<2>
    	 \_dom   │ A{?}::T
-   	 \_args  │ ['new-host'][MTronException<127>:'new-host' [str::T] unable to convert uri::T]]['new-host' [str::T] unable to convert uri::T]@/sys/fail/376
+   	 \_args  │ ['new-host'][MTronException<127>:'new-host' [str::T] unable to convert uri::T]]['new-host' [str::T] unable to convert uri::T]@/sys/fail/366
 ```
 The `.as(html::T)` / `.as(json::T)` serialization passes through `ObjHTMLSerializer.write()` /
 `ObjJSONSerializer.write()` which handle both `str::T` (pass-through) and `rec::T` (structural render).
