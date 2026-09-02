@@ -71,29 +71,37 @@ For the common single-public-class file, the class level is often elided in conv
 
 **Dereference flow:** a file/URL dereference tags content via `MIME.fromExtension`/`toTid` — a `.java` file dereferences as `java::T` (a `str::T` refinement — `as?java<=str(java::T)`, parse verification in the `JAVA_TYPE` predicate). No MIME change is needed for the coarse schema.
 
-**`cs_java::T` is a `rec::T` refinement** — `as(cs_java::T)` *is* the parse: it produces the coarse rec. Its `isaPredicate` is a **top-level shape check** — the rec must expose `classes` (lst); `package`/`imports`/`preamble`/`postscript` are optional addressing/write views. Deeper member-level verification (method/field shapes) can be added later without touching the parse. The dereference flow is two steps:
+**`cs_java::T` is a `rec::T` refinement** — `as(cs_java::T)` *is* the parse: it produces the coarse rec. Its `isaPredicate` is a **top-level shape check** — the rec must expose `classes` (a **named rec** — each class name maps to the ranked `lst` of that class's recs); `package`/`imports`/`preamble`/`postscript` are optional addressing/write views. Deeper member-level verification (method/field shapes) can be added later without touching the parse. The dereference flow is two steps:
 
 1. `*<fs:Foo.java>` → `java::T` str (tagged by MIME)
 2. `.as(cs_java::T)` → `as?cs_java<=java(cs_java::T)` runs `ObjJavaCSSerializer.parse` → the coarse `cs_java` rec
 
 The `rec::T ↔ cs_java::T` as-paths re-tag (downgrade/upgrade the tag). Onboarding a language is `CS_{LANG}_TID` + `CS_{LANG}_TYPE` (a `rec::T` refinement) + `as?cs_{lang}<= {lang}(cs_{lang}::T)` + the `CS_{LANG}_TID ↔ REC_TID` as-paths.
 
-### Addressing — name + ordinal (the shared code schema)
+### Addressing — names and ranks live in the structure
 
-The coarse rec is **the contract every language adapter fills** (Java first, via `ObjJavaIDESerializer`; python/rust/go the same way). On top of the contract, the language-agnostic machinery — `ObjIDESchema` (`isa/ide/parser/`), with no source language inside it — gives every node two **derived** fields, computed by `decorate` on every parse: never stored, never stale.
+The coarse rec is **the contract every language adapter fills** (Java first, via `ObjJavaIDESerializer`; python/rust/go the same way). Named = addressable, ordered = printable — both at once: the `classes` slot is a named rec (a file's top-level names are structurally unique, each class name mapping to the ranked `lst::T` of that class's recs), and `members` is an ordered `lst::T` of **single-field wrapper recs** — `{name => memberRec}` — where **the list position is the print order** and **the wrapper key is the named slot**. Dereference walks straight through it:
 
-| field | type | rule |
-|---|---|---|
-| `ordinal` | `int` | rank of the node among its same-named siblings, document order — a named member groups by `(kind, name)`, a nameless member by `kind`, a class by `name`. A node with no same-named sibling is `0`; `N > 0` exists only because of a duplicate |
-| `path` | `str` | the node's own address (below) |
+```
+code/0                                   file slot — the host space prepends it;
+                                          the serializer never sees a filename
+code/0/classes/Greeter/0                 class Greeter, rank 0 — two Greeters in different
+                                         packages are different files, i.e. different code slots
+code/0/classes/Greeter/0/members/1/apply the apply member at list position 1
+                                         (print order is the list order)
+code/0/classes/Greeter/0/members/+/apply wildcard: the set of every member named apply
+code/0/classes/Greeter/0/members/1/apply/text
+```
 
-**Address grammar** — `classes/{name}/{ordinal}` · `.../members/{kind}/{name}/{ordinal}` · nameless members drop the name slot: `.../members/{kind}/{ordinal}` · repeat `members/...` for nested types (a nested class is a `kind=>class` member carrying its own `members`). The top-level class ordinal is invariant 0 (Java forbids duplicate top-level names in a file); overload rank is document order — and because Java forbids two methods of the same name+erasure, `(kind, name, rank-in-source)` is a unique identity. **Same class name in different packages is the file slot's job** — the host space prepends `code/{name}/{ordinal}` (ordinal = rank among same-named files); the serializer never sees a filename.
+Nameless members (comments, static initializers) take their kind word as the wrapper key — `members/3/comment/text` — and stay named and addressable. `ordinal` and `path` are **not stored fields**: the key *is* the name, the list position *is* the order, and there is no parallel identifier scheme for either to drift from.
 
-`locate(rec, address)` resolves an address back to the node rec; every miss throws with the candidates that *do* exist at that level, so a miss is recoverable (re-aim), never silent (mis-targeted).
+**References.** Durable `!*` pointers use the name form — `notes >>= +["I should rewrite this method", !*code/1/classes/Greeter/0/members/+/apply]` — which survives member insertion. When two members share a name, the pointer disambiguates by structural predicate — `.../members/+/apply=?=[signature=>has("int a")]` — evaluated as the native rec projection (`lhs.at(key).test(value)` per rule) on the wrapped member rec. Fixed list indices are the session-scoped form ("this one, right now") and shift on insertion — standard list semantics.
 
-**Lossless.** `write` is pure concatenation (preamble → each type `header + members + footer` → postscript; a member's `text` folds in its leading whitespace) — `write(parse(src)) == src` byte-for-byte, nested types included.
+**Lossless.** `write` walks the list: classes in slot order (a non-first class's `sep` carries the inter-class gap), then within a class `header + members (wrappers in list order) + footer`, with a member's `text` folding in its leading whitespace — so `write(parse(src)) == src` byte-for-byte in **any** member order, same-named ones interleaved with others included, and the chain `'...'.as(web:java::T).as(ide:java::T).as(web:java::T).as(str::T)` returns the source intact.
 
-**Span-edit + gate.** `spanOf` finds a node's span inside the source (document-order walk — exact even for repeated spans); `firstError` reports the first tree-sitter syntax error with line and column; an adapter's `edit(src, address, newText)` = locate → splice the span → **parse gate** → fresh rec. An unparseable replacement is rejected with its diagnostic instead of saved — *parse before commit, fail soft with the diagnostic*.
+**Known simplification.** Nested types currently parse as `kind=>other` members (a full `text` span); recursive expansion into their own `members` is a later refinement.
+
+**Language onboarding** is `IDE_{LANG}_TID` + `IDE_{LANG}_TYPE` (a `rec::T` refinement — `classes` slot = named rec → ranked lists) + `as?ide_{lang}<={lang}(parse)` + `as?{lang}<=ide_{lang}(write)`, both backed by that language's serializer.
 
 **Type-reference traversal (the source tree as a graph):** the serializer emits `superclass`/`interfaces` as **bare type names** (`AbstractSpace<Map<Obj, Obj>>`, no `extends`/`implements` keyword). The codespace layer — which has the project's file index — upgrades them into `!*` redirects to the referenced class's own cs rec:
 

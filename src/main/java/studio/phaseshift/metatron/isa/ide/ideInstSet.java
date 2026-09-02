@@ -117,10 +117,12 @@ public class ideInstSet extends AbstractInstSet {
     public static final Type IDE_JAVA_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(IDE_JAVA_TID)
-            // top-level coarse-schema verification — the cs_java rec must expose classes (lst);
-            // package/imports/preamble/postscript are optional addressing/write views
+            // top-level coarse-schema verification — classes is a rec of named slots,
+            // each mapping to the ranked lst of the classes/members that share that name
+            // (the list position is the ordinal); package/imports/preamble/postscript
+            // are optional addressing/write views
             .isaPredicate(rec(
-                    uri("classes").asUri(), LST_TYPE,
+                    uri("classes").asUri(), rec(T(ALL), LST_TYPE),
                     uri("package").maybe().asUri(), STR_TYPE,
                     uri("imports").maybe().asUri(), LST_TYPE,
                     uri("preamble").maybe().asUri(), STR_TYPE,
@@ -144,7 +146,7 @@ public class ideInstSet extends AbstractInstSet {
                         docWrap(IDE_RESULT_TYPE,
                                 "the standardized build/test/status outcome — rec::T with a union status verdict",
                                 "x>>status",
-                                "x>>output.take(10)",
+                                "x>>output.limit(10)",
                                 "x>>runtime.normalize()"),
                         docWrap(IDE_PROJECT_TYPE,
                                 "the project descriptor (the pom.xml of a metatron ide) — a project.mtron file at the project root",
@@ -160,7 +162,6 @@ public class ideInstSet extends AbstractInstSet {
                                                 .map(e -> Tuple.Pair.with(e.get0(), start_(e.get1()).as_(JAVA_TYPE).apply()))
                                                 .map(e -> (Obj) start_(e.get1()).as_(IDE_JAVA_TYPE).apply().asRec().at(uri("location"), e.get0(), MUTABLE))
                                                 .toList()), MUTABLE);
-                                        //   .map(e -> (Obj) auto_(from_(e).as_(JAVA_TYPE).as_(IDE_JAVA_TYPE).update_(rec(LOCATION, e))).tryToInst())
                                     }
                                     if (!project.has(NAME))
                                         project.at(NAME, str(lhs.uriValue().basePath().name()), MUTABLE);
@@ -221,13 +222,16 @@ public class ideInstSet extends AbstractInstSet {
                         // round-trip without the derived text field going stale.
                         instC(AS_INST_TID.dom(IDE_JAVA_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> str(ObjJavaIDESerializer.single().write(lhs.asRec()))),
                         //instC(AS_INST_TID.dom(REC_TID).rng(IDE_JAVA_TID), lst(IDE_JAVA_TYPE), (lhs, inst) -> lhs.tid(IDE_JAVA_TID)),
-                        docWrap(instC(IDE_INST_TID.extend("find").dom(URI_TID).rng(URI_TID.maybeSome()), lst(URI_TYPE, T(STR_TID.maybe())),
+                        docWrap(instC(IDE_INST_TID.extend("find").dom(URI_TID).rng(URI_TID.maybeSome()), rec(uri(CLASS), URI_TYPE, uri(MEMBER), T(STR_TID.maybe()), uri(TEXT), T(STR_TID.maybe())),
                                         // *scratch/root.repeat(code=>>>,until=>false,emit=>has(<#>)) 
                                         (lhs, inst) -> {
                                             return start_(lhs).rshift_(uri(CODE)).rshift_().
-                                                    filter_(from_(id_()).rshift_(uri("location")).has_(inst.arg(0))).
+                                                    filter_(from_(id_()).rshift_(uri("location")).has_(inst.arg(CLASS, 0))).
                                                     repeat_(rec(CODE, rshift_(), EMIT, BOOL_TRUE)).
-                                                    filter_(from_(id_()).rshift_(uri(NAME)).has_(inst.arg(1).orElse(str(".*")))).tryToInst().apply();
+                                                    rshift_(uri("members")).rshift_().rshift_().filter_(from_(id_())
+                                                            .where_(rec(
+                                                                    NAME, has_(inst.arg(NAME, 1).orElse(str(".*"))),
+                                                                    TEXT, has_(inst.arg(TEXT, 2).orElse(str(".*")))))).tryToInst().apply();
                                             /*return from_(uri(lhs.uriValue().extend(f(CODE).extend("/")))).
                                                     filter_(rshift_().rshift_(uri("location")).has_(inst.arg(0))).
                                                     split_(lst(lshift_(), rshift_(uri("location")))).
