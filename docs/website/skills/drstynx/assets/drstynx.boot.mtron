@@ -85,11 +85,11 @@ fsspace::[
 httpspace::[host     => !*<boot/args/external/web/http>,
             q        => [mimeq::[=>]],
             pattern  => <http://#>,
-            route    => [/mcp       => mcp_mtron_http,
+            route    => [/mcp       => mcp_mtron,
                          /docker    => docker:,
                          /dr        => /usr/dr,
                          /marko     => /usr/marko,
-                         /message   => mcp_message_http,
+                         /message   => mcp_message,
                          /          => mfs:docs/website/]]@/sys/space/web/http;   
 
 [==
@@ -142,11 +142,17 @@ tblespace::[pattern    => </usr/dr/#>,
             table      => [,],
             q          => [incrq::[=>],subq::[=>],mimeq::[=>]],
             route      => [/usr/dr/ => <>]]@</sys/space/usr/dr>;
+tblespace::[pattern    => </usr/dsh/#>,
+            host       => <sqlite:/home/killswitch/.metatron/dsh.sqlite>,
+            driver     => <org.sqlite.JDBC>,
+            table      => [,],
+            q          => [incrq::[=>],subq::[=>],mimeq::[=>]],
+            route      => [/usr/dsh/ => <>]]@</sys/space/usr/dsh>;
 wsspace::[host     => !*<boot/args/external/web/ws>,
           pattern  => <ws://#>,
           route    => [/drstynx => *dr.as(skill::T).as(mcp_server::T),
-                       /mcp     => mcp_mtron_ws,
-                       /message => mcp_message_ws,
+                       /mcp     => mcp_mtron,
+                       /message => mcp_message,
                        /mtron   => mtron_ws]]@/sys/space/web/ws;       
 mqttspace::[host    => <mqtt://ginger.local:1883>,
             pattern => z2m:#,

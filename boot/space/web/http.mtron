@@ -3,5 +3,5 @@
   -<([host    => _,
       q       => [mimeq::[=>]],
       pattern => http://#,
-      route   => [/mcp   => mcp_mtron_http,
+      route   => [/mcp   => mcp_mtron,
                   /      => fs:boot/space/web]]@/sys/space/web/http).as(httpspace::T) }

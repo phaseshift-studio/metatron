@@ -18,16 +18,17 @@
 
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
-import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Fail;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Str;
 
 import java.util.Set;
 
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -115,7 +116,7 @@ public interface Feature {
 
     default void onError(final Agent agent, final Fail fail) {
     }
-
+    
     /**
      * The full feature tids this feature requires to function properly —
      * they must be attached to the same agent.  The agent is the integrator

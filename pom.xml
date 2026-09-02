@@ -991,7 +991,9 @@
                     <version>3.5.6</version>
                     <configuration>
                         <parallel>classesAndMethods</parallel>
-                        <threadCount>10</threadCount>
+                        <threadCount>6</threadCount>
+                        <forkCount>6</forkCount>
+                        <reuseForks>false</reuseForks>
                         <argLine>
                             --sun-misc-unsafe-memory-access=allow
                             --enable-native-access=ALL-UNNAMED
@@ -1016,8 +1018,6 @@
                         <excludes>
                             <testExclude>com/example/scratch/**/*</testExclude>
                         </excludes>
-                        <forkCount>8</forkCount>
-                        <reuseForks>false</reuseForks>
                     </configuration>
                 </plugin>
                 <plugin>

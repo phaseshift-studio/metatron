@@ -8,9 +8,11 @@ import dev.langchain4j.model.TokenCountEstimator;
 import dev.langchain4j.service.AiServices;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.AgentServices;
+import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -20,10 +22,13 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MESSAGE_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -48,6 +53,12 @@ public class MessageFeature extends AbstractFeature {
     public static void buildSession(final Agent agent, final AiServices<AgentServices> service) {
         if (agent.hasFeature(LLM_MESSAGE_FEATURE_TID))
             service.chatMemory(agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as().memory()).storeRetrievedContentInChatMemory(true);
+        if (agent.hasFeature(LLM_TOOL_FEATURE_TID)) {
+            ToolFeature toolFeature = agent.feature(LLM_TOOL_FEATURE_TID).as();
+            toolFeature.addTool(mTool.tool(instC(f("add_message").dom(ALL.maybe()).rng(MESSAGE_TID), lst(REC_TYPE), (lhs, inst) -> {
+                return agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as().addMessage(agent, inst.arg(0).asRec());
+            })));
+        }
     }
 
     /**
@@ -67,6 +78,27 @@ public class MessageFeature extends AbstractFeature {
         ));
     }
 
+    public Rec addMessage(final Agent agent, final Rec message) {
+        MessageBuilder.build(message.tid()).copy(message.jvm()).time().create();
+        final SpaceChatSessionStore store = this.createStore(agent);
+        return store.addMessage(message);
+    }
+
+    private SpaceChatSessionStore createStore(final Agent agent) {
+        final fURI sessionID = this.at(SESSION).uriValue();
+        Rec session = Router.readFromSpace(sessionID).orElse(rec());
+        final int chatId = session.at(uri(CHAT_ID)).orElse(jnt(0)).intValue().intValue() + 1;
+        session.at(uri(CHAT_ID), jnt(chatId), MUTABLE);
+        agent.setCurrentChatId(chatId);
+
+        final Space space = Router.global().getSpaceFor(sessionID);
+        // the session's home <memoryRoot>/session/<id> is the ledger's root —
+        // the store is told which memory system it serves (not derived
+        // from the agent's own root)
+        return new SpaceChatSessionStore(agent, space, agent.chatDepth(), chatId, SpaceChatSessionStore.memoryRootOf(sessionID));
+
+    }
+
     @Override
     public Obj onBeforeChat(final Agent agent) {
         final fURI sessionID = this.at(SESSION).uriValue();
@@ -75,16 +107,7 @@ public class MessageFeature extends AbstractFeature {
             // Monotonic execution counter — incremented on every chat() call,
             // persisted with the session so it survives restarts.  Used by
             // SpaceChatSessionStore for cross-turn sub-agent isolation.
-            final int chatId = session.at(uri(CHAT_ID)).orElse(jnt(0)).intValue().intValue() + 1;
-            session.at(uri(CHAT_ID), jnt(chatId), MUTABLE);
-            agent.setCurrentChatId(chatId);
-
-            final Space space = Router.global().getSpaceFor(sessionID);
-            // the session's home <memoryRoot>/session/<id> is the ledger's root —
-            // the store is told which memory system it serves (not derived
-            // from the agent's own root)
-            final SpaceChatSessionStore store = new SpaceChatSessionStore(agent, space, agent.chatDepth(), chatId, SpaceChatSessionStore.memoryRootOf(sessionID));
-            this.store = store;
+            this.store = this.createStore(agent);
             // Ensure session exists in space with required fields
             if (session.at(ALGORITHM).isNoObj()) {
                 if (!this.asRec().at(ALGORITHM).isNoObj()) {

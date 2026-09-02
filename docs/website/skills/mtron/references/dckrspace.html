@@ -1103,7 +1103,10 @@ mtron&gt; *docker:image/nginx:alpine/tag         [-- alpine --]
      environment=&gt;[POSTGRES_PASSWORD=&gt;secret]]]]
 </code></pre>
 <p>Compose YAML is generated to <code>/tmp/metatron-docker/&lt;name&gt;/docker-compose.yml</code> and
-<code>docker compose up -d</code> is executed. Progress streams through the widget.</p>
+<code>docker compose up -d --wait</code> is executed — the write blocks until the stack
+reports healthy.  Give each service a <code>healthcheck</code> (e.g. <code>test =&gt; ['CMD','mysqladmin','ping','--silent']</code>) so a boot file can register a space on
+the backend immediately after the up returns; without a healthcheck <code>--wait</code>
+satisfies on container start. Progress streams through the widget.</p>
 <h4>Stop a stack</h4>
 <pre><code class="language-mtron">mtron&gt; docker:compose/my-stack -&gt; noobj     [-- docker compose down + cleanup --]
 </code></pre>

@@ -57,7 +57,7 @@ public class mcpEmulatorTest extends AbstractMcpHandlerTest {
     @BeforeAll
     public static void setup() {
         InstSet.importInstSet(f("/m/web"));
-        httpSpace.of(rec(uri(PATTERN), uri("http://#"), uri(HOST), uri("http://localhost:8654"), uri(ROUTE), rec(uri("/metatron"), uri("mcp_mtron_http"))), f("/sys/space/web/http"));
+        httpSpace.of(rec(uri(PATTERN), uri("http://#"), uri(HOST), uri("http://localhost:8654"), uri(ROUTE), rec(uri("/metatron"), uri("mcp_mtron"))), f("/sys/space/web/http"));
     }
 
     @Override

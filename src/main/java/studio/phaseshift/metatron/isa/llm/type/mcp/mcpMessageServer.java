@@ -26,8 +26,8 @@ import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler;
-import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
+import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -55,14 +55,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler.HTTP_MCP_HANDLER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_SERVER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * The MCP server for an agent's message ledger.
  * <p>
- * {@code mcp_message_server} exposes an agent's chronological message ledger
+ * {@code mcp_message} exposes an agent's chronological message ledger
  * ({@code <root>/message}) over MCP so that remote harness memory can be
  * appended ({@code add_message}), read back (latest first,
  * {@code get_messages}), and searched by pattern ({@code
@@ -93,18 +92,20 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *       tool, uri — required) plus {@code contents} (the call id, the
  *       correlation key to the ai tool_request that requested it — the type
  *       also knows this field as {@code id})</li>
+ *   <li>{@code compaction} — a compaction sentinel (the
+ *       {@code message/compaction} record): {@code text} is the resume
+ *       summary; optional {@code in}/{@code out}/{@code compression}
+ *       statistics ride the generic attributes merge. Reads bound the live
+ *       window at the newest sentinel (see {@code SpaceChatSessionStore}
+ *       {@code stopAt})</li>
  * </ul>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class mcpMessageServer {
 
-    //public static final fURI MCP_MESSAGE_SERVER_TID = LLM_ISA_TID.extend("mcp").extend("mcp_message_server");
-    public static final fURI MCP_MESSAGE_HTTP_TID = LLM_ISA_TID.extend("mcp").extend("mcp_message_http");
-    public static final fURI MCP_MESSAGE_WS_TID = LLM_ISA_TID.extend("mcp").extend("mcp_message_ws");
-    //public static final Type MCP_MESSAGE_SERVER_TYPE = mcpMessageServer.createType();
-    public static final Type MCP_MESSAGE_WS_TYPE = mcpMessageServer.wsHandler();
-    public static final Type MCP_MESSAGE_HTTP_TYPE = mcpMessageServer.httpHandler();
+    public static final fURI MCP_MESSAGE_SERVER_TID = LLM_ISA_TID.extend("mcp").extend("mcp_message");
+    public static final Type MCP_MESSAGE_SERVER_TYPE = mcpMessageServer.server();
 
     /**
      * Default read window for {@code get_messages} / {@code search_messages}.
@@ -116,31 +117,23 @@ public class mcpMessageServer {
      */
     public static final int HARD_MAX_MESSAGES = 500;
 
-    public static Type wsHandler() {
+    /**
+     * The single transport-agnostic MCP server for the message ledger. Both
+     * {@code httpSpace} and {@code wsSpace} wrap this {@link mcpServer} in their
+     * respective transport handler ({@code mcp_httpHandler} / {@code
+     * mcp_wsHandler}).
+     */
+    public static Type server() {
         return Type.Builder.build()
-                .tid(WS_MCP_HANDLER_TID)
-                .vid(MCP_MESSAGE_WS_TID)
+                .tid(MCP_SERVER_TID)
+                .vid(MCP_MESSAGE_SERVER_TID)
                 .isaPredicate(rec(
-                        uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE),
+                        uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
                         uri(RESOURCE).maybe().asUri(), T(ALL),
                         uri(PROMPT).maybe().asUri(), T(ALL)))
-                .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_MESSAGE_WS_TID), lst(REC_TYPE), (lhs, inst) -> {
+                .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_MESSAGE_SERVER_TID), lst(REC_TYPE), (lhs, inst) -> {
                     final Rec config = inst.arg(0).asRec();
-                    return new mcp_wsHandler(rec(generateMcpConfig(MCP_MESSAGE_WS_TID, config.jvm()), REC_TID, config.vid()).asRec());
-                })).create();
-    }
-
-    public static Type httpHandler() {
-        return Type.Builder.build()
-                .tid(HTTP_MCP_HANDLER_TID)
-                .vid(MCP_MESSAGE_HTTP_TID)
-                .isaPredicate(rec(
-                        uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE),
-                        uri(RESOURCE).maybe().asUri(), T(ALL),
-                        uri(PROMPT).maybe().asUri(), T(ALL)))
-                .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_MESSAGE_HTTP_TID), lst(REC_TYPE), (lhs, inst) -> {
-                    final Rec config = inst.arg(0).asRec();
-                    return new mcp_httpHandler(rec(generateMcpConfig(MCP_MESSAGE_HTTP_TID, config.jvm()), REC_TID, config.vid()).asRec());
+                    return new mcpServer(generateMcpConfig(MCP_MESSAGE_SERVER_TID, config.jvm()), MCP_SERVER_TID, config.vid());
                 })).create();
     }
 
@@ -150,7 +143,7 @@ public class mcpMessageServer {
         final Rec tools = rec(mutableMap());
         final Inst addMessage = docWrap(instC(vid.extend("add_message").dom(ALL.maybe()).rng(MESSAGE_TID), rec(
                 ROOT, URI_TYPE,
-                KIND, isa_(union_(lst(uri(USER), uri(AI), uri(SYSTEM), uri("thinking"), uri("tool_result")))).tryToInst(),
+                KIND, isa_(union_(lst(uri(USER), uri(AI), uri(SYSTEM), uri("thinking"), uri("tool_result"), uri("compaction")))).tryToInst(),
                 TEXT, STR_TYPE,
                 SESSION, URI_TYPE,
                 NAME, T(STR_TID.maybe()),
@@ -202,6 +195,11 @@ public class mcpMessageServer {
             builder = MessageBuilder.build(SYSTEM_MESSAGE_TID).text(text);
         } else if (messageKind.equals(uri("thinking"))) {
             builder = MessageBuilder.build(THINKING_MESSAGE_TID).text(text);
+        } else if (messageKind.equals(uri("compaction"))) {
+            // the compaction sentinel — its text is the resume summary; the
+            // optional in/out/compression statistics ride the generic
+            // attributes merge below (the same shape compactSession writes)
+            builder = MessageBuilder.build(COMPACTION_MESSAGE_TID).text(text);
         } else if (messageKind.equals(uri(AI))) {
             builder = MessageBuilder.build(AI_MESSAGE_TID).text(text);
             if (!toolRequests.isNoObj())
@@ -236,8 +234,16 @@ public class mcpMessageServer {
     }
 
     private static Lst buildToolRequests(final Obj toolRequests) {
+        Obj requests = toolRequests;
+        if (requests.isStr()) {
+            // an mcp client may deliver tool_requests as a json string — the
+            // json serializer decodes it to a typed lst(rec); the mtron parser
+            // garbles json (list-of-recs lands as objs). the same idiom the
+            // emulator's install uses for its mcpServers snippet
+            requests = ObjJSONSerializer.simple().inputBytes(Str.Helper.cleanString(requests, true));
+        }
         final List<Obj> built = new ArrayList<>();
-        toolRequests.<Lst>as().lstValue().forEach(entry -> {
+        requests.<Lst>as().lstValue().forEach(entry -> {
             final Rec entryRec = entry.asRec();
             final String toolName = entryRec.at(uri(NAME)).toCleanString();
             final Obj toolArgs = entryRec.at(uri(ARGS));

@@ -62,6 +62,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -212,6 +213,13 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 Obj wsHandlerType = Space.Helper.resolveApply(this.space, routeValue);
                 if (wsHandlerType.isUri())
                     wsHandlerType = Router.readFromSpace(wsHandlerType.uriValue());
+                // ── mcp_server type: materialize it so the transport wraps it ──
+                if (wsHandlerType.isType() && wsHandlerType.asType().hasConstructor()
+                        && Obj.Helper.specificType(wsHandlerType).test(MCP_SERVER_TYPE)) {
+                    final Obj mcp = wsHandlerType.asType().constructor().apply(rec(mutableMap())).as();
+                    if (!mcp.isFail())
+                        wsHandlerType = mcp;
+                }
                 if (!wsHandlerType.isType() && !(wsHandlerType instanceof mcpServer))
                     throw MTronException.of("websocket handler type required: %s", wsHandlerType);
                 LOG.debug("starting session with websocket handler: %s", wsHandlerType);

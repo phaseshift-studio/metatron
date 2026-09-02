@@ -125,7 +125,7 @@ public class mcp_httpHandler extends HttpRec {
         if ("initialize".equals(method)) {
             this.sessionId = java.util.UUID.randomUUID().toString();
             sessions.put(this.sessionId, this.vid());
-            LOG.info("created mcp session: %s", this.sessionId);
+            LOG.status(DEBUG, "created mcp session: %s", this.sessionId);
         }
 
         // Dispatch to protocol handler
