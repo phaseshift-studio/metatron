@@ -484,15 +484,15 @@ mtron&gt; */sys/env/+/.filter(not(&lt;&lt;.has(API))).take(5)  [-- first 5 envir
 <p><strong>First:</strong> Check <code>*/sys/space/${space}.pattern</code> to discover the URI prefix.</p>
 <pre><code class="language-mtron">mtron&gt; [-- SQL table (if pattern is &quot;acme:#&quot;) --]
 mtron&gt; *acme:${table}.*(_).limit(10)
-==&gt;fail::[unable to locate inst-f of limit(10)@&lt;2&gt;]@/sys/fail/158
+==&gt;fail::[unable to locate inst-f of limit(10)@&lt;2&gt;]@/sys/fail/148
 mtron&gt; [-- Document collection (if pattern is &quot;mongo:#&quot;) --]
 mtron&gt; *mongo:${collection}.*(_).limit(10)
-==&gt;fail::[unable to locate inst-f of limit(10)@&lt;2&gt;]@/sys/fail/162
+==&gt;fail::[unable to locate inst-f of limit(10)@&lt;2&gt;]@/sys/fail/152
 mtron&gt; [-- Graph vertices/edges (if pattern is &quot;g:#&quot;) --]
 mtron&gt; *g:V.*(_).limit(10)
-==&gt;fail::[unable to locate inst-f of limit(10)@&lt;2&gt;]@/sys/fail/166
+==&gt;fail::[unable to locate inst-f of limit(10)@&lt;2&gt;]@/sys/fail/156
 mtron&gt; *g:E.*(_).limit(10)
-==&gt;fail::[unable to locate inst-f of limit(10)@&lt;2&gt;]@/sys/fail/170
+==&gt;fail::[unable to locate inst-f of limit(10)@&lt;2&gt;]@/sys/fail/160
 mtron&gt; [-- File system (if pattern is &quot;local:#&quot;) --]
 mtron&gt; *&lt;local:path/to/file&gt;                    [-- Read file --]
 mtron&gt; *&lt;local:path/#&gt;                          [-- List recursively --]

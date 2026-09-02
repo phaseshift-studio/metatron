@@ -425,19 +425,9 @@
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
  type=&gt;[model::T,tool::T,session{?}::T,iteration::T,claim::T,loose_end::T,system::T,chat_result::T,user::T,tool_request::T,...(22 more)],
- inst=&gt;[
-  as?model&lt;=rec(model::T),
-  as?tool&lt;=docs(tool::T),
-  as?tool&lt;=inst(tool::T),
-  as?skill&lt;=uri(skill::T),
-  as?skill&lt;=agent(skill::T),
-  chat?chat_result&lt;=agent(str::T),
-  embed?/m/vec/vec&lt;=model(#::T),
-  interrupt?noobj{0}&lt;=agent(),
-  chat?chat_result&lt;=agent(str::T,rec::T),
-  summary?rec&lt;=session{?}({?}session=&gt;session{?}::T,{?}model=&gt;choose([
+ inst=&gt;[as?model&lt;=rec(model::T),as?tool&lt;=docs(tool::T),as?tool&lt;=inst(tool::T),as?skill&lt;=uri(skill::T),as?skill&lt;=agent(skill::T),chat?chat_result&lt;=agent(str::T),embed?/m/vec/vec&lt;=model(#::T),interrupt?noobj{0}&lt;=agent(),chat?chat_result&lt;=agent(str::T,rec::T),summary?rec&lt;=session{?}({?}session=&gt;session{?}::T,{?}model=&gt;choose([
   isa(model::T)=&gt;id(),
-  isa(session{?}::T)=&gt;*rshift(agent).mult(model)]).rshift(),{?}scope=&gt;union([?time::T,?datetime::T]),{?}kind=&gt;lst::T,{?}concept=&gt;lst::T)]]@/m/llm</code></pre>
+  isa(session{?}::T)=&gt;*rshift(agent).mult(model)]).rshift(),{?}scope=&gt;union([?time::T,?datetime::T]),{?}kind=&gt;lst::T,{?}concept=&gt;lst::T),...(1 more)]]@/m/llm</code></pre>
                     </div>
                 </div>
             </div>
@@ -445,7 +435,7 @@
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">32</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">5</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">32</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">6</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -491,8 +481,8 @@
 </a><a href="#__m__llm__feature__chat_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">chat_feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__llm__feature__comment_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">comment_feature</span>
+</a><a href="#__m__llm__feature__compaction_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">compaction_feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__llm__feature__concept_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">concept_feature</span>
@@ -500,20 +490,14 @@
 </a><a href="#__m__llm__feature__cost_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">cost_feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__llm__feature__iteration_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">iteration_feature</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__llm__feature__ledger_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">ledger_feature</span>
+</a><a href="#__m__llm__feature__embed_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">embed_feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__llm__feature__loop_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">loop_feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__llm__feature__recall_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">recall_feature</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__llm__feature__session_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">session_feature</span>
+</a><a href="#__m__llm__feature__message_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">message_feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__llm__feature__skill_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">skill_feature</span>
@@ -530,8 +514,14 @@
 </a><a href="#__m__llm__feature__tool_feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">tool_feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">mcp</small></div><div class="d-flex flex-wrap"><a href="#__m__llm__mcp__mcp_message" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">mcp_message</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">message</small></div><div class="d-flex flex-wrap"><a href="#__m__llm__message__ai" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">ai</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__llm__message__compaction" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">compaction</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__llm__message__system" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">system</span>
@@ -553,6 +543,9 @@
     <h6 class="text-primary mb-2">Instructions</h6>
     <div class="d-flex flex-wrap"><a href="#__m__llm__inst__chat?rng=__m__llm__chat_result&dom=__m__llm__agent" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">chat</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__llm__inst__compact?rng=__m__rec&dom=__m__llm__agent{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">compact</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__llm__inst__embed?rng=__m__vec__vec&dom=__m__llm__model" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">embed</span>
@@ -579,15 +572,15 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
   name=&gt;str::T,
   {?}desc=&gt;str::T,
-  {?}feature=&gt;[feature::T]]][ctor?agent&lt;=#{?}(#{*}::T)]@/m/llm/agent</code></pre></div>
+  {?}feature=&gt;lst::T]][ctor?agent&lt;=#{?}(#{*}::T)]@/m/llm/agent</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an agent is an llm enriched with embodied capabilities</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
-  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
+  <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__message__ai">
@@ -688,18 +681,48 @@
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">claim::[text=&gt;&quot;the scratch project writes do not persist because there is no backing write primitive&quot;,	kind=&gt;problem,	source=&gt;[/usr/dr/message/4],	concept=&gt;[/usr/dr/concept/persistence],	tier=&gt;nat::1]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__llm__feature__comment_feature">
+</div><div class="card mb-3" id="__m__llm__message__compaction">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
-            <span class="code text-primary fw-bold">comment_feature::T</span>
+            <span class="code text-primary fw-bold">compaction::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__llm__message" class="instset-doc-small-code text-info code">/m/llm/message::T</a></span>
+        </span>
+        <small class="text-muted code">/m/llm/message/compaction</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[
+  text=&gt;str::T,
+  {?}in=&gt;int::T,
+  {?}out=&gt;int::T,
+  {?}compression=&gt;real::T]]@/m/llm/message/compaction</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a compaction represents a stop point for message retrieval and provides a summary of all previous messages</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'total tokens processed (the input digest estimate)'" class="text-info">&#39;total tokens processed (the input digest estimate)&#39;</a>
+  <a href="#{?}out" class="text-light">{?}out</a> <span class="text-light">=&gt;</span> <a href="#'total tokens generated (the summary estimate)'" class="text-info">&#39;total tokens generated (the summary estimate)&#39;</a>
+  <a href="#{?}compression" class="text-light">{?}compression</a> <span class="text-light">=&gt;</span> <a href="#'fraction of tokens removed — 1 - out__in (0.0 to 1.0)'" class="text-info">in (0.0 to 1.0)&#39;</a>
+  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the summary of all previous messages and compactions'" class="text-info">&#39;the summary of all previous messages and compactions&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__llm__feature__compaction_feature">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">compaction_feature::T</span>
             <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__llm__feature" class="instset-doc-small-code text-info code">/m/llm/feature::T</a></span>
         </span>
-        <small class="text-muted code">/m/llm/feature/comment_feature</small>
+        <small class="text-muted code">/m/llm/feature/compaction_feature</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?comment_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/comment_feature</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[{?}model=&gt;model::T,{?}threshold=&gt;real::T,{?}context=&gt;int::T]][ctor?compaction_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/compaction_feature</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,{?}skill=&gt;[skill::T],{?}on_agent_ctor=&gt;#::T,{?}on_before_chat=&gt;#::T,{?}on_partial_response=&gt;#::T,{?}on_partial_thinking=&gt;#::T,{?}on_partial_tool_call=&gt;#::T,{?}before_tool_execution=&gt;#::T,{?}on_tool_executed=&gt;#::T,{?}on_complete_response=&gt;#::T,...(1 more)]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">allows user to interject with a comment in the current chat lifecycle of the agent</p>
+    <p class="mb-0 text-light">compacts historic messages and inserts a compaction message into message stream which acts as a stop sentinel for agents history introspection</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#model" class="text-light">model</a> <span class="text-light">=&gt;</span> <a href="#'the model to analyze message history'" class="text-info">&#39;the model to analyze message history&#39;</a>
+  <a href="#threshold" class="text-light">threshold</a> <span class="text-light">=&gt;</span> <a href="#'auto-compaction trigger — fraction of the model context window full (default 0.8)'" class="text-info">&#39;auto-compaction trigger — fraction of the model context window full (default 0.8)&#39;</a>
+  <a href="#context" class="text-light">context</a> <span class="text-light">=&gt;</span> <a href="#"context window size in tokens, overriding the model's advertised value"" class="text-info">&quot;context window size in tokens, overriding the model&#39;s advertised value&quot;</a>
+</pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature__concept_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -740,6 +763,19 @@
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cost_feature::[root=&gt;/usr/dr/cost,cost=&gt;[in_cost=&gt;usd_currency::0.065,out_cost=&gt;usd_currency::0.001]]</code></pre>
 </div>
+</div><div class="card mb-3" id="__m__llm__feature__embed_feature">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">embed_feature::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__llm__feature" class="instset-doc-small-code text-info code">/m/llm/feature::T</a></span>
+        </span>
+        <small class="text-muted code">/m/llm/feature/embed_feature</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[
+  root=&gt;uri::T,
+  {?}model=&gt;model::T]][ctor?embed_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/embed_feature</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,{?}skill=&gt;[skill::T],{?}on_agent_ctor=&gt;#::T,{?}on_before_chat=&gt;#::T,{?}on_partial_response=&gt;#::T,{?}on_partial_thinking=&gt;#::T,{?}on_partial_tool_call=&gt;#::T,{?}before_tool_execution=&gt;#::T,{?}on_tool_executed=&gt;#::T,{?}on_complete_response=&gt;#::T,...(1 more)]</code></div></div>
+    
 </div><div class="card mb-3" id="__m__llm__feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -795,43 +831,6 @@
   <a href="#time" class="text-light">time</a> <span class="text-light">=&gt;</span> <a href="#'creation timestamp'" class="text-info">&#39;creation timestamp&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__llm__feature__iteration_feature">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">iteration_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__llm__feature" class="instset-doc-small-code text-info code">/m/llm/feature::T</a></span>
-        </span>
-        <small class="text-muted code">/m/llm/feature/iteration_feature</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?iteration_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/iteration_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,{?}skill=&gt;[skill::T],{?}on_agent_ctor=&gt;#::T,{?}on_before_chat=&gt;#::T,{?}on_partial_response=&gt;#::T,{?}on_partial_thinking=&gt;#::T,{?}on_partial_tool_call=&gt;#::T,{?}before_tool_execution=&gt;#::T,{?}on_tool_executed=&gt;#::T,{?}on_complete_response=&gt;#::T,...(1 more)]</code></div></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">overlays an iteration graph on the message ledger — each chat turn creates a linked iteration node with prev/next pointers and message back-references</p>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">iteration_feature::[]</code></pre>
-</div>
-</div><div class="card mb-3" id="__m__llm__feature__ledger_feature">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">ledger_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__llm__feature" class="instset-doc-small-code text-info code">/m/llm/feature::T</a></span>
-        </span>
-        <small class="text-muted code">/m/llm/feature/ledger_feature</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[{?}init=&gt;lst::T]][ctor?ledger_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/ledger_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,{?}skill=&gt;[skill::T],{?}on_agent_ctor=&gt;#::T,{?}on_before_chat=&gt;#::T,{?}on_partial_response=&gt;#::T,{?}on_partial_thinking=&gt;#::T,{?}on_partial_tool_call=&gt;#::T,{?}before_tool_execution=&gt;#::T,{?}on_tool_executed=&gt;#::T,{?}on_complete_response=&gt;#::T,...(1 more)]</code></div></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">Never cleared between chat calls. Agent reads via system message injection, writes via &lt;&lt;mtron:ledger&gt;&gt; blocks. Survives the entire session.</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#ledger feature — persistent agent-owned scratchpad for cross-turn task tracking" class="text-info">ledger feature — persistent agent-owned scratchpad for cross-turn task tracking</a> <span class="text-light">=&gt;</span> <span class="text-success">?</span></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}init" class="text-light">{?}init</a> <span class="text-light">=&gt;</span> <a href="#'optional pre-populated task list'" class="text-info">&#39;optional pre-populated task list&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">ledger_feature::[init=&gt;[&#39;task 1&#39;,&#39;task 2&#39;]]</code></pre>
-</div>
 </div><div class="card mb-3" id="__m__llm__feature__loop_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -869,7 +868,7 @@
   status=&gt;union([open,in_progress,resolved,abandoned]),
   {?}source=&gt;[#{?}::T],
   {?}claim=&gt;[#{?}::T],
-  time=&gt;datetime::T]]@/m/llm/loose_end</code></pre></div>
+  {?}time=&gt;datetime::T]]@/m/llm/loose_end</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an open problem a future session can pick up cold — the continuation point carried across sessions</p>
@@ -886,6 +885,17 @@
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">loose_end::[title=&gt;&quot;wire the mcp_stdio transport&quot;,	desc=&gt;&quot;expose /mcp over stdin so harness can spawn metatron directly&quot;,	status=&gt;open,	source=&gt;[/usr/dr/message/4],	claim=&gt;[/usr/dr/claim/7],	time=&gt;datetime::&lt;//2026.08:25/15/48/02/251?tz=+0000&gt;]</code></pre>
 </div>
+</div><div class="card mb-3" id="__m__llm__mcp__mcp_message">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">mcp_message::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web.html#__m__web__mcp__mcp_server" class="instset-doc-small-code text-info code">/m/web/mcp/mcp_server::T</a></span>
+        </span>
+        <small class="text-muted code">/m/llm/mcp/mcp_message</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_server::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_message&lt;=#{?}(rec::T)]@/m/llm/mcp/mcp_message</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web.html#__m__web__mcp__mcp_server" class="code inherited-link">mcp_server::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div></div>
+    
 </div><div class="card mb-3" id="__m__llm__message">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -897,8 +907,19 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}session=&gt;uri::T]]@/m/llm/message</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">polymorphic chat message — one of system, user, ai, tool_result, or thinking; discriminated by _tid column</p>
+    <p class="mb-0 text-light">polymorphic chat message — one of system, user, ai, tool_result, thinking, or compaction; discriminated by _tid column</p>
 </div>
+</div><div class="card mb-3" id="__m__llm__feature__message_feature">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">message_feature::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__llm__feature" class="instset-doc-small-code text-info code">/m/llm/feature::T</a></span>
+        </span>
+        <small class="text-muted code">/m/llm/feature/message_feature</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[session=&gt;uri::T]][ctor?message_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/message_feature</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,{?}skill=&gt;[skill::T],{?}on_agent_ctor=&gt;#::T,{?}on_before_chat=&gt;#::T,{?}on_partial_response=&gt;#::T,{?}on_partial_thinking=&gt;#::T,{?}on_partial_tool_call=&gt;#::T,{?}before_tool_execution=&gt;#::T,{?}on_tool_executed=&gt;#::T,{?}on_complete_response=&gt;#::T,...(1 more)]</code></div></div>
+    
 </div><div class="card mb-3" id="__m__llm__model">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -916,6 +937,7 @@
   {?}timeout=&gt;time::T,
   {?}size=&gt;data::T,
   {?}quant=&gt;int::T,
+  {?}context=&gt;int::T,
   {?}cost=&gt;{?}[
    in=&gt;currency::T,
    out=&gt;currency::T]]][ctor?model&lt;=#{?}(#{*}::T)]@/m/llm/model</code></pre></div>
@@ -924,29 +946,19 @@
     <p class="mb-0 text-light">populate a model reference rec using data from the ai provider&#39;s http-endpoint</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
-  <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
-  <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
   <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
+  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#"the model's context window size in tokens"" class="text-info">&quot;the model&#39;s context window size in tokens&quot;</a>
   <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
+  <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
   <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
-  <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
+  <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">model::[provider=&gt;deepseek,host=&gt;&lt;http://deepseek.com/api&gt;,protocol=&gt;openai,llm=&gt;deepseek-v4-pro]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__llm__feature__recall_feature">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">recall_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__llm__feature" class="instset-doc-small-code text-info code">/m/llm/feature::T</a></span>
-        </span>
-        <small class="text-muted code">/m/llm/feature/recall_feature</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?recall_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/recall_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,{?}skill=&gt;[skill::T],{?}on_agent_ctor=&gt;#::T,{?}on_before_chat=&gt;#::T,{?}on_partial_response=&gt;#::T,{?}on_partial_thinking=&gt;#::T,{?}on_partial_tool_call=&gt;#::T,{?}before_tool_execution=&gt;#::T,{?}on_tool_executed=&gt;#::T,{?}on_complete_response=&gt;#::T,...(1 more)]</code></div></div>
-    
 </div><div class="card mb-3" id="__m__llm__session">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -969,17 +981,6 @@
   <a href="#algorithm" class="text-light">algorithm</a> <span class="text-light">=&gt;</span> <a href="#'the algorithm used to manage the chat session (compaction, windowing, summarizing, etc.)'" class="text-info">&#39;the algorithm used to manage the chat session (compaction, windowing, summarizing, etc.)&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__llm__feature__session_feature">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">session_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__llm__feature" class="instset-doc-small-code text-info code">/m/llm/feature::T</a></span>
-        </span>
-        <small class="text-muted code">/m/llm/feature/session_feature</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[session=&gt;uri::T]][ctor?session_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/session_feature</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,{?}skill=&gt;[skill::T],{?}on_agent_ctor=&gt;#::T,{?}on_before_chat=&gt;#::T,{?}on_partial_response=&gt;#::T,{?}on_partial_thinking=&gt;#::T,{?}on_partial_tool_call=&gt;#::T,{?}before_tool_execution=&gt;#::T,{?}on_tool_executed=&gt;#::T,{?}on_complete_response=&gt;#::T,...(1 more)]</code></div></div>
-    
 </div><div class="card mb-3" id="__m__llm__skill">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1108,7 +1109,17 @@
   desc=&gt;str::T,
   {?}arg=&gt;#::T]]@/m/llm/tool</code></pre></div>
     
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a tool function for the llm to use</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a tool specification" class="text-info">a tool specification</a> <span class="text-light">=&gt;</span> <span class="text-success">?</span></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#'tool instruction'" class="text-info">&#39;tool instruction&#39;</a>
+  <a href="#{?}arg" class="text-light">{?}arg</a> <span class="text-light">=&gt;</span> <a href="#'tool arguments'" class="text-info">&#39;tool arguments&#39;</a>
+  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'tool description'" class="text-info">&#39;tool description&#39;</a>
+  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'tool name'" class="text-info">&#39;tool name&#39;</a>
+</pre>
+</div>
 </div><div class="card mb-3" id="__m__llm__feature__tool_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1117,7 +1128,7 @@
         </span>
         <small class="text-muted code">/m/llm/feature/tool_feature</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[tool=&gt;lst::T]][ctor?tool_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/tool_feature</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[{?}tool=&gt;lst{?}::T]][ctor?tool_feature&lt;=#{?}(#{*}::T)]@/m/llm/feature/tool_feature</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,{?}skill=&gt;[skill::T],{?}on_agent_ctor=&gt;#::T,{?}on_before_chat=&gt;#::T,{?}on_partial_response=&gt;#::T,{?}on_partial_thinking=&gt;#::T,{?}on_partial_tool_call=&gt;#::T,{?}before_tool_execution=&gt;#::T,{?}on_tool_executed=&gt;#::T,{?}on_complete_response=&gt;#::T,...(1 more)]</code></div></div>
     
 </div><div class="card mb-3" id="__m__llm__message__tool_request">
@@ -1189,7 +1200,7 @@
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">5</span></h3>
+    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">6</span></h3>
     <div class="card mb-3" id="__m__llm__inst__chat?rng=__m__llm__chat_result&dom=__m__llm__agent">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1202,6 +1213,29 @@
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__llm__inst__chat?rng=__m__llm__chat_result&dom=__m__llm__agent-doc-0-tab').click();document.getElementById('__m__llm__inst__chat?rng=__m__llm__chat_result&dom=__m__llm__agent-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">chat?rng=chat_result&dom=agent(str::T,rec::T){<j>}</code></pre>
 </div>
     
+</div><div class="card mb-3" id="__m__llm__inst__compact?rng=__m__rec&dom=__m__llm__agent{?}">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">compact</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__llm__agent" data-bs-toggle="tooltip" title="domain" class="code text-info">agent</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
+        </span>
+        <small class="text-muted code">/m/llm/inst/compact?rng=/m/rec&amp;dom=/m/llm/agent{?}</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__llm__inst__compact?rng=__m__rec&dom=__m__llm__agent{?}-doc-0-tab').click();document.getElementById('__m__llm__inst__compact?rng=__m__rec&dom=__m__llm__agent{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">compact?rng=rec&dom=agent{?}({?}agent=>agent::T,{?}model=>model::T,{?}prompt=>str::T){<j>}</code></pre>
+</div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">compact a session&#39;s message ledger into a resume summary sentinel — the same call as the &lt;&lt;mtron:compaction&gt;&gt; block (they share the argument rec::T vocabulary: agent, model, prompt)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an agent to compact" class="text-info">an agent to compact</a> <span class="text-light">=&gt;</span> <a href="#the applied constraints rec — [to, compaction=>vid, in, out, compression]" class="text-success">the applied constraints rec — [to, compaction=&gt;vid, in, out, compression]</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the agent to compact (defaults to the lhs)'" class="text-info">&#39;the agent to compact (defaults to the lhs)&#39;</a>
+  <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#'the summarizer model (default: the agent home model)'" class="text-info">&#39;the summarizer model (default: the agent home model)&#39;</a>
+  <span class="text-light">2</span> <span class="text-light">=&gt;</span> <a href="#'the summarizer prompt template'" class="text-info">&#39;the summarizer prompt template&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">@dr.compact()  [-- fluent --]  |  compact(@dr)  [-- function --]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__llm__inst__embed?rng=__m__vec__vec&dom=__m__llm__model">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
