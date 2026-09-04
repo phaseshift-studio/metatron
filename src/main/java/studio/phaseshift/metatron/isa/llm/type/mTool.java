@@ -189,15 +189,15 @@ public class mTool extends MRec {
     }
 
     public static QCollection.Docs mtronInstToDocs(final Inst inst) {
-        final Obj found = Router.readFromSpace(inst.tid().addQ(DOCQ)).stream().findFirst().orElse(noobj());
-        final QCollection.Docs doc = QCollection.isNoDocs(found) ? doc(inst,
+        final Obj found = Router.readFromSpace(inst.tid().addQ(DOCQ)).stream().findFirst().filter(x -> x instanceof QCollection.Docs).filter(x -> !QCollection.isNoDocs(x)).orElse(noobj());
+        final QCollection.Docs doc = found.isNoObj() ? doc(inst,
                 inst.dom().tid().toString(),
                 inst.rng().tid().toString(),
                 instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(
                         Rel::first,
                         e -> e.second().tid().toString()
                 )),
-                "<no description>") : doc(found.asRec());
+                "<no description>") : (QCollection.Docs) found;
         inst.logger().debug("building ai compliant tool from mtron inst: %s", inst.tid());
         return doc;//rec(mutableMap(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
     }
@@ -236,5 +236,16 @@ public class mTool extends MRec {
         });
         final String description = null == spec.description() || spec.description().isBlank() ? "<no description>" : spec.description();
         return doc(inst, "<no description>", "<no description>", argDescs, description);
+    }
+
+
+    @Override
+    public int hashCode() {
+        return this.name().hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        return other instanceof mTool tool && tool.name().equals(this.name());
     }
 }

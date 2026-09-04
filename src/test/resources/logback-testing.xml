@@ -29,6 +29,7 @@
     <root level="${ROOT_LEVEL}">
         <appender-ref ref="STDOUT"/>
     </root>
+    <logger name="java.net.http" level="WARN"/>
     <logger name="cch.qos.logback" level="WARN">
         <appender-ref ref="STDOUT"/>
     </logger>

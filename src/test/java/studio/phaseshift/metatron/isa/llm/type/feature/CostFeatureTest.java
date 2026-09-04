@@ -54,8 +54,8 @@ public class CostFeatureTest extends AbstractFeatureTest {
         final CostFeature cf = feature();
         final Agent agent = agentWith(cf);
         cf.onAgentCtor(agent);
-        assertNotNull(agent.costCalculator().get(), "calculator should be set");
-        assertEquals(MATH_USD_TID, agent.costCalculator().get().getCurrencyTID(),
+        assertNotNull(cf.getCalculator(), "calculator should be set");
+        assertEquals(MATH_USD_TID, cf.getCalculator().getCurrencyTID(),
                 "currency TID from rate/in");
     }
 
@@ -64,7 +64,7 @@ public class CostFeatureTest extends AbstractFeatureTest {
         final CostFeature cf = feature();
         final Agent agent = agentWith(cf);
         cf.onAgentCtor(agent);
-        agent.costCalculator().get().setCost(0.00435, 0.00870);
+        cf.getCalculator().setCost(0.00435, 0.00870);
         cf.persistCost();
         final Obj rows = Router.readFromSpace(cf.at(uri("root")).uriValue().extend("+"));
         assertFalse(rows.isNoObj(), "cost row should be persisted");

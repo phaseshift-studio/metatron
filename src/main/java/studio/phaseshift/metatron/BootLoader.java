@@ -517,7 +517,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     fsSpace.makeFile(bootPath).vid(f("boot/file"));
                     final long count = mParser.eval(bootPath.toFile(), e -> {
                         LOG.error("{{r}}%s{{X}} starting at line {{y}}%d{{X}}\n%s", e.parseException(), e.lineNumber() + 1, e.lineString());
-                        if (Tracer.stack.enabled())
+                        if (Tracer.java_stack.enabled())
                             e.parseException().printStackTrace(System.err);
                     }).count();
                     LOG.info("processed boot input: {{b}}%s{{/b}} {{g}}[{{y}}out: %d{{/y}}]{{/g}}", args.at(Tokens.BOOT).uriValue(), count);

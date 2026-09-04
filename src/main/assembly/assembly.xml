@@ -88,6 +88,8 @@
             <outputDirectory>/</outputDirectory>
             <includes>
                 <include>emoji.txt</include>
+                <include>studio/phaseshift/metatron/util/terrier_stop_word_list_en.txt</include>
+                <include>studio/phaseshift/metatron/util/dictionary_en.txt</include>
             </includes>
         </fileSet>
         <fileSet>

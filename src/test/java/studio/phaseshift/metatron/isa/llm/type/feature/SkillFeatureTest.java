@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
-import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -32,13 +31,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -154,7 +150,8 @@ public class SkillFeatureTest extends AbstractFeatureTest {
                 uri(DESC), str("a skill shipping one tool"),
                 uri(TOOL), lst(docWrap(instC(f("/m/llm/test/forwarded_tool"), rec0(), (lhs, inst) -> noobj()), "forwards a test payload")))));
         gateway.onBeforeChat(a);
-        assertEquals(1, tools.tools().lstValue().size(), "the skill's tool was forwarded to the tool gateway");
+        assertEquals(1, tools.tools().lstValue().stream().filter(t -> t.asRec().at(NAME).uriValue().toString().contains("list_skills")).count());
+        assertEquals(2, tools.tools().lstValue().size(), "the skill's tool was forwarded to the tool gateway");
     }
 
     // ── skill aggregation across features ───────────────────────────

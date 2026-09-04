@@ -98,7 +98,7 @@ public class EmbedFeature extends AbstractFeature {
         if (signal.isNoObj())
             return;
         final fURI writeLocation = this.at(ROOT).uriValue().extend("_").addQ(INCRQ);
-        LOG.info("writing embedding to %s", writeLocation);
+        LOG.status(DEBUG, "writing embedding to %s", writeLocation);
         final Lst vector = model(signal.at(MODEL).orElse(this.at(MODEL))).embed(result);
         final Rec embedding = rec(mutableMap(
                 uri(OBJ), result,
@@ -106,7 +106,6 @@ public class EmbedFeature extends AbstractFeature {
                 uri(META), agent.hasFeature(LLM_MESSAGE_FEATURE_TID) ?
                         rec(SESSION, agent.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION)) :
                         noobj()), VEC_EMBEDDING_TID, null);
-        LOG.info("embedding complete: %s", embedding);
         final Obj complete = Router.writeToSpace(writeLocation, embedding);
         result.put(EMBED, complete.hasVID() ? auto_from_(complete.vid()) : noobj());
     }

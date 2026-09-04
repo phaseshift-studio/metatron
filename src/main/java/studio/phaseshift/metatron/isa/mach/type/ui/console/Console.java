@@ -341,10 +341,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
 
     /**
      * @return true when the current thread is the console's repl thread or a
-     *         thread it directly spawned (e.g. the per-line SwarmMachine evaluating
-     *         an inline {@code @agent.chat(...)}).  False for detached threads such
-     *         as {@code virtual::[code=>...]} forks, so background chats don't
-     *         animate console spinners.
+     * thread it directly spawned (e.g. the per-line SwarmMachine evaluating
+     * an inline {@code @agent.chat(...)}).  False for detached threads such
+     * as {@code virtual::[code=>...]} forks, so background chats don't
+     * animate console spinners.
      */
     public static boolean isConsoleOwned() {
         final AbstractThread current = BootLoader.CURRENT_THREAD.get();
@@ -901,12 +901,12 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     /**
-     * If {@link Tracer#stack} is enabled, prompt the user to launch the
+     * If {@link Tracer#java_stack} is enabled, prompt the user to launch the
      * {@link TraceTool} for each fail object.  Falls back to
      * {@link #renderTrace} when the user declines.
      */
     private void promptTraceForFails(final Obj result) {
-        if (!Tracer.stack.enabled()) return;
+        if (!Tracer.java_stack.enabled()) return;
         result.stream().filter(Obj::isFail).forEach(failObj -> {
             terminal.writer().write(Graphitty.string("{{y}}display trace tool? {{g}}[y/N]{{y}} {{X}}"));
             terminal.writer().flush();

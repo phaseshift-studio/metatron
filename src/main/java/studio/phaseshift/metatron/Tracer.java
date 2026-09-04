@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron;
 
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
@@ -26,7 +27,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -36,35 +36,40 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public enum Tracer {
 
+
+    /**
+     * Render the mtron stack trace on {@code fail()} objects.
+     */
+    mtron_stack,
     /**
      * Render the Java stack trace on {@code fail()} objects.
      */
-    stack;
+    java_stack;
 
-    private static final Set<Tracer> ACTIVE = new LinkedHashSet<>(List.of(values()));
+    private static final Set<Tracer> ACTIVE_TRACERS = new LinkedHashSet<>(List.of(values()));
 
     public static void init(final Rec config) {
-        ACTIVE.clear();
-        Stream.of(Tracer.values()).filter(t -> config.at(uri(t.name())).orElse(BOOL_FALSE).boolValue()).forEachOrdered(ACTIVE::add);
+        ACTIVE_TRACERS.clear();
+        Stream.of(Tracer.values()).filter(t -> config.at(uri(t.name())).orElse(BOOL_FALSE).boolValue()).forEachOrdered(ACTIVE_TRACERS::add);
     }
 
     public boolean enabled() {
-        return ACTIVE.contains(this);
+        return ACTIVE_TRACERS.contains(this);
     }
 
     public static void enable(final Tracer... stages) {
-        ACTIVE.addAll(List.of(stages));
+        ACTIVE_TRACERS.addAll(List.of(stages));
         for (final Tracer stage : stages)
-            Router.writeToSpace(f("/sys/tracer/stage").extend(stage.name()), BOOL_TRUE);
+            Router.writeToSpace(mInstSet.TRACER_TYPE_TID.extend(stage.name()), BOOL_TRUE);
     }
 
     public static void disable(final Tracer... stages) {
-        List.of(stages).forEach(ACTIVE::remove);
+        List.of(stages).forEach(ACTIVE_TRACERS::remove);
         for (final Tracer stage : stages)
-            Router.writeToSpace(f("/sys/tracer/stage").extend(stage.name()), BOOL_FALSE);
+            Router.writeToSpace(mInstSet.TRACER_TYPE_TID.extend(stage.name()), BOOL_FALSE);
     }
 
     public static Set<Tracer> getEnabled() {
-        return new LinkedHashSet<>(ACTIVE);
+        return new LinkedHashSet<>(ACTIVE_TRACERS);
     }
 }

@@ -22,6 +22,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -438,6 +440,23 @@ public class ObjJavaIDESerializerTest extends AbstractJavaSerializerTest {
                 .toList();
         assertEquals(List.of("int apply(int x)", "int apply(long y)"), sigs,
                 "the wildcard must resolve exactly the two members named apply");
+    }
+
+    @ParameterizedTest()
+    @CsvSource(value = {
+            "*wv/classes/WR/0/kind % class_declaration",
+            "*wv/classes/WR/0/members/0/fillA/kind % method",
+    }, delimiter = '%')
+    public void testIdeJavaStoredValueReads(final String code, final String expected) {
+        // the ide:java rec must be stored as a value (to() evaluates before the write)
+        // for the deep reads underneath it to resolve.  A list literal around the
+        // bare expression ([...as(ide:java::T)]) stores the unevaluated code instead,
+        // and unrollPoly only descends into poly elements, so the reads below a
+        // code element come back noobj — the agent-ide code list therefore grows
+        // through the pull (which stores parsed recs), not through list literals.
+        final String parse = "'public class WR { int fillA(){return 1;} }'.as(web:java::T).as(ide:java::T)";
+        eval(parse + ".to(wv)");
+        checkCodeParseApply(LOG, code, expected);
     }
 
     @Test

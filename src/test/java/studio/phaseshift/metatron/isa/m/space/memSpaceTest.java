@@ -19,6 +19,10 @@
 package studio.phaseshift.metatron.isa.m.space;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.TestReport;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.LineQTest;
@@ -72,6 +76,60 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTe
                 uri(PATTERN), uri("/tt/#")), f("/sys/space/mem_persist_2"));
         data.forEach((k, v) -> assertEquals(v, Router.readFromSpace(k)));
         space2.close();
+    }
+
+    @ParameterizedTest()
+    @TestData(value = {
+            "/t/code -> ['a' => ['x' => 1, 'y' => 2], 'b' => 'hello']"
+    })
+    @CsvSource(value = {
+            "*/t/code       % ['a'=>['x'=>1,'y'=>2],'b'=>'hello']",
+            "*/t/code/a     % ['x'=>1,'y'=>2]",
+            "*/t/code/b     % 'hello'",
+            "*/t/code/a/x   % 1",
+            "*/t/code/a/y   % 2",
+            "*/t/code/a/+   % [1,2]",
+            "*/t/code/a/0   % 1",
+            "*/t/code/a/1   % 2",
+            "*/t/code/0/a/x % 1",
+            "*/t/code/1    % 'hello'",
+            "*/t/code/+/a  % [1,2]",
+    }, delimiter = '%')
+    void testListElementReads(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
+    }
+
+    @ParameterizedTest()
+    @TestData(value = {
+            "/dev/proj -> [name => 't', code => [[kind => 'class', sig => 'greet(String)'], [kind => 'ctor']]]"
+    })
+    @CsvSource(value = {
+            "*/dev/proj/name   % 't'",
+            "*/dev/proj/code   % [[kind=>'class',sig=>'greet(String)'], [kind=>'ctor']]",
+            "*/dev/proj/code/0 % [kind=>'class',sig=>'greet(String)']",
+            "*/dev/proj/code/1 % [kind=>'ctor']",
+            "*/dev/proj/code/+ % [[kind=>'class',sig=>'greet(String)'], [kind=>'ctor']]",
+            "*/dev/proj/code/0/kind % 'class'",
+    }, delimiter = '%')
+    void testProjectShapedListReads(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
+    }
+
+    @ParameterizedTest()
+    @TestData(value = {
+            "/t/proj -> [name => 't', code => []]",
+            "/t/proj/code/0 -> ['kind' => 'method', 'name' => 'greet']"
+    })
+    @CsvSource(value = {
+            "*/t/proj/name   % 't'",
+            "*/t/proj/code   % [['kind'=>'method','name'=>'greet']]",
+            "*/t/proj/code/0 % ['kind'=>'method','name'=>'greet']",
+    }, delimiter = '%')
+    void testRecListFieldAppendWrite(final String code, final String expected) {
+        // an element write into a rec list field that is still empty — the ide pull
+        // grows its code list this way; the element must land at index == size
+        // (Lst.at append) instead of throwing "lst index out of bounds: 0 > 0".
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
     }
 
     @Override

@@ -81,7 +81,10 @@ public class CostFeature extends AbstractFeature {
         Router.readFromSpace(this.at(ROOT).uriValue().extend("+")).stream().filter(x -> x.asRec().has(SESSION)).filter(x -> x.asRec().at(SESSION).uriValue().equals(this.sessionVID)).findFirst().orElse(rec());
         this.calculator.setCost(this.at(f(COST).extend(IN)).orElse(real(0.0)).realValue(), this.at(f(COST).extend(IN)).orElse(real(0.0)).realValue());
         this.sessionVID = agent.feature(LLM_MESSAGE_FEATURE_TID).orElse(rec()).at(SESSION).orElse(uri("")).uriValue();
-        agent.costCalculator().set(this.calculator);
+    }
+
+    public CostCalculator getCalculator() {
+        return this.calculator;
     }
 
 

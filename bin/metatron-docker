@@ -1,23 +1,66 @@
 #!/bin/sh
-# run the metatron container image against the local docker daemon.
-# dckrspace::T boots pull their infra (sqlite, postgres, janusgraph, ...) via the
-# host docker socket, which is why it is mounted here.
-set -e
+# bin/metatron-docker — run any metatron boot file in a disposable container.
+#
+# The docker counterpart to the bin/<app> shells — one script, not one per
+# app:
+#   bin/agent-ide                            # the ide app, local environment
+#   bin/metatron-docker agent-ide.boot.mtron # the same boot file, in docker
+#
+# Interactive ephemeral container (--rm): published console 8555 / mcp 8777,
+# repo mounted at /work as the host user (so mfs writes land in the tree),
+# docker socket mounted so dckrspace boots can pull their infra.
+#
+# Usage:
+#   bin/metatron-docker                              # boot/docker.boot.mtron (default)
+#   bin/metatron-docker agent-ide.boot.mtron         # boot/agent-ide.boot.mtron
+#   bin/metatron-docker .metatron/skills/drstynx/assets/drstynx.boot.mtron
+#   bin/metatron-docker agent-ide.boot.mtron "[log=>debug]"   # full boot args
+#   NO_PORTS=1 bin/metatron-docker ...    # headless: skip publishing 8555/8777 (live-server safe)
+#
+# Env:
+#   METATRON_IMAGE  image tag (default: metatron:dev — build it from this
+#                   tree with bin/metatron-dev-docker if missing or stale)
+set -eu
 
-IMAGE="${METATRON_IMAGE:-ghcr.io/phaseshift-studio/metatron:main}"
+cd "$(dirname "$(readlink -f "$0")")/.."
+REPO="$(pwd)"
 
-if [ $# -eq 0 ]; then
-  set -- "[boot=><boot/docker.boot.mtron>,log=>info]"
+BOOT_FILE="${1:-docker.boot.mtron}"
+case "$BOOT_FILE" in */*) ;; *) BOOT_FILE="boot/$BOOT_FILE" ;; esac
+if [ ! -f "$BOOT_FILE" ]; then
+    echo "no such boot file: $BOOT_FILE" >&2
+    exit 2
+fi
+ARGS="${2:-[boot=><$BOOT_FILE>,log=>info]}"
+
+IMAGE="${METATRON_IMAGE:-metatron:dev}"
+if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
+    echo "image $IMAGE not found — build it first: bin/metatron-dev-docker" >&2
+    exit 3
 fi
 
-echo "  metatron w/
-      ░█▀▄░█▀█░█▀▀░█░█░█▀▀░█▀▄
-      ░█░█░█░█░█░░░█▀▄░█▀▀░█▀▄
-      ░▀▀░░▀▀▀░▀▀▀░▀░▀░▀▀▀░▀░▀"
-echo "metatron-docker: $*"
-exec docker run --rm -it \
-  -p 8555:8555 \
-  -p 8777:8777 \
+echo "
+  metatron w/
+    ░█▀▄░█▀█░█▀▀░█░█░█▀▀░█▀▄
+    ░█░█░█░█░█░░░█▀▄░█▀▀░█▀▄
+    ░▀▀░░▀▀▀░▀▀▀░▀░▀░▀▀▀░▀░▀
+metatron-docker: $BOOT_FILE
+  image: $IMAGE"
+
+# -t only when attached to a real terminal (agents/background jobs have none)
+[ -t 0 ] && TTY="-it" || TTY="-i"
+
+# publish the browser ports unless the caller opted out (NO_PORTS=1, e.g. headless probes)
+PORT_FLAGS=""
+[ "${NO_PORTS:-0}" = "1" ] || PORT_FLAGS="-p 8555:8555 -p 8777:8777"
+
+# shellcheck disable=SC2086
+exec docker run --rm $TTY $PORT_FLAGS \
+  --user "$(id -u):$(id -g)" \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --group-add "$(stat -c '%g' /var/run/docker.sock)" \
-  "$IMAGE" "$@"
+  -v "$REPO":/work \
+  -v "$REPO/boot":/app/boot:ro \
+  -v "$REPO/conf":/app/conf:ro \
+  -w /work \
+  "$IMAGE" "$ARGS"

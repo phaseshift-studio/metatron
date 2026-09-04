@@ -155,53 +155,61 @@ public interface ObjSerializer<T> extends Rec {
         return (Fail) this.read(t);
     }
 
+    private static <O extends Obj> O castOrName(final Obj read, final String expected) {
+        // a fail read back must surface its own reason — a raw cast would
+        // surface as a bare ClassCastException with the original cause lost
+        if (read instanceof Fail fail)
+            throw MTronException.of("read expected %s, got fail: %s", expected, fail.message());
+        return (O) read;
+    }
+
     default Bytes readBytes(final T t) {
-        return (Bytes) this.read(t);
+        return castOrName(this.read(t), "bytes");
     }
 
 
     default Bool readBool(final T t) {
-        return (Bool) this.read(t);
+        return castOrName(this.read(t), "bool");
     }
 
 
     default Objs readObjs(final T t) {
-        return (Objs) this.read(t);
+        return castOrName(this.read(t), "objs");
     }
 
     default Int readInt(final T t) {
-        return (Int) this.read(t);
+        return castOrName(this.read(t), "int");
     }
 
     default Real readReal(final T t) {
-        return (Real) this.read(t);
+        return castOrName(this.read(t), "real");
     }
 
     default Str readStr(final T t) {
-        return (Str) this.read(t);
+        return castOrName(this.read(t), "str");
     }
 
     default Uri readUri(final T t) {
-        return (Uri) this.read(t);
+        return castOrName(this.read(t), "uri");
     }
 
     default Rel readRel(final T t) {
-        return (Rel) this.read(t);
+        return castOrName(this.read(t), "rel");
     }
 
     default Lst readLst(final T t) {
-        return (Lst) this.read(t);
+        return castOrName(this.read(t), "lst");
     }
 
     default Rec readRec(final T t) {
-        return (Rec) this.read(t);
+        return castOrName(this.read(t), "rec");
     }
 
     default Inst readInst(final T t) {
-        return (Inst) this.read(t);
+        return castOrName(this.read(t), "inst");
     }
 
     default Code readCode(final T t) {
-        return (Code) this.read(t);
+        return castOrName(this.read(t), "code");
     }
 }

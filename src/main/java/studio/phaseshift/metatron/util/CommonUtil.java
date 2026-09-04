@@ -36,6 +36,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -56,6 +57,44 @@ public final class CommonUtil {
 
     private static final Pattern INT_PATTERN = Pattern.compile("-?\\d+");
     private static final Pattern REAL_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)");
+
+    // ========================================
+    // User-regex guards
+    // ========================================
+
+    /**
+     * Quantifier-over-quantified-group (eg "(a+)+") is the classic
+     * catastrophic shape — the backtracking java regex engine then
+     * recurses without bound against long text, and the resulting
+     * StackOverflowError is an Error, so it blows through Exception
+     * handling and takes the worker thread (and, before the wsSpace
+     * and mcpServer Throwable nets, the whole server) down.
+     */
+    private static final Pattern NESTED_QUANTIFIER = Pattern.compile("\\([^()]*[+*?]\\)[+*]{1,2}");
+
+    public static Pattern guardPattern(final String pattern) {
+        if (NESTED_QUANTIFIER.matcher(pattern).find())
+            throw MTronException.of("regex pattern rejected — nested quantifiers risk catastrophic backtracking: %s", pattern);
+        return Pattern.compile(pattern);
+    }
+
+    public static boolean findSafely(final Pattern rx, final String text) {
+        return withMatcher(rx, text, Matcher::find);
+    }
+
+    /**
+     * Run a matcher body with a StackOverflowError net — a pathological
+     * pattern (or pathologically long text) that slips the shape check
+     * must become a named failure, never a raw SOR on the worker thread.
+     */
+    public static <R> R withMatcher(final Pattern pattern, final String text, final Function<Matcher, R> body) {
+        try {
+            return body.apply(pattern.matcher(text));
+        } catch (final StackOverflowError e) {
+            throw MTronException.of("regex overflowed (pathological pattern/text): %s", pattern);
+        }
+    }
+
 
     private CommonUtil() {
         // do nothing
@@ -401,7 +440,7 @@ public final class CommonUtil {
         } while (retryIfCollision && !Router.readFromSpace(shortId).isNoObj());
         return shortId;
     }
-    
+
 
     public static String clipString(final String string, final int maxLength, final boolean ellipses) {
         if (string.length() < maxLength)

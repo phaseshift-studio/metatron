@@ -102,7 +102,7 @@ public class mModel extends MRec {
         final TextSegment embeddingString = TextSegment.from(toEmbed.toCleanString());
         final Response<Embedding> response = embeddingModel.embed(embeddingString);
         if (null != response.tokenUsage())
-            this.logger().info("embedding token usage: %s", response.tokenUsage());
+            this.logger().status(DEBUG, "embedding token usage: %s", response.tokenUsage());
 
         return vec(response.content().vectorAsDoubleArray());
     }

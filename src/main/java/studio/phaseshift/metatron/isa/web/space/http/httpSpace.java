@@ -385,7 +385,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                         .build();
                 final HttpResponse<byte[]> response;
                 try (final HttpClient client = HttpClient.newHttpClient()) {
-                    LOG.info(request);
+                    LOG.debug(request);
                     response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
                 }
                 final Optional<String> contentType = pattern.hasQ(MIMEQ_PATTERN) ? Optional.of(pattern.q(MIMEQ_PATTERN)) : response.headers().firstValue(MIME.MIMEType.VALUE);

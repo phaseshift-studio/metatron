@@ -21,10 +21,10 @@ package studio.phaseshift.metatron.isa.tble.space;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MType;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -550,7 +550,12 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final TableMetadata metadata = this.tableSchemas.get(tableName.toLowerCase());
         if (metadata == null)
             return ObjSQLSerializer.readCurrentAsRec(rs);
-        return (Rec) readTableRow(rs, metadata);
+        final Obj row = readTableRow(rs, metadata);
+        // a fail read back from a row must surface its own reason — a raw cast
+        // would surface as a bare ClassCastException with the cause lost
+        if (row instanceof Fail fail)
+            throw MTronException.of("readRow expected rec from table %s, got fail: %s", tableName, fail.message());
+        return (Rec) row;
     }
 
     private Obj readColumnWithMetadata(final ResultSet rs, final ColumnMetadata col,

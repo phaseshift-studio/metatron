@@ -128,7 +128,11 @@ public class mcpServer extends MRec {
                 case "notifications/initialized", "notifications/cancelled" -> handleNotifications(id, method);
                 default -> handleUnknownMethod(id, method);
             };
-        } catch (final Exception e) {
+        } catch (final Throwable e) {
+            // Throwable (not Exception) — an Error such as a
+            // StackOverflowError from a pathological regex in a tool
+            // call must become a named fail payload, not escape to
+            // the worker thread and drop the session
             LOG.error("error processing mcp message: %s -- %s", message, e.getMessage() == null ? e.getClass().getName() : e.getMessage());
             for (var ste : e.getStackTrace()) {
                 LOG.error("  at %s.%s(%s:%d)", ste.getClassName(), ste.getMethodName(), ste.getFileName(), ste.getLineNumber());

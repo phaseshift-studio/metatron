@@ -360,7 +360,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             if (this.asType().isBaseType())
                 return this.tid();
             final Type parent = this.asType().parentType();
-            if (parent.isBaseType())
+            if (parent.isBaseType() || this.equals(parent))
                 return parent.tid();
             else return parent.baseTypeID();
         }
@@ -402,6 +402,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default <O extends Obj> O as() {
+        // raw by design: the engine's own fail machinery (MFail.incrStackWrap)
+        // writes fails to the fail space and casts the result back with as(), so
+        // this must not gate on Fail
         return (O) this;
     }
 
@@ -609,6 +612,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default Rec asRec() {
+        // a cast onto a fail would surface as a bare ClassCastException with the
+        // original failure reason lost — name it
+        if (this instanceof Fail fail)
+            throw MTronException.of("asRec onto a fail: %s", fail.message());
         try {
             return (Rec) this;
         } catch (final Exception e) {
@@ -1060,14 +1067,16 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     if (!type.isNoObj() && type.isType() && type.asType().hasConstructor()) {
                         final Obj protoObj = MObjFactory.of().toObj(jvm, null, vid, clazz);
                         final O constructedObj = type.asType().constructor().apply(protoObj).as();
-                        if (TypeCheck.type_ctor.enabled() && constructedObj.isFail())
+                        if (constructedObj.isFail())
+                            // a failed constructor must not slip past the generic return
+                            // cast (it would surface as a bare CCE with the cause
+                            // lost) — always name the reason, type_ctor or not (the
+                            // objClone sibling does exactly this)
                             throw MTronException.of("unable to construct %s::T: %s", tid, constructedObj);
-                        else {
-                            constructedObj.self(constructedObj.jvm(), bigTID, vid);
-                            if (null != vid)
-                                Router.writeToSpace(vid, constructedObj);
-                            return constructedObj;
-                        }
+                        constructedObj.self(constructedObj.jvm(), bigTID, vid);
+                        if (null != vid)
+                            Router.writeToSpace(vid, constructedObj);
+                        return constructedObj;
                     }
                 }
             }
@@ -1129,7 +1138,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         return lhs;
                     }),
                     instC(RANGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(INT_TYPE, isa_(INT_TYPE).else_(jnt(0)).tryToInst()), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1().take(cInt.of(inst.arg(1).intValue())).get0()),
-                    docWrap(instC(ORDER_INST_TID.dom(A.maybeSome()).rng(LST_TID.maybe()).q(BLOCK, null), lst(ALL_TYPE), (lhs, inst) -> lhs.isNoObj() ? noobj() : lst(lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))).toList())),
+                    docWrap(instC(ORDER_INST_TID.dom(A.maybeSome()).rng(LST_TID.maybe()).q(BLOCK, null), lst(ALL_TYPE), (lhs, inst) -> lhs.isNoObj() ? noobj() : lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))).collect(new CommonUtil.LstCollector())),
                             "maybe some objs", "maybe a lst sorted by the arg obj", Map.of(jnt(0), "the obj to sort by"), "a sorting function \\(f(X)\\to X'\\)"),
                     instC(M_ISA_INST_TID.extend("via").dom(A).rng(B), lst(REL_TYPE), (lhs, inst) -> {
                         Rel currentTransform = inst.arg(0).asRel();

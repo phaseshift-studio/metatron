@@ -277,9 +277,9 @@ public final class CommandPalette extends MRec {
         this.at("tracer", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             final boolean newState = lhs.isStr() && !lhs.strValue().isBlank()
                     ? lhs.strValue().trim().equalsIgnoreCase("on")
-                    : !Tracer.stack.enabled();
-            if (newState) Tracer.enable(Tracer.stack);
-            else Tracer.disable(Tracer.stack);
+                    : !Tracer.java_stack.enabled();
+            if (newState) Tracer.enable(Tracer.java_stack);
+            else Tracer.disable(Tracer.java_stack);
             LOG.info("tracer {{%s}}%s{{X}}", newState ? "g" : "r", newState ? "ON" : "OFF");
             return noobj();
         }), MUTABLE);

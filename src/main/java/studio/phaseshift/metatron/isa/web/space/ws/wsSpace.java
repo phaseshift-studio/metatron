@@ -286,10 +286,19 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                     }
                 }
             } catch (final Exception e) {
-                LOG.error("error on new connection with %s: %s", conn.getRemoteSocketAddress(), e);
+                LOG.status(DEBUG, "error on new connection at %s with %s: %s", conn.getResourceDescriptor(), conn.getRemoteSocketAddress(), e);
                 conn.closeConnection(3000, "error on connection: " + e);
                 // Do NOT re-throw — propagating an exception from an event handler
                 // to the WebSocketWorker thread kills the entire server.
+            } catch (final Throwable e) {
+                // an Error (e.g. a StackOverflowError) kills the whole
+                // server if it reaches the WebSocketWorker thread —
+                // drop only this connection
+                LOG.status(DEBUG, "error on new connection at %s with %s: %s", conn.getResourceDescriptor(), conn.getRemoteSocketAddress(), e);
+                try {
+                    conn.closeConnection(3000, "worker error: " + e.getClass().getSimpleName());
+                } catch (final Throwable already) {
+                }
             }
         }
 
@@ -302,7 +311,19 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 session.onClose(conn, code, reason, remote);
                 this.space.cache.write(session.getThisVID(), noobj());
             } catch (final Exception e) {
-                LOG.error(e);
+                LOG.status(DEBUG, e);
+            } catch (final Throwable e) {
+                // an Error (e.g. a StackOverflowError from deep obj
+                // rendering) must not reach the WebSocketWorker thread —
+                // propagating from a handler kills the whole server;
+                // drop only this session.  The stack must be printed —
+                // a bare to-string shows no frames, and the repeating
+                // frames are exactly what names the recursion loop.
+                LOG.status(DEBUG, "dropping session: %s", e);
+                try {
+                    conn.closeConnection(3000, "worker error: " + e.getClass().getSimpleName());
+                } catch (final Throwable already) {
+                }
             }
         }
 
@@ -314,7 +335,19 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 final WebSocketObj session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
                 session.onMessage(conn, session.getIO().input().fromBytes(message));
             } catch (final Exception e) {
-                LOG.error(e);
+                LOG.status(DEBUG, e);
+            } catch (final Throwable e) {
+                // an Error (e.g. a StackOverflowError from deep obj
+                // rendering) must not reach the WebSocketWorker thread —
+                // propagating from a handler kills the whole server;
+                // drop only this session.  The stack must be printed —
+                // a bare to-string shows no frames, and the repeating
+                // frames are exactly what names the recursion loop.
+                LOG.status(DEBUG, "dropping session: %s", e);
+                try {
+                    conn.closeConnection(3000, "worker error: " + e.getClass().getSimpleName());
+                } catch (final Throwable already) {
+                }
             }
         }
 
@@ -325,7 +358,19 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 final WebSocketObj session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
                 session.onMessage(conn, session.getIO().input().fromBytes(message.array()));
             } catch (final Exception e) {
-                LOG.error(e);
+                LOG.status(DEBUG, e);
+            } catch (final Throwable e) {
+                // an Error (e.g. a StackOverflowError from deep obj
+                // rendering) must not reach the WebSocketWorker thread —
+                // propagating from a handler kills the whole server;
+                // drop only this session.  The stack must be printed —
+                // a bare to-string shows no frames, and the repeating
+                // frames are exactly what names the recursion loop.
+                LOG.status(DEBUG, "dropping session: %s", e);
+                try {
+                    conn.closeConnection(3000, "worker error: " + e.getClass().getSimpleName());
+                } catch (final Throwable already) {
+                }
             }
         }
 
@@ -337,7 +382,19 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 final WebSocketObj session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
                 session.onError(conn, ex);
             } catch (final Exception e) {
-                LOG.error(e);
+                LOG.status(DEBUG, e);
+            } catch (final Throwable e) {
+                // an Error (e.g. a StackOverflowError from deep obj
+                // rendering) must not reach the WebSocketWorker thread —
+                // propagating from a handler kills the whole server;
+                // drop only this session.  The stack must be printed —
+                // a bare to-string shows no frames, and the repeating
+                // frames are exactly what names the recursion loop.
+                LOG.status(DEBUG, "dropping session: %s", e);
+                try {
+                    conn.closeConnection(3000, "worker error: " + e.getClass().getSimpleName());
+                } catch (final Throwable already) {
+                }
             }
         }
 

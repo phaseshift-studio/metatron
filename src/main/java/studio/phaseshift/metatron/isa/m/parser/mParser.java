@@ -40,7 +40,6 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,7 +47,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.petitparser.parser.primitive.CharacterParser.any;
@@ -478,15 +476,34 @@ public class mParser {
                 seq(keyParser, of("=>").trim(), valueParser).separatedBy(of(',').trim()))
                 .map(t -> t.equals("=>") ?
                         Map.of() :
-                        ((List) t).stream()
-                                .filter(o -> o instanceof List)
-                                //.map(l -> (((List) l).get(0) instanceof Obj) ? l : ((List) l).subList(1, ((List) l).size() - 1))
-                                .collect(Collectors.toMap(kv -> pick(kv, 0), kv -> pick(kv, 2), Obj::append, LinkedHashMap::new)));
+                        collectRec((List) t));
+    }
+
+    /**
+     * Turns the separatedBy pair list into a rec.  A pair with a null key or value
+     * is a malformed entry (a partial parse left a hole behind) — previously this
+     * fell through to Collectors.toMap and died with a bare NullPointerException
+     * (null message) deep inside HashMap.merge; now it surfaces as a diagnostic
+     * naming the offending entry instead.
+     */
+    private static Map<Obj, Obj> collectRec(final List<?> pairs) {
+        final Map<Obj, Obj> m = new LinkedHashMap<>();
+        for (final Object o : pairs) {
+            if (!(o instanceof List kv))
+                continue;
+            final Obj key = pick(kv, 0);
+            final Obj value = pick(kv, 2);
+            if (null == key || null == value) {
+                throw MTronException.of("rec entry malformed (missing key or value): %s", kv);
+            }
+            m.merge(key, value, Obj::append);
+        }
+        return m;
     }
 
     public static <O extends Obj> O eval(final File source) {
         try {
-            return eval(new String(Files.readAllBytes(source.toPath()), StandardCharsets.UTF_8));
+            return eval(Files.readString(source.toPath()));
         } catch (IOException e) {
             throw MTronException.of(e);
         }
@@ -1134,7 +1151,7 @@ public class mParser {
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), sugar_args(null != endToken), null == endToken ? of("") : endToken.trim())
                         .map(t -> instB(tid.qString(pick(t, 1)), lst(mParser.<Obj>pick(t, 2)))));
     }
-    
+
     public record FileParseError(int lineNumber, String lineString, Exception parseException) {
     }
 
