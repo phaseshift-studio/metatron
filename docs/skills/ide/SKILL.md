@@ -1,62 +1,42 @@
 ---
 name: ide
-description: >
-  agent ide: driving the metatron VM to work on a project's source through the
-  uri graph -- self-contained setup (create the spaces, load the project,
-  wire the command palette, bind the write-back subscription), pull a
-  file's members, read them, edit the member fields (signature / header /
-  body), and let the `code`-space subscription write back to disk.
-  Only .java files for now. (living doc -- iterate freely)
+description:
+  agent ide: metatron coding agent harness
 ---
 
 # agent ide: source edits through the uri graph
 
-An agent edits a project's source by **pulling a file into the code space, editing the member's *fields*,** and letting
-the subscription on `code/#`
-write back to disk and log a `saved` event. `.java` files only, today.
+**IMPORTANT**: If you are not encoded in metatron and thus, can't speak executable mtron code, you will need to use the
+mcp server tool `eval` (`m_inst_eval_mtron`).
 
-You need the mtron `eval` tool (`m_inst_eval_mtron`).
-
-NOTE: the code blocks below are plain `mtron` (NOT `mtron_pre`) -- they are **inert text, not evaluated** by the
-DocRunner. Deliberately: evaluating the setup block would overlap the current VM the docs run on. Once a toy project for
-the docs to work against exists, re-tag the blocks `mtron_pre` so they execute in order, in one VM session, with state
-accumulating. Nothing is pre-booted (`boot/docs.mtron` untouched) -- the setup block builds the whole environment.
+An agent edits a project's source by **pulling** a file into the code space, **editing** the rec-encoded member's, and
+letting a **subscription** on `code/#` write back to disk and **log** a `saved` event.
 
 ## setup: build the infrastructure
 
-Establish the two spaces, load the project's `ide.mtron` into a
-`project::T` at the project root, wire the command palette, and bind the write-back subscription on the code space.
+First, load necessary instruction sets. Second, open three spaces:
 
-```mtron
-memspace::[
-  pattern => </dev/metatron/#>,
-        q => [mintq::[=>],docq::[=>],subq::[=>],mimeq::[=>], lineq::[=>],lockq::[=>],incrq::[=>]]]@</sys/space/dev/metatron>;
+1. a location to store metatron encoding the source code (`memspace`).
+2. access to the file system where source code is stored (`fsspace`).
+3. an optional space for storing mutation event logs (`tblespace`).
 
-tblespace::[pattern    => </log/metatron/#>,
-            host       => <sqlite:target/metatron/log_metatron.sqlite>,
-            driver     => <org.sqlite.JDBC>,
-            table      => [,],
-            q          => [incrq::[=>],subq::[=>],mimeq::[=>]],
-            route      => [/log/metatron/ => <>]]@</sys/space/log/metatron>;
-
-*<mfs:metatron.ide.mtron>.
-  else(<mfs:.>@</dev/metatron>.
-        as(project::T).
-        update(+([name   =>'metatron',
-                  desc   =>'metatron: a ring-based language and virtual machine'])).
-        >>=[_=>dedup()].
-        to(<mfs:metatron.ide.mtron>)).
-  to(/dev/metatron).
-  side(temp -> '.')
-  -<[mvn_build => mvn_build -> ide:command('mvn -f ${*temp} compile'),
-     mvn_clean => mvn_clean -> ide:command('mvn -f ${*temp} clean'),
-     mvn_exec  => mvn_exec  -> ide:command('mvn -f ${*temp} compile exec:java'),
-     code_tree => |inst?#{*}<=#{?}(max=>?int::T.else(2)){ *max.-<tree_select::[root=>!*/dev/metatron/root,max=>_,flatten=>true]@metatron_tree }].
-  to(/dev/metatron/command);
-
-  /dev/metatron/code/#?subq -> sub::[code=> >>0.as(rec::T)>>path==[_,_,_,_,_,_].
-                                                 as?uri<=lst(uri::T).to(x).*(_).>>=[location=>none].as(web:java::T).
-                                                 to(*(*x.>>location).side(-<[location=>_,user=>/usr/marko,status=>saved,time=>!math:datetime_now()].to(/log/metatron/event/_?incrq)))];
+```mtron_pre
+import(/m/ide,ide)
+import(/m/web,web) 
+import(/m/math,math)                
+memspace::[                                                                 /
+  pattern => </dev/scratch/#>,                                              / 
+        q => [mintq::[=>],docq::[=>],subq::[=>],                            /
+              mimeq::[=>], lineq::[=>],lockq::[=>],                         /
+              incrq::[=>]]]@</sys/space/dev/metatron>
+fsspace::[pattern      => mfs:#,                                            /
+           route       => [mfs:=><.>]]@/sys/space/fs/mfs
+tblespace::[pattern    => </log/scratch/#>,                                 /
+            host       => <sqlite:target/log_scratch.sqlite>,               /
+            driver     => <org.sqlite.JDBC>,                                /
+            table      => [,],                                              /
+            q          => [incrq::[=>],subq::[=>],mimeq::[=>]],             /
+            route      => [/log/scratch/ => <>]]@</sys/space/log/scratch>
 ```
 
 ## encodings
@@ -68,28 +48,12 @@ A loaded Java file has two encodings:
 - **uri-graph (`idx`) encoding** — navigate the source with path syntax:
   `*/dev/metatron/idx/memSpace/method/close`.
 
-The pull (`src/.../cls()`) returns the class's **rec encoding** (the
-`ide:java` value) and stores it in the `code` list beside the project root.
+The pull (`src/.../${class}()`) returns the class's **rec encoding** (the
+`ide:java::T` value) and stores it in the `code` list beside the project root.
 `ide:index(root)` re-projects that code list into `root/idx`:
 `class => kind => name => !@.../code/N/classes/cls/0/members/i/name` — *anchors* pointing into the code space. That
 anchor is the write surface, and it also resolves back through the space to the stored member (the round trip is
 asserted in the acceptance test).
-
-## workflow
-
-1. Pull the file (disk -> code space; fresh generation `code/N`; resets in-memory edits).
-2. List the members.
-3. Read a member (the rec encoding: `kind`/`name`/`signature`/`header`/`body`/`footer`/`text`).
-4. Edit the member's *field* via `>>=` -- this trips the subscription and saves to disk.
-
-```mtron
-/dev/metatron/src/memSpace()
-*/dev/metatron/idx/memSpace/+/+/.<<
-*/dev/metatron/idx/memSpace/method/close
-*/dev/metatron/idx/memSpace/method/close >>= [body=>"""{System.out.println("hello");}"""]
-```
-
-Field semantics:
 
 | field       | edit to change                      |
 |-------------|-------------------------------------|
@@ -99,25 +63,111 @@ Field semantics:
 | `footer`    | trailing bits                       |
 | `text`      | **derived** -- do not hand-edit     |
 
-## write-back (how it actually lands on disk)
+## writing code in mtron
 
-The subscription is bound to the **code space**: `target=>/dev/metatron/code/#`. A write to a code-space member:
+An example Java/Maven3 project is provided with metatron. This project is used for the following examples.
 
-1. materializes the java obj into its `location` slot (the fs write), and
-2. side-appends an audit record `{location, user, status:saved, time}` to
-   `/log/metatron/event/_?incrq`.
-
-Inspect the rule itself: `*/dev/metatron/code/#?subq`.
-
-## verify
-
-Did the write-back fire? Check the audit log (last entry is the newest save):
-
-```mtron
-*/log/metatron/event/+
+```mtron_pre
+*<mfs:src/test/resources/scratch/pom.xml>.                                        /
+  as(rec::T).                                                                     /
+  repeat(code=>>>,until=><<.-<[has(Id),has(version)]>-,emit=>false).take(3)
 ```
 
-…and read the file on disk. If the edit didn't land, the event log is the quickest tell.
+A `project::T` consolidates source code, various space embeddings, and build commands under one `rec::T`. There exists
+an `as()`-mapping from `uri::T` to `project::T`. The resultant `project::T` is saved to the user home graph. Finally.
+maven build commands are attached to the `project::T` for each of access.
+
+```mtron_pre
+<mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/scratch)                                       /
+@/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/test/resources/scratch compile'),               /
+                                mvn_clean => !ide:command('mvn -f src/test/resources/scratch clean'),                 / 
+                                mvn_exec  => !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]    
+```
+
+Now that the project is stored in space, a quick build to ensure a clean slate to work from.
+
+```mtron_pre
+*/dev/scratch/command/mvn_build
+```
+
+The Java source files have a `str::T > web:java::T` encoding accessible via `src`.
+
+```mtron_pre
+*/dev/scratch/src/+/ 
+```
+
+The file name serves as the key and an lambda `inst` serves as a lazy constructor of an `ide:java::T`. Calling the file
+name pulls the raw
+`src` into both `code` and `idx`.
+
+```mtron_pre
+/dev/scratch/src/Echo() 
+*/dev/scratch/code/0
+*/dev/scratch/idx/Echo
+```
+
+`idx` offers a human-readable path scheme that projects to the `code` uri subgraph. Due to the `!*` nature of the `idx`
+objs, any updates to
+`idx` redirect to `code`. When `code` is changed, a `?subq` listener fires, mapping the `ide:java::T` to `web:java::T`
+and then to disk. The subscription then pulls the file from disk to a `web:java::T` and then a `ide:java::T` in `code`
+and `idx`. In this way,
+`code` serves as a metatron encoded proxy to the file system representation of the project's source code.
+
+```mtron_pre
+*/dev/scratch/idx/Echo/method/speak
+*/dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T)
+*/dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T) >>= [1 => "return who;" ]>>.>-?str<=str{*}(' ')
+@/dev/scratch/idx/Echo/method/speak >>= [body=> -<'\n'.as(rec::T) >>= [1 => 'return "marko";' ]>>.>-?str<=str{*}(' ')]
+```
+
+Finally, to check if the update to `Echo::speak` made it to disk, dereference the uri disk pointer.
+
+```mtron_pre
+*<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>
+```
+
+The standard template for selective editing of code is provided below where `[X=>Y]` is a placeholder for patterns
+itemized in the subsequent table.
+
+```mtron
+@../idx/${class}/method/${method} >>= [body => -<'\n'.as(rec::T)>>=([X=>Y]>>.>-?str<=str{*}('\n'))]
+└───────────────┬───────────────┘     └───┬──┘└──┬──┘ └────┬───┘└────┬───┘└┬┘└─────────┬─────────┘
+                │                         │      │         │         │     │           └ join them by a newline
+     anchor the method to edit            │      │         │         │     └ get lines  
+                                          │      │         │         └ update template **important**
+                                          │      │         └ turn the lst of lines to a int indexed rec
+                                          │      └ split the current body by newlines
+                                      │   └ update the method body                                │
+                                      └────────────┬───────────┘ └─────────────┬──────────────────┘ 
+                                                   │                           └ src lines to single src string 
+                                                   └ single src string to src lines
+```
+
+| pattern           | example                                | discussion               |
+|-------------------|----------------------------------------|--------------------------|
+| single replace    | `[4 => 'a']`                           | replace line 4           |
+| single insert     | `[4 => +'a']`                          | insert at line 4         |
+| multi-line insert | `[3 => +'a\nb']`                       | insert 2 lines at line 3 |
+| single delete     | `[1 => none]`                          | remove first line        |
+| batch delete      | `[?>2.?<5 => none ]`                   | remove lines 3 and 4     |
+| batch delete      | `[_ => has('ex[1-9]{2}.*').map(none)]` | remove lines by regex    |
+
+### subscriptions
+
+A `?subq` subscription handles transforming updated `code` structures into language compliant source text on disk.
+Different subscriptions can be defined to provide any number of useful reactions to code edits. Examples include:
+
+1. triggering an agent to review the code.
+2. sending a log event to the log portion of space.
+3. compile the code and altering should it fail.
+4. record stats (points to sections of the code).
+5. ...
+
+The current `sub::T` is:
+
+```mtron_pre
+*/dev/scratch/code/#?subq
+```
 
 ## gotchas (learned the hard way)
 
@@ -141,8 +191,8 @@ Did the write-back fire? Check the audit log (last entry is the newest save):
 ## running as a container app
 
 The agent ide ships as a metatron app: `boot/agent-ide.boot.mtron` builds the whole workspace (home memspace, scratch
-project at `/usr/marko/scratch`, write-back subscription, command palette) and the launcher runs it in a container with
-the repo mounted at `/work` (= the `mfs:` root).
+project at `/dev/scratch`, write-back subscription, command palette) and the launcher runs it in a container with the
+repo mounted at `/work` (= the `mfs:` root).
 
 ```
 bin/agent-ide-docker                 # up: ws://localhost:8555/mtron, http://localhost:8777/mcp
@@ -156,10 +206,10 @@ The launcher passes `--user $(id -u):$(id -g)`: the image's own uid cannot write
 Poke surface (in the app):
 
 ```
-*/usr/marko/scratch/name                    # 'scratch'
-*/usr/marko/scratch/command/+               # mvn_build / mvn_clean / mvn_test / mvn_exec / code_tree
+*/dev/scratch/name                    # 'scratch'
+*/dev/scratch/command/+               # mvn_build / mvn_clean / mvn_test / mvn_exec / code_tree
 */log/metatron/event/+                      # the save audit trail (empty until a save fires)
-bin/agent-ide-eval '/usr/marko/scratch/command/mvn_build()'
+bin/agent-ide-eval '/dev/scratch/command/mvn_build()'
 ```
 
 No maven in the runtime image: `mvn_build()` fails in-container by design right now (documented gap; the docker socket
@@ -244,7 +294,7 @@ Learned the hard way, in this order of cost:
 - **boot-args values**: a bare word (`user => marko`) is stored differently than a quoted str or a `<...>` uri; the home
   module's `_`
   binding was unreliable, so the boot builds the home space as an explicit
-  `memspace::[pattern => </usr/marko/#>, ...]` record instead.
+  `memspace::[pattern => </dev/#>, ...]` record instead.
 - **`+` in mtron is rec-union** (update `+([...])`), not string concat.
 - **tblespace hosts**: plain literal, and the parent directory must exist (sqlite JDBC will not create it).
 - a `log` key in the marker block would override the CLI `log=>info`

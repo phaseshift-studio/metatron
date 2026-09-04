@@ -251,6 +251,7 @@
                             </div>
                         </div>
                     </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../skills/ide/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
@@ -578,8 +579,8 @@
     <p class="mb-0 text-light">an agent is an llm enriched with embodied capabilities</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
-  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
+  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
   <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
 </pre>
 </div>
@@ -699,9 +700,9 @@
     <p class="mb-0 text-light">a compaction represents a stop point for message retrieval and provides a summary of all previous messages</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'total tokens processed (the input digest estimate)'" class="text-info">&#39;total tokens processed (the input digest estimate)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}compression" class="text-light">{?}compression</a> <span class="text-light">=&gt;</span> <a href="#'fraction of tokens removed — 1 - out__in (0.0 to 1.0)'" class="text-info">in (0.0 to 1.0)&#39;</a>
   <a href="#{?}out" class="text-light">{?}out</a> <span class="text-light">=&gt;</span> <a href="#'total tokens generated (the summary estimate)'" class="text-info">&#39;total tokens generated (the summary estimate)&#39;</a>
-  <a href="#{?}compression" class="text-light">{?}compression</a> <span class="text-light">=&gt;</span> <a href="#'fraction of tokens removed — 1 - out__in (0.0 to 1.0)'" class="text-info">in (0.0 to 1.0)&#39;</a>
+  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'total tokens processed (the input digest estimate)'" class="text-info">&#39;total tokens processed (the input digest estimate)&#39;</a>
   <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the summary of all previous messages and compactions'" class="text-info">&#39;the summary of all previous messages and compactions&#39;</a>
 </pre>
 </div>
@@ -946,14 +947,14 @@
     <p class="mb-0 text-light">populate a model reference rec using data from the ai provider&#39;s http-endpoint</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
-  <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
-  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#"the model's context window size in tokens"" class="text-info">&quot;the model&#39;s context window size in tokens&quot;</a>
-  <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
   <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
-  <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
-  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
+  <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
+  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#"the model's context window size in tokens"" class="text-info">&quot;the model&#39;s context window size in tokens&quot;</a>
+  <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
+  <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
   <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1114,9 +1115,9 @@
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a tool specification" class="text-info">a tool specification</a> <span class="text-light">=&gt;</span> <span class="text-success">?</span></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#'tool instruction'" class="text-info">&#39;tool instruction&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'tool description'" class="text-info">&#39;tool description&#39;</a>
   <a href="#{?}arg" class="text-light">{?}arg</a> <span class="text-light">=&gt;</span> <a href="#'tool arguments'" class="text-info">&#39;tool arguments&#39;</a>
-  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'tool description'" class="text-info">&#39;tool description&#39;</a>
+  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#'tool instruction'" class="text-info">&#39;tool instruction&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'tool name'" class="text-info">&#39;tool name&#39;</a>
 </pre>
 </div>

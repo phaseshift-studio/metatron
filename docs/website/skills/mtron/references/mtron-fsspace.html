@@ -250,6 +250,7 @@
                             </div>
                         </div>
                     </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../skills/ide/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
@@ -490,14 +491,14 @@ mtron&gt; *&lt;local:config.json?mimeq=application/x-mtron&gt;/database/host
 ==&gt;fail::[parse error at line 1, col 47:
      ...l:config.json?mimeq=application/x-mtron&gt;/database/host
                                                 ^
-     could not parse at '/']@/sys/fail/334
+     could not parse at '/']@/sys/fail/506
 </code></pre>
 <h4>Binary Files</h4>
 <p>Files without a recognized text MIME type are read as <code>bytes::T</code>. Executable files (with shebangs)
 are treated as <code>inst::T</code> and can be invoked directly:</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;local:script.sh&gt;        [-- bytes::T if binary, str::T if text                    --]
 mtron&gt; &lt;local:script.sh&gt;.exec()  [-- execute (shell scripts, via application/x-mtron exec) --]
-==&gt;fail::[unable to locate inst-f of exec()@&lt;1&gt;]@/sys/fail/336
+==&gt;fail::[unable to locate inst-f of exec()@&lt;1&gt;]@/sys/fail/508
 </code></pre>
 <h3>Pattern-Based Access</h3>
 <p>fsSpace supports wildcard patterns in reads:</p>
@@ -509,7 +510,7 @@ mtron&gt; *&lt;local:+/+&gt;.where([name =&gt; where(^(&gt;&gt;is(hasPostfix(.tx
 ==&gt;fail::[parse error at line 1, col 14:
      *&lt;local:+/+&gt;.where([name =&gt; where(^(&gt;&gt;is(hasPostfix(....
                   ^
-     could not parse at 'w']@/sys/fail/338
+     could not parse at 'w']@/sys/fail/510
 </code></pre>
 <h3>Line-Level Editing with <code>lineq</code></h3>
 <p>The <code>lineq</code> query processor enables reading and editing specific line ranges within text files, useful for targeted
@@ -522,7 +523,7 @@ mtron&gt; *&lt;local:src/main.java?lineq=10..20&gt;
    	  \_pred │ []
    	[inst]   │ *&lt;local:src/main.java?lineq=10..20&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;local:src/main.java?lineq=10..20&gt;][NumberFormatException&lt;67&gt;:For input string: &quot;10..20&quot;[NumberFormatException&lt;67&gt;:For input string: &quot;10..20&quot;] ← For input string: &quot;10..20&quot;]][For input string: &quot;10..20&quot;[NumberFormatException&lt;67&gt;:For input string: &quot;10..20&quot;]][For input string: &quot;10..20&quot;]@/sys/fail/340
+   	 \_args  │ [&lt;local:src/main.java?lineq=10..20&gt;][NumberFormatException&lt;67&gt;:For input string: &quot;10..20&quot;[NumberFormatException&lt;67&gt;:For input string: &quot;10..20&quot;] ← For input string: &quot;10..20&quot;]][For input string: &quot;10..20&quot;[NumberFormatException&lt;67&gt;:For input string: &quot;10..20&quot;]][For input string: &quot;10..20&quot;]@/sys/fail/512
 mtron&gt; [-- Replace lines 5-10 with new content --]
 mtron&gt; &lt;local:src/main.java?lineq=5..10&gt; -&gt; &quot;&quot;&quot;
          public void newMethod() {
@@ -543,7 +544,7 @@ mtron&gt; &lt;local:src/main.java?lineq=5..10&gt; -&gt; &quot;&quot;&quot;
    public void newMethod() {
    // new implementation
    }
-   &quot;&quot;&quot;][NumberFormatException&lt;67&gt;:For input string: &quot;5..10&quot;[NumberFormatException&lt;67&gt;:For input string: &quot;5..10&quot;] ← For input string: &quot;5..10&quot;]][For input string: &quot;5..10&quot;[NumberFormatException&lt;67&gt;:For input string: &quot;5..10&quot;]][For input string: &quot;5..10&quot;]@/sys/fail/342
+   &quot;&quot;&quot;][NumberFormatException&lt;67&gt;:For input string: &quot;5..10&quot;[NumberFormatException&lt;67&gt;:For input string: &quot;5..10&quot;] ← For input string: &quot;5..10&quot;]][For input string: &quot;5..10&quot;[NumberFormatException&lt;67&gt;:For input string: &quot;5..10&quot;]][For input string: &quot;5..10&quot;]@/sys/fail/514
 </code></pre>
 <h4>Boot Configuration Example</h4>
 <pre><code class="language-mtron">mtron&gt; fsspace::[
@@ -558,12 +559,12 @@ mtron&gt; *&lt;local:Main.java?lineq=1..50&gt;
    	  \_pred │ []
    	[inst]   │ *&lt;local:Main.java?lineq=1..50&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;local:Main.java?lineq=1..50&gt;][NumberFormatException&lt;67&gt;:For input string: &quot;1..50&quot;[NumberFormatException&lt;67&gt;:For input string: &quot;1..50&quot;] ← For input string: &quot;1..50&quot;]][For input string: &quot;1..50&quot;[NumberFormatException&lt;67&gt;:For input string: &quot;1..50&quot;]][For input string: &quot;1..50&quot;]@/sys/fail/344
+   	 \_args  │ [&lt;local:Main.java?lineq=1..50&gt;][NumberFormatException&lt;67&gt;:For input string: &quot;1..50&quot;[NumberFormatException&lt;67&gt;:For input string: &quot;1..50&quot;] ← For input string: &quot;1..50&quot;]][For input string: &quot;1..50&quot;[NumberFormatException&lt;67&gt;:For input string: &quot;1..50&quot;]][For input string: &quot;1..50&quot;]@/sys/fail/516
 mtron&gt; &lt;local:index.html?mimeq=application/x-mtron&gt;/html/head/title
 ==&gt;fail::[parse error at line 1, col 45:
      ...al:index.html?mimeq=application/x-mtron&gt;/html/head/title
                                                 ^
-     could not parse at '/']@/sys/fail/346
+     could not parse at '/']@/sys/fail/518
 </code></pre>
 <h3>Type Round-Trip</h3>
 <p>The full read-modify-write cycle preserves types:</p>
@@ -577,7 +578,7 @@ mtron&gt; &lt;local:page.html&gt; -&gt; *&lt;local:page.html?mimeq=application/x
    	  \_pred │ []
    	[inst]   │ at?rng=B{*}&amp;dom=A{?}('New Title'){&lt;j&gt;}@&lt;2&gt;
    	 \_dom   │ A{?}::T
-   	 \_args  │ ['New Title'][MTronException&lt;127&gt;:'New Title' [str::T] unable to convert uri::T]]['New Title' [str::T] unable to convert uri::T]@/sys/fail/356
+   	 \_args  │ ['New Title'][MTronException&lt;137&gt;:'New Title' [str::T] unable to convert uri::T]]['New Title' [str::T] unable to convert uri::T]@/sys/fail/528
 mtron&gt; [-- Read JSON config, modify a value, write back --]
 mtron&gt; &lt;local:config.json&gt; -&gt; *&lt;local:config.json?mimeq=application/x-mtron&gt;
          .at(database/host -&gt; 'new-host')
@@ -588,7 +589,7 @@ mtron&gt; &lt;local:config.json&gt; -&gt; *&lt;local:config.json?mimeq=applicati
    	  \_pred │ []
    	[inst]   │ at?rng=B{*}&amp;dom=A{?}('new-host'){&lt;j&gt;}@&lt;2&gt;
    	 \_dom   │ A{?}::T
-   	 \_args  │ ['new-host'][MTronException&lt;127&gt;:'new-host' [str::T] unable to convert uri::T]]['new-host' [str::T] unable to convert uri::T]@/sys/fail/366
+   	 \_args  │ ['new-host'][MTronException&lt;137&gt;:'new-host' [str::T] unable to convert uri::T]]['new-host' [str::T] unable to convert uri::T]@/sys/fail/538
 </code></pre>
 <p>The <code>.as(html::T)</code> / <code>.as(json::T)</code> serialization passes through <code>ObjHTMLSerializer.write()</code> /
 <code>ObjJSONSerializer.write()</code> which handle both <code>str::T</code> (pass-through) and <code>rec::T</code> (structural render).</p>

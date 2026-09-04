@@ -74,6 +74,34 @@ mtron> */sys/space/+                                  [-- list spaces           
      incrq::[
       pattern=>incrq,
       pre_write=>inst?#{*}<=#{?}(uri::T,#::T)]]]@/sys/space/usr
+==>memspace::[
+    pattern=>/sys/#,
+    q=>[
+     docq::[
+      pattern=>docq,
+      pre_read=>inst?#{*}<=#{?}(uri::T),
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
+      obj=>memspace::[pattern=><#>],
+      inst=>instset::[pattern=><#>]],
+     subq::[
+      pattern=>subq,
+      pre_read=>inst?#{*}<=#{?}(uri::T),
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
+      qless_write=>inst?#{*}<=#{?}(uri::T,#::T),
+      obj=>[,]],
+     incrq::[
+      pattern=>incrq,
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T)],
+     mimeq::[
+      pattern=>mimeq,
+      post_read=>inst?#{*}<=#{?}(uri::T,#::T)],
+     lockq::[
+      pattern=>lockq,
+      pre_read=>inst?#{*}<=#{?}(uri::T),
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
+      qless_write=>inst?#{*}<=#{?}(uri::T,#::T),
+      obj=>[,]]],
+    space=>[sub=>!*/sys/space/log/scratch/instset]]@/sys/space/sys
 ==>memspace::[pattern=>/a/#]@/sys/space/a
 ==>fsspace::[
     pattern=>mtronfs:#,
@@ -99,15 +127,15 @@ mtron> */sys/env/+/.filter(not(<<.has(API))).take(5)  [-- first 5 environmental 
 ```mtron
 mtron> [-- SQL table (if pattern is "acme:#") --]
 mtron> *acme:${table}.*(_).limit(10)
-==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/148
+==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/320
 mtron> [-- Document collection (if pattern is "mongo:#") --]
 mtron> *mongo:${collection}.*(_).limit(10)
-==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/152
+==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/324
 mtron> [-- Graph vertices/edges (if pattern is "g:#") --]
 mtron> *g:V.*(_).limit(10)
-==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/156
+==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/328
 mtron> *g:E.*(_).limit(10)
-==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/160
+==>fail::[unable to locate inst-f of limit(10)@<2>]@/sys/fail/332
 mtron> [-- File system (if pattern is "local:#") --]
 mtron> *<local:path/to/file>                    [-- Read file --]
 mtron> *<local:path/#>                          [-- List recursively --]

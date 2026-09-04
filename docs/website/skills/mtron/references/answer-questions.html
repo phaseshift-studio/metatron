@@ -250,6 +250,7 @@
                             </div>
                         </div>
                     </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../skills/ide/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
@@ -462,6 +463,34 @@
      incrq::[
       pattern=&gt;incrq,
       pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]]]@/sys/space/usr
+==&gt;memspace::[
+    pattern=&gt;/sys/#,
+    q=&gt;[
+     docq::[
+      pattern=&gt;docq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+     subq::[
+      pattern=&gt;subq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;[,]],
+     incrq::[
+      pattern=&gt;incrq,
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     mimeq::[
+      pattern=&gt;mimeq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     lockq::[
+      pattern=&gt;lockq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;[,]]],
+    space=&gt;[sub=&gt;!*/sys/space/log/scratch/instset]]@/sys/space/sys
 ==&gt;memspace::[pattern=&gt;/a/#]@/sys/space/a
 ==&gt;fsspace::[
     pattern=&gt;mtronfs:#,
@@ -484,15 +513,15 @@ mtron&gt; */sys/env/+/.filter(not(&lt;&lt;.has(API))).take(5)  [-- first 5 envir
 <p><strong>First:</strong> Check <code>*/sys/space/${space}.pattern</code> to discover the URI prefix.</p>
 <pre><code class="language-mtron">mtron&gt; [-- SQL table (if pattern is &quot;acme:#&quot;) --]
 mtron&gt; *acme:${table}.*(_).limit(10)
-==&gt;fail::[unable to locate inst-f of limit(10)@&lt;2&gt;]@/sys/fail/148
+==&gt;fail::[unable to locate inst-f of limit(10)@&lt;2&gt;]@/sys/fail/320
 mtron&gt; [-- Document collection (if pattern is &quot;mongo:#&quot;) --]
 mtron&gt; *mongo:${collection}.*(_).limit(10)
-==&gt;fail::[unable to locate inst-f of limit(10)@&lt;2&gt;]@/sys/fail/152
+==&gt;fail::[unable to locate inst-f of limit(10)@&lt;2&gt;]@/sys/fail/324
 mtron&gt; [-- Graph vertices/edges (if pattern is &quot;g:#&quot;) --]
 mtron&gt; *g:V.*(_).limit(10)
-==&gt;fail::[unable to locate inst-f of limit(10)@&lt;2&gt;]@/sys/fail/156
+==&gt;fail::[unable to locate inst-f of limit(10)@&lt;2&gt;]@/sys/fail/328
 mtron&gt; *g:E.*(_).limit(10)
-==&gt;fail::[unable to locate inst-f of limit(10)@&lt;2&gt;]@/sys/fail/160
+==&gt;fail::[unable to locate inst-f of limit(10)@&lt;2&gt;]@/sys/fail/332
 mtron&gt; [-- File system (if pattern is &quot;local:#&quot;) --]
 mtron&gt; *&lt;local:path/to/file&gt;                    [-- Read file --]
 mtron&gt; *&lt;local:path/#&gt;                          [-- List recursively --]

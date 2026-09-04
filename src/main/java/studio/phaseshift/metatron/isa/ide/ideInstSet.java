@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.ide.parser.ObjJavaIDESerializer;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -180,6 +181,7 @@ public class ideInstSet extends AbstractInstSet {
                                                         final Lst codeLst = Router.readFromSpace(lhs.vid().extend(CODE)).orElse(lst());
                                                         final int c = (int) codeLst.count();
                                                         final fURI codeID = lhs.vid().extend(CODE).extend(c);
+                                                        spinner.setMessage("\rloading project: %s", e.name());
                                                         Router.writeToSpace(lhs.vid().extend(CODE), codeLst.add(ideJava, MUTABLE));
                                                         //////////////////////////////////////////////////////////////////////////
                                                         final Rec idx = Router.readFromSpace(lhs.vid().extend("idx")).orElse(rec());
@@ -234,6 +236,12 @@ public class ideInstSet extends AbstractInstSet {
                                         project.at(NAME, str(lhs.uriValue().basePath().name()), MUTABLE);
                                     if (!project.has(ROOT))
                                         project.at(ROOT, lhs.vid(null), MUTABLE);
+                                    ObjmtronSerializer.parse("""
+                                                             %s/code/#?subq -> sub::[code=> >>0.as(rec::T)>>path==[_,_,_,_,_,_].to(temp).
+                                                                                     as?uri<=lst(uri::T).to(x).*(_).>>=[location=>none].as(web:java::T).
+                                                                                     to(*(*x.>>location).side(-<[location=>_,status=>saved,time=>!math:datetime_now()].print("saved ", _, "\\n"))).
+                                                                                     map(%s/src.mult(*temp.reverse().>-.take(1)))];
+                                                             """.formatted(lhs.vid(), lhs.vid())).apply();
 
                                     return project.selfTID(IDE_PROJECT_TID);
                                 }),

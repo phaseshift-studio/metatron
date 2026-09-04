@@ -250,6 +250,7 @@
                             </div>
                         </div>
                     </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../skills/ide/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
@@ -428,6 +429,64 @@ are represented as space-specific <code>instsets</code> (instruction sets).</p>
 </ul>
 <h3>Universal (all environments)</h3>
 <pre><code class="language-mtron">mtron&gt; */sys/space/+/+/                         [-- List all spaces --]
+==&gt;/sys/space/dev/metatron=&gt;memspace::[
+    pattern=&gt;/dev/scratch/#,
+    q=&gt;[
+     mintq::[
+      pattern=&gt;mintq,
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     docq::[
+      pattern=&gt;docq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+     subq::[
+      pattern=&gt;subq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;[sub::[
+    code=&gt;rshift(0).as(rec::T).rshift(path).select([id(),id(),id(),id(),id(),id()]).to(temp).as?rng=uri&amp;dom=lst(uri::T).to(x).*id().update([location=&gt;none]).as(java::T).to(**x.rshift(location).side(split([
+     location=&gt;id(),
+     status=&gt;saved,
+     time=&gt;!math:datetime_now()]).print('saved ',id(),'\n'))).map(map(/dev/scratch/src).mult(*temp.reverse().merge().take(1))),
+    target=&gt;/dev/scratch/code/#]]],
+     mimeq::[
+      pattern=&gt;mimeq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     lineq::[
+      pattern=&gt;lineq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     lockq::[
+      pattern=&gt;lockq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;[,]],
+     incrq::[
+      pattern=&gt;incrq,
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]]]@/sys/space/dev/metatron
+==&gt;/sys/space/log/scratch=&gt;tblespace::[
+    pattern=&gt;/log/scratch/#,
+    host=&gt;&lt;sqlite:target/log_scratch.sqlite&gt;,
+    driver=&gt;&lt;org.sqlite.JDBC&gt;,
+    table=&gt;[,],
+    q=&gt;[
+     incrq::[
+      pattern=&gt;incrq,
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     subq::[
+      pattern=&gt;subq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;[,]],
+     mimeq::[
+      pattern=&gt;mimeq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
+    route=&gt;[/log/scratch/=&gt;&lt;&gt;]]@/sys/space/log/scratch
 mtron&gt; */sys/space/${space}                     [-- View space config --]
 mtron&gt; !*&lt;uri&gt;                                  [-- Create reference (lazy) --]
 mtron&gt; *&lt;uri&gt;                                   [-- Dereference (evaluate) --]

@@ -250,6 +250,7 @@
                             </div>
                         </div>
                     </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='./skills/ide/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='./skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
@@ -709,7 +710,7 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
    	  \_pred │ []
    	[inst]   │ plus?rng=int&amp;dom=int(fail::[unable to determine inst function:]@/sys/fail/184){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [fail::[unable to determine inst function:]@/sys/fail/186][MTronException&lt;127&gt;:fail::[unable to determine inst function:...]][fail::[unable to determine inst function:
+   	 \_args  │ [fail::[unable to determine inst function:]@/sys/fail/186][MTronException&lt;137&gt;:fail::[unable to determine inst function:...]][fail::[unable to determine inst function:
    	12          =&gt; 1?dom=int()   | [inst]
    	int::T      =&gt; int::T   |  \_dom
    	int::T     ==&gt; [,]   |  \_args]@/sys/fail/182 [value] unable to convert fail::T]@/sys/fail/188</code></pre>
@@ -1179,7 +1180,7 @@ mtron&gt;  10.is_divisible('abc')
    	  \_pred │ []
    	[inst]   │ mod?rng=int&amp;dom=int('abc'){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ ['abc'][MTronException&lt;127&gt;:'abc' [value] unable to convert str::T]]['abc' [value] unable to convert str::T]@/sys/fail/208</code></pre>
+   	 \_args  │ ['abc'][MTronException&lt;137&gt;:'abc' [value] unable to convert str::T]]['abc' [value] unable to convert str::T]@/sys/fail/208</code></pre>
 </div>
 </div>
 </div>
@@ -2457,7 +2458,7 @@ Note the use of the tools provided to the agent.
    	  \_pred │ []
    	[inst]   │ plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
    	 \_dom   │ int::T
-   	 \_args  │ [b][MTronException&lt;127&gt;:1 [int::T] unable to convert uri::T]][1 [int::T] unable to convert uri::T]@/sys/fail/60
+   	 \_args  │ [b][MTronException&lt;137&gt;:1 [int::T] unable to convert uri::T]][1 [int::T] unable to convert uri::T]@/sys/fail/60
 mtron&gt; */sys/fail/+     ​2​
 mtron&gt; */sys/fail/+.catch(_)     ​3​
 mtron&gt; */sys/fail     ​4​</code></pre>
@@ -2713,7 +2714,7 @@ mtron&gt;  -21.as(int::T).as(nat::T).as(age::T)     ​4​
    	  \_pred │ []
    	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-21 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-21 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/564
+   	 \_args  │ [nat::T][MTronException&lt;137&gt;:-21 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-21 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/564
 mtron&gt;  121.as(int::T).as(nat::T).as(age::T)     ​5​
 ==&gt;fail::[apply failure:
    	[lhs]    │ nat::121
@@ -2721,7 +2722,7 @@ mtron&gt;  121.as(int::T).as(nat::T).as(age::T)     ​5​
    	  \_pred │ [is(gt(0))]
    	[inst]   │ as?rng=age&amp;dom=int(age::T){&lt;j&gt;}@<i class="conum" data-value="3"></i><b>(3)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [age::T][MTronException&lt;127&gt;:nat::121 is not a nat::T[is(lt(120))]@age [structural]]][nat::121 is not a nat::T[is(lt(120))]@age [structural]]@/sys/fail/566
+   	 \_args  │ [age::T][MTronException&lt;137&gt;:nat::121 is not a nat::T[is(lt(120))]@age [structural]]][nat::121 is not a nat::T[is(lt(120))]@age [structural]]@/sys/fail/566
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;age::T]]@chicken     ​6​
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​7​
 ==&gt;chicken::[name=&gt;'snowbutt',age=&gt;7]
@@ -2858,7 +2859,7 @@ mtron&gt;  chicken::[name=&gt;'snowbutt',age=&gt;7].as(human::T)     ​5​
      age=&gt;age::T]), isa([name=&gt;str::T,age=&gt;int::T])]
    	[inst]   │ as?rng=human&amp;dom=rec(human::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ rec::T
-   	 \_args  │ [human::T][MTronException&lt;127&gt;:chicken::[name=&gt;'snowbutt',age=&gt;7] is not a human::T [nominal]]][chicken::[name=&gt;'snowbutt',age=&gt;7] is not a human::T [nominal]]@/sys/fail/570
+   	 \_args  │ [human::T][MTronException&lt;137&gt;:chicken::[name=&gt;'snowbutt',age=&gt;7] is not a human::T [nominal]]][chicken::[name=&gt;'snowbutt',age=&gt;7] is not a human::T [nominal]]@/sys/fail/570
 mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)     ​6​
 ==&gt;chicken::[name=&gt;'fuzzy feet',age=&gt;2]
 mtron&gt; 'punky'.as(chicken::T)     ​7​
@@ -2868,7 +2869,7 @@ mtron&gt; 'punky'.as(chicken::T)     ​7​
    	  \_pred │ []
    	[inst]   │ as?rng=chicken&amp;dom=str(chicken::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ str::T
-   	 \_args  │ [chicken::T][MTronException&lt;127&gt;:'punky' is not a animal::T[?[...]]['punky' is not a animal::T[?[
+   	 \_args  │ [chicken::T][MTronException&lt;137&gt;:'punky' is not a animal::T[?[...]]['punky' is not a animal::T[?[
      name=&gt;str::T,
      age=&gt;age::T]]@chicken [structural]]@/sys/fail/572</code></pre>
 </div>
@@ -2986,7 +2987,7 @@ mtron&gt;  -2.as(nat::T)     ​6​
    	  \_pred │ []
    	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-2 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-2 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/576
+   	 \_args  │ [nat::T][MTronException&lt;137&gt;:-2 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-2 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/576
 mtron&gt;  nat::2 * -1     ​7​
 ==&gt;fail::[apply failure:
    	[lhs]    │ nat::2
@@ -2994,7 +2995,7 @@ mtron&gt;  nat::2 * -1     ​7​
    	  \_pred │ [is(gt(0))]
    	[inst]   │ mult?rng=int&amp;dom=int(-1){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [-1][MTronException&lt;127&gt;:-2 is not a int::T[is(gt(0))]@/m/math/nat]][-2 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/578</code></pre>
+   	 \_args  │ [-1][MTronException&lt;137&gt;:-2 is not a int::T[is(gt(0))]@/m/math/nat]][-2 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/578</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3021,7 +3022,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{r}}M{{y}}e{{y}}T{{r}}A{{r}}T{{r}}R{{y}}o{{b}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}m{{b}}e{{g}}t{{b}}A{{g}}t{{g}}r{{m}}o{{g}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3675,7 +3676,7 @@ mtron&gt;  int::-10.as(nat::T)
    	  \_pred │ []
    	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/642</code></pre>
+   	 \_args  │ [nat::T][MTronException&lt;137&gt;:-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/642</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3781,7 +3782,7 @@ mtron&gt;  int::-10.as(nat::T)
    	  \_pred │ []
    	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [nat::T][MTronException&lt;127&gt;:-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/646</code></pre>
+   	 \_args  │ [nat::T][MTronException&lt;137&gt;:-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/646</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3813,7 +3814,7 @@ mtron&gt;  125.as(nat::T).as(age::T)
    	  \_pred │ []
    	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
-   	 \_args  │ [nat::T][MTronException&lt;127&gt;:125 is not a int::T[is(lt(120))]@/m/math/nat [structural]]][125 is not a int::T[is(lt(120))]@/m/math/nat [structural]]@/sys/fail/654</code></pre>
+   	 \_args  │ [nat::T][MTronException&lt;137&gt;:125 is not a int::T[is(lt(120))]@/m/math/nat [structural]]][125 is not a int::T[is(lt(120))]@/m/math/nat [structural]]@/sys/fail/654</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -4110,7 +4111,7 @@ mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-.map(&lt;${g:V/_}&gt;)&gt;&gt;+  
    	  \_pred │ []
    	[inst]   │ rshift?rng=B{*}&amp;dom=A(&lt;+&gt;){&lt;j&gt;}@<i class="conum" data-value="4"></i><b>(4)</b>
    	 \_dom   │ A::T
-   	 \_args  │ [&lt;+&gt;][MTronException&lt;127&gt;:unable to parse ${g to a furi: ${g]][unable to parse ${g to a furi: ${g]@/sys/fail/442</code></pre>
+   	 \_args  │ [&lt;+&gt;][MTronException&lt;137&gt;:unable to parse ${g to a furi: ${g]][unable to parse ${g to a furi: ${g]@/sys/fail/442</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6853,19 +6854,6 @@ mtron&gt; *fs:m     ​3​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
 mtron&gt; */sys/space/localfs/script     ​2​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
-==&gt;'[?25l'
-==&gt;{2}'⠙ resolving dependencies'
-==&gt;{2}'⠹ resolving dependencies'
-==&gt;{2}'⠸ resolving dependencies'
-==&gt;{2}'⠼ resolving dependencies'
-==&gt;{2}'⠴ resolving dependencies'
-==&gt;{2}'⠦ resolving dependencies'
-==&gt;'⠧ resolving dependencies'
-==&gt;'⠇ resolving dependencies'
-==&gt;'⠏ resolving dependencies'
-==&gt;'⠋ resolving dependencies'
-==&gt;'⠧ resolving dependencies[?12l[?25h'
-==&gt;'[K[0;32m✓[0m resolving dependencies'
 ==&gt;null
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
 ==&gt;fail::[apply failure:
@@ -6874,7 +6862,7 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
    	  \_pred │ []
    	[inst]   │ as?rng=bytes&amp;dom=bool(bytes::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ bool::T
-   	 \_args  │ [bytes::T][MTronException&lt;127&gt;:/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;} [/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}::T] unable to convert bool::T]][/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;} [/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}::T] unable to convert bool::T]@/sys/fail/72
+   	 \_args  │ [bytes::T][MTronException&lt;137&gt;:/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;} [/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}::T] unable to convert bool::T]][/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;} [/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}::T] unable to convert bool::T]@/sys/fail/72
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 ==&gt;fail::[apply failure:
    	[lhs]    │ /sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}
@@ -6882,7 +6870,7 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
    	  \_pred │ []
    	[inst]   │ as?rng=bytes&amp;dom=bool(bytes::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ bool::T
-   	 \_args  │ [bytes::T][MTronException&lt;127&gt;:/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;} [/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}::T] unable to convert bool::T]][/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;} [/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}::T] unable to convert bool::T]@/sys/fail/74</code></pre>
+   	 \_args  │ [bytes::T][MTronException&lt;137&gt;:/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;} [/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}::T] unable to convert bool::T]][/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;} [/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}::T] unable to convert bool::T]@/sys/fail/74</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6927,21 +6915,20 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355856       6236   6349620   1% /run'
+==&gt;'tmpfs                    6355856       6852   6349004   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2         959786032  506407796 404550028  56% /'
-==&gt;'tmpfs                   31779268     367692  31411576   2% /dev/shm'
+==&gt;'/dev/nvme1n1p2         959786032  509572752 401385072  56% /'
+==&gt;'tmpfs                   31779268     426852  31352416   2% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779268          0  31779268   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        240   6355612   1% /run/user/1000'
+==&gt;'tmpfs                    6355852        276   6355576   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1410268348 510940196  74% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1411985372 509223172  74% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
 ==&gt;boot
-==&gt;'build-env.sh'
 ==&gt;conf
 ==&gt;'CONTRIBUTING.md'
 ==&gt;dist
@@ -6949,24 +6936,19 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;dsh-plugins
 ==&gt;'language.properties'
 ==&gt;LICENSE
+==&gt;'metatron.ide.mtron'
 ==&gt;'metatron.iml'
-==&gt;'metatron.jar'
 ==&gt;mvnw
 ==&gt;'mvnw.cmd'
 ==&gt;node_modules
 ==&gt;'opencode.json'
 ==&gt;'pom.xml'
-==&gt;'_probe'
-==&gt;'project.ide.mtron'
 ==&gt;'README.md'
 ==&gt;'RELEASE.md'
-==&gt;scratch
-==&gt;'scratch-boot.log'
 ==&gt;src
 ==&gt;target
-==&gt;worktrees
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;751</code></pre>
+==&gt;580</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7154,7 +7136,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.09:1/18/45/17/982?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.09:4/15/48/31/589?tz=-0600&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7173,7 +7155,7 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;host     ​7​
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(host){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ uri::T
-   	 \_args  │ [host][MTronException&lt;127&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]@/sys/fail/352
+   	 \_args  │ [host][MTronException&lt;137&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]@/sys/fail/352
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;port     ​8​
 ==&gt;fail::[apply failure:
    	[lhs]    │ &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
@@ -7181,7 +7163,7 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;port     ​8​
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(port){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException&lt;127&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/362
+   	 \_args  │ [port][MTronException&lt;137&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/362
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;path&gt;&gt;0     ​9​
 ==&gt;fail::[apply failure:
    	[lhs]    │ &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
@@ -7189,7 +7171,7 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;path&gt;&gt;0     �
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(path){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ uri::T
-   	 \_args  │ [path][MTronException&lt;127&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/path?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/path?tz=-0500&gt;]@/sys/fail/372
+   	 \_args  │ [path][MTronException&lt;137&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/path?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/path?tz=-0500&gt;]@/sys/fail/372
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;==[port=&gt;+1]&gt;&gt;port     ​10​
 ==&gt;fail::[apply failure:
    	[lhs]    │ &lt;//2024.12:26/09/00/00/000?tz=-0500&gt;
@@ -7197,7 +7179,7 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;==[port=&gt;+1]&gt;&gt;port 
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(port){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
    	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException&lt;127&gt;:no active space supports pattern &lt;//2024.12:26/09/00/00/000/port?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:26/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/382
+   	 \_args  │ [port][MTronException&lt;137&gt;:no active space supports pattern &lt;//2024.12:26/09/00/00/000/port?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:26/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/382
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;=?=[port=&gt;25]     ​11​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)&gt;&gt;=[q=&gt;[tz=&gt;'+0000']].as(datetime::T)     ​12​
@@ -8103,7 +8085,16 @@ mtron&gt; *g:V/1/OUT/te:hot/a/owner/name     ​3​
    	  \_pred │ []
    	[inst]   │ *g:V/1/OUT/te:hot/a/owner/name
    	 \_dom   │ #{?}::T
-   	 \_args  │ [g:V/1/OUT/te:hot/a/owner/name][Obj&lt;613&gt;:unable to convert mfail to rec::T[Obj&lt;613&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]][unable to convert mfail to rec::T[Obj&lt;613&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MFail cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MFail and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/136
+   	 \_args  │ [g:V/1/OUT/te:hot/a/owner/name][MTronException&lt;137&gt;:asRec onto a fail: apply failure:...]][asRec onto a fail: apply failure:
+   	[lhs]    │ [
+    item=&gt;'laptop',
+    total=&gt;1200.0000,
+    owner=&gt;!*g:V/2]
+   	 \_type  │ /m/rec
+   	  \_pred │ []
+   	[inst]   │ !*g:V/2
+   	 \_dom   │ #{?}::T
+   	 \_args  │ [g:V/2][Obj$Helper&lt;1026&gt;:obj does not match person::T...]]@/sys/fail/136
 mtron&gt; *g:V/1/OUT/te:cold/x/total     ​4​
 ==&gt;15.0000
 mtron&gt; *g:V/1/OUT/knows.count()     ​5​
@@ -9068,7 +9059,7 @@ mtron&gt; */sys/thread/b.stop()
      code=&gt;at(ab).plus('B'),
      loop=&gt;second::1.0000,
      state=&gt;pause]@/sys/thread/b,
-    result=&gt;'BABABABAB'@ab]@/sys/thread/b
+    result=&gt;'BABABABABAB'@ab]@/sys/thread/b
 mtron&gt; */sys/thread/a.stop()
 ==&gt;virtual::[
     code=&gt;at(ab).plus('A'),
@@ -9297,7 +9288,7 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
 
    		&lt;p&gt;&amp;nbsp;&lt;/p&gt;		&lt;h1 style="padding-left:125px;color:var(--primary)"&gt;PhaseShift Studio&lt;/h1&gt;
    &lt;img style="padding-left:100px" src="http://metatron.phaseshift.studio/images/metatron-character.png" width="500px" /&gt;
-   	&lt;script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v3d52b47920f24c319d37e2661827c42b1787588026925" integrity="sha512-d9sL6GJLXn6fInD1+TVXhTcQOsmxeHfmHAvwGDIxp5TO+uo1fiWW7mHomMj4MLRlCsJDTqXzWLHJFFlPCEIj/A==" data-cf-beacon='{"version":"2024.11.0","token":"2ed4d310d5f64c4a9118e02b0e07c623","r":1}' crossorigin="anonymous"&gt;&lt;/script&gt;
+   	&lt;script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"2ed4d310d5f64c4a9118e02b0e07c623","r":1,"spa":2}' crossorigin="anonymous"&gt;&lt;/script&gt;
    &lt;/body&gt;
    &lt;/html&gt;
    """
@@ -9329,8 +9320,8 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​3​
       [
        tag=&gt;script,
        type=&gt;'module',
-       src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v3d52b47920f24c319d37e2661827c42b1787588026925&gt;,
-       integrity=&gt;'sha512-d9sL6GJLXn6fInD1+TVXhTcQOsmxeHfmHAvwGDIxp5TO+uo1fiWW...',
+       src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495&gt;,
+       integrity=&gt;'sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWc...',
        data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2ed4d310d5f64c4a9118e02b0e0...',
        crossorigin=&gt;'anonymous']],
      style=&gt;'background-color: black;']]]
@@ -9346,7 +9337,7 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt
    	  \_pred │ []
    	[inst]   │ *&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt;][MTronException&lt;127&gt;:no mimeq query processor attached to /sys/space/http [http://#]]][no mimeq query processor attached to /sys/space/http [http://#]]@/sys/fail/708
+   	 \_args  │ [&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt;][MTronException&lt;137&gt;:no mimeq query processor attached to /sys/space/http [http://#]]][no mimeq query processor attached to /sys/space/http [http://#]]@/sys/fail/708
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​6​
 ==&gt;[html=&gt;[
     head=&gt;[
@@ -9375,8 +9366,8 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​6​
       [
        tag=&gt;script,
        type=&gt;'module',
-       src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v3d52b47920f24c319d37e2661827c42b1787588026925&gt;,
-       integrity=&gt;'sha512-d9sL6GJLXn6fInD1+TVXhTcQOsmxeHfmHAvwGDIxp5TO+uo1fiWW...',
+       src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495&gt;,
+       integrity=&gt;'sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWc...',
        data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2ed4d310d5f64c4a9118e02b0e0...',
        crossorigin=&gt;'anonymous']],
      style=&gt;'background-color: black;']]]</code></pre>
@@ -9433,7 +9424,7 @@ mtron&gt; *&lt;http://localhost:11434/api/tags?mimeq=application/x-mtron&gt;    
    	  \_pred │ []
    	[inst]   │ *http://localhost:11434/api/tags?mimeq=application/x-mtron
    	 \_dom   │ #{?}::T
-   	 \_args  │ [http://localhost:11434/api/tags?mimeq=application/x-mtron][MTronException&lt;127&gt;:no mimeq query processor attached to /sys/space/http [http://#]]][no mimeq query processor attached to /sys/space/http [http://#]]@/sys/fail/710
+   	 \_args  │ [http://localhost:11434/api/tags?mimeq=application/x-mtron][MTronException&lt;137&gt;:no mimeq query processor attached to /sys/space/http [http://#]]][no mimeq query processor attached to /sys/space/http [http://#]]@/sys/fail/710
 mtron&gt; *&lt;http://localhost:11434/api/tags&gt;.as(rec::T)     ​4​
 ==&gt;[models=&gt;[[
     name=&gt;&lt;qwen3.5:4b&gt;,
@@ -10133,9 +10124,11 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
 mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
 ==&gt;'grant'
+==&gt;'alex'
 ==&gt;'marko'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
+==&gt;3
 ==&gt;2</code></pre>
 </div>
 </div>

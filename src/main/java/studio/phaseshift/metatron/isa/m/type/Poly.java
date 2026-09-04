@@ -158,11 +158,27 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         public static Rec transformLstToRec(final Lst lhs, final fURI tid, final fURI vid) {
             return IteratorUtil.indexedStream(lhs.lstValue().iterator())
                     .map(r -> rel(jnt(r.get0()), r.get1()))
-                    .collect(new CommonUtil.RecCollector(tid, vid));
+                    .collect(new CommonUtil.RecCollector(tid, vid, () -> new TreeMap<>(CommonUtil.REC_KEY_ORDER)));
         }
 
         public static Lst transformRecToLst(final Rec lhs, final fURI tid, final fURI vid) {
-            return lst(IteratorUtil.indexedStream(lhs.recValue().entrySet().iterator())
+            final List<Map.Entry<Obj, Obj>> entries = new ArrayList<>(lhs.recValue().entrySet());
+            // int keys ascending; non-int keys stable at the tail (original map
+            // order — List.sort is stable, and this comparator never throws)
+            entries.sort((e1, e2) -> {
+                final boolean i1 = e1.getKey().isInt();
+                final boolean i2 = e2.getKey().isInt();
+                if (i1 != i2)
+                    return i1 ? 1 : -1;
+                if (!i1)
+                    return 0;
+                try {
+                    return Long.compare(((Number) e1.getKey().jvm()).longValue(), ((Number) e2.getKey().jvm()).longValue());
+                } catch (final Exception ex) {
+                    return 0;
+                }
+            });
+            return lst(IteratorUtil.indexedStream(entries.iterator())
                     .map(r -> rel(jnt(r.get0()), rel(r.get1().getKey(), r.get1().getValue())))
                     .reduce(new ArrayList<>(), (a, b) -> {
                         a.add(b);
@@ -335,7 +351,8 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                 return rhsValue;
 
             }));
-            return operation.apply(lhsClone, rhsApplied).vid(lhs.vid()).tid(lhs.tid());
+            final Obj result = operation.apply(lhsClone, rhsApplied);
+            return CommonUtil.orderIntRec(result, lhs).vid(lhs.vid()).tid(lhs.tid());
         }
 
         private static Obj updateLstRecursion(final Lst lhs, final Lst rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {

@@ -120,13 +120,6 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         if (key.isInt()) {
             final int keyIndex = key.intValue().intValue();
             final int effectiveIdx = keyIndex < 0 ? this.jvm().size() + keyIndex : keyIndex;
-            if (effectiveIdx == this.jvm().size() && !value.isNoObj()) {
-                // index == size appends — the rec.at upsert stance for lists; the ide
-                // pull grows its code list element by element this way
-                final ArrayList<Obj> newList = new ArrayList<>(this.lstValue());
-                newList.add(value);
-                return (Lst) operation.apply(this, newList);
-            }
             if (effectiveIdx < 0 || effectiveIdx >= this.jvm().size())
                 throw MTronException.of("lst index out of bounds: %d > %d", Math.abs(keyIndex), this.jvm().size());
             final ArrayList<Obj> newList = new ArrayList<>(this.lstValue());
@@ -209,7 +202,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(LST_TID).rng(URI_TID), lst(T(LST_TID.poly(URI_TID))), (lhs, inst) -> lhs.lstValue().stream().reduce(uri(""), (a, b) -> uri(a.uriValue().extend(b.uriValue())))),
                     instC(AS_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid()).c(c -> c.mult(lhs.c()))),
-                    instC(AS_INST_TID.dom(LST_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> Poly.Helper.transformLstToRec(lhs.asLst(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), null)),
+                    instC(AS_INST_TID.dom(LST_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> Poly.Helper.transformLstToRec(lhs.asLst(), inst.arg(0).vidOrTid(), null)),
                     instC(AS_INST_TID.dom(LST_TID).rng(CODE_TID), lst(T(CODE_TID)), (lhs, inst) -> code(lhs.asLst().jvm().stream().map(Obj::asInst).toList()).c(c -> c.mult(lhs.c()))),
                     instC(REVERSE_INST_TID.dom(LST_TID).rng(LST_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.asLst().jvm().reversed())),
                     instC(PLUS_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(Stream.concat(lhs.elements(), inst.arg(0).elements()).toList())),
@@ -221,7 +214,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                     instC(SPLIT_INST_TID.dom(A).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(inst.arg(0).elements().map(e -> e.apply(lhs)).toList())),
                     instC(MERGE_INST_TID.dom(LST_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.elements())),
                     instC(MERGE_INST_TID.dom(LST_TID).rng(A.maybeSome()), lst(URI_TYPE), (lhs, inst) -> uri(lhs.elements().map(e -> e.uriValue().toString()).reduce("", (a, b) -> a + inst.arg(0).uriValue().toString() + b).substring(1))),
-                    instC(MERGE_INST_TID.dom(LST_TID).rng(A.maybeSome()), lst(STR_TYPE), (lhs, inst) -> str(lhs.elements().map(Obj::strValue).reduce("", (a, b) -> a + inst.arg(0).strValue() + b).substring(1))),
+                    instC(MERGE_INST_TID.dom(LST_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(lhs.elements().map(Obj::strValue).reduce("", (a, b) -> a + inst.arg(0).strValue() + b).substring(1))),
                     instC(HAS_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(ALL), T(ALL).maybe(), T(ALL).maybe()), (lhs, inst) -> lhs.<Lst>as().elements().anyMatch(r -> r.test(inst.arg(0)) || r.test(inst.arg(1)) || r.test(inst.arg(2))) ? lhs : noobj()),
                     instC(WITHIN_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(ALL_STAR)), (lhs, inst) -> lst(inst.arg(0).apply(objs(lhs.elements().flatMap(Obj::elements))).stream().toList())),
                     instC(SUM_INST_TID.dom(LST_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Lst) a).plus((Lst) b)).lstValue()), lst()),
