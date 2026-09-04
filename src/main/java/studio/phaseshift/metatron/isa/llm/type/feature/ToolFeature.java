@@ -2,8 +2,10 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.service.tool.ToolProvider;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
+import studio.phaseshift.metatron.isa.llm.mToolProvider;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
@@ -15,14 +17,14 @@ import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_CLIENT_TYPE;
@@ -48,11 +50,20 @@ public class ToolFeature extends AbstractFeature {
     /**
      * The registered tools — canonical mTool elements, upserted by name.
      */
-    private final List registeredTools = new ArrayList();
+    private final mToolProvider toolProvider = new mToolProvider();
+
+    public void addToolProvider(final ToolProvider toolProvider) {
+        this.toolProvider.addToolProvider(toolProvider);
+    }
+
+    public ToolProvider getToolProvider() {
+        return this.toolProvider;
+    }
+
     /**
      * The mcp clients gathered from this feature's {@code tool} config surface.
      */
-    private final List<McpClient> mcpClients = new ArrayList<>();
+    private final Set<McpClient> mcpClients = new HashSet<>();
 
     public ToolFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -67,8 +78,7 @@ public class ToolFeature extends AbstractFeature {
      * @param tool the tool to register
      */
     public void addTool(final mTool tool) {
-        this.registeredTools.removeIf(t -> ((Obj) t).<mTool>as().name().equals(tool.name()));
-        this.registeredTools.add(tool);
+        this.toolProvider.addTool(tool);
     }
 
     /**
@@ -77,7 +87,7 @@ public class ToolFeature extends AbstractFeature {
      * @return the registered tools
      */
     public Lst tools() {
-        return lst((List) this.registeredTools);
+        return this.toolProvider.getTools().stream().collect(new CommonUtil.LstCollector());
     }
 
     @Override
@@ -93,8 +103,7 @@ public class ToolFeature extends AbstractFeature {
                         this.addTool((mTool) t);
                     } else if (t.isRec() && t.test(MCP_CLIENT_TYPE)) {
                         final McpClient client = Rec.wrap(t.as(), mcpClient.class).client();
-                        if (!this.mcpClients.contains(client))
-                            this.mcpClients.add(client);
+                        this.mcpClients.add(client);
                     } else
                         this.addTool(mTool.tool(t));
 
@@ -110,17 +119,9 @@ public class ToolFeature extends AbstractFeature {
                     uri(DESC), str("tool extensions intended for llm use"),
                     uri(CONTENT), str("any mtron inst can be added to tool feature and it will be mapped to an mcp tool")))));
         // ── 3. project the registry onto the agent's LC4j tool bag ──
-        LOG.status(DEBUG, "registering %s tools", this.registeredTools.size());
-        this.registeredTools.forEach(t -> {
-            final mTool tt = ((Obj) t).<mTool>as();
-            try {
-                agent.addTool(tt.toolSpecification());
-            } catch (final Exception e) {
-                this.logger().warn("unable to register tool %s (ignoring): %s", tt.name(), e.getMessage());
-            }
-        });
+        LOG.status(DEBUG, "registering %s tools", this.toolProvider.getTools().size());
         if (!this.mcpClients.isEmpty())
-            agent.addToolProvider(McpToolProvider.builder().mcpClients(this.mcpClients).build());
+            this.addToolProvider(McpToolProvider.builder().mcpClients(new ArrayList<>(this.mcpClients)).build());
         return noobj();
     }
 

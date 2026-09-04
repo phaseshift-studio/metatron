@@ -419,13 +419,13 @@ public final class QCollection {
     public final static Rec NO_DOCS = rec(mutableMap(uri(DESC), str(NO_DOCS_STRING)), DOCS_TID, null);
 
     public static boolean isNoDocs(final Obj obj) {
-        if (obj.isNoObj())
+        if (obj.isNoObj() || !obj.isRec())
             return true;
         return obj.asRec().at(DESC).orElse(str("okay")).equals(str(NO_DOCS_STRING));
     }
 
     public static boolean hasDocs(final Obj obj) {
-        if (obj.isNoObj())
+        if (obj.isNoObj() || !obj.isRec())
             return false;
         return !obj.asRec().at(DESC).orElse(str(NO_DOCS_STRING)).equals(str(NO_DOCS_STRING));
     }
@@ -877,7 +877,7 @@ public final class QCollection {
         }
 
         public static Docs doc(final Rec docRec) {
-            return new Docs(docRec.jvm(), docRec.tid(), docRec.vid());
+            return docRec instanceof Docs ? (Docs) docRec : new Docs(docRec.jvm(), docRec.tid(), docRec.vid());
         }
 
         public static Docs doc(final Obj inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
@@ -892,7 +892,7 @@ public final class QCollection {
         }
 
         public static Docs doc(final Inst inst) {
-            return Router.readFromSpace(inst.tid().addQ(DOCQ)).orElse(NO_DOCS).as();
+            return doc(Router.readFromSpace(inst.tid().addQ(DOCQ)).stream().findFirst().orElse(NO_DOCS).asRec());
         }
     }
 }

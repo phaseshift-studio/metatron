@@ -120,6 +120,13 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         if (key.isInt()) {
             final int keyIndex = key.intValue().intValue();
             final int effectiveIdx = keyIndex < 0 ? this.jvm().size() + keyIndex : keyIndex;
+            if (effectiveIdx == this.jvm().size() && !value.isNoObj()) {
+                // index == size appends — the rec.at upsert stance for lists; the ide
+                // pull grows its code list element by element this way
+                final ArrayList<Obj> newList = new ArrayList<>(this.lstValue());
+                newList.add(value);
+                return (Lst) operation.apply(this, newList);
+            }
             if (effectiveIdx < 0 || effectiveIdx >= this.jvm().size())
                 throw MTronException.of("lst index out of bounds: %d > %d", Math.abs(keyIndex), this.jvm().size());
             final ArrayList<Obj> newList = new ArrayList<>(this.lstValue());

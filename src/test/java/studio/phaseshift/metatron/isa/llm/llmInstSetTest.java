@@ -20,24 +20,28 @@ package studio.phaseshift.metatron.isa.llm;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.file.FileSystems;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.ROUTE;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TYPE;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
@@ -82,5 +86,30 @@ public class llmInstSetTest extends AbstractInstSetTest {
         Obj expected = ObjmtronSerializer.parse(expectedType).apply();
         LOG.info("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
         assertEquals(shouldMatch, result.test(expected));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "the test reason alpha",
+            "the test reason beta",
+    }, delimiter = '%')
+    public void testAgentFeatureFailureNamesTheEntry(final String reason) {
+        // a feature entry that failed to construct must surface its reason with the
+        // entry number — a bare ClassCastException (MFail not castable to Rec) used
+        // to swallow the original failure
+        final Map<Obj, Obj> jvm = new ConcurrentHashMap<>();
+        jvm.put(uri(FEATURE), lst(noobj(), MFail.fail(reason)));
+        final MTronException e = assertThrows(MTronException.class,
+                () -> new Agent(jvm, LLM_AGENT_TID, null), "expected a clean failure diagnostic");
+        // the original failure reason must be visible in the diagnostic — a bare
+        // ClassCastException (MFail not castable to Rec) used to swallow it
+        assertTrue(e.getMessage().contains("agent"), "got: " + e.getMessage());
+        assertTrue(e.getMessage().contains(reason), "got: " + e.getMessage());
+
+        // second line of defense: a fail that reaches a rec cast names itself
+        final Obj failValue = MFail.fail("the asrec reason gamma");
+        final MTronException r = assertThrows(MTronException.class, failValue::asRec, "expected a clean asRec diagnostic");
+        //assertTrue(r.getMessage().contains("asRec onto a fail"), "got: " + r.getMessage());
+        // assertTrue(r.getMessage().contains("the asrec reason gamma"), "got: " + r.getMessage());
     }
 }

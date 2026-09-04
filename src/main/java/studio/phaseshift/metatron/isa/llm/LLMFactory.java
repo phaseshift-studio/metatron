@@ -39,6 +39,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.parser.JsonSchemaGenerator;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.feature.CostFeature;
 import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
@@ -57,8 +58,10 @@ import java.util.Optional;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MODEL_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_THINK_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.noobjRec;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.rec;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.rec0;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
@@ -263,9 +266,11 @@ public final class LLMFactory {
                                 .logger(Graphitty.log(OllamaStreamingChatModel.class).logger(Level.WARN));
                 if (hasResponseFormat)
                     builder = builder.responseFormat(createResponseFormat(responseFormat2));
-                final CostCalculator calculator = agent.costCalculator().get();
-                if (calculator != null)
-                    builder.listeners(List.of(calculator));
+                if (agent.hasFeature(LLM_COST_FEATURE_TID)) {
+                    final CostCalculator calculator = agent.feature(LLM_COST_FEATURE_TID).<CostFeature>as().getCalculator();
+                    if (calculator != null)
+                        builder.listeners(List.of(calculator));
+                }
                 yield builder.build();
             }
             case OPENAI -> {
@@ -293,9 +298,11 @@ public final class LLMFactory {
                         .logger(Graphitty.log(OpenAiStreamingChatModel.class).logger(Level.WARN))
                         .timeout(Duration.ofSeconds(60))
                         .responseFormat(openAiFormat);
-                final CostCalculator calculator = agent.costCalculator().get();
-                if (calculator != null)
-                    builder.listeners(List.of(calculator));
+                if (agent.hasFeature(LLM_COST_FEATURE_TID)) {
+                    final CostCalculator calculator = agent.feature(LLM_COST_FEATURE_TID).<CostFeature>as().getCalculator();
+                    if (calculator != null)
+                        builder.listeners(List.of(calculator));
+                }
                 yield builder.build();
             }
             case ANTHROPIC -> {
@@ -309,9 +316,11 @@ public final class LLMFactory {
                                 // .listeners(model.cost().isPresent() ? List.of(new CostCalculator(model.cost().get())) : null)
                                 .logger(Graphitty.log(AnthropicStreamingChatModel.class).logger(Level.WARN))
                                 .responseFormat(createResponseFormat(responseFormat));
-                final CostCalculator calculator = agent.costCalculator().get();
-                if (calculator != null)
-                    builder.listeners(List.of(calculator));
+                if (agent.hasFeature(LLM_COST_FEATURE_TID)) {
+                    final CostCalculator calculator = agent.feature(LLM_COST_FEATURE_TID).<CostFeature>as().getCalculator();
+                    if (calculator != null)
+                        builder.listeners(List.of(calculator));
+                }
                 yield builder.build();
             }
 
@@ -332,8 +341,8 @@ public final class LLMFactory {
             case OLLAMA -> OllamaEmbeddingModel.builder()
                     .baseUrl(model.host().uriValue().toString())
                     .modelName(modelName)
-                    .logRequests(true)
-                    .logResponses(true)
+                    .logRequests(false)
+                    .logResponses(false)
                     .build();
             case OPENAI -> OpenAiEmbeddingModel.builder()
                     .apiKey(model.apiKey().strValue())

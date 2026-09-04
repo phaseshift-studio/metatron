@@ -1,0 +1,26 @@
+#!/bin/bash
+# bin/agent-ide — the agent ide app (local environment, no docker).
+#
+# Thin app shell, same shape as bin/drstynx: banner + BOOT_FILE + exec
+# bin/metatron.  bin/metatron handles the build gate (rebuilds the jar when
+# sources changed) and the JVM flags, so this never drifts from the source.
+#
+# Docker counterpart (same boot file, isolated container):
+#   bin/metatron-docker agent-ide.boot.mtron
+# -------------------------------------------------------------------
+set -euo pipefail
+
+# ── banner ──────────────────────────────────────────────────────────
+cat <<'EOF'
+  ____ __    _  _  ___    ____  ____   ____
+ |_  _| |_  (_) _\ \ / / / _ \ |  _ \ |  _ \
+   | || ' \ | | ' \ \ /  | | | || |  || | | |
+   |_||_||_||_|_||_\_/_/ |_| |_|\___/ |____/
+       the agent ide — a metatron app
+EOF
+
+# ── launch (app-specific: change these) ─────────────────────────────
+BOOT_FILE="boot/agent-ide.boot.mtron"
+BOOT_ARGS="[log=>info]"
+
+exec "$(dirname "$(readlink -f "$0")")/metatron" -b "$BOOT_FILE" "$BOOT_ARGS"

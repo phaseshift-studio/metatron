@@ -6,10 +6,13 @@
      fs: fsspace below (rooted at cwd = /app in the container) pulls the modules
      and exposes the full container filesystem to mtron.
      Container run (see dist/docker/README.md):
+     
        docker run ... ghcr.io/phaseshift-studio/metatron \
-         "[user=><name>,
-           web=>[http=><http://0.0.0.0:8777>,ws=><ws://0.0.0.0:8555>],
-           data=><~/.metatron>,mcp=>[...]]"
+         "[user    => <name>,                            \
+           console => true,                              \
+           web     => [http => <http://0.0.0.0:8777>,    \
+                       ws   => <ws://0.0.0.0:8555>],     \
+           data    => <~/.metatron>,mcp=>[...]]"
 ==]
 print("""
                        PhaseShift Studio Presents
@@ -44,5 +47,7 @@ fsspace::[pattern => fs:#,
 *boot/args/web/ws.<fs:boot/space/web/ws.mtron>();
 <fs:boot/space/tble/sqlite.mtron>(user=>!*boot/args/user,storage=>!(*boot/args/data.else(/tmp)));
 
-print('{{g}}docker boot complete — ws 0.0.0.0:8555, http 0.0.0.0:8777{{X}}\n');
-print('{{g}}a simple remote console: {{y}}wsplus {{b}}ws://localhost:8555/mtron{{X}}\n')
+*boot/args/console.?=true.
+  else(print('{{g}}docker boot complete — ws 0.0.0.0:8555, http 0.0.0.0:8777{{X}}\n').
+       print('{{g}}a simple remote console: {{y}}wsplus {{b}}ws://localhost:8555/mtron{{X}}\n')).
+       -<[[=>]@/sys/console.as(console::T)];

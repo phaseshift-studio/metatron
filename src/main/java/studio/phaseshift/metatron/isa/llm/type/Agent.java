@@ -18,29 +18,19 @@
 
 package studio.phaseshift.metatron.isa.llm.type;
 
-import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
-import dev.langchain4j.service.tool.ToolExecutor;
-import dev.langchain4j.service.tool.ToolProvider;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.llm.mToolProvider;
-import studio.phaseshift.metatron.isa.llm.type.feature.ChatFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
-import studio.phaseshift.metatron.isa.llm.type.feature.MessageFeature;
-import studio.phaseshift.metatron.isa.llm.type.feature.SystemFeature;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
@@ -84,28 +74,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class Agent extends MRec {
 
     private final AtomicReference<Tuple.Pair<fURI, fURI>> currentHook = new AtomicReference<>(null);
-    /**
-     * Holds the {@link CostCalculator} created during streaming so that
-     * Phase 4 and features can read accumulated token costs after chat completes.
-     * Set by {@code CostFeature.onBeforeChat} or by {@link LLMFactory#createChatInteraction}.
-     */
-    private final AtomicReference<CostCalculator> costCalculator = new AtomicReference<>(null);
     final AtomicBoolean interrupt = new AtomicBoolean(false);
     final AtomicBoolean first = new AtomicBoolean(true);
-    private final mToolProvider toolProvider = new mToolProvider();
-
-    public void addToolProvider(final ToolProvider toolProvider) {
-        this.toolProvider.addToolProvider(toolProvider);
-    }
-
-    public void addTool(final Tuple.Pair<ToolSpecification, ToolExecutor> tool) {
-        this.toolProvider.addTool(mTool.toolToMtronDoc(tool.get0(), tool.get1()));
-    }
-
-    public QCollection.Docs addTool(final QCollection.Docs instSpec) {
-        this.toolProvider.addTool(instSpec);
-        return instSpec;
-    }
 
     /**
      * The current user message — single source of truth, mutable by features.
@@ -209,13 +179,6 @@ public class Agent extends MRec {
         return null;
     }
 
-    /**
-     * Accessor for the cost calculator so features and LLMFactory can share it.
-     */
-    public AtomicReference<CostCalculator> costCalculator() {
-        return this.costCalculator;
-    }
-
     // ── Factory ────────────────────────────────────────────────────
 
     public static Agent agent(final Rec config) {
@@ -270,7 +233,17 @@ public class Agent extends MRec {
     }
 
     public Lst features() {
-        return this.at(FEATURE).orElse(lst());
+        final Lst feats = this.at(FEATURE).orElse(lst());
+        // A feature entry that failed to construct (an MFail) would otherwise blow
+        // up later as a raw cast (MFail not castable to Rec) with the original
+        // cause lost — surface it here while we still have it at hand.
+        int entry = 1;
+        for (final Obj f : feats.elements().toList()) {
+            if (f instanceof Fail failure)
+                throw MTronException.of("agent feature entry %d failed to construct: %s", entry, failure.message());
+            entry++;
+        }
+        return feats;
     }
 
     /**
@@ -416,7 +389,7 @@ public class Agent extends MRec {
                         //.executeToolsConcurrently(ThreadExecutor.instance())
                         //.maxToolCallingRoundTrips(10)
                         .storeRetrievedContentInChatMemory(true)
-                        .toolProvider(this.toolProvider)
+                        .toolProvider(this.hasFeature(LLM_TOOL_FEATURE_TID) ? this.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().getToolProvider() : new mToolProvider())
                         .toolExecutionErrorHandler((error, context) -> {
                             if (this.has(TOOL) && this.feature(LLM_TOOL_FEATURE_TID).asRec().has(ON_ERROR)) {
                                 this.feature(LLM_TOOL_FEATURE_TID).asRec().at(ON_ERROR).asInst().args(lst(this, fail(error)));

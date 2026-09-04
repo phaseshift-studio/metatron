@@ -24,36 +24,41 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
-import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
-import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class mToolProvider implements ToolProvider {
 
-    private final Set<QCollection.Docs> toolSet = new LinkedHashSet<>();
+    private final Set<mTool> toolSet = new LinkedHashSet<>();
     private final Set<ToolProvider> providers = new LinkedHashSet<>();
 
     public void addToolProvider(final ToolProvider provider) {
         this.providers.add(provider);
     }
 
-    public void addTool(final QCollection.Docs instSpec) {
-        this.toolSet.add(instSpec);
+    public void addTool(final mTool tool) {
+        this.toolSet.removeIf(t -> t.name().equals(tool.name()));
+        this.toolSet.add(tool);
+    }
+
+    public Set<mTool> getTools() {
+        return this.toolSet;
     }
 
     @Override
     public ToolProviderResult provideTools(final ToolProviderRequest request) {
-        final Map<ToolSpecification, ToolExecutor> map = this.toolSet.stream().map(mTool::mtronInstToolSpecification).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1, (a, b) -> a, LinkedHashMap::new));
+        final Map<ToolSpecification, ToolExecutor> map = new LinkedHashMap<>();
         this.providers.forEach(p -> map.putAll(p.provideTools(request).tools()));
+        this.toolSet.forEach(t -> {
+            map.put(t.toolSpecification().get0(), t.toolSpecification().get1());
+        });
         return new ToolProviderResult(map);
     }
 

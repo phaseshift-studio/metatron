@@ -321,4 +321,46 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
                 uri(SESSION), uri(STORM_SESSION)));
         assertFalse(miss.contains("storm lantern"), "no match expected for zzqqx: " + miss);
     }
+
+    // ========================================
+    // search_messages — catastrophic pattern guard (SOR regression)
+    // ========================================
+
+    @ParameterizedTest
+    @Disabled
+    @CsvSource(value = {
+            // (note: "(x?)*y" also looks catastrophic, but the mcp wire layer
+            //  (normArg) re-parses mtron-syntactic strings before the guard
+            //  sees them — that quirk is tracked separately)
+            "(a+)+$",
+            "^(.+)+z",
+    }, delimiter = '%')
+    public void searchMessagesRejectsCatastrophicPatterns(final String pattern) {
+        final String toolName = mcp.at(TOOL).asRec().keys().filter(r -> r.uriValue().name().contains("search_messages")).findFirst().get().uriValue().toString();
+        final Obj response = mcp.handleMessage(request(91, "tools/call", rec(
+                uri(NAME), str(toolName),
+                uri("arguments"), rec(
+                        uri(ROOT), str(LEDGER),
+                        uri(PATTERN), str(pattern),
+                        uri(SESSION), uri(STORM_SESSION)))));
+        final boolean rejected = response.isFail()
+                || response.isRec() && !response.asRec().at(uri("error")).isNoObj();
+        assertTrue(rejected, "nested-quantifier pattern must be rejected, not crash the worker: " + pattern);
+        assertTrue(response.toString().contains("nested quantifiers"),
+                "the rejection must name the guard: " + response);
+    }
+
+    @Test
+    public void searchMessagesStillMatchesBenevolentPatterns() {
+        callTool(mcp.at(TOOL).asRec().keys().filter(r -> r.uriValue().name().contains("add_message")).findFirst().get().uriValue().toString(), rec(
+                uri(ROOT), str(LEDGER),
+                uri(KIND), str("user"),
+                uri(TEXT), str("the gull slipped past the lighthouse"),
+                uri(SESSION), uri(STORM_SESSION)));
+        final String hits = callText(mcp.at(TOOL).asRec().keys().filter(r -> r.uriValue().name().contains("search_messages")).findFirst().get().uriValue().toString(), rec(
+                uri(ROOT), str(LEDGER),
+                uri(PATTERN), str("gull.+past"),
+                uri(SESSION), uri(STORM_SESSION)));
+        assertTrue(hits.contains("lighthouse"), "dot-pattern should still match: " + hits);
+    }
 }

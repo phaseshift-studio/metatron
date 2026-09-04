@@ -43,8 +43,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.*;
 import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
@@ -262,9 +261,11 @@ public class mInstSet extends AbstractInstSet {
             .tid(REC_TID)
             .vid(TRACER_TYPE_TID)
             .isaPredicate(rec(
-                    uri(Tracer.stack.name()), BOOL_TYPE))
+                    uri(Tracer.mtron_stack.name()), BOOL_TYPE,
+                    uri(Tracer.java_stack.name()), BOOL_TYPE))
             .constructor(stages -> rec(
-                    uri(Tracer.stack.name()), stages.asRec().at(uri(Tracer.stack.name())).orElse(BOOL_FALSE)))
+                    uri(Tracer.mtron_stack.name()), stages.asRec().at(uri(Tracer.mtron_stack.name())).orElse(BOOL_TRUE),
+                    uri(Tracer.java_stack.name()), stages.asRec().at(uri(Tracer.java_stack.name())).orElse(BOOL_FALSE)))
             .create();
     
    /* public static final Type MONO_TYPE = Type.Builder.build()
@@ -394,7 +395,8 @@ public class mInstSet extends AbstractInstSet {
                                 remove stages accordingly for increased performance.
                                 """),
                         docWrap(TRACER_TYPE, null, null, mutableMap(
-                                        uri(Tracer.stack.name()), "render java stack traces on uncaught fail::T"),
+                                        uri(Tracer.mtron_stack.name()), "render mtron stack traces on uncaught fail::T",
+                                        uri(Tracer.java_stack.name()), "render java stack traces on uncaught fail::T"),
                                 """
                                 diagnostic stages for surfacing internal java state.
                                 useful for debugging native java issues that mtron instructions

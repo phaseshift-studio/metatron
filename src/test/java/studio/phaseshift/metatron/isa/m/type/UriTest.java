@@ -70,6 +70,17 @@ public class UriTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "a/b/c.split(/)                  % [a,b,c]",
+            "a/b/c.split(f(\"(a+)+$\"))      % <ERROR>",
+            "a/b/c.split(f(\"(x?)*y\"))      % <ERROR>",
+            "a/b/c.split(f(\"(.*)*\"))        % <ERROR>",
+    }, delimiter = '%')
+    public void testSplitRegexGuard(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "a.pow(0)                         % <.>",
             "/a.pow(1)                        % /a",
             "/a/.pow(1)                       % /a/",

@@ -35,7 +35,8 @@ public class ExecutionStack {
         create_type,
         resolve_inst,
         resolve_inst_args,
-        eval_inst
+        apply_inst,
+        apply_args
     }
 
     private final Deque stack = new ArrayDeque<>();
@@ -68,7 +69,7 @@ public class ExecutionStack {
         }
     }
 
-    public String generateStackTrace() {
+    public static String generateStackTrace() {
         Deque<ExecutionState> stack = THREAD_EXECUTION_STACK.get();
         if (null == stack)
             return "no execution state stack";

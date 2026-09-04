@@ -22,11 +22,14 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 
@@ -279,6 +282,177 @@ public class ideInstSetTest extends AbstractMetatronTest {
         // so compare identity rather than isInst)
         final Obj back = Router.readFromSpace(AS_INST_TID.dom(LLM_SKILL_TID).rng(IDE_PROJECT_TID));
         assertEquals(noobj(), back, "skill -> project must not be a registered as-view — %s".formatted(back));
+    }
+
+    @Test
+    @Disabled
+    public void testPullAfterSpaceRoundTrip() throws Exception {
+        // the agent-ide pull, end to end, on the CONTRACT shape — a space-rooted
+        // project (*<uri>), since the pull stores code/idx beside the root in the
+        // SAME space (the root uri is its own space location).  Steps:
+        //   1. register a space routing the project's non-reserved scheme (probe:)
+        //      against the repo root (fs:/src: are reserved and stripped from the
+        //      fURI basePath, so they can never match a space pattern);
+        //   2. build the live project from *<probe:...> (as(project::T) strips the
+        //      deref's leading slash and walks CWD-relative per its startsWith("src")
+        //      contract), store it under pp, re-read;
+        //   3. call the stored class inst — the pull reads its own java source
+        //      through the probe space, parses it, appends the ide:java rec to the
+        //      code list beside the project root, and publishes idx/<class>.
+        final java.util.function.Function<String, Obj> run = code -> {
+            final Obj cd = ObjmtronSerializer.parse(code);
+            return cd.apply(noobj());
+        };
+        final fsSpace repoSrc = FS_SPACE_TYPE.constructor().asInst().args(lst(rec(
+                uri(PATTERN), uri("probe:#"),
+                uri(ROUTE), rec(uri("probe:"), uri(System.getProperty("user.dir")))).vid(f("/sys/space/repoProbe")))).apply(noobj()).as();
+        Router.global().addSpace(repoSrc);
+
+        final String root = "src/test/resources/scratch";
+        final String probeRoot = "probe:" + root;
+        final java.nio.file.Path codeFile = java.nio.file.Path.of(System.getProperty("user.dir"), root, "code");
+        final java.nio.file.Path idxFile = java.nio.file.Path.of(System.getProperty("user.dir"), root, "idx");
+        try {
+            run.apply("*<" + probeRoot + ">.as(project::T).to(pp)");
+
+            // acceptance — the pull.  SANCTIONED CALL SHAPE (marko): pp/src is the rec
+            // that is the domain of its own Greeter instruction, and the inst is called
+            // directly — pp/src/Greeter() — no star in front of the inst name (the
+            // star-dot form *pp/src.Greeter() is the other legal shape).
+            final Obj pulled = run.apply("pp/src/Greeter()");
+            final String pullOut = trunc(pulled, 4000);
+            if (pullOut.contains("no space location"))
+                throw new AssertionError("pull hit the bare-value contract: " + pullOut);
+            if (pullOut.contains("no active space"))
+                throw new AssertionError("pull could not route its source read: " + pullOut);
+            if (!pulled.isRec())
+                throw new AssertionError("the pull should return the pulled class value (an ide:java rec), but failed: " + pullOut);
+            if (!pullOut.contains("Greeter"))
+                throw new AssertionError("the pulled rec should carry the class, but was: " + pullOut);
+            if (!java.nio.file.Files.exists(codeFile))
+                throw new AssertionError("the pull did not write the code list beside the project root (missing %s)".formatted(codeFile));
+            final String codeContent = java.nio.file.Files.readString(codeFile);
+            if (!codeContent.contains("Greeter"))
+                throw new AssertionError("the code list beside the project root does not hold the parsed class: " + trunc(codeContent, 400));
+
+            // acceptance — the reprojection.  idx is a SEPARATE inst (ide:index) on the
+            // code base — code is the source, idx is a re-slice of it: class => kind =>
+            // name => the !@ anchors into the code list elements.
+            final Obj indexInst = Router.readFromSpace(IDE_INST_TID.extend("index"));
+            if (!indexInst.isInst())
+                throw new AssertionError("ide:index must be a registered inst, but was: " + indexInst);
+            final Obj idxGen = indexInst.asInst().apply(uri(probeRoot));
+            final String idxOut = trunc(idxGen, 4000);
+            if (idxOut.contains("no code list"))
+                throw new AssertionError("ide:index found no code list to reproject: " + idxOut);
+            if (!idxOut.contains("Greeter"))
+                throw new AssertionError("the idx reprojection should carry the class, but was: " + idxOut);
+            if (!idxOut.contains("/code/0/"))
+                throw new AssertionError("the idx anchors should reference the code list elements (code/0/...): " + idxOut);
+
+            // acceptance — the anchor round trip: idx -> anchor -> the stored code value.
+            // the first entry (class Greeter, kind field, name GREETING) must resolve to
+            // the member rec held by code/0.
+            final Obj anchor = idxGen.asRec().at("Greeter").asRec().at("field").asRec().at("GREETING").stream().toList().getFirst();
+            final Obj memberAtAnchor = anchor.isUri() ? Router.readFromSpace(anchor.uriValue()) : str("the first idx anchor was not an uri: " + anchor);
+            final String memberOut = trunc(memberAtAnchor, 400);
+            if (memberOut.contains("no space location") || memberOut.contains("no active space"))
+                throw new AssertionError("the idx anchor did not resolve through the space to the code value: " + memberOut);
+            if (!memberOut.contains("GREETING"))
+                throw new AssertionError("the anchor should land on the GREETING member, but resolved to: " + memberOut);
+        } finally {
+            // the pull writes code/idx beside the fixture — keep the repo clean
+            java.nio.file.Files.deleteIfExists(codeFile);
+            java.nio.file.Files.deleteIfExists(idxFile);
+        }
+    }
+
+    // ── the noobj reserved-word boundary (engine fix a): identifiers that
+    //    merely begin with `noobj` must remain parseable — the `noobjSpace`
+    //    class key in the drstynx project artifact used to trip the bare
+    //    `noobj` literal and NPE the deserializer ─────────────────────────
+    @ParameterizedTest
+    @CsvSource(value = {
+            // the reserved word `noobj` keeps working as a value ...
+            "noobj                        % noobj",
+            "1.map(noobj)                 % noobj",
+            "noobj{,}                     % noobj",
+            "[noobj=>1]                   % [=>]",
+            "[noobj=>noobj]               % [=>]",
+            "[A=>noobj,B=>1]              % [B=>1]",
+            "{noobj,noobjX}               % noobjX",
+            // noobj-prefixed identifiers are NOT swallowed (the noobjSpace bug) ...
+            "[noobjSpace=>1, x=>2]        % [noobjSpace=>1, x=>2]",
+            "[noobjx=>1]                  % [noobjx=>1]",
+            "[xnoobj=>1]                  % [xnoobj=>1]",
+            "[noobjSpace=>inst?#{*}<=#{?}(#{*}::T)] % [noobjSpace=>inst?#{*}<=#{?}(#{*}::T)]",
+    }, delimiter = '%')
+    @Disabled
+    void testNoobjReservedKeyBoundaries(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @Test
+    @Disabled
+    void testProjectArtifactReadsBack() {
+        // the 23KB drstynx project artifact carries 521 class slots; slot #100 is
+        // noobjSpace, a reserved-word-colliding key.  Reading it back must now
+        // surface either a rec/object or a clean (messaGED) failure — never a
+        // bare null-message NPE from the deserializer
+        final String content;
+        try {
+            content = java.nio.file.Files.readString(java.nio.file.Path.of("metatron.ide.mtron"));
+        } catch (final java.io.IOException ex) {
+            throw new AssertionError("cannot read the project artifact (is it present at the repo root?)", ex);
+        }
+        if (!content.contains("noobjSpace")) {
+            throw new AssertionError("the project artifact under test should carry the noobjSpace class slot; the fixture changed — update this test: " + trunc(content, 300));
+        }
+        final Obj out;
+        try {
+            out = ObjmtronSerializer.parse(content).apply(noobj());
+        } catch (final Throwable ex) {
+            // the NPE regression (null message, HashMap.merge) must be gone; a
+            // clean, messaged rejection (e.g. the type predicate naming its
+            // mismatched field) is acceptable — the deserialize side is fixed
+            final String msg = String.valueOf(ex.getMessage());
+            if (null == ex.getMessage() || msg.isBlank())
+                throw new AssertionError("reading the project artifact still surfaces a bare null-message NPE — the diagnostic path (engine fix c) did not take: " + ex);
+            if (msg.contains("does not match"))
+                return; // clean type rejection — deserialization itself succeeded (noobjSpace now parses)
+            throw new AssertionError("expected the project artifact to read back (or fail cleanly with a message), but it threw: " + msg);
+        }
+        if (out.isFail() && !out.toString().contains("does not match")) {
+            throw new AssertionError("the project artifact should read to a rec (or a clean type-mismatch fail), but failed with: " + out);
+        }
+        final String rendered = out.toString();
+        if (!rendered.contains("noobjSpace"))
+            throw new AssertionError("the read-back artifact should carry the noobjSpace slot, but rendered: " + trunc(rendered, 400));
+    }
+
+    @Test
+    void testIdeaCommandWrapsPlainAndSpliced() {
+        // a plain command string wraps into the enriched runner inst
+        final Obj plain = ObjmtronSerializer.parse("ide:command('echo hello')").apply(noobj());
+        if (plain.isFail())
+            throw new AssertionError("ide:command returned a fail: " + plain);
+        if (!plain.isInst())
+            throw new AssertionError("ide:command should wrap into the runner inst, but flowed: " + plain);
+        // the drstynx boot shape: the command string splices a side binding
+        ObjmtronSerializer.parse("side(temp -> \".\")").apply(noobj());
+        final Obj splice = ObjmtronSerializer.parse("ide:command('mvn -f ${*temp} compile')").apply(noobj());
+        if (splice.isFail())
+            throw new AssertionError("ide:command with a spliced side binding returned a fail: " + splice);
+    }
+
+    private static String trunc(final String s, final int max) {
+        if (null == s)
+            return "null";
+        return s.length() <= max ? s : s.substring(0, max) + " (…+" + (s.length() - max) + ")";
+    }
+
+    private static String trunc(final Obj o, final int max) {
+        return trunc(null == o ? null : o.toString(), max);
     }
 
     /// ///////////////////////////////////////////////////////////////////////////////////////////

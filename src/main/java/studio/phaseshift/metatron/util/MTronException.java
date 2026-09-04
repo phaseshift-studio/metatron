@@ -18,10 +18,12 @@
 
 package studio.phaseshift.metatron.util;
 
+import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -112,6 +114,14 @@ public class MTronException extends RuntimeException {
                 causeSummary(cause)), cause);
     }
 
+    private static MTronException tracerThrow(final MTronException e) {
+        if (Tracer.mtron_stack.enabled())
+            Graphitty.log(Tracer.class).error(ExecutionStack.generateStackTrace());
+        if (Tracer.java_stack.enabled())
+            e.printStackTrace();
+        return e;
+    }
+
     public static MTronException of(final Throwable cause) {
         if (cause instanceof MTronException)
             return (MTronException) cause;
@@ -120,26 +130,26 @@ public class MTronException extends RuntimeException {
     }
 
     public static MTronException of(final Throwable cause, final String format, final Object... args) {
-        return new MTronException(Graphitty.string(args.length == 0 ? format : format.formatted(args)), convert(cause));
+        return tracerThrow(new MTronException(Graphitty.string(args.length == 0 ? format : format.formatted(args)), convert(cause)));
     }
 
     public static MTronException of(final String format, final Object... args) {
-        return new MTronException(Graphitty.string(args.length == 0 ? format : format.formatted(args)));
+        return tracerThrow(new MTronException(Graphitty.string(args.length == 0 ? format : format.formatted(args))));
     }
 
     public static MTronException of(final fURI source, final String format, final Object... args) {
-        return new MTronException(args.length == 0
+        return tracerThrow(new MTronException(args.length == 0
                 ? "[%s] %s".formatted(source, format)
-                : "[%s] %s".formatted(source, Graphitty.string(format.formatted(args))));
+                : "[%s] %s".formatted(source, Graphitty.string(format.formatted(args)))));
     }
 
     public static MTronException of(final Object throwableOrformat, final Object... args) {
         //if (throwableOrformat instanceof Throwable)
         //   ((Throwable) throwableOrformat).printStackTrace();
-        return throwableOrformat instanceof Throwable ?
+        return tracerThrow(throwableOrformat instanceof Throwable ?
                 new MTronException(Graphitty.string(args.length <= 1 ? (String) args[0] : ((String) args[0]).formatted(Arrays.copyOfRange(args, 1, args.length))),
                         convert((Throwable) throwableOrformat)) :
-                new MTronException(Graphitty.string(args.length == 0 ? throwableOrformat.toString() : throwableOrformat.toString().formatted(args)));
+                new MTronException(Graphitty.string(args.length == 0 ? throwableOrformat.toString() : throwableOrformat.toString().formatted(args))));
     }
 
     private static MTronException convert(final Throwable throwable) {
@@ -151,7 +161,7 @@ public class MTronException extends RuntimeException {
             final String[] message = throwable.getMessage().split(" cannot be cast to class ");
             final String leftClass = message[0].trim();
             final String rightClass = message[1].trim().split("\\(")[0].trim();
-            return new MTronException("unable to convert " + convertName(leftClass.substring(leftClass.lastIndexOf('.') + 1)) + " to " + convertName(rightClass.substring(rightClass.lastIndexOf('.') + 1)), throwable);
+            return tracerThrow(new MTronException("unable to convert " + convertName(leftClass.substring(leftClass.lastIndexOf('.') + 1)) + " to " + convertName(rightClass.substring(rightClass.lastIndexOf('.') + 1)), throwable));
         } else {
             // Preserve the original throwable as the Java cause — do NOT
             // embed the full stack trace in the message string.  The cause
@@ -159,7 +169,7 @@ public class MTronException extends RuntimeException {
             // through getStackTrace().  Embedding them in the message
             // buries the signal and discards structured cause data.
             // throwable.printStackTrace();
-            return new MTronException(null == throwable.getMessage() ? "fail" : throwable.getMessage(), throwable);
+            return tracerThrow(new MTronException(null == throwable.getMessage() ? "fail" : throwable.getMessage(), throwable));
         }
     }
 

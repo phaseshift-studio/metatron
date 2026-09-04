@@ -1,0 +1,99 @@
+[== the agent ide, as a metatron app.
+     A self-contained workbench for working on a java/mvn project through
+     the uri graph: pull a file, read a member, edit a FIELD (never text),
+     let the code/# subscription write the file back + log a saved event,
+     then build through the command palette.  the default project is the
+     SCRATCH FIXTURE so edits and builds never touch the metatron codebase.
+     the boot-args marker block below holds the app defaults: the BootLoader
+     parses it into boot/args (a CLI arg of the same name is overridden by
+     the file, so tune the file or the launcher to repoint the app). ==]
+[== boot args ==]
+[
+ user     => <marko>,
+ project  => [ dir      => <src/test/resources/scratch>,
+               artifact => <src/test/resources/scratch/project.ide.mtron> ],
+ build    => [ file => <src/test/resources/scratch/pom.xml> ],
+ web      => [ http => <http://0.0.0.0:8777>,
+               ws   => <ws://0.0.0.0:8555> ],
+ log_file => <sqlite:/tmp/log_metatron_agentide.sqlite>
+]
+[===============]
+print("{{r}}------------
+{{g}}*{{y}}boot/args{{X}}: ",
+      *boot/args,
+      "\n{{r}}------------
+{{X}}");
+
+print("{{y}}loading instruction sets
+{{X}}");
+import(/m/mach/io);
+import(/m/mach/ui,ui);
+import(/m/tble);
+import(/m/web,web);
+import(/m/math,math);
+import(/m/ide,ide);
+
+print("{{y}}fs: => . (cwd) | mfs: => . (cwd)
+{{X}}");
+fsspace::[pattern => fs:#,
+          q       => [mimeq::[=>]],
+    route => [fs: => <.>]]@/sys/space/fs/root;
+fsspace::[pattern => mfs:#,
+          q       => [mimeq::[=>],
+                      lineq::[=>]],
+    route => [mfs: => <.>]]@/sys/space/fs/metatron;
+
+memspace::[pattern => </usr/marko/#>,
+           q       => [docq::[=>], subq::[=>],
+                       mimeq::[=>], lineq::[=>], lockq::[=>], incrq::[=>]]]
+  @</sys/space/usr/marko>;
+
+print("{{y}}log : /log/metatron/# on ${*boot/args/log_file}
+{{X}}");
+tblespace::[pattern    => </log/metatron/#>,
+            host       => !*<boot/args/log_file>,
+            driver     => <org.sqlite.JDBC>,
+            table      => [,],
+            q          => [incrq::[=>],
+                           subq::[=>],
+                           mimeq::[=>]],
+            route      => [/log/metatron/ => <>]]@/sys/space/log/metatron;
+
+print("{{y}}web : ${*boot/args/web/http}  ${*boot/args/web/ws}
+{{X}}");
+*boot/args/web/http.<fs:boot/space/web/http.mtron>();
+*boot/args/web/ws.<fs:boot/space/web/ws.mtron>();
+
+[====== THE AGENT IDE WORKSPACE ======]
+print("{{y}}ide : /usr/${*boot/args/user}/scratch
+{{X}}");
+*<mfs:src/test/resources/scratch/project.ide.mtron>.
+  else(<mfs:src/test/resources/scratch>.
+        as(project::T).
+        update(+([name   =>'scratch',
+                  desc   =>'a scratch java/mvn project for the agent ide'])).
+        >>=[_=>dedup()].
+        to(<mfs:src/test/resources/scratch/project.ide.mtron>)).
+  to(/usr/marko/scratch).
+  side(temp -> "${*boot/args/build/file}")
+  -<[mvn_build => mvn_build -> ide:command('mvn -f ${*temp} compile'),
+      mvn_clean => mvn_clean -> ide:command('mvn -f ${*temp} clean'),
+      mvn_test  => mvn_test  -> ide:command('mvn -f ${*temp} test'),
+      mvn_exec  => mvn_exec  -> ide:command('mvn -f ${*temp} compile exec:java'),
+      code_tree => |inst?#{*}<=#{?}(max=>?int::T.else(2)){ *max.-<tree_select::[root=>!*/usr/marko/scratch/root,max=>_,flatten=>true]@scratch_tree }].
+  to(/usr/marko/scratch/command);
+  /usr/marko/scratch/code/#?subq -> sub::[code=> >>0.as(rec::T)>>path==[_,_,_,_,_,_].
+                                                 as?uri<=lst(uri::T).to(x).*(_).>>=[location=>none].as(web:java::T).
+                                                 to(*(*x.>>location).side(-<[location=>_,user=>/usr/marko,status=>saved,time=>!math:datetime_now()].to(/log/metatron/event/_?incrq)))];
+
+[== ready ==]
+print("""
+{{g}}agent ide workbench ready
+  user        : {{y}}${*boot/args/user}{{X}}
+  project     : {{y}}*/usr/${*boot/args/user}/scratch{{X}}
+  members     : {{y}}*/usr/${*boot/args/user}/scratch/idx/<class>/+{{X}}
+  edit        : {{y}}*...idx/<class>/method/<name> >>= [body=>...]{{X}}
+  save check  : {{y}}*/log/metatron/event/+{{X}}
+  build       : {{y}}/usr/${*boot/args/user}/scratch/command/mvn_build(){{X}}
+  doors       : {{y}}${*boot/args/web/ws}/<host>/mtron{{X}}   {{y}}${*boot/args/web/http}/mcp{{X}}
+""");

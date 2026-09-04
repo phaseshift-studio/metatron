@@ -297,18 +297,18 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
     @Override
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
-            LOG.info("writing to %s: %s", pattern, obj);
+            LOG.debug("writing to %s: %s", pattern, obj);
             try {
                 final fURI aligned = Space.Helper.routeFromSpace(pattern, this.routes());
                 final DataPath dp = DataPath.withoutDB(aligned);
-                LOG.info("furi aligned: %s", aligned);
+                LOG.debug("furi aligned: %s", aligned);
                 if (!dp.hasCollection())
                     throw MTronException.of("vecspace write requires a collection: %s", aligned);
 
                 // ── DELETE ──
                 if (obj.isNoObj()) {
                     if (dp.hasEntry() && !dp.entryIsWildcard()) {
-                        LOG.info("deleting %s", dp);
+                        LOG.debug("deleting %s", dp);
                         final fURI collId = resolveCollectionId(dp.collection(), false);
                         this.sjvm().delete(collId, List.of(dp.entry()));
                     }

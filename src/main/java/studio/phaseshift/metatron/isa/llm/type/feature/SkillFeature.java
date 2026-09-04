@@ -122,13 +122,13 @@ public class SkillFeature extends AbstractFeature {
 
         try {
             final Skills skills = new Skills.Builder().skills(allSkills).build();
-            agent.addToolProvider(skills.toolProvider());
-            agent.addTool(docWrapDocs(instC(f("list_skills").dom(NOOBJ.zero()).rng(LST_TID), lst(),
+            agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().addToolProvider(skills.toolProvider());
+            agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().addTool(mTool.tool(docWrapDocs(instC(f("list_skills").dom(NOOBJ.zero()).rng(LST_TID), lst(),
                             (lhs, inst) -> lst(allSkills.stream().map(s -> (Obj) lst(str(s.name()), str(s.description()))).toList())),
                     "no domain",
                     "a lst[lst[str,str]] of skills",
                     Map.of(),
-                    "generates a lst of available skills by name and description"));
+                    "generates a lst of available skills by name and description")));
             // Cross-feature communication: SystemFeature owns the system-message channel.
             // If the agent lacks it, this feature is debilitated — log and proceed.
             if (this.requireFeature(agent, LLM_SYSTEM_FEATURE_TID)) {
@@ -148,9 +148,9 @@ public class SkillFeature extends AbstractFeature {
     }
 
     private static fURI key(final mSkill skill) {
-        final Obj name = skill.atDirect(uri(NAME));
+        final Obj name = skill.at(uri(NAME));
         if (!name.isNoObj())
             return name.uriValue();
-        return f(UUID.nameUUIDFromBytes("skill@%d".formatted(System.identityHashCode(skill)).getBytes()).toString());
+        return skill.tid().extend(name.toCleanString());
     }
 }

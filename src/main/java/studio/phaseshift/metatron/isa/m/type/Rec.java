@@ -134,11 +134,17 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                             (null != v && v.isPoly()
                                     ? v.<Poly<?, ?>>as().at(k.pretract(1).toUri(), value.parent(this), operation)
                                     : rec().at(k.pretract(1).toUri(), value.parent(this), operation)));
-            return (Rec) operation.apply(this, map);
+            final Poly<?, ?> applied1 = operation.apply(this, map);
+            if (applied1 instanceof Fail fail)
+                throw MTronException.of("rec at(%s): operation failed: %s", key, fail.message());
+            return (Rec) applied1;
         } else {
             final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
             map.put(key, value);
-            return (Rec) operation.apply(this, map);
+            final Poly<?, ?> applied2 = operation.apply(this, map);
+            if (applied2 instanceof Fail fail)
+                throw MTronException.of("rec at(%s): operation failed: %s", key, fail.message());
+            return (Rec) applied2;
         }
     }
 
