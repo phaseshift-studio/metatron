@@ -132,12 +132,12 @@ mtron> {"mcpServers": {
             "intellij": {
    ...
      ^
-     unclosed '{' — missing '}'?]@/sys/fail/58
+     unclosed '{' — missing '}'?]@/sys/fail/234
 mtron> }}
 ==>fail::[parse error at line 1, col 1:
      }}
      ^
-     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/60
+     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/236
 ```
 For `STDIO` transport MCP servers, the same process works:
 
@@ -161,12 +161,12 @@ mtron> mcp_client::[host=>http://localhost:8777/mcp]@a
    	  \_pred │ []
    	[inst]   │ ctor?rng=mcp_client&dom=#{?}([host=>http://localhost:8777/mcp]@a){<j>}
    	 \_dom   │ #{?}::T
-   	 \_args  │ [[host=>http://localhost:8777/mcp]@a][SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/64]@/sys/fail/66
+   	 \_args  │ [[host=>http://localhost:8777/mcp]@a][SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/240]@/sys/fail/242
 mtron> *a>>tool
 mtron> [-- => [m_inst_eval_mtron=>tool::[inst=>..., name=>m_inst_eval_mtron, desc=>..., arg=>...], ...] --]
 mtron> [-- invoke a tool by applying its inst field --]
 mtron> a/tool/m_inst_eval_mtron/inst("1+2")
-==>fail::[unable to locate inst-f of a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/68
+==>fail::[unable to locate inst-f of a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/244
 mtron> [-- => 3 --]
 ```
 ### WebSocket

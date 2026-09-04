@@ -250,6 +250,7 @@
                             </div>
                         </div>
                     </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../skills/ide/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
@@ -420,7 +421,7 @@ mtron&gt; '''mtron''' [-- str (triple single-quoted, multi-line --]
 ==&gt;fail::[parse error at line 1, col 3:
      '''mtron''' 
        ^
-     could not parse at ''']@/sys/fail/368
+     could not parse at ''']@/sys/fail/540
 mtron&gt; &lt;a.b.c&gt;     [-- uri (angle-bracket necessary of uri has . or space) --]
 ==&gt;&lt;a.b.c&gt;
 mtron&gt; /foo/bar    [-- uri (path literal) --]
@@ -463,14 +464,14 @@ mtron&gt; {1,1,2} [-- becomes {{2}1,2} (duplicates merged on coefficient) --]
 ==&gt;fail::[parse error at line 1, col 9:
      [1,2,3].0         
              ^
-     could not parse at '0']@/sys/fail/370
+     could not parse at '0']@/sys/fail/542
 mtron&gt; [1,2,3]&gt;&gt;0        [--
 ==&gt;1
 mtron&gt; [a=&gt;1,b=&gt;2].a     [--
 ==&gt;fail::[parse error at line 1, col 13:
      [a=&gt;1,b=&gt;2].a     
                  ^
-     could not parse at 'a']@/sys/fail/380
+     could not parse at 'a']@/sys/fail/552
 mtron&gt; [a=&gt;1,b=&gt;2]&gt;&gt;a    [--
 ==&gt;1
 </code></pre>
@@ -593,7 +594,7 @@ mtron&gt; 'ab3cd'.regex('\d{2}')        [-- [,]  (no match — empty pair) --]
    	  \_pred │ []
    	[inst]   │ */path/to/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException&lt;127&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/444
+   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/616
 mtron&gt; @/path/to/obj              [-- real obj at uri (attached) --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
@@ -601,7 +602,7 @@ mtron&gt; @/path/to/obj              [-- real obj at uri (attached) --]
    	  \_pred │ []
    	[inst]   │ at?rng=B{*}&amp;dom=A{?}(/path/to/obj){&lt;j&gt;}
    	 \_dom   │ A{?}::T
-   	 \_args  │ [/path/to/obj][MTronException&lt;127&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/446
+   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/618
 mtron&gt; *local:software/           [-- read with trailing
        *&lt;/path/to/obj&gt;            [-- angle-bracket handles special chars --]
 ==&gt;fail::[apply failure:
@@ -610,7 +611,7 @@ mtron&gt; *local:software/           [-- read with trailing
    	  \_pred │ []
    	[inst]   │ */path/to/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException&lt;127&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/448
+   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/620
 </code></pre>
 <p>Wildcards:</p>
 <pre><code class="language-mtron">mtron&gt; */path/+/obj               [-- + matches one segment --]
@@ -620,7 +621,7 @@ mtron&gt; *local:software/           [-- read with trailing
    	  \_pred │ []
    	[inst]   │ */path/+/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/obj][MTronException&lt;127&gt;:no active space supports pattern /path/+/obj]][no active space supports pattern /path/+/obj]@/sys/fail/450
+   	 \_args  │ [/path/+/obj][MTronException&lt;137&gt;:no active space supports pattern /path/+/obj]][no active space supports pattern /path/+/obj]@/sys/fail/622
 mtron&gt; */path/+/+                 [-- ++, children at depth 2 --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
@@ -628,12 +629,12 @@ mtron&gt; */path/+/+                 [-- ++, children at depth 2 --]
    	  \_pred │ []
    	[inst]   │ */path/+/+
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/+][MTronException&lt;127&gt;:no active space supports pattern /path/+/+]][no active space supports pattern /path/+/+]@/sys/fail/452
+   	 \_args  │ [/path/+/+][MTronException&lt;137&gt;:no active space supports pattern /path/+/+]][no active space supports pattern /path/+/+]@/sys/fail/624
 mtron&gt; */path/#                   [-- [-- matches all remaining segments (recursive) --] --]
 ==&gt;fail::[parse error at line 1, col 9:
      */path/#                    --]
              ^
-     could not parse at ' ']@/sys/fail/454
+     could not parse at ' ']@/sys/fail/626
 </code></pre>
 <p><strong>uri::T</strong> type drives URI-specific operations:</p>
 <pre><code class="language-mtron">mtron&gt; http://abc:123/a/b/c.&gt;&gt;scheme        [-- http --]
@@ -643,7 +644,7 @@ mtron&gt; */path/#                   [-- [-- matches all remaining segments (rec
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(scheme){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [scheme][MTronException&lt;127&gt;:no active space supports pattern http://abc:123/a/b/c/scheme]][no active space supports pattern http://abc:123/a/b/c/scheme]@/sys/fail/464
+   	 \_args  │ [scheme][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/scheme]][no active space supports pattern http://abc:123/a/b/c/scheme]@/sys/fail/636
 mtron&gt; http://abc:123/a/b/c.&gt;&gt;host          [-- abc --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -651,7 +652,7 @@ mtron&gt; http://abc:123/a/b/c.&gt;&gt;host          [-- abc --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(host){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [host][MTronException&lt;127&gt;:no active space supports pattern http://abc:123/a/b/c/host]][no active space supports pattern http://abc:123/a/b/c/host]@/sys/fail/474
+   	 \_args  │ [host][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/host]][no active space supports pattern http://abc:123/a/b/c/host]@/sys/fail/646
 mtron&gt; http://abc:123/a/b/c.&gt;&gt;port          [-- 123 (noobj if no port) --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -659,7 +660,7 @@ mtron&gt; http://abc:123/a/b/c.&gt;&gt;port          [-- 123 (noobj if no port) 
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(port){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException&lt;127&gt;:no active space supports pattern http://abc:123/a/b/c/port]][no active space supports pattern http://abc:123/a/b/c/port]@/sys/fail/484
+   	 \_args  │ [port][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/port]][no active space supports pattern http://abc:123/a/b/c/port]@/sys/fail/656
 mtron&gt; http://abc:123/a/b/c.&gt;&gt;authority     [-- abc:123 --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -667,7 +668,7 @@ mtron&gt; http://abc:123/a/b/c.&gt;&gt;authority     [-- abc:123 --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(authority){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [authority][MTronException&lt;127&gt;:no active space supports pattern http://abc:123/a/b/c/authority]][no active space supports pattern http://abc:123/a/b/c/authority]@/sys/fail/494
+   	 \_args  │ [authority][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/authority]][no active space supports pattern http://abc:123/a/b/c/authority]@/sys/fail/666
 mtron&gt; http://abc:123/a/b/c.&gt;&gt;{schema,path} [-- {http,/a/b/c} --]
 mtron&gt; /a/b/c&gt;&gt;0                            [-- a --]
 ==&gt;/a/b/c
@@ -698,7 +699,7 @@ mtron&gt; int::T[?&gt;0]@nat           [-- syntax sugar on is(gt(0)) --]
 mtron&gt; nat::2                    [-- ok --]
 ==&gt;nat::2
 mtron&gt; nat::-1                   [-- &lt;ERROR&gt; --]
-==&gt;fail::[-1 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/504
+==&gt;fail::[-1 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/676
 </code></pre>
 <hr />
 <h3>8. Mapping &amp; Filtering</h3>
@@ -993,7 +994,7 @@ mtron&gt; {1,2,3,4}.sum{2}().sum?int&lt;=int{1,7}().sum()-&lt;[_,_]&gt;-.sum?int
 ==&gt;fail::[parse error at line 1, col 74:
      ...,7}().sum()-&lt;[_,_]&gt;-.sum?int&lt;=int{2}()  #
                                                 ^
-     could not parse at '#' — unclosed '&lt;' — missing '&gt;'?]@/sys/fail/672
+     could not parse at '#' — unclosed '&lt;' — missing '&gt;'?]@/sys/fail/844
 </code></pre>
 
     </div>

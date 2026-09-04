@@ -46,6 +46,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.type.Rec.Helper.cleanMap;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 
@@ -57,6 +58,53 @@ public final class CommonUtil {
 
     private static final Pattern INT_PATTERN = Pattern.compile("-?\\d+");
     private static final Pattern REAL_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)");
+
+    // rec key order: int keys ascending; every other key (ring/compound/uri/
+    // noobj markers) gets a stable within-run identity slot — this comparator
+    // never throws, never renders, never resolves tids (all dangerous to call
+    // while the vm is mid-dispatch)
+    public static final Comparator<Obj> REC_KEY_ORDER = CommonUtil::compareRecKey;
+
+    public static Map<Obj, Obj> orderedRecMap(final Map<Obj, Obj> source) {
+        final TreeMap<Obj, Obj> ordered = new TreeMap<>(REC_KEY_ORDER);
+        ordered.putAll(source);
+        return ordered;
+    }
+
+    // sort a rec by int keys — but ONLY recs whose every key is int (any
+    // non-int key returns the rec untouched, preserving original lookup
+    // semantics). called from normal code paths, never from a rec constructor.
+    public static Obj orderIntRec(final Obj result, final Rec context) {
+        if (!result.isRec())
+            return result;
+        final Rec rec = result.asRec();
+        final List<Map.Entry<Obj, Obj>> entries = new ArrayList<>(rec.recValue().entrySet());
+        try {
+            entries.sort((e1, e2) -> Long.compare(((Number) e1.getKey().jvm()).longValue(), ((Number) e2.getKey().jvm()).longValue()));
+        } catch (final Exception e) {
+            return result;
+        }
+        final Map<Obj, Obj> ordered = new LinkedHashMap<>();
+        entries.forEach(e -> ordered.put(e.getKey(), e.getValue()));
+        return rec(ordered, context.tid(), context.vid());
+    }
+
+    private static int compareRecKey(final Obj a, final Obj b) {
+        final boolean ai = a.isInt();
+        final boolean bi = b.isInt();
+        if (ai != bi)
+            return ai ? -1 : 1;
+        if (ai) {
+            try {
+                return Long.compare(((Number) a.jvm()).longValue(), ((Number) b.jvm()).longValue());
+            } catch (final Exception e) {
+                // ring/joint int: fall to the identity slot below
+            }
+        }
+        final int h1 = System.identityHashCode(a);
+        final int h2 = System.identityHashCode(b);
+        return h1 == h2 ? 0 : Integer.compare(h1, h2);
+    }
 
     // ========================================
     // User-regex guards
@@ -622,32 +670,40 @@ public final class CommonUtil {
 
         final fURI vid;
         final fURI tid;
+        final Supplier<Map<Obj, Obj>> mapSupplier;
 
         public RecCollector() {
-            this.vid = null;
-            this.tid = REC_TID;
+            this(REC_TID, null, LinkedHashMap::new);
         }
 
         public RecCollector(final fURI tid, final fURI vid) {
+            this(tid, vid, LinkedHashMap::new);
+        }
+
+        public RecCollector(final fURI tid, final fURI vid, final Supplier<Map<Obj, Obj>> mapSupplier) {
             this.tid = tid;
             this.vid = vid;
+            this.mapSupplier = mapSupplier;
         }
 
         @Override
         public Supplier<Map<Obj, Obj>> supplier() {
-            return LinkedHashMap::new;
+            return this.mapSupplier;
         }
 
         @Override
         public BiConsumer<Map<Obj, Obj>, Rel> accumulator() {
-            return (a, b) -> a.compute(b.jvm().get0(), (k, v) -> b.isNoObj() ? v : (null == v ? b.jvm().get1() : v.append(b.jvm().get1())));
+            return (a, b) -> {
+                if (b.jvm().get0().isNoObj()) return;   // no-match marker — never a rec key
+                a.compute(b.jvm().get0(), (k, v) -> b.jvm().get1().isNoObj() ? v : (null == v ? b.jvm().get1() : v.append(b.jvm().get1())));
+            };
         }
 
         @Override
         public BinaryOperator<Map<Obj, Obj>> combiner() {
             return (a, b) -> {
                 a.putAll(b);
-                return a;
+                return cleanMap(a);
             };
         }
 

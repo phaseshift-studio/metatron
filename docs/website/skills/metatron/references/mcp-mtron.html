@@ -250,6 +250,7 @@
                             </div>
                         </div>
                     </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../skills/ide/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
@@ -519,12 +520,12 @@
             &quot;intellij&quot;: {
    ...
      ^
-     unclosed '{' — missing '}'?]@/sys/fail/58
+     unclosed '{' — missing '}'?]@/sys/fail/234
 mtron&gt; }}
 ==&gt;fail::[parse error at line 1, col 1:
      }}
      ^
-     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/60
+     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/236
 </code></pre>
 <p>For <code>STDIO</code> transport MCP servers, the same process works:</p>
 <pre><code>mcp_client::[command=&gt;[&lt;/home/killswitch/.local/bin/codegraph&gt;,'serve', '--mcp']]@codegraph;
@@ -543,12 +544,12 @@ mtron&gt; mcp_client::[host=&gt;http://localhost:8777/mcp]@a
    	  \_pred │ []
    	[inst]   │ ctor?rng=mcp_client&amp;dom=#{?}([host=&gt;http://localhost:8777/mcp]@a){&lt;j&gt;}
    	 \_dom   │ #{?}::T
-   	 \_args  │ [[host=&gt;http://localhost:8777/mcp]@a][SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/64]@/sys/fail/66
+   	 \_args  │ [[host=&gt;http://localhost:8777/mcp]@a][SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/240]@/sys/fail/242
 mtron&gt; *a&gt;&gt;tool
 mtron&gt; [-- =&gt; [m_inst_eval_mtron=&gt;tool::[inst=&gt;..., name=&gt;m_inst_eval_mtron, desc=&gt;..., arg=&gt;...], ...] --]
 mtron&gt; [-- invoke a tool by applying its inst field --]
 mtron&gt; a/tool/m_inst_eval_mtron/inst(&quot;1+2&quot;)
-==&gt;fail::[unable to locate inst-f of a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/68
+==&gt;fail::[unable to locate inst-f of a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/244
 mtron&gt; [-- =&gt; 3 --]
 </code></pre>
 <h4>WebSocket</h4>

@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
@@ -73,7 +74,7 @@ public class MRec extends MObj implements Rec {
     }
 
     public static Rec rec(final Map<Obj, Obj> map, final fURI tid, final fURI vid) {
-        return null == tid ? new MRec(Rec.Helper.cleanMap(map), REC_TID, vid) : MObj.of(Rec.Helper.cleanMap(map), tid, vid, Rec.class);
+        return null == tid ? new MRec(map, REC_TID, vid) : MObj.of(map, tid, vid, Rec.class);
     }
 
     public static Rec rec(final Map<Obj, Obj> map) {
