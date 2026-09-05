@@ -20,7 +20,7 @@ public class Echo {
      * @return the spoken words
      */
     public String speak(String who) {
-        return PREFIX + " " + who;
+        return who;
     }
 
     /**

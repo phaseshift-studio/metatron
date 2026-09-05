@@ -1,0 +1,1069 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ide · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../../lib/animate/animate.min.css" rel="stylesheet">
+    <link href="../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../css/termynal.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <script src="../../lib/wow/wow.min.js" type="text/javascript"></script>
+    <script src="../../lib/easing/easing.min.js" type="text/javascript"></script>
+    <script src="../../lib/waypoints/waypoints.min.js" type="text/javascript"></script>
+    <script src="../../lib/termynal/termynal.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .terminal-box.click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .terminal-box.click-to-copy:active {
+            background-color: var(--mred);
+        }
+
+        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
+        .terminal-box.click-to-copy .hljs-copy-button {
+            display: none;
+        }
+    </style>
+    <script src="../../js/metatron.js" type="text/javascript"></script>
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 text-primary logo-text navbar-brand ms-4 ms-lg-0">
+        <a href="../../index.html" class="text-primary" title="metatron"><i class="bi bi-soundwave me-3 icon-color"></i></a>
+        <a href="http://phaseshift.studio" class="text-primary">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="terminal-box click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box click-to-copy" title="click to copy">
+                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="start.html"
+                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/start.html');return false;">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../instset/index.html';">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../instset/m.html';"><img
+                            src="../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../instset/m_dcmnt.html';"><img
+                            src="../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../instset/m_grph.html';"><img
+                            src="../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../instset/m_iot.html';"><img
+                            src="../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../instset/m_llm.html';"><img
+                            src="../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                            alt="llm"/>/m/llm</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../instset/m_mach.html';"><img
+                            src="../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                            alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../instset/m_math.html';"><img
+                            src="../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../instset/m_sys.html';"><img
+                            src="../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../instset/m_tble.html';"><img
+                            src="../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                            alt="tble"/>/m/tble</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../instset/m_vec.html';"><img
+                            src="../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/vec</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../instset/m_web.html';"><img
+                            src="../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../../tractatus.html"
+                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/tractatus.html');return false;">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../skills/agent/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/drstynx/assets/drstynx.boot.mtron';">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/drstynx/assets/drstynx.sqlite';">drstynx.sqlite</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../skills/ide/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/metatron/references/mcp-mtron.html';">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/metatron/references/rewrite-system-java.html';">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/metatron/references/tble-space-java.html';">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/metatron/references/type-system-java.html';">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/metatron/references/ui-instset-java.html';">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/metatron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/references/answer-questions.html';">answer-questions</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/references/connecting-datasources.html';">connecting-datasources</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/references/dckrspace.html';">dckrspace</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/references/dsh-mtron.html';">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/references/http-page-fetching.html';">http-page-fetching</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/references/math_instset.html';">math_instset</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/references/mcp-server-architecture.html';">mcp-server-architecture</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/references/mcp-server-notifications.html';">mcp-server-notifications</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/references/mtron-fsspace.html';">mtron-fsspace</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/references/mtron-language-reference.html';">mtron-language-reference</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/references/type-system-mtron.html';">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/references/unsloth-training-mtron.html';">unsloth-training-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/scripts/unsloth_studio.py';">unsloth_studio.py</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/assets/README.md';">README.md</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/assets/dsh_memory_loader.py';">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../skills/mtron/assets/mtron_training_dataset.jsonl';">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../articles/stream-ring-theory.pdf';"><i
+                            class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../articles/parametric-identities-in-ring-theory.html';"><i
+                            class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../../articles/mm-adt.pdf';"><i
+                            class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://opencollective.com/metatron';">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://github.com/phaseshift-studio/metatron';">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://huggingface.co/phaseshift-studio';">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://groups.google.com/u/1/g/metatron-phaseshift';">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../index.html';">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../index.html';">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="./console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target (no rollover copy button). The :active CSS turns the block
+    // red while pressed; this copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">
+    <div class="skill-doc mb-4">
+        <a href="SKILL.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>SKILL.md</a>
+    </div>
+    <div class="markdown-body">
+<h2>agent ide: source edits through the uri graph</h2>
+<p>An agent edits a project's source by **pulling a file into the code space, editing the member's <em>fields</em>, and letting
+the subscription on <code>code/#</code> write back to disk and log a <code>saved</code> event.</p>
+<p>If you are not encoded in metatron and thus, don't natural expression access to mtron, you will need to use the mcp
+server tool <code>eval</code> (<code>m_inst_eval_mtron</code>).</p>
+<h3>setup: build the infrastructure</h3>
+<p>First, load necessary instruction sets. Second, open three spaces:</p>
+<ol>
+<li>a location to store metatron encoding the source code (<code>memspace</code>).</li>
+<li>access to the file system where source code is stored (<code>fsspace</code>).</li>
+<li>an optional space for storing mutation event logs (<code>tblespace</code>).</li>
+</ol>
+<pre><code class="language-mtron">mtron&gt; import(/m/ide,ide)
+mtron&gt; import(/m/web,web)
+mtron&gt; import(/m/math,math)
+mtron&gt; memspace::[
+         pattern =&gt; &lt;/dev/scratch/#&gt;,
+               q =&gt; [mintq::[=&gt;],docq::[=&gt;],subq::[=&gt;],
+                    mimeq::[=&gt;], lineq::[=&gt;],lockq::[=&gt;],
+                    incrq::[=&gt;]]]@&lt;/sys/space/dev/metatron&gt;
+mtron&gt; fsspace::[pattern      =&gt; mfs:#,
+                  route       =&gt; [mfs:=&gt;&lt;.&gt;]]@/sys/space/fs/mfs
+mtron&gt; tblespace::[pattern    =&gt; &lt;/log/scratch/#&gt;,
+                   host       =&gt; &lt;sqlite:target/log_scratch.sqlite&gt;,
+                   driver     =&gt; &lt;org.sqlite.JDBC&gt;,
+                   table      =&gt; [,],
+                   q          =&gt; [incrq::[=&gt;],subq::[=&gt;],mimeq::[=&gt;]],
+                   route      =&gt; [/log/scratch/ =&gt; &lt;&gt;]]@&lt;/sys/space/log/scratch&gt;
+</code></pre>
+<h3>encodings</h3>
+<p>A loaded Java file has two encodings:</p>
+<ul>
+<li><strong>rec encoding</strong> — each member is a rec: <code>kind</code>, <code>name</code>, <code>signature</code>,
+<code>header</code> (up to <code>{</code>), <code>body</code> (<code>{...}</code>), <code>footer</code>, and <code>text</code> = <strong>derived</strong> (header + body + footer).</li>
+<li><strong>uri-graph (<code>idx</code>) encoding</strong> — navigate the source with path syntax:
+<code>*/dev/metatron/idx/memSpace/method/close</code>.</li>
+</ul>
+<p>The pull (<code>src/.../cls()</code>) returns the class's <strong>rec encoding</strong> (the
+<code>ide:java</code> value) and stores it in the <code>code</code> list beside the project root.
+<code>ide:index(root)</code> re-projects that code list into <code>root/idx</code>:
+<code>class =&gt; kind =&gt; name =&gt; !@.../code/N/classes/cls/0/members/i/name</code> — <em>anchors</em> pointing into the code space. That
+anchor is the write surface, and it also resolves back through the space to the stored member (the round trip is
+asserted in the acceptance test).</p>
+<p>field semantics:</p>
+<table>
+<thead>
+<tr><th>field</th><th>edit to change</th></tr>
+</thead>
+<tbody>
+<tr><td><code>signature</code></td><td>the method signature</td></tr>
+<tr><td><code>header</code></td><td>declaration/annotations (up to <code>{</code>)</td></tr>
+<tr><td><code>body</code></td><td>the method body (<code>{...}</code>)</td></tr>
+<tr><td><code>footer</code></td><td>trailing bits</td></tr>
+<tr><td><code>text</code></td><td><strong>derived</strong> -- do not hand-edit</td></tr>
+</tbody>
+</table>
+<h3>writing code in mtron</h3>
+<p>An example Java/Maven3 project is provided with metatron. This project is used for the following examples.</p>
+<pre><code class="language-mtron">mtron&gt; *&lt;mfs:src/test/resources/scratch/pom.xml&gt;.
+         as(rec::T).
+         repeat(code=&gt;&gt;&gt;,until=&gt;&lt;&lt;.-&lt;[has(Id),has(version)]&gt;-,emit=&gt;false).take(3)
+==&gt;groupId=&gt;[node=&gt;[,],text=&gt;'com.example.scratch']
+==&gt;artifactId=&gt;[node=&gt;[,],text=&gt;'scratch']
+==&gt;version=&gt;[node=&gt;[,],text=&gt;'0.1.0-SNAPSHOT']
+</code></pre>
+<p>A <code>project::T</code> consolidates source code, various space embeddings, and build commands under one <code>rec::T</code>. There exists
+an <code>as()</code>-mapping from <code>uri::T</code> to <code>project::T</code>. The resultant <code>project::T</code> is saved to the user home graph. Finally.
+maven build commands are attached to the <code>project::T</code> for each of access.</p>
+<pre><code class="language-mtron">mtron&gt; &lt;mfs:src/test/resources/scratch&gt;@&lt;/dev/scratch&gt;.as(project::T).to(/dev/scratch)
+       @/dev/scratch &gt;&gt;= +[command =&gt; [mvn_build =&gt; !ide:command('mvn -f src/test/resources/scratch compile'),
+                                       mvn_clean =&gt; !ide:command('mvn -f src/test/resources/scratch clean'),
+                                       mvn_exec  =&gt; !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
+==&gt;project::[
+    src=&gt;[
+     Operation=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
+     Echo=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
+     Calculator=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
+     EchoTest=&gt;inst?#{*}&lt;=#{?}(#{*}::T)],
+    code=&gt;[,],
+    idx=&gt;[=&gt;],
+    name=&gt;'scratch',
+    root=&gt;mfs:src/test/resources/scratch,
+    command=&gt;[
+     mvn_build=&gt;!ide:command('mvn -f src/test/resources/scratch compile'),
+     mvn_clean=&gt;!ide:command('mvn -f src/test/resources/scratch clean'),
+     mvn_exec=&gt;!ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
+</code></pre>
+<p>Now that the project is stored in space, a quick build to ensure a clean slate to work from.</p>
+<pre><code class="language-mtron">mtron&gt; */dev/scratch/command/mvn_build
+</code></pre>
+<p>The Java source files have a <code>str::T &gt; web:java::T</code> encoding accessible via <code>src</code>.</p>
+<pre><code class="language-mtron"></code></pre>
+<p>The file name serves as the key and an lambda <code>inst</code> serves as a lazy constructor of an <code>ide:java::T</code>. Calling the file
+name pulls the raw
+<code>src</code> into both <code>code</code> and <code>idx</code>.</p>
+<pre><code class="language-mtron">mtron&gt; /dev/scratch/src/Echo()
+==&gt;[Echo=&gt;[
+    field=&gt;[
+     PREFIX=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
+     name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
+    constructor=&gt;[Echo=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
+    comment=&gt;[=&gt;],
+    method=&gt;[
+     speak=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
+     name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]]
+mtron&gt; */dev/scratch/code/0
+==&gt;java::[
+    package=&gt;'package com.example.scratch;',
+    preamble=&gt;&quot;&quot;&quot;package com.example.scratch;
+   
+   /**
+    * A simple greeter used ...&quot;&quot;&quot;,
+    classes=&gt;[Echo=&gt;[[
+    kind=&gt;class_declaration,
+    name=&gt;'Echo',
+    header=&gt;'public class Echo {',
+    members=&gt;[
+     [PREFIX=&gt;[
+    kind=&gt;field,
+    text=&gt;&quot;&quot;&quot;
+   
+       public static final String PREFIX = &quot;...thus spoke&quot;;&quot;&quot;&quot;,
+    name=&gt;'PREFIX']],
+     [name=&gt;[
+    kind=&gt;field,
+    text=&gt;&quot;&quot;&quot;
+   
+       private final String name;&quot;&quot;&quot;,
+    name=&gt;'name']],
+     [Echo=&gt;[
+    kind=&gt;constructor,
+    name=&gt;'Echo',
+    signature=&gt;'Echo(String name)',
+    header=&gt;&quot;&quot;&quot;
+   
+       public Echo(String name) &quot;&quot;&quot;,
+    body=&gt;&quot;&quot;&quot;{
+           this.name = name;
+       }&quot;&quot;&quot;,
+    footer=&gt;'',
+    text=&gt;&quot;&quot;&quot;
+   
+       public Echo(String name) {
+           this.name = name;
+   ...&quot;&quot;&quot;]],
+     [comment=&gt;[
+    kind=&gt;comment,
+    text=&gt;&quot;&quot;&quot;
+   
+       /**
+        * Speak to a person.
+        *
+        * @param wh...&quot;&quot;&quot;]],
+     [speak=&gt;[
+    kind=&gt;method,
+    name=&gt;'speak',
+    signature=&gt;'String speak(String who)',
+    header=&gt;&quot;&quot;&quot;
+       public String speak(String who) &quot;&quot;&quot;,
+    body=&gt;&quot;&quot;&quot;{
+           return PREFIX + &quot; &quot; + who;
+       }&quot;&quot;&quot;,
+    footer=&gt;'',
+    text=&gt;&quot;&quot;&quot;
+       public String speak(String who) {
+           return PREFI...&quot;&quot;&quot;]],
+     [comment=&gt;[
+    kind=&gt;comment,
+    text=&gt;&quot;&quot;&quot;
+   
+       /**
+        * The name this speaker was built with.
+       ...&quot;&quot;&quot;]],
+     [name=&gt;[
+    kind=&gt;method,
+    name=&gt;'name',
+    signature=&gt;'String name()',
+    header=&gt;&quot;&quot;&quot;
+       public String name() &quot;&quot;&quot;,
+    body=&gt;&quot;&quot;&quot;{
+           return this.name;
+       }&quot;&quot;&quot;,
+    footer=&gt;'',
+    text=&gt;&quot;&quot;&quot;
+       public String name() {
+           return this.name;
+       }&quot;&quot;&quot;]]],
+    footer=&gt;&quot;&quot;&quot;
+   }&quot;&quot;&quot;]]],
+    postscript=&gt;&quot;&quot;&quot;
+   &quot;&quot;&quot;,
+    location=&gt;&lt;mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java&gt;]
+mtron&gt; */dev/scratch/idx/Echo
+==&gt;[
+    field=&gt;[
+     PREFIX=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
+     name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
+    constructor=&gt;[Echo=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
+    comment=&gt;[=&gt;],
+    method=&gt;[
+     speak=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
+     name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]
+</code></pre>
+<p><code>idx</code> offers a human-readable path scheme that projects to the <code>code</code> uri subgraph. Due to the <code>!*</code> nature of the <code>idx</code>
+objs, any updates to
+<code>idx</code> redirect to <code>code</code>. When <code>code</code> is changed, a <code>?subq</code> listener fires, mapping the <code>ide:java::T</code> to <code>web:java::T</code>
+and then to disk. The subscription then pulls the file from disk to a <code>web:java::T</code> and then a <code>ide:java::T</code> in <code>code</code>
+and <code>idx</code>. In this way,
+<code>code</code> serves as a metatron encoded proxy to the file system representation of the project's source code.</p>
+<pre><code class="language-mtron">mtron&gt; */dev/scratch/idx/Echo/method/speak
+==&gt;[
+    kind=&gt;method,
+    name=&gt;'speak',
+    signature=&gt;'String speak(String who)',
+    header=&gt;&quot;&quot;&quot;
+       public String speak(String who) &quot;&quot;&quot;,
+    body=&gt;&quot;&quot;&quot;{
+           return PREFIX + &quot; &quot; + who;
+       }&quot;&quot;&quot;,
+    footer=&gt;'',
+    text=&gt;&quot;&quot;&quot;
+       public String speak(String who) {
+           return PREFI...&quot;&quot;&quot;]@/dev/scratch/code/0/classes/Echo/0/members/4/speak
+mtron&gt; */dev/scratch/idx/Echo/method/speak/body.-&lt;'\n'.as(rec::T)
+==&gt;[
+    0=&gt;'{',
+    1=&gt;'        return PREFIX + &quot; &quot; + who;',
+    2=&gt;'    }']
+mtron&gt; */dev/scratch/idx/Echo/method/speak/body.-&lt;'\n'.as(rec::T) &gt;&gt;= [1 =&gt; &quot;return who;&quot; ]&gt;&gt;.&gt;-?str&lt;=str{*}(' ')
+==&gt;'{ return who;     }'
+mtron&gt; @/dev/scratch/idx/Echo/method/speak &gt;&gt;= [body=&gt; -&lt;'\n'.as(rec::T) &gt;&gt;= [1 =&gt; 'return &quot;marko&quot;;' ]&gt;&gt;.&gt;-?str&lt;=str{*}(' ')]
+==&gt;[
+    body=&gt;'{ return &quot;marko&quot;;     }',
+    kind=&gt;method,
+    name=&gt;'speak',
+    signature=&gt;'String speak(String who)',
+    header=&gt;&quot;&quot;&quot;
+       public String speak(String who) &quot;&quot;&quot;,
+    footer=&gt;'',
+    text=&gt;&quot;&quot;&quot;
+       public String speak(String who) {
+           return PREFI...&quot;&quot;&quot;]
+</code></pre>
+<p>Finally, to check if the update to <code>Echo::speak</code> made it to disk, dereference the uri disk pointer.</p>
+<pre><code class="language-mtron">mtron&gt; *&lt;mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java&gt;
+==&gt;java::&quot;&quot;&quot;package com.example.scratch;
+   
+   /**
+    * A simple greeter used as a scratch fixture for the agent IDE.
+    */
+   public class Echo {
+   
+       public static final String PREFIX = &quot;...thus spoke&quot;;
+   
+       private final String name;
+   
+       public Echo(String name) {
+           this.name = name;
+       }
+   
+       /**
+        * Speak to a person.
+        *
+        * @param who the person to speak with
+        * @return the spoken words
+        */
+       public String speak(String who) {
+           return PREFIX + &quot; &quot; + who;
+       }
+   
+       /**
+        * The name this speaker was built with.
+        *
+        * @return the speekers name
+        */
+       public String name() {
+           return this.name;
+       }
+   }
+   &quot;&quot;&quot;
+</code></pre>
+<p>The standard template for selective editing of code is provided below where <code>[X=&gt;Y]</code> is a placeholder for patterns
+itemized in the subsequent table.</p>
+<pre><code class="language-mtron">@../idx/${class}/method/${method} &gt;&gt;= [body =&gt; -&lt;'\n'.as(rec::T)&gt;&gt;=([X=&gt;Y]&gt;&gt;.&gt;-?str&lt;=str{*}('\n'))]
+└───────────────┬───────────────┘     └───┬──┘└──┬──┘ └────┬───┘└────┬───┘└┬┘└─────────┬─────────┘
+                │                         │      │         │         │     │           └ join them by a newline
+     anchor the method to edit            │      │         │         │     └ get lines  
+                                          │      │         │         └ update template **important**
+                                          │      │         └ turn the lst of lines to a int indexed rec
+                                          │      └ split the current body by newlines
+                                      │   └ update the method body                                │
+                                      └────────────┬───────────┘ └─────────────┬──────────────────┘ 
+                                                   │                           └ src lines to single src string 
+                                                   └ single src string to src lines
+</code></pre>
+<table>
+<thead>
+<tr><th>pattern</th><th>example</th><th>discussion</th></tr>
+</thead>
+<tbody>
+<tr><td>single replace</td><td><code>[4 =&gt; 'a']</code></td><td>replace line 4</td></tr>
+<tr><td>single insert</td><td><code>[4 =&gt; +'a']</code></td><td>insert at line 4</td></tr>
+<tr><td>multi-line insert</td><td><code>[3 =&gt; +'a\nb']</code></td><td>insert 2 lines at line 3</td></tr>
+<tr><td>single delete</td><td><code>[1 =&gt; none]</code></td><td>remove first line</td></tr>
+<tr><td>batch delete</td><td><code>[?&gt;2.?&lt;5 =&gt; none ]</code></td><td>remove lines 3 and 4</td></tr>
+<tr><td>batch delete</td><td><code>[_ =&gt; has('ex[1-9]{2}.*').map(none)]</code></td><td>remove lines by regex</td></tr>
+</tbody>
+</table>
+<h4>subscriptions</h4>
+<p>A <code>?subq</code> subscription handles transforming updated <code>code</code> structures into language compliant source text on disk.
+Different subscriptions can be defined to provide any number of useful reactions to code edits. Examples include:</p>
+<ol>
+<li>triggering an agent to review the code.</li>
+<li>sending a log event to the log portion of space.</li>
+<li>compile the code and altering should it fail.</li>
+<li>record stats (points to sections of the code).</li>
+<li>...</li>
+</ol>
+<p>The current <code>sub::T</code> is:</p>
+<pre><code class="language-mtron">mtron&gt; */dev/scratch/code/#?subq
+==&gt;[sub::[
+    code=&gt;rshift(0).as(rec::T).rshift(path).select([id(),id(),id(),id(),id(),id()]).to(temp).as?rng=uri&amp;dom=lst(uri::T).to(x).*id().update([location=&gt;none]).as(java::T).to(**x.rshift(location).side(split([
+     location=&gt;id(),
+     status=&gt;saved,
+     time=&gt;!math:datetime_now()]).print('saved ',id(),'\n'))).map(map(/dev/scratch/src).mult(*temp.reverse().merge().take(1))),
+    target=&gt;/dev/scratch/code/#]]
+</code></pre>
+<h3>gotchas (learned the hard way)</h3>
+<ul>
+<li><strong>Edit fields, not <code>text</code>.</strong> <code>text</code> is derived; writing it (e.g. via
+<code>?lineq=</code>) edits a detached projection under <code>idx</code>, never satisfies the subscription, detaches the member anchor, and
+accumulates stale slots across generations.</li>
+<li><strong>Re-pulling resets.</strong> <code>src/...()</code> bumps the generation (<code>code/0 -&gt; 1 -&gt; 2…</code>)
+from disk; in-memory edits die with the generation. Disk is authoritative.</li>
+<li><strong>Multi-line strings</strong>: use <code>&quot;&quot;&quot; ... &quot;&quot;&quot;</code>; send <em>real</em> tabs/newlines in the value -- a literal backslash-<code>\t</code>/<code>\n</code>
+lands as text, not control chars.</li>
+<li><strong><code>.vid()</code></strong> on a member yields a wrapped expr (<code>&lt;...&gt;</code>), not a plain uri;
+<code>* &lt;text?lineq=N&gt;</code> on it flattens to a uri. <code>?lineq</code> ranges (<code>3-6</code>)
+dereference fine; single-line <code>?lineq=N</code> with <code>*(_)</code> returns <code>this</code>
+(self), not the line.</li>
+<li><strong><code>&gt;&gt;=</code> on a derived/clone path</strong> silently does nothing useful.</li>
+<li><strong>The doc examples side-effect</strong>: the <code>body=&gt;</code> edit rewrites the project's
+<code>memSpace.java</code> on disk at build time. The mvn site build excludes this doc (toy project pending) so the examples can
+be run safely.</li>
+<li>Only <code>.java</code> so far.</li>
+</ul>
+<h3>running as a container app</h3>
+<p>The agent ide ships as a metatron app: <code>boot/agent-ide.boot.mtron</code> builds the whole workspace (home memspace, scratch
+project at <code>/dev/scratch</code>, write-back subscription, command palette) and the launcher runs it in a container with the
+repo mounted at <code>/work</code> (= the <code>mfs:</code> root).</p>
+<pre><code>bin/agent-ide-docker                 # up: ws://localhost:8555/mtron, http://localhost:8777/mcp
+bin/agent-ide-eval '&lt;mtron code&gt;'    # evaluate through the mcp door (m_inst_eval_mtron)
+docker stop agent-ide                # down
+</code></pre>
+<p>The launcher passes <code>--user $(id -u):$(id -g)</code>: the image's own uid cannot write the mounted repo and an mfs write then
+<strong>hangs</strong> rather than failing — always run the container as the host user.</p>
+<p>Poke surface (in the app):</p>
+<pre><code>*/dev/scratch/name                    # 'scratch'
+*/dev/scratch/command/+               # mvn_build / mvn_clean / mvn_test / mvn_exec / code_tree
+*/log/metatron/event/+                      # the save audit trail (empty until a save fires)
+bin/agent-ide-eval '/dev/scratch/command/mvn_build()'
+</code></pre>
+<p>No maven in the runtime image: <code>mvn_build()</code> fails in-container by design right now (documented gap; the docker socket
+is mounted for the dckr-space route as an option).</p>
+<h3>the pull: code and idx are separate reprojections</h3>
+<p>The push goal was decoupling: <code>code</code> is the reprojection of the source text, and <code>idx</code> is a <em>reprojection of the code
+list</em> — multiple embeddings of one structure in the uri graph, like database indices. Delivered:</p>
+<ul>
+<li><strong>the pull owns the code list only.</strong> <code>src/&lt;cls&gt;()</code> (the class inst under the project) resolves the source through its
+routed space,
+<code>ide:java</code>-transforms it, appends the class value into <code>base/code</code> (a lst that grows over repeated pulls), writes
+<code>base/code</code> beside the project root, and <strong>returns the flow of the class rec</strong> — the pulled value is the rec encoding,
+not a fail and not a list of anchors.</li>
+<li><strong><code>idx</code> is the separate inst <code>ide:index</code>.</strong> On a project-root uri it reads
+<code>base/code</code> and re-slices every element: <code>class =&gt; kind =&gt; name</code> =&gt; the
+<code>!@base/code/N/classes/&lt;C&gt;/&lt;ci&gt;/members/&lt;mc&gt;/&lt;name&gt;</code> anchors — one anchor per code element <code>N</code> holding the member —
+and returns that reprojection as its value. It best-effort publishes <code>base/idx</code> beside the root. Adding another
+embedding of the code list (a different keying, a different slice) is a new small inst that reads <code>base/code</code> — the
+pull itself never changes.</li>
+<li><strong><code>code</code> base = the root URI itself</strong> (<code>ideInstSet</code> pull lambda:
+<code>codeBase = lhs.isUri() ? lhs.uriValue() : lhs.vid()</code>). The as (project)
+lhs's dom is <code>uri</code>, so the uri is its own space location — <code>code</code> (and, on publish, <code>idx</code>) land beside the project in
+the SAME space (mfs/fs) the root came from. A root with neither uri nor vid fails with a clear contract message
+instead of the old
+<code>Cannot invoke &quot;fURI.extend(String)&quot; because Obj.vid() is null</code> NPE.</li>
+<li><strong>deref walk:</strong> <code>*&lt;mfs:root&gt;</code> re-shapes the root to <code>/src/...</code>; the walk strips the leading slash
+(<code>replaceFirst(&quot;^/+&quot;,&quot;&quot;)</code>) to stay CWD-relative per its existing <code>startsWith(&quot;src&quot;)</code> filter. Without that, the project
+builds <strong>empty</strong> — the 257-byte <code>project.ide.mtron</code> artifact on boot and its <code>#{*}</code> passthrough class insts are that
+empty shape.</li>
+</ul>
+<p>Acceptance — <code>ideInstSetTest#testPullAfterSpaceRoundTrip</code> (green, JDK 24):
+routes a <code>probe:</code> space against the repo root, builds the project from
+<code>*&lt;probe:root&gt;</code>, calls the stored class inst, and asserts (1) the pull returns the class rec, (2) the <code>code</code> list landed
+beside the root with the parsed class, (3) <code>ide:index</code> re-projects it with <code>code/0/.../members/...</code>
+anchors, and (4) <strong>idx -&gt; anchor -&gt; value</strong>: the first anchor uri resolves through the space back to the stored member
+rec.</p>
+<p><strong>Known gap (engine, not ide):</strong> <em>publishing</em> <code>base/idx</code> on an fs/mfs space fails — the idx value carries <code>!@...</code>
+auto-at refs and the fs write throws <code>[rec::T] unable to convert uri::T</code>. That only affects the side effect: <code>ide:index</code>
+returns the reprojection regardless, and for a memspace-rooted project the write works (no serialization). Auto-at ref
+serialization is an fs-space / mtron-serializer matter — the domain owner's call.</p>
+<h4>the list-element truth (memspace)</h4>
+<ul>
+<li><strong><code>[expr]</code> stores the CODE, not the value.</strong> <code>*wl/0</code> renders
+<code>map('...').as(java::T)...</code> — an unevaluated instruction. When another obj touches it the code applies; when it
+doesn't, deep reads <strong>under</strong> a code element (<code>code/0/classes/...</code>) are noobj by design (<code>Space.Helper.unrollPoly</code>
+only descends into poly rec/lst elements).</li>
+<li><strong><code>block</code> / <code>|</code> is the explicit &quot;don't evaluate&quot; tool</strong> (marko, 2026-09-03):
+<code>block(b)</code> returns <code>b</code> when applied (<code>Obj.java</code> <code>BLOCK_INST_TID</code>
+body <code>(lhs, inst) -&gt; inst.arg(0)</code>); <code>|</code> is its sugar (<code>mInstSet</code> <code>Sugar.prefix(&quot;|&quot;, BLOCK_INST_TID)</code>). Per marko, in
+<code>1-&lt;[+2,|+2]</code> the bare <code>+2</code> evaluates on touch (→ 3) while the <code>|+2</code>
+stays inert (→ <code>+2</code>). So to hold an unevaluated value use <code>|</code>/<code>block</code>, not a bare code element.</li>
+<li><strong>The value shape is the clean one:</strong> <code>expr.to(slot)</code> evaluates before the write; deep reads under the stored rec
+resolve (<code>ObjJavaIDESerializerTest#testIdeJavaStoredValueReads</code>). The pull does this in-java
+(<code>codeLst.add(ideJava, MUTABLE)</code>).</li>
+<li><strong><code>Lst.at</code> append (fixed here):</strong> writing an element at <code>index == size</code>
+used to throw <code>lst index out of bounds: 0 &gt; 0</code> instead of appending (the pull grows its code list element by element).
+<code>Lst.at(key,value,op)</code> now appends at <code>index == size</code> — the rec.at upsert stance for lists — and keeps throwing past
+<code>size</code>. Covered by
+<code>memSpaceTest#testRecListFieldAppendWrite</code>; LstTest/RecTest/memSpaceTest all green.</li>
+</ul>
+<h3>boot-file footguns (agent-ide.boot.mtron)</h3>
+<p>Learned the hard way, in this order of cost:</p>
+<ul>
+<li><strong>chain lines end with <code>.</code></strong> — a continuation line starting with <code>.</code> after a <code>&lt;uri&gt;</code> literal line does not parse: <code>could not parse at 'e' — unclosed '&lt;' — missing '&gt;'?</code>. Dot-at-EOL everywhere (drstynx style) parses clean.</li>
+<li><strong><code>.else()</code> is an instruction</strong> — call it at a use site. As a rec field value (tblespace host, <code>side(temp -&gt; ...)</code>
+argument) it stays a code obj and dies with <code>[code::T] unable to convert uri::T</code>. The house pattern is the
+<code>[== boot args ==]</code> marker block (BootLoader parses it and overrides the CLI for same-named keys) — no <code>.else()</code>
+needed.</li>
+<li><strong><code>&lt;uri&gt;</code> literals take no splices</strong> — <code>&lt;mfs:${...}&gt;</code> fails to parse. Use literal paths, or the string-with-splice
+form:
+<code>side(temp -&gt; &quot;${*boot/args/build/file}&quot;)</code>.</li>
+<li><strong><code>#</code> is not a comment</strong> — only <code>[-- .. --]</code> and <code>[== .. ==]</code> are.</li>
+<li><strong>quote chars inside <code>[==..==]</code> bodies matter</strong> — unbalanced quotes in a comment body silently kill the web binding
+(door never opens, zero error lines). Same for the <code>&quot;&quot;&quot;</code> banner.</li>
+<li><strong>don't nest <code>[== boot args ==]</code> text inside another comment</strong> — it terminates that comment.</li>
+<li><strong>boot-args values</strong>: a bare word (<code>user =&gt; marko</code>) is stored differently than a quoted str or a <code>&lt;...&gt;</code> uri; the home
+module's <code>_</code>
+binding was unreliable, so the boot builds the home space as an explicit
+<code>memspace::[pattern =&gt; &lt;/dev/#&gt;, ...]</code> record instead.</li>
+<li><strong><code>+</code> in mtron is rec-union</strong> (update <code>+([...])</code>), not string concat.</li>
+<li><strong>tblespace hosts</strong>: plain literal, and the parent directory must exist (sqlite JDBC will not create it).</li>
+<li>a <code>log</code> key in the marker block would override the CLI <code>log=&gt;info</code>
+(header beats CLI) — keep <code>log</code> to the CLI.</li>
+</ul>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

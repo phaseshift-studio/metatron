@@ -312,7 +312,8 @@ agent::[
                         root          => /usr/dr/loop],
     comment_feature::::[              => ],
     skill_feature::::::[skill         => [ <mfs:.metatron/skills/metatron>, 
-                                           <mfs:.metatron/skills/mtron> ]],
+                                           <mfs:.metatron/skills/mtron>,
+                                           <mfs:.metatron/skills/ide>]],
     concept_feature::::[root          => /usr/dr/concept,
                         extractor     => lucene],
     audit_feature::::::[on_agent_ctor => inst(a=>agent::T) {   

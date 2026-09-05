@@ -6,11 +6,11 @@ description:
 
 # agent ide: source edits through the uri graph
 
-**IMPORTANT**: If you are not encoded in metatron and thus, can't speak executable mtron code, you will need to use the
-mcp server tool `eval` (`m_inst_eval_mtron`).
+An agent edits a project's source by **pulling a file into the code space, editing the member's *fields*, and letting
+the subscription on `code/#` write back to disk and log a `saved` event.
 
-An agent edits a project's source by **pulling** a file into the code space, **editing** the rec-encoded member's, and
-letting a **subscription** on `code/#` write back to disk and **log** a `saved` event.
+If you are not encoded in metatron and thus, don't natural expression access to mtron, you will need to use the mcp
+server tool `eval` (`m_inst_eval_mtron`).
 
 ## setup: build the infrastructure
 
@@ -20,25 +20,24 @@ First, load necessary instruction sets. Second, open three spaces:
 2. access to the file system where source code is stored (`fsspace`).
 3. an optional space for storing mutation event logs (`tblespace`).
 
-```mtron_pre
-import(/m/ide,ide)
-import(/m/web,web) 
-import(/m/math,math)                
-memspace::[                                                                 /
-  pattern => </dev/scratch/#>,                                              / 
-        q => [mintq::[=>],docq::[=>],subq::[=>],                            /
-              mimeq::[=>], lineq::[=>],lockq::[=>],                         /
-              incrq::[=>]]]@</sys/space/dev/metatron>
-fsspace::[pattern      => mfs:#,                                            /
-           route       => [mfs:=><.>]]@/sys/space/fs/mfs
-tblespace::[pattern    => </log/scratch/#>,                                 /
-            host       => <sqlite:target/log_scratch.sqlite>,               /
-            driver     => <org.sqlite.JDBC>,                                /
-            table      => [,],                                              /
-            q          => [incrq::[=>],subq::[=>],mimeq::[=>]],             /
-            route      => [/log/scratch/ => <>]]@</sys/space/log/scratch>
+```mtron
+mtron> import(/m/ide,ide)
+mtron> import(/m/web,web)
+mtron> import(/m/math,math)
+mtron> memspace::[
+         pattern => </dev/scratch/#>,
+               q => [mintq::[=>],docq::[=>],subq::[=>],
+                    mimeq::[=>], lineq::[=>],lockq::[=>],
+                    incrq::[=>]]]@</sys/space/dev/metatron>
+mtron> fsspace::[pattern      => mfs:#,
+                  route       => [mfs:=><.>]]@/sys/space/fs/mfs
+mtron> tblespace::[pattern    => </log/scratch/#>,
+                   host       => <sqlite:target/log_scratch.sqlite>,
+                   driver     => <org.sqlite.JDBC>,
+                   table      => [,],
+                   q          => [incrq::[=>],subq::[=>],mimeq::[=>]],
+                   route      => [/log/scratch/ => <>]]@</sys/space/log/scratch>
 ```
-
 ## encodings
 
 A loaded Java file has two encodings:
@@ -48,12 +47,14 @@ A loaded Java file has two encodings:
 - **uri-graph (`idx`) encoding** — navigate the source with path syntax:
   `*/dev/metatron/idx/memSpace/method/close`.
 
-The pull (`src/.../${class}()`) returns the class's **rec encoding** (the
-`ide:java::T` value) and stores it in the `code` list beside the project root.
+The pull (`src/.../cls()`) returns the class's **rec encoding** (the
+`ide:java` value) and stores it in the `code` list beside the project root.
 `ide:index(root)` re-projects that code list into `root/idx`:
 `class => kind => name => !@.../code/N/classes/cls/0/members/i/name` — *anchors* pointing into the code space. That
 anchor is the write surface, and it also resolves back through the space to the stored member (the round trip is
 asserted in the acceptance test).
+
+field semantics:
 
 | field       | edit to change                      |
 |-------------|-------------------------------------|
@@ -67,80 +68,244 @@ asserted in the acceptance test).
 
 An example Java/Maven3 project is provided with metatron. This project is used for the following examples.
 
-```mtron_pre
-*<mfs:src/test/resources/scratch/pom.xml>.                                        /
-  as(rec::T).                                                                     /
-  repeat(code=>>>,until=><<.-<[has(Id),has(version)]>-,emit=>false).take(3)
+```mtron
+mtron> *<mfs:src/test/resources/scratch/pom.xml>.
+         as(rec::T).
+         repeat(code=>>>,until=><<.-<[has(Id),has(version)]>-,emit=>false).take(3)
+==>groupId=>[node=>[,],text=>'com.example.scratch']
+==>artifactId=>[node=>[,],text=>'scratch']
+==>version=>[node=>[,],text=>'0.1.0-SNAPSHOT']
 ```
-
 A `project::T` consolidates source code, various space embeddings, and build commands under one `rec::T`. There exists
 an `as()`-mapping from `uri::T` to `project::T`. The resultant `project::T` is saved to the user home graph. Finally.
 maven build commands are attached to the `project::T` for each of access.
 
-```mtron_pre
-<mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/scratch)                                       /
-@/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/test/resources/scratch compile'),               /
-                                mvn_clean => !ide:command('mvn -f src/test/resources/scratch clean'),                 / 
-                                mvn_exec  => !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]    
+```mtron
+mtron> <mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/scratch)
+       @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/test/resources/scratch compile'),
+                                       mvn_clean => !ide:command('mvn -f src/test/resources/scratch clean'),
+                                       mvn_exec  => !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
+==>project::[
+    src=>[
+     Operation=>inst?#{*}<=#{?}(#{*}::T),
+     Echo=>inst?#{*}<=#{?}(#{*}::T),
+     Calculator=>inst?#{*}<=#{?}(#{*}::T),
+     EchoTest=>inst?#{*}<=#{?}(#{*}::T)],
+    code=>[,],
+    idx=>[=>],
+    name=>'scratch',
+    root=>mfs:src/test/resources/scratch,
+    command=>[
+     mvn_build=>!ide:command('mvn -f src/test/resources/scratch compile'),
+     mvn_clean=>!ide:command('mvn -f src/test/resources/scratch clean'),
+     mvn_exec=>!ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
 ```
-
 Now that the project is stored in space, a quick build to ensure a clean slate to work from.
 
-```mtron_pre
-*/dev/scratch/command/mvn_build
+```mtron
+mtron> */dev/scratch/command/mvn_build
 ```
-
 The Java source files have a `str::T > web:java::T` encoding accessible via `src`.
 
-```mtron_pre
-*/dev/scratch/src/+/ 
+```mtron
 ```
-
 The file name serves as the key and an lambda `inst` serves as a lazy constructor of an `ide:java::T`. Calling the file
 name pulls the raw
 `src` into both `code` and `idx`.
 
-```mtron_pre
-/dev/scratch/src/Echo() 
-*/dev/scratch/code/0
-*/dev/scratch/idx/Echo
+```mtron
+mtron> /dev/scratch/src/Echo()
+==>[Echo=>[
+    field=>[
+     PREFIX=>!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
+     name=>!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
+    constructor=>[Echo=>!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
+    comment=>[=>],
+    method=>[
+     speak=>!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
+     name=>!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]]
+mtron> */dev/scratch/code/0
+==>java::[
+    package=>'package com.example.scratch;',
+    preamble=>"""package com.example.scratch;
+   
+   /**
+    * A simple greeter used ...""",
+    classes=>[Echo=>[[
+    kind=>class_declaration,
+    name=>'Echo',
+    header=>'public class Echo {',
+    members=>[
+     [PREFIX=>[
+    kind=>field,
+    text=>"""
+   
+       public static final String PREFIX = "...thus spoke";""",
+    name=>'PREFIX']],
+     [name=>[
+    kind=>field,
+    text=>"""
+   
+       private final String name;""",
+    name=>'name']],
+     [Echo=>[
+    kind=>constructor,
+    name=>'Echo',
+    signature=>'Echo(String name)',
+    header=>"""
+   
+       public Echo(String name) """,
+    body=>"""{
+           this.name = name;
+       }""",
+    footer=>'',
+    text=>"""
+   
+       public Echo(String name) {
+           this.name = name;
+   ..."""]],
+     [comment=>[
+    kind=>comment,
+    text=>"""
+   
+       /**
+        * Speak to a person.
+        *
+        * @param wh..."""]],
+     [speak=>[
+    kind=>method,
+    name=>'speak',
+    signature=>'String speak(String who)',
+    header=>"""
+       public String speak(String who) """,
+    body=>"""{
+           return PREFIX + " " + who;
+       }""",
+    footer=>'',
+    text=>"""
+       public String speak(String who) {
+           return PREFI..."""]],
+     [comment=>[
+    kind=>comment,
+    text=>"""
+   
+       /**
+        * The name this speaker was built with.
+       ..."""]],
+     [name=>[
+    kind=>method,
+    name=>'name',
+    signature=>'String name()',
+    header=>"""
+       public String name() """,
+    body=>"""{
+           return this.name;
+       }""",
+    footer=>'',
+    text=>"""
+       public String name() {
+           return this.name;
+       }"""]]],
+    footer=>"""
+   }"""]]],
+    postscript=>"""
+   """,
+    location=><mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>]
+mtron> */dev/scratch/idx/Echo
+==>[
+    field=>[
+     PREFIX=>!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
+     name=>!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
+    constructor=>[Echo=>!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
+    comment=>[=>],
+    method=>[
+     speak=>!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
+     name=>!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]
 ```
-
 `idx` offers a human-readable path scheme that projects to the `code` uri subgraph. Due to the `!*` nature of the `idx`
 objs, any updates to
-`idx` redirect to `code`. When `code` is **re-saved**, a `?subq` listener fires, mapping the `ide:java::T` to `web:java::T`
+`idx` redirect to `code`. When `code` is changed, a `?subq` listener fires, mapping the `ide:java::T` to `web:java::T`
 and then to disk. The subscription then pulls the file from disk to a `web:java::T` and then a `ide:java::T` in `code`
 and `idx`. In this way,
 `code` serves as a metatron encoded proxy to the file system representation of the project's source code.
 
-**edit, then save — two steps** (verified against a live VM, 2026-09-04): the `>>=` edit lands in the `code` space
-immediately, but the **disk write-back fires on the class-level save** (`code/N.to(...)`) — the subscription
-serializes the class rec (header + body + footer of each member) and writes the file. An edit that is never saved is
-space-only.
-
-```mtron_pre
-*/dev/scratch/idx/Echo/method/speak
-*/dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T)
-*/dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T) >>= [1 => "return who;"]
-@/dev/scratch/idx/Echo/method/speak >>= [body=> '{
-        return "marko";
-    }']
-*<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>
-
+```mtron
+mtron> */dev/scratch/idx/Echo/method/speak
+==>[
+    kind=>method,
+    name=>'speak',
+    signature=>'String speak(String who)',
+    header=>"""
+       public String speak(String who) """,
+    body=>"""{
+           return PREFIX + " " + who;
+       }""",
+    footer=>'',
+    text=>"""
+       public String speak(String who) {
+           return PREFI..."""]@/dev/scratch/code/0/classes/Echo/0/members/4/speak
+mtron> */dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T)
+==>[
+    0=>'{',
+    1=>'        return PREFIX + " " + who;',
+    2=>'    }']
+mtron> */dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T) >>= [1 => "return who;" ]>>.>-?str<=str{*}(' ')
+==>'{ return who;     }'
+mtron> @/dev/scratch/idx/Echo/method/speak >>= [body=> -<'\n'.as(rec::T) >>= [1 => 'return "marko";' ]>>.>-?str<=str{*}(' ')]
+==>[
+    body=>'{ return "marko";     }',
+    kind=>method,
+    name=>'speak',
+    signature=>'String speak(String who)',
+    header=>"""
+       public String speak(String who) """,
+    footer=>'',
+    text=>"""
+       public String speak(String who) {
+           return PREFI..."""]
+```
 Finally, to check if the update to `Echo::speak` made it to disk, dereference the uri disk pointer.
 
-```mtron_pre
-*<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>
+```mtron
+mtron> *<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>
+==>java::"""package com.example.scratch;
+   
+   /**
+    * A simple greeter used as a scratch fixture for the agent IDE.
+    */
+   public class Echo {
+   
+       public static final String PREFIX = "...thus spoke";
+   
+       private final String name;
+   
+       public Echo(String name) {
+           this.name = name;
+       }
+   
+       /**
+        * Speak to a person.
+        *
+        * @param who the person to speak with
+        * @return the spoken words
+        */
+       public String speak(String who) {
+           return PREFIX + " " + who;
+       }
+   
+       /**
+        * The name this speaker was built with.
+        *
+        * @return the speekers name
+        */
+       public String name() {
+           return this.name;
+       }
+   }
+   """
 ```
-
 The standard template for selective editing of code is provided below where `[X=>Y]` is a placeholder for patterns
 itemized in the subsequent table.
-
-> **known limitation (verified 2026-09-04, live VM):** the nested `>>=[...]>...join` *inside* `body=>` is
-> **silently dropped** by the current VM build — the line echoes back as accepted, but nothing changes in `code`,
-> in `idx`, or on disk (and no error is raised). The same update works when the new body is a **concrete string** —
-> which is what an agent composes anyway (it has the lines and the edit). So: build the full new `body` text, update
-> with it, then save (`code/N.to`).
 
 ```mtron
 @../idx/${class}/method/${method} >>= [body => -<'\n'.as(rec::T)>>=([X=>Y]>>.>-?str<=str{*}('\n'))]
@@ -178,10 +343,15 @@ Different subscriptions can be defined to provide any number of useful reactions
 
 The current `sub::T` is:
 
-```mtron_pre
-*/dev/scratch/code/#?subq
+```mtron
+mtron> */dev/scratch/code/#?subq
+==>[sub::[
+    code=>rshift(0).as(rec::T).rshift(path).select([id(),id(),id(),id(),id(),id()]).to(temp).as?rng=uri&dom=lst(uri::T).to(x).*id().update([location=>none]).as(java::T).to(**x.rshift(location).side(split([
+     location=>id(),
+     status=>saved,
+     time=>!math:datetime_now()]).print('saved ',id(),'\n'))).map(map(/dev/scratch/src).mult(*temp.reverse().merge().take(1))),
+    target=>/dev/scratch/code/#]]
 ```
-
 ## gotchas (learned the hard way)
 
 - **Edit fields, not `text`.** `text` is derived; writing it (e.g. via
@@ -196,23 +366,6 @@ The current `sub::T` is:
   dereference fine; single-line `?lineq=N` with `*(_)` returns `this`
   (self), not the line.
 - **`>>=` on a derived/clone path** silently does nothing useful.
-  Verified repro (2026-09-04): `@…/idx/Echo/method/speak >>= [body=> -<'\n'.as(rec::T)>>=([1=>'x']>>.>-?str<=str{*}('\n'))]`
-  echoes as accepted; `code`, `idx`, and disk are all unchanged, no error. Plain-string RHS works in the same one line:
-  `>>= [body=> '{
-        return who;
-    }']` lands in `code` immediately.
-- **Save to make it stick.** The `code/N.to(code/N)` re-save is what fires the write-back subscription — after the edit,
-  run it, then confirm on the `mfs:` file. Until then the edit is space-only.
-- **`text` stays stale after a body edit — by design.** the serializer composes `header + body + footer` on write, so
-  an outdated `text` field is harmless; do not try to keep it in sync by hand.
-- **rec key order (since the int-key sorting, 2026-09-04):** `as(rec::T)` from a lst, `>>=` result recs, and `==`
-  select result recs all render **int keys ascending**; recs with any non-int key keep their original order. Both are
-  stable within a run and safe to rely on for line numbers.
-- **join (`>>.>-?str<=str{*}(...)`) accepts a rec or a lst of strings** — joining a `rec` after `.as(lst::T)` fails
-  (`Tuple$Pair cannot be cast to String`); the pair-list is not a string list.
-- **the mtron MCP eval has a single-obj echo bug:** bare single-obj expressions can return `noobj` even when server
-  side they are fine — wrap for a liveness check with `1-<[expr]` (returns the address/uri when live; note `1-<[a,b]`
-  *splits* lists, so use it for single values). List-valued expressions render normally.
 - **The doc examples side-effect**: the `body=>` edit rewrites the project's
   `memSpace.java` on disk at build time. The mvn site build excludes this doc (toy project pending) so the examples can
   be run safely.
