@@ -447,6 +447,7 @@ maven build commands are attached to the <code>project::T</code> for each of acc
                                        mvn_clean =&gt; !ide:command('mvn -f src/test/resources/scratch clean'),
                                        mvn_exec  =&gt; !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
 ==&gt;project::[
+    root=&gt;mfs:src/test/resources/scratch,
     src=&gt;[
      Operation=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
      Echo=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
@@ -454,8 +455,6 @@ maven build commands are attached to the <code>project::T</code> for each of acc
      EchoTest=&gt;inst?#{*}&lt;=#{?}(#{*}::T)],
     code=&gt;[,],
     idx=&gt;[=&gt;],
-    name=&gt;'scratch',
-    root=&gt;mfs:src/test/resources/scratch,
     command=&gt;[
      mvn_build=&gt;!ide:command('mvn -f src/test/resources/scratch compile'),
      mvn_clean=&gt;!ide:command('mvn -f src/test/resources/scratch clean'),
@@ -463,6 +462,11 @@ maven build commands are attached to the <code>project::T</code> for each of acc
 </code></pre>
 <p>Now that the project is stored in space, a quick build to ensure a clean slate to work from.</p>
 <pre><code class="language-mtron">mtron&gt; */dev/scratch/command/mvn_build
+==&gt;result::[
+    status=&gt;success,
+    runtime=&gt;millis::849.0000,
+    command=&gt;'mvn -f src/test/resources/scratch compile',
+    output=&gt;!*/sys/tmp/2bae9f33]
 </code></pre>
 <p>The Java source files have a <code>str::T &gt; web:java::T</code> encoding accessible via <code>src</code>.</p>
 <pre><code class="language-mtron"></code></pre>
@@ -611,12 +615,12 @@ mtron&gt; */dev/scratch/idx/Echo/method/speak/body.-&lt;'\n'.as(rec::T)
 mtron&gt; */dev/scratch/idx/Echo/method/speak/body.-&lt;'\n'.as(rec::T) &gt;&gt;= [1 =&gt; &quot;return who;&quot;]
 ==&gt;[0=&gt;'{',1=&gt;'return who;',2=&gt;'    }']
 mtron&gt; @/dev/scratch/idx/Echo/method/speak &gt;&gt;= [body=&gt; '{
-==&gt;fail::[rec entry malformed (missing key or value): [body, =&gt;, null]]@/sys/fail/132
+==&gt;fail::[rec entry malformed (missing key or value): [body, =&gt;, null]]@/sys/fail/136
 mtron&gt; return &quot;marko&quot;;
 ==&gt;fail::[parse error at line 1, col 7:
      return &quot;marko&quot;;
            ^
-     could not parse at ' ']@/sys/fail/142
+     could not parse at ' ']@/sys/fail/146
 mtron&gt; }']
 ==&gt;fail::[parse error at line 1, col 1:
      }']

@@ -1,9 +1,7 @@
 ---
 name: mtron
 description: >
-  Working with the mtron language in metatron: spaces, and the read (*), write
-  (->), and update (@ via >>=) basics on a uri graph -- plus the reference map
-  to deep dives (data sources, MCP, fsspace, Docker, types, training).
+  understanding the language used to control the metatron
 ---
 
 # mtron: the basics on a uri/obj graph

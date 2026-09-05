@@ -84,6 +84,7 @@ mtron> <mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/sc
                                        mvn_clean => !ide:command('mvn -f src/test/resources/scratch clean'),
                                        mvn_exec  => !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
 ==>project::[
+    root=>mfs:src/test/resources/scratch,
     src=>[
      Operation=>inst?#{*}<=#{?}(#{*}::T),
      Echo=>inst?#{*}<=#{?}(#{*}::T),
@@ -91,8 +92,6 @@ mtron> <mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/sc
      EchoTest=>inst?#{*}<=#{?}(#{*}::T)],
     code=>[,],
     idx=>[=>],
-    name=>'scratch',
-    root=>mfs:src/test/resources/scratch,
     command=>[
      mvn_build=>!ide:command('mvn -f src/test/resources/scratch compile'),
      mvn_clean=>!ide:command('mvn -f src/test/resources/scratch clean'),
@@ -102,6 +101,11 @@ Now that the project is stored in space, a quick build to ensure a clean slate t
 
 ```mtron
 mtron> */dev/scratch/command/mvn_build
+==>result::[
+    status=>success,
+    runtime=>millis::849.0000,
+    command=>'mvn -f src/test/resources/scratch compile',
+    output=>!*/sys/tmp/2bae9f33]
 ```
 The Java source files have a `str::T > web:java::T` encoding accessible via `src`.
 
@@ -257,17 +261,17 @@ mtron> */dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T)
 mtron> */dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T) >>= [1 => "return who;"]
 ==>[0=>'{',1=>'return who;',2=>'    }']
 mtron> @/dev/scratch/idx/Echo/method/speak >>= [body=> '{
-==>fail::[rec entry malformed (missing key or value): [body, =>, null]]@/sys/fail/128
+==>fail::[rec entry malformed (missing key or value): [body, =>, null]]@/sys/fail/136
 mtron> return "marko";
 ==>fail::[parse error at line 1, col 7:
      return "marko";
            ^
-     could not parse at ' ']@/sys/fail/142
+     could not parse at ' ']@/sys/fail/146
 mtron> }']
 ==>fail::[parse error at line 1, col 1:
      }']
      ^
-     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/144
+     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/148
 mtron> *<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>
 ==>java::"""package com.example.scratch;
    
@@ -308,12 +312,12 @@ mtron> Finally, to check if the update to `Echo::speak` made it to disk, derefer
 ==>fail::[parse error at line 1, col 8:
      Finally, to check if the update to `Echo::speak...
             ^
-     could not parse at ',']@/sys/fail/146
+     could not parse at ',']@/sys/fail/150
 mtron> ```mtron_pre
 ==>fail::[parse error at line 1, col 1:
      ```mtron_pre
      ^
-     could not parse at '`']@/sys/fail/148
+     could not parse at '`']@/sys/fail/152
 mtron> *<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>
 ==>java::"""package com.example.scratch;
    

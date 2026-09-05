@@ -388,6 +388,21 @@
         }
        }
        &quot;&quot;&quot;.as(json::T).as(mcp_client::T).to(/usr/marko/mcp/intellij)
+==&gt;fail::[apply failure:
+   	[lhs]    │ json::&quot;&quot;&quot;
+   {
+   &quot;type&quot;: &quot;streamable-http&quot;,
+   &quot;url&quot;: &quot;http://127.0.0.1:64342/stream&quot;,
+   &quot;headers&quot;: {
+   &quot;IJ_MCP_SERVER_PROJECT_PATH&quot;: &quot;~/software/metatron&quot;
+   }
+   }
+   &quot;&quot;&quot;
+   	 \_type  │ /m/web/mime/json
+   	  \_pred │ [/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]
+   	[inst]   │ as?rng=mcp_client{+}&amp;dom=json(mcp_client::T){&lt;j&gt;}@&lt;2&gt;
+   	 \_dom   │ str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/json
+   	 \_args  │ [mcp_client::T][SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/160
 </code></pre>
 <p>If the snippet provided has an <code>mcpServer</code> outer wrapping, then do:</p>
 <pre><code class="language-mtron">mtron&gt; &quot;&quot;&quot;
@@ -400,93 +415,13 @@
           }
         }}}
        &quot;&quot;&quot;.as(json::T).as(rec::T)&gt;&gt;mcpServers/intellij.as(json::T).as(mcp_client::T)
-==&gt;mcp_client::[
-    type=&gt;streamable-http,
-    url=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
-    headers=&gt;[IJ_MCP_SERVER_PROJECT_PATH=&gt;~/software/metatron],
-    host=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
-    status=&gt;!inst?bool&lt;=#{?}(),
-    tool=&gt;[  execute_run_configuration=&gt;tool::[
-      inst=&gt;inst?#{?}&lt;=#{?}(configurationName=&gt;'Name of the existing run configuration to execute',filePath=&gt;&quot;File path relative to the project root. Provide together with `line` to create and execute a temporary run configuration from code context.&quot;,line=&gt;&quot;1-based line number for `filePath`. Provide together with `filePath` and do not combine with `configurationName`.&quot;,timeout=&gt;'Timeout in milliseconds',waitForExit=&gt;&quot;Whether to wait for process termination. If false, the tool returns immediately after the process starts and ignores `timeout`.&quot;,programArguments=&gt;'Optional program arguments override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',workingDirectory=&gt;'Optional working directory override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',envs=&gt;'Optional environment variable overrides for this launch only. Missing/null keeps existing env unchanged; when provided, values are merged over existing env.'),
-      name=&gt;execute_run_configuration,
-      desc=&gt;'Run either an existing run configuration by name or a tempo...',
-      arg=&gt;[
-       configurationName=&gt;'Name of the existing run configuration to execute',
-       filePath=&gt;'File path relative to the project root. Provide together wi...',
-       line=&gt;&quot;1-based line number for `filePath`. Provide together with `...&quot;,
-       timeout=&gt;'Timeout in milliseconds',
-       waitForExit=&gt;'Whether to wait for process termination. If false, the tool...',
-       programArguments=&gt;'Optional program arguments override for this launch only. M...',
-       workingDirectory=&gt;'Optional working directory override for this launch only. M...',
-       envs=&gt;'Optional environment variable overrides for this launch onl...']],
-     get_run_configurations=&gt;tool::[
-      inst=&gt;inst?#{?}&lt;=#{?}(filePath=&gt;'Optional file path relative to the project root. When provided, returns run points (executable entry points) in the file instead of project-wide run configurations.'),
-      name=&gt;get_run_configurations,
-      desc=&gt;'Returns either project run configurations or executable cod...',
-      arg=&gt;[filePath=&gt;'Optional file path relative to the project root. When provi...']],
-     analyze_calls=&gt;tool::[
-      inst=&gt;inst?#{?}&lt;=#{?}(symbolFqn=&gt;&quot;Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.&quot;,analysisKind=&gt;&quot;Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.&quot;,depth=&gt;'Maximum number of call levels to render below the requested subtree root. Default: 5. Use 0 to render only the subtree root.',maxChildren=&gt;'Maximum number of direct children rendered for each node. Default: 50.',maxNodes=&gt;'Maximum total number of rendered call nodes. Default: 1000.',treePath=&gt;&quot;Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.&quot;,childOffset=&gt;&quot;Offset for paging direct children of the node addressed by `treePath`. Default: 0.&quot;,timeout=&gt;'Timeout in milliseconds'),
-      name=&gt;analyze_calls,
-      desc=&gt;'Builds the IDE Call Hierarchy tree for a method, function, ...',
-      arg=&gt;[
-       symbolFqn=&gt;'Plain fully qualified symbol name, or an exact signature re...',
-       analysisKind=&gt;&quot;Call analysis direction. Use `INCOMING_CALLS` to show calle...&quot;,
-       depth=&gt;'Maximum number of call levels to render below the requested...',
-       maxChildren=&gt;'Maximum number of direct children rendered for each node. D...',
-       maxNodes=&gt;'Maximum total number of rendered call nodes. Default: 1000.',
-       treePath=&gt;'Optional path to a subtree root, copied exactly from a prev...',
-       childOffset=&gt;'Offset for paging direct children of the node addressed by ...',
-       timeout=&gt;'Timeout in milliseconds']],
-     build_project=&gt;tool::[
-      inst=&gt;inst?#{?}&lt;=#{?}(rebuild=&gt;&quot;Whether to perform full rebuild the project. Defaults to false. Effective only when `filesToRebuild` is not specified.&quot;,filesToRebuild=&gt;'If specified, only compile files with the specified paths. Paths are relative to the project root.',timeout=&gt;'Timeout in milliseconds'),
-      name=&gt;build_project,
-      desc=&gt;'Triggers building of the project or specified files, waits ...',
-      arg=&gt;[
-       rebuild=&gt;'Whether to perform full rebuild the project. Defaults to fa...',
-       filesToRebuild=&gt;'If specified, only compile files with the specified paths. ...',
-       timeout=&gt;'Timeout in milliseconds']],
-     get_file_problems=&gt;tool::[
-      inst=&gt;inst?#{?}&lt;=#{?}(filePath=&gt;'Path relative to the project root',errorsOnly=&gt;'Whether to include only errors or include both errors and warnings',timeout=&gt;'Timeout in milliseconds'),
-      name=&gt;get_file_problems,
-      desc=&gt;'Analyzes the specified file for errors and warnings using I...',
-      arg=&gt;[
-       filePath=&gt;'Path relative to the project root',
-       errorsOnly=&gt;'Whether to include only errors or include both errors and w...',
-       timeout=&gt;'Timeout in milliseconds']],
-     get_project_dependencies=&gt;tool::[
-      inst=&gt;inst?#{?}&lt;=#{?}(),
-      name=&gt;get_project_dependencies,
-      desc=&gt;&quot;&quot;&quot;Get a list of all dependencies defined in the project.
-   Incl...&quot;&quot;&quot;,
-      arg=&gt;[=&gt;]],
-     get_project_modules=&gt;tool::[
-      inst=&gt;inst?#{?}&lt;=#{?}(),
-      name=&gt;get_project_modules,
-      desc=&gt;&quot;&quot;&quot;Get a list of all modules in the project with their types.
-   ...&quot;&quot;&quot;,
-      arg=&gt;[=&gt;]],
-     lint_files=&gt;tool::[
-      inst=&gt;inst?#{?}&lt;=#{?}(files=&gt;'List of project-relative files to analyze. Duplicate paths are ignored after normalization.',min_severity=&gt;&quot;Minimum severity to include: `warning` or `error`. Defaults to `warning`.&quot;,timeout=&gt;'Timeout in milliseconds'),
-      name=&gt;lint_files,
-      desc=&gt;'Analyzes the specified files for errors and warnings using ...',
-      arg=&gt;[
-       files=&gt;'List of project-relative files to analyze. Duplicate paths ...',
-       min_severity=&gt;&quot;Minimum severity to include: `warning` or `error`. Defaults...&quot;,
-       timeout=&gt;'Timeout in milliseconds']],
-     create_new_file=&gt;tool::[
-      inst=&gt;inst?#{?}&lt;=#{?}(pathInProject=&gt;'Path where the file should be created relative to the project root',text=&gt;'Content to write into the new file',overwrite=&gt;'Whether to overwrite an existing file if exists. If false, an exception is thrown in case of a conflict.'),
-      name=&gt;create_new_file,
-      desc=&gt;'Creates a new file at the specified path within the project...',
-      arg=&gt;[
-       pathInProject=&gt;'Path where the file should be created relative to the proje...',
-       text=&gt;'Content to write into the new file',
-       overwrite=&gt;'Whether to overwrite an existing file if exists. If false, ...']],
-     get_all_open_file_paths=&gt;tool::[
-      inst=&gt;inst?#{?}&lt;=#{?}(),
-      name=&gt;get_all_open_file_paths,
-      desc=&gt;&quot;Returns active editor's and other open editors' file paths ...&quot;,
-      arg=&gt;[=&gt;]],
-     ...(44 more)]]
+==&gt;fail::[apply failure:
+   	[lhs]    │ json::'{&quot;type&quot;:&quot;streamable-http&quot;,&quot;url&quot;:&quot;http://127.0.0.1:64342/stream&quot;,&quot;headers&quot;:{&quot;IJ_MCP_SERVER_PROJECT_PATH&quot;:&quot;~/software/metatron&quot;}}'
+   	 \_type  │ /m/web/mime/json
+   	  \_pred │ [/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]
+   	[inst]   │ as?rng=mcp_client{+}&amp;dom=json(mcp_client::T){&lt;j&gt;}@&lt;5&gt;
+   	 \_dom   │ str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/json
+   	 \_args  │ [mcp_client::T][SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/170
 </code></pre>
 <p>Moreover, if the <code>mcpServer</code> snippet has multiple inner servers endpoints defined, to load all of them, do:</p>
 <pre><code class="language-mtron">mtron&gt; {&quot;mcpServers&quot;: {
@@ -497,12 +432,12 @@
             &quot;intellij&quot;: {
    ...
      ^
-     unclosed '{' — missing '}'?]@/sys/fail/168
+     unclosed '{' — missing '}'?]@/sys/fail/172
 mtron&gt; }}
 ==&gt;fail::[parse error at line 1, col 1:
      }}
      ^
-     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/170
+     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/174
 </code></pre>
 <p>For <code>STDIO</code> transport MCP servers, the same process works:</p>
 <pre><code>mcp_client::[command=&gt;[&lt;/home/killswitch/.local/bin/codegraph&gt;,'serve', '--mcp']]@codegraph;
@@ -521,12 +456,12 @@ mtron&gt; mcp_client::[host=&gt;http://localhost:8777/mcp]@a
    	  \_pred │ []
    	[inst]   │ ctor?rng=mcp_client&amp;dom=#{?}([host=&gt;http://localhost:8777/mcp]@a){&lt;j&gt;}
    	 \_dom   │ #{?}::T
-   	 \_args  │ [[host=&gt;http://localhost:8777/mcp]@a][SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/174]@/sys/fail/176
+   	 \_args  │ [[host=&gt;http://localhost:8777/mcp]@a][SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/178]@/sys/fail/180
 mtron&gt; *a&gt;&gt;tool
 mtron&gt; [-- =&gt; [m_inst_eval_mtron=&gt;tool::[inst=&gt;..., name=&gt;m_inst_eval_mtron, desc=&gt;..., arg=&gt;...], ...] --]
 mtron&gt; [-- invoke a tool by applying its inst field --]
 mtron&gt; a/tool/m_inst_eval_mtron/inst(&quot;1+2&quot;)
-==&gt;fail::[unable to locate inst-f of a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/178
+==&gt;fail::[unable to locate inst-f of a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/182
 mtron&gt; [-- =&gt; 3 --]
 </code></pre>
 <h4>WebSocket</h4>
