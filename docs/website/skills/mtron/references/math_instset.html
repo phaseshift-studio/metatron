@@ -437,7 +437,7 @@ mtron&gt; second::60.0.gt(millis::500.0)
 <h4>Construction</h4>
 <pre><code class="language-mtron">mtron&gt; [-- Current system time --]
 mtron&gt; datetime_now()
-==&gt;datetime::&lt;//2026.09:5/02/39/54/918?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.09:5/06/41/19/243?tz=-0600&gt;
 mtron&gt; [-- From record (goes through .as(uri::T) first) --]
 mtron&gt; [host=&gt;&lt;2024.12&gt;,port=&gt;25,path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
         c=&gt;[min=&gt;1,max=&gt;1],q=&gt;[tz=&gt;'-0500']].as(uri::T).as(datetime::T)
@@ -456,7 +456,7 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;host
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(host){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [host][MTronException&lt;137&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]@/sys/fail/312
+   	 \_args  │ [host][MTronException&lt;137&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]@/sys/fail/316
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;port
 ==&gt;fail::[apply failure:
    	[lhs]    │ &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
@@ -464,7 +464,7 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;port
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(port){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException&lt;137&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/322
+   	 \_args  │ [port][MTronException&lt;137&gt;:no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/326
 mtron&gt; [-- Vocabulary projections require datetime:: prefix --]
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year
 ==&gt;2024
@@ -525,7 +525,7 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;==[port=&gt;31]&gt;&gt;port
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(port){&lt;j&gt;}@&lt;2&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException&lt;137&gt;:no active space supports pattern &lt;//2024.12:31/09/00/00/000/port?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:31/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/380
+   	 \_args  │ [port][MTronException&lt;137&gt;:no active space supports pattern &lt;//2024.12:31/09/00/00/000/port?tz=-0500&gt;]][no active space supports pattern &lt;//2024.12:31/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/384
 mtron&gt; [-- Where filter: match day 25 --]
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;=?=[port=&gt;25]
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;

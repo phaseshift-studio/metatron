@@ -411,7 +411,7 @@ anywhere            ┌───────────────────
       params=&gt;*message.rshift(1)]=&gt;json::[
       jsonrpc=&gt;'2.0',
       method=&gt;rshift(0).minus(&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}${/}&gt;),
-      params=&gt;*message.rshift(1)]=&gt;==&gt;/m/inst/pred?#{?}&lt;=#{?}(#{*}::T)]]@/sys/fail/422
+      params=&gt;*message.rshift(1)]=&gt;==&gt;/m/inst/pred?#{?}&lt;=#{?}(#{*}::T)]]@/sys/fail/426
 </code></pre>
 <p>This lives in <code>boot/boot.mtron</code> lines 82-88 and is injected at boot time.</p>
 <h3>Key Mechanics</h3>
@@ -451,7 +451,7 @@ mtron&gt; json::[jsonrpc =&gt; '2.0', params =&gt; *message&gt;&gt;1]
       jsonrpc=&gt;'2.0',
       params=&gt;*message.rshift(1)]=&gt;json::[
       jsonrpc=&gt;'2.0',
-      params=&gt;*message.rshift(1)]=&gt;==&gt;/m/inst/pred?#{?}&lt;=#{?}(#{*}::T)]]@/sys/fail/432
+      params=&gt;*message.rshift(1)]=&gt;==&gt;/m/inst/pred?#{?}&lt;=#{?}(#{*}::T)]]@/sys/fail/436
 ```**Symptom**: Client receives raw expression text instead of evaluated values.
 **Fix**: Use `-&lt;json::[...]` to force evaluation.
 
@@ -462,7 +462,7 @@ mtron&gt; *srv&gt;&gt;&gt;send.apply(-&lt;json::[...])
 ==&gt;fail::[parse error at line 1, col 7:
      *srv&gt;&gt;&gt;send.apply(-&lt;json::[...])
            ^
-     unexpected '&gt;' — URI brackets don't match, or extra '&gt;'?]@/sys/fail/434
+     unexpected '&gt;' — URI brackets don't match, or extra '&gt;'?]@/sys/fail/438
 ```**Symptom**: `fail::[unable to determine inst function:]`
 **Fix**: Separate JSON builder from send call using `.inst()` split-pattern.
 
@@ -475,7 +475,7 @@ mtron&gt; &lt;ws://.../?subq&gt; -&gt; sub::[...]                       [-- re-r
 ==&gt;fail::[parse error at line 1, col 17:
      &lt;ws://.../?subq&gt; -&gt; sub::[...]                       
                      ^
-     could not parse at ' ']@/sys/fail/436
+     could not parse at ' ']@/sys/fail/440
 </code></pre>
 <h3>Boot Integration</h3>
 <p>The <code>subq</code> framework must be enabled on the WebSocket space before subscriptions can be registered:</p>
@@ -483,7 +483,7 @@ mtron&gt; &lt;ws://.../?subq&gt; -&gt; sub::[...]                       [-- re-r
 ==&gt;fail::[parse error at line 1, col 1:
      wsspace::[q =&gt; [subq::[=&gt;]], ...]@/sys/s...
      ^
-     could not parse at 'w']@/sys/fail/438
+     could not parse at 'w']@/sys/fail/442
 </code></pre>
 <p>The <code>q =&gt; [subq::[=&gt;]]</code> adds declarative pub/sub semantics to the space.</p>
 <h3>MCP Notification Methods</h3>

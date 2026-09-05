@@ -1,7 +1,7 @@
 ---
 name: ide
-description:
-  agent ide: metatron coding agent harness
+description: >
+  metatron agent coding harness ide
 ---
 
 # agent ide: source edits through the uri graph
@@ -108,7 +108,8 @@ name pulls the raw
 
 `idx` offers a human-readable path scheme that projects to the `code` uri subgraph. Due to the `!*` nature of the `idx`
 objs, any updates to
-`idx` redirect to `code`. When `code` is **re-saved**, a `?subq` listener fires, mapping the `ide:java::T` to `web:java::T`
+`idx` redirect to `code`. When `code` is **re-saved**, a `?subq` listener fires, mapping the `ide:java::T` to
+`web:java::T`
 and then to disk. The subscription then pulls the file from disk to a `web:java::T` and then a `ide:java::T` in `code`
 and `idx`. In this way,
 `code` serves as a metatron encoded proxy to the file system representation of the project's source code.
@@ -196,7 +197,8 @@ The current `sub::T` is:
   dereference fine; single-line `?lineq=N` with `*(_)` returns `this`
   (self), not the line.
 - **`>>=` on a derived/clone path** silently does nothing useful.
-  Verified repro (2026-09-04): `@…/idx/Echo/method/speak >>= [body=> -<'\n'.as(rec::T)>>=([1=>'x']>>.>-?str<=str{*}('\n'))]`
+  Verified repro (2026-09-04):
+  `@…/idx/Echo/method/speak >>= [body=> -<'\n'.as(rec::T)>>=([1=>'x']>>.>-?str<=str{*}('\n'))]`
   echoes as accepted; `code`, `idx`, and disk are all unchanged, no error. Plain-string RHS works in the same one line:
   `>>= [body=> '{
         return who;
