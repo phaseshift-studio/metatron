@@ -50,7 +50,7 @@ mtron> <ws://localhost:8555/mcp/+/notifications/#?subq> -> sub::[
       params=>*message.rshift(1)]=>json::[
       jsonrpc=>'2.0',
       method=>rshift(0).minus(<ws://localhost:8555/mcp/${*message>>0>>1}${/}>),
-      params=>*message.rshift(1)]=>==>/m/inst/pred?#{?}<=#{?}(#{*}::T)]]@/sys/fail/488
+      params=>*message.rshift(1)]=>==>/m/inst/pred?#{?}<=#{?}(#{*}::T)]]@/sys/fail/422
 ```
 This lives in `boot/boot.mtron` lines 82-88 and is injected at boot time.
 
@@ -93,7 +93,7 @@ mtron> json::[jsonrpc => '2.0', params => *message>>1]
       jsonrpc=>'2.0',
       params=>*message.rshift(1)]=>json::[
       jsonrpc=>'2.0',
-      params=>*message.rshift(1)]=>==>/m/inst/pred?#{?}<=#{?}(#{*}::T)]]@/sys/fail/498
+      params=>*message.rshift(1)]=>==>/m/inst/pred?#{?}<=#{?}(#{*}::T)]]@/sys/fail/432
 ```**Symptom**: Client receives raw expression text instead of evaluated values.
 **Fix**: Use `-<json::[...]` to force evaluation.
 
@@ -104,7 +104,7 @@ mtron> *srv>>>send.apply(-<json::[...])
 ==>fail::[parse error at line 1, col 7:
      *srv>>>send.apply(-<json::[...])
            ^
-     unexpected '>' — URI brackets don't match, or extra '>'?]@/sys/fail/500
+     unexpected '>' — URI brackets don't match, or extra '>'?]@/sys/fail/434
 ```**Symptom**: `fail::[unable to determine inst function:]`
 **Fix**: Separate JSON builder from send call using `.inst()` split-pattern.
 
@@ -117,7 +117,7 @@ mtron> <ws://.../?subq> -> sub::[...]                       [-- re-register subs
 ==>fail::[parse error at line 1, col 17:
      <ws://.../?subq> -> sub::[...]                       
                      ^
-     could not parse at ' ']@/sys/fail/502
+     could not parse at ' ']@/sys/fail/436
 ```
 ## Boot Integration
 
@@ -127,7 +127,7 @@ mtron> wsspace::[q => [subq::[=>]], ...]@/sys/space/web/ws
 ==>fail::[parse error at line 1, col 1:
      wsspace::[q => [subq::[=>]], ...]@/sys/s...
      ^
-     could not parse at 'w']@/sys/fail/504
+     could not parse at 'w']@/sys/fail/438
 ```
 The `q => [subq::[=>]]` adds declarative pub/sub semantics to the space.
 

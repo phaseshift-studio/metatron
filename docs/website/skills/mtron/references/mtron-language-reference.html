@@ -31,6 +31,10 @@
     <link rel="icon" type="image/png" sizes="32x32" href="../../../images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="../../../images/favicon-16x16.png">
     <link rel="mask-icon" href="../../../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- CSS PACKAGES -->
     <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
@@ -123,9 +127,9 @@
 <!-- NAVIGATION BAR -->
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
      data-wow-delay="0.1s">
-    <h2 class="mb-0 text-primary logo-text navbar-brand ms-4 ms-lg-0">
-        <a href="../../../index.html" class="text-primary" title="metatron"><i class="bi bi-soundwave me-3 icon-color"></i></a>
-        <a href="http://phaseshift.studio" class="text-primary">PhaseShift Studio</a>
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../../../index.html" title="metatron"><img src="../../../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
     </h2>
     <div class="collapse navbar-collapse" id="navbarCollapse">
         <div class="navbar-nav ms-auto p-4 p-lg-0">
@@ -170,52 +174,40 @@
                     instruction sets
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../../../instset/index.html';">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../../../instset/m.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m.html"><img
                             src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../../../instset/m_dcmnt.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dcmnt.html"><img
                             src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
                             alt="dcmnt"/>/m/dcmnt</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../../../instset/m_grph.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_grph.html"><img
                             src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
                             alt="grph"/>/m/grph</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../../../instset/m_iot.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_iot.html"><img
                             src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../../../instset/m_llm.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_llm.html"><img
                             src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
                             alt="llm"/>/m/llm</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../../../instset/m_mach.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach.html"><img
                             src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
                             alt="mach"/>/m/mach</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../../../instset/m_math.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math.html"><img
                             src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../../../instset/m_sys.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_sys.html"><img
                             src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                             alt="sys"/>/m/sys</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../../../instset/m_tble.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_tble.html"><img
                             src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
                             alt="tble"/>/m/tble</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../../../instset/m_vec.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_vec.html"><img
                             src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/vec</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../../../instset/m_web.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_web.html"><img
                             src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                 </ul>
@@ -236,66 +228,66 @@
                     agent skills
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../skills/agent/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/agent/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/drstynx/assets/drstynx.boot.mtron';">drstynx.boot.mtron</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/drstynx/assets/drstynx.sqlite';">drstynx.sqlite</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
                             </div>
                         </div>
                     </li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../skills/ide/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/mcp-mtron.html';">mcp-mtron</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/rewrite-system-java.html';">rewrite-system-java</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/tble-space-java.html';">tble-space-java</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/type-system-java.html';">type-system-java</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/references/ui-instset-java.html';">ui-instset-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/metatron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                             </div>
                         </div>
                     </li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../../../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/answer-questions.html';">answer-questions</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/connecting-datasources.html';">connecting-datasources</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/dckrspace.html';">dckrspace</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/dsh-mtron.html';">dsh-mtron</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/http-page-fetching.html';">http-page-fetching</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/math_instset.html';">math_instset</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mcp-server-architecture.html';">mcp-server-architecture</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mcp-server-notifications.html';">mcp-server-notifications</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mtron-fsspace.html';">mtron-fsspace</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/mtron-language-reference.html';">mtron-language-reference</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/type-system-mtron.html';">type-system-mtron</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/references/unsloth-training-mtron.html';">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/answer-questions.html">answer-questions</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/connecting-datasources.html">connecting-datasources</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace.html">dckrspace</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/http-page-fetching.html">http-page-fetching</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math_instset.html">math_instset</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mtron-fsspace.html">mtron-fsspace</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mtron-language-reference.html">mtron-language-reference</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/scripts/unsloth_studio.py';">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
                                 <div class="skill-resource-group">assets</div>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/README.md';">README.md</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/dsh_memory_loader.py';">dsh_memory_loader.py</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../../../skills/mtron/assets/mtron_training_dataset.jsonl';">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -309,14 +301,11 @@
                 <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
                    data-bs-toggle="dropdown" aria-expanded="false">articles</a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../../../articles/stream-ring-theory.pdf';"><i
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/stream-ring-theory.pdf"><i
                             class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../../../articles/parametric-identities-in-ring-theory.html';"><i
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/parametric-identities-in-ring-theory.html"><i
                             class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../../../articles/mm-adt.pdf';"><i
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/mm-adt.pdf"><i
                             class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
                 </ul>
             </li>
@@ -329,20 +318,16 @@
                     software guild
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='https://opencollective.com/metatron';">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
                         <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='https://github.com/phaseshift-studio/metatron';">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
                         <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='https://huggingface.co/phaseshift-studio';">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
                         <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='https://groups.google.com/u/1/g/metatron-phaseshift';">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
                         <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
-                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../index.html';">live coding</a></li>-->
-                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../../../index.html';">artifacts</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../../../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../../../index.html">artifacts</a></li>-->
                 </ul>
             </li>
             <!--<li class="nav-item dropdown">
@@ -421,7 +406,7 @@ mtron&gt; '''mtron''' [-- str (triple single-quoted, multi-line --]
 ==&gt;fail::[parse error at line 1, col 3:
      '''mtron''' 
        ^
-     could not parse at ''']@/sys/fail/540
+     could not parse at ''']@/sys/fail/474
 mtron&gt; &lt;a.b.c&gt;     [-- uri (angle-bracket necessary of uri has . or space) --]
 ==&gt;&lt;a.b.c&gt;
 mtron&gt; /foo/bar    [-- uri (path literal) --]
@@ -464,14 +449,14 @@ mtron&gt; {1,1,2} [-- becomes {{2}1,2} (duplicates merged on coefficient) --]
 ==&gt;fail::[parse error at line 1, col 9:
      [1,2,3].0         
              ^
-     could not parse at '0']@/sys/fail/542
+     could not parse at '0']@/sys/fail/476
 mtron&gt; [1,2,3]&gt;&gt;0        [--
 ==&gt;1
 mtron&gt; [a=&gt;1,b=&gt;2].a     [--
 ==&gt;fail::[parse error at line 1, col 13:
      [a=&gt;1,b=&gt;2].a     
                  ^
-     could not parse at 'a']@/sys/fail/552
+     could not parse at 'a']@/sys/fail/486
 mtron&gt; [a=&gt;1,b=&gt;2]&gt;&gt;a    [--
 ==&gt;1
 </code></pre>
@@ -594,7 +579,7 @@ mtron&gt; 'ab3cd'.regex('\d{2}')        [-- [,]  (no match — empty pair) --]
    	  \_pred │ []
    	[inst]   │ */path/to/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/616
+   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/550
 mtron&gt; @/path/to/obj              [-- real obj at uri (attached) --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
@@ -602,7 +587,7 @@ mtron&gt; @/path/to/obj              [-- real obj at uri (attached) --]
    	  \_pred │ []
    	[inst]   │ at?rng=B{*}&amp;dom=A{?}(/path/to/obj){&lt;j&gt;}
    	 \_dom   │ A{?}::T
-   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/618
+   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/552
 mtron&gt; *local:software/           [-- read with trailing
        *&lt;/path/to/obj&gt;            [-- angle-bracket handles special chars --]
 ==&gt;fail::[apply failure:
@@ -611,7 +596,7 @@ mtron&gt; *local:software/           [-- read with trailing
    	  \_pred │ []
    	[inst]   │ */path/to/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/620
+   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/554
 </code></pre>
 <p>Wildcards:</p>
 <pre><code class="language-mtron">mtron&gt; */path/+/obj               [-- + matches one segment --]
@@ -621,7 +606,7 @@ mtron&gt; *local:software/           [-- read with trailing
    	  \_pred │ []
    	[inst]   │ */path/+/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/obj][MTronException&lt;137&gt;:no active space supports pattern /path/+/obj]][no active space supports pattern /path/+/obj]@/sys/fail/622
+   	 \_args  │ [/path/+/obj][MTronException&lt;137&gt;:no active space supports pattern /path/+/obj]][no active space supports pattern /path/+/obj]@/sys/fail/556
 mtron&gt; */path/+/+                 [-- ++, children at depth 2 --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
@@ -629,12 +614,12 @@ mtron&gt; */path/+/+                 [-- ++, children at depth 2 --]
    	  \_pred │ []
    	[inst]   │ */path/+/+
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/+][MTronException&lt;137&gt;:no active space supports pattern /path/+/+]][no active space supports pattern /path/+/+]@/sys/fail/624
+   	 \_args  │ [/path/+/+][MTronException&lt;137&gt;:no active space supports pattern /path/+/+]][no active space supports pattern /path/+/+]@/sys/fail/558
 mtron&gt; */path/#                   [-- [-- matches all remaining segments (recursive) --] --]
 ==&gt;fail::[parse error at line 1, col 9:
      */path/#                    --]
              ^
-     could not parse at ' ']@/sys/fail/626
+     could not parse at ' ']@/sys/fail/560
 </code></pre>
 <p><strong>uri::T</strong> type drives URI-specific operations:</p>
 <pre><code class="language-mtron">mtron&gt; http://abc:123/a/b/c.&gt;&gt;scheme        [-- http --]
@@ -644,7 +629,7 @@ mtron&gt; */path/#                   [-- [-- matches all remaining segments (rec
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(scheme){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [scheme][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/scheme]][no active space supports pattern http://abc:123/a/b/c/scheme]@/sys/fail/636
+   	 \_args  │ [scheme][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/scheme]][no active space supports pattern http://abc:123/a/b/c/scheme]@/sys/fail/570
 mtron&gt; http://abc:123/a/b/c.&gt;&gt;host          [-- abc --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -652,7 +637,7 @@ mtron&gt; http://abc:123/a/b/c.&gt;&gt;host          [-- abc --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(host){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [host][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/host]][no active space supports pattern http://abc:123/a/b/c/host]@/sys/fail/646
+   	 \_args  │ [host][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/host]][no active space supports pattern http://abc:123/a/b/c/host]@/sys/fail/580
 mtron&gt; http://abc:123/a/b/c.&gt;&gt;port          [-- 123 (noobj if no port) --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -660,7 +645,7 @@ mtron&gt; http://abc:123/a/b/c.&gt;&gt;port          [-- 123 (noobj if no port) 
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(port){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/port]][no active space supports pattern http://abc:123/a/b/c/port]@/sys/fail/656
+   	 \_args  │ [port][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/port]][no active space supports pattern http://abc:123/a/b/c/port]@/sys/fail/590
 mtron&gt; http://abc:123/a/b/c.&gt;&gt;authority     [-- abc:123 --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -668,7 +653,7 @@ mtron&gt; http://abc:123/a/b/c.&gt;&gt;authority     [-- abc:123 --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(authority){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [authority][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/authority]][no active space supports pattern http://abc:123/a/b/c/authority]@/sys/fail/666
+   	 \_args  │ [authority][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/authority]][no active space supports pattern http://abc:123/a/b/c/authority]@/sys/fail/600
 mtron&gt; http://abc:123/a/b/c.&gt;&gt;{schema,path} [-- {http,/a/b/c} --]
 mtron&gt; /a/b/c&gt;&gt;0                            [-- a --]
 ==&gt;/a/b/c
@@ -699,7 +684,7 @@ mtron&gt; int::T[?&gt;0]@nat           [-- syntax sugar on is(gt(0)) --]
 mtron&gt; nat::2                    [-- ok --]
 ==&gt;nat::2
 mtron&gt; nat::-1                   [-- &lt;ERROR&gt; --]
-==&gt;fail::[-1 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/676
+==&gt;fail::[-1 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/610
 </code></pre>
 <hr />
 <h3>8. Mapping &amp; Filtering</h3>
@@ -994,7 +979,7 @@ mtron&gt; {1,2,3,4}.sum{2}().sum?int&lt;=int{1,7}().sum()-&lt;[_,_]&gt;-.sum?int
 ==&gt;fail::[parse error at line 1, col 74:
      ...,7}().sum()-&lt;[_,_]&gt;-.sum?int&lt;=int{2}()  #
                                                 ^
-     could not parse at '#' — unclosed '&lt;' — missing '&gt;'?]@/sys/fail/844
+     could not parse at '#' — unclosed '&lt;' — missing '&gt;'?]@/sys/fail/778
 </code></pre>
 
     </div>

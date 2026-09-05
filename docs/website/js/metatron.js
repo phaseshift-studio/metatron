@@ -32,9 +32,9 @@
     hljs.highlightAll();
     // TERMYNAL TABS
     $(function () {
-        $("li").click(function (e) {
+        $(".tabrow li").click(function (e) {
             e.preventDefault();
-            $("li").removeClass("selected");
+            $(".tabrow li").removeClass("selected");
             $(this).addClass("selected");
         });
     });

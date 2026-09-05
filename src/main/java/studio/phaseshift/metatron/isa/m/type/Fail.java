@@ -110,6 +110,8 @@ public interface Fail extends Obj, PlusMonoid<Fail> {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(CAUSE_INST_TID.dom(FAIL_TID).rng(FAIL_TID.maybe()), lst(), (lhs, x) -> lhs.<Fail>as().cause().map(z -> (Obj) z).orElse(noobj())), // necessary cause of type casting
+                    // the mtron execution path at access time (clip in flow, unroll here)
+                    instC(M_ISA_INST_TID.extend("path").dom(FAIL_TID).rng(STR_TID), lst(), (lhs, x) -> str(MFail.path())),
                     instC(REIFY_INST_TID.dom(FAIL_TID).rng(REC_TID), lst(), (lhs, x) -> {
                         final StackTraceElement[] element = lhs.<Fail>as().jvm().getStackTrace();
                         final Map<Obj, Obj> throwable = new LinkedHashMap<>();

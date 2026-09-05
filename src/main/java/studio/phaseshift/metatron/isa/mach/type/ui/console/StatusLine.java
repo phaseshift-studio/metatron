@@ -74,9 +74,9 @@ public class StatusLine implements Runnable {
         this.addWidget(f("type_check_"), () -> "{{w&[%s]}} T {{X}}".formatted(TypeCheck.colorLevel()));
         //this.addWidget(f("spaces"), () -> "{{w}}spaces:{{y}}%d".formatted(Router.global().spaces().count()));
         //this.addWidget(f("nodes"), () -> "{{w}}nodes:{{y}}%d".formatted(Router.global().server().nodes().size()));
-        this.addWidget(f("in_bytes"), () -> "{{w}}↓ {{%s}}%s".formatted(getForegroundColor(), bytesFormat(Router.global().stats().ioStats().bytesRecv())));
-        this.addWidget(f("out_bytes"), () -> "{{w}}↑ {{%s}}%s".formatted(getForegroundColor(), bytesFormat(Router.global().stats().ioStats().bytesSent())));
-        this.addWidget(f("time"), () -> "{{%s}}⏳{{%s}} %s".formatted(this.runningTime() > 10000 ? "r" : "w", getForegroundColor(), timeFormat(this.runningTime())));
+        this.addWidget(f("in_bytes"), () -> " {{w}}\uD83D\uDCE5 {{%s}}%s ".formatted(getForegroundColor(), bytesFormat(Router.global().stats().ioStats().bytesRecv())));
+        this.addWidget(f("out_bytes"), () -> "{{w}}\uD83D\uDCE4 {{%s}}%s ".formatted(getForegroundColor(), bytesFormat(Router.global().stats().ioStats().bytesSent())));
+        this.addWidget(f("time"), () -> "{{%s}}⏳{{%s}}%s ".formatted(this.runningTime() > 10000 ? "r" : "w", getForegroundColor(), timeFormat(this.runningTime())));
         this.addWidget(f("message"), () -> "{{[%s]}}✉️ {{[%s]}} %s".formatted(StatusLine.lastMessage.toLowerCase().contains("error") ? "r" : getBackgroundColor(), getBackgroundColor(), StatusLine.lastMessage));
         /*this.addWidget(f("run"), () -> "{{w}}run:{{y}}%d".formatted(Router.global().stats().monadicStats().runningMonads()));
         this.addWidget(f("halt"), () -> "{{w}}halt:{{y}}%d".formatted(Router.global().stats().monadicStats().haltedMonads()));

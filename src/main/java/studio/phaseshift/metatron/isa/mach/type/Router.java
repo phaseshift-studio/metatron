@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.router.NoObjRouter;
+import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -77,7 +78,8 @@ public interface Router extends Space {
     }
 
     static Obj readFromSpace(final fURI vid) {
-        return Router.loaded() ? BootLoader.ROUTER.read(vid) : noobj();
+        return ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.resolve_inst, "read " + vid),
+                () -> Router.loaded() ? BootLoader.ROUTER.read(vid) : noobj());
     }
 
     static Obj readFromSpace(final String vid) {
@@ -85,7 +87,8 @@ public interface Router extends Space {
     }
 
     static Obj writeToSpace(final fURI vid, final Obj obj) {
-        return Router.loaded() ? BootLoader.ROUTER.write(vid, obj) : noobj();
+        return ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.apply_inst, "write " + vid),
+                () -> Router.loaded() ? BootLoader.ROUTER.write(vid, obj) : noobj());
     }
 
     static Obj writeToSpace(final String vid, final Obj obj) {

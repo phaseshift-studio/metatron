@@ -31,6 +31,10 @@
     <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
     <link rel="mask-icon" href="../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- CSS PACKAGES -->
     <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
@@ -124,9 +128,9 @@
 <!-- NAVIGATION BAR -->
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
      data-wow-delay="0.1s">
-    <h2 class="mb-0 text-primary logo-text navbar-brand ms-4 ms-lg-0">
-        <a href="../index.html" class="text-primary" title="metatron"><i class="bi bi-soundwave me-3 icon-color"></i></a>
-        <a href="http://phaseshift.studio" class="text-primary">PhaseShift Studio</a>
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../index.html" title="metatron"><img src="../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
     </h2>
     <div class="collapse navbar-collapse" id="navbarCollapse">
         <div class="navbar-nav ms-auto p-4 p-lg-0">
@@ -171,52 +175,40 @@
                     instruction sets
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../instset/index.html';">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../instset/m.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m.html"><img
                             src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../instset/m_dcmnt.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dcmnt.html"><img
                             src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
                             alt="dcmnt"/>/m/dcmnt</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../instset/m_grph.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_grph.html"><img
                             src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
                             alt="grph"/>/m/grph</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../instset/m_iot.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_iot.html"><img
                             src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../instset/m_llm.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_llm.html"><img
                             src="../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
                             alt="llm"/>/m/llm</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../instset/m_mach.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_mach.html"><img
                             src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
                             alt="mach"/>/m/mach</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../instset/m_math.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math.html"><img
                             src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../instset/m_sys.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_sys.html"><img
                             src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                             alt="sys"/>/m/sys</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../instset/m_tble.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_tble.html"><img
                             src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
                             alt="tble"/>/m/tble</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../instset/m_vec.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_vec.html"><img
                             src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/vec</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../instset/m_web.html';"><img
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_web.html"><img
                             src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                 </ul>
@@ -237,66 +229,66 @@
                     agent skills
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../skills/agent/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/agent/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/drstynx/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/drstynx/assets/drstynx.boot.mtron';">drstynx.boot.mtron</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/drstynx/assets/drstynx.sqlite';">drstynx.sqlite</a>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
                             </div>
                         </div>
                     </li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../skills/ide/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/metatron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/metatron/references/mcp-mtron.html';">mcp-mtron</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/metatron/references/rewrite-system-java.html';">rewrite-system-java</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/metatron/references/tble-space-java.html';">tble-space-java</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/metatron/references/type-system-java.html';">type-system-java</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/metatron/references/ui-instset-java.html';">ui-instset-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/metatron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                             </div>
                         </div>
                     </li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
-                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="#" onclick="location.href='../skills/mtron/SKILL.html';"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
                             <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
                         </div>
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/references/answer-questions.html';">answer-questions</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/references/connecting-datasources.html';">connecting-datasources</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/references/dckrspace.html';">dckrspace</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/references/dsh-mtron.html';">dsh-mtron</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/references/http-page-fetching.html';">http-page-fetching</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/references/math_instset.html';">math_instset</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/references/mcp-server-architecture.html';">mcp-server-architecture</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/references/mcp-server-notifications.html';">mcp-server-notifications</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/references/mtron-fsspace.html';">mtron-fsspace</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/references/mtron-language-reference.html';">mtron-language-reference</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/references/type-system-mtron.html';">type-system-mtron</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/references/unsloth-training-mtron.html';">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/answer-questions.html">answer-questions</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/connecting-datasources.html">connecting-datasources</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace.html">dckrspace</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/http-page-fetching.html">http-page-fetching</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/math_instset.html">math_instset</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mtron-fsspace.html">mtron-fsspace</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mtron-language-reference.html">mtron-language-reference</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/scripts/mtron_ws_client.py';">mtron_ws_client.py</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/scripts/unsloth_studio.py';">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
                                 <div class="skill-resource-group">assets</div>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/assets/README.md';">README.md</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/assets/dsh_memory_loader.py';">dsh_memory_loader.py</a>
-                                <a class="skill-resource dropdown-item" href="#" onclick="location.href='../skills/mtron/assets/mtron_training_dataset.jsonl';">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -310,14 +302,11 @@
                 <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
                    data-bs-toggle="dropdown" aria-expanded="false">articles</a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../articles/stream-ring-theory.pdf';"><i
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../articles/stream-ring-theory.pdf"><i
                             class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../articles/parametric-identities-in-ring-theory.html';"><i
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../articles/parametric-identities-in-ring-theory.html"><i
                             class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='../articles/mm-adt.pdf';"><i
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../articles/mm-adt.pdf"><i
                             class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
                 </ul>
             </li>
@@ -330,20 +319,16 @@
                     software guild
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='https://opencollective.com/metatron';">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
                         <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='https://github.com/phaseshift-studio/metatron';">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
                         <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='https://huggingface.co/phaseshift-studio';">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
                         <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='https://groups.google.com/u/1/g/metatron-phaseshift';">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
                         <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
-                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../index.html';">live coding</a></li>-->
-                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../index.html';">artifacts</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">artifacts</a></li>-->
                 </ul>
             </li>
             <!--<li class="nav-item dropdown">
@@ -437,13 +422,13 @@
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">17</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">16</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">17</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">16</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
-        <div class="card-header"><h5 class="mb-0 text-primary">Index</h5></div>
+        <div class="card-header"><h5 class="mb-0 text-primary">index</h5></div>
         <div class="card-body"><div class="mb-3">
-    <h6 class="text-primary mb-2">Constants</h6>
+    <h6 class="text-primary mb-2">constants</h6>
     <div class="d-flex flex-wrap"><a href="#__m__math__e?constq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">e</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
@@ -452,7 +437,7 @@
     <span class="pill-label badge bg-secondary ms-2">C</span>
 </a></div>
 </div><div class="mb-3">
-    <h6 class="text-primary mb-2">Types</h6>
+    <h6 class="text-primary mb-2">types</h6>
     <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">math</small></div><div class="d-flex flex-wrap"><a href="#__m__math__currency" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">currency</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -506,7 +491,7 @@
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
 </div><div class="mb-3">
-    <h6 class="text-primary mb-2">Instructions</h6>
+    <h6 class="text-primary mb-2">insts</h6>
     <div class="d-flex flex-wrap"><a href="#__m__math__inst__abs?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">abs</span>
     <span class="pill-label badge bg-success ms-2">I</span>
@@ -556,7 +541,7 @@
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="consts">
-    <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">2</span></h3>
+    <h3 class="text-primary mb-3">constants <span class="pill-label badge bg-secondary">2</span></h3>
     <div class="card mb-3" id="__m__math__e?constq">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">e</span>
@@ -573,7 +558,7 @@
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">17</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">17</span></h3>
     <div class="card mb-3" id="__m__math__data__bB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -795,7 +780,7 @@
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">16</span></h3>
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">16</span></h3>
     <div class="card mb-3" id="__m__math__inst__abs?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>

@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
+import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -377,11 +378,16 @@ public interface Inst extends Call {
                                 "\n\t%-10s  => %s   |  \\_dom" +
                                 "\n\t%-10s %s=> %s   |  \\_args", clhs, cinst, clhs.type(), cinst.dom(), clhs.type(), cinst.args().elements().allMatch(clhs::test) ? "=" : "X", cinst.args());
                 }
-                cinst = Helper.applyArgs(clhs, cinst);
+                final Inst cin1 = cinst;
+                final Obj clhs1 = clhs;
+                cinst = ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.resolve_inst_args, cin1.tid() + ""), () -> Helper.applyArgs(clhs1, cin1));
                 Router.stack().push(cinst.args());
                 //Router.stack().push(rec("lhs",clhs));
                 try {
-                    rhs = Objs.trySingleton(FutureObj.resolveFuture(cinst.f().apply(clhs, cinst)));
+                    final Inst cin2 = cinst;
+                    final Obj clhs2 = clhs;
+                    rhs = ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.apply_inst, cin2.tid() + ""),
+                            () -> Objs.trySingleton(FutureObj.resolveFuture(cin2.f().apply(clhs2, cin2))));
                     rhs = null == rhs ? noobj() : rhs;
                     if (rhs.isUncaughtFail())
                         return rhs;

@@ -79,7 +79,8 @@ pre code.hljs {
     font-size: 0.9rem !important;
 }
 
-.instset-doc-small-code > a {
+.instset-doc-small-code > a,
+.instset-doc-small-code .code {
     font-size: 0.9rem !important;
 }
 

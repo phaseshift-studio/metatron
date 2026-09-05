@@ -1,13 +1,13 @@
 :root {
     --maincolor: #000000;
-    --primarycolor: #952e1e;
+    --primarycolor: #970207; /* unified accent red */
     --secondarycolor: #191C24;
     --tertiarycolor: #6565f3;
     --sidebarbackground: #191C24;
-    --linkcolor: var(--mmagenta);
+    --linkcolor: #58a6ff; /* hyperlink blue */
     --linkcoloralternate: #2652e5;
-    --white: #c2c2c2;
-    --primary: #a30000;
+    --white: #e8e8e8; /* body text (off-white) */
+    --primary: #970207; /* accent red (interactive / hover / brand) */
     --secondary: #191C24;
     --light: #6C7293;
     --dark: #000000;
@@ -21,7 +21,7 @@
     --myellow: #edbf73;
     --maqua: #0082ae;
     --mbrown: #ffffff80;
-    --mheading: #796c6c;
+    --mheading: #f5f5f5; /* headings */
 }
 
 .stemblock,
@@ -29,8 +29,21 @@ mjx-container {
     color: #cdcdcd;
 }
 
-h1, h2, h3, h4 {
+h1, h2, h3, h4, h5, h6 {
     color: var(--mheading);
+    font-family: 'Oswald', 'IBM Plex Sans', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+/* unify bootstrap's flattened bright red into the signature crimson */
+.text-primary {
+    color: #970207 !important;
+}
+
+/* bare links: cool blue for clear affordance against the red theme */
+a {
+    color: var(--linkcolor);
 }
 
 h1 {
@@ -83,8 +96,9 @@ h2[id], h3[id], h4[id], h5[id], h6[id] {
 }
 
 .pill-label {
-    font-size: 0.85rem;
+    font-size: 0.72rem;
     vertical-align: middle;
+    padding: 0.2em 0.5em;
 }
 
 .mini-label {
@@ -123,7 +137,7 @@ table .ulist {
     background-color: var(--secondarycolor);
     background-clip: border-box;
     border: 2px solid;
-    border-color: var(--mred);
+    border-color: var(--primary);
     border-radius: 2px;
 }
 
@@ -149,7 +163,7 @@ table .ulist {
     background-color: var(--secondarycolor);
     background-clip: border-box;
     border: 2px solid;
-    border-color: var(--mred);
+    border-color: var(--primary);
     border-radius: 1px;
 }
 
@@ -186,6 +200,28 @@ table .ulist {
 
 .logo-text a:hover {
     color: var(--primary);
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.nav-brand a,
+.nav-brand a:hover {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.nav-brand img {
+    height: 24px;
+    width: 24px;
 }
 
 .navbar-nav .nav-link {
@@ -349,7 +385,12 @@ table {
 
 /* Style the front side */
 .flip-box-front {
+    font-size: 1.1rem;
+    line-height: 1.45;
+}
 
+.flip-box-front h3 {
+    margin-bottom: 0.75rem !important;
 }
 
 /* Style the back side */
@@ -548,7 +589,7 @@ code {
 }
 
 em {
-    color: var(--primary)
+    color: inherit;
 }
 
 .subtitle {
@@ -784,7 +825,9 @@ body {
     padding: 0;
     min-height: 100vh;
     background: var(--dark);
-    line-height: 1.4rem;
+    color: var(--white);
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    line-height: 1.6;
     font-size: 1.2rem;
 }
 
@@ -916,7 +959,7 @@ footer {
 .custom-docs {
     padding: 20px;
     background: var(--secondarycolor);
-    border: 1px solid var(--mred);
+    border: 1px solid var(--primary);
 }
 
 .discrete {
@@ -1400,7 +1443,7 @@ details {
     float: right;
     display: inline-block;
     max-width: max-content;
-    border: 1px solid var(--mred);
+    border: 1px solid var(--primary);
     margin: 0 0 0.75em 1em;
     padding: 0.5em 0.85em;
     background: rgba(122, 37, 24, 0.06);
@@ -1439,7 +1482,7 @@ details[open] summary::before {
 /* ── Admonition blocks ──────────────────────────────────────────── */
 .admonitionblock {
     margin: 1.5rem 0;
-    border-left: 4px solid var(--mred);
+    border-left: 4px solid var(--primary);
     padding: 0.85rem 1.2rem;
     border-radius: 0 4px 4px 0;
 }
@@ -1513,7 +1556,7 @@ details[open] summary::before {
 
 th {
     font-size: 1.2rem;
-    color: var(--mred);
+    color: var(--mheading);
 }
 
 .halign-center {
@@ -1652,7 +1695,7 @@ th {
 }
 
 strong {
-    color: var(--mred);
+    color: var(--white);
 }
 
 .hljs-fos-docs-if-else-then-case-do,
@@ -1871,12 +1914,12 @@ h6:hover .heading-anchor {
 }
 
 .markdown-body a {
-    color: var(--mmagenta);
+    color: var(--linkcolor);
     text-decoration: none;
 }
 
 .markdown-body a:hover {
-    color: var(--primary);
+    color: #7ab8ff;
     text-decoration: underline;
 }
 
@@ -1925,7 +1968,7 @@ h6:hover .heading-anchor {
 }
 
 .markdown-body blockquote {
-    border-left: 4px solid var(--mred);
+    border-left: 4px solid var(--primary);
     margin: 1rem 0;
     padding: 0.25rem 1rem;
     color: var(--light);
@@ -1943,6 +1986,17 @@ h6:hover .heading-anchor {
 
 .markdown-body img {
     max-width: 100%;
+}
+
+/* skill page title chrome — a red rule under the title */
+.skill-doc {
+    border-bottom: 1px solid var(--primary);
+    padding-bottom: 0.9rem;
+    margin-bottom: 1.75rem;
+}
+
+.skill-title {
+    font-weight: 600;
 }
 
 /* ── AGENT SKILLS accordion dropdown ────────────────────────────────── */
