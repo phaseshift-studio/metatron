@@ -108,17 +108,24 @@ name pulls the raw
 
 `idx` offers a human-readable path scheme that projects to the `code` uri subgraph. Due to the `!*` nature of the `idx`
 objs, any updates to
-`idx` redirect to `code`. When `code` is changed, a `?subq` listener fires, mapping the `ide:java::T` to `web:java::T`
+`idx` redirect to `code`. When `code` is **re-saved**, a `?subq` listener fires, mapping the `ide:java::T` to `web:java::T`
 and then to disk. The subscription then pulls the file from disk to a `web:java::T` and then a `ide:java::T` in `code`
 and `idx`. In this way,
 `code` serves as a metatron encoded proxy to the file system representation of the project's source code.
 
+**edit, then save — two steps** (verified against a live VM, 2026-09-04): the `>>=` edit lands in the `code` space
+immediately, but the **disk write-back fires on the class-level save** (`code/N.to(...)`) — the subscription
+serializes the class rec (header + body + footer of each member) and writes the file. An edit that is never saved is
+space-only.
+
 ```mtron_pre
 */dev/scratch/idx/Echo/method/speak
 */dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T)
-*/dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T) >>= [1 => "return who;" ]>>.>-?str<=str{*}(' ')
-@/dev/scratch/idx/Echo/method/speak >>= [body=> -<'\n'.as(rec::T) >>= [1 => 'return "marko";' ]>>.>-?str<=str{*}(' ')]
-```
+*/dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T) >>= [1 => "return who;"]
+@/dev/scratch/idx/Echo/method/speak >>= [body=> '{
+        return "marko";
+    }']
+*<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>
 
 Finally, to check if the update to `Echo::speak` made it to disk, dereference the uri disk pointer.
 
@@ -128,6 +135,12 @@ Finally, to check if the update to `Echo::speak` made it to disk, dereference th
 
 The standard template for selective editing of code is provided below where `[X=>Y]` is a placeholder for patterns
 itemized in the subsequent table.
+
+> **known limitation (verified 2026-09-04, live VM):** the nested `>>=[...]>...join` *inside* `body=>` is
+> **silently dropped** by the current VM build — the line echoes back as accepted, but nothing changes in `code`,
+> in `idx`, or on disk (and no error is raised). The same update works when the new body is a **concrete string** —
+> which is what an agent composes anyway (it has the lines and the edit). So: build the full new `body` text, update
+> with it, then save (`code/N.to`).
 
 ```mtron
 @../idx/${class}/method/${method} >>= [body => -<'\n'.as(rec::T)>>=([X=>Y]>>.>-?str<=str{*}('\n'))]
@@ -183,6 +196,23 @@ The current `sub::T` is:
   dereference fine; single-line `?lineq=N` with `*(_)` returns `this`
   (self), not the line.
 - **`>>=` on a derived/clone path** silently does nothing useful.
+  Verified repro (2026-09-04): `@…/idx/Echo/method/speak >>= [body=> -<'\n'.as(rec::T)>>=([1=>'x']>>.>-?str<=str{*}('\n'))]`
+  echoes as accepted; `code`, `idx`, and disk are all unchanged, no error. Plain-string RHS works in the same one line:
+  `>>= [body=> '{
+        return who;
+    }']` lands in `code` immediately.
+- **Save to make it stick.** The `code/N.to(code/N)` re-save is what fires the write-back subscription — after the edit,
+  run it, then confirm on the `mfs:` file. Until then the edit is space-only.
+- **`text` stays stale after a body edit — by design.** the serializer composes `header + body + footer` on write, so
+  an outdated `text` field is harmless; do not try to keep it in sync by hand.
+- **rec key order (since the int-key sorting, 2026-09-04):** `as(rec::T)` from a lst, `>>=` result recs, and `==`
+  select result recs all render **int keys ascending**; recs with any non-int key keep their original order. Both are
+  stable within a run and safe to rely on for line numbers.
+- **join (`>>.>-?str<=str{*}(...)`) accepts a rec or a lst of strings** — joining a `rec` after `.as(lst::T)` fails
+  (`Tuple$Pair cannot be cast to String`); the pair-list is not a string list.
+- **the mtron MCP eval has a single-obj echo bug:** bare single-obj expressions can return `noobj` even when server
+  side they are fine — wrap for a liveness check with `1-<[expr]` (returns the address/uri when live; note `1-<[a,b]`
+  *splits* lists, so use it for single values). List-valued expressions render normally.
 - **The doc examples side-effect**: the `body=>` edit rewrites the project's
   `memSpace.java` on disk at build time. The mvn site build excludes this doc (toy project pending) so the examples can
   be run safely.
