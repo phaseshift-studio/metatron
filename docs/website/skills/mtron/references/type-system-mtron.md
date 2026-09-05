@@ -338,7 +338,7 @@ mtron> -1.is(nat::T)          [-- false (-1 is not > 0) --]
    	 \_args  │ [nat::T][Obj$ObjType<1270>:unable to convert type to bool[Obj$ObjType<1270>:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert type to bool[Obj$ObjType<1270>:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/804
 mtron> [-- type vs type (refinement check) --]
 mtron> nat::T.is(int::T)      [-- true (nat is-a int) --]
-==>fail::[MACHine FAILed][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/830
+==>fail::[MAcHInE faIlEd][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/830
 mtron> int::T.is(nat::T)      [-- false (int is not-a nat) --]
 ==>fail::[apply failure:
    	[lhs]    │ int::T

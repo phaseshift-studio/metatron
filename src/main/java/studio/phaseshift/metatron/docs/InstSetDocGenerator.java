@@ -1534,6 +1534,7 @@ public class InstSetDocGenerator {
             content = DOC_LINK_PAT.matcher(content).replaceAll("$1=\"" + depth + "/$2/");
             content = content.replace("href=\"index.html\"", "href=\"" + depth + "/index.html\"")
                     .replace("href=\"tractatus.html\"", "href=\"" + depth + "/tractatus.html\"")
+                    .replace("href=\"start.html\"", "href=\"" + depth + "/start.html\"")
                     .replace("href=\"./instset/", "href=\"" + depth + "/instset/")
                     .replace("href=\"./skills/", "href=\"" + depth + "/skills/")
                     .replace("href=\"./articles/", "href=\"" + depth + "/articles/")

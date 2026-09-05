@@ -71,7 +71,7 @@ mtron> second::60.0.gt(millis::500.0)
 ```mtron
 mtron> [-- Current system time --]
 mtron> datetime_now()
-==>datetime::<//2026.09:4/21/26/30/370?tz=-0600>
+==>datetime::<//2026.09:5/02/39/54/918?tz=-0600>
 mtron> [-- From record (goes through .as(uri::T) first) --]
 mtron> [host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],
         c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T)

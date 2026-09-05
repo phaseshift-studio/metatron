@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -28,9 +28,7 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.algebra.Form.MULT_MONOID;
 import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
 import static studio.phaseshift.metatron.isa.m.type.Poly.IMMUTABLE;
@@ -47,7 +45,7 @@ public class RelTest extends AbstractAlgebraTest<Rel> {
 
     public RelTest() {
         // NOTE: rel-arrow is a pair of monoids but not a rig — plus has the noobj sink as a live zero (0+a = a = a+0, green in testPlusMonoid) while mult composes over that sink only partially (0*a => noobj=>noobj), so the rig annihilator 0*a = 0 does not hold for arrows; union over full relations lives at the lst-of-arrows level.
-        super(rel(uri("a"), jnt(1)), Set.of(PLUS_MONOID,MULT_MONOID));
+        super(rel(uri("a"), jnt(1)), Set.of(PLUS_MONOID, MULT_MONOID));
     }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -88,9 +86,33 @@ public class RelTest extends AbstractAlgebraTest<Rel> {
             "*a.zero().type()                                             % rel::T",
             "*a.zero() + *a                                              % *a",
             "*a * (noobj=>noobj)                                         % (noobj=>noobj)",
+            "*a.zero().tid()                                             % (a=>1).zero().tid()",
+            "*a.zero().type()                                            % (a=>1).zero().type()",
     }, delimiter = '%')
     public void testRelZeroCanonical(final String code, final String expected) {
         Router.global().write("a", rel(uri("a"), jnt(1)));
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    ///
+    /// Is noobj the universal zero?  Decide per type: is X.zero() the same element as bare noobj?
+    ///   int : 5.zero()  = 0          (?== noobj)
+    ///   rel : (a=>1).zero() = noobj=>noobj (?== noobj)
+    ///   lst : [,].zero()? / [1].zero() = [,] (?== noobj)
+    /// and does noobj act as an additive identity across types: noobj + 5 = 5 ?
+    /// (These are EXPECTED-TO-DIVERGE probes: they pin, type by type, whether noobj IS the zero
+    ///  or merely the value a zero renders/carries.)
+    @ParameterizedTest
+    @Disabled
+    @CsvSource(value = {
+            "5.zero()                                                    % 0",
+            "5.zero()                                                    % noobj",
+            "(a=>1).zero()                                               % noobj",
+            "[1,2].zero()                                               % [,]",
+            "[1,2].zero()                                               % noobj",
+            "noobj + 5                                                   % 5",
+    }, delimiter = '%')
+    public void testNoobjIsUniversalZero(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
@@ -607,16 +629,15 @@ public class RelTest extends AbstractAlgebraTest<Rel> {
             "{3}(1=>2).mult({(2=>3),{4}(2=>4)})                            % {{3}(1=>3),{12}(1=>4)}",
             "{2}(a=>b).neg()                                               % {2}(b=>a)",
             "{5}(a=>b).plus((c=>d))                                        % {{5}(a=>b),(c=>d)}",
-          //  "{5}(a=>b).plus({(c=>d),{6}({7}c=>{2}e)})                      % {{5}(a=>b),(c=>d),{6}({7}c=>{2}e)}",
+            //  "{5}(a=>b).plus({(c=>d),{6}({7}c=>{2}e)})                      % {{5}(a=>b),(c=>d),{6}({7}c=>{2}e)}",
             "{5}(a=>b).plus({3}(c=>d))                                     % {{5}(a=>b),{3}(c=>d)}",
     }, delimiter = '%')
     public void testRelRingWithCoefficients(final String code, final String expected) {
         AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
     }
 
-    ///////////////////////////////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////////////////////////////
     // MUTABILITY — at(first, second, operation)
-
     @ParameterizedTest
     @CsvSource(value = {
             // MUTABLE set: mutate same reference
@@ -624,7 +645,7 @@ public class RelTest extends AbstractAlgebraTest<Rel> {
             "(1=>2)  | 3   | 4   | true",
     }, delimiter = '|')
     public void testMutableSet(final String relStr, final String first, final String second,
-                                final boolean expectSame) {
+                               final boolean expectSame) {
         final Rel original = ObjmtronSerializer.parse(relStr).asRel();
         final Obj f = ObjmtronSerializer.parse(first);
         final Obj s = ObjmtronSerializer.parse(second);

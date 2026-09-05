@@ -262,7 +262,7 @@ mtron> return "marko";
 ==>fail::[parse error at line 1, col 7:
      return "marko";
            ^
-     could not parse at ' ']@/sys/fail/146
+     could not parse at ' ']@/sys/fail/142
 mtron> }']
 ==>fail::[parse error at line 1, col 1:
      }']
