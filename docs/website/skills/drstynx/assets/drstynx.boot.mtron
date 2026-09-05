@@ -201,19 +201,19 @@ grphspace::[pattern   => h:#,
         [========= IDE ========]
         [======================]     
         
-*<mfs:metatron.ide.mtron>.
-  else(<mfs:.>@</usr/marko/metatron>.
+<mfs:.>@</usr/marko/metatron>.
         as(project::T).
         update(+([name   =>'metatron',
-                  desc   =>'metatron: a ring-based language and virtual machine'])).
+                  desc   =>'a ring-based language and virtual machine'])).
         >>=[_=>dedup()].
-        to(<mfs:metatron.ide.mtron>)).
-  to(/usr/marko/metatron).
-  side(temp -> '/home/killswitch/software/metatron')
-  -<[mvn_build => mvn_build -> ide:command('mvn -f ${*temp} compile'),
-     mvn_clean => mvn_clean -> ide:command('mvn -f ${*temp} clean'),
-     mvn_exec  => mvn_exec  -> ide:command('mvn -f ${*temp} compile exec:java'),
-     code_tree => |inst?#{*}<=#{?}(max=>?int::T.else(2)){ *max.-<tree_select::[root=>!*/usr/marko/metatron/root,max=>_,flatten=>true]@metatron_tree }].
+  to(<mfs:metatron.ide.mtron>).
+  to(/usr/marko/metatron);
+  '/home/killswitch/software/metatron'.to(temp).
+      -<[mvn_build   => mvn_build -> ide:command('mvn -f ${*temp} compile'),
+         mvn_clean   => mvn_clean -> ide:command('mvn -f ${*temp} clean'),
+         mvn_exec    => mvn_exec  -> ide:command('mvn -f ${*temp} compile exec:java'),
+         bash        => bash      -> |root:bash('-c',as(str::T)),
+         git         => git       -> ide:command(cmd=>|'git ${>>op.as(str::T)}',op=>uri::T)].
   to(/usr/marko/metatron/command);
   /usr/marko/metatron/code/#?subq -> sub::[code=> >>0.as(rec::T)>>path==[_,_,_,_,_,_].
                                                  as?uri<=lst(uri::T).to(x).*(_).>>=[location=>none].as(web:java::T).

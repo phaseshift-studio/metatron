@@ -257,7 +257,7 @@ mtron> */dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T)
 mtron> */dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T) >>= [1 => "return who;"]
 ==>[0=>'{',1=>'return who;',2=>'    }']
 mtron> @/dev/scratch/idx/Echo/method/speak >>= [body=> '{
-==>fail::[rec entry malformed (missing key or value): [body, =>, null]]@/sys/fail/132
+==>fail::[rec entry malformed (missing key or value): [body, =>, null]]@/sys/fail/128
 mtron> return "marko";
 ==>fail::[parse error at line 1, col 7:
      return "marko";
@@ -267,7 +267,7 @@ mtron> }']
 ==>fail::[parse error at line 1, col 1:
      }']
      ^
-     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/148
+     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/144
 mtron> *<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>
 ==>java::"""package com.example.scratch;
    
@@ -308,12 +308,12 @@ mtron> Finally, to check if the update to `Echo::speak` made it to disk, derefer
 ==>fail::[parse error at line 1, col 8:
      Finally, to check if the update to `Echo::speak...
             ^
-     could not parse at ',']@/sys/fail/150
+     could not parse at ',']@/sys/fail/146
 mtron> ```mtron_pre
 ==>fail::[parse error at line 1, col 1:
      ```mtron_pre
      ^
-     could not parse at '`']@/sys/fail/152
+     could not parse at '`']@/sys/fail/148
 mtron> *<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>
 ==>java::"""package com.example.scratch;
    
