@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<idea-plugin>
+    <id>metatron.docstest</id>
+    <name>metatron docs test (minimal)</name>
+    <version>0.1</version>
+    <vendor>PHASESHIFT</vendor>
+    <description>Diagnostic: a no-op plugin to test "Install Plugin from Disk".</description>
+    <depends>com.intellij.modules.platform</depends>
+    <idea-version since-build="252"/>
+</idea-plugin>

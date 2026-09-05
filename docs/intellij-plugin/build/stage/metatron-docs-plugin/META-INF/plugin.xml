@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<idea-plugin>
+    <id>studio.phaseshift.metatron.docs</id>
+    <name>metatron docs build</name>
+    <version>0.1</version>
+    <vendor>PHASESHIFT</vendor>
+
+    <description><![CDATA[
+        Right-click a docs source file to build it and open the result, with fast single-file turnaround.
+        <ul>
+            <li><code>docs/skills/**/*.md</code> -> MarkdownRunner (single-file) -> opens the processed markdown in the editor.</li>
+            <li><code>docs/website/adoc/*.adoc</code> -> AsciiDocRunner (the adoc tree is one book; --single-boot) -> opens <code>docs/website/tractatus.html</code> in the browser.</li>
+        </ul>
+        Shells out to the pre-built metatron uber-jar (same runners as <code>bin/metatron-build-docker docs</code>).
+        Build output streams to <code>target/docs-build.log</code>.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <idea-version since-build="252"/>
+
+    <actions>
+        <action id="metatron.DocsBuild"
+                class="studio.phaseshift.metatron.intellij.DocsBuildAction"
+                text="Build and view (metatron docs)"
+                description="Build the selected .md / .adoc and open the result">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>
