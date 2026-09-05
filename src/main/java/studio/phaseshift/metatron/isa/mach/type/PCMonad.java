@@ -26,12 +26,9 @@ import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.Tokens.LOOP;
-import static studio.phaseshift.metatron.Tokens.LOOPBACK;
-import static studio.phaseshift.metatron.Tokens.MONAD;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -71,17 +68,6 @@ public interface PCMonad extends Monad<Lst> {
         return this.c(cInt.ZERO());
     }*/
 
-    default boolean halted() {
-        return this.inst().isNoObj();
-    }
-
-    default boolean dead() {
-        return this.obj().isNoObj();
-    }
-
-    default boolean zombie() {
-        return this.dead() && !this.halted();
-    }
 
     default PCMonad nextInst() {
         return this.jvm(lst(CommonUtil.arrayList(this.obj(), this.code().nextInst(this.inst()), this.state(), this.code())));
@@ -208,22 +194,5 @@ public interface PCMonad extends Monad<Lst> {
         //return this.next(monadicInst ? nextObj.asMonad().obj(): nextObj); // wrap monad (rhs)
     }
 
-    class Helpers {
-        public static String monadToString(final PCMonad monad) {
-            return "%s::[%s<=o==M==i=>%s]".formatted(monad.tid(), monad.obj(), monad.inst());
-        }
-
-        public static int monadHashCode(final PCMonad monad) {
-            return Objects.hash(monad.tid().one(), monad.jvm());
-        }
-
-        public static boolean monadEquals(final PCMonad monad, final Object other) {
-            return other instanceof PCMonad && Obj.Helper.objEquals(monad, other);
-        }
-
-        public static boolean monadcLessEquals(final PCMonad monad, final Object other) {
-            return other instanceof PCMonad && Obj.Helper.objcLessEquals(monad, other);
-        }
-    }
-
+    
 }

@@ -9,8 +9,6 @@
         }, 1);
     };
     spinner();
-    // FADE-IN-OUT EFFECT INITIALIZE
-    new WOW().init();
     // STICK NAVBAR
     $(window).scroll(function () {
         if ($(this).scrollTop() > 300) {
@@ -25,7 +23,7 @@
         }
     });
     $('.back-to-top').click(function () {
-        $('html, body').animate({scrollTop: 0}, 1500, 'easeInOutExpo');
+        $('html, body').animate({scrollTop: 0}, 1500);
         return false;
     });
     // SYNTAX HIGHLIGHTING IN <code> SNIPPETS
@@ -310,57 +308,6 @@ $(document).ready(function () {
         window.location.href = "tractatus.html";
     }
 });
-
-/************************
- *  TERMYNAL FUNCTIONS  *
- ************************/
-
-function parseConsoleOutput(consoleOutput) {
-    var lines = consoleOutput.split("\n");
-    var outputs = new Array();
-    lines.forEach((line, i) => {
-        if (line.startsWith("==>"))
-            outputs.push({type: "input", prompt: line.trim()});
-        else if (line.startsWith("mtron>"))
-            outputs.push({type: "input", value: line.replace("mtron>", "").trim()})
-        else if (line.startsWith("$"))
-            outputs.push({type: "input", prompt: "$", value: line.replace("$", "").trim()})
-        else if (line.startsWith("%")) {
-            outputs.push({type: "input", prompt: "", value: line.replace("%", "").trim()})
-            outputs.push({type: "progress"})
-        } else if (line.startsWith("........."))
-            outputs.push({type: "input", prompt: ".........", value: "    " + line.replace(".........", "").trim()})
-        else
-            outputs.push({type: "input", prompt: "", value: line.trim()})
-    });
-    return outputs;
-}
-
-var termynals = {};
-
-function refreshTermynal(id) {
-    if (null != termynals[id]) {
-        var x = termynals[id]
-        x.lines.splice(0, x.lines.length)
-        x.lineData.splice(0, x.lineData.length)
-        x.lines = []
-        x.container = null
-        delete termynals[id]
-    }
-    var t = new Termynal('#' + id,
-        {
-            lines: [],
-            lineData: parseConsoleOutput(cluster),
-            typeDelay: 5,
-            lineDelay: 50,
-            noInit: true
-        });
-
-    t.init();
-    t.lines.splice(0, t.lines.length)
-    t.lines = t.lineData
-    termynals[id] = t;
-}
 
 function modalPanel(title, icon, htmlBody) {
     // Move modal to body to escape stacking context traps

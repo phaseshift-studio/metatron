@@ -39,9 +39,7 @@
     <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="../lib/animate/animate.min.css" rel="stylesheet">
     <link href="../css/bootstrap.min.css" rel="stylesheet">
-    <link href="../css/termynal.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
     <!-- JAVASCRIPT PACKAGES -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
@@ -55,10 +53,6 @@
     <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
-    <script src="../lib/wow/wow.min.js" type="text/javascript"></script>
-    <script src="../lib/easing/easing.min.js" type="text/javascript"></script>
-    <script src="../lib/waypoints/waypoints.min.js" type="text/javascript"></script>
-    <script src="../lib/termynal/termynal.js" type="text/javascript"></script>
     <!-- <script src="data/console.txt"></script>-->
     <!-- CUSTOM CSS/JAVASCRIPT -->
     <link href="../css/metatron.css" rel="stylesheet">
@@ -160,8 +154,7 @@
             --------------------------------------- QUICK START LINK ----------------------------------------------------
             ----------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
-                <a class="nav-link quickstart-link" href="start.html"
-                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/start.html');return false;">
+                <a class="nav-link quickstart-link" href="../start.html">
                     <i class="bi bi-book me-1"></i> quick start
                 </a>
             </li>
@@ -218,8 +211,7 @@
              ----------------------------------- TRACTATUS LINK --------------------------------------------------------
              ---------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
-                <a class="nav-link" href="../tractatus.html"
-                   onclick="location.href=location.href.replace(/(\/instset)?(\/[^/]*)?(\.html)?$/,'/tractatus.html');return false;">the
+                <a class="nav-link" href="../tractatus.html">the
                     tractatus</a>
             </li>
             <!-- SKILLS-MENU:START -->
@@ -685,10 +677,10 @@
     <p class="mb-0 text-light">a compaction represents a stop point for message retrieval and provides a summary of all previous messages</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the summary of all previous messages and compactions'" class="text-info">&#39;the summary of all previous messages and compactions&#39;</a>
-  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'total tokens processed (the input digest estimate)'" class="text-info">&#39;total tokens processed (the input digest estimate)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'total tokens processed (the input digest estimate)'" class="text-info">&#39;total tokens processed (the input digest estimate)&#39;</a>
   <a href="#{?}out" class="text-light">{?}out</a> <span class="text-light">=&gt;</span> <a href="#'total tokens generated (the summary estimate)'" class="text-info">&#39;total tokens generated (the summary estimate)&#39;</a>
   <a href="#{?}compression" class="text-light">{?}compression</a> <span class="text-light">=&gt;</span> <a href="#'fraction of tokens removed — 1 - out__in (0.0 to 1.0)'" class="text-info">in (0.0 to 1.0)&#39;</a>
+  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the summary of all previous messages and compactions'" class="text-info">&#39;the summary of all previous messages and compactions&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature__compaction_feature">
@@ -932,14 +924,14 @@
     <p class="mb-0 text-light">populate a model reference rec using data from the ai provider&#39;s http-endpoint</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
-  <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
-  <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
   <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
   <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#"the model's context window size in tokens"" class="text-info">&quot;the model&#39;s context window size in tokens&quot;</a>
   <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
   <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
   <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
+  <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
