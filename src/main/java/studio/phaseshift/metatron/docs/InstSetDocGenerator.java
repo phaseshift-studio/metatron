@@ -472,11 +472,11 @@ public class InstSetDocGenerator {
                        %s
                    </div>
                </div>""".formatted(
-                navBtn("consts", "Consts", consts, "bg-secondary") +
-                        navBtn("types", "Types", types, "bg-primary") +
-                        navBtn("spaces", "Spaces", spaces, "bg-info") +
-                        navBtn("instructions", "Insts", insts, "bg-success") +
-                        navBtn("rewrites", "Rewrites", rewrites, "bg-warning"));
+                navBtn("consts", "consts", consts, "bg-secondary") +
+                        navBtn("types", "types", types, "bg-primary") +
+                        navBtn("spaces", "spaces", spaces, "bg-info") +
+                        navBtn("instructions", "insts", insts, "bg-success") +
+                        navBtn("rewrites", "rewrites", rewrites, "bg-warning"));
     }
 
     private static String navBtn(final String href, final String label, final int count, final String badgeClass) {
@@ -497,7 +497,7 @@ public class InstSetDocGenerator {
         final StringBuilder cols = new StringBuilder();
 
         // Constants
-        tocFlatGroup(cols, "Constants", "bg-secondary", "C",
+        tocFlatGroup(cols, "constants", "bg-secondary", "C",
                 consts.stream()
                         .filter(c -> c.vid() != null)
                         .map(c -> tocPill(vidToAnchor(c.vid().toString()), c.vid().name(), "bg-secondary", "C"))
@@ -508,13 +508,13 @@ public class InstSetDocGenerator {
         cols.append(tocTypesSection(instsetVid, instsetName, types));
 
         // Spaces
-        tocFlatGroup(cols, "Spaces", "bg-info text-dark", "S",
+        tocFlatGroup(cols, "spaces", "bg-info text-dark", "S",
                 spaces.stream().sorted((a, b) -> a.name().compareTo(b.name()))
                         .map(s -> tocPill(vidToAnchor(s.vid()), s.name(), "bg-info text-dark", "S"))
                         .collect(Collectors.joining()));
 
         // Instructions
-        tocFlatGroup(cols, "Instructions", "bg-success", "I",
+        tocFlatGroup(cols, "insts", "bg-success", "I",
                 insts.stream()
                         .filter(inst -> inst.tid() != null)
                         .collect(Collectors.toMap(
@@ -528,7 +528,7 @@ public class InstSetDocGenerator {
                         .collect(Collectors.joining()));
 
         // Rewrites
-        tocFlatGroup(cols, "Rewrites", "bg-warning text-dark", "R",
+        tocFlatGroup(cols, "rewrites", "bg-warning text-dark", "R",
                 rewrites.stream()
                         .filter(r -> r.tid() != null)
                         .collect(Collectors.toMap(
@@ -546,7 +546,7 @@ public class InstSetDocGenerator {
         return """
                <div class="container-xxl mb-4">
                    <div class="card">
-                       <div class="card-header"><h5 class="mb-0 text-primary">Index</h5></div>
+                       <div class="card-header"><h5 class="mb-0 text-primary">index</h5></div>
                        <div class="card-body">%s</div>
                    </div>
                </div>""".formatted(cols.toString());
@@ -626,7 +626,7 @@ public class InstSetDocGenerator {
 
         return """
                <div class="mb-3">
-                   <h6 class="text-primary mb-2">Types</h6>
+                   <h6 class="text-primary mb-2">types</h6>
                    %s
                </div>""".formatted(rows.toString());
     }
@@ -678,7 +678,7 @@ public class InstSetDocGenerator {
         }
         return """
                <div class="container-xxl mb-4" id="consts">
-                   <h3 class="text-primary mb-3">Constants <span class="pill-label badge bg-secondary">%d</span></h3>
+                   <h3 class="text-primary mb-3">constants <span class="pill-label badge bg-secondary">%d</span></h3>
                    %s
                </div>""".formatted(consts.size(), cards.toString());
     }
@@ -719,7 +719,7 @@ public class InstSetDocGenerator {
         }
         return """
                <div class="container-xxl mb-4" id="types">
-                   <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">%d</span></h3>
+                   <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">%d</span></h3>
                    %s
                </div>""".formatted(types.size(), cards.toString());
     }
@@ -946,7 +946,7 @@ public class InstSetDocGenerator {
 
         return """
                <div class="container-xxl mb-4" id="instructions">
-                   <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">%d</span></h3>
+                   <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">%d</span></h3>
                    %s
                </div>""".formatted(insts.size(), cards.toString());
     }
@@ -994,7 +994,7 @@ public class InstSetDocGenerator {
         }
         return """
                <div class="container-xxl mb-4" id="rewrites">
-                   <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">%d</span></h3>
+                   <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">%d</span></h3>
                    %s
                </div>""".formatted(rewrites.size(), cards.toString());
     }
@@ -1033,7 +1033,7 @@ public class InstSetDocGenerator {
         }
         return """
                <div class="container-xxl mb-4" id="spaces">
-                   <h3 class="text-primary mb-3">Spaces <span class="pill-label badge bg-info">%d</span></h3>
+                   <h3 class="text-primary mb-3">spaces <span class="pill-label badge bg-info">%d</span></h3>
                    %s
                </div>""".formatted(spaces.size(), cards.toString());
     }
@@ -1534,6 +1534,9 @@ public class InstSetDocGenerator {
             content = DOC_LINK_PAT.matcher(content).replaceAll("$1=\"" + depth + "/$2/");
             content = content.replace("href=\"index.html\"", "href=\"" + depth + "/index.html\"")
                     .replace("href=\"tractatus.html\"", "href=\"" + depth + "/tractatus.html\"")
+                    .replace("href=\"./instset/", "href=\"" + depth + "/instset/")
+                    .replace("href=\"./skills/", "href=\"" + depth + "/skills/")
+                    .replace("href=\"./articles/", "href=\"" + depth + "/articles/")
                     .replace("location.href='./articles/", "location.href='" + depth + "/articles/")
                     .replace("location.href='tractatus.html'", "location.href='" + depth + "/tractatus.html'")
                     .replace("location.href='index.html'", "location.href='" + depth + "/index.html'")

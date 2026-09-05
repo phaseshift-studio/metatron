@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Objects;
@@ -148,6 +149,22 @@ public class MFail extends MObj implements Fail {
                 ensureFailRefs(jvm);
         }
         return incrStackWrap(new MFail(jvm, FAIL_TID, null), FAIL_STACK_PATTERN);
+    }
+
+    /**
+     * Attach the mtron execution path (from {@link ExecutionStack}) and the
+     * java origin frame to the fail's message when the stack is non-empty.
+     * This is what makes {@code catch(cause())} show *where in the pipeline*
+     * the fail happened — the clipped in-flow message stays, and the full
+     * history is present on the fail itself and in fail space.
+     */
+    /**
+     * The mtron execution path at the moment of access — the stable *query*
+     * form of the stack (the in-flow fail string itself is always rendered
+     * without it, keeping fail equality byte-stable).
+     */
+    public static String path() {
+        return ExecutionStack.generateStackTrace();
     }
 
     /**

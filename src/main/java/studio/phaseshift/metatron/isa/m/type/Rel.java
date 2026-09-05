@@ -146,6 +146,11 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
     }
 
 
+    /*@Override
+    default Obj tid(final fURI tid) {
+       return tid.isZero() ? this.zero() : Poly.super.tid(tid);
+    }*/
+    
     /*default Type dom() {
         return this.value().getValue0().dom();
     }
@@ -187,7 +192,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
      */
     @Override
     default Rel zero() {
-        return rel(noobj(), noobj());
+        return rel(noobj(), noobj());//.selfTID(REL_TID.zero()).as();
     }
 
     /**

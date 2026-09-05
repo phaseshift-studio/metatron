@@ -170,4 +170,50 @@ public abstract class AbstractAlgebraTest<O extends Obj> extends AbstractObjTest
         }
     }
 
+    ///
+    /// parametric identities — the identity elements are instructions whose
+    /// identity properties are realized at evaluation time, uniformly over
+    /// every element of the ring.  The defining parametric law is element
+    /// independence: one()/zero() do not depend on the element they are
+    /// asked of (reynolds' parametricity / theorems-for-free style): a single
+    /// polymorphic instruction covers what would otherwise require infinite
+    /// enumeration (e.g. the universal diagonal relation for rel).
+    ///
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*a.one().zero()                                                         % *a.zero()",
+            "*a.zero().one()                                                         % *a.one()",
+            "*a.zero().zero()                                                        % *a.zero()",
+            "*a.mult(*a).one()                                                       % *a.one()",
+            "*a.mult(*a).zero()                                                      % *a.zero()",
+            "*a.one().mult(*a.zero())                                                % *a.zero()",
+            "*a.mult(*a.zero())                                                      % *a.zero()",
+            // zero-on-the-left annihilator (0*a = 0) is pinned per-conformer where it
+            // renders canonically (Int/Lst green); rel splits the top-level zero render
+            // (noobj vs noobj=>noobj) — see RelTest.testRelZeroSink + the canonical-zero note.
+
+    }, delimiter = '%')
+    public void testParametricIdentities(final String lhs, final String rhs) {
+        final boolean plusMonoid = this.obj instanceof PlusMonoid.O && this.forms.contains(PLUS_MONOID);
+        final boolean multMonoid = this.obj instanceof MultMonoid.O && this.forms.contains(MULT_MONOID);
+        if (plusMonoid && multMonoid) {
+            LOG.warn("testing parametric identities for %s %s", this.obj.type(), this.forms);
+            final PlusMonoid.O zeroable = (PlusMonoid.O) this.obj;
+            final MultMonoid.O oneable = (MultMonoid.O) this.obj;
+            assertEquals(zeroable.zero(), zeroable.zero().zero(), "0 is element independent (0 of 0 = 0)");
+            assertEquals(oneable.one(), oneable.mult(oneable).one(), "1 invariant under mult (1 of a*a = 1)");
+            // cross-interface element independence (1 of 0 = 1, 0 of 1 = 0) is pinned by the mtron rows below
+            assertEquals(zeroable.zero(), zeroable.plus(zeroable).zero(), "0 invariant under plus (0 of a+a = 0)");
+            // mixed-call annihilator laws (0 * a = 0, 1 * 0 = 0) are pinned by the mtron rows below
+            /// /////////////////////////////////////////////////////////////////////////
+            Router.global().write("a", this.obj);
+            final Obj lhsObj = ObjmtronSerializer.parse(lhs).apply();
+            final Obj rhsObj = ObjmtronSerializer.parse(rhs).apply();
+            assertEquals(lhsObj, rhsObj, lhs + " != " + rhs);
+        } else {
+            LOG.warn("skipping parametric identities (needs plus+mult monoid): %s %s", this.obj.type(), this.forms);
+            assumeTrue(plusMonoid && multMonoid, this.obj.type() + " is not a rig");
+        }
+    }
+
 }

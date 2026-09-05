@@ -206,13 +206,11 @@ public class HeaderGenerator {
         sb.append("                    instruction sets\n");
         sb.append("                </a>\n");
         sb.append("                <ul class=\"dropdown-menu dropdown-menu-dark\" aria-labelledby=\"isa_dropdown\">\n");
-        sb.append("                    <li><a class=\"code dropdown-item d-flex align-items-center\" href=\"#\"\n");
-        sb.append("                           onclick=\"location.href='./instset/index.html';\">\n");
+        sb.append("                    <li><a class=\"code dropdown-item d-flex align-items-center\" href=\"./instset/index.html\">\n");
         sb.append("                        <i class=\"bi bi-grid-3x3-gap-fill me-2\"></i>overview</a></li>\n");
         sb.append("                    <li><hr class=\"dropdown-divider\"></li>\n");
         for (final InstSet is : instsets) {
-            sb.append("                    <li><a class=\"code dropdown-item d-flex align-items-center\" href=\"#\"\n");
-            sb.append("                           onclick=\"location.href='./instset/").append(is.filename()).append("';\"><img\n");
+            sb.append("                    <li><a class=\"code dropdown-item d-flex align-items-center\" href=\"./instset/").append(is.filename()).append("\"><img\n");
             sb.append("                            src=\"./images/icons/space/").append(is.icon())
                     .append("-icon.svg\" class=\"isa-row icon-color me-2\"\n");
             sb.append("                            alt=\"").append(is.icon()).append("\"/>").append(is.vid()).append("</a></li>\n");
@@ -238,14 +236,14 @@ public class HeaderGenerator {
         sb.append("                <ul class=\"dropdown-menu dropdown-menu-dark\" id=\"skills-accordion\" aria-labelledby=\"skills_dropdown\">\n");
         for (final Skill skill : skills) {
             if (!skill.hasResources()) {
-                sb.append("                    <li><a class=\"code dropdown-item d-flex align-items-center\" href=\"#\" onclick=\"location.href='./skills/")
-                        .append(skill.name()).append("/SKILL.html';\"><i class=\"bi bi-robot icon-color me-2 isa-row\"></i>")
+                sb.append("                    <li><a class=\"code dropdown-item d-flex align-items-center\" href=\"./skills/")
+                        .append(skill.name()).append("/SKILL.html\"><i class=\"bi bi-robot icon-color me-2 isa-row\"></i>")
                         .append(skill.name()).append("</a></li>\n");
             } else {
                 sb.append("                    <li class=\"skill-group\">\n");
                 sb.append("                        <div class=\"d-flex align-items-center\">\n");
-                sb.append("                            <a class=\"code dropdown-item skill-link d-flex align-items-center flex-grow-1\" href=\"#\" onclick=\"location.href='./skills/")
-                        .append(skill.name()).append("/SKILL.html';\"><i class=\"bi bi-robot icon-color me-2 isa-row\"></i>")
+                sb.append("                            <a class=\"code dropdown-item skill-link d-flex align-items-center flex-grow-1\" href=\"./skills/")
+                        .append(skill.name()).append("/SKILL.html\"><i class=\"bi bi-robot icon-color me-2 isa-row\"></i>")
                         .append(skill.name()).append("</a>\n");
                 sb.append("                            <button class=\"skill-chevron\" type=\"button\" data-bs-toggle=\"collapse\" data-bs-target=\"#skill-")
                         .append(skill.name()).append("\" aria-expanded=\"false\" aria-label=\"").append(skill.name())
@@ -276,8 +274,8 @@ public class HeaderGenerator {
         if (files.isEmpty()) return;
         sb.append("                                <div class=\"skill-resource-group\">").append(label).append("</div>\n");
         for (final String file : files) {
-            sb.append("                                <a class=\"skill-resource dropdown-item\" href=\"#\" onclick=\"location.href='./skills/")
-                    .append(skillName).append(subdir).append(file).append(linkSuffix).append("';\">")
+            sb.append("                                <a class=\"skill-resource dropdown-item\" href=\"./skills/")
+                    .append(skillName).append(subdir).append(file).append(linkSuffix).append("\">")
                     .append(file).append("</a>\n");
         }
     }

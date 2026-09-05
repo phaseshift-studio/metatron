@@ -656,6 +656,8 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.plus('a').catch(cause().cause().cause().cause())                       % noobj",
             "1.plus('a').catch(throw('bad')).catch(_)                               % fail::['bad'].catch(_)",
             "1.plus(mult(throw('bad'))).mult(23).catch(34).plus(2)                  % 36",
+            "1.plus(1).throw('bad').catch(_).path()                                 % 1.plus(1).throw('bad').catch(_).path()",
+
     }, delimiter = '%')
     public void testFailureCatch(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

@@ -24,6 +24,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.Set;
 
@@ -45,6 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class RelTest extends AbstractAlgebraTest<Rel> {
 
     public RelTest() {
+        // NOTE: rel-arrow is a pair of monoids but not a rig — plus has the noobj sink as a live zero (0+a = a = a+0, green in testPlusMonoid) while mult composes over that sink only partially (0*a => noobj=>noobj), so the rig annihilator 0*a = 0 does not hold for arrows; union over full relations lives at the lst-of-arrows level.
         super(rel(uri("a"), jnt(1)), Set.of(PLUS_MONOID,MULT_MONOID));
     }
 
@@ -52,6 +54,45 @@ public class RelTest extends AbstractAlgebraTest<Rel> {
 // BASIC CONSTRUCTION AND ACCESSORS
 
     /// ////////////////////////////////////////////////////////////////////////
+
+    ///
+    /// zero-sink laws — zero of rel::T is the sink rel (noobj=>noobj), a proper member of the
+    /// type.  Pinned in the space-bearing ring syntax (spaceless * is pointer-deref, not mult):
+    ///   (a=>b) + (noobj=>noobj) = (a=>b)         plus-identity, zero on the right
+    ///   (noobj=>noobj) + (a=>b) = (a=>b)         plus-identity, zero on the left
+    ///   (a=>b) * (noobj=>noobj) = (noobj=>noobj) annihilation to zero (zero on the right, green)
+    ///
+    /// KNOWN CANONICALIZATION TARGET (red, not pinned as a law): zero on the *left* through a
+    /// member, zero().mult(a), renders the zero as noobj=>noobj while the bare zero prints noobj —
+    /// a zero-refinement render split (zero().zero() != zero() as a render).  Value is identical
+    /// (Rel.zero() is receiver-static); Int/Lst do not split.  Fix = canonical zero-tid render
+    /// on rel, which touches the type system (JObjFactory reads tid.isZero()), so it is
+    /// isolated here rather than forced green.
+    @ParameterizedTest
+    @CsvSource(value = {
+            "(a=>b) + (noobj=>noobj)                                         % (a=>b)",
+            "(noobj=>noobj) + (a=>b)                                         % (a=>b)",
+            "(a=>b) * (noobj=>noobj)                                         % (noobj=>noobj)",
+    }, delimiter = '%')
+    public void testRelZeroSink(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    ///
+    /// canonical-zero divergence probe — does zero resolve identically via a deref'd element
+    /// (*a) vs a literal rel (a=>1)?  If these disagree, the zero-of-rel is routing through a
+    /// non-rel dispatch (bare noobj) on one path and the rel sink (noobj=>noobj) on the other.
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*a.zero()                                                    % (a=>1).zero()",
+            "*a.zero().type()                                             % rel::T",
+            "*a.zero() + *a                                              % *a",
+            "*a * (noobj=>noobj)                                         % (noobj=>noobj)",
+    }, delimiter = '%')
+    public void testRelZeroCanonical(final String code, final String expected) {
+        Router.global().write("a", rel(uri("a"), jnt(1)));
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
 
     @ParameterizedTest
     @CsvSource(value = {
