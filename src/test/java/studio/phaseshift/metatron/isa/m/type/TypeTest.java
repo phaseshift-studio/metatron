@@ -19,16 +19,19 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -37,14 +40,27 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.FAIL_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public class TypeTest extends AbstractMetatronTest {
     private static final GraphittyLogger LOG = Graphitty.log(TypeTest.class);
     private static String LAST_TYPE_DEF = "";
 
+
+    @Test
+    @Disabled
+    public void testXXX() {
+        Type a = T(INT_TID.maybe()).maybeSome();
+        Type b = T(Tuple.Pair.with(null, null), INT_TID.maybe(), TYPE_TID.maybeSome());
+        //KType c = TT(INT_TYPE.maybe().asType()).c(cInt.of(2, 77)).as();
+        Object d = jnt(2).c(cInt.of(4, 6)).vid();
+        LOG.warn("\n%s\n%s\n%s", a, b, d);
+        assertNotEquals(a, b);
+        LOG.warn("%s", ObjmtronSerializer.parse("int{?}::T{*}"));
+    }
 
     @Disabled("everything works with the recent inst typing exception console::T (??)")
     @ParameterizedTest

@@ -100,11 +100,10 @@ public class InstSetDocGenerator {
         boolean verbose = true;
         int buildNumber = 0;
         String relativeDepth = "..";
-        final Set<String> instsetVids = new LinkedHashSet<>(List.of(
-                "/m", "/m/sys", "/m/mach", "/m/math", "/m/web", "/m/iot",
-                "/m/llm", "/m/tble", "/m/dcmnt", "/m/grph",
-                "/m/vec"
-        ));
+        // Positional args define the instset vid set — e.g. `InstSetDocGenerator /m/math`
+        // builds just math. No positional args -> build the full default set (a "build all").
+        final Set<String> instsetVids = new LinkedHashSet<>();
+        boolean anyVid = false;
 
         int i = 0;
         while (i < args.length) {
@@ -119,10 +118,21 @@ public class InstSetDocGenerator {
                 case "-v", "--verbose" -> verbose = true;
                 case "-q", "--quiet" -> verbose = false;
                 default -> {
-                    if (!args[i].startsWith("-")) instsetVids.add(args[i]);
+                    if (!args[i].startsWith("-")) {
+                        instsetVids.add(args[i]);
+                        anyVid = true;
+                    }
                 }
             }
             i++;
+        }
+
+        if (!anyVid) {
+            instsetVids.addAll(List.of(
+                    "/m", "/m/sys", "/m/mach", "/m/math", "/m/web", "/m/iot",
+                    "/m/llm", "/m/tble", "/m/dcmnt", "/m/grph",
+                    "/m/vec"
+            ));
         }
 
         if (instsetVids.isEmpty()) {

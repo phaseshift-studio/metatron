@@ -93,7 +93,7 @@ public class ideInstSet extends AbstractInstSet {
             .tid(REC_TID)
             .vid(IDE_RESULT_TID)
             .isaPredicate(rec(
-                    uri(STATUS), union_(lst(uri(SUCCESS), uri(ERROR), uri(HALTED))),
+                    uri(STATUS), union_(uri(SUCCESS), uri(ERROR), uri(HALTED)).tryToInst(),
                     uri(RUNTIME), TIME_TYPE,
                     uri(COMMAND).maybe(), STR_TYPE,
                     uri(PROJECT).maybe(), T(IDE_PROJECT_TID),

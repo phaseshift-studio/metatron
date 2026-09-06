@@ -44,6 +44,9 @@ public final class Tokens {
     public static final String ANTHROPIC = "anthropic";
     public static final String OLLAMA = "ollama";
     public static final String RESULT = "result";
+    public static final String CMD = "cmd";
+    public static final String ALLOW = "allow";
+    public static final String REJECT = "reject";
     public static final String PROJECT = "project";
     public static final String DATA = "data";
     public static final String TO = "to";

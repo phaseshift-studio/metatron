@@ -39,11 +39,13 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.incrQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -72,6 +74,7 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
     @BeforeAll
     public static void mountFeatureTestSpace() {
         InstSet.importInstSet(f("/m/llm"));
+        InstSet.importInstSet(MATH_ISA_TID);
         memSpace.of(f("/usr/test/#"), f("/sys/space/usr/test")).addQ(incrQ());
     }
 
@@ -80,7 +83,11 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
     /**
      * The feature under test — freshly constructed with a realistic config.
      */
-    protected abstract AbstractFeature feature();
+    protected abstract <F extends Feature> F feature();
+
+    public <F extends Feature> F feature(final Rec config) {
+        return this.feature().jvm(config.jvm()).as();
+    }
 
     // ── Free tests (run for every feature) ─────────────────────────
 
@@ -264,7 +271,7 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
         return ChatResult.chatResult()
                 .put("chat", str(chat))
                 .put("user", str(user))
-                .put("time", jnt(42));
+                .put("time", real(42.0, MATH_MILLIS_TID, null));
     }
 
     protected static Inst toolCall() {

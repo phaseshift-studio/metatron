@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Fail;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.util.MTronException;
@@ -47,9 +48,13 @@ public class MFail extends MObj implements Fail {
     }
 
     protected static Fail incrStackWrap(final Fail fail, final fURI pattern) {
-        if (null != fail.vid())
+        if (null != fail.vid() && !fail.isNoObj())
             return fail;
-        return Router.writeToSpace(fail.vid(pattern)).as();
+        final Obj o = Router.writeToSpace(fail.vid(pattern));
+        if (o.isFail())
+            return o.as();
+        else
+            return fail("expected fail: %s", o.toCleanString());
     }
 
     @Override
@@ -174,7 +179,7 @@ public class MFail extends MObj implements Fail {
      * constructor wrapping on JDK 25+ (initCause blocked after null-cause).
      */
     private static Throwable rebuildMtronChainWithCause(final Throwable mtronCauseHead,
-                                                         final Throwable tCause) {
+                                                        final Throwable tCause) {
         if (null == tCause)
             return mtronCauseHead;
         // Walk to the tail of the mtron chain

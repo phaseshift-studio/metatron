@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.STYLE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_PROGRESS_TABLE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -48,7 +49,8 @@ public class ProgressTableWidget extends TableWidget {
         this.headers.addAll(List.of("layer", "progress", " ", " "));
         if (this.has(STYLE)) {
             Style.from(this.at(STYLE), this);
-        }
+        } else
+            Style.from(rec(), this);
     }
 
     public ProgressTableWidget() {

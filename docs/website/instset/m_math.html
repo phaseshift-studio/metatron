@@ -402,8 +402,8 @@
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- type=&gt;[nat::T,data::T,bB::T,kB::T,mB::T,gB::T,tB::T,pB::T,currency::T,usd::T,...(7 more)],
- inst=&gt;[datetime_now?datetime&lt;=#{?}(),as?/m/math/time&lt;=/m/math/time(time::T),plus?datetime&lt;=datetime(time::T),minus?datetime&lt;=datetime(time::T),minus?/m/math/time&lt;=datetime(datetime::T),as?datetime&lt;=uri(uri::T),as?int&lt;=datetime(int::T),as?str&lt;=datetime(str::T),as?datetime&lt;=str(datetime::T),normalize?/m/math/time&lt;=/m/math/time(),...(14 more)],
+ type=&gt;[nat::T,data::T,bB::T,kB::T,mB::T,gB::T,tB::T,pB::T,currency::T,usd::T,...(8 more)],
+ inst=&gt;[datetime_now?datetime&lt;=#{?}(),as?time&lt;=time(time::T),plus?datetime&lt;=datetime(time::T),minus?datetime&lt;=datetime(time::T),minus?time&lt;=datetime(datetime::T),as?datetime&lt;=uri(uri::T),as?int&lt;=datetime(int::T),as?str&lt;=datetime(str::T),as?datetime&lt;=str(datetime::T),normalize?time&lt;=time(),...(14 more)],
  const=&gt;[
   2.7183@/m/math/e?constq,
   3.1416@/m/math/pi?constq]]@/m/math</code></pre>
@@ -414,7 +414,7 @@
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">17</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">16</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">18</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">16</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -441,6 +441,9 @@
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__math__nat" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">nat</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__time" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">time</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">currency</small></div><div class="d-flex flex-wrap"><a href="#__m__math__currency__euro" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">euro</span>
@@ -550,7 +553,7 @@
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">17</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">18</span></h3>
     <div class="card mb-3" id="__m__math__data__bB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -609,8 +612,8 @@
         </span>
         <small class="text-muted code">/m/math/time/day</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?day&lt;=#{?}(#{*}::T)]@/m/math/time/day</code></pre></div>
-    
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?day&lt;=#{?}(#{*}::T)]@/m/math/time/day</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__time" class="code inherited-link">time::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?real::T</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a day of time (24 hours)</p>
 </div>
@@ -648,8 +651,8 @@
         </span>
         <small class="text-muted code">/m/math/time/hour</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?hour&lt;=#{?}(#{*}::T)]@/m/math/time/hour</code></pre></div>
-    
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?hour&lt;=#{?}(#{*}::T)]@/m/math/time/hour</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__time" class="code inherited-link">time::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?real::T</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an hour of time (60 minutes)</p>
 </div>
@@ -687,8 +690,8 @@
         </span>
         <small class="text-muted code">/m/math/time/millis</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?millis&lt;=#{?}(#{*}::T)]@/m/math/time/millis</code></pre></div>
-    
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?millis&lt;=#{?}(#{*}::T)]@/m/math/time/millis</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__time" class="code inherited-link">time::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?real::T</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a millisecond of time</p>
 </div>
@@ -700,8 +703,8 @@
         </span>
         <small class="text-muted code">/m/math/time/minute</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?minute&lt;=#{?}(#{*}::T)]@/m/math/time/minute</code></pre></div>
-    
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?minute&lt;=#{?}(#{*}::T)]@/m/math/time/minute</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__time" class="code inherited-link">time::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?real::T</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a minute of time (60 seconds)</p>
 </div>
@@ -739,8 +742,8 @@
         </span>
         <small class="text-muted code">/m/math/time/second</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/time::T[][ctor?second&lt;=#{?}(#{*}::T)]@/m/math/time/second</code></pre></div>
-    
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?second&lt;=#{?}(#{*}::T)]@/m/math/time/second</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__time" class="code inherited-link">time::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?real::T</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a second of time (1000 millis)</p>
 </div>
@@ -757,6 +760,17 @@
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a terabyte (1024 gigabytes) of data</p>
 </div>
+</div><div class="card mb-3" id="__m__math__time">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">time::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__real" class="instset-doc-small-code text-info code">/m/real::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/time</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T[?real::T]@/m/math/time</code></pre></div>
+    
+    
 </div><div class="card mb-3" id="__m__math__currency__usd">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -892,7 +906,7 @@
         <small class="text-muted code">/m/math/data/inst/normalize?rng=/m/math/data&amp;dom=/m/math/data</small>
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data-doc-0-tab').click();document.getElementById('__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=data&dom=data(){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data-doc-0-tab').click();document.getElementById('__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=<a href="#__m__math__time" data-bs-toggle="tooltip" title="domain" class="code text-info">time</a>&dom=<a href="#__m__math__time" data-bs-toggle="tooltip" title="domain" class="code text-info">time</a>(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data-doc-0-tab').click();document.getElementById('__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=time&dom=time(){<j>}</code></pre>
 </div>
     
 </div><div class="card mb-3" id="__m__math__inst__round?rng=__m__int&dom=#{?}">

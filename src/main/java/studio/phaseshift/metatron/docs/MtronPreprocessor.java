@@ -107,10 +107,12 @@ public final class MtronPreprocessor {
     private static final Pattern MAXOUTPUT = Pattern.compile("\\[MAXOUTPUT (\\d+)]");
 
     private static final ObjmtronSerializer SER;
+
     static {
         SER = new ObjmtronSerializer();
         SER.at(uri("clip"), rec("str", jnt(35), "rec", jnt(7), "lst", jnt(7)), MUTABLE);
     }
+
     private static final GraphittyLogger LOG = Graphitty.log(MtronPreprocessor.class);
 
     // ── Process entry point ─────────────────────────────────────────
@@ -151,7 +153,9 @@ public final class MtronPreprocessor {
                 : out;
     }
 
-    /** adoc output wrapper: {@code [source,mtron,role="..."]} listing block. */
+    /**
+     * adoc output wrapper: {@code [source,mtron,role="..."]} listing block.
+     */
     private static String wrapAdoc(final String role, final List<String> lines) {
         final StringBuilder block = new StringBuilder();
         block.append("[source,mtron");
@@ -164,7 +168,9 @@ public final class MtronPreprocessor {
         return block.toString();
     }
 
-    /** markdown output wrapper: {@code ```mtron} fenced listing block. */
+    /**
+     * markdown output wrapper: {@code ```mtron} fenced listing block.
+     */
     private static String wrapMarkdown(final List<String> lines) {
         final StringBuilder block = new StringBuilder();
         block.append("```mtron\n");
@@ -253,7 +259,7 @@ public final class MtronPreprocessor {
             try {
                 TypeCheck.disable(TypeCheck.code_resolve, TypeCheck.inst_rng);
                 final Obj input = ObjmtronSerializer.singleNoClip().read(expr);
-                final Obj result = input.apply();
+                final Obj result = ObjmtronSerializer.eval(expr);
                 if (result.isFail() && !error) {
                     LOG.error("no [ERROR] modifier in code block (docs are buggy): %s\n\t[{{r}}bad expression{{X}}]: %s\n", result, expr);
                     //System.exit(1);
@@ -262,7 +268,7 @@ public final class MtronPreprocessor {
                     result.stream().forEach(o -> lines.add("==>" + SER.write(o).replace("\n", "\n   ")));
                 } else if (noOutput) {
                     lines.add("...");
-                } else if (result.isNoObj() && input.isType()) {
+                } else if (!result.isNoObj() && input.isType()) {
                     lines.add("==>" + SER.write(input).replace("\n", "\n   ")); // replacement so second+ lines are indented past the result prompt
                 }
                 // Clear fail stack so errors don't leak across blocks

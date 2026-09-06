@@ -20,8 +20,7 @@ import static studio.phaseshift.metatron.Tokens.SKILL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrapDocs;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -50,10 +49,6 @@ public class SkillFeature extends AbstractFeature {
      * The registered skills — mSkill elements, upserted by name.
      */
     private final Map<fURI, mSkill> skillRegistry = new LinkedHashMap<>();
-    /**
-     * whether the seeds from our rec config have been hydrated yet
-     */
-    private boolean seeded = false;
 
     public SkillFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -86,13 +81,15 @@ public class SkillFeature extends AbstractFeature {
     }
 
     @Override
-    public void onAgentCtor(final Agent agent) {
-        if (this.seeded)
-            return;
-        this.seeded = true;
-        // hydrate our rec-config seeds as the initial registry state
-        if (!this.has(SKILL))
-            return;
+    public Obj onBeforeChat(final Agent agent) {
+        agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().addTool(mTool.tool(docWrapDocs(instC(f("list_skills").dom(NOOBJ.zero()).rng(LST_TID), lst(),
+                        (lhs, inst) -> lst(agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().skillRegistry.values().stream().map(mSkill::toSkill).toList().stream().map(s -> (Obj) lst(str(s.name()), str(s.description()))).toList())),
+                "no domain",
+                "a lst[lst[str,str]] of skills",
+                Map.of(),
+                "generates a lst of available skills by name and description")));
+
+        // --- 0. load explicit skills specified in skill feature definition (skill registry still might have some)
         this.at(SKILL).elements().forEach(s -> {
             try {
                 this.addSkill(s.isUri() ? mSkill.of(fsSpace.staticObjToFile(s)) : mSkill.of(s.asRec()));
@@ -100,10 +97,7 @@ public class SkillFeature extends AbstractFeature {
                 this.logger().warn("unable to seed skill %s (ignoring): %s", s, e.getMessage());
             }
         });
-    }
 
-    @Override
-    public Obj onBeforeChat(final Agent agent) {
         // ── 1. forward each skill's tools to the tool gateway (the single composition point) ──
         if (agent.hasFeature(LLM_TOOL_FEATURE_TID)) {
             final ToolFeature toolFeature = agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as();
@@ -123,12 +117,6 @@ public class SkillFeature extends AbstractFeature {
         try {
             final Skills skills = new Skills.Builder().skills(allSkills).build();
             agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().addToolProvider(skills.toolProvider());
-            agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().addTool(mTool.tool(docWrapDocs(instC(f("list_skills").dom(NOOBJ.zero()).rng(LST_TID), lst(),
-                            (lhs, inst) -> lst(allSkills.stream().map(s -> (Obj) lst(str(s.name()), str(s.description()))).toList())),
-                    "no domain",
-                    "a lst[lst[str,str]] of skills",
-                    Map.of(),
-                    "generates a lst of available skills by name and description")));
             // Cross-feature communication: SystemFeature owns the system-message channel.
             // If the agent lacks it, this feature is debilitated — log and proceed.
             if (this.requireFeature(agent, LLM_SYSTEM_FEATURE_TID)) {

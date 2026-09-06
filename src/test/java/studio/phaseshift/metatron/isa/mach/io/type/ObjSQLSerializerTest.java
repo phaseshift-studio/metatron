@@ -41,7 +41,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /**
  * Tests for {@link ObjSQLSerializer} JSON detection and {@link ColumnMetadata} default probing.
  */
-@DisplayName("ObjSQLSerializer — JSON detection")
 public class ObjSQLSerializerTest {
 
     static {
@@ -104,7 +103,7 @@ public class ObjSQLSerializerTest {
                 "true                 % boolean text",
                 "                     % empty string",
                 "  plain text         % leading whitespace, no JSON",
-        }, delimiter = '%')
+        }, delimiter = '%', nullValues = "null")
         void testPlainString(String input, String description) {
             final Obj result = ObjSQLSerializer.readMaybeJSON(input);
             if (null != input && input.equals("123"))

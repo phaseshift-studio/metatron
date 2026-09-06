@@ -431,7 +431,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
                     : "{{y}}no documentation available{{X}}";
 
             String body = Graphitty.string(
-                    "{{m}}Java Implementation{{X}}\n" +
+                    "{{m}}java implementation{{X}}\n" +
                             "{{w}}class:{{X}} %s\n" +
                             "{{w}}documentation:{{X}}\n%s",
                     className, docBody);

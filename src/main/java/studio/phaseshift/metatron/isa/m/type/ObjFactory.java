@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -24,15 +24,15 @@ import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.lang.reflect.Modifier;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.nio.ByteBuffer;
+import java.util.*;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -118,7 +118,7 @@ public interface ObjFactory extends Rec {
             tid = MACH_MONAD_TID;
         else
             throw MTronException.of("unable to convert to requested obj class: %s", objClass);
-        return this.toObj(value, tid,null, objClass);
+        return this.toObj(value, tid, null, objClass);
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -152,6 +152,44 @@ public interface ObjFactory extends Rec {
                 return containsObjs((Map<Object, Object>) object);
             else
                 return object instanceof Obj;
+        }
+
+        public static fURI baseTID(final Obj obj) {
+            final Object value = obj.jvm();
+            if (null == value)
+                return NOOBJ_TID;
+            final Class<?> objClass = value.getClass();
+            if (Boolean.class.isAssignableFrom(objClass))
+                return BOOL_TID;
+            else if (Long.class.isAssignableFrom(objClass))
+                return INT_TID;
+            else if (Double.class.isAssignableFrom(objClass))
+                return REAL_TID;
+            else if (String.class.isAssignableFrom(objClass))
+                return STR_TID;
+            else if (fURI.class.isAssignableFrom(objClass))
+                return URI_TID;
+            else if (List.class.isAssignableFrom(objClass))
+                return LST_TID;
+            else if (Tuple.Pair.class.isAssignableFrom(objClass))
+                return REL_TID;
+            else if (Map.class.isAssignableFrom(objClass))
+                return REC_TID;
+            else if (Tuple.Triplet.class.isAssignableFrom(objClass))
+                return M_ISA_INST_TID;
+            else if (List.class.isAssignableFrom(objClass))
+                return CODE_TID;
+            else if (List.class.isAssignableFrom(objClass))
+                return OBJS_TID;
+            else if (Tuple.Pair.class.isAssignableFrom(objClass))
+                return TYPE_INST_TID;
+            else if (Exception.class.isAssignableFrom(objClass) || Fail.class.isAssignableFrom(objClass))
+                return FAIL_TID;
+            else if (Lst.class.isAssignableFrom(objClass))
+                return MACH_MONAD_TID;
+            else if (ByteBuffer.class.isAssignableFrom(objClass))
+                return BYTES_TID;
+            return ALL;
         }
 
         public static boolean attemptReflection(final Class<?> clazz) {

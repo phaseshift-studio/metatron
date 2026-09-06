@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -47,13 +47,20 @@ public interface Objs extends Obj, PlusMonoid.O<Objs> {
 
     @Override
     default Type rng() {
-        return IteratorUtil.stream(this.jvm()).map(Obj::rng).findFirst().orElse(NoObj.noobj().type());
+        return Type.Helper.findLCD(IteratorUtil.stream(this.jvm()).map(Obj::rng).toList());
     }
 
     @Override
     default Type dom() {
-        return IteratorUtil.stream(this.jvm()).map(Obj::dom).findFirst().orElse(NoObj.noobj().type());
+        return Type.Helper.findLCD(IteratorUtil.stream(this.jvm()).map(Obj::dom).toList());
     }
+
+    /*@Override
+    default Type type() {
+        final cInt cc = IteratorUtil.stream(this.jvm()).map(Obj::c).reduce(cInt.ZERO(), cInt::plus);
+        final Type t = Type.Helper.findLCD(IteratorUtil.stream(this.jvm()).map(Obj::type).toList());
+        return T(t.vid()).c(cc).as();
+    }*/
 
     @Override
     default Obj autoResolve(final Obj obj) {

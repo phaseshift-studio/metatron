@@ -1,7 +1,6 @@
 ---
 name: ide
-description:
-  agent ide: metatron coding agent harness
+description: metatron agent coding harness ide
 ---
 
 # agent ide: source edits through the uri graph
@@ -103,9 +102,9 @@ Now that the project is stored in space, a quick build to ensure a clean slate t
 mtron> */dev/scratch/command/mvn_build
 ==>result::[
     status=>success,
-    runtime=>millis::849.0000,
+    runtime=>millis::895.0000,
     command=>'mvn -f src/test/resources/scratch compile',
-    output=>!*/sys/tmp/2bae9f33]
+    output=>!*/sys/tmp/e52e924c]
 ```
 The Java source files have a `str::T > web:java::T` encoding accessible via `src`.
 
@@ -227,10 +226,21 @@ mtron> */dev/scratch/idx/Echo
 ```
 `idx` offers a human-readable path scheme that projects to the `code` uri subgraph. Due to the `!*` nature of the `idx`
 objs, any updates to
-`idx` redirect to `code`. When `code` is **re-saved**, a `?subq` listener fires, mapping the `ide:java::T` to `web:java::T`
+`idx` redirect to `code`. When `code` is **re-saved**, a `?subq` listener fires, mapping the `ide:java::T` to
+`web:java::T`
 and then to disk. The subscription then pulls the file from disk to a `web:java::T` and then a `ide:java::T` in `code`
 and `idx`. In this way,
 `code` serves as a metatron encoded proxy to the file system representation of the project's source code.
+
+```
+         ┌─────── idx 
+         │         │
+   src ──┤         │
+    ▲    │         ▼
+    │    └─────── code 
+    │            ⋰
+    └───── sub:[...]   
+```
 
 **edit, then save — two steps** (verified against a live VM, 2026-09-04): the `>>=` edit lands in the `code` space
 immediately, but the **disk write-back fires on the class-level save** (`code/N.to(...)`) — the subscription
@@ -260,18 +270,19 @@ mtron> */dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T)
     2=>'    }']
 mtron> */dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T) >>= [1 => "return who;"]
 ==>[0=>'{',1=>'return who;',2=>'    }']
-mtron> @/dev/scratch/idx/Echo/method/speak >>= [body=> '{
-==>fail::[rec entry malformed (missing key or value): [body, =>, null]]@/sys/fail/136
-mtron> return "marko";
-==>fail::[parse error at line 1, col 7:
-     return "marko";
-           ^
-     could not parse at ' ']@/sys/fail/146
-mtron> }']
-==>fail::[parse error at line 1, col 1:
-     }']
-     ^
-     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/148
+mtron> @/dev/scratch/idx/Echo/method/speak >>= [body=> '{ return "marko"; }']
+==>[
+    body=>'{ return "marko"; }',
+    kind=>method,
+    name=>'speak',
+    signature=>'String speak(String who)',
+    header=>"""
+       public String speak(String who) """,
+    footer=>'',
+    text=>"""
+       public String speak(String who) {
+           return who;
+   ..."""]
 mtron> *<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>
 ==>java::"""package com.example.scratch;
    
@@ -308,16 +319,10 @@ mtron> *<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.j
        }
    }
    """
-mtron> Finally, to check if the update to `Echo::speak` made it to disk, dereference the uri disk pointer.
-==>fail::[parse error at line 1, col 8:
-     Finally, to check if the update to `Echo::speak...
-            ^
-     could not parse at ',']@/sys/fail/150
-mtron> ```mtron_pre
-==>fail::[parse error at line 1, col 1:
-     ```mtron_pre
-     ^
-     could not parse at '`']@/sys/fail/152
+```
+Finally, to check if the update to `Echo::speak` made it to disk, dereference the uri disk pointer.
+
+```mtron
 mtron> *<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>
 ==>java::"""package com.example.scratch;
    
@@ -423,7 +428,8 @@ mtron> */dev/scratch/code/#?subq
   dereference fine; single-line `?lineq=N` with `*(_)` returns `this`
   (self), not the line.
 - **`>>=` on a derived/clone path** silently does nothing useful.
-  Verified repro (2026-09-04): `@…/idx/Echo/method/speak >>= [body=> -<'\n'.as(rec::T)>>=([1=>'x']>>.>-?str<=str{*}('\n'))]`
+  Verified repro (2026-09-04):
+  `@…/idx/Echo/method/speak >>= [body=> -<'\n'.as(rec::T)>>=([1=>'x']>>.>-?str<=str{*}('\n'))]`
   echoes as accepted; `code`, `idx`, and disk are all unchanged, no error. Plain-string RHS works in the same one line:
   `>>= [body=> '{
         return who;

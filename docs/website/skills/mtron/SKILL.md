@@ -1,16 +1,14 @@
 ---
 name: mtron
-description: >
-  Working with the mtron language in metatron: spaces, and the read (*), write
-  (->), and update (@ via >>=) basics on a uri graph -- plus the reference map
-  to deep dives (data sources, MCP, fsspace, Docker, types, training).
+description: understanding the language used to control the metatron
 ---
 
 # mtron: the basics on a uri/obj graph
 
 mtron is a functional, fluent, monadic language that manipulates the metatron environment. metatron **storage** is a uri
-(uniform resource identifier) graph where any vertex can hold an associated obj (object). metatron **processing** is a
-data-flow model aimed at graph traversal and obj manipulation.
+graph (uniform resource identifier) where any vertex can hold an associated obj (object). metatron **processing** is
+expressed as a data-flow aimed at guiding monads as they traverse the uri/obj-graph to ultimately halt on the solution
+to the problem represented as an mtron expression.
 
 Every denoted object can be reified, referred to, and manipulated -- a **reflective computing environment**.
 

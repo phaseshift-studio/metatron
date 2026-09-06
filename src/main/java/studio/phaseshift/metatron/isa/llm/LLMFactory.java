@@ -84,6 +84,8 @@ public final class LLMFactory {
     }
 
     public static Rec createModel(final Rec preModel) {
+        if (preModel.at(LLM).toCleanString().equals("human:latest"))
+            return preModel;
         return switch (preModel.at(PROTOCOL).uriValue().toString()) {
             case ANTHROPIC -> {
                 final AnthropicModelCatalog models = AnthropicModelCatalog.builder().baseUrl(preModel.at(HOST).uriValue().toString()).build();
@@ -234,6 +236,8 @@ public final class LLMFactory {
 
     public static StreamingChatModel createChatInteraction(final Agent agent, final Obj modelObj, final Obj responseObj, final Obj fmt) {
         final Rec model = modelObj.isNoObj() ? noobjRec() : modelObj.asRec();
+        if (model.at(LLM).toCleanString().equals("human:latest"))
+            return new HumanStreamingModel();
         final Rec responseFormat = fmt.isNoObj() ? rec0().c(cInt::zero).as() : fmt.asRec();
         final fURI provider = model.at(f(PROTOCOL)).uriValue();
         final String host = model.at(HOST).uriValue().toString();

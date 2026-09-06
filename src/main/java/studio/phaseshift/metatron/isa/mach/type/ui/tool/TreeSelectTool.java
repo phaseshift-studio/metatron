@@ -35,6 +35,8 @@ import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.IOError;
+import java.io.InterruptedIOException;
 import java.util.*;
 
 import static org.jline.keymap.KeyMap.key;
@@ -237,23 +239,28 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
 
     @Override
     public void run() {
-        Console.userMode.set(true);
-        // Enter raw mode for arrow-key reading
-        savedAttributes = terminal.enterRawMode();
-        terminal.puts(InfoCmp.Capability.keypad_xmit);
-        terminal.puts(InfoCmp.Capability.cursor_invisible);
-        terminal.writer().flush();
+        try {
+            Console.userMode.set(true);
+            // Enter raw mode for arrow-key reading
+            savedAttributes = terminal.enterRawMode();
+            terminal.puts(InfoCmp.Capability.keypad_xmit);
+            terminal.puts(InfoCmp.Capability.cursor_invisible);
+            terminal.writer().flush();
 
-        pushTreeLevel(rootUri(), maxDepth(), expandedNodes, 0, 0, -1, -1);
+            pushTreeLevel(rootUri(), maxDepth(), expandedNodes, 0, 0, -1, -1);
 
-        this.running = true;
-        final BindingReader bindingReader = new BindingReader(terminal.reader());
-        final KeyMap<Action> keyMap = buildKeyMap();
+            this.running = true;
+            final BindingReader bindingReader = new BindingReader(terminal.reader());
+            final KeyMap<Action> keyMap = buildKeyMap();
 
-        while (running && !stack.isEmpty()) {
-            redrawStack();
-            final Action action = bindingReader.readBinding(keyMap);
-            handleAction(action);
+            while (running && !stack.isEmpty()) {
+                redrawStack();
+                final Action action = bindingReader.readBinding(keyMap);
+                handleAction(action);
+            }
+        } catch (final IOError e) {
+            if (!(e.getCause() instanceof InterruptedIOException))
+                throw e;
         }
     }
 

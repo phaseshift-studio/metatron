@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -50,9 +50,9 @@ public class MariaDBDatabaseConfig implements DatabaseConfig {
         }
         // Return in the format expected by tbleSpace (without jdbc: prefix)
         return "mariadb://" + container.getHost() + ":" + container.getFirstMappedPort() +
-               "/" + container.getDatabaseName() +
-               "?user=" + container.getUsername() +
-               "&password=" + container.getPassword();
+                "/" + container.getDatabaseName() +
+                "?user=" + container.getUsername() +
+                "&password=" + container.getPassword();
     }
 
     @Override
@@ -75,7 +75,7 @@ public class MariaDBDatabaseConfig implements DatabaseConfig {
     @Override
     public void setup() throws Exception {
         if (container == null) {
-             throw new IllegalStateException("MariaDB container not initialized");
+            throw new IllegalStateException("MariaDB container not initialized");
         }
         container.waitingFor(Wait.forLogMessage(".*ready for connections.*", 1));
         container.withStartupTimeout(java.time.Duration.ofMinutes(3));
@@ -103,35 +103,35 @@ public class MariaDBDatabaseConfig implements DatabaseConfig {
                )
                """;
     }
-    
+
     @Override
     public String getUsersTableDDL() {
         // MariaDB uses MySQL-compatible syntax
         return """
-            CREATE TABLE IF NOT EXISTS users (
-                id INT PRIMARY KEY,
-                name VARCHAR(255),
-                age INT,
-                salary DOUBLE,
-                active INT,
-                email VARCHAR(255)
-            )
-            """;
+               CREATE TABLE IF NOT EXISTS users (
+                   id INT PRIMARY KEY,
+                   name VARCHAR(255),
+                   age INT,
+                   salary DOUBLE,
+                   active INT,
+                   email VARCHAR(255)
+               )
+               """;
     }
 
     @Override
     public String getProductsTableDDL() {
         // MariaDB uses MySQL-compatible syntax
         return """
-            CREATE TABLE IF NOT EXISTS products (
-                id INT PRIMARY KEY,
-                product_name VARCHAR(255),
-                price DOUBLE,
-                in_stock INT,
-                quantity INT,
-                category VARCHAR(255)
-            )
-            """;
+               CREATE TABLE IF NOT EXISTS products (
+                   id INT PRIMARY KEY,
+                   product_name VARCHAR(255),
+                   price DOUBLE,
+                   in_stock INT,
+                   quantity INT,
+                   category VARCHAR(255)
+               )
+               """;
     }
 
     @Override

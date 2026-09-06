@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -50,7 +50,7 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
             first = false;
             boolean found = !Router.global().read(i.tid().basePath()).isNoObj();
             this.instTable.addRow(List.of(
-                    (found ? "{{b}}" : "{{r}}") + i.tid().name(),
+                    (found ? "{{b}}" : "{{r}}") + i.tid().name() + (i.tid().c().isOne() ? "" : ("{" + i.tid().c() + "}")),
                     i.dom().vid().small() + "::T",
                     i.rng().vid().small() + "::T",
                     (i.args().elements().allMatch(x -> x.isResolved(true)) ? "{{g}}" : "{{y}}") + generateArgsString(i.args()),
