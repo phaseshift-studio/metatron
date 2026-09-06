@@ -372,14 +372,15 @@
 </script>
 <main class="container my-4 flex-grow-1">
     <div class="skill-doc mb-4">
-        <h1 class="skill-title mb-1">mtron: Working with the mtron language in metatron: spaces, and the read (*), write</h1>
+        <h1 class="skill-title mb-1">mtron: understanding the language used to control the metatron</h1>
         <a href="SKILL.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>SKILL.md</a>
     </div>
     <div class="markdown-body">
 <h2>mtron: the basics on a uri/obj graph</h2>
 <p>mtron is a functional, fluent, monadic language that manipulates the metatron environment. metatron <strong>storage</strong> is a uri
-(uniform resource identifier) graph where any vertex can hold an associated obj (object). metatron <strong>processing</strong> is a
-data-flow model aimed at graph traversal and obj manipulation.</p>
+graph (uniform resource identifier) where any vertex can hold an associated obj (object). metatron <strong>processing</strong> is
+expressed as a data-flow aimed at guiding monads as they traverse the uri/obj-graph to ultimately halt on the solution
+to the problem represented as an mtron expression.</p>
 <p>Every denoted object can be reified, referred to, and manipulated -- a <strong>reflective computing environment</strong>.</p>
 <p><strong>if it exists, it has a uri. if it has a uri, it can be accessed.</strong></p>
 <h3>the three verbs: write, read, update</h3>

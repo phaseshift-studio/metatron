@@ -42,17 +42,20 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -66,7 +69,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 @Isolated
 public class AgentTest extends AbstractMetatronTest {
 
-    private static final String MODEL_NAME = "test-model";
+    private static final String MODEL_NAME = "qwen3:8b";
     private static final String PROVIDER_NAME = "ollama";
     private static final String PROVIDER_HOST = "http://localhost:11434";
 
@@ -131,7 +134,6 @@ public class AgentTest extends AbstractMetatronTest {
         assertFalse(agent.feature(LLM_SKILL_FEATURE_TID).isNoObj());
         assertFalse(agent.feature(LLM_NOTE_FEATURE_TID).isNoObj());
         assertFalse(agent.feature(LLM_CHAT_FEATURE_TID).isNoObj());
-        assertFalse(agent.feature(LLM_FEATURE_TID.extend("rag")).isNoObj());
         assertFalse(agent.feature(LLM_MESSAGE_FEATURE_TID).isNoObj());
     }
 
@@ -144,15 +146,8 @@ public class AgentTest extends AbstractMetatronTest {
     public void testSkills() {
         assertFalse(agent.feature(LLM_SKILL_FEATURE_TID).isNoObj());
         LOG.debug("skills: %s", agent.feature(LLM_SKILL_FEATURE_TID));
-        assertEquals(3, agent.feature(LLM_SKILL_FEATURE_TID).elements().count());
+        assertEquals(2, agent.feature(LLM_SKILL_FEATURE_TID).elements().count());
         assertEquals(1, agent.feature(LLM_SKILL_FEATURE_TID).asRec().at(SKILL).asLst().elements().count());
-    }
-
-    @Test
-    public void testRag() {
-        assertFalse(agent.feature(LLM_FEATURE_TID.extend("rag")).isNoObj());
-        assertEquals(f("/sys/docs/#"), agent.feature(LLM_FEATURE_TID.extend("rag")).orElse(rec0()).at(PATTERN).uriValue());
-        assertEquals(5, agent.feature(LLM_FEATURE_TID.extend("rag")).orElse(rec0()).at(MAX).intValue().intValue());
     }
 
     @Test
@@ -161,15 +156,6 @@ public class AgentTest extends AbstractMetatronTest {
         assertFalse(features.isNoObj());
         // features is a Lst of Feature instances
         assertFalse(features.isEmpty());
-    }
-
-    @Test
-    public void testAddNote() {
-        // Find the note feature and inspect its note list directly (no privileged addNote() on Agent)
-        final Rec noteFeature = agent.feature(LLM_NOTE_FEATURE_TID).orElse(rec0());
-        final Obj notes = noteFeature.at(uri(NOTE));
-        assertFalse(notes.isNoObj());
-        assertEquals(1, notes.asLst().lstValue().size());
     }
 
     // ========================================================================
@@ -452,11 +438,11 @@ public class AgentTest extends AbstractMetatronTest {
         final ChatResult result = ChatResult.chatResult()
                 .put("chat", str("bare response"))
                 .put("user", str("test prompt"))
-                .put("time", jnt(100));
+                .put("time", real(100.0, MATH_MILLIS_TID, null));
         assertNotNull(result, "chat_result must be a rec");
         assertEquals(LLM_CHAT_RESULT_TID, result.tid(), "chat_result must have the chat_result tid");
         assertEquals("bare response", result.at(uri(CHAT)).strValue());
-        assertEquals(100L, result.at(uri(TIME)).intValue());
+        assertEquals(100.0, result.at(uri(TIME)).realValue());
     }
 
     @Test
@@ -575,6 +561,24 @@ public class AgentTest extends AbstractMetatronTest {
     // ========================================================================
     //  agent => skill (as?skill<=agent)
     // ========================================================================
+
+    public static ToolFeature toolFeature() {
+        return new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null);
+    }
+
+    public static Inst findTool(final Agent agent, final Feature feature, final String toolNameRegEx) {
+        feature.onBeforeChat(agent);
+        return agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as()
+                .tools()
+                .elements()
+                .map(t -> t.asRec().at(uri(INST)).<Obj>as())
+                .filter(Obj::isObjInst)
+                .map(Obj::asInst)
+                .filter(i -> Pattern.compile(toolNameRegEx).matcher(i.tid().toString()).find())
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("bash tool not registered by BashFeature.onBeforeChat"));
+    }
+
 
     @Test
     public void testAgentAsSkill() {

@@ -38,14 +38,14 @@ import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_TABLE_TID;
  */
 public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget> {
 
-    @JRecElement(key = "header", rng = "/m/lst")
-    public final List<String> headers = new ArrayList<>();
+    @JRecElement(key = "header", rng = "/m/lst{?}")
+    public List<String> headers = new ArrayList<>();
 
-    @JRecElement(key = "row", rng = "/m/lst")
-    public final List<List<Object>> table = new ArrayList<>();
+    @JRecElement(key = "row", rng = "/m/lst{?}")
+    public List<List<Object>> table = new ArrayList<>();
 
-    @JRecElement(key = "metadata", rng = "/m/lst")
-    public final List<List<Object>> metadata = new ArrayList<>();
+    @JRecElement(key = "metadata", rng = "/m/lst{?}")
+    public List<List<Object>> metadata = new ArrayList<>();
 
     private Style<TableWidget> style = Style.empty();
     private Cursor cursor;
@@ -84,7 +84,13 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
      * serialization pipeline.
      */
     private void sync() {
-        if (this.style == null) return;   // construction guard
+        if (null == this.headers)
+            this.headers = new ArrayList<>();
+        if (null == this.table)
+            this.table = new ArrayList<>();
+        if (null == this.metadata)
+            this.metadata = new ArrayList<>();
+        //if (this.style == null) return;   // construction guard
         if (this.javaPopulated) return;   // Java API owns the data
 
         final Obj h = this.at(HEADER);
@@ -237,6 +243,7 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
     }
 
     public List<String> formattedRows() {
+        this.sync();
         final List<String> frows = new ArrayList<>();
         for (int i = 0; i < this.table.size(); i++) frows.add(this.formattedRow(i));
         return frows;
@@ -251,7 +258,7 @@ public class TableWidget extends JRec<TableWidget> implements Widget<TableWidget
     public synchronized String format() {
         this.sync();
         final StringBuilder sb = new StringBuilder();
-        if (!this.headers.isEmpty()) {
+        if (null != this.headers && !this.headers.isEmpty()) {
             if (this.style.headerDivider().isEmpty() && !this.style.divider().isEmpty())
                 this.style.headerDivider(" ".repeat(Highlighter.visualLength(this.style.divider())));
             final List<Integer> widths = this.formattedWidths(this.headers);

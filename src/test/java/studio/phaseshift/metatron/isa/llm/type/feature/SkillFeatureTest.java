@@ -142,16 +142,16 @@ public class SkillFeatureTest extends AbstractFeatureTest {
     @Test
     public void testSkillToolsForwardToToolRegistry() {
         // the composition point: a skill's tools flow skill gateway → tool gateway
-        final SkillFeature gateway = feature();
-        final ToolFeature tools = new ToolFeature(new LinkedHashMap<Obj, Obj>(), LLM_TOOL_FEATURE_TID, null);
-        final Agent a = agentWith(gateway, tools);
-        gateway.addSkill(mSkill.of(rec(
+        final SkillFeature skillFeature = feature();
+        final ToolFeature toolFeature = new ToolFeature(new LinkedHashMap<Obj, Obj>(), LLM_TOOL_FEATURE_TID, null);
+        final Agent agent = agentWith(skillFeature, toolFeature);
+        skillFeature.addSkill(mSkill.of(rec(
                 uri(NAME), uri("forwarder_skill"),
                 uri(DESC), str("a skill shipping one tool"),
                 uri(TOOL), lst(docWrap(instC(f("/m/llm/test/forwarded_tool"), rec0(), (lhs, inst) -> noobj()), "forwards a test payload")))));
-        gateway.onBeforeChat(a);
-        assertEquals(1, tools.tools().lstValue().stream().filter(t -> t.asRec().at(NAME).uriValue().toString().contains("list_skills")).count());
-        assertEquals(2, tools.tools().lstValue().size(), "the skill's tool was forwarded to the tool gateway");
+        skillFeature.onBeforeChat(agent);
+        assertEquals(1, agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().tools().lstValue().stream().filter(t -> t.asRec().at(NAME).uriValue().toString().contains("list_skills")).count());
+        assertEquals(2, agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().tools().lstValue().size(), "the skill's tool was forwarded to the tool gateway");
     }
 
     // ── skill aggregation across features ───────────────────────────

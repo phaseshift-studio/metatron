@@ -1,19 +1,16 @@
 ---
 name: dckrspace
 description: |
-  Docker management through dckrSpace — pull, run, stop containers; manage images, volumes,
-  networks; docker-compose up/down; navigate container↔resource graph links. All from mtron.
-  TRIGGER: When working with Docker in metatron, dckrSpace, dockerspace::, docker: URIs,
-  container run/stop, image pull, volume or network management, docker-compose in mtron.
+  manipulating docker's graph of images, containers, volumes, networks
 ---
 
-# dckrSpace — Docker in mtron
+# dckrspace
 
 ## Architecture
 
-`dckrspace::T` bridges a Docker daemon into metatron's URI space. Every Docker resource (container, image, volume,
-network)
-is a first-class uri-addressable `obj`. Writes trigger Docker CLI operations; reads refresh state from the daemon.
+`dckrspace::T` bridges a docker daemon into metatron's uri space. Every docker resource (container, image, volume,
+network) is a first-class uri-addressable `obj`. Writes trigger docker cli operations; reads refresh state from the
+daemon.
 
 The space maintains a bidirectional graph: containers link to their images, networks, and volumes, and each resource
 links back to its containers.

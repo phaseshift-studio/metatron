@@ -46,9 +46,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.Collections;
+import java.util.Deque;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -156,11 +162,22 @@ public class AsciiDocRunner {
         }
 
         // ── Collect .adoc files ──────────────────────────────────────────
+        // single-file mode: <input> is one .adoc file → build only that file plus any
+        // .adoc files it (transitively) includes. a directory → the full book build (as before).
+        final boolean singleFile = Files.isRegularFile(inputPath)
+                && inputPath.getFileName().toString().endsWith(".adoc");
+        final Path adocBaseDir = singleFile ? inputPath.getParent() : inputPath;
         final List<Path> adocFiles = new ArrayList<>();
-        try (var stream = Files.list(inputPath)) {
-            stream.filter(f -> Files.isRegularFile(f) && f.getFileName().toString().endsWith(".adoc"))
-                    .sorted()
-                    .forEach(adocFiles::add);
+        if (singleFile) {
+            adocFiles.addAll(collectAdocIncludes(adocBaseDir, inputPath));
+            LOG.info("single-file mode: " + inputPath.getFileName()
+                    + " + " + (adocFiles.size() - 1) + " transitive .adoc include(s)");
+        } else {
+            try (var stream = Files.list(inputPath)) {
+                stream.filter(f -> Files.isRegularFile(f) && f.getFileName().toString().endsWith(".adoc"))
+                        .sorted()
+                        .forEach(adocFiles::add);
+            }
         }
 
         if (adocFiles.isEmpty()) {
@@ -221,9 +238,9 @@ public class AsciiDocRunner {
 
 
         // ── Copy supporting files (header.html, footer.html, images) ────
-        final Path includesDir = inputPath.getParent().resolve("includes");
+        final Path includesDir = adocBaseDir.getParent().resolve("includes");
         final List<Path> supportDirs = new ArrayList<>();
-        supportDirs.add(inputPath);
+        supportDirs.add(adocBaseDir);
         if (Files.isDirectory(includesDir)) supportDirs.add(includesDir);
         for (final Path dir : supportDirs) {
             try (var stream = Files.list(dir)) {
@@ -237,23 +254,30 @@ public class AsciiDocRunner {
             }
         }
 
-        // ── Generate tractatus.html (single mega-page) ──────────────────
+        // ── Generate HTML ───────────────────────────────────────────────
+        // single-file: <dir>/<basename>.html   ·   book: <dir>/tractatus.html
         if (htmlPath != null) {
-            final Path tractatusAdoc = outputPath.resolve("tractatus.adoc");
-            if (!Files.exists(tractatusAdoc)) {
-                LOG.warn("[docs-runner] tractatus.adoc not found — skipping HTML");
+            final Path sourceAdoc = singleFile
+                    ? outputPath.resolve(inputPath.getFileName())
+                    : outputPath.resolve("tractatus.adoc");
+            final String baseName = inputPath.getFileName().toString();
+            final Path htmlOut = singleFile
+                    ? htmlPath.resolve(baseName.endsWith(".adoc") ? baseName.substring(0, baseName.length() - 5) + ".html" : baseName + ".html")
+                    : htmlPath.resolve("tractatus.html");
+            if (!Files.exists(sourceAdoc)) {
+                LOG.warn("[docs-runner] " + sourceAdoc.getFileName() + " not found — skipping HTML");
             } else {
-                LOG.info("[docs-runner] tractatus.adoc -> " + htmlPath.resolve("tractatus.html"));
+                LOG.info("[docs-runner] " + sourceAdoc.getFileName() + " -> " + htmlOut);
                 try (final Asciidoctor asciidoctor = Asciidoctor.Factory.create()) {
                     final String html = asciidoctor.convert(
-                            Files.readString(tractatusAdoc),
+                            Files.readString(sourceAdoc),
                             Options.builder()
                                     .safe(SafeMode.UNSAFE)
                                     .toFile(false)
                                     .baseDir(outputPath.toFile())
                                     .build());
-                    Files.writeString(htmlPath.resolve("tractatus.html"), html);
-                    LOG.info("[docs-runner] wrote " + htmlPath.resolve("tractatus.html"));
+                    Files.writeString(htmlOut, html);
+                    LOG.info("[docs-runner] wrote " + htmlOut);
                 }
             }
         }
@@ -261,6 +285,37 @@ public class AsciiDocRunner {
         LOG.info("done");
         BootLoader.close();
         System.exit(0);
+    }
+
+    private static final Pattern ADOC_INCLUDE = Pattern.compile("include::\\s*([\\w./-]+\\.adoc)");
+
+    /// In single-file mode, collect the target plus every (transitively) included .adoc file so
+    /// `include::X.adoc[]` resolves when only that file is (re)built. Non-.adoc includes
+    /// (header.html, css, images) are handled by the usual support-file copy step.
+    private static Set<Path> collectAdocIncludes(final Path baseDir, final Path start) {
+        final Set<Path> needed = new LinkedHashSet<>();
+        final Deque<Path> pending = new ArrayDeque<>();
+        needed.add(start);
+        pending.add(start);
+        while (!pending.isEmpty()) {
+            final Path cur = pending.poll();
+            final List<String> lines;
+            try {
+                lines = Files.readAllLines(cur);
+            } catch (final IOException ignored) {
+                continue;
+            }
+            for (final String line : lines) {
+                final Matcher m = ADOC_INCLUDE.matcher(line);
+                while (m.find()) {
+                    final Path dep = baseDir.resolve(m.group(1)).normalize();
+                    if (!dep.equals(cur) && Files.isRegularFile(dep) && needed.add(dep)) {
+                        pending.add(dep);
+                    }
+                }
+            }
+        }
+        return needed;
     }
 
     /**

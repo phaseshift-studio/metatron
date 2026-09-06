@@ -137,7 +137,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final Type TIME_TYPE = Type.Builder.build()
             .tid(REAL_TID)
             .vid(MATH_TIME_TID)
-            .predicate(id_().tryToInst())
+            .isaPredicate(REAL_TYPE) // without it -- nominal type exceptions with subtypes (thats wrong - fix) TODO
             .create();
 
     public static final Type MILLIS_TYPE = Type.Builder.build()
@@ -595,6 +595,7 @@ public class mathInstSet extends AbstractInstSet {
                         docWrap(MATH_CURRENCY_TYPE, "a currency amount"),
                         docWrap(Type.Builder.build().tid(MATH_CURRENCY_TID).vid(MATH_USD_TID).create(), "united states currency"),
                         docWrap(Type.Builder.build().tid(MATH_CURRENCY_TID).vid(MATH_EURO_TID).create(), "european union currency"),
+                        TIME_TYPE,
                         docWrap(MILLIS_TYPE, "a millisecond of time"),
                         docWrap(SECOND_TYPE, "a second of time (1000 millis)"),
                         docWrap(MINUTE_TYPE, "a minute of time (60 seconds)"),

@@ -1094,7 +1094,7 @@ public class mParser {
         return seq(m_type_prefix(null), of('T'),
                 opt(seq(of('['), opt(m_obj(), null), of(']')).map(t -> pick(t, 1)), null),
                 opt(seq(of('['), opt(m_obj(), null), of(']')).map(t -> pick(t, 1)), null),
-                m_vid_postfix())
+                choice(m_furi_coefficient().map(t -> TYPE_TID.c(cInt.of(t.toString()))), m_vid_postfix()))
                 .map(t -> T(Tuple.Pair.with(pick(t, 2), pick(t, 3)), pick(t, 0), pick(t, 4)));
     }
 

@@ -25,9 +25,9 @@ import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
-import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -486,7 +486,7 @@ public interface Inst extends Call {
 
     @Override
     default Inst tid(final fURI tid) {
-        return this.clone(this.jvm(), tid, this.vid());
+        return this.clone(this.jvm(), tid/*tid.rng(this.tid().rng().c(c -> c.mult(tid.c())))*/, this.vid());
     }
 
     final class Helper {

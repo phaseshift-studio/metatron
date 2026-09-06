@@ -11,13 +11,12 @@
     ollama    => <http://ginger.local:11434>,
     embedding => <http://ginger.local:8025/api/v2>,
     knowgraph => <ws://ginger.local:8182/gremlin>,
-    session   => <sqlite:/home/killswitch/.metatron/dr.sqlite>,
-    localfs   => </home/killswitch/.hermes_clone>],
+    session   => <sqlite:/home/killswitch/.metatron/dr.sqlite>],
  tracer/stage => [stack=>false],
  typer/stage  => [inst_dom     => false,
                   inst_rng     => false,
-                  type_ctor    => false,
-                  obj_write    => true,
+                  type_pred    => false,
+                  obj_write    => false,
                   code_resolve => false],
  header       => """
    ______          _______ __   {{r}}PhaseShift Studio                    
@@ -68,13 +67,7 @@ memspace::[
 fsspace::[
   pattern => root:#,
         q => [mimeq::[=>]],
-    route => [root: => /usr/bin]]@</sys/space/fs/root>;
-fsspace::[
-  pattern => localfs:#,
-        q => [ subq::[=>],
-              mimeq::[=>],
-              safeq::[=>]],
-    route => [localfs: => <~/.hermes_clone>]]@</sys/space/fs/dr>; 
+    route => [root: => /usr/bin]]@</sys/space/fs/root>; 
 fsspace::[
   pattern => mfs:#,
   q       => [mimeq::[=>],lineq::[=>]],
@@ -270,6 +263,7 @@ scratch
   api_key  => !*</sys/env/DEEPSEEK_API_KEY>,
   llm      => <deepseek-v4-pro> 
 ]@/usr/dr/model; ==]
+human -> model::[llm=>'human:latest'];
 model::[provider     => ollama,
         protocol     => ollama,
         host         => <http://ginger.local:11434>,
@@ -323,6 +317,7 @@ agent::[
                                                                          left=>-2,top=>8,foreground =>"{{y}}"]]@<audit_widget> },
                         to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() },
                         root          => /usr/dr/audit],
+    bash_feature:::::::[reject        => ["\brm\b"]],
     summarize_feature::[root          => /usr/dr],
     embed_feature::::::[root          => embed:chat_result,
                         model         => model::[provider     => ollama,

@@ -37,7 +37,6 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.*;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
-import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
@@ -126,7 +125,7 @@ public class webInstSet extends AbstractInstSet {
     public static Type MIME_OBJ_TYPE = Type.Builder.build()
             .tid(URI_TID)
             .vid(MIME_TYPE_TID)
-            .isaPredicate(union_(Stream.of(MIME.MIMEType.values()).map(m -> uri(m.value)).collect(new CommonUtil.LstCollector())))
+            .isaPredicate(union_(Stream.of(MIME.MIMEType.values()).map(m -> uri(m.value)).toArray(Obj[]::new)))
             .create();
 
     public static final Type XML_TYPE = Type.Builder.build()

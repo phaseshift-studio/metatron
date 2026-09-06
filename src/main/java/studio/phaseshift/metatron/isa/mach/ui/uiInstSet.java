@@ -120,7 +120,6 @@ public class uiInstSet extends AbstractInstSet {
                         docWrap(UI_CONSOLE_TYPE = Type.Builder.build()
                                 .tid(REC_TID)
                                 .vid(UI_CONSOLE_TID)
-                                .isaPredicate(rec())
                                 .constructor(arg -> {
                                     final Console console = new Console(arg.as(), arg.vid());
                                     final CommandPalette palette = new CommandPalette(console);
@@ -137,9 +136,9 @@ public class uiInstSet extends AbstractInstSet {
                         docWrap(UI_ANCHOR_TYPE = Type.Builder.build()
                                 .tid(URI_TID)
                                 .vid(UI_ANCHOR_TID)
-                                .isaPredicate(union_(lst(Arrays.stream(FloatingSurface.Anchor.values())
+                                .isaPredicate(union_(Arrays.stream(FloatingSurface.Anchor.values())
                                         .map(a -> uri(a.name().toLowerCase()))
-                                        .toArray(Obj[]::new))))
+                                        .toArray(Obj[]::new)))
                                 .create(), "a float anchor position"),
                         docWrap(UI_STYLE_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
@@ -181,7 +180,7 @@ public class uiInstSet extends AbstractInstSet {
                         docWrap(UI_WIDGET_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(UI_WIDGET_TID)
-                                        .isaPredicate(rec(uri(STYLE).maybe().asUri(), UI_STYLE_TYPE))
+                                        .isaPredicate(rec(uri(STYLE).maybe().asUri(), T(UI_STYLE_TID.maybe())))
                                         .create(), "", "",
                                 Map.of(uri(STYLE), "the style specification for the widget"),
                                 "the base widget type"),
@@ -200,7 +199,8 @@ public class uiInstSet extends AbstractInstSet {
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_PROGRESS_TABLE_TID)
                                         .isaPredicate(rec(
-                                                (Obj) uri("rows").maybe(), LST_TYPE))
+                                                uri(HEADER).maybe().asUri(), LST_TYPE,
+                                                uri(ROW).maybe(), LST_TYPE))
                                         .constructor(arg -> new ProgressTableWidget(arg.recValue(), UI_PROGRESS_TABLE_TID, arg.vid()))
                                         .create(),
                                 "a table of progress bars",
@@ -296,15 +296,15 @@ public class uiInstSet extends AbstractInstSet {
                                 Map.of(uri(OBJ), "the list of objs to swipe through"),
                                 "a left-right swipe panel: arrow keys navigate, pgup/pgdn jump ±5, ctrl-d quits; displays each obj in a PanelWidget with docq+Highlighter formatting"),
                         docWrap(UI_MODAL_TYPE = Type.Builder.build()
-                                .tid(UI_WIDGET_TID)
-                                .vid(UI_MODAL_TID)
-                                .isaPredicate(rec(
-                                        uri(TITLE).maybe().asUri(), STR_TYPE,
-                                        uri(BODY).maybe(), T(STR_TID.maybeSome())))
-                                .constructor(arg -> new ModalTool(arg.jvm(), UI_MODAL_TID, arg.vid()))
-                                .create(), "rec", "modal", Map.of(
-                                uri(TITLE), "the title of the modal",
-                                uri(BODY), "the body content of the modal"),
+                                        .tid(UI_WIDGET_TID)
+                                        .vid(UI_MODAL_TID)
+                                        .isaPredicate(rec(
+                                                uri(TITLE).maybe().asUri(), STR_TYPE,
+                                                uri(BODY).maybe(), T(STR_TID.maybeSome())))
+                                        .constructor(arg -> new ModalTool(arg.jvm(), UI_MODAL_TID, arg.vid()))
+                                        .create(), "rec", "modal", Map.of(
+                                        uri(TITLE), "the title of the modal",
+                                        uri(BODY), "the body content of the modal"),
                                 "a modal popup panel: space/enter/ctrl-d dismisses")),
                 uri(INST), lst(
                         docWrap(instC(AS_INST_TID.dom(UI_WIDGET_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(((Widget<?>) lhs).format())),

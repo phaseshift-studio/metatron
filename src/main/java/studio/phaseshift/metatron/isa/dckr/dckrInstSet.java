@@ -123,9 +123,9 @@ public class dckrInstSet extends AbstractInstSet {
                         docWrap(DOCKER_CONTAINER_STATE_TYPE = Type.Builder.build()
                                         .tid(URI_TID)
                                         .vid(DOCKER_CONTAINER_STATE_TID)
-                                        .isaPredicate(union_(lst(
+                                        .isaPredicate(union_(
                                                 uri("created"), uri("running"), uri("paused"),
-                                                uri("restarting"), uri("exited"), uri("dead"))))
+                                                uri("restarting"), uri("exited"), uri("dead")))
                                         .create(),
                                 "docker container state — union of created|running|paused|restarting|exited|dead",
                                 "running.matches(docker_container_state::T)     [-- true --]",

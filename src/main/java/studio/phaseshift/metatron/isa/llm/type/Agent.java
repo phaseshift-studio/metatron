@@ -325,7 +325,7 @@ public class Agent extends MRec {
             if (hookKey.equals(ON_AGENT_CTOR) || feature.at(ACTIVE).orElse(BOOL_TRUE).boolValue()) {
                 if (!hookKey.equals(ON_ERROR))
                     this.currentHook.set(Tuple.Pair.with(feature.tid(), f(hookKey)));
-                StatusLine.message(str("[%s][%s]".formatted(feature.tid(), hookKey)));
+                StatusLine.message(str("current llm stage: [%s][%s]".formatted(feature.tid(), hookKey)));
                 final Obj hook = feature.at(uri(hookKey));
                 (hook.isInst() ? hook.asInst().args(lst(args)) : hook).apply(this);
             } else {
@@ -354,7 +354,10 @@ public class Agent extends MRec {
         final String depthKey = sessionVID != null ? sessionVID.toString() : this.tid().toString();
         final AtomicInteger counter = depthMap.computeIfAbsent(depthKey, k -> new AtomicInteger(0));
         this.currentDepth = counter.incrementAndGet();
-        final CommonUtil.Spinner waiting = Console.isConsoleOwned() ? CommonUtil.spinner("initializing agent...", true) : null;
+        final CommonUtil.Spinner waiting =
+                Console.isConsoleOwned() && !this.feature(LLM_CHAT_FEATURE_TID).<ChatFeature>as().at(MODEL).asRec().at(LLM).toCleanString().equals("human:latest") ?
+                        CommonUtil.spinner("initializing agent...", true) :
+                        null;
         try {
             if (this.first.getAndSet(false))
                 this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
@@ -434,16 +437,18 @@ public class Agent extends MRec {
                 spinnerMessage(waiting, "waiting for agent response...");
                 agent.chat(Str.Helper.stripString(str(this.userMessage)))
                         .onToolExecuted(tool -> {
+                            StatusLine.message(str("current llm stage: on_tool_execute"));
                             if (this.interrupt.get()) latch.countDown();
                             isTooling.set(false);
                             final Rec toolRec = rec(
                                     uri(NAME), str(tool.request().name()),
                                     uri(TOOL_ARGUMENTS), str(tool.request().arguments()),
-                                    uri(RESULT), str(tool.result()),
+                                    uri(RESULT), str(tool.result() != null ? tool.result() : ""),
                                     uri(CONTENTS), str(tool.request().id()));
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_TOOL_EXECUTED, toolRec));
                         })
                         .onPartialToolCall(partialToolCall -> {
+                            StatusLine.message(str("current llm stage: on_partial_tool_call"));
                             if (this.interrupt.get()) {
                                 latch.countDown();
                                 return;
@@ -456,6 +461,7 @@ public class Agent extends MRec {
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_TOOL_CALL));
                         })
                         .onPartialResponse(s -> {
+                            StatusLine.message(str("current llm stage: on_partial_response"));
                             closeSpinner(waiting);
                             if (this.interrupt.get()) {
                                 latch.countDown();
@@ -466,6 +472,7 @@ public class Agent extends MRec {
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_RESPONSE, str(s)));
                         })
                         .onPartialThinking(t -> {
+                            StatusLine.message(str("current llm stage: on_partial_thinking"));
                             closeSpinner(waiting);
                             if (this.interrupt.get()) {
                                 latch.countDown();
@@ -484,6 +491,7 @@ public class Agent extends MRec {
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_ERROR));
                             latch.countDown();
                         }).onCompleteResponse(c -> {
+                            StatusLine.message(str("current llm stage: on_complete_response"));
                             closeSpinner(waiting);
                             if (this.interrupt.get()) {
                                 latch.countDown();

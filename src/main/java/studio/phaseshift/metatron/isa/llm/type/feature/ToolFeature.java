@@ -22,9 +22,15 @@ import java.util.Map;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrapDocs;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_CLIENT_TYPE;
@@ -92,6 +98,12 @@ public class ToolFeature extends AbstractFeature {
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
+        this.addTool(mTool.tool(docWrapDocs(instC(f("list_tools").dom(NOOBJ.zero()).rng(LST_TID), lst(),
+                        (lhs, inst) -> lst(agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().tools())),
+                "no domain",
+                "a lst of tools",
+                Map.of(),
+                "generates a lst of available tools")));
         // ── 1. register this feature's own tool extensions (its config surface) ──
         if (this.has(TOOL)) {
             this.at(TOOL).elements().forEach(t -> {

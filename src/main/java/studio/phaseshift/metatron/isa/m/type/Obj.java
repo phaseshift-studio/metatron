@@ -408,6 +408,14 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         return (O) this;
     }
 
+    default <O extends Obj> O asOrThrow(final String format, final Object... params) {
+        try {
+            return this.as();
+        } catch (final Exception e) {
+            throw MTronException.of(format, params);
+        }
+    }
+
     default <O extends Obj> boolean is(final Class<O> clazz) {
         return clazz.isAssignableFrom(this.getClass());
     }
@@ -496,6 +504,13 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         return this instanceof Rec;
     }
 
+    /**
+     * Checks if current obj is an inst.
+     * Note that noobj implements inst.
+     * Use {@link #isObjInst} for non-noobj verification.
+     *
+     * @return the obj cast to an inst
+     */
     default boolean isInst() {
         return this instanceof Inst;
     }
@@ -647,6 +662,12 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         }
     }
 
+    /**
+     * Casts the current obj to an inst.
+     * Note that noobj implements inst.
+     *
+     * @return the obj cast to an inst
+     */
     default Inst asInst() {
         try {
             return (Inst) this;
@@ -877,8 +898,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 return lhs.c().isZeroable();
             if (rhs.isType() && rhs.asType().isNominal())
                 return lhs.testNominally(rhs);
-            //if (!lhs.baseType().test(rhs.baseType()))
-            //   return false;
+            //if (!lhs.baseTypeID().test(rhs.baseTypeID()))
+            //    return false;
             // if (!lhs.isObjCall() && rhs.isType() && rhs.asType().isNominal() &&
             //         ((lhs.isType() && lhs.asType().isRefinementOf(rhs.asType())) || (lhs.type().isRefinementOf(rhs.asType()))))
             //    return false;
@@ -890,7 +911,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
             // ── ObjCall handling ──
             if (rhs.isObjCall() && !rhs.asCall().isPredicate(lhs)) {
-                if (false)
+                if (false) // TODO
                     return (Obj.Helper.specificType(lhs).test(rhs.dom()) &&
                             Obj.Helper.specificType(lhs).test(rhs.rng()));
                 return true;
@@ -1011,7 +1032,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
          * Throws {@link MTronException} on failure. Does NOT trigger a space write.
          */
         public static void objTypeCheck(final Obj obj) {
-            if (TypeCheck.type_ctor.enabled()) {
+            if (Router.loaded() && null != obj.jvm() && !obj.isType() && !obj.isNoObj() && !obj.isCall() && !obj.isInstSet() && !ObjFactory.Helper.baseTID(obj).test(obj.type().baseTypeID().basePath()))
+                throw MTronException.of("%s [%s] is not a %s".formatted(obj, obj.jvm().getClass().getSimpleName().toLowerCase(), obj.type()));
+            if (TypeCheck.type_pred.enabled()) {
                 if (Router.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.test(obj.type())) {
                     if (obj.isPoly()) {
                         final String matchDiffString = Poly.Helper.diffTypeRecursion(obj, obj.type()).toString();
@@ -1064,19 +1087,24 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 final fURI bigTID = tid.big();
                 if (!BASE_TYPES.contains(bigTID.basePath()) && Router.loaded()) {
                     Obj type = Router.readFromSpace(bigTID);
-                    if (!type.isNoObj() && type.isType() && type.asType().hasConstructor()) {
+                    if (!type.isNoObj() && type.isType()) {
+
                         final Obj protoObj = MObjFactory.of().toObj(jvm, null, vid, clazz);
-                        final O constructedObj = type.asType().constructor().apply(protoObj).as();
-                        if (constructedObj.isFail())
-                            // a failed constructor must not slip past the generic return
-                            // cast (it would surface as a bare CCE with the cause
-                            // lost) — always name the reason, type_ctor or not (the
-                            // objClone sibling does exactly this)
-                            throw MTronException.of("unable to construct %s::T: %s", tid, constructedObj);
-                        constructedObj.self(constructedObj.jvm(), bigTID, vid);
-                        if (null != vid)
-                            Router.writeToSpace(vid, constructedObj);
-                        return constructedObj;
+                        if (!protoObj.baseTypeID().test(type.baseTypeID()))
+                            throw MTronException.of("%s is not a %s".formatted(protoObj, type));
+                        if (type.asType().hasConstructor()) {
+                            final O constructedObj = type.asType().constructor().apply(protoObj).as();
+                            if (constructedObj.isFail())
+                                // a failed constructor must not slip past the generic return
+                                // cast (it would surface as a bare CCE with the cause
+                                // lost) — always name the reason, type_ctor or not (the
+                                // objClone sibling does exactly this)
+                                throw MTronException.of("unable to construct %s::T: %s", tid, constructedObj);
+                            constructedObj.self(constructedObj.jvm(), bigTID, vid);
+                            if (null != vid)
+                                Router.writeToSpace(vid, constructedObj);
+                            return constructedObj;
+                        }
                     }
                 }
             }
@@ -1123,7 +1151,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                                 .getOutput()
                                                 .getBytes())));
                     }),
-                    instC(UNION_INST_TID.dom(A).rng(A.maybe()), lst(LST_TYPE), (lhs, inst) -> inst.arg(0).lstValue().stream().anyMatch(o -> o.test(lhs)) ? lhs : noobj()),
+                    instC(UNION_INST_TID.dom(A).rng(A.maybe()), lst(T(B), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe())), (lhs, inst) -> inst.args().lstValue().stream().anyMatch(o -> o.test(lhs)) ? lhs : noobj()),
                     instC(SERIALIZE_INST_TID.dom(A).rng(B), lst(T(OBJ_SERIAL_TID)), (lhs, inst) -> {
                         final Object serialization = inst.arg(0).<ObjSerializer<?>>as().write(lhs);
                         try {
@@ -1256,7 +1284,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             Router.readFromSpace(lhs.uriValue().basePath().extend("apply")).apply(inst.args())),
                     //instC(MAP_INST_TID.dom(A).rng(ALL.maybe()), lst(T(B)), (lhs, inst) -> inst.arg(0)),
                     docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)), "maybe some obj", "the lhs obj applied to the arg obj", Map.of(jnt(0), "any obj"), "applies the lhs obj to the arg obj to yield the rhs obj"),
-                    instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? noobj() : lhs),
+                    instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).booleanCheck() ? lhs : noobj()),
                     docWrap(instC(SIDE_INST_TID.dom(A).rng(A), lst(ALL_TYPE), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
                             "any obj", "the lhs obj", Map.of(jnt(0), "any obj applied by lhs obj"), "passes lhs obj through after applying itself to inst arg obj", "1.side(plus(2).to(x)) [-- 1 [x=>3] --]"),
                     docWrap(instC(TID_INST_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),

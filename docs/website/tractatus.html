@@ -1791,11 +1791,12 @@ These types are distributed in the <code>/m/math</code> instruction set and impo
 ==&gt;real::T[?real::T]@/m/math/currency
 ==&gt;currency::T@/m/math/currency/usd
 ==&gt;currency::T@/m/math/currency/euro
-==&gt;/m/math/time::T[][ctor?millis&lt;=#{?}(#{*}::T)]@/m/math/time/millis
-==&gt;/m/math/time::T[][ctor?second&lt;=#{?}(#{*}::T)]@/m/math/time/second
-==&gt;/m/math/time::T[][ctor?minute&lt;=#{?}(#{*}::T)]@/m/math/time/minute
-==&gt;/m/math/time::T[][ctor?hour&lt;=#{?}(#{*}::T)]@/m/math/time/hour
-==&gt;/m/math/time::T[][ctor?day&lt;=#{?}(#{*}::T)]@/m/math/time/day
+==&gt;real::T[?real::T]@/m/math/time
+==&gt;time::T[][ctor?millis&lt;=#{?}(#{*}::T)]@/m/math/time/millis
+==&gt;time::T[][ctor?second&lt;=#{?}(#{*}::T)]@/m/math/time/second
+==&gt;time::T[][ctor?minute&lt;=#{?}(#{*}::T)]@/m/math/time/minute
+==&gt;time::T[][ctor?hour&lt;=#{?}(#{*}::T)]@/m/math/time/hour
+==&gt;time::T[][ctor?day&lt;=#{?}(#{*}::T)]@/m/math/time/day
 ==&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datetime</code></pre>
 </div>
 </div>
@@ -1910,6 +1911,7 @@ Over the remainder of this documentation, each of the components of Dr.Stynx&#82
                                                                          left=&gt;-2,top=&gt;8,foreground =&gt;"{{y}}"]]@&lt;audit_widget&gt; },
                         to            =&gt; inst(a=&gt;str::T){ @&lt;audit_widget&gt;&gt;&gt;=[body=&gt;+*a].display() },
                         root          =&gt; /usr/dr/audit],
+    bash_feature:::::::[reject        =&gt; ["\brm\b"]],
     summarize_feature::[root          =&gt; /usr/dr],
     embed_feature::::::[root          =&gt; embed:chat_result,
                         model         =&gt; model::[provider     =&gt; ollama,
@@ -2027,17 +2029,15 @@ And since, metatron is able to map common data formats to `obj`, its possible to
 mtron>  *<fs:skills/mtron/SKILL.md>
 ==>markdown::"""---
    name: mtron
-   description: >
-     Working with the mtron language in metatron: spaces, and the read (*), write
-     (->), and update (@ via >>=) basics on a uri graph -- plus the reference map
-     to deep dives (data sources, MCP, fsspace, Docker, types, training).
+   description: understanding the language used to control the metatron
    ---
 
    # mtron: the basics on a uri/obj graph
 
    mtron is a functional, fluent, monadic language that manipulates the metatron environment. metatron **storage** is a uri
-   (uniform resource identifier) graph where any vertex can hold an associated obj (object). metatron **processing** is a
-   data-flow model aimed at graph traversal and obj manipulation.
+   graph (uniform resource identifier) where any vertex can hold an associated obj (object). metatron **processing** is
+   expressed as a data-flow aimed at guiding monads as they traverse the uri/obj-graph to ultimately halt on the solution
+   to the problem represented as an mtron expression.
 
    Every denoted object can be reified, referred to, and manipulated -- a **reflective computing environment**.
 
@@ -2045,6 +2045,8 @@ mtron>  *<fs:skills/mtron/SKILL.md>
 
    ## the three verbs: write, read, update
 
+   |   do   | mtron            | what it does                               |
+   |:------:|------------------|--------------------------------------------|
    ...
 ----
 
@@ -3000,7 +3002,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{g}}m{{b}}E{{y}}T{{y}}a{{y}}t{{y}}r{{c}}O{{m}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{c}}M{{g}}E{{y}}t{{g}}a{{r}}t{{m}}R{{g}}o{{m}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3094,7 +3096,7 @@ mtron&gt; a/b/c * d/e/f     ​6​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 'metatron'.as(bytes::T)     ​1​
 ==&gt;0x6d65746174726f6e
 mtron&gt; bytes::'48656c6c6f'     ​2​
-==&gt;fail::['48656c6c6f' is not a bytes::T]@/sys/fail/588</code></pre>
+==&gt;fail::['48656c6c6f' [string] is not a bytes::T]@/sys/fail/588</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6893,22 +6895,23 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355856       6944   6348912   1% /run'
+==&gt;'tmpfs                    6355856       7036   6348820   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2         959786032  510642716 400315108  57% /'
-==&gt;'tmpfs                   31779268      52496  31726772   1% /dev/shm'
+==&gt;'/dev/nvme1n1p2         959786032  511226612 399731212  57% /'
+==&gt;'tmpfs                   31779268     289912  31489356   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779268          0  31779268   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        232   6355620   1% /run/user/1000'
+==&gt;'tmpfs                    6355852        256   6355596   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1412328784 508879760  74% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1411597540 509611004  74% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
 ==&gt;boot
 ==&gt;conf
 ==&gt;'CONTRIBUTING.md'
+==&gt;dev
 ==&gt;dist
 ==&gt;docs
 ==&gt;dsh-plugins
@@ -6926,7 +6929,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;580</code></pre>
+==&gt;591</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7114,7 +7117,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.09:5/06/34/48/272?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.09:6/07/53/57/926?tz=-0600&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -8072,7 +8075,7 @@ mtron&gt; *g:V/1/OUT/te:hot/a/owner/name     ​3​
    	  \_pred │ []
    	[inst]   │ !*g:V/2
    	 \_dom   │ #{?}::T
-   	 \_args  │ [g:V/2][Obj$Helper&lt;1026&gt;:obj does not match person::T...]]@/sys/fail/136
+   	 \_args  │ [g:V/2][Obj$Helper&lt;1049&gt;:obj does not match person::T...]]@/sys/fail/136
 mtron&gt; *g:V/1/OUT/te:cold/x/total     ​4​
 ==&gt;15.0000
 mtron&gt; *g:V/1/OUT/knows.count()     ​5​
@@ -10102,9 +10105,11 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
 mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
 ==&gt;'grant'
+==&gt;'alex'
 ==&gt;'marko'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
+==&gt;3
 ==&gt;2</code></pre>
 </div>
 </div>

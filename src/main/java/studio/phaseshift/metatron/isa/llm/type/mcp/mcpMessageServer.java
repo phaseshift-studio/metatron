@@ -23,9 +23,8 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
-import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import studio.phaseshift.metatron.util.MTronException;
@@ -42,11 +41,10 @@ import static studio.phaseshift.metatron.isa.llm.llmInstSet.MUTABLE;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATETIME_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -54,7 +52,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_SERVER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -143,7 +140,7 @@ public class mcpMessageServer {
         final Rec tools = rec(mutableMap());
         final Inst addMessage = docWrap(instC(vid.extend("add_message").dom(ALL.maybe()).rng(MESSAGE_TID), rec(
                 ROOT, URI_TYPE,
-                KIND, isa_(union_(lst(uri(USER), uri(AI), uri(SYSTEM), uri("thinking"), uri("tool_result"), uri("compaction")))).tryToInst(),
+                KIND, union_(uri(USER), uri(AI), uri(SYSTEM), uri("thinking"), uri("tool_result"), uri("compaction")).tryToInst(),
                 TEXT, STR_TYPE,
                 SESSION, URI_TYPE,
                 NAME, T(STR_TID.maybe()),

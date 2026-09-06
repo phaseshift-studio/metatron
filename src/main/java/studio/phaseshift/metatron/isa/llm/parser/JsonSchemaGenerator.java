@@ -122,7 +122,7 @@ public final class JsonSchemaGenerator {
         else if (element instanceof JsonObjectSchema)
             return recToType((JsonObjectSchema) element);
         else if (element instanceof JsonAnyOfSchema)
-            return union_(lst(((JsonAnyOfSchema) element).anyOf().stream().map(JsonSchemaGenerator::schemaToType).toList())).tryToInst();
+            return union_(((JsonAnyOfSchema) element).anyOf().stream().map(JsonSchemaGenerator::schemaToType).toArray(Obj[]::new)).tryToInst();
         else
             return STR_TYPE;
     }

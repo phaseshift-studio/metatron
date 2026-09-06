@@ -22,8 +22,11 @@ package studio.phaseshift.metatron.isa.mach.io.type;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -37,12 +40,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -55,7 +61,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     public static final int NESTED_STRING_THRESHOLD = 40;
 
     // ── Config key URIs ───────────────────────────────────────────
-    private static final fURI KEY_CLIP = fURI.Singleton.f("clip");
+    private static final fURI KEY_CLIP = f("clip");
     private static final fURI KEY_REC = KEY_CLIP.extend(REC_TID);
     private static final fURI KEY_LST = KEY_CLIP.extend(LST_TID);
     private static final fURI KEY_STR = KEY_CLIP.extend(STR_TID);
@@ -63,7 +69,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     private static final fURI KEY_REAL = KEY_CLIP.extend(REAL_TID);
     private static final fURI KEY_BYTES = KEY_CLIP.extend(BYTES_TID);
     private static final fURI KEY_FAIL = KEY_CLIP.extend(FAIL_TID);
-    private static final fURI KEY_JUSTIFY = fURI.Singleton.f("justify");
+    private static final fURI KEY_JUSTIFY = f("justify");
 
     // ── Singletons ───────────────────────────────────────────────
     private static final ObjmtronSerializer INSTANCE = new ObjmtronSerializer((Void) null);
@@ -400,6 +406,33 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     // ── Read ─────────────────────────────────────────────────────
 
+    public static Obj eval(final String expression) {
+        // 1. Parse the full input — the parser natively handles ; via end() sugar
+        final Obj parsed = ObjmtronSerializer.parseMulti(expression);
+        if (null == parsed || parsed.isNoObj()) return noobj();
+        // 2. Split into independently executable segments at end() boundaries
+        final List<Code> segments;
+        if (parsed.isCode()) {
+            segments = ObjmtronSerializer.splitCodeAtEnd(parsed.asCode());
+        } else {
+            // Single expression (bare value or single instruction) — wrap as a one-instruction code
+            segments = List.of(MCode.of(List.of(
+                    parsed.isInst() ? parsed.as() : instB(START_INST_TID, lst(parsed)))));
+        }
+        if (segments.isEmpty()) return noobj();
+        Obj running = noobj();
+        for (final Code segment : segments) {
+            try {
+                final Obj resolvedResult = segment.resolve(running);
+                final Machine mach = SwarmMachine.of(resolvedResult.as());
+                running = mach.apply(noobj());
+            } catch (final Exception e) {
+                throw MTronException.of(e);
+            }
+        }
+        return running;
+    }
+
     @Override
     public Obj read(final String data) throws MTronException {
         try {
@@ -527,8 +560,12 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             sb.append(temp);
             sb.append("]");
         }
-        if (type.vid() != null && !type.tid().equals(type.vid()))
-            sb.append("@").append(type.vid());
+        if (type.hasVID()) {
+            if (type.vid().basePath().equals(TYPE_TID) && !type.vid().c().isOne()) {
+                sb.append("{").append(type.vid().c()).append("}");
+            } else if (!type.tid().basePath().equals(type.vid().basePath()))
+                sb.append("@").append(type.vid());
+        }
         return sb;
     }
 

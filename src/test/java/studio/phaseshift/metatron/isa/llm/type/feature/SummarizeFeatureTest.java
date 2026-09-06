@@ -35,8 +35,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DAY_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -59,7 +59,7 @@ public class SummarizeFeatureTest extends AbstractFeatureTest {
         return ChatResult.chatResult()
                 .put(CHAT, str("I've queued a summarization over the last two days."))
                 .put(USER, str("test prompt"))
-                .put(TIME, jnt(42))
+                .put(TIME, real(42.0, MATH_MILLIS_TID, null))
                 .put(BLOCK, rec(uri("summarize"), rec(
                         uri(SCOPE), real(2.0, MATH_DAY_TID, null),
                         uri(KIND), lst(uri("decision")),

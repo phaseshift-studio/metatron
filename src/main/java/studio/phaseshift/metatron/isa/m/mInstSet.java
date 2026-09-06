@@ -248,13 +248,13 @@ public class mInstSet extends AbstractInstSet {
             .isaPredicate(rec(
                     uri(TypeCheck.inst_dom.name()), BOOL_TYPE,
                     uri(TypeCheck.inst_rng.name()), BOOL_TYPE,
-                    uri(TypeCheck.type_ctor.name()), BOOL_TYPE,
+                    uri(TypeCheck.type_pred.name()), BOOL_TYPE,
                     uri(TypeCheck.code_resolve.name()), BOOL_TYPE,
                     uri(TypeCheck.obj_write.name()), BOOL_TYPE))
             .constructor(stages -> rec(
                     uri(TypeCheck.inst_dom.name()), stages.asRec().at(uri(TypeCheck.inst_dom.name())).orElse(BOOL_FALSE),
                     uri(TypeCheck.inst_rng.name()), stages.asRec().at(uri(TypeCheck.inst_rng.name())).orElse(BOOL_FALSE),
-                    uri(TypeCheck.type_ctor.name()), stages.asRec().at(uri(TypeCheck.type_ctor.name())).orElse(BOOL_FALSE),
+                    uri(TypeCheck.type_pred.name()), stages.asRec().at(uri(TypeCheck.type_pred.name())).orElse(BOOL_FALSE),
                     uri(TypeCheck.code_resolve.name()), stages.asRec().at(uri(TypeCheck.code_resolve.name())).orElse(BOOL_FALSE),
                     uri(TypeCheck.obj_write.name()), stages.asRec().at(uri(TypeCheck.obj_write.name())).orElse(BOOL_FALSE))).create();
     public static final Type TRACER_TYPE = Type.Builder.build()
@@ -384,7 +384,7 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(TYPER_TYPE, null, null, mutableMap(
                                         uri(TypeCheck.inst_dom.name()), "ensure lhs obj matches instruction domain",
                                         uri(TypeCheck.inst_rng.name()), "ensure rhs obj matches instruction range",
-                                        uri(TypeCheck.type_ctor.name()), "ensure type constructor argument matches type predicate",
+                                        uri(TypeCheck.type_pred.name()), "ensure type constructor argument matches type predicate",
                                         uri(TypeCheck.obj_write.name()), "ensure obj matches type on space write",
                                         uri(TypeCheck.code_resolve.name()), "ensure only fully resolved code can be executed"),
                                 """
@@ -841,7 +841,7 @@ public class mInstSet extends AbstractInstSet {
         rows.add(headers);
         for (final Inst i : code.insts()) {
             rows.add(java.util.List.of(
-                    i.tid().name(),
+                    i.tid().name() + (i.tid().c().isOne() ? "" : ("{" + i.tid().c() + "}")),
                     i.dom().vid().small() + "::T",
                     i.rng().vid().small() + "::T",
                     i.args().elements()

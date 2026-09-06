@@ -18,7 +18,7 @@ mtron> ... [-- larger agent definition --]
 ==>fail::[parse error at line 1, col 2:
      ... 
       ^
-     could not parse at '.']@/sys/fail/154
+     could not parse at '.']@/sys/fail/192
 mtron> feature=>[
         tool_feature::[tool=>[!*eval]]
         ... [-- other features attached to agent --]
@@ -26,12 +26,12 @@ mtron> feature=>[
      feature=>[
            tool_feature::[tool=>[!*eval...
             ^
-     could not parse at '=' — unclosed '[' — missing ']'?]@/sys/fail/156
+     could not parse at '=' — unclosed '[' — missing ']'?]@/sys/fail/206
 mtron> ]
 ==>fail::[parse error at line 1, col 1:
      ]
      ^
-     unexpected ']' — missing opening '[' or extra ']'?]@/sys/fail/158
+     unexpected ']' — missing opening '[' or extra ']'?]@/sys/fail/208
 ```
 ## References
 

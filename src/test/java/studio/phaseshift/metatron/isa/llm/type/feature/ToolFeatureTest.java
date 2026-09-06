@@ -83,6 +83,6 @@ public class ToolFeatureTest extends AbstractFeatureTest {
         final Agent a = agentWith(tf);
         tf.addTool(mTool.tool(rec(uri(INST), instLambda((lhs, inst) -> noobj()), uri(NAME), uri("direct_tool"), uri(DESC), str("a directly registered tool"))));
         tf.onBeforeChat(a);
-        assertEquals(1, tf.tools().lstValue().size(), "directly added tools persist in the registry across chats");
+        assertEquals(2, tf.tools().lstValue().size(), "directly added tools persist in the registry across chats");
     }
 }

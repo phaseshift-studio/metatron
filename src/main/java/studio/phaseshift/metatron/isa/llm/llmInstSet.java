@@ -100,6 +100,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_TOOL_FEATURE_TID = LLM_FEATURE_TID.extend("tool_feature");
     public static final fURI LLM_SYSTEM_FEATURE_TID = LLM_FEATURE_TID.extend("system_feature");
     public static final fURI LLM_NOTE_FEATURE_TID = LLM_FEATURE_TID.extend("note_feature");
+    public static final fURI LLM_BASH_FEATURE_TID = LLM_FEATURE_TID.extend("bash_feature");
     public static final fURI LLM_RECALL_FEATURE_TID = LLM_FEATURE_TID.extend("recall_feature");
     public static final fURI LLM_EMBED_FEATURE_TID = LLM_FEATURE_TID.extend("embed_feature");
     //public static final fURI LLM_MESSAGE_FEATURE_TID = f(LLM_MESSAGE_FEATURE_TID_STRING);
@@ -295,11 +296,11 @@ public class llmInstSet extends AbstractInstSet {
                                         .vid(LLM_CLAIM_TID)
                                         .isaPredicate(rec(
                                                 uri(TEXT), STR_TYPE,
-                                                uri(KIND), union_(lst(
+                                                uri(KIND), union_(
                                                         uri("decision"),
                                                         uri("problem"),
                                                         uri("solution"),
-                                                        uri("observation"))).tryToInst(),
+                                                        uri("observation")).tryToInst(),
                                                 uri(SOURCE).maybe(), lst(T(ALL.maybe())),
                                                 uri(CONCEPT).maybe(), lst(T(ALL.maybe())),
                                                 uri("tier").maybe(), isa_(NAT_TYPE).else_(jnt(1))))
@@ -324,11 +325,11 @@ public class llmInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri(TITLE), STR_TYPE,
                                                 uri(DESC), STR_TYPE,
-                                                uri(STATUS), union_(lst(
+                                                uri(STATUS), union_(
                                                         uri("open"),
                                                         uri("in_progress"),
                                                         uri("resolved"),
-                                                        uri("abandoned"))).tryToInst(),
+                                                        uri("abandoned")).tryToInst(),
                                                 uri(SOURCE).maybe(), lst(T(ALL.maybe())),
                                                 uri("claim").maybe(), lst(T(ALL.maybe())),
                                                 uri(TIME).maybe(), DATETIME_TYPE))
@@ -490,7 +491,6 @@ public class llmInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 // hook fields — each is an optional inst a feature can override
                                                 uri(ROOT).maybe().asUri(), URI_TYPE,
-                                                uri(SKILL).maybe(), lst(LLM_SKILL_TYPE),
                                                 uri(ON_AGENT_CTOR).maybe(), ALL_TYPE,
                                                 uri(ON_BEFORE_CHAT).maybe(), ALL_TYPE,
                                                 uri(ON_PARTIAL_RESPONSE).maybe(), ALL_TYPE,
@@ -503,7 +503,6 @@ public class llmInstSet extends AbstractInstSet {
                                         .create(),
                                 null, null, mutableMap(
                                         uri(ROOT).maybe(), "the root uri location of feature data",
-                                        uri(SKILL).maybe(), "skills associated with the feature",
                                         uri(ON_AGENT_CTOR).maybe(), "inst?noobj<=agent(){ [-- one time setup --] }",
                                         uri(ON_BEFORE_CHAT).maybe(), "inst?#{?}<=agent(){ [-- non-noobj to short-circuit --] }",
                                         uri(ON_PARTIAL_RESPONSE).maybe(), "inst?noobj<=agent(text=>str::T)",
@@ -647,6 +646,22 @@ public class llmInstSet extends AbstractInstSet {
                                 "lifecycle audit trail with table text and widget result"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
+                                        .vid(LLM_BASH_FEATURE_TID)
+                                        .isaPredicate(rec(
+                                                uri(DIR).maybe().asUri(), isa_(URI_TYPE).else_(uri(System.getProperty("user.dir"))),
+                                                uri(TIMEOUT).maybe(), isa_(TIME_TYPE).else_(real(10.0, MATH_SECOND_TID, null)),
+                                                uri(ALLOW).maybe(), LST_TYPE,
+                                                uri(REJECT).maybe(), LST_TYPE))
+                                        .constructor(arg -> createStageLambdas(new BashFeature(arg.asRec().jvm(), LLM_BASH_FEATURE_TID, arg.vid())))
+                                        .create(),
+                                null, null, mutableMap(
+                                        uri(DIR).maybe(), "working directory of all bash processes",
+                                        uri(TIMEOUT).maybe(), "default timeout for bash processes (agent can change at tool call)",
+                                        uri(ALLOW).maybe(), "a lst of regex patterns to allow",
+                                        uri(REJECT).maybe(), "a lst of regex patterns to reject"),
+                                "provide agent fine grained control of a bash terminal where allowed patterns and secondarily filtered by reject patterns"),
+                        docWrap(Type.Builder.build()
+                                        .tid(LLM_FEATURE_TID)
                                         .vid(LLM_LOOP_FEATURE_TID)
                                         .isaPredicate(rec(
                                                 uri("max_loop").maybe().asUri(), INT_TYPE,
@@ -756,7 +771,7 @@ public class llmInstSet extends AbstractInstSet {
                                                         isa_(LLM_MODEL_TYPE).tryToInst(), id_().tryToInst(),
                                                         isa_(LLM_SESSION_TYPE).tryToInst(), from_(rshift_(uri(AGENT)).mult_(uri(MODEL))).tryToInst()))
                                                         .rshift_().tryToInst(),
-                                                uri(SCOPE).maybe().asUri(), union_(lst(isa_(TIME_TYPE).tryToInst(), isa_(DATETIME_TYPE).tryToInst())).tryToInst(),
+                                                uri(SCOPE).maybe().asUri(), union_(TIME_TYPE, DATETIME_TYPE).tryToInst(),
                                                 uri(KIND).maybe().asUri(), LST_TYPE,
                                                 uri(CONCEPT).maybe().asUri(), LST_TYPE),
                                         (lhs, inst) -> {

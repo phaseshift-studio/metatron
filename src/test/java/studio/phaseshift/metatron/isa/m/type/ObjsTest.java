@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,18 +18,36 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 public class ObjsTest extends AbstractObjTest {
+
+    @BeforeAll
+    public static void setup() {
+        InstSet.importInstSet(MATH_ISA_TID);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,1,1,1}                      |int{4}::T       |true",
+            //    "{1,1,1,nat::1}                 |int{4}::T       |true",
+            //    "{1,1,1,'hello'}                |#{4}::T         |true"
+    }, delimiter = '|')
+    public void testType(final String objs, final String expectedType, final boolean shouldEqual) {
+        AbstractMetatronTest.checkEquality(LOG, ObjmtronSerializer.parse(expectedType), ObjmtronSerializer.parse(objs).type(), shouldEqual);
+    }
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -56,8 +74,8 @@ public class ObjsTest extends AbstractObjTest {
         assertEquals(10000, objs.uniqueC().max().intValue());
         assertEquals(10000, objs.c().min().intValue());
         assertEquals(10000, objs.c().max().intValue());
-        assertEquals(10000,objs.stream().count());
-        assertEquals(10000,IteratorUtil.count(objs.<Iterable<Obj>>jvm()));
+        assertEquals(10000, objs.stream().count());
+        assertEquals(10000, IteratorUtil.count(objs.<Iterable<Obj>>jvm()));
         /// ///////////////////////////////////////////////////////////////
         objs = noobj();
         for (int i = 0; i < 10000; i++) {
@@ -66,7 +84,7 @@ public class ObjsTest extends AbstractObjTest {
         assertEquals(1, objs.uniqueC().max().intValue());
         assertEquals(10000, objs.c().min().intValue());
         assertEquals(10000, objs.c().max().intValue());
-        assertEquals(1,objs.stream().count());
+        assertEquals(1, objs.stream().count());
     }
 
     @ParameterizedTest
@@ -90,5 +108,5 @@ public class ObjsTest extends AbstractObjTest {
     public void testMerge(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
-    
+
 }

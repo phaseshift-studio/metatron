@@ -372,6 +372,7 @@
 </script>
 <main class="container my-4 flex-grow-1">
     <div class="skill-doc mb-4">
+        <h1 class="skill-title mb-1">ide: metatron agent coding harness ide</h1>
         <a href="SKILL.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>SKILL.md</a>
     </div>
     <div class="markdown-body">
@@ -464,9 +465,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
 <pre><code class="language-mtron">mtron&gt; */dev/scratch/command/mvn_build
 ==&gt;result::[
     status=&gt;success,
-    runtime=&gt;millis::849.0000,
+    runtime=&gt;millis::895.0000,
     command=&gt;'mvn -f src/test/resources/scratch compile',
-    output=&gt;!*/sys/tmp/2bae9f33]
+    output=&gt;!*/sys/tmp/e52e924c]
 </code></pre>
 <p>The Java source files have a <code>str::T &gt; web:java::T</code> encoding accessible via <code>src</code>.</p>
 <pre><code class="language-mtron"></code></pre>
@@ -584,10 +585,19 @@ mtron&gt; */dev/scratch/idx/Echo
 </code></pre>
 <p><code>idx</code> offers a human-readable path scheme that projects to the <code>code</code> uri subgraph. Due to the <code>!*</code> nature of the <code>idx</code>
 objs, any updates to
-<code>idx</code> redirect to <code>code</code>. When <code>code</code> is <strong>re-saved</strong>, a <code>?subq</code> listener fires, mapping the <code>ide:java::T</code> to <code>web:java::T</code>
+<code>idx</code> redirect to <code>code</code>. When <code>code</code> is <strong>re-saved</strong>, a <code>?subq</code> listener fires, mapping the <code>ide:java::T</code> to
+<code>web:java::T</code>
 and then to disk. The subscription then pulls the file from disk to a <code>web:java::T</code> and then a <code>ide:java::T</code> in <code>code</code>
 and <code>idx</code>. In this way,
 <code>code</code> serves as a metatron encoded proxy to the file system representation of the project's source code.</p>
+<pre><code>         ┌─────── idx 
+         │         │
+   src ──┤         │
+    ▲    │         ▼
+    │    └─────── code 
+    │            ⋰
+    └───── sub:[...]   
+</code></pre>
 <p><strong>edit, then save — two steps</strong> (verified against a live VM, 2026-09-04): the <code>&gt;&gt;=</code> edit lands in the <code>code</code> space
 immediately, but the <strong>disk write-back fires on the class-level save</strong> (<code>code/N.to(...)</code>) — the subscription
 serializes the class rec (header + body + footer of each member) and writes the file. An edit that is never saved is
@@ -614,18 +624,19 @@ mtron&gt; */dev/scratch/idx/Echo/method/speak/body.-&lt;'\n'.as(rec::T)
     2=&gt;'    }']
 mtron&gt; */dev/scratch/idx/Echo/method/speak/body.-&lt;'\n'.as(rec::T) &gt;&gt;= [1 =&gt; &quot;return who;&quot;]
 ==&gt;[0=&gt;'{',1=&gt;'return who;',2=&gt;'    }']
-mtron&gt; @/dev/scratch/idx/Echo/method/speak &gt;&gt;= [body=&gt; '{
-==&gt;fail::[rec entry malformed (missing key or value): [body, =&gt;, null]]@/sys/fail/136
-mtron&gt; return &quot;marko&quot;;
-==&gt;fail::[parse error at line 1, col 7:
-     return &quot;marko&quot;;
-           ^
-     could not parse at ' ']@/sys/fail/146
-mtron&gt; }']
-==&gt;fail::[parse error at line 1, col 1:
-     }']
-     ^
-     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/148
+mtron&gt; @/dev/scratch/idx/Echo/method/speak &gt;&gt;= [body=&gt; '{ return &quot;marko&quot;; }']
+==&gt;[
+    body=&gt;'{ return &quot;marko&quot;; }',
+    kind=&gt;method,
+    name=&gt;'speak',
+    signature=&gt;'String speak(String who)',
+    header=&gt;&quot;&quot;&quot;
+       public String speak(String who) &quot;&quot;&quot;,
+    footer=&gt;'',
+    text=&gt;&quot;&quot;&quot;
+       public String speak(String who) {
+           return who;
+   ...&quot;&quot;&quot;]
 mtron&gt; *&lt;mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java&gt;
 ==&gt;java::&quot;&quot;&quot;package com.example.scratch;
    
@@ -662,17 +673,9 @@ mtron&gt; *&lt;mfs:src/test/resources/scratch/src/main/java/com/example/scratch/
        }
    }
    &quot;&quot;&quot;
-mtron&gt; Finally, to check if the update to `Echo::speak` made it to disk, dereference the uri disk pointer.
-==&gt;fail::[parse error at line 1, col 8:
-     Finally, to check if the update to `Echo::speak...
-            ^
-     could not parse at ',']@/sys/fail/150
-mtron&gt; ```mtron_pre
-==&gt;fail::[parse error at line 1, col 1:
-     ```mtron_pre
-     ^
-     could not parse at '`']@/sys/fail/152
-mtron&gt; *&lt;mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java&gt;
+</code></pre>
+<p>Finally, to check if the update to <code>Echo::speak</code> made it to disk, dereference the uri disk pointer.</p>
+<pre><code class="language-mtron">mtron&gt; *&lt;mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java&gt;
 ==&gt;java::&quot;&quot;&quot;package com.example.scratch;
    
    /**
@@ -776,7 +779,8 @@ lands as text, not control chars.</li>
 dereference fine; single-line <code>?lineq=N</code> with <code>*(_)</code> returns <code>this</code>
 (self), not the line.</li>
 <li><strong><code>&gt;&gt;=</code> on a derived/clone path</strong> silently does nothing useful.
-Verified repro (2026-09-04): <code>@…/idx/Echo/method/speak &gt;&gt;= [body=&gt; -&lt;'\n'.as(rec::T)&gt;&gt;=([1=&gt;'x']&gt;&gt;.&gt;-?str&lt;=str{*}('\n'))]</code>
+Verified repro (2026-09-04):
+<code>@…/idx/Echo/method/speak &gt;&gt;= [body=&gt; -&lt;'\n'.as(rec::T)&gt;&gt;=([1=&gt;'x']&gt;&gt;.&gt;-?str&lt;=str{*}('\n'))]</code>
 echoes as accepted; <code>code</code>, <code>idx</code>, and disk are all unchanged, no error. Plain-string RHS works in the same one line:
 <code>&gt;&gt;= [body=&gt; '{ return who; }']</code> lands in <code>code</code> immediately.</li>
 <li><strong>Save to make it stick.</strong> The <code>code/N.to(code/N)</code> re-save is what fires the write-back subscription — after the edit,

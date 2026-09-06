@@ -1,7 +1,6 @@
 ---
 name: ide
-description: >
-  metatron agent coding harness ide
+description: metatron agent coding harness ide
 ---
 
 # agent ide: source edits through the uri graph
@@ -114,6 +113,16 @@ and then to disk. The subscription then pulls the file from disk to a `web:java:
 and `idx`. In this way,
 `code` serves as a metatron encoded proxy to the file system representation of the project's source code.
 
+```
+         ┌─────── idx 
+         │         │
+   src ──┤         │
+    ▲    │         ▼
+    │    └─────── code 
+    │            ⋰
+    └───── sub:[...]   
+```
+
 **edit, then save — two steps** (verified against a live VM, 2026-09-04): the `>>=` edit lands in the `code` space
 immediately, but the **disk write-back fires on the class-level save** (`code/N.to(...)`) — the subscription
 serializes the class rec (header + body + footer of each member) and writes the file. An edit that is never saved is
@@ -123,10 +132,9 @@ space-only.
 */dev/scratch/idx/Echo/method/speak
 */dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T)
 */dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T) >>= [1 => "return who;"]
-@/dev/scratch/idx/Echo/method/speak >>= [body=> '{
-        return "marko";
-    }']
+@/dev/scratch/idx/Echo/method/speak >>= [body=> '{ return "marko"; }'] 
 *<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>
+```
 
 Finally, to check if the update to `Echo::speak` made it to disk, dereference the uri disk pointer.
 

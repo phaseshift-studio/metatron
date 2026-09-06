@@ -56,11 +56,11 @@ include::header.html[]
                             expressive, and efficient way to
                             define and manipulate data structures encoded within and between data
                             sources.
-                            It is designed to be used across a wide range of applications, from the
-                            enthusiast's home automation project to an organization's large-scale master
+                            It can be used for a wide range of applications including
+                            an enthusiast's home automation project, an organization's large-scale master
                             data
                             management
-                            system.
+                            system, or an agent's tailor-made harness in a data-rich environment.
                         </p>
                     </div>
                     <div class="col-md-6">
