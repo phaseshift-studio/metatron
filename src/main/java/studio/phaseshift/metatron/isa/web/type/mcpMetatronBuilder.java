@@ -105,7 +105,7 @@ public final class mcpMetatronBuilder {
      * docq QProc mounted on the instruction space resolves them.
      */
     private static fURI toolTid(final String name) {
-        return M_ISA_INST_TID.extend(name);
+        return MCP_MTRON_SERVER_TID.extend(name);
     }
 
     // ========================================
@@ -174,9 +174,9 @@ public final class mcpMetatronBuilder {
                     "(experimental) returns the result of reading the provided memory"), MUTABLE);
             // eval_mtron — the foundational tool: evaluate metatron expressions
             tools.at(uri(mTool.toolName(toolTid("eval_mtron"))), docWrap(instC(
-                            toolTid("eval_mtron").dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
-                            rec(uri("code"), STR_TYPE), (lhs, inst) -> {
-                                final Obj codeArg = normArg(inst.arg(f("code"), 0));
+                            f(mTool.toolName(toolTid("eval_mtron"))).dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
+                            rec(uri(CODE), STR_TYPE), (lhs, inst) -> {
+                                final Obj codeArg = normArg(inst.arg(CODE, 0));
                                 if (codeArg.isCall())
                                     return codeArg.apply();
                                 else {
@@ -285,7 +285,7 @@ public final class mcpMetatronBuilder {
                             final Map<String, List<String>> frontMatter = mSkill.parseFrontMatter(sr.content());
                             final Rec resource = rec(
                                     uri(URI), uri(sr.relativePath()),
-                                    uri(NAME), str(frontMatter.getOrDefault("name", List.of(Path.of(sr.relativePath()).getFileName().toString())).getFirst()),
+                                    uri(NAME), str(frontMatter.getOrDefault(NAME, List.of(Path.of(sr.relativePath()).getFileName().toString())).getFirst()),
                                     uri(DESC), str(frontMatter.getOrDefault("description", List.of("no description")).getFirst()));
                             if (sr.content().length() > LARGE_RESOURCE_THRESHOLD) {
                                 // large resource — expose a reference to the file, not its inline content
@@ -300,7 +300,6 @@ public final class mcpMetatronBuilder {
                     });
             jvm.put(uri(RESOURCE), resources);
         }
-
         return jvm;
     }
 }

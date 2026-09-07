@@ -132,7 +132,9 @@ CP="$(ls "$IDEA_HOME"/lib/*.jar 2>/dev/null | tr '\n' ':')"
 
 SOURCES="$(find src -name '*.java' | tr '\n' ' ')"
 echo "[plugin] compiling: $SOURCES"
-javac -encoding UTF-8 -proc:none -nowarn -cp "$CP" -d "$BUILD/classes" $SOURCES
+# --release 17: any modern build JDK (here: 25) would otherwise emit class files the IDE's
+# bundled JBR (21) cannot load — pin the bytecode target so the zip is installable everywhere.
+javac -encoding UTF-8 -proc:none -nowarn --release 17 -cp "$CP" -d "$BUILD/classes" $SOURCES
 
 # ── 3. Package as a canonical IntelliJ plugin ─────────────────────────────
 #   metatron-docs-plugin.zip

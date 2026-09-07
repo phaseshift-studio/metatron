@@ -88,10 +88,14 @@ public class BashFeature extends AbstractFeature {
                         if (p.isPresent())
                             throw MTronException.of("reject patterns match command: %s %s", command, p.get());
                     }
+                    final Map<String, String> envVars = new HashMap<>();
+                    if (this.at(ENV).isRec())
+                        this.at(ENV).asRec().elements().forEach(rel -> envVars.put(rel.first().toCleanString(), rel.second().toCleanString()));
                     final ProcResult result = new ProcBuilder("bash")
                             .withArg("-c")
                             .withArg(command)
                             .withWorkingDirectory(new File(workingDirectory))
+                            .withVars(envVars)
                             .withTimeoutMillis(inst.arg(TIMEOUT, 1).orElse(this.at(TIMEOUT)).orElse(DEFAULT_TIMEOUT).tid(MATH_MILLIS_TID).realValue().longValue())
                             //.withErrorConsumer(error -> errors.append(new String(error.readAllBytes())))
                             //.withOutputConsumer(output ->   outputs.append(new String(output.readAllBytes())))

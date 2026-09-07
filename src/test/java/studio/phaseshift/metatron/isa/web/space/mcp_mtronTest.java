@@ -264,9 +264,9 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
                 "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\"}", null);
         assertEquals(200, resp.statusCode(), "tools/list should return 200");
         assertTrue(resp.body().contains("\"result\""), "should have a result");
-        assertTrue(resp.body().contains("m_inst_list_space") &&
-                        resp.body().contains("m_inst_router_info") &&
-                        resp.body().contains("m_inst_find_inst"),
+        assertTrue(resp.body().contains("m_web_mcp_mcp_mtron_list_space") &&
+                        resp.body().contains("m_web_mcp_mcp_mtron_router_info") &&
+                        resp.body().contains("m_web_mcp_mcp_mtron_find_inst"),
                 "tools/list should include the metatron-native tools");
     }
 
@@ -274,7 +274,7 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
     public void testHttpPostCallListSpace() throws Exception {
         final var resp = httpPost("/mcp",
                 "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\"," +
-                        "\"params\":{\"name\":\"m_inst_list_space\",\"arguments\":{}}}", null);
+                        "\"params\":{\"name\":\"m_web_mcp_mcp_mtron_list_space\",\"arguments\":{}}}", null);
         assertEquals(200, resp.statusCode());
         assertFalse(resp.body().contains("\"error\""), "list_space should not error: " + resp.body());
     }
@@ -283,7 +283,7 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
     public void testHttpPostCallRouterInfo() throws Exception {
         final var resp = httpPost("/mcp",
                 "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\"," +
-                        "\"params\":{\"name\":\"m_inst_router_info\",\"arguments\":{}}}", null);
+                        "\"params\":{\"name\":\"m_web_mcp_mcp_mtron_router_info\",\"arguments\":{}}}", null);
         assertEquals(200, resp.statusCode());
         assertFalse(resp.body().contains("\"error\""), "router_info should not error");
     }
@@ -394,7 +394,7 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
         assertNotNull(resp, "tools/list should return a response");
         assertTrue(resp.contains("\"result\""), "tools/list should have a result");
         assertTrue(
-                resp.contains("m_inst_list_space") && resp.contains("m_inst_router_info") && resp.contains("m_inst_find_inst"),
+                resp.contains("m_web_mcp_mcp_mtron_list_space") && resp.contains("m_web_mcp_mcp_mtron_router_info") && resp.contains("m_web_mcp_mcp_mtron_find_inst"),
                 "tools/list should include the metatron-native tools");
     }
 
@@ -402,7 +402,7 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
     public void testCallListSpaceRoundTrip() throws Exception {
         connectToServer("/mcp-mtron");
         final String req = "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\","
-                + "\"params\":{\"name\":\"m_inst_list_space\",\"arguments\":{}}}";
+                + "\"params\":{\"name\":\"m_web_mcp_mcp_mtron_list_space\",\"arguments\":{}}}";
         final String resp = sendAndReceive(req);
         assertNotNull(resp, "list_space call should return a response");
         assertFalse(resp.contains("\"error\""), "list_space should not error: " + resp);
@@ -413,7 +413,7 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
     public void testCallRouterInfoRoundTrip() throws Exception {
         connectToServer("/mcp-mtron");
         final String req = "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\","
-                + "\"params\":{\"name\":\"m_inst_router_info\",\"arguments\":{}}}";
+                + "\"params\":{\"name\":\"m_web_mcp_mcp_mtron_router_info\",\"arguments\":{}}}";
         final String resp = sendAndReceive(req);
         assertNotNull(resp, "router_info call should return a response");
         assertFalse(resp.contains("\"error\""), "router_info should not error: " + resp);
@@ -424,7 +424,7 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
     public void testCallFindInstRoundTrip() throws Exception {
         connectToServer("/mcp-mtron");
         final String req = "{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"tools/call\","
-                + "\"params\":{\"name\":\"m_inst_find_inst\",\"arguments\":{\"pattern\":\"plus\"}}}";
+                + "\"params\":{\"name\":\"m_web_mcp_mcp_mtron_find_inst\",\"arguments\":{\"pattern\":\"plus\"}}}";
         final String resp = sendAndReceive(req);
         assertNotNull(resp, "find_inst call should return a response");
         assertFalse(resp.contains("\"error\""), "find_inst should not error: " + resp);

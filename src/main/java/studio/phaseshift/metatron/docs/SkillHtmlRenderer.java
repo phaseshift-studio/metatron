@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -45,10 +46,25 @@ import java.util.regex.Pattern;
  * footer, depth-rewritten for its location, and rewrites relative {@code .md}
  * links to their {@code .html} counterparts so cross-references resolve.</p>
  *
+ * <p><strong>Character fidelity.</strong> The renderer passes multi-character
+ * operators such as {@code =>}, {@code -<}, {@code >=}, {@code <=} and {@code >>=}
+ * through to the HTML <em>verbatim</em> — flexmark only escapes them as HTML
+ * entities ({@code &gt;}, {@code &lt;}) when needed; it never typographically
+ * "compresses" them into single Unicode look-alikes ({@code ≥}, {@code ≤},
+ * {@code ⇒}, …). All reads/writes are explicit UTF-8, and a regression test
+ * (see {@code SkillHtmlRendererTest}) pins the pass-through down. If such
+ * operators still <em>appear</em> as one glyph, that is the viewer's font
+ * ligatures, not this HTML — the site CSS kills code ligatures with
+ * {@code font-variant-ligatures: none}.</p>
+ *
  * <h3>Usage</h3>
  * <pre>
  * java studio.phaseshift.metatron.docs.SkillHtmlRenderer [-s &lt;skills-dir&gt;]
  * </pre>
+ *
+ * <p>Programmatic reuse: {@link #renderAll(Path)} renders every skill doc under a
+ * skills container in place — {@code MarkdownRunner --html} chains it after the
+ * markdown pass.</p>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -87,7 +103,16 @@ public class SkillHtmlRenderer {
                 default -> LOG.error("[skill-html] ignoring unknown arg: %s", args[i]);
             }
         }
+        renderAll(skillsDir);
+    }
 
+    /**
+     * Render every skill markdown doc under {@code skillsDir} to a sibling
+     * {@code .html}, rewriting nothing that is already current.
+     *
+     * @return the number of HTML files actually written (changed)
+     */
+    public static int renderAll(final Path skillsDir) throws IOException {
         final Path websiteRoot = skillsDir.getParent();
         final List<Path> files = new ArrayList<>();
         try (final var stream = Files.walk(skillsDir)) {
@@ -103,6 +128,7 @@ public class SkillHtmlRenderer {
             if (render(file, websiteRoot)) written++;
         }
         LOG.info("[skill-html] rendered %d of %d markdown files into %s", written, files.size(), skillsDir);
+        return written;
     }
 
     /**
@@ -124,7 +150,7 @@ public class SkillHtmlRenderer {
      * when the output changed (idempotent, so a clean build writes nothing).
      */
     private static boolean render(final Path mdFile, final Path websiteRoot) throws IOException {
-        final FrontMatter fm = split(Files.readString(mdFile));
+        final FrontMatter fm = split(Files.readString(mdFile, StandardCharsets.UTF_8));
 
         final String mdName = mdFile.getFileName().toString();
         final Path htmlFile = mdFile.resolveSibling(mdName.substring(0, mdName.length() - ".md".length()) + ".html");
@@ -135,7 +161,7 @@ public class SkillHtmlRenderer {
                         "<title>" + fm.name() + " · PhaseShift Studio</title>");
         final String footer = InstSetDocGenerator.loadWebsiteFooter(depth);
 
-        final String body = RENDERER.render(PARSER.parse(fm.body()));
+        final String body = renderBody(fm.body());
         final String bodyLinks = MD_HREF.matcher(body).replaceAll(mr ->
                 "href=\"" + mr.group(1) + ".html" + (mr.group(2) == null ? "" : mr.group(2)) + "\"");
         final String bodyShifted = shiftHeadingsDown(bodyLinks);
@@ -155,12 +181,22 @@ public class SkillHtmlRenderer {
         page.append(footer);
 
         final String html = page.toString();
-        if (Files.exists(htmlFile) && html.equals(Files.readString(htmlFile))) {
+        if (Files.exists(htmlFile) && html.equals(Files.readString(htmlFile, StandardCharsets.UTF_8))) {
             return false;
         }
-        Files.writeString(htmlFile, html);
+        Files.writeString(htmlFile, html, StandardCharsets.UTF_8);
         LOG.info("[skill-html] wrote %s", htmlFile);
         return true;
+    }
+
+    /**
+     * Flexmark-render a markdown body to HTML. Package-visible so the fidelity
+     * guarantee (operators pass through, never "compressed" into single Unicode
+     * look-alikes) is unit-testable; {@link #render(Path, Path)} uses it for the
+     * page body, and nothing else in the page pipeline rewrites text characters.
+     */
+    static String renderBody(final String markdown) {
+        return RENDERER.render(PARSER.parse(markdown));
     }
 
     /**

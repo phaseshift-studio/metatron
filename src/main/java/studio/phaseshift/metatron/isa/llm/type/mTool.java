@@ -95,7 +95,7 @@ public class mTool extends MRec {
             final Map<Obj, Obj> jvm = new java.util.LinkedHashMap<>(docs.jvm());
             jvm.putIfAbsent(uri(INST), inst);
             jvm.putIfAbsent(uri(NAME), uri(toolName(inst.tid())));
-            jvm.putIfAbsent(uri(DESC), str("a tool forwarded from a skill"));
+            jvm.putIfAbsent(uri(DESC), docs.at(DESC));
             jvm.putIfAbsent(uri(ARGS), docs.at(ARG));
             return new mTool(jvm, LLM_TOOL_TID, inst.vid());
         }
@@ -198,6 +198,7 @@ public class mTool extends MRec {
                         e -> e.second().tid().toString()
                 )),
                 "<no description>") : (QCollection.Docs) found;
+        doc.at(OBJ, inst, MUTABLE);
         inst.logger().debug("building ai compliant tool from mtron inst: %s", inst.tid());
         return doc;//rec(mutableMap(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
     }

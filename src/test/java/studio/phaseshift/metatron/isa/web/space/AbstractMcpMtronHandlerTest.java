@@ -93,7 +93,7 @@ public abstract class AbstractMcpMtronHandlerTest extends AbstractMcpHandlerTest
                 uri(ID), jnt(2),
                 uri("method"), uri("tools/list")));
         final boolean has = res.at(uri(RESULT)).asRec().at(uri("tools")).asLst().lstValue()
-                .stream().anyMatch(t -> t.isRec() && str("m_inst_list_space").equals(t.asRec().at(uri(NAME))));
+                .stream().anyMatch(t -> t.isRec() && str("m_web_mcp_mcp_mtron_list_space").equals(t.asRec().at(uri(NAME))));
         assertTrue(has, "tools/list should include 'list_space'");
     }
 
@@ -104,7 +104,7 @@ public abstract class AbstractMcpMtronHandlerTest extends AbstractMcpHandlerTest
                 uri(ID), jnt(3),
                 uri("method"), uri("tools/list")));
         final boolean has = res.at(uri(RESULT)).asRec().at(uri("tools")).asLst().lstValue()
-                .stream().anyMatch(t -> t.isRec() && str("m_inst_router_info").equals(t.asRec().at(uri(NAME))));
+                .stream().anyMatch(t -> t.isRec() && str("m_web_mcp_mcp_mtron_router_info").equals(t.asRec().at(uri(NAME))));
         assertTrue(has, "tools/list should include 'router_info'");
     }
 
@@ -115,7 +115,7 @@ public abstract class AbstractMcpMtronHandlerTest extends AbstractMcpHandlerTest
                 uri(ID), jnt(4),
                 uri("method"), uri("tools/list")));
         final boolean has = res.at(uri(RESULT)).asRec().at(uri("tools")).asLst().lstValue()
-                .stream().anyMatch(t -> t.isRec() && str("m_inst_find_inst").equals(t.asRec().at(uri(NAME))));
+                .stream().anyMatch(t -> t.isRec() && str("m_web_mcp_mcp_mtron_find_inst").equals(t.asRec().at(uri(NAME))));
         assertTrue(has, "tools/list should include 'find_inst'");
     }
 
@@ -129,7 +129,7 @@ public abstract class AbstractMcpMtronHandlerTest extends AbstractMcpHandlerTest
                 uri(JSONRPC), str("2.0"),
                 uri(ID), jnt(10),
                 uri("method"), uri("tools/call"),
-                uri("params"), rec(uri(NAME), str("m_inst_list_space"), uri("arguments"), rec())));
+                uri("params"), rec(uri(NAME), str("m_web_mcp_mcp_mtron_list_space"), uri("arguments"), rec())));
         assertFalse(res.at(uri(RESULT)).isNoObj(), "list_space should return a result");
         assertFalse(res.at(uri("error")).isRec(), "list_space should not error");
         assertTrue(res.at(uri(RESULT)).isRec(), "list_space result should be a Rec");
@@ -141,7 +141,7 @@ public abstract class AbstractMcpMtronHandlerTest extends AbstractMcpHandlerTest
                 uri(JSONRPC), str("2.0"),
                 uri(ID), jnt(11),
                 uri("method"), uri("tools/call"),
-                uri("params"), rec(uri(NAME), str("m_inst_router_info"), uri("arguments"), rec())));
+                uri("params"), rec(uri(NAME), str("m_web_mcp_mcp_mtron_router_info"), uri("arguments"), rec())));
         assertFalse(res.at(uri(RESULT)).isNoObj(), "router_info should return a result");
         final Obj contentList = res.at(uri(RESULT)).asRec().at(uri(CONTENT));
         assertFalse(contentList.isNoObj(), "result should have a content field");
@@ -156,7 +156,7 @@ public abstract class AbstractMcpMtronHandlerTest extends AbstractMcpHandlerTest
                 uri(JSONRPC), str("2.0"),
                 uri(ID), jnt(12),
                 uri("method"), uri("tools/call"),
-                uri("params"), rec(uri(NAME), str("m_inst_find_inst"), uri("arguments"), rec(uri(PATTERN), uri("plus")))));
+                uri("params"), rec(uri(NAME), str("m_web_mcp_mcp_mtron_find_inst"), uri("arguments"), rec(uri(PATTERN), uri("plus")))));
         assertFalse(res.at(uri(RESULT)).isNoObj(), "find_inst(pattern=>plus) should return a result");
         assertFalse(res.at(uri("error")).isRec(), "find_inst(pattern=>plus) should not error");
     }
@@ -182,7 +182,7 @@ public abstract class AbstractMcpMtronHandlerTest extends AbstractMcpHandlerTest
                 uri(ID), jnt(20),
                 uri("method"), uri("tools/call"),
                 uri("params"), rec(
-                        uri(NAME), str("m_inst_eval_mtron"),
+                        uri(NAME), str("m_web_mcp_mcp_mtron_eval_mtron"),
                         uri("arguments"), rec(uri("code"), str("\"hello\"")))));
         assertFalse(res.at(uri(RESULT)).isNoObj(), "eval_mtron('\"hello\"') should return a result");
         assertFalse(res.at(uri("error")).isRec(), "eval_mtron('\"hello\"') should not error");
@@ -196,7 +196,7 @@ public abstract class AbstractMcpMtronHandlerTest extends AbstractMcpHandlerTest
                 uri(ID), jnt(21),
                 uri("method"), uri("tools/call"),
                 uri("params"), rec(
-                        uri(NAME), str("m_inst_eval_mtron"),
+                        uri(NAME), str("m_web_mcp_mcp_mtron_eval_mtron"),
                         uri("arguments"), rec(uri("code"), str("## Search Results\n\nmethod at line 79")))));
         assertFalse(res.at(uri(RESULT)).isNoObj(), "eval_mtron(non-mtron text) should return a result");
         assertFalse(res.at(uri("error")).isRec(), "eval_mtron(non-mtron text) should not error");
@@ -210,7 +210,7 @@ public abstract class AbstractMcpMtronHandlerTest extends AbstractMcpHandlerTest
                 uri(ID), jnt(22),
                 uri("method"), uri("tools/call"),
                 uri("params"), rec(
-                        uri(NAME), str("m_inst_eval_mtron"),
+                        uri(NAME), str("m_web_mcp_mcp_mtron_eval_mtron"),
                         uri("arguments"), rec(uri("code"), str("text with literal %s placeholder")))));
         assertFalse(res.at(uri(RESULT)).isNoObj(), "eval_mtron(literal %s) should return a result");
         assertFalse(res.at(uri("error")).isRec(), "eval_mtron(literal %s) should not error");

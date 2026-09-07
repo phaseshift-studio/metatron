@@ -3,40 +3,32 @@ name: mtron
 description: understanding the language used to control the metatron
 ---
 
-# mtron: the basics on a uri/obj graph
+# mtron: traversing the metatron graph
 
-mtron is a functional, fluent, monadic language that manipulates the metatron environment. metatron **storage** is a uri
-graph (uniform resource identifier) where any vertex can hold an associated obj (object). metatron **processing** is
-expressed as a data-flow aimed at guiding monads as they traverse the uri/obj-graph to ultimately halt on the solution
-to the problem represented as an mtron expression.
+mtron is a functional, fluent, monadic language that manipulates the metatron environment.
 
-Every denoted object can be reified, referred to, and manipulated -- a **reflective computing environment**.
+To understand mtron, it's necessary to first understand how structures and processes are organized in metatron.
 
-**if it exists, it has a uri. if it has a uri, it can be accessed.**
+metatron's **structure** forms a [split graph](https://en.wikipedia.org/wiki/Split_graph) with two vertex sets:
+`V = U + O`. The set `U` is the set of uris (**uniform resource identifies**) and they maintain an
+intra-edge set defined solely by path uri **path adjacency**. The set `O` is the set of objs (objects) whose
+intra-edge set denote **shared/coupled state**. Finally, there exists an **inter-edge** set linking vertices in `U` to
+vertices in `O` by according to a **reference/referent** relationship.
 
-## the three verbs: write, read, update
+**IMPORTANT**: the metatron uri/obj split graph will more conveniently be referred to as **the metatron graph**.
 
-|   do   | mtron            | what it does                               |
-|:------:|------------------|--------------------------------------------|
-| write  | `/a -> 5`        | store `5` at address `/a`                  |
-|  read  | `*/a`            | fetch (dereference) the obj stored at `/a` |
-| update | `@/a >>= [d=>5]` | evolve the obj *in place* at `/a`          |
-
-**`*` is a clone reference, `@` is an anchor reference.** `*/a` yields a copy -- edits to it never reach the address.
-`@/a` returns the obj bound to `/a`, and
-`>>=` (the `update` instruction) writes the change back to the address. An update delta is mtron: a plain value
-replaces, a rec overlays, `+N` adds numerically,
-`+[v]` promotes to a set, and `none` deletes a key. The full algebra is chapter 14 of the language reference -- and
-`*update?docq`.
+metatron's **process** is realized as a swarm of monadic traversers whose abstract path through the graph is defined by
+a functional ringoid -- a collection of functions structured using * (serial compose) and + (parallel branch). The
+functional language is called **mtron**.
 
 ## space: storage
 
-A system that supports the encoding of a uri/obj-graph is called a `space`. An example uri/obj-graph maintained by a
-`space` responsible for the address pattern
-`/a/#` is diagrammed below.
+A system that exposes a subset of the metatron graph is called a `space`. In the example below, a simple in-memory space
+implementation is used to maintain a subset of the uri address space that matches `/a/#` (`#` is recursive wildcard).
 
 ```mtron
 mtron> memspace::[pattern=>/a/#]@/sys/space/a
+==>memspace::[pattern=>/a/#]@/sys/space/a
 ```
 ```mtron
      1  2  3
@@ -49,8 +41,8 @@ mtron> memspace::[pattern=>/a/#]@/sys/space/a
         'm'   [1.0,0xa5,true]
 ```
 
-To construct the graph, denote uri vertices with path syntax, objs with obj syntax, and connect them with `->` (sugar'd
-`ref`).
+To construct the graph, a path syntax is used to denote a unique uri address. The primitive `->` (sugar'd
+`ref`) instruction writes the **rhs** (right-hand side) obj to the **lhs** (left-hand side) uri.
 
 ```mtron
 mtron> /a       -> 0
@@ -64,14 +56,14 @@ mtron> /a/x/y/z -> 3
 mtron> /a/b     -> [q=>r]
 ==>[q=>r]
 mtron> /a/b/c   -> |plus(2)
+==>plus(2)
 mtron> /a/b/d   -> 'm'
 ==>'m'
 mtron> /a/b/d/e -> [1.0,0xa5,true]
 ==>[1.0000,0xa5,true]
 ```
-To retrieve stored objs, dereference their uris. The uri is the **reference**, the obj is the **referent**; moving from
-one to the other is **dereferencing**
-(also, **resolving**).
+To retrieve stored objs, dereference their uris. The uri is the **reference**, the obj is the **referent** and the
+process of moving from one to the other is called **dereferencing** (also known as **resolving**).
 
 ```mtron
 mtron> */a
@@ -84,6 +76,7 @@ mtron> */a/b
     c=>plus(2),
     d=>[e=>[1.0000,0xa5,true]]]
 mtron> */a/b/c
+==>plus(2)
 mtron> */a/b/d
 ==>[e=>[1.0000,0xa5,true]]
 ```
@@ -97,6 +90,35 @@ mtron.
 
 . **branch** : a uri with a `/` suffix -- `a/b/`. . **node** : with no `/` suffix -- `a/b`.
 
+## graph crud cheat-sheet
+
+|     do      | mtron sugar      | mtron inst                | what it does                                     |
+|:-----------:|------------------|---------------------------|--------------------------------------------------|
+|    write    | `a -> 5`         | `ref?A{?}<=uri(A{?}::T)`  | store `int::5` at address `a`                    |
+|  read copy  | `*a`             | `from?A{?}<=#{?}(uri::T)` | clone (dereference) the obj stored at `a`        |
+| read anchor | `@a`             | `at?A{?}<=#{?}(uri::T)`   | couple (main reference) to the obj stored at `a` |
+|   update    | `@/a >>= [d=>5]` | `update?A{?}<=#(A{?}::T)` | update the obj (from/at) `a`                     |
+
+`*` is a **clone reference**. `*a` copies the referent, where subsequent mutations do not affect the source obj.
+
+```mtron
+mtron> a -> 5
+==>5
+mtron> *a + 6
+==>11
+mtron> *a
+==>5
+```
+`@` is an **anchor reference**. `@a` couples the referent, where edits propagate back to the source obj.
+
+```mtron
+mtron> a -> 5
+==>5
+mtron> @a + 6
+==>17@a
+mtron> *a
+==>17
+```
 ### obj types
 
 #### mono types
@@ -267,7 +289,11 @@ is structural validation during projection):
 
 ```mtron
 mtron> int::T[?>0]@nat
+==>int::T[is(gt(0))]@/m/math/nat
 mtron> rec::T[?[name=>str::T, age=>nat::T]]@person
+==>rec::T[?[
+     name=>str::T,
+     age=>nat::T]]@person
 mtron> person::[name=>'marko', age=>29]
 ==>person::[name=>'marko',age=>29]
 ```

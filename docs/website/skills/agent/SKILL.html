@@ -397,21 +397,31 @@ please. To understand the underlying storage mechanisms of your space, you can l
     'review metatron docs',
     'review mtron docs']@/usr/agent/todo
 mtron&gt; @/usr/agent/todo &gt;&gt;= [0=&gt;none]
-==&gt;['review mtron docs']
+==&gt;[,]
 </code></pre>
 <p>A more interesting way to approach the problem involves defining a <code>task</code> type.</p>
 <pre><code class="language-mtron">mtron&gt; rec::T[done=&gt;bool::T,desc=&gt;str::T,start{?}::T,end{?}::T]@/usr/agent/task
-==&gt;fail::[parse error at line 1, col 7:
-     rec::T[done=&gt;bool::T,desc=&gt;str::T,start{?}::T,...
-           ^
-     could not parse at '[']@/sys/fail/40
+==&gt;ERROR: monad obj coefficient is greater than inst domain coefficient: 
+	obj       =&gt; rec::T
+	\_c       =&gt; 1
+	inst     X=&gt; start?rng=A{**}&amp;dom=noobj{0}([
+  done=&gt;bool::T,
+  desc=&gt;str::T,
+  start{?}::T,
+  end{?}::T]@/usr/agent/task){&lt;j&gt;}@&lt;1&gt;
+	\_dom_c  X=&gt; 0
 mtron&gt; [,]@/usr/agent/todo
 ==&gt;[,]@/usr/agent/todo
 mtron&gt; datetime_now()-&lt;task::[done=&gt;false,desc=&gt;&quot;review metatron docs&quot;,start=&gt;_]&gt;-@/usr/agent/todo
-==&gt;[task::[
-    done=&gt;false,
-    desc=&gt;'review metatron docs',
-    start=&gt;datetime::&lt;//2026.09:6/08/02/11/171?tz=-0600&gt;]]@/usr/agent/todo
+==&gt;[
+    task::[
+     done=&gt;false,
+     desc=&gt;'review metatron docs',
+     start=&gt;datetime::&lt;//2026.09:6/23/18/43/199?tz=-0600&gt;],
+    task::[
+     done=&gt;false,
+     desc=&gt;'review metatron docs',
+     start=&gt;datetime::&lt;//2026.09:6/23/18/42/636?tz=-0600&gt;]]@/usr/agent/todo
 </code></pre>
 <p>The current time is split across the defined task. Since <code>start=&gt;_</code> has an open slot, the current
 <code>datatime::T</code> fills in the spot and then the task is merged into your todo list. To get a structured understanding of
@@ -423,7 +433,7 @@ the expression, do:
 ==&gt;task::[
     done=&gt;true,
     desc=&gt;'review metatron docs',
-    start=&gt;datetime::&lt;//2026.09:6/08/02/11/171?tz=-0600&gt;]
+    start=&gt;datetime::&lt;//2026.09:6/23/18/43/199?tz=-0600&gt;]
 </code></pre>
 <p>As you learn about metatron and the mtron language, you'll come up with clever ways to manipulate your <code>/usr/agent</code>
 space.</p>
@@ -436,7 +446,7 @@ recursive chat:</p>
 ==&gt;fail::[unable to determine inst function:
    	chat('what is 1+(2+3)?')@/usr/agent  =&gt; chat?dom=chat('what is 1+(2+3)?')@&lt;1&gt;   | [inst]
    	chat::T     =&gt; chat::T   |  \_dom
-   	chat::T    ==&gt; ['what is 1+(2+3)?']   |  \_args]@/sys/fail/42
+   	chat::T    ==&gt; ['what is 1+(2+3)?']   |  \_args]@/sys/fail/44
 </code></pre>
 <p>The sub-agent (depth 2) solves &quot;what is 2+3?&quot; in a clean context window. You receive only its answer (<code>5</code>). Its internal
 tool calls, thinking traces, and intermediate steps are <em>invisible to you</em>. Your context window stays focused on the

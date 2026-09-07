@@ -22,6 +22,10 @@ mtron> wsspace::[host     => <ws://localhost:8555>,
                  pattern  => ws://#,
                  route    => [/mtron => mtron_ws,
                               /mcp  => mcp_mtron_ws]]
+==>wsspace::[
+    host=>ws://localhost:8555,
+    pattern=>ws://#,
+    route=>[/mtron=>mtron_ws,/mcp=>mcp_mtron_ws]]
 ```
 **Route resolution** (wsSpace.createServer()):
 1. Client connects to `ws://host:port/path`

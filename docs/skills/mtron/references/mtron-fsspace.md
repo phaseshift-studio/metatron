@@ -9,7 +9,7 @@ description: |
 
 # FileSystem Space (fsSpace)
 
-An `fsspace` mounts a subset of a file system into metatron's URI address space. Files are addressed via the space's
+An `fsspace` mounts a subset of a file system into the metatron graph. Files are addressed via the space's
 scheme (e.g., `local:`) and path prefix.
 
 **IMPORTANT**: Every uri can be wrapped in angle brackets `< >`, but it is only required for those uris that have `.`

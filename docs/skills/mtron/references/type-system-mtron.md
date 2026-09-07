@@ -93,16 +93,9 @@ Shorthand: `#::T` is often used when cardinality is known to be `{1}` (the defau
 The full type syntax is `tid::T[predicate][constructor]@vid`:
 
 ```mtron_pre
-[-- person is a record with age (int) and name (str) --]
 person -> rec::T[?[age=>int::T,name=>str::T]]@person
-
-[-- nat is a positive integer (predicate only, no constructor) --]
 nat -> int::T[is(gt(0))]@nat
-
-[-- nat with absolute-value constructor --]
 nat -> int::T[?>0][-<|[is(lt(0)) => * -1, _ => _]>>]@nat
-
-[-- bignat refines nat, further constraining to > 100 --]
 bignat -> nat::T[is(gt(100))]@bignat
 ```
 
@@ -112,13 +105,8 @@ name under which it is stored.
 ### Instantiation
 
 ```mtron_pre
-[-- Create a person with named address --]
 person::[name=>'enoch',age=>365]@enoch
-
-[-- Create a value and then as-cast to a type --]
 23.as(nat::T)
-
-[-- Create with explicit tid/vid --]
 int::42@the_answer
 ```
 
@@ -131,27 +119,20 @@ A predicate is a **constraint** that values must satisfy to be members of the ty
 Created with `?[...]` — defines a required **record structure**:
 
 ```mtron_pre
-[-- being requires an age field of type int --]
 being -> rec::T[?[age=>int::T]]
-
-[-- person refines being, adding a name field --]
 person -> being::T[?[name=>str::T]]
-
-[-- team requires a flag (2-char str) and at least one member --]
 team -> rec::T[?[flag=>str{2}::T, member=>being{+}::T]]
 ```
 
 Field types can be optional with `?`:
 
 ```mtron_pre
-[-- address is optional (maybe present) --]
 rec::T[?[name=>str::T, address=>str{?}::T]]
 ```
 
 **Multi-level stacking**: a type inherits all isa constraints from its ancestors:
 
 ```mtron_pre
-[-- mortal inherits being?[age=>int::T] from person --]
 mortal -> person::T[?<120]  [-- adds a non-isa constraint on top --]
 ```
 
@@ -162,16 +143,9 @@ The full predicate stack for `mortal` is: `[?<120, isa([age=>int::T,name=>str::T
 Freeform functional constraints using instructions:
 
 ```mtron_pre
-[-- value must be greater than 0 --]
 int::T[is(gt(0))]
-
-[-- shorthand: ?>0 means "is greater than 0" --]
 int::T[?>0]
-
-[-- value must match exactly 42 --]
 int::T[?=42]
-
-[-- composition: value must be > 0 AND < 120 --]
 int::T[?>0.?<120]
 ```
 

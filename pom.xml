@@ -51,7 +51,6 @@
         <skipInstSet>false</skipInstSet>
         <skipMarkdown>false</skipMarkdown>
         <skipHeaderMenu>false</skipHeaderMenu>
-        <skipSkillHtml>false</skipSkillHtml>
         <!-- doc-generation experiment toggles: fresh VM per file by default -->
         <mtron.singleBoot>true</mtron.singleBoot>
         <mtron.reverse>false</mtron.reverse>
@@ -694,25 +693,8 @@
                                 <argument>-Dmtron.singleBoot=${mtron.singleBoot}</argument>
                                 <argument>-Dmtron.reverse=${mtron.reverse}</argument>
                                 <argument>studio.phaseshift.metatron.docs.MarkdownRunner</argument>
+                                <argument>--html</argument>
                                 <argument>${project.basedir}/docs/skills</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>run-skill-html-renderer</id>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <skip>${skipSkillHtml}</skip>
-                            <executable>java</executable>
-                            <arguments>
-                                <argument>-classpath</argument>
-                                <classpath/>
-                                <argument>studio.phaseshift.metatron.docs.SkillHtmlRenderer</argument>
-                                <argument>-s</argument>
-                                <argument>${project.basedir}/docs/website/skills</argument>
                             </arguments>
                         </configuration>
                     </execution>

@@ -384,23 +384,14 @@ access to an mtron virtual machine. The <code>tool_feature::T</code> of the <cod
 instructions and MCP servers. A general purpose instruction is <code>eval?#{*}&lt;=#{?}(#::T)</code>. The following agent definition
 snippet is sufficient for the spawned agent to execute mtron code.</p>
 <pre><code class="language-mtron">mtron&gt; ... [-- larger agent definition --]
-==&gt;fail::[parse error at line 1, col 2:
-     ... 
-      ^
-     could not parse at '.']@/sys/fail/192
 mtron&gt; feature=&gt;[
         tool_feature::[tool=&gt;[!*eval]]
         ... [-- other features attached to agent --]
-==&gt;fail::[parse error at line 1, col 8:
-     feature=&gt;[
-           tool_feature::[tool=&gt;[!*eval...
-            ^
-     could not parse at '=' — unclosed '[' — missing ']'?]@/sys/fail/206
+==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '=&gt;[
+        tool_feature::[tool=&gt;[!*eval]]
+        ...'
 mtron&gt; ]
-==&gt;fail::[parse error at line 1, col 1:
-     ]
-     ^
-     unexpected ']' — missing opening '[' or extra ']'?]@/sys/fail/208
+==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at ']'
 </code></pre>
 <h3>References</h3>
 <ul>

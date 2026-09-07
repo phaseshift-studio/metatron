@@ -104,7 +104,7 @@ public class ScoringInstResolver implements InstResolver {
         if (null == fetched || fetched.isNoObj()) // TODO: can't figure out why grphspace is yielding a null
             fetched = Router.readFromSpace(basePath);
 
-        return resolve(lhs, userInst, fetched.stream());
+        return Inst.Helper.bindQ(lhs, userInst, resolve(lhs, userInst, fetched.stream()));
     }
 
     private boolean checkArgs(final Poly<?, ?> userInstArgs, final Poly<?, ?> instArgs) {

@@ -180,9 +180,9 @@ public class uiInstSet extends AbstractInstSet {
                         docWrap(UI_WIDGET_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(UI_WIDGET_TID)
-                                        .isaPredicate(rec(uri(STYLE).maybe().asUri(), T(UI_STYLE_TID.maybe())))
-                                        .create(), "", "",
-                                Map.of(uri(STYLE), "the style specification for the widget"),
+                                        .isaPredicate(rec(uri(STYLE).maybe().asUri(), T(UI_STYLE_TID)))
+                                        .create(), null, null,
+                                Map.of(uri(STYLE).maybe(), "the style specification for the widget"),
                                 "the base widget type"),
                         docWrap(UI_ACCORDION_TYPE = Type.Builder.build()
                                         .tid(UI_WIDGET_TID)
@@ -307,8 +307,10 @@ public class uiInstSet extends AbstractInstSet {
                                         uri(BODY), "the body content of the modal"),
                                 "a modal popup panel: space/enter/ctrl-d dismisses")),
                 uri(INST), lst(
-                        docWrap(instC(AS_INST_TID.dom(UI_WIDGET_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(((Widget<?>) lhs).format())),
-                                "map a widget to a str::T representation not anchored to a canvas. useful for embedding widget text into other objs."),
+                        docWrap(instC(AS_INST_TID.dom(UI_WIDGET_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> {
+                            final String widgetString = ((Widget<?>) lhs).format();
+                            return str("\n" + widgetString + "\n");
+                        }), "map a widget to a str::T representation not anchored to a canvas. useful for embedding widget text into other objs."),
                         docWrap(instC(UI_INST_TID.extend("display").dom(UI_WIDGET_TID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {
                             final Widget<?> widget = (Widget<?>) lhs;
                             widget.run();

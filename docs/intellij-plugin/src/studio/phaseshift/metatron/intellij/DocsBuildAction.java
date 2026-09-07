@@ -41,8 +41,9 @@ import java.util.Locale;
  * build already uses, but scoped to fast single-file turnaround:
  *
  * <ul>
- *   <li>{@code .md} under {@code docs/skills/} → {@code MarkdownRunner <file> -o <outDir>}
- *       (single-file native) → opens the processed markdown in the editor.</li>
+ *   <li>{@code .md} under {@code docs/skills/} → {@code MarkdownRunner <file> -o <outDir> --html}
+ *       (single-file native; {@code --html} chains SkillHtmlRenderer) → opens the processed
+ *       markdown in the editor and the rendered sibling {@code .html} in the browser.</li>
  *   <li>{@code .adoc} under {@code docs/website/adoc/} → {@code AsciiDocRunner docs/website/adoc
  *       ... --single-boot} (the adoc tree is one book; the viewable artifact is
  *       {@code docs/website/tractatus.html}) → opens that in the browser.</li>
@@ -208,13 +209,15 @@ public class DocsBuildAction extends AnAction {
         command.add(jar.getAbsolutePath());
         switch (kind) {
             case MD -> {
-                // Single-file markdown (MarkdownRunner).
+                // Single-file markdown (MarkdownRunner): process the md and, with --html,
+                // chain SkillHtmlRenderer so the rendered sibling .html is produced too.
                 command.add(MD_RUNNER);
                 command.add(target);
                 command.add("-o");
                 command.add(markdownOutDir(target));
                 command.add("-b");
                 command.add("boot/docs.mtron");
+                command.add("--html");
             }
             case ADOC -> {
                 // Single-file adoc: build just this adoc (+ any .adoc it includes) -> <docs/website>/<name>.html.
@@ -328,17 +331,32 @@ public class DocsBuildAction extends AnAction {
         try {
             // Pull the built output into a focused editor tab (all three modes).
             refreshAndOpen(project, output);
-            // For rendered HTML (adoc / InstSet), also open it in the browser.
-            if (kind == BuildKind.ADOC || kind == BuildKind.INSTSET) {
-                final URL u = url(output);
-                if (u != null) {
-                    BrowserUtil.browse(u);
+            // For rendered HTML (adoc / InstSet) open it in the browser; for md, the
+            // MarkdownRunner --html pass produced a sibling .html — open that too.
+            final File browserTarget = kind == BuildKind.MD ? htmlSibling(output) : output;
+            if (kind == BuildKind.ADOC || kind == BuildKind.INSTSET || kind == BuildKind.MD) {
+                if (browserTarget.isFile()) {
+                    final URL u = url(browserTarget);
+                    if (u != null) {
+                        BrowserUtil.browse(u);
+                    }
+                } else if (kind == BuildKind.MD) {
+                    notify("Docs build", "rendered html not found: " + browserTarget,
+                            NotificationType.WARNING);
                 }
             }
         } catch (final Exception ex) {
             notify("Docs build", "built, but could not open " + output + " (" + ex.getMessage() + ")",
                     NotificationType.WARNING);
         }
+    }
+
+    /// For a processed md output, the sibling .html that MarkdownRunner --html renders next to it.
+    private static File htmlSibling(final File md) {
+        final String name = md.getName();
+        return name.endsWith(".md") && md.getParentFile() != null
+                ? new File(md.getParentFile(), name.substring(0, name.length() - 3) + ".html")
+                : md;
     }
 
     /// Open the build log in the editor (best-effort).

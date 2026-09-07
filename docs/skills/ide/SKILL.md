@@ -20,17 +20,17 @@ First, load necessary instruction sets. Second, open three spaces:
 3. an optional space for storing mutation event logs (`tblespace`).
 
 ```mtron_pre
-import(/m/ide,ide)
-import(/m/web,web) 
-import(/m/math,math)                
-memspace::[                                                                 /
+[MAXOUTPUT 5] import(/m/ide,ide)
+[MAXOUTPUT 5] import(/m/web,web) 
+[MAXOUTPUT 5] import(/m/math,math)                
+[MAXOUTPUT 5] memspace::[                                                   /
   pattern => </dev/scratch/#>,                                              / 
         q => [mintq::[=>],docq::[=>],subq::[=>],                            /
               mimeq::[=>], lineq::[=>],lockq::[=>],                         /
               incrq::[=>]]]@</sys/space/dev/metatron>
-fsspace::[pattern      => mfs:#,                                            /
+[MAXOUTPUT 5] fsspace::[pattern      => mfs:#,                              /
            route       => [mfs:=><.>]]@/sys/space/fs/mfs
-tblespace::[pattern    => </log/scratch/#>,                                 /
+[MAXOUTPUT 5] tblespace::[pattern    => </log/scratch/#>,                   /
             host       => <sqlite:target/log_scratch.sqlite>,               /
             driver     => <org.sqlite.JDBC>,                                /
             table      => [,],                                              /
@@ -77,16 +77,23 @@ an `as()`-mapping from `uri::T` to `project::T`. The resultant `project::T` is s
 maven build commands are attached to the `project::T` for each of access.
 
 ```mtron_pre
-<mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/scratch)                                       /
+<mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/scratch)
+```
+
+Now that the project is stored in space, build commands can be added and the project can be built.
+
+```mtron_pre
 @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/test/resources/scratch compile'),               /
                                 mvn_clean => !ide:command('mvn -f src/test/resources/scratch clean'),                 / 
                                 mvn_exec  => !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]    
+*/dev/scratch/command/mvn_clean
+*/dev/scratch/command/mvn_build>>output
 ```
 
-Now that the project is stored in space, a quick build to ensure a clean slate to work from.
+The project's uri subgraph (tree) can be displayed using the `tree::T` widget.
 
 ```mtron_pre
-*/dev/scratch/command/mvn_build
+tree::[root=>/dev/scratch, max=>3].as?str<=widget(str::T)
 ```
 
 The Java source files have a `str::T > web:java::T` encoding accessible via `src`.
@@ -95,14 +102,14 @@ The Java source files have a `str::T > web:java::T` encoding accessible via `src
 */dev/scratch/src/+/ 
 ```
 
-The file name serves as the key and an lambda `inst` serves as a lazy constructor of an `ide:java::T`. Calling the file
-name pulls the raw
-`src` into both `code` and `idx`.
+The file name serves as the key and a lambda `inst` serves as a lazy constructor of an `ide:java::T`. Calling the file
+name pulls the raw `src` into both `code` and `idx`.
 
 ```mtron_pre
 /dev/scratch/src/Echo() 
-*/dev/scratch/code/0
+[MAXOUTPUT 25] */dev/scratch/code/0
 */dev/scratch/idx/Echo
+tree::[root=>/dev/scratch, max=>3].as?str<=widget(str::T)
 ```
 
 `idx` offers a human-readable path scheme that projects to the `code` uri subgraph. Due to the `!*` nature of the `idx`
@@ -114,13 +121,19 @@ and `idx`. In this way,
 `code` serves as a metatron encoded proxy to the file system representation of the project's source code.
 
 ```
-         ┌─────── idx 
+         ┌──────► idx 
          │         │
    src ──┤         │
     ▲    │         ▼
-    │    └─────── code 
-    │            ⋰
-    └───── sub:[...]   
+    ⋮    └──────► code 
+    ⋮            ⋰
+    ⋮… … … … sub:[...]   
+```
+
+Zooming in on the `idx` branch.
+
+```mtron_pre
+tree::[root=>/dev/scratch/idx, max=>5].as?str<=widget(str::T)
 ```
 
 **edit, then save — two steps** (verified against a live VM, 2026-09-04): the `>>=` edit lands in the `code` space
@@ -133,10 +146,10 @@ space-only.
 */dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T)
 */dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T) >>= [1 => "return who;"]
 @/dev/scratch/idx/Echo/method/speak >>= [body=> '{ return "marko"; }'] 
-*<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>
 ```
 
-Finally, to check if the update to `Echo::speak` made it to disk, dereference the uri disk pointer.
+Finally, to determine if the registered `sub::T` wrote the updated `Echo::speak` to disk, dereference the
+respective `fsspace::T` pointer.
 
 ```mtron_pre
 *<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>

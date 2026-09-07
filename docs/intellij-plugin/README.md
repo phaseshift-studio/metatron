@@ -8,11 +8,13 @@ for writing website docs. Lives in the repo (next to the docs it builds), **outs
 
 | You right-click… | It runs (via the pre-built uber-jar) | You get |
 |---|---|---|
-| `docs/skills/**/*.md` | `MarkdownRunner <file> -o .metatron/skills/<sub>` (single-file) | the **processed** markdown opened in the editor |
+| `docs/skills/**/*.md` | `MarkdownRunner <file> -o .metatron/skills/<sub> --html` (single-file + chained `SkillHtmlRenderer`) | the **processed** markdown opened in the editor **and** the rendered sibling `.html` opened in the browser |
 | `docs/website/adoc/*.adoc` | `AsciiDocRunner docs/website/adoc … --single-boot` (the adoc tree is one book) | **`docs/website/tractatus.html`** opened in the browser |
 
-- **md** is a true single-file build (`MarkdownRunner` has a `singleFile` mode) — the fastest loop, and the
-  file you clicked is the only file processed.
+- **md** is a true single-file build (`MarkdownRunner` has a `singleFile` mode) — the file you clicked is the
+  only file processed. `--html` then chains `SkillHtmlRenderer` in the same VM run, so the final markdown
+  (`docs/skills/**` → `.metatron/skills/**`) *and* the rendered website HTML (sibling `.html`, same page chrome
+  as `bin/metatron-build-docker docs`) both come out of one right-click.
 - **adoc** is a *book*: `tractatus.adoc` `include::`s the chapters, and the one viewable artifact is the
   single mega-page `tractatus.html`. So an adoc build rebuilds the bundle (with `--single-boot` to amortize the
   per-file VM boot) and opens that page. That is how the site is actually rendered — there is no standalone
@@ -59,7 +61,7 @@ docs/intellij-plugin/
   compiles against any recent IDEA with no exotic module deps.
 - **Progress**: v1 posts a "built/built→path" notification and opens the output. The slow part is the per-run VM
   boot, which the runners already amortize for adoc via `--single-boot`. A live streaming Run-console (instead of
-  `target/docs-build.log`) and **md→HTML** rendering (via `SkillHtmlRenderer`) are the natural next levers — both
-  small — if you want rendered HTML for markdown too, not just the processed source.
+  `target/docs-build.log`) is the natural next lever. md→HTML rendering is done: `MarkdownRunner --html` chains
+  `SkillHtmlRenderer` in the same VM run, and the action opens both the processed markdown and the rendered page.
 - **Not compiled by the metatron Maven build** — it's under `docs/`, not `src/`, so `./mvnw` never touches it.
   Its only coupling to metatron is the `java -cp <uber-jar> …Runner` call.

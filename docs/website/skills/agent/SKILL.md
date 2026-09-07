@@ -36,23 +36,33 @@ mtron> ["review metatron docs","review mtron docs"]@/usr/agent/todo
     'review metatron docs',
     'review mtron docs']@/usr/agent/todo
 mtron> @/usr/agent/todo >>= [0=>none]
-==>['review mtron docs']
+==>[,]
 ```
 A more interesting way to approach the problem involves defining a `task` type.
 
 ```mtron
 mtron> rec::T[done=>bool::T,desc=>str::T,start{?}::T,end{?}::T]@/usr/agent/task
-==>fail::[parse error at line 1, col 7:
-     rec::T[done=>bool::T,desc=>str::T,start{?}::T,...
-           ^
-     could not parse at '[']@/sys/fail/40
+==>ERROR: monad obj coefficient is greater than inst domain coefficient: 
+	obj       => rec::T
+	\_c       => 1
+	inst     X=> start?rng=A{**}&dom=noobj{0}([
+  done=>bool::T,
+  desc=>str::T,
+  start{?}::T,
+  end{?}::T]@/usr/agent/task){<j>}@<1>
+	\_dom_c  X=> 0
 mtron> [,]@/usr/agent/todo
 ==>[,]@/usr/agent/todo
 mtron> datetime_now()-<task::[done=>false,desc=>"review metatron docs",start=>_]>-@/usr/agent/todo
-==>[task::[
-    done=>false,
-    desc=>'review metatron docs',
-    start=>datetime::<//2026.09:6/08/02/11/171?tz=-0600>]]@/usr/agent/todo
+==>[
+    task::[
+     done=>false,
+     desc=>'review metatron docs',
+     start=>datetime::<//2026.09:6/23/18/43/199?tz=-0600>],
+    task::[
+     done=>false,
+     desc=>'review metatron docs',
+     start=>datetime::<//2026.09:6/23/18/42/636?tz=-0600>]]@/usr/agent/todo
 ```
 The current time is split across the defined task. Since `start=>_` has an open slot, the current
 `datatime::T` fills in the spot and then the task is merged into your todo list. To get a structured understanding of
@@ -68,7 +78,7 @@ mtron> @/usr/agent/todo/0 >>= [done=>true]
 ==>task::[
     done=>true,
     desc=>'review metatron docs',
-    start=>datetime::<//2026.09:6/08/02/11/171?tz=-0600>]
+    start=>datetime::<//2026.09:6/23/18/43/199?tz=-0600>]
 ```
 As you learn about metatron and the mtron language, you'll come up with clever ways to manipulate your `/usr/agent`
 space.
@@ -86,7 +96,7 @@ mtron> @/usr/agent.chat("what is 1+(2+3)?")      [-- human asks you --]
 ==>fail::[unable to determine inst function:
    	chat('what is 1+(2+3)?')@/usr/agent  => chat?dom=chat('what is 1+(2+3)?')@<1>   | [inst]
    	chat::T     => chat::T   |  \_dom
-   	chat::T    ==> ['what is 1+(2+3)?']   |  \_args]@/sys/fail/42
+   	chat::T    ==> ['what is 1+(2+3)?']   |  \_args]@/sys/fail/44
 ```
 The sub-agent (depth 2) solves "what is 2+3?" in a clean context window. You receive only its answer (`5`). Its internal
 tool calls, thinking traces, and intermediate steps are *invisible to you*. Your context window stays focused on the

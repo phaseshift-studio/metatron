@@ -94,6 +94,25 @@ public class BashFeatureTest extends AbstractFeatureTest {
     }
 
     /**
+     * Invoke the bash tool with an explicit agent-supplied TIMEOUT.
+     */
+    private static Obj run(final Inst bash, final String command, final Obj timeout) {
+        final Obj result = bash.args(rec(uri(CMD), str(command), uri(TIMEOUT), timeout)).apply(noobj());
+        STATIC_LOG.debug("result: %s", result);
+        return result;
+    }
+
+    /**
+     * Invoke the bash tool with no TIMEOUT argument, so the BashFeature-level
+     * TIMEOUT (or the built-in default) is what applies.
+     */
+    private static Obj runNoAgentTimeout(final Inst bash, final String command) {
+        final Obj result = bash.args(rec(uri(CMD), str(command))).apply(noobj());
+        STATIC_LOG.debug("result: %s", result);
+        return result;
+    }
+
+    /**
      * Assert the command was rejected (i.e. the guard threw before any exec).
      */
     private static void assertRejected(final Inst bash, final String command, final String errorMessageFragment) {
@@ -166,5 +185,83 @@ public class BashFeatureTest extends AbstractFeatureTest {
         final Obj result = run(bash, "false");
         assertTrue(result.isFail(), "a non-zero exit must surface as a fail, got: %s".formatted(result));
         assertTrue(result.toCleanString().contains("terminated with unexpected exit"), "expected the exit status in the failure text, got: %s".formatted(result.toCleanString()));
+    }
+
+    // ── TIMEOUT: agent-supplied vs BashFeature-level ──────────────────────
+
+    /// The agent's TIMEOUT must be applied: shorter than a slow command, it cuts it off.
+    @Test
+    public void testAgentTimeoutKillsSlowCommand() {
+        final BashFeature feature = feature(rec(uri(ALLOW), lst(str(".*"))));
+        final Agent agent = agentWith(feature, AgentTest.toolFeature());
+        final Inst bash = AgentTest.findTool(agent, feature, "bash");
+        final long start = System.nanoTime();
+        final Obj result = run(bash, "sleep 2", real(300.0, MATH_MILLIS_TID, null));
+        final long elapsedMs = (System.nanoTime() - start) / 1000000L;
+        assertTrue(elapsedMs < 1500, "the 300ms agent TIMEOUT should cut sleep 2 off well before 2s; took %d ms (agent TIMEOUT not applied?)".formatted(elapsedMs));
+        assertTrue(result.isFail(), "sleep 2 under a 300ms agent TIMEOUT must not report success, got: %s".formatted(result));
+    }
+
+    /// The agent's TIMEOUT must override a shorter BashFeature-level TIMEOUT.
+    @Test
+    public void testAgentTimeoutOverridesFeatureTimeout() {
+        final BashFeature feature = feature(rec(uri(ALLOW), lst(str(".*")), uri(TIMEOUT), real(300.0, MATH_MILLIS_TID, null)));
+        final Agent agent = agentWith(feature, AgentTest.toolFeature());
+        final Inst bash = AgentTest.findTool(agent, feature, "bash");
+        final long start = System.nanoTime();
+        final Obj result = run(bash, "sleep 1", real(3000.0, MATH_MILLIS_TID, null));
+        final long elapsedMs = (System.nanoTime() - start) / 1000000L;
+        assertFalse(result.isFail(), "agent TIMEOUT (3000ms) must override the feature TIMEOUT (300ms) so sleep 1 completes; got: %s".formatted(result));
+        assertTrue(elapsedMs >= 800, "sleep 1 should run to completion (~1s) under the 3000ms agent TIMEOUT, not be cut at 300ms; took %d ms".formatted(elapsedMs));
+    }
+
+    /// When the agent omits TIMEOUT, the BashFeature-level TIMEOUT must apply (not the 30s built-in default).
+    @Test
+    public void testFeatureTimeoutAppliesWhenAgentOmitsTimeout() {
+        final BashFeature feature = feature(rec(uri(ALLOW), lst(str(".*")), uri(TIMEOUT), real(300.0, MATH_MILLIS_TID, null)));
+        final Agent agent = agentWith(feature, AgentTest.toolFeature());
+        final Inst bash = AgentTest.findTool(agent, feature, "bash");
+        final long start = System.nanoTime();
+        final Obj result = runNoAgentTimeout(bash, "sleep 2");
+        final long elapsedMs = (System.nanoTime() - start) / 1000000L;
+        assertTrue(elapsedMs < 1500, "the 300ms feature TIMEOUT should cut sleep 2 off well before 2s; took %d ms (feature TIMEOUT not applied?)".formatted(elapsedMs));
+        assertTrue(result.isFail(), "sleep 2 under a 300ms feature TIMEOUT must not report success, got: %s".formatted(result));
+    }
+
+    // ── ENV: environment variables (uri => value) applied to every bash call ──
+
+    /// A feature-level env var must be visible to the command.
+    @Test
+    public void testEnvVariableIsVisibleToCommand() {
+        final BashFeature feature = feature(rec(uri(ENV), rec(uri("MARKO_TEST_VAR"), str("metatron-env-value"))));
+        final Agent agent = agentWith(feature, AgentTest.toolFeature());
+        final Inst bash = AgentTest.findTool(agent, feature, "bash");
+        final Obj result = run(bash, "echo $MARKO_TEST_VAR");
+        assertFalse(result.isFail(), "env test command should succeed: %s".formatted(result));
+        assertTrue(result.toCleanString().contains("metatron-env-value"), "expected the env value in the output, got: %s".formatted(result.toCleanString()));
+    }
+
+    /// A feature-level env var must override an inherited one (here USER) for the command.
+    @Test
+    public void testEnvOverridesInheritedVariable() {
+        final BashFeature feature = feature(rec(uri(ENV), rec(uri("USER"), str("metatron-env-user"))));
+        final Agent agent = agentWith(feature, AgentTest.toolFeature());
+        final Inst bash = AgentTest.findTool(agent, feature, "bash");
+        final Obj result = run(bash, "echo $USER");
+        assertFalse(result.isFail(), "echo $USER should succeed: %s".formatted(result));
+        assertTrue(result.toCleanString().contains("metatron-env-user"), "env USER must override the inherited value, got: %s".formatted(result.toCleanString()));
+    }
+
+    /// A secret-ish env value must not leak into the tool's output / failure text.
+    @Test
+    public void testEnvSecretNotLeakedInFailureOutput() {
+        final BashFeature feature = feature(rec(uri(ENV), rec(uri("SECRET_API_TOKEN"), str("top-secret-xyz-9876"))));
+        final Agent agent = agentWith(feature, AgentTest.toolFeature());
+        final Inst bash = AgentTest.findTool(agent, feature, "bash");
+        final Obj result = run(bash, "false");
+        assertTrue(result.isFail(), "false must fail: %s".formatted(result));
+        final String text = result.toCleanString();
+        assertFalse(text.contains("top-secret-xyz-9876"), "the secret env value must not leak into the output: %s".formatted(text));
+        assertFalse(text.contains("SECRET_API_TOKEN"), "the env variable name must not leak into the output: %s".formatted(text));
     }
 }

@@ -9,7 +9,7 @@ description: |
 
 # FileSystem Space (fsSpace)
 
-An `fsspace` mounts a subset of a file system into metatron's URI address space. Files are addressed via the space's
+An `fsspace` mounts a subset of a file system into the metatron graph. Files are addressed via the space's
 scheme (e.g., `local:`) and path prefix.
 
 **IMPORTANT**: Every uri can be wrapped in angle brackets `< >`, but it is only required for those uris that have `.`
@@ -26,6 +26,17 @@ mtron> fsspace::[
          pattern => <local:#>,
          q       => [mimeq::[=>], lineq::[=>]],
          route   => [local: => <~/my-project>]]@/sys/space/fs/local
+==>fsspace::[
+    pattern=>local:#,
+    q=>[
+     mimeq::[
+      pattern=>mimeq,
+      post_read=>inst?#{*}<=#{?}(uri::T,#::T)],
+     lineq::[
+      pattern=>lineq,
+      post_read=>inst?#{*}<=#{?}(uri::T,#::T),
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T)]],
+    route=>[local:=>/home/ubuntu/my-project]]@/sys/space/fs/local
 ```
 - **`pattern`** — the URI pattern this space handles (`local:#` matches `<local:file.txt>`, `<local:sub/dir/file.md>`,
   etc.)
@@ -93,7 +104,6 @@ mtron> *<local:index.html?mimeq=application/x-mtron>
 ```mtron
 mtron> [-- Read a file (returns typed string by default) --]
 mtron> *<local:test.md>
-==>markdown::'## new content'
 mtron> [-- Write a string to a file --]
 mtron> <local:test.md> -> "## new content"
 ==>'## new content'
@@ -112,10 +122,7 @@ mtron> *<local:test.md?mimeq=application/x-mtron>
     out=>[[type=>text,content=>'new content']]]]]
 mtron> [-- Read JSON, then walk into rec fields --]
 mtron> *<local:config.json?mimeq=application/x-mtron>/database/host
-==>fail::[parse error at line 1, col 47:
-     ...l:config.json?mimeq=application/x-mtron>/database/host
-                                                ^
-     could not parse at '/']@/sys/fail/446
+==>/database/host
 ```
 ### Binary Files
 
@@ -125,7 +132,7 @@ are treated as `inst::T` and can be invoked directly:
 ```mtron
 mtron> *<local:script.sh>        [-- bytes::T if binary, str::T if text                    --]
 mtron> <local:script.sh>.exec()  [-- execute (shell scripts, via application/x-mtron exec) --]
-==>fail::[unable to locate inst-f of exec()@<1>]@/sys/fail/448
+==>fail::[unable to locate inst-f of exec()@<1>]@/sys/fail/44
 ```
 ## Pattern-Based Access
 
@@ -137,10 +144,7 @@ mtron> *<local:+/>
 ==><local:/test.md>=>markdown::'## new content'
 mtron> [-- Read all .txt files --]
 mtron> *<local:+/+>.where([name => where(^(>>is(hasPostfix(.txt))))])
-==>fail::[parse error at line 1, col 14:
-     *<local:+/+>.where([name => where(^(>>is(hasPostfix(....
-                  ^
-     could not parse at 'w']@/sys/fail/450
+==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at '([name => where(^(>>is(hasPostfix(.txt))))])'
 ```
 ## Line-Level Editing with `lineq`
 
@@ -156,7 +160,7 @@ mtron> *<local:src/main.java?lineq=10..20>
    	  \_pred │ []
    	[inst]   │ *<local:src/main.java?lineq=10..20>
    	 \_dom   │ #{?}::T
-   	 \_args  │ [<local:src/main.java?lineq=10..20>][NumberFormatException<67>:For input string: "10..20"[NumberFormatException<67>:For input string: "10..20"] ← For input string: "10..20"]][For input string: "10..20"[NumberFormatException<67>:For input string: "10..20"]][For input string: "10..20"]@/sys/fail/452
+   	 \_args  │ [<local:src/main.java?lineq=10..20>][NumberFormatException<67>:For input string: "10..20"[NumberFormatException<67>:For input string: "10..20"] ← For input string: "10..20"]][For input string: "10..20"[NumberFormatException<67>:For input string: "10..20"]][For input string: "10..20"]@/sys/fail/50
 mtron> [-- Replace lines 5-10 with new content --]
 mtron> <local:src/main.java?lineq=5..10> -> """
          public void newMethod() {
@@ -168,16 +172,16 @@ mtron> <local:src/main.java?lineq=5..10> -> """
    	 \_type  │ /m/uri
    	  \_pred │ []
    	[inst]   │ ref?rng=#{*}&dom=#("""
-   public void newMethod() {
-   // new implementation
-   }
-   """){<j>}@<1>
+            public void newMethod() {
+              // new implementation
+            }
+          """){<j>}@<1>
    	 \_dom   │ #::T
    	 \_args  │ ["""
-   public void newMethod() {
-   // new implementation
-   }
-   """][NumberFormatException<67>:For input string: "5..10"[NumberFormatException<67>:For input string: "5..10"] ← For input string: "5..10"]][For input string: "5..10"[NumberFormatException<67>:For input string: "5..10"]][For input string: "5..10"]@/sys/fail/454
+            public void newMethod() {
+              // new implementation
+            }
+          """][NumberFormatException<67>:For input string: "5..10"[NumberFormatException<67>:For input string: "5..10"] ← For input string: "5..10"]][For input string: "5..10"[NumberFormatException<67>:For input string: "5..10"]][For input string: "5..10"]@/sys/fail/54
 ```
 ### Boot Configuration Example
 
@@ -186,6 +190,17 @@ mtron> fsspace::[
          pattern => <local:#>,
          q       => [mimeq::[=>], lineq::[=>]],
          route   => [local: => ~/src]]@/sys/space/fs/src
+==>fsspace::[
+    pattern=>local:#,
+    q=>[
+     mimeq::[
+      pattern=>mimeq,
+      post_read=>inst?#{*}<=#{?}(uri::T,#::T)],
+     lineq::[
+      pattern=>lineq,
+      post_read=>inst?#{*}<=#{?}(uri::T,#::T),
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T)]],
+    route=>[local:=>/m/inst/thread(/src)]]@/sys/space/fs/src
 mtron> [-- Then use in expressions: --]
 mtron> *<local:Main.java?lineq=1..50>
 ==>fail::[apply failure:
@@ -194,12 +209,13 @@ mtron> *<local:Main.java?lineq=1..50>
    	  \_pred │ []
    	[inst]   │ *<local:Main.java?lineq=1..50>
    	 \_dom   │ #{?}::T
-   	 \_args  │ [<local:Main.java?lineq=1..50>][NumberFormatException<67>:For input string: "1..50"[NumberFormatException<67>:For input string: "1..50"] ← For input string: "1..50"]][For input string: "1..50"[NumberFormatException<67>:For input string: "1..50"]][For input string: "1..50"]@/sys/fail/456
+   	 \_args  │ [<local:Main.java?lineq=1..50>][NumberFormatException<67>:For input string: "1..50"[NumberFormatException<67>:For input string: "1..50"] ← For input string: "1..50"]][For input string: "1..50"[NumberFormatException<67>:For input string: "1..50"]][For input string: "1..50"]@/sys/fail/58
 mtron> <local:index.html?mimeq=application/x-mtron>/html/head/title
-==>fail::[parse error at line 1, col 45:
-     ...al:index.html?mimeq=application/x-mtron>/html/head/title
-                                                ^
-     could not parse at '/']@/sys/fail/458
+==>ERROR: monad obj coefficient is greater than inst domain coefficient: 
+	obj       => <local:index.html?mimeq=application/x-mtron>
+	\_c       => 1
+	inst     X=> start?rng=A{**}&dom=noobj{0}(/html/head/title){<j>}@<1>
+	\_dom_c  X=> 0
 ```
 ## Type Round-Trip
 
@@ -216,7 +232,7 @@ mtron> <local:page.html> -> *<local:page.html?mimeq=application/x-mtron>
    	  \_pred │ []
    	[inst]   │ at?rng=B{*}&dom=A{?}('New Title'){<j>}@<2>
    	 \_dom   │ A{?}::T
-   	 \_args  │ ['New Title'][MTronException<137>:'New Title' [str::T] unable to convert uri::T]]['New Title' [str::T] unable to convert uri::T]@/sys/fail/468
+   	 \_args  │ ['New Title'][MTronException<137>:'New Title' [str::T] unable to convert uri::T]]['New Title' [str::T] unable to convert uri::T]@/sys/fail/80
 mtron> [-- Read JSON config, modify a value, write back --]
 mtron> <local:config.json> -> *<local:config.json?mimeq=application/x-mtron>
          .at(database/host -> 'new-host')
@@ -227,7 +243,7 @@ mtron> <local:config.json> -> *<local:config.json?mimeq=application/x-mtron>
    	  \_pred │ []
    	[inst]   │ at?rng=B{*}&dom=A{?}('new-host'){<j>}@<2>
    	 \_dom   │ A{?}::T
-   	 \_args  │ ['new-host'][MTronException<137>:'new-host' [str::T] unable to convert uri::T]]['new-host' [str::T] unable to convert uri::T]@/sys/fail/478
+   	 \_args  │ ['new-host'][MTronException<137>:'new-host' [str::T] unable to convert uri::T]]['new-host' [str::T] unable to convert uri::T]@/sys/fail/100
 ```
 The `.as(html::T)` / `.as(json::T)` serialization passes through `ObjHTMLSerializer.write()` /
 `ObjJSONSerializer.write()` which handle both `str::T` (pass-through) and `rec::T` (structural render).

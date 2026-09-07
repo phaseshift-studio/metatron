@@ -90,10 +90,6 @@ public interface Code extends Call {
         }
         return rewrittenCode.get();
     }
-    
-    /*default Code rewrite(final Code queryPlan) {
-       // TODO!!! 
-    }*/
 
     @Override
     default Code resolve(final Obj lhs) {
