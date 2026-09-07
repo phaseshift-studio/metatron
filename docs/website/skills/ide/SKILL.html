@@ -389,21 +389,140 @@ letting a <strong>subscription</strong> on <code>code/#</code> write back to dis
 <li>an optional space for storing mutation event logs (<code>tblespace</code>).</li>
 </ol>
 <pre><code class="language-mtron">mtron&gt; import(/m/ide,ide)
+==&gt;instset::[
+    pattern=&gt;/m/ide/#,
+    q=&gt;[docq::[
+    pattern=&gt;docq,
+    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+    space=&gt;[super=&gt;!*/m],
+    type=&gt;[
+     obj_ide_java::T,
+     java::T,
+     result::T,
+     project::T],
+    inst=&gt;[
+     as?project&lt;=uri(project::T),
+     as?skill&lt;=project(#::T),
+     as?java&lt;=java(java::T),
+     as?java&lt;=java(java::T),
+     find?uri{*}&lt;=uri(class=&gt;uri::T,member=&gt;str{?}::T,text=&gt;str{?}::T),
+     search?uri{*}&lt;=uri(str::T),
+     command?inst&lt;=#{?}(command=&gt;str::T)]]@/m/ide
 mtron&gt; import(/m/web,web)
+==&gt;instset::[
+    pattern=&gt;/m/web/#,
+    q=&gt;[docq::[
+    pattern=&gt;docq,
+    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+    space=&gt;[super=&gt;!*/m],
+    const=&gt;[[remote_console=&gt;inst()]@helper,[=&gt;]@obj_xml,obj_html::[=&gt;]@obj_html,obj_json::[
+     density=&gt;OPAQUE,
+     wrap_uri=&gt;true,
+     bias_towards_uri=&gt;true,
+     bias_towards_objs=&gt;false]@obj_json,obj_markdown::[=&gt;]@obj_markdown,obj_text::[=&gt;]@obj_text,/m/mach/io/serializer/mtron::[
+     clip=&gt;[
+      rec=&gt;10,
+      lst=&gt;10,
+      str=&gt;60,
+      uri=&gt;2147483647,
+      real=&gt;4,
+      bytes=&gt;60,
+      fail=&gt;60],
+     justify=&gt;true]@clean,bytebuffer::[=&gt;]@bytebuffer,obj_json::[
+     density=&gt;&lt;TRANSPARENT&gt;,
+     wrap_uri=&gt;true,
+     bias_towards_uri=&gt;true,
+     bias_towards_objs=&gt;false]@obj_json,obj_bson::[=&gt;]@obj_bson,...(1 more)],
+    type=&gt;[mime::T,xml::T,html::T,json::T,yaml::T,xsv::T,csv::T,css::T,markdown::T,java::T,...(25 more)],
+    inst=&gt;[ping?time&lt;=#{?}(uri::T),format?str&lt;=markdown(),as?skill&lt;=markdown(str::T),as?rec&lt;=json(rec::T),as?rec&lt;=yaml(rec::T),as?json&lt;=rec(json::T),as?rec&lt;=xml(rec::T),as?xml&lt;=rec(xml::T),as?rec&lt;=html(rec::T),as?html&lt;=rec(html::T),...(11 more)]]@/m/web
 mtron&gt; import(/m/math,math)
+==&gt;instset::[
+    pattern=&gt;/m/math/#,
+    q=&gt;[docq::[
+    pattern=&gt;docq,
+    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+    space=&gt;[super=&gt;!*/m],
+    type=&gt;[nat::T,data::T,bB::T,kB::T,mB::T,gB::T,tB::T,pB::T,currency::T,usd::T,...(8 more)],
+    inst=&gt;[datetime_now?datetime&lt;=#{?}(),as?time&lt;=time(time::T),plus?datetime&lt;=datetime(time::T),minus?datetime&lt;=datetime(time::T),minus?time&lt;=datetime(datetime::T),as?datetime&lt;=uri(uri::T),as?int&lt;=datetime(int::T),as?str&lt;=datetime(str::T),as?datetime&lt;=str(datetime::T),normalize?time&lt;=time(),...(14 more)],
+    const=&gt;[
+     2.7183@/m/math/e?constq,
+     3.1416@/m/math/pi?constq]]@/m/math
 mtron&gt; memspace::[
          pattern =&gt; &lt;/dev/scratch/#&gt;,
                q =&gt; [mintq::[=&gt;],docq::[=&gt;],subq::[=&gt;],
                      mimeq::[=&gt;], lineq::[=&gt;],lockq::[=&gt;],
                      incrq::[=&gt;]]]@&lt;/sys/space/dev/metatron&gt;
+==&gt;memspace::[
+    pattern=&gt;/dev/scratch/#,
+    q=&gt;[
+     mintq::[
+      pattern=&gt;mintq,
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     docq::[
+      pattern=&gt;docq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+     subq::[
+      pattern=&gt;subq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;[,]],
+     mimeq::[
+      pattern=&gt;mimeq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     lineq::[
+      pattern=&gt;lineq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     lockq::[
+      pattern=&gt;lockq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;[,]],
+     incrq::[
+      pattern=&gt;incrq,
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]]]@/sys/space/dev/metatron
 mtron&gt; fsspace::[pattern      =&gt; mfs:#,
                   route       =&gt; [mfs:=&gt;&lt;.&gt;]]@/sys/space/fs/mfs
+==&gt;fsspace::[pattern=&gt;mfs:#,route=&gt;[mfs:=&gt;&lt;&gt;]]@/sys/space/fs/mfs
 mtron&gt; tblespace::[pattern    =&gt; &lt;/log/scratch/#&gt;,
                    host       =&gt; &lt;sqlite:target/log_scratch.sqlite&gt;,
                    driver     =&gt; &lt;org.sqlite.JDBC&gt;,
                    table      =&gt; [,],
                    q          =&gt; [incrq::[=&gt;],subq::[=&gt;],mimeq::[=&gt;]],
                    route      =&gt; [/log/scratch/ =&gt; &lt;&gt;]]@&lt;/sys/space/log/scratch&gt;
+==&gt;tblespace::[
+    pattern=&gt;/log/scratch/#,
+    host=&gt;&lt;sqlite:target/log_scratch.sqlite&gt;,
+    driver=&gt;&lt;org.sqlite.JDBC&gt;,
+    table=&gt;[,],
+    q=&gt;[
+     incrq::[
+      pattern=&gt;incrq,
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     subq::[
+      pattern=&gt;subq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;[,]],
+     mimeq::[
+      pattern=&gt;mimeq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
+    route=&gt;[/log/scratch/=&gt;&lt;&gt;]]@/sys/space/log/scratch
 </code></pre>
 <h3>encodings</h3>
 <p>A loaded Java file has two encodings:</p>
@@ -444,7 +563,28 @@ asserted in the acceptance test).</p>
 an <code>as()</code>-mapping from <code>uri::T</code> to <code>project::T</code>. The resultant <code>project::T</code> is saved to the user home graph. Finally.
 maven build commands are attached to the <code>project::T</code> for each of access.</p>
 <pre><code class="language-mtron">mtron&gt; &lt;mfs:src/test/resources/scratch&gt;@&lt;/dev/scratch&gt;.as(project::T).to(/dev/scratch)
-       @/dev/scratch &gt;&gt;= +[command =&gt; [mvn_build =&gt; !ide:command('mvn -f src/test/resources/scratch compile'),
+==&gt;project::[
+    root=&gt;mfs:src/test/resources/scratch,
+    src=&gt;[
+     Operation=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
+     Echo=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
+     Calculator=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
+     EchoTest=&gt;inst?#{*}&lt;=#{?}(#{*}::T)],
+    code=&gt;[,],
+    idx=&gt;[=&gt;]]@/dev/scratch
+mtron&gt; tree::[root=&gt;/dev/scratch, max=&gt;3].as?str&lt;=widget(str::T)
+==&gt;&quot;&quot;&quot;scratch
+   ├─ code
+   ├─ idx
+   ├─ root
+   └─ src
+       ├─ Calculator
+       ├─ Echo
+       ├─ EchoTest
+       └─ Operation&quot;&quot;&quot;
+</code></pre>
+<p>Now that the project is stored in space, a quick build to ensure a clean slate to work from.</p>
+<pre><code class="language-mtron">mtron&gt; @/dev/scratch &gt;&gt;= +[command =&gt; [mvn_build =&gt; !ide:command('mvn -f src/test/resources/scratch compile'),
                                        mvn_clean =&gt; !ide:command('mvn -f src/test/resources/scratch clean'),
                                        mvn_exec  =&gt; !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
 ==&gt;project::[
@@ -456,18 +596,16 @@ maven build commands are attached to the <code>project::T</code> for each of acc
      EchoTest=&gt;inst?#{*}&lt;=#{?}(#{*}::T)],
     code=&gt;[,],
     idx=&gt;[=&gt;],
-    command=&gt;[
+    command=&gt;{2}[
      mvn_build=&gt;!ide:command('mvn -f src/test/resources/scratch compile'),
      mvn_clean=&gt;!ide:command('mvn -f src/test/resources/scratch clean'),
      mvn_exec=&gt;!ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
-</code></pre>
-<p>Now that the project is stored in space, a quick build to ensure a clean slate to work from.</p>
-<pre><code class="language-mtron">mtron&gt; */dev/scratch/command/mvn_build
-==&gt;result::[
+mtron&gt; */dev/scratch/command/mvn_build
+==&gt;result{4}::[
     status=&gt;success,
-    runtime=&gt;millis::895.0000,
+    runtime=&gt;millis::848.0000,
     command=&gt;'mvn -f src/test/resources/scratch compile',
-    output=&gt;!*/sys/tmp/e52e924c]
+    output=&gt;!*/sys/tmp/4114ddfc]
 </code></pre>
 <p>The Java source files have a <code>str::T &gt; web:java::T</code> encoding accessible via <code>src</code>.</p>
 <pre><code class="language-mtron"></code></pre>
@@ -477,13 +615,13 @@ name pulls the raw
 <pre><code class="language-mtron">mtron&gt; /dev/scratch/src/Echo()
 ==&gt;[Echo=&gt;[
     field=&gt;[
-     PREFIX=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
-     name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
-    constructor=&gt;[Echo=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
+     PREFIX=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/0/PREFIX,
+     name=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/1/name],
+    constructor=&gt;[Echo=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/2/Echo],
     comment=&gt;[=&gt;],
     method=&gt;[
-     speak=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
-     name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]]
+     speak=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/4/speak,
+     name=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/6/name]]]
 mtron&gt; */dev/scratch/code/0
 ==&gt;java::[
     package=&gt;'package com.example.scratch;',
@@ -575,13 +713,44 @@ mtron&gt; */dev/scratch/code/0
 mtron&gt; */dev/scratch/idx/Echo
 ==&gt;[
     field=&gt;[
-     PREFIX=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
-     name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
-    constructor=&gt;[Echo=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
+     PREFIX=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/0/PREFIX,
+     name=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/1/name],
+    constructor=&gt;[Echo=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/2/Echo],
     comment=&gt;[=&gt;],
     method=&gt;[
-     speak=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
-     name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]
+     speak=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/4/speak,
+     name=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/6/name]]
+mtron&gt; tree::[root=&gt;/dev/scratch, max=&gt;3].as?str&lt;=widget(str::T)
+==&gt;&quot;&quot;&quot;scratch
+   ├─ code
+   │   ├─ 0
+   │   │   ├─ classes
+   │   │   ├─ location
+   │   │   ├─ package
+   │   │   ├─ postscript
+   │   │   └─ preamble
+   │   └─ 1
+   │       ├─ classes
+   │       ├─ location
+   │       ├─ package
+   │       ├─ postscript
+   │       └─ preamble
+   ├─ command
+   │   ├─ mvn_build
+   │   ├─ mvn_clean
+   │   └─ mvn_exec
+   ├─ idx
+   │   └─ Echo
+   │       ├─ comment
+   │       ├─ constructor
+   │       ├─ field
+   │       └─ method
+   ├─ root
+   └─ src
+       ├─ Calculator
+       ├─ Echo
+       ├─ EchoTest
+       └─ Operation&quot;&quot;&quot;
 </code></pre>
 <p><code>idx</code> offers a human-readable path scheme that projects to the <code>code</code> uri subgraph. Due to the <code>!*</code> nature of the <code>idx</code>
 objs, any updates to
@@ -616,7 +785,7 @@ space-only.</p>
     text=&gt;&quot;&quot;&quot;
        public String speak(String who) {
            return who;
-   ...&quot;&quot;&quot;]@/dev/scratch/code/0/classes/Echo/0/members/4/speak
+   ...&quot;&quot;&quot;]@/dev/scratch/code/1/classes/Echo/0/members/4/speak
 mtron&gt; */dev/scratch/idx/Echo/method/speak/body.-&lt;'\n'.as(rec::T)
 ==&gt;[
     0=&gt;'{',
