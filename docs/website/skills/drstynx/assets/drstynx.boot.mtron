@@ -325,7 +325,10 @@ agent::[
                                                  host         => <http://ginger.local:11434>,
                                                  llm          => <qwen3-embedding:4b>]],
     system_feature:::::[              => ],
-    tool_feature:::::::[tool          => [!*eval,!*sql,!*codegraph,
+    tool_feature:::::::[tool          => [!*gremlin,
+                                          !*sql,
+                                          !*codegraph,
+                                          mcp_client::[host=><http://localhost:8777/mcp>],
                                           forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
     cost_feature:::::::[root          => /usr/dr/cost,
                         to            => inst(in_cost=>real::T,out_cost=>real::T,total_cost=>real::T){ 

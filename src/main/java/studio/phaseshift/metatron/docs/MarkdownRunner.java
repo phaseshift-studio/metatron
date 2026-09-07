@@ -65,9 +65,17 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * <h3>Usage</h3>
  * <pre>
- * java studio.phaseshift.metatron.docs.MarkdownRunner &lt;input-dir&gt; [-b &lt;boot&gt;] [-o &lt;out&gt;]
- * java studio.phaseshift.metatron.docs.MarkdownRunner &lt;file.md&gt;  [-b &lt;boot&gt;] [-o &lt;out&gt;]
+ * java studio.phaseshift.metatron.docs.MarkdownRunner &lt;input-dir&gt; [-b &lt;boot&gt;] [-o &lt;out&gt;] [--html]
+ * java studio.phaseshift.metatron.docs.MarkdownRunner &lt;file.md&gt;  [-b &lt;boot&gt;] [-o &lt;out&gt;] [--html]
  * </pre>
+ *
+ * <p>{@code --html} (or {@code -Dmtron.html=true}) chains {@link SkillHtmlRenderer}
+ * onto the markdown pass: after processing, every skill doc under the canonical
+ * website skills container that {@code -o} resolves into (the nearest ancestor
+ * directory named {@code skills}, symlinks followed — {@code .metatron/skills}
+ * is the repo's symlink to {@code docs/website/skills}) is rendered to a sibling
+ * {@code .html}. Outputs outside a website skills tree (probe dirs like
+ * {@code target/temp}) skip the html pass with a note.</p>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -86,8 +94,12 @@ public class MarkdownRunner {
         //   between files when the VM is reused instead of rebuilt per file.
         // --reverse: process files in reverse sorted order — an order-dependence
         //   probe for state bleed (or -Dmtron.reverse=true).
+        // --html: after the markdown pass, chain SkillHtmlRenderer over the
+        //   canonical website skills container the -o output resolves into
+        //   (or -Dmtron.html=true).
         boolean singleBoot = Boolean.parseBoolean(System.getProperty("mtron.singleBoot", "false"));
         boolean reverse = Boolean.parseBoolean(System.getProperty("mtron.reverse", "false"));
+        boolean html = Boolean.parseBoolean(System.getProperty("mtron.html", "false"));
 
         int i = 0;
         while (i < args.length) {
@@ -96,6 +108,7 @@ public class MarkdownRunner {
                 case "-o", "--out" -> outDir = Path.of(args[++i]);
                 case "--single-boot" -> singleBoot = true;
                 case "--reverse" -> reverse = true;
+                case "--html" -> html = true;
                 default -> input = args[i];
             }
             i++;
@@ -141,7 +154,8 @@ public class MarkdownRunner {
             return;
         }
         if (reverse) Collections.reverse(files);
-        LOG.info("processing " + files.size() + " files (singleBoot=" + singleBoot + ", reverse=" + reverse + ")");
+        LOG.info("processing " + files.size() + " files (singleBoot=" + singleBoot
+                + ", reverse=" + reverse + ", html=" + html + ")");
         if (singleBoot) bootVM(boot);
         final long buildStart = System.nanoTime();
 
@@ -173,10 +187,41 @@ public class MarkdownRunner {
         ////////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////
 
+        // ── Optional html pass: chain SkillHtmlRenderer over the skills container ──
+        if (html) {
+            final long t1 = System.nanoTime();
+            final Path skillsDir = skillsContainer(out);
+            if (skillsDir == null) {
+                LOG.info("--html skipped: output " + out + " is not under a website skills tree");
+            } else {
+                SkillHtmlRenderer.renderAll(skillsDir);
+                LOG.info("html rendered into " + skillsDir + " (" + elapsedMs(t1) + "ms)");
+            }
+        }
+
         LOG.info("done — " + files.size() + " files, " + elapsedMs(buildStart) + "ms total (singleBoot="
-                + singleBoot + ", reverse=" + reverse + ")");
+                + singleBoot + ", reverse=" + reverse + ", html=" + html + ")");
         BootLoader.close();
         System.exit(0);
+    }
+
+    /**
+     * The canonical website skills container that the markdown output directory
+     * {@code out} lives under: the nearest ancestor (or {@code out} itself) whose
+     * directory name is {@code skills}, with symlinks resolved — the repo's
+     * {@code .metatron/skills} is a symlink to {@code docs/website/skills}, and a
+     * probe written to {@code .metatron/skills/mtron/references} still belongs to
+     * that same container. Returns null when {@code out} is not under a
+     * {@code skills} directory (probe outputs like {@code target/temp}).
+     */
+    static Path skillsContainer(final Path out) throws IOException {
+        Path p = out.toRealPath();
+        while (p != null) {
+            final Path name = p.getFileName();
+            if (name != null && "skills".equals(name.toString())) return p;
+            p = p.getParent();
+        }
+        return null;
     }
 
     /**

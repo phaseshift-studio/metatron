@@ -395,10 +395,11 @@ mtron&gt; 'mtron'     [-- str (single-quoted) --]
 mtron&gt; &quot;&quot;&quot;mtron&quot;&quot;&quot; [-- str (triple double-quoted, multi-line) --]
 ==&gt;'mtron'
 mtron&gt; '''mtron''' [-- str (triple single-quoted, multi-line --]
-==&gt;fail::[parse error at line 1, col 3:
-     '''mtron''' 
-       ^
-     could not parse at ''']@/sys/fail/480
+==&gt;ERROR: monad obj coefficient is greater than inst domain coefficient: 
+	obj       =&gt; ''
+	\_c       =&gt; 1
+	inst     X=&gt; start?rng=A{**}&amp;dom=noobj{0}('mtron'){&lt;j&gt;}@&lt;1&gt;
+	\_dom_c  X=&gt; 0
 mtron&gt; &lt;a.b.c&gt;     [-- uri (angle-bracket necessary of uri has . or space) --]
 ==&gt;&lt;a.b.c&gt;
 mtron&gt; /foo/bar    [-- uri (path literal) --]
@@ -438,17 +439,19 @@ mtron&gt; {1,1,2} [-- becomes {{2}1,2} (duplicates merged on coefficient) --]
 </code></pre>
 <h4>Indexing / Access</h4>
 <pre><code class="language-mtron">mtron&gt; [1,2,3].0         [--
-==&gt;fail::[parse error at line 1, col 9:
-     [1,2,3].0         
-             ^
-     could not parse at '0']@/sys/fail/482
+==&gt;ERROR: monad obj coefficient is greater than inst domain coefficient: 
+	obj       =&gt; [1,2,3]
+	\_c       =&gt; 1
+	inst     X=&gt; start?rng=A{**}&amp;dom=noobj{0}(0){&lt;j&gt;}@&lt;1&gt;
+	\_dom_c  X=&gt; 0
 mtron&gt; [1,2,3]&gt;&gt;0        [--
 ==&gt;1
 mtron&gt; [a=&gt;1,b=&gt;2].a     [--
-==&gt;fail::[parse error at line 1, col 13:
-     [a=&gt;1,b=&gt;2].a     
-                 ^
-     could not parse at 'a']@/sys/fail/492
+==&gt;ERROR: monad obj coefficient is greater than inst domain coefficient: 
+	obj       =&gt; [a=&gt;1,b=&gt;2]
+	\_c       =&gt; 1
+	inst     X=&gt; start?rng=A{**}&amp;dom=noobj{0}(a){&lt;j&gt;}@&lt;1&gt;
+	\_dom_c  X=&gt; 0
 mtron&gt; [a=&gt;1,b=&gt;2]&gt;&gt;a    [--
 ==&gt;1
 </code></pre>
@@ -571,15 +574,15 @@ mtron&gt; 'ab3cd'.regex('\d{2}')        [-- [,]  (no match — empty pair) --]
    	  \_pred │ []
    	[inst]   │ */path/to/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/556
+   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/236
 mtron&gt; @/path/to/obj              [-- real obj at uri (attached) --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
    	 \_type  │ noobj{0}
    	  \_pred │ []
-   	[inst]   │ at?rng=B{*}&amp;dom=A{?}(/path/to/obj){&lt;j&gt;}
+   	[inst]   │ at?rng=B{*}&amp;dom=A{?}(/path/to/obj){&lt;j&gt;}@&lt;0&gt;
    	 \_dom   │ A{?}::T
-   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/558
+   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/240
 mtron&gt; *local:software/           [-- read with trailing
        *&lt;/path/to/obj&gt;            [-- angle-bracket handles special chars --]
 ==&gt;fail::[apply failure:
@@ -588,7 +591,7 @@ mtron&gt; *local:software/           [-- read with trailing
    	  \_pred │ []
    	[inst]   │ */path/to/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/560
+   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/244
 </code></pre>
 <p>Wildcards:</p>
 <pre><code class="language-mtron">mtron&gt; */path/+/obj               [-- + matches one segment --]
@@ -598,7 +601,7 @@ mtron&gt; *local:software/           [-- read with trailing
    	  \_pred │ []
    	[inst]   │ */path/+/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/obj][MTronException&lt;137&gt;:no active space supports pattern /path/+/obj]][no active space supports pattern /path/+/obj]@/sys/fail/562
+   	 \_args  │ [/path/+/obj][MTronException&lt;137&gt;:no active space supports pattern /path/+/obj]][no active space supports pattern /path/+/obj]@/sys/fail/248
 mtron&gt; */path/+/+                 [-- ++, children at depth 2 --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
@@ -606,12 +609,9 @@ mtron&gt; */path/+/+                 [-- ++, children at depth 2 --]
    	  \_pred │ []
    	[inst]   │ */path/+/+
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/+][MTronException&lt;137&gt;:no active space supports pattern /path/+/+]][no active space supports pattern /path/+/+]@/sys/fail/564
+   	 \_args  │ [/path/+/+][MTronException&lt;137&gt;:no active space supports pattern /path/+/+]][no active space supports pattern /path/+/+]@/sys/fail/252
 mtron&gt; */path/#                   [-- [-- matches all remaining segments (recursive) --] --]
-==&gt;fail::[parse error at line 1, col 9:
-     */path/#                    --]
-             ^
-     could not parse at ' ']@/sys/fail/566
+==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '--]'
 </code></pre>
 <p><strong>uri::T</strong> type drives URI-specific operations:</p>
 <pre><code class="language-mtron">mtron&gt; http://abc:123/a/b/c.&gt;&gt;scheme        [-- http --]
@@ -621,7 +621,7 @@ mtron&gt; */path/#                   [-- [-- matches all remaining segments (rec
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(scheme){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [scheme][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/scheme]][no active space supports pattern http://abc:123/a/b/c/scheme]@/sys/fail/576
+   	 \_args  │ [scheme][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/scheme]][no active space supports pattern http://abc:123/a/b/c/scheme]@/sys/fail/282
 mtron&gt; http://abc:123/a/b/c.&gt;&gt;host          [-- abc --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -629,7 +629,7 @@ mtron&gt; http://abc:123/a/b/c.&gt;&gt;host          [-- abc --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(host){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [host][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/host]][no active space supports pattern http://abc:123/a/b/c/host]@/sys/fail/586
+   	 \_args  │ [host][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/host]][no active space supports pattern http://abc:123/a/b/c/host]@/sys/fail/310
 mtron&gt; http://abc:123/a/b/c.&gt;&gt;port          [-- 123 (noobj if no port) --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -637,7 +637,7 @@ mtron&gt; http://abc:123/a/b/c.&gt;&gt;port          [-- 123 (noobj if no port) 
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(port){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/port]][no active space supports pattern http://abc:123/a/b/c/port]@/sys/fail/596
+   	 \_args  │ [port][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/port]][no active space supports pattern http://abc:123/a/b/c/port]@/sys/fail/338
 mtron&gt; http://abc:123/a/b/c.&gt;&gt;authority     [-- abc:123 --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -645,7 +645,7 @@ mtron&gt; http://abc:123/a/b/c.&gt;&gt;authority     [-- abc:123 --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(authority){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [authority][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/authority]][no active space supports pattern http://abc:123/a/b/c/authority]@/sys/fail/606
+   	 \_args  │ [authority][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/authority]][no active space supports pattern http://abc:123/a/b/c/authority]@/sys/fail/366
 mtron&gt; http://abc:123/a/b/c.&gt;&gt;{schema,path} [-- {http,/a/b/c} --]
 mtron&gt; /a/b/c&gt;&gt;0                            [-- a --]
 ==&gt;/a/b/c
@@ -672,11 +672,13 @@ mtron&gt; [a,b].as(rec::T)          [-- [0=&gt;a,1=&gt;b] --]
 </code></pre>
 <p>Custom types via <code>tid::T[predicate][constructor]@vid</code>:</p>
 <pre><code class="language-mtron">mtron&gt; int::T[is(gt(0))]@nat     [-- type nat, only positive ints --]
+==&gt;int::T[is(gt(0))]@/m/math/nat
 mtron&gt; int::T[?&gt;0]@nat           [-- syntax sugar on is(gt(0)) --]
+==&gt;int::T[is(gt(0))]@/m/math/nat
 mtron&gt; nat::2                    [-- ok --]
 ==&gt;nat::2
 mtron&gt; nat::-1                   [-- &lt;ERROR&gt; --]
-==&gt;fail::[-1 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/616
+==&gt;ERROR: -1 is not a int::T[is(gt(0))]@/m/math/nat
 </code></pre>
 <hr />
 <h3>8. Mapping &amp; Filtering</h3>
@@ -838,9 +840,6 @@ mtron&gt; [1,2]@a &gt;&gt;= [_,+4]                      [-- [1,6]@a  (second ele
 mtron&gt; [a=&gt;1,b=&gt;2] &gt;&gt;= [b=&gt;none]               [-- [a=&gt;1]  (remove field b) --]
 ==&gt;[a=&gt;1]
 mtron&gt; @&lt;people/+&gt;.&gt;&gt;= [name=&gt;&quot;Micky Mouse&quot;]   [-- wildcard update --]
-==&gt;[name=&gt;'Micky Mouse',role=&gt;developer]
-==&gt;[name=&gt;'Micky Mouse',role=&gt;oracle]
-==&gt;[name=&gt;'Micky Mouse',role=&gt;architect]
 </code></pre>
 <p><code>@</code> means &quot;anchor the write-back to the VID&quot; (persist).  <code>*</code> means &quot;anonymous copy&quot; (no write-back):</p>
 <pre><code class="language-mtron">mtron&gt; @a/b/c&gt;&gt;= +10      [-- modifies *a/b/c and writes back --]
@@ -968,10 +967,11 @@ mtron&gt; ?int::T    [-- check if type is int --]
 </ol>
 <pre><code class="language-mtron">mtron&gt; [-- Chaining example (read test data from test file): --]
 mtron&gt; {1,2,3,4}.sum{2}().sum?int&lt;=int{1,7}().sum()-&lt;[_,_]&gt;-.sum?int&lt;=int{2}()  #
-==&gt;fail::[parse error at line 1, col 74:
-     ...,7}().sum()-&lt;[_,_]&gt;-.sum?int&lt;=int{2}()  #
-                                                ^
-     could not parse at '#' — unclosed '&lt;' — missing '&gt;'?]@/sys/fail/784
+==&gt;ERROR: monad obj coefficient is greater than inst domain coefficient: 
+	obj       =&gt; 40
+	\_c       =&gt; 1
+	inst     X=&gt; start?rng=A{**}&amp;dom=noobj{0}(&lt;#&gt;){&lt;j&gt;}@&lt;6&gt;
+	\_dom_c  X=&gt; 0
 </code></pre>
 
     </div>

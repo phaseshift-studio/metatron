@@ -79,7 +79,7 @@ public class mcpClient extends MRec {
                 .clientVersion(METATRON_VERSION)
                 .protocolVersion("2024-11-05")
                 //.roots(List.of(new McpRoot("metatron", "http://localhost:8999")))
-                .logHandler(message -> as().logger().debug("mcp log: %s", message))
+                .logHandler(message -> as().logger().log(message.level().name(), "mcp log: %s", message))
                 .transport(createTransport(
                         this.at(TRANSPORT).orElse(this.at(TYPE)),
                         this.at(uri(HEADERS)).orElse(rec()).jvm(),
@@ -97,7 +97,7 @@ public class mcpClient extends MRec {
             }
         })));
         final Rec tools = rec();
-        this.client.listTools().stream().forEach(t -> {
+        this.client.listTools().forEach(t -> {
             try {
                 final Rec evaluationArgs = Optional.ofNullable(t.parameters())
                         .map(JsonObjectSchema::properties)

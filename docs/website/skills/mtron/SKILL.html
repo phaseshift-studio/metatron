@@ -376,35 +376,23 @@
         <a href="SKILL.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>SKILL.md</a>
     </div>
     <div class="markdown-body">
-<h2>mtron: the basics on a uri/obj graph</h2>
-<p>mtron is a functional, fluent, monadic language that manipulates the metatron environment. metatron <strong>storage</strong> is a uri
-graph (uniform resource identifier) where any vertex can hold an associated obj (object). metatron <strong>processing</strong> is
-expressed as a data-flow aimed at guiding monads as they traverse the uri/obj-graph to ultimately halt on the solution
-to the problem represented as an mtron expression.</p>
-<p>Every denoted object can be reified, referred to, and manipulated -- a <strong>reflective computing environment</strong>.</p>
-<p><strong>if it exists, it has a uri. if it has a uri, it can be accessed.</strong></p>
-<h3>the three verbs: write, read, update</h3>
-<table>
-<thead>
-<tr><th align="center">do</th><th>mtron</th><th>what it does</th></tr>
-</thead>
-<tbody>
-<tr><td align="center">write</td><td><code>/a -&gt; 5</code></td><td>store <code>5</code> at address <code>/a</code></td></tr>
-<tr><td align="center">read</td><td><code>*/a</code></td><td>fetch (dereference) the obj stored at <code>/a</code></td></tr>
-<tr><td align="center">update</td><td><code>@/a &gt;&gt;= [d=&gt;5]</code></td><td>evolve the obj <em>in place</em> at <code>/a</code></td></tr>
-</tbody>
-</table>
-<p><strong><code>*</code> is a clone reference, <code>@</code> is an anchor reference.</strong> <code>*/a</code> yields a copy -- edits to it never reach the address.
-<code>@/a</code> returns the obj bound to <code>/a</code>, and
-<code>&gt;&gt;=</code> (the <code>update</code> instruction) writes the change back to the address. An update delta is mtron: a plain value
-replaces, a rec overlays, <code>+N</code> adds numerically,
-<code>+[v]</code> promotes to a set, and <code>none</code> deletes a key. The full algebra is chapter 14 of the language reference -- and
-<code>*update?docq</code>.</p>
+<h2>mtron: traversing the metatron graph</h2>
+<p>mtron is a functional, fluent, monadic language that manipulates the metatron environment.</p>
+<p>To understand mtron, it's necessary to first understand how structures and processes are organized in metatron.</p>
+<p>metatron's <strong>structure</strong> forms a <a href="https://en.wikipedia.org/wiki/Split_graph">split graph</a> with two vertex sets:
+<code>V = U + O</code>. The set <code>U</code> is the set of uris (<strong>uniform resource identifies</strong>) and they maintain an
+intra-edge set defined solely by path uri <strong>path adjacency</strong>. The set <code>O</code> is the set of objs (objects) whose
+intra-edge set denote <strong>shared/coupled state</strong>. Finally, there exists an <strong>inter-edge</strong> set linking vertices in <code>U</code> to
+vertices in <code>O</code> by according to a <strong>reference/referent</strong> relationship.</p>
+<p><strong>IMPORTANT</strong>: the metatron uri/obj split graph will more conveniently be referred to as <strong>the metatron graph</strong>.</p>
+<p>metatron's <strong>process</strong> is realized as a swarm of monadic traversers whose abstract path through the graph is defined by
+a functional ringoid -- a collection of functions structured using * (serial compose) and + (parallel branch). The
+functional language is called <strong>mtron</strong>.</p>
 <h3>space: storage</h3>
-<p>A system that supports the encoding of a uri/obj-graph is called a <code>space</code>. An example uri/obj-graph maintained by a
-<code>space</code> responsible for the address pattern
-<code>/a/#</code> is diagrammed below.</p>
+<p>A system that exposes a subset of the metatron graph is called a <code>space</code>. In the example below, a simple in-memory space
+implementation is used to maintain a subset of the uri address space that matches <code>/a/#</code> (<code>#</code> is recursive wildcard).</p>
 <pre><code class="language-mtron">mtron&gt; memspace::[pattern=&gt;/a/#]@/sys/space/a
+==&gt;memspace::[pattern=&gt;/a/#]@/sys/space/a
 </code></pre>
 <pre><code class="language-mtron">     1  2  3
   0   ⋮  ⋮  ⋮ 
@@ -415,8 +403,8 @@ replaces, a rec overlays, <code>+N</code> adds numerically,
 [q=&gt;r]   ⋮    ⋱
         'm'   [1.0,0xa5,true]
 </code></pre>
-<p>To construct the graph, denote uri vertices with path syntax, objs with obj syntax, and connect them with <code>-&gt;</code> (sugar'd
-<code>ref</code>).</p>
+<p>To construct the graph, a path syntax is used to denote a unique uri address. The primitive <code>-&gt;</code> (sugar'd
+<code>ref</code>) instruction writes the <strong>rhs</strong> (right-hand side) obj to the <strong>lhs</strong> (left-hand side) uri.</p>
 <pre><code class="language-mtron">mtron&gt; /a       -&gt; 0
 ==&gt;0
 mtron&gt; /a/x     -&gt; 1
@@ -428,14 +416,14 @@ mtron&gt; /a/x/y/z -&gt; 3
 mtron&gt; /a/b     -&gt; [q=&gt;r]
 ==&gt;[q=&gt;r]
 mtron&gt; /a/b/c   -&gt; |plus(2)
+==&gt;plus(2)
 mtron&gt; /a/b/d   -&gt; 'm'
 ==&gt;'m'
 mtron&gt; /a/b/d/e -&gt; [1.0,0xa5,true]
 ==&gt;[1.0000,0xa5,true]
 </code></pre>
-<p>To retrieve stored objs, dereference their uris. The uri is the <strong>reference</strong>, the obj is the <strong>referent</strong>; moving from
-one to the other is <strong>dereferencing</strong>
-(also, <strong>resolving</strong>).</p>
+<p>To retrieve stored objs, dereference their uris. The uri is the <strong>reference</strong>, the obj is the <strong>referent</strong> and the
+process of moving from one to the other is called <strong>dereferencing</strong> (also known as <strong>resolving</strong>).</p>
 <pre><code class="language-mtron">mtron&gt; */a
 ==&gt;0
 mtron&gt; */a/x
@@ -446,6 +434,7 @@ mtron&gt; */a/b
     c=&gt;plus(2),
     d=&gt;[e=&gt;[1.0000,0xa5,true]]]
 mtron&gt; */a/b/c
+==&gt;plus(2)
 mtron&gt; */a/b/d
 ==&gt;[e=&gt;[1.0000,0xa5,true]]
 </code></pre>
@@ -455,6 +444,34 @@ mtron.</p>
 <h4>uri categories</h4>
 <p>. <strong>absolute</strong>: a uri with a <code>/</code> prefix -- <code>/a/b</code>. . <strong>relative</strong>: with no <code>/</code> prefix -- <code>a/b</code>.</p>
 <p>. <strong>branch</strong> : a uri with a <code>/</code> suffix -- <code>a/b/</code>. . <strong>node</strong> : with no <code>/</code> suffix -- <code>a/b</code>.</p>
+<h3>graph crud cheat-sheet</h3>
+<table>
+<thead>
+<tr><th align="center">do</th><th>mtron sugar</th><th>mtron inst</th><th>what it does</th></tr>
+</thead>
+<tbody>
+<tr><td align="center">write</td><td><code>a -&gt; 5</code></td><td><code>ref?A{?}&lt;=uri(A{?}::T)</code></td><td>store <code>int::5</code> at address <code>a</code></td></tr>
+<tr><td align="center">read copy</td><td><code>*a</code></td><td><code>from?A{?}&lt;=#{?}(uri::T)</code></td><td>clone (dereference) the obj stored at <code>a</code></td></tr>
+<tr><td align="center">read anchor</td><td><code>@a</code></td><td><code>at?A{?}&lt;=#{?}(uri::T)</code></td><td>couple (main reference) to the obj stored at <code>a</code></td></tr>
+<tr><td align="center">update</td><td><code>@/a &gt;&gt;= [d=&gt;5]</code></td><td><code>update?A{?}&lt;=#(A{?}::T)</code></td><td>update the obj (from/at) <code>a</code></td></tr>
+</tbody>
+</table>
+<p><code>*</code> is a <strong>clone reference</strong>. <code>*a</code> copies the referent, where subsequent mutations do not affect the source obj.</p>
+<pre><code class="language-mtron">mtron&gt; a -&gt; 5
+==&gt;5
+mtron&gt; *a + 6
+==&gt;11
+mtron&gt; *a
+==&gt;5
+</code></pre>
+<p><code>@</code> is an <strong>anchor reference</strong>. <code>@a</code> couples the referent, where edits propagate back to the source obj.</p>
+<pre><code class="language-mtron">mtron&gt; a -&gt; 5
+==&gt;5
+mtron&gt; @a + 6
+==&gt;17@a
+mtron&gt; *a
+==&gt;17
+</code></pre>
 <h4>obj types</h4>
 <h5>mono types</h5>
 <table>
@@ -616,7 +633,11 @@ being <code>A</code> (i.e. <code>A{1}</code>) means the barrier is <em>reducing<
 <p><strong>Types and validation</strong> -- define a type, validate a value against it (<code>.as(type::T)</code>
 is structural validation during projection):</p>
 <pre><code class="language-mtron">mtron&gt; int::T[?&gt;0]@nat
+==&gt;int::T[is(gt(0))]@/m/math/nat
 mtron&gt; rec::T[?[name=&gt;str::T, age=&gt;nat::T]]@person
+==&gt;rec::T[?[
+     name=&gt;str::T,
+     age=&gt;nat::T]]@person
 mtron&gt; person::[name=&gt;'marko', age=&gt;29]
 ==&gt;person::[name=&gt;'marko',age=&gt;29]
 </code></pre>

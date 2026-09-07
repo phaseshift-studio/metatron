@@ -127,17 +127,11 @@ Moreover, if the `mcpServer` snippet has multiple inner servers endpoints define
 mtron> {"mcpServers": {
          "intellij": {
          }
-==>fail::[parse error at line 1, col 1:
-     {"mcpServers": {
-            "intellij": {
-   ...
-     ^
-     unclosed '{' — missing '}'?]@/sys/fail/218
+==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at '{"mcpServers": {
+         "intellij": {
+         }'
 mtron> }}
-==>fail::[parse error at line 1, col 1:
-     }}
-     ^
-     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/220
+==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at '}}'
 ```
 For `STDIO` transport MCP servers, the same process works:
 
@@ -149,24 +143,25 @@ do
 
 ```mtron
 mtron> *mcp_server
+==>rec::T[?[{?}tool=>{?}[uri::T=>inst::T],{?}resource=>#::T,{?}prompt=>#::T]][ctor?mcp_server<=#{?}(rec::T)]@/m/web/mcp/mcp_server
 ```### Using tools from the client
 
 After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entries keyed by `mTool.toolName(tid)` — the flattened instruction tid (e.g. `m_inst_eval_mtron`). Each entry carries `inst`, `name`, `desc`, and `arg`:
 
 ```mtron
 mtron> mcp_client::[host=>http://localhost:8777/mcp]@a
-==>fail::[unable to construct mcp_client::T: fail::[apply failure:
-   	[lhs]    │ [host=>http://localhost:8777/mcp]@a
-   	 \_type  │ /m/rec
-   	  \_pred │ []
-   	[inst]   │ ctor?rng=mcp_client&dom=#{?}([host=>http://localhost:8777/mcp]@a){<j>}
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [[host=>http://localhost:8777/mcp]@a][SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/224]@/sys/fail/226
+==>ERROR: unable to construct mcp_client::T: fail::[apply failure:
+	[lhs]    │ [host=>http://localhost:8777/mcp]@a
+	 \_type  │ /m/rec
+	  \_pred │ []
+	[inst]   │ ctor?rng=mcp_client&dom=#{?}([host=>http://localhost:8777/mcp]@a){<j>}
+	 \_dom   │ #{?}::T
+	 \_args  │ [[host=>http://localhost:8777/mcp]@a][SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/418
 mtron> *a>>tool
 mtron> [-- => [m_inst_eval_mtron=>tool::[inst=>..., name=>m_inst_eval_mtron, desc=>..., arg=>...], ...] --]
 mtron> [-- invoke a tool by applying its inst field --]
 mtron> a/tool/m_inst_eval_mtron/inst("1+2")
-==>fail::[unable to locate inst-f of a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/228
+==>fail::[unable to locate inst-f of a/tool/m_inst_eval_mtron/inst('1+2')@<0>]@/sys/fail/422
 mtron> [-- => 3 --]
 ```
 ### WebSocket

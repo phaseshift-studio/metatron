@@ -8,7 +8,7 @@
     <description><![CDATA[
         Right-click a docs source file to build it and open the result, with fast single-file turnaround.
         <ul>
-            <li><code>docs/skills/**/*.md</code> -> MarkdownRunner (single-file) -> opens the processed markdown in the editor.</li>
+            <li><code>docs/skills/**/*.md</code> -> MarkdownRunner (single-file, <code>--html</code>) -> processed markdown opened in the editor <b>and</b> the rendered sibling <code>.html</code> opened in the browser.</li>
             <li><code>docs/website/adoc/*.adoc</code> -> AsciiDocRunner (the adoc tree is one book; --single-boot) -> opens <code>docs/website/tractatus.html</code> in the browser.</li>
         </ul>
         Shells out to the pre-built metatron uber-jar (same runners as <code>bin/metatron-build-docker docs</code>).

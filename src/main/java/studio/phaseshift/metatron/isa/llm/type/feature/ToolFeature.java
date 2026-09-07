@@ -1,7 +1,6 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import dev.langchain4j.mcp.McpToolProvider;
-import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.tool.ToolProvider;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
@@ -16,7 +15,6 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.util.CommonUtil;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -69,7 +67,7 @@ public class ToolFeature extends AbstractFeature {
     /**
      * The mcp clients gathered from this feature's {@code tool} config surface.
      */
-    private final Set<McpClient> mcpClients = new HashSet<>();
+    private final Set<mcpClient> mcpClients = new HashSet<>();
 
     public ToolFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -114,8 +112,7 @@ public class ToolFeature extends AbstractFeature {
                     } else if (t instanceof mTool) {
                         this.addTool((mTool) t);
                     } else if (t.isRec() && t.test(MCP_CLIENT_TYPE)) {
-                        final McpClient client = Rec.wrap(t.as(), mcpClient.class).client();
-                        this.mcpClients.add(client);
+                        this.mcpClients.add(Rec.wrap(t.as(), mcpClient.class));
                     } else
                         this.addTool(mTool.tool(t));
 
@@ -133,7 +130,7 @@ public class ToolFeature extends AbstractFeature {
         // ── 3. project the registry onto the agent's LC4j tool bag ──
         LOG.status(DEBUG, "registering %s tools", this.toolProvider.getTools().size());
         if (!this.mcpClients.isEmpty())
-            this.addToolProvider(McpToolProvider.builder().mcpClients(new ArrayList<>(this.mcpClients)).build());
+            this.addToolProvider(McpToolProvider.builder().mcpClients(this.mcpClients.stream().map(mcpClient::client).toList()).build());
         return noobj();
     }
 

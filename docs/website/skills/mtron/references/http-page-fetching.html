@@ -394,6 +394,31 @@ mounted so <code>?mimeq=</code> query parameters work:</p>
          pattern =&gt; &lt;http://#&gt;,
          q       =&gt; [mimeq::[=&gt;]],          [-- enables ?mimeq= query processor --]
          route   =&gt; [/ =&gt; &lt;local:web&gt;]]
+==&gt;ERROR: unable to construct httpspace::T: fail::[apply failure:
+	[lhs]    │ [
+ host=&gt;http://localhost:8777,
+ pattern=&gt;http://#,
+ q=&gt;[mimeq::[
+ pattern=&gt;mimeq,
+ post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
+ route=&gt;[/=&gt;local:web]]
+	 \_type  │ /m/rec
+	  \_pred │ []
+	[inst]   │ /m/web/space/httpspace/ctor?rng=httpspace&amp;dom=#{?}([
+  host=&gt;http://localhost:8777,
+  pattern=&gt;http://#,
+  q=&gt;[mimeq::[
+ pattern=&gt;mimeq,
+ post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
+  route=&gt;[/=&gt;local:web]]){&lt;j&gt;}
+	 \_dom   │ #{?}::T
+	 \_args  │ [[
+ host=&gt;http://localhost:8777,
+ pattern=&gt;http://#,
+ q=&gt;[mimeq::[
+ pattern=&gt;mimeq,
+ post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
+ route=&gt;[/=&gt;local:web]]][Net&lt;-2&gt;:Address already in use[Net&lt;-2&gt;:Address already in use] ← Address already in use]][Address already in use[Net&lt;-2&gt;:Address already in use]][Address already in use]@/sys/fail/40
 </code></pre>
 <h3>Basic Dereference — Typed String (default)</h3>
 <p>Default reads return a typed <code>html::&quot;...&quot;</code> string with <code>tid = /m/web/mime/html</code>:</p>
@@ -404,9 +429,9 @@ mounted so <code>?mimeq=</code> query parameters work:</p>
    	  \_pred │ []
    	[inst]   │ *&lt;http://example.com&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://example.com&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com&gt;]][no active space supports pattern &lt;http://example.com&gt;]@/sys/fail/296
+   	 \_args  │ [&lt;http://example.com&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com&gt;]][no active space supports pattern &lt;http://example.com&gt;]@/sys/fail/44
 mtron&gt; *&lt;http://example.com&gt;.test(html::T)
-==&gt;fail::[unable to locate inst-f of test(html::T)@&lt;1&gt;]@/sys/fail/300
+==&gt;fail::[unable to locate inst-f of test(html::T)@&lt;1&gt;]@/sys/fail/52
 </code></pre>
 <p>The string is predicate-validated: <code>html::T</code>'s predicate checks that the content is valid HTML.</p>
 <h3>Structural Parse — rec::T DOM Tree</h3>
@@ -419,7 +444,7 @@ mtron&gt; *&lt;http://example.com?mimeq=application/x-mtron&gt;
    	  \_pred │ []
    	[inst]   │ *&lt;http://example.com?mimeq=application/x-mtron&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://example.com?mimeq=application/x-mtron&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com?mimeq=application/x-mtron&gt;]][no active space supports pattern &lt;http://example.com?mimeq=application/x-mtron&gt;]@/sys/fail/302
+   	 \_args  │ [&lt;http://example.com?mimeq=application/x-mtron&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com?mimeq=application/x-mtron&gt;]][no active space supports pattern &lt;http://example.com?mimeq=application/x-mtron&gt;]@/sys/fail/56
 mtron&gt; [-- via .as(rec::T) on a typed string --]
 mtron&gt; *&lt;http://example.com&gt;.as(rec::T)
 ==&gt;fail::[apply failure:
@@ -428,7 +453,7 @@ mtron&gt; *&lt;http://example.com&gt;.as(rec::T)
    	  \_pred │ []
    	[inst]   │ *&lt;http://example.com&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://example.com&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com&gt;]][no active space supports pattern &lt;http://example.com&gt;]@/sys/fail/304
+   	 \_args  │ [&lt;http://example.com&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com&gt;]][no active space supports pattern &lt;http://example.com&gt;]@/sys/fail/60
 </code></pre>
 <p>The <code>?mimeq=application/x-mtron</code> query is handled by <code>QCollection.mimeQ()</code> postRead processor, which (1) probes the
 content type from the response headers or URI extension, (2) tags the string with the correct TID (triggering predicate
@@ -470,52 +495,30 @@ validation), and (3) if <code>application/x-mtron</code> is requested, runs the 
 <p>Tree walking into the DOM tree requires the structural <code>rec::T</code> form. Use <code>.as(rec::T)</code> first, then walk the tree:</p>
 <pre><code class="language-mtron">mtron&gt; [-- Cast to rec first, then walk --]
 mtron&gt; *&lt;http://example.com&gt;.as(rec::T)/html/body/out           [-- body's children list --]
-==&gt;fail::[parse error at line 1, col 33:
-     *&lt;http://example.com&gt;.as(rec::T)/html/body/out           
-                                     ^
-     could not parse at '/']@/sys/fail/306
+==&gt;/html/body/out
 mtron&gt; *&lt;http://example.com&gt;.as(rec::T)/html/body/out/+/out      [-- first child's children (h1, p, p) --]
-==&gt;fail::[parse error at line 1, col 33:
-     *&lt;http://example.com&gt;.as(rec::T)/html/body/out/+/out      
-                                     ^
-     could not parse at '/']@/sys/fail/308
+==&gt;/html/body/out/+/out
 mtron&gt; *&lt;http://example.com&gt;.as(rec::T)/html/body/out/+/out/+/out  [-- grandchild (a tag) --]
-==&gt;fail::[parse error at line 1, col 33:
-     *&lt;http://example.com&gt;.as(rec::T)/html/body/out/+/out/+/out  
-                                     ^
-     could not parse at '/']@/sys/fail/310
+==&gt;/html/body/out/+/out/+/out
 </code></pre>
 <h4>With <code>+</code> wildcards</h4>
 <p>The <code>+</code> wildcard enters each list element, producing a stream/set:</p>
 <pre><code class="language-mtron">mtron&gt; *page.as(rec::T)/html/body/out/+/out        [-- all children of all body elements --]
-==&gt;fail::[parse error at line 1, col 17:
-     *page.as(rec::T)/html/body/out/+/out        
-                     ^
-     could not parse at '/']@/sys/fail/312
+==&gt;/html/body/out/+/out
 mtron&gt; *page.as(rec::T)/html/body/out/+/out/+/out  [-- all grandchildren --]
-==&gt;fail::[parse error at line 1, col 17:
-     *page.as(rec::T)/html/body/out/+/out/+/out  
-                     ^
-     could not parse at '/']@/sys/fail/314
+==&gt;/html/body/out/+/out/+/out
 </code></pre>
 <h4>Filtering with <code>where()</code></h4>
 <pre><code class="language-mtron">mtron&gt; [-- Filter for elements with tag=a, then extract href --]
 mtron&gt; *page.as(rec::T)/html/body/out/+/out/+/out/+&gt;.where([tag=&gt;a])&gt;&gt;href
-==&gt;fail::[parse error at line 1, col 17:
-     *page.as(rec::T)/html/body/out/+/out/+/out/+&gt;.where([tag...
-                     ^
-     could not parse at '/']@/sys/fail/316
+==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '&gt;.where([tag=&gt;a])&gt;&gt;href'
 </code></pre>
 <h3>Converting Back — rec::T → html::T</h3>
 <p>Serialize a <code>rec::T</code> DOM tree back to an HTML string with <code>.as(html::T)</code>:</p>
 <pre><code class="language-mtron">mtron&gt; [-- Parse to rec, mutate, serialize back to html string --]
 mtron&gt; *&lt;http://example.com&gt;.as(rec::T)
          .at(html/body/out -&gt; [/* modified children */]).as(html::T)
-==&gt;fail::[parse error at line 2, col 10:
-     ...http://example.com&gt;.as(rec::T)
-            .at(html/body/out -&gt; [/* modified childr...
-                                                ^
-     could not parse at '.']@/sys/fail/318
+==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '(html/body/out -&gt; [/* modified children */]).as(html::T)'
 </code></pre>
 <p><code>ObjHTMLSerializer.write()</code> handles both <code>str::T</code> (pass-through via <code>Jsoup.parse()</code>) and <code>rec::T</code> (DOM rendering).</p>
 <h3>Other MIME Types</h3>
@@ -527,7 +530,7 @@ mtron&gt; *&lt;http://example.com&gt;.as(rec::T)
    	  \_pred │ []
    	[inst]   │ *&lt;http://example.com/data.json&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://example.com/data.json&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com/data.json&gt;]][no active space supports pattern &lt;http://example.com/data.json&gt;]@/sys/fail/320
+   	 \_args  │ [&lt;http://example.com/data.json&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com/data.json&gt;]][no active space supports pattern &lt;http://example.com/data.json&gt;]@/sys/fail/78
 mtron&gt; *&lt;http://example.com/data.json?mimeq=application/x-mtron&gt;
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
@@ -535,7 +538,7 @@ mtron&gt; *&lt;http://example.com/data.json?mimeq=application/x-mtron&gt;
    	  \_pred │ []
    	[inst]   │ *&lt;http://example.com/data.json?mimeq=application/x-mtron&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://example.com/data.json?mimeq=application/x-mtron&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com/data.json?mimeq=application/x-mtron&gt;]][no active space supports pattern &lt;http://example.com/data.json?mimeq=application/x-mtron&gt;]@/sys/fail/322
+   	 \_args  │ [&lt;http://example.com/data.json?mimeq=application/x-mtron&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com/data.json?mimeq=application/x-mtron&gt;]][no active space supports pattern &lt;http://example.com/data.json?mimeq=application/x-mtron&gt;]@/sys/fail/82
 mtron&gt; *&lt;http://example.com/data.json&gt;.as(rec::T)
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
@@ -543,7 +546,7 @@ mtron&gt; *&lt;http://example.com/data.json&gt;.as(rec::T)
    	  \_pred │ []
    	[inst]   │ *&lt;http://example.com/data.json&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://example.com/data.json&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com/data.json&gt;]][no active space supports pattern &lt;http://example.com/data.json&gt;]@/sys/fail/324
+   	 \_args  │ [&lt;http://example.com/data.json&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com/data.json&gt;]][no active space supports pattern &lt;http://example.com/data.json&gt;]@/sys/fail/86
 </code></pre>
 <h3>MIME Type → TID Mapping</h3>
 <p><code>MIME.MIMEType.toTid()</code> provides the reverse mapping used by the <code>mimeq</code> query processor:</p>

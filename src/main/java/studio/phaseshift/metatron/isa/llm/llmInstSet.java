@@ -651,14 +651,16 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(DIR).maybe().asUri(), isa_(URI_TYPE).else_(uri(System.getProperty("user.dir"))),
                                                 uri(TIMEOUT).maybe(), isa_(TIME_TYPE).else_(real(10.0, MATH_SECOND_TID, null)),
                                                 uri(ALLOW).maybe(), LST_TYPE,
-                                                uri(REJECT).maybe(), LST_TYPE))
+                                                uri(REJECT).maybe(), LST_TYPE,
+                                                uri(ENV).maybe(), rec(URI_TYPE, union_(URI_TYPE, STR_TYPE).tryToInst())))
                                         .constructor(arg -> createStageLambdas(new BashFeature(arg.asRec().jvm(), LLM_BASH_FEATURE_TID, arg.vid())))
                                         .create(),
                                 null, null, mutableMap(
                                         uri(DIR).maybe(), "working directory of all bash processes",
                                         uri(TIMEOUT).maybe(), "default timeout for bash processes (agent can change at tool call)",
                                         uri(ALLOW).maybe(), "a lst of regex patterns to allow",
-                                        uri(REJECT).maybe(), "a lst of regex patterns to reject"),
+                                        uri(REJECT).maybe(), "a lst of regex patterns to reject",
+                                        uri(ENV).maybe(), "a rec of environment variables (uri => value) applied to every bash call"),
                                 "provide agent fine grained control of a bash terminal where allowed patterns and secondarily filtered by reject patterns"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)

@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.llm.type;
 
 import dev.langchain4j.data.embedding.Embedding;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
@@ -392,6 +393,18 @@ public class Agent extends MRec {
                         //.executeToolsConcurrently(ThreadExecutor.instance())
                         //.maxToolCallingRoundTrips(10)
                         .storeRetrievedContentInChatMemory(true)
+                        /*.registerListener(new AiServiceListener<AiServiceEvent>() {
+                            // TODO: supports developer defined events 
+                            @Override
+                            public Class<AiServiceEvent> getEventClass() {
+                                return null;
+                            }
+
+                            @Override
+                            public void onEvent(AiServiceEvent event) {
+
+                            }
+                        })*/
                         .toolProvider(this.hasFeature(LLM_TOOL_FEATURE_TID) ? this.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().getToolProvider() : new mToolProvider())
                         .toolExecutionErrorHandler((error, context) -> {
                             if (this.has(TOOL) && this.feature(LLM_TOOL_FEATURE_TID).asRec().has(ON_ERROR)) {
@@ -400,7 +413,15 @@ public class Agent extends MRec {
                                 LOG.error(error);
                             }
                             return new ToolErrorHandlerResult(error.getMessage());
-                        });
+                        }).toolArgumentsErrorHandler((error, context) ->
+                                new ToolErrorHandlerResult("""
+                                                           provided arguments do not match tool schema: %s
+                                                           """.formatted(error)))
+                        .hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.toolExecutionResultMessage(
+                                toolExecutionRequest,
+                                """
+                                %s tool does not exist. use list_tools() to see available tools.
+                                """.formatted(toolExecutionRequest.name())));
                 //.storeRetrievedContentInChatMemory(true);
                 // AgentUtility.buildService(this, service);
                 //////////////////////////////////////////////////////////////////////////////////

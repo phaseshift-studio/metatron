@@ -77,7 +77,6 @@ case "${1-}" in
         ;;
     docs)
         target="${2:-docs/skills/mtron}"
-        probe=0
         case "$target" in
             *.md)
                 case "$target" in
@@ -90,7 +89,6 @@ case "${1-}" in
                         out_dir=".metatron/skills${sub:+/$sub}"
                         ;;
                     *)
-                        probe=1
                         out_dir="_probe"
                         ;;
                 esac
@@ -99,13 +97,10 @@ case "${1-}" in
                 out_dir=".metatron/skills/$(basename "$target")"
                 ;;
         esac
+        # MarkdownRunner --html: markdown pass + SkillHtmlRenderer chained in one VM run
         cmd="set -eu
             [ -f $JAR ] || mvn $MVN_OPTS -DskipTests package
-            java $JVM_FLAGS -cp $JAR $DOCS.MarkdownRunner $target -o $out_dir"
-        if [ "$probe" = "0" ]; then
-            cmd="$cmd
-            java -cp $JAR $DOCS.SkillHtmlRenderer -s docs/website/skills"
-        fi
+            java $JVM_FLAGS -cp $JAR $DOCS.MarkdownRunner $target -o $out_dir --html"
         docker_run sh -c "$cmd"
         ;;
     run)

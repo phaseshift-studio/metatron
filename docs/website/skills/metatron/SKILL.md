@@ -15,23 +15,14 @@ snippet is sufficient for the spawned agent to execute mtron code.
 
 ```mtron
 mtron> ... [-- larger agent definition --]
-==>fail::[parse error at line 1, col 2:
-     ... 
-      ^
-     could not parse at '.']@/sys/fail/192
 mtron> feature=>[
         tool_feature::[tool=>[!*eval]]
         ... [-- other features attached to agent --]
-==>fail::[parse error at line 1, col 8:
-     feature=>[
-           tool_feature::[tool=>[!*eval...
-            ^
-     could not parse at '=' — unclosed '[' — missing ']'?]@/sys/fail/206
+==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at '=>[
+        tool_feature::[tool=>[!*eval]]
+        ...'
 mtron> ]
-==>fail::[parse error at line 1, col 1:
-     ]
-     ^
-     unexpected ']' — missing opening '[' or extra ']'?]@/sys/fail/208
+==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at ']'
 ```
 ## References
 

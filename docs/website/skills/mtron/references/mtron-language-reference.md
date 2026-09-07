@@ -27,10 +27,11 @@ mtron> 'mtron'     [-- str (single-quoted) --]
 mtron> """mtron""" [-- str (triple double-quoted, multi-line) --]
 ==>'mtron'
 mtron> '''mtron''' [-- str (triple single-quoted, multi-line --]
-==>fail::[parse error at line 1, col 3:
-     '''mtron''' 
-       ^
-     could not parse at ''']@/sys/fail/480
+==>ERROR: monad obj coefficient is greater than inst domain coefficient: 
+	obj       => ''
+	\_c       => 1
+	inst     X=> start?rng=A{**}&dom=noobj{0}('mtron'){<j>}@<1>
+	\_dom_c  X=> 0
 mtron> <a.b.c>     [-- uri (angle-bracket necessary of uri has . or space) --]
 ==><a.b.c>
 mtron> /foo/bar    [-- uri (path literal) --]
@@ -80,17 +81,19 @@ mtron> {1,1,2} [-- becomes {{2}1,2} (duplicates merged on coefficient) --]
 
 ```mtron
 mtron> [1,2,3].0         [--
-==>fail::[parse error at line 1, col 9:
-     [1,2,3].0         
-             ^
-     could not parse at '0']@/sys/fail/482
+==>ERROR: monad obj coefficient is greater than inst domain coefficient: 
+	obj       => [1,2,3]
+	\_c       => 1
+	inst     X=> start?rng=A{**}&dom=noobj{0}(0){<j>}@<1>
+	\_dom_c  X=> 0
 mtron> [1,2,3]>>0        [--
 ==>1
 mtron> [a=>1,b=>2].a     [--
-==>fail::[parse error at line 1, col 13:
-     [a=>1,b=>2].a     
-                 ^
-     could not parse at 'a']@/sys/fail/492
+==>ERROR: monad obj coefficient is greater than inst domain coefficient: 
+	obj       => [a=>1,b=>2]
+	\_c       => 1
+	inst     X=> start?rng=A{**}&dom=noobj{0}(a){<j>}@<1>
+	\_dom_c  X=> 0
 mtron> [a=>1,b=>2]>>a    [--
 ==>1
 ```
@@ -234,15 +237,15 @@ mtron> */path/to/obj              [-- read obj at uri (detached) --]
    	  \_pred │ []
    	[inst]   │ */path/to/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException<137>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/556
+   	 \_args  │ [/path/to/obj][MTronException<137>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/236
 mtron> @/path/to/obj              [-- real obj at uri (attached) --]
 ==>fail::[apply failure:
    	[lhs]    │ noobj
    	 \_type  │ noobj{0}
    	  \_pred │ []
-   	[inst]   │ at?rng=B{*}&dom=A{?}(/path/to/obj){<j>}
+   	[inst]   │ at?rng=B{*}&dom=A{?}(/path/to/obj){<j>}@<0>
    	 \_dom   │ A{?}::T
-   	 \_args  │ [/path/to/obj][MTronException<137>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/558
+   	 \_args  │ [/path/to/obj][MTronException<137>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/240
 mtron> *local:software/           [-- read with trailing
        *</path/to/obj>            [-- angle-bracket handles special chars --]
 ==>fail::[apply failure:
@@ -251,7 +254,7 @@ mtron> *local:software/           [-- read with trailing
    	  \_pred │ []
    	[inst]   │ */path/to/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException<137>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/560
+   	 \_args  │ [/path/to/obj][MTronException<137>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/244
 ```
 Wildcards:
 ```mtron
@@ -262,7 +265,7 @@ mtron> */path/+/obj               [-- + matches one segment --]
    	  \_pred │ []
    	[inst]   │ */path/+/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/obj][MTronException<137>:no active space supports pattern /path/+/obj]][no active space supports pattern /path/+/obj]@/sys/fail/562
+   	 \_args  │ [/path/+/obj][MTronException<137>:no active space supports pattern /path/+/obj]][no active space supports pattern /path/+/obj]@/sys/fail/248
 mtron> */path/+/+                 [-- ++, children at depth 2 --]
 ==>fail::[apply failure:
    	[lhs]    │ noobj
@@ -270,12 +273,9 @@ mtron> */path/+/+                 [-- ++, children at depth 2 --]
    	  \_pred │ []
    	[inst]   │ */path/+/+
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/+][MTronException<137>:no active space supports pattern /path/+/+]][no active space supports pattern /path/+/+]@/sys/fail/564
+   	 \_args  │ [/path/+/+][MTronException<137>:no active space supports pattern /path/+/+]][no active space supports pattern /path/+/+]@/sys/fail/252
 mtron> */path/#                   [-- [-- matches all remaining segments (recursive) --] --]
-==>fail::[parse error at line 1, col 9:
-     */path/#                    --]
-             ^
-     could not parse at ' ']@/sys/fail/566
+==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at '--]'
 ```
 **uri::T** type drives URI-specific operations:
 ```mtron
@@ -286,7 +286,7 @@ mtron> http://abc:123/a/b/c.>>scheme        [-- http --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&dom=uri(scheme){<j>}@<1>
    	 \_dom   │ uri::T
-   	 \_args  │ [scheme][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/scheme]][no active space supports pattern http://abc:123/a/b/c/scheme]@/sys/fail/576
+   	 \_args  │ [scheme][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/scheme]][no active space supports pattern http://abc:123/a/b/c/scheme]@/sys/fail/282
 mtron> http://abc:123/a/b/c.>>host          [-- abc --]
 ==>fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -294,7 +294,7 @@ mtron> http://abc:123/a/b/c.>>host          [-- abc --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&dom=uri(host){<j>}@<1>
    	 \_dom   │ uri::T
-   	 \_args  │ [host][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/host]][no active space supports pattern http://abc:123/a/b/c/host]@/sys/fail/586
+   	 \_args  │ [host][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/host]][no active space supports pattern http://abc:123/a/b/c/host]@/sys/fail/310
 mtron> http://abc:123/a/b/c.>>port          [-- 123 (noobj if no port) --]
 ==>fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -302,7 +302,7 @@ mtron> http://abc:123/a/b/c.>>port          [-- 123 (noobj if no port) --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&dom=uri(port){<j>}@<1>
    	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/port]][no active space supports pattern http://abc:123/a/b/c/port]@/sys/fail/596
+   	 \_args  │ [port][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/port]][no active space supports pattern http://abc:123/a/b/c/port]@/sys/fail/338
 mtron> http://abc:123/a/b/c.>>authority     [-- abc:123 --]
 ==>fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -310,7 +310,7 @@ mtron> http://abc:123/a/b/c.>>authority     [-- abc:123 --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&dom=uri(authority){<j>}@<1>
    	 \_dom   │ uri::T
-   	 \_args  │ [authority][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/authority]][no active space supports pattern http://abc:123/a/b/c/authority]@/sys/fail/606
+   	 \_args  │ [authority][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/authority]][no active space supports pattern http://abc:123/a/b/c/authority]@/sys/fail/366
 mtron> http://abc:123/a/b/c.>>{schema,path} [-- {http,/a/b/c} --]
 mtron> /a/b/c>>0                            [-- a --]
 ==>/a/b/c
@@ -338,11 +338,13 @@ mtron> [a,b].as(rec::T)          [-- [0=>a,1=>b] --]
 Custom types via `tid::T[predicate][constructor]@vid`:
 ```mtron
 mtron> int::T[is(gt(0))]@nat     [-- type nat, only positive ints --]
+==>int::T[is(gt(0))]@/m/math/nat
 mtron> int::T[?>0]@nat           [-- syntax sugar on is(gt(0)) --]
+==>int::T[is(gt(0))]@/m/math/nat
 mtron> nat::2                    [-- ok --]
 ==>nat::2
 mtron> nat::-1                   [-- <ERROR> --]
-==>fail::[-1 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/616
+==>ERROR: -1 is not a int::T[is(gt(0))]@/m/math/nat
 ```
 ---
 
@@ -540,9 +542,6 @@ mtron> [1,2]@a >>= [_,+4]                      [-- [1,6]@a  (second element +4) 
 mtron> [a=>1,b=>2] >>= [b=>none]               [-- [a=>1]  (remove field b) --]
 ==>[a=>1]
 mtron> @<people/+>.>>= [name=>"Micky Mouse"]   [-- wildcard update --]
-==>[name=>'Micky Mouse',role=>developer]
-==>[name=>'Micky Mouse',role=>oracle]
-==>[name=>'Micky Mouse',role=>architect]
 ```
 `@` means "anchor the write-back to the VID" (persist).  `*` means "anonymous copy" (no write-back):
 ```mtron
@@ -698,8 +697,9 @@ mtron> ?int::T    [-- check if type is int --]
 ```mtron
 mtron> [-- Chaining example (read test data from test file): --]
 mtron> {1,2,3,4}.sum{2}().sum?int<=int{1,7}().sum()-<[_,_]>-.sum?int<=int{2}()  #
-==>fail::[parse error at line 1, col 74:
-     ...,7}().sum()-<[_,_]>-.sum?int<=int{2}()  #
-                                                ^
-     could not parse at '#' — unclosed '<' — missing '>'?]@/sys/fail/784
+==>ERROR: monad obj coefficient is greater than inst domain coefficient: 
+	obj       => 40
+	\_c       => 1
+	inst     X=> start?rng=A{**}&dom=noobj{0}(<#>){<j>}@<6>
+	\_dom_c  X=> 0
 ```

@@ -361,7 +361,7 @@ public interface Inst extends Call {
                 && !instDomRngMatch(clhs, cinst.dom()) && clhs.unique()) {
             // if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
             clhs = clhs.c(cInt::one);
-            cinst = this.resolve(clhs);
+            cinst = Inst.Helper.bindQ(lhs, this, this.resolve(clhs));
             modulateC = true;
             //  }
             if (!instDomRngMatch(clhs, cinst.dom()))
@@ -646,6 +646,12 @@ public interface Inst extends Call {
             final Inst resolved = inst.args(cargs);
             //  LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
             return resolved;
+        }
+
+        public static Inst bindQ(final Obj lhs, final Inst userInst, final Inst apiInst) {
+            if (userInst.tid().hasQ(BLOCK))
+                return apiInst.tid(apiInst.tid().addQ(BLOCK));
+            return apiInst;
         }
 
         public static Inst bindGenerics(final Obj lhs, final Inst apiInst, final Obj userInst) {

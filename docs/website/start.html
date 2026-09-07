@@ -578,12 +578,83 @@ For now, create the following bootloader as plain text&#8201;&#8212;&#8201;it wi
 <div class="title">start.mtron bootloader</div>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">import(/m/web);
+==&gt;instset::[
+    pattern=&gt;/m/web/#,
+    q=&gt;[docq::[
+    pattern=&gt;docq,
+    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+    space=&gt;[super=&gt;!*/m],
+    const=&gt;[[remote_console=&gt;inst()]@helper,[=&gt;]@obj_xml,obj_html::[=&gt;]@obj_html,obj_json::[
+     density=&gt;OPAQUE,
+     wrap_uri=&gt;true,
+     bias_towards_uri=&gt;true,
+     bias_towards_objs=&gt;false]@obj_json,obj_markdown::[=&gt;]@obj_markdown,obj_text::[=&gt;]@obj_text,/m/mach/io/serializer/mtron::[
+     clip=&gt;[
+      rec=&gt;10,
+      lst=&gt;10,
+      str=&gt;60,
+      uri=&gt;2147483647,
+      real=&gt;4,
+      bytes=&gt;60,
+      fail=&gt;60],
+     justify=&gt;true]@/m/mach/io/serializer/string/clean,bytebuffer::[=&gt;]@bytebuffer,obj_json::[
+     density=&gt;&lt;TRANSPARENT&gt;,
+     wrap_uri=&gt;true,
+     bias_towards_uri=&gt;true,
+     bias_towards_objs=&gt;false]@obj_json,obj_bson::[=&gt;]@obj_bson,...(1 more)],
+    type=&gt;[mime::T,xml::T,html::T,json::T,yaml::T,xsv::T,csv::T,css::T,markdown::T,java::T,...(25 more)],
+    inst=&gt;[ping?time&lt;=#{?}(uri::T),format?str&lt;=markdown(),as?skill&lt;=markdown(str::T),as?rec&lt;=json(rec::T),as?rec&lt;=yaml(rec::T),as?json&lt;=rec(json::T),as?rec&lt;=xml(rec::T),as?xml&lt;=rec(xml::T),as?rec&lt;=html(rec::T),as?html&lt;=rec(html::T),...(11 more)]]@/m/web
 memspace::[pattern  =&gt;/usr/#, q     =&gt;[docq::[=&gt;],subq::[=&gt;]]]@/sys/space/usr;
+==&gt;memspace::[
+    pattern=&gt;/usr/#,
+    q=&gt;[
+     docq::[
+      pattern=&gt;docq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+     subq::[
+      pattern=&gt;subq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;[,]]]]@/sys/space/usr
 memspace::[pattern  =&gt;g:#,    q     =&gt;[subq::[=&gt;]]]           @/sys/space/graph;
+==&gt;memspace::[
+    pattern=&gt;g:#,
+    q=&gt;[subq::[
+    pattern=&gt;subq,
+    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+    qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+    obj=&gt;[,]]]]@/sys/space/graph
 fsspace::[pattern   =&gt;local:#,route =&gt;[local: =&gt; &lt;~/&gt;]]       @/sys/space/fs;
+==&gt;fsspace::[
+    pattern=&gt;local:#,
+    route=&gt;[local:=&gt;/home/killswitch/]]@/sys/space/fs
 httpspace::[pattern =&gt;http://#,
              host    =&gt;http://localhost:8765,
              route   =&gt;[/            =&gt;local:]]@/sys/space/http;
+==&gt;ERROR: unable to construct httpspace::T: fail::[apply failure:
+	[lhs]    │ [
+ pattern=&gt;http://#,
+ host=&gt;http://localhost:8765,
+ route=&gt;[/=&gt;local:]]@/sys/space/http
+	 \_type  │ /m/rec
+	  \_pred │ []
+	[inst]   │ /m/web/space/httpspace/ctor?rng=httpspace&amp;dom=#{?}([
+  pattern=&gt;http://#,
+  host=&gt;http://localhost:8765,
+  route=&gt;[/=&gt;local:]]@/sys/space/http){&lt;j&gt;}
+	 \_dom   │ #{?}::T
+	 \_args  │ [[
+ pattern=&gt;http://#,
+ host=&gt;http://localhost:8765,
+ route=&gt;[/=&gt;local:]]@/sys/space/http][Net&lt;-2&gt;:Address already in use[Net&lt;-2&gt;:Address already in use] ← Address already in use]][Address already in use[Net&lt;-2&gt;:Address already in use]][Address already in use]@/sys/fail/1226
 console::[=&gt;]@/usr/ui/console;
 ==&gt;console::[=&gt;]@/usr/ui/console</code></pre>
 </div>
@@ -684,8 +755,8 @@ mtron&gt; */sys/space/+.&gt;&gt;pattern
 ==&gt;g:#
 ==&gt;ha:#
 ==&gt;/usr/#
-==&gt;/te/hot/#
 ==&gt;http://#
+==&gt;/te/hot/#
 ==&gt;acme:#
 ==&gt;/sys/#
 ==&gt;loc:#
@@ -699,8 +770,8 @@ mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
 ==&gt;{5}[=&gt;]
 ==&gt;[/te/cold/#=&gt;[/te/cold/=&gt;&lt;&gt;]]
 ==&gt;[ha:#=&gt;[ha:=&gt;/home/chips]]
-==&gt;[/te/hot/#=&gt;[/te/hot/=&gt;&lt;&gt;]]
 ==&gt;[http://#=&gt;[/=&gt;local:]]
+==&gt;[/te/hot/#=&gt;[/te/hot/=&gt;&lt;&gt;]]
 ==&gt;[acme:#=&gt;[acme:=&gt;&lt;&gt;]]
 ==&gt;[farm:#=&gt;[farm:=&gt;&lt;&gt;]]
 ==&gt;[mtronfs:#=&gt;[mtronfs:=&gt;&lt;.metatron&gt;]]

@@ -492,41 +492,36 @@
 <pre><code class="language-mtron">mtron&gt; {&quot;mcpServers&quot;: {
          &quot;intellij&quot;: {
          }
-==&gt;fail::[parse error at line 1, col 1:
-     {&quot;mcpServers&quot;: {
-            &quot;intellij&quot;: {
-   ...
-     ^
-     unclosed '{' — missing '}'?]@/sys/fail/218
+==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '{&quot;mcpServers&quot;: {
+         &quot;intellij&quot;: {
+         }'
 mtron&gt; }}
-==&gt;fail::[parse error at line 1, col 1:
-     }}
-     ^
-     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/220
+==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '}}'
 </code></pre>
 <p>For <code>STDIO</code> transport MCP servers, the same process works:</p>
 <pre><code>mcp_client::[command=&gt;[&lt;/home/killswitch/.local/bin/codegraph&gt;,'serve', '--mcp']]@codegraph;
 </code></pre>
 <p>do</p>
 <pre><code class="language-mtron">mtron&gt; *mcp_server
+==&gt;rec::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_server&lt;=#{?}(rec::T)]@/m/web/mcp/mcp_server
 ```### Using tools from the client
 
 After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entries keyed by `mTool.toolName(tid)` — the flattened instruction tid (e.g. `m_inst_eval_mtron`). Each entry carries `inst`, `name`, `desc`, and `arg`:
 
 ```mtron
 mtron&gt; mcp_client::[host=&gt;http://localhost:8777/mcp]@a
-==&gt;fail::[unable to construct mcp_client::T: fail::[apply failure:
-   	[lhs]    │ [host=&gt;http://localhost:8777/mcp]@a
-   	 \_type  │ /m/rec
-   	  \_pred │ []
-   	[inst]   │ ctor?rng=mcp_client&amp;dom=#{?}([host=&gt;http://localhost:8777/mcp]@a){&lt;j&gt;}
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [[host=&gt;http://localhost:8777/mcp]@a][SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/224]@/sys/fail/226
+==&gt;ERROR: unable to construct mcp_client::T: fail::[apply failure:
+	[lhs]    │ [host=&gt;http://localhost:8777/mcp]@a
+	 \_type  │ /m/rec
+	  \_pred │ []
+	[inst]   │ ctor?rng=mcp_client&amp;dom=#{?}([host=&gt;http://localhost:8777/mcp]@a){&lt;j&gt;}
+	 \_dom   │ #{?}::T
+	 \_args  │ [[host=&gt;http://localhost:8777/mcp]@a][SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/418
 mtron&gt; *a&gt;&gt;tool
 mtron&gt; [-- =&gt; [m_inst_eval_mtron=&gt;tool::[inst=&gt;..., name=&gt;m_inst_eval_mtron, desc=&gt;..., arg=&gt;...], ...] --]
 mtron&gt; [-- invoke a tool by applying its inst field --]
 mtron&gt; a/tool/m_inst_eval_mtron/inst(&quot;1+2&quot;)
-==&gt;fail::[unable to locate inst-f of a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/228
+==&gt;fail::[unable to locate inst-f of a/tool/m_inst_eval_mtron/inst('1+2')@&lt;0&gt;]@/sys/fail/422
 mtron&gt; [-- =&gt; 3 --]
 </code></pre>
 <h4>WebSocket</h4>

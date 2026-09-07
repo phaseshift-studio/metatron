@@ -401,9 +401,9 @@
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- const=&gt;[noobj],
- inst=&gt;[as?bool&lt;=bool(bool::T),as?bytes&lt;=bool(bytes::T),as?int&lt;=bool(int::T),as?real&lt;=bool(real::T),as?str&lt;=bool(str::T),plus?bool&lt;=bool(bool::T),mult?bool&lt;=bool(bool::T),not?bool&lt;=bool(),as?bool&lt;=bytes(bool::T),as?str&lt;=bytes(str::T),...(233 more)],
  rewrite=&gt;[/m/inst/rewrite/id_removal?code{?}&lt;=code(),/m/inst/rewrite/map_nest?code{?}&lt;=code(),/m/inst/rewrite/map_inst?code{?}&lt;=code(),/m/inst/rewrite/else_after_count?code{?}&lt;=code(),/m/inst/rewrite/plus_zero?code{?}&lt;=code(),/m/inst/rewrite/mult_one?code{?}&lt;=code(),/m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),/m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),/m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code(),/m/inst/rewrite/range_skip_take?code{?}&lt;=code(),...(1 more)],
+ inst=&gt;[as?bool&lt;=bool(bool::T),as?bytes&lt;=bool(bytes::T),as?int&lt;=bool(int::T),as?real&lt;=bool(real::T),as?str&lt;=bool(str::T),plus?bool&lt;=bool(bool::T),mult?bool&lt;=bool(bool::T),not?bool&lt;=bool(),as?bool&lt;=bytes(bool::T),as?str&lt;=bytes(str::T),...(233 more)],
+ const=&gt;[noobj],
  type=&gt;[#::T,bool::T,int::T,real::T,bytes::T,str::T,uri::T,rel::T,lst::T,rec::T,...(29 more)],
  space=&gt;[sub=&gt;{!*/m/sys,!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}]]@/m</code></pre>
                     </div>
@@ -1616,10 +1616,10 @@ a/b/c/                           [-- relative/branch uri            --]
     <p class="mb-0 text-light">storage systems structured as uri addressed objs</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}scheme" class="text-light">{?}scheme</a> <span class="text-light">=&gt;</span> <a href="#'an instset defining the type structure of the space objs'" class="text-info">&#39;an instset defining the type structure of the space objs&#39;</a>
-  <a href="#pattern" class="text-light">pattern</a> <span class="text-light">=&gt;</span> <a href="#'the uri address region the space will manage'" class="text-info">&#39;the uri address region the space will manage&#39;</a>
-  <a href="#{?}q" class="text-light">{?}q</a> <span class="text-light">=&gt;</span> <a href="#'query processors (qproc) that augment space capabilities'" class="text-info">&#39;query processors (qproc) that augment space capabilities&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#pattern" class="text-light">pattern</a> <span class="text-light">=&gt;</span> <a href="#'the uri address region the space will manage'" class="text-info">&#39;the uri address region the space will manage&#39;</a>
+  <a href="#{?}scheme" class="text-light">{?}scheme</a> <span class="text-light">=&gt;</span> <a href="#'an instset defining the type structure of the space objs'" class="text-info">&#39;an instset defining the type structure of the space objs&#39;</a>
   <a href="#{?}route" class="text-light">{?}route</a> <span class="text-light">=&gt;</span> <a href="#'a secondary router after global router for inter and intra-space redirects'" class="text-info">&#39;a secondary router after global router for inter and intra-space redirects&#39;</a>
+  <a href="#{?}q" class="text-light">{?}q</a> <span class="text-light">=&gt;</span> <a href="#'query processors (qproc) that augment space capabilities'" class="text-info">&#39;query processors (qproc) that augment space capabilities&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>

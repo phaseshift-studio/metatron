@@ -267,13 +267,8 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         return this.logger().isEnabledForLevel(Level.ERROR) ? this.logLevel(Level.ERROR, f, args) : this;
     }
 
-    public GraphittyLogger status(final String level, final Object f, final Object... args) {
+    public GraphittyLogger log(final String level, final Object f, final Object... args) {
         final String message = f.toString().formatted(args);
-        try {
-            StatusLine.message(str(message));
-        } catch (final Exception e) {
-            // do nothing
-        }
         return switch (level) {
             case TRACE -> this.trace(message);
             case DEBUG -> this.debug(message);
@@ -282,6 +277,16 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
             case ERROR -> this.error(message);
             default -> this;
         };
+    }
+
+    public GraphittyLogger status(final String level, final Object f, final Object... args) {
+        final String message = f.toString().formatted(args);
+        try {
+            StatusLine.message(str(message));
+        } catch (final Exception e) {
+            // do nothing
+        }
+        return log(level, message);
     }
 
     /// ///////////////////////////////

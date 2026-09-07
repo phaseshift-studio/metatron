@@ -1803,6 +1803,9 @@ h6:hover .heading-anchor {
 
 .markdown-body code {
     font-family: 'JetBrains Mono', 'Courier New', monospace;
+    /* never ligate multi-character operators (=> -< >= <= >>= etc.) into single
+       look-alike glyphs — mtron source must read back as the exact characters */
+    font-variant-ligatures: none;
     color: var(--mblue);
     background: rgba(70, 105, 221, 0.10);
     padding: 0.15em 0.4em;
