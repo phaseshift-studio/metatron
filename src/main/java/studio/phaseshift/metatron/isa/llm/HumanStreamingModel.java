@@ -47,7 +47,7 @@ public class HumanStreamingModel implements StreamingChatModel {
     @Override
     public void doChat(final ChatRequest chatRequest, final StreamingChatResponseHandler handler) {
         // Run on a separate thread so the caller isn't blocked
-        ThreadExecutor.instance().submit(() -> {
+        ThreadExecutor.instance().execute(() -> {
             try {
                 final List<ChatMessage> messages = chatRequest.messages();
                 final ChatMessage lastMessage = messages.getLast();

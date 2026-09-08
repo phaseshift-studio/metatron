@@ -21,44 +21,34 @@ package studio.phaseshift.metatron.isa.mach.io.type;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.util.MTronException;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/*
+/**
+ * An {@link MRec}-backed convenience base for {@link Serializer}s whose two
+ * sides are <em>not</em> {@link Obj} — i.e. a format-to-format pair such as
+ * {@code HTMLMarkdownSerializer} (markdown text ⇄ html text). Extending this
+ * class makes the serializer a first-class metatron {@code Rec}: it carries a
+ * tid/vid, is configurable via {@code at(...)}, and can be addressed in space,
+ * exactly like the Obj serializer family.
+ *
+ * <p>Serializers that map {@code Obj} to/from an external format should extend
+ * {@link AbstractObjSerializer} instead — it anchors {@code A = Obj} on this
+ * class ({@code AbstractObjSerializer<T> extends AbstractSerializer<Obj, T>})
+ * and layers on the Obj-typed API from {@link ObjSerializer}.
+ *
+ * @param <A> the canonical/metatron-side type
+ * @param <B> the external/encoded type
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public abstract class AbstractObjSerializer<T> extends AbstractSerializer<Obj, T> implements ObjSerializer<T> {
+public abstract class AbstractSerializer<A, B> extends MRec implements Serializer<A, B> {
 
-    protected AbstractObjSerializer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+    protected AbstractSerializer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
 
-    protected AbstractObjSerializer(final fURI tid, final fURI vid) {
+    protected AbstractSerializer(final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), tid, vid);
-    }
-
-    @Override
-    public ByteBuffer outputBytes(final Obj obj) throws MTronException {
-        final T t = this.write(obj);
-        return ByteBuffer.wrap(t.toString().getBytes(StandardCharsets.UTF_8));
-    }
-
-    @Override
-    public ObjSerializer<T> clone() {
-        return this;
-    }
-
-    public String toString() {
-        return "!*" + this.vid();
-    }
-
-    public boolean equals(final Object other) {
-        if (other == null)
-            return false;
-        return this.getClass().equals(other.getClass());
     }
 }

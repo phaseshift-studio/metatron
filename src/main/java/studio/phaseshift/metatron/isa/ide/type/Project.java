@@ -68,21 +68,21 @@ public class Project extends MRec {
         ////////////////////////////////////////////////////////////////
         project.at(CODE, lst(), MUTABLE);
         project.at("idx", rec(), MUTABLE);
-        final Rec subscription = ObjmtronSerializer.parse("""
-                                                          sub::[target=> <%s/code/#>,
-                                                                code  => >>0.as(rec::T)>>path==[_,_,_,_,_,_].to(temp).
-                                                                           as?uri<=lst(uri::T).to(x).*(_).>>=[location=>none].as(web:java::T).
-                                                                           to(*(*x.>>location).side(-<[location=>_,status=>saved,time=>!math:datetime_now()].print("saved ", _, "\\n"))).
-                                                                           map(<%s/src>.mult(*temp.reverse().>-.take(1)))]
-                                                          """.formatted(root.vid(), root.vid()));
-
-        project.at(SUB, rec("auto_save", subscription), MUTABLE);
-        Router.writeToSpace(root.vid().extend("code/#").addQ(SUBQ), rec(CODE, auto_from_(root.vid().extend(f("sub/auto_save/code"))).apply_(id_()).tryToInst()));
+        project.addSubscription(f("auto_save"),
+                ObjmtronSerializer.parse("""
+                                         sub::[target=> <%s/code/#>,
+                                               code  => |(>>0.as(rec::T)>>path==[_,_,_,_,_,_].to(temp).
+                                                          as?uri<=lst(uri::T).to(x).*(_).>>=[location=>none].as(web:java::T).
+                                                          to(*(*x.>>location).side(-<[location=>_,status=>saved,time=>!math:datetime_now()].print("saved ", _, "\\n"))).
+                                                          map(<%s/src>.mult(*temp.reverse().>-.take(1))))]
+                                         """.formatted(project.vid(), project.vid())));
         return project(project.selfTID(IDE_PROJECT_TID).asRec());
     }
 
-    public void addSubscription() {
-
+    public Project addSubscription(final fURI name, final Rec subscription) {
+        this.at(SUB, this.at(SUB).orElse(rec()).at(name, subscription, MUTABLE), MUTABLE);
+        Router.writeToSpace(this.vid().extend("code/#").addQ(SUBQ), rec(CODE, auto_from_(this.vid().extend("sub/auto_save/code")).apply_(id_()).tryToInst()));
+        return this;
     }
 
     public void addCommand() {

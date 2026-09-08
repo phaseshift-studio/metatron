@@ -42,7 +42,7 @@ import java.util.Locale;
  *
  * <ul>
  *   <li>{@code .md} under {@code docs/skills/} → {@code MarkdownRunner <file> -o <outDir> --html}
- *       (single-file native; {@code --html} chains SkillHtmlRenderer) → opens the processed
+ *       (single-file native; {@code --html} runs the site-html pass) → opens the processed
  *       markdown in the editor and the rendered sibling {@code .html} in the browser.</li>
  *   <li>{@code .adoc} under {@code docs/website/adoc/} → {@code AsciiDocRunner docs/website/adoc
  *       ... --single-boot} (the adoc tree is one book; the viewable artifact is
@@ -210,7 +210,7 @@ public class DocsBuildAction extends AnAction {
         switch (kind) {
             case MD -> {
                 // Single-file markdown (MarkdownRunner): process the md and, with --html,
-                // chain SkillHtmlRenderer so the rendered sibling .html is produced too.
+                // run the site-html pass so the rendered sibling .html is produced too.
                 command.add(MD_RUNNER);
                 command.add(target);
                 command.add("-o");

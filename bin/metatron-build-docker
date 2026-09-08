@@ -9,7 +9,7 @@
 # Usage:
 #   bin/metatron-build-docker build                 # mvn package (skip tests)
 #   bin/metatron-build-docker test [mvn test args]  # e.g. test -Dtest=MIMETest
-#   bin/metatron-build-docker docs [dir|file.md]    # MarkdownRunner (+ SkillHtmlRenderer)
+#   bin/metatron-build-docker docs [dir|file.md]    # MarkdownRunner (--html site pass via HTMLMarkdownSerializer)
 #       dir      — a skill root (default docs/skills/mtron)
 #       file.md  — single probe mode: a file under docs/skills/ lands in the
 #                  matching .metatron/skills/ slot; any other .md goes to _probe/
@@ -97,7 +97,7 @@ case "${1-}" in
                 out_dir=".metatron/skills/$(basename "$target")"
                 ;;
         esac
-        # MarkdownRunner --html: markdown pass + SkillHtmlRenderer chained in one VM run
+        # MarkdownRunner --html: markdown pass + site-html render in one VM run
         cmd="set -eu
             [ -f $JAR ] || mvn $MVN_OPTS -DskipTests package
             java $JVM_FLAGS -cp $JAR $DOCS.MarkdownRunner $target -o $out_dir --html"

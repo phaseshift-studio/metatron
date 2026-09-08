@@ -64,7 +64,7 @@ artifacts land back host-owned.
 ```bash
 bin/metatron-build-docker build                     # mvn package (skip tests)
 bin/metatron-build-docker test -Dtest=memSpaceTest  # test run in the container
-bin/metatron-build-docker docs [dir|file.md]        # MarkdownRunner + SkillHtmlRenderer
+bin/metatron-build-docker docs [dir|file.md]        # MarkdownRunner --html (site html via HTMLMarkdownSerializer)
 bin/metatron-build-docker run '<cmd>'               # raw shell in the container
 ```
 
@@ -78,7 +78,9 @@ bin/metatron-build-docker run '<cmd>'               # raw shell in the container
   `--name` around these (a stale container from a killed run collides).
 - Docs pipeline (`docs` subcommand): `MarkdownRunner` evaluates the ` ```mtron_pre ` blocks of
   `docs/skills/*` and writes the single processed copy via `.metatron/skills`, which is a **symlink to
-  `docs/website/skills`**; `SkillHtmlRenderer` renders the HTML. `docs` also takes a single `.md` file (probe mode): a
+  `docs/website/skills`**; `MarkdownRunner --html` renders the site HTML (body conversion via
+  `HTMLMarkdownSerializer`, page chrome assembled in the runner — this replaced the deleted
+  `docs/SkillHtmlRenderer`). `docs` also takes a single `.md` file (probe mode): a
   `docs/skills/...` file lands in its `.metatron/skills/` slot, any other file goes to `_probe/`. Rule: every example in
   a skill doc must be verified through this pipeline before shipping —
   `fail::` lines in the processed output are broken examples.
