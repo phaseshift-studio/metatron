@@ -519,7 +519,13 @@ maven build commands are attached to the <code>project::T</code> for each of acc
      Calculator=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
      EchoTest=&gt;inst?#{*}&lt;=#{?}(#{*}::T)],
     code=&gt;[,],
-    idx=&gt;[=&gt;]]@/dev/scratch
+    idx=&gt;[=&gt;],
+    sub=&gt;[auto_save=&gt;sub::[
+    target=&gt;/dev/scratch/code/#,
+    code=&gt;rshift(0).as(rec::T).rshift(path).select([id(),id(),id(),id(),id(),id()]).to(temp).as?rng=uri&amp;dom=lst(uri::T).to(x).*id().update([location=&gt;none]).as(java::T).to(**x.rshift(location).side(split([
+     location=&gt;id(),
+     status=&gt;saved,
+     time=&gt;!math:datetime_now()]).print('saved ',id(),'\n'))).map(map(/dev/scratch/src).mult(*temp.reverse().merge().take(1)))]]]@/dev/scratch
 </code></pre>
 <p>Now that the project is stored in space, build commands can be added and the project can be built.</p>
 <pre><code class="language-mtron">mtron&gt; @/dev/scratch &gt;&gt;= +[command =&gt; [mvn_build =&gt; !ide:command('mvn -f src/test/resources/scratch compile'),
@@ -534,6 +540,12 @@ maven build commands are attached to the <code>project::T</code> for each of acc
      EchoTest=&gt;inst?#{*}&lt;=#{?}(#{*}::T)],
     code=&gt;[,],
     idx=&gt;[=&gt;],
+    sub=&gt;[auto_save=&gt;sub::[
+    target=&gt;/dev/scratch/code/#,
+    code=&gt;rshift(0).as(rec::T).rshift(path).select([id(),id(),id(),id(),id(),id()]).to(temp).as?rng=uri&amp;dom=lst(uri::T).to(x).*id().update([location=&gt;none]).as(java::T).to(**x.rshift(location).side(split([
+     location=&gt;id(),
+     status=&gt;saved,
+     time=&gt;!math:datetime_now()]).print('saved ',id(),'\n'))).map(map(/dev/scratch/src).mult(*temp.reverse().merge().take(1)))]],
     command=&gt;{2}[
      mvn_build=&gt;!ide:command('mvn -f src/test/resources/scratch compile'),
      mvn_clean=&gt;!ide:command('mvn -f src/test/resources/scratch clean'),
@@ -541,9 +553,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result{4}::[
     status=&gt;success,
-    runtime=&gt;millis::739.0000,
+    runtime=&gt;millis::981.0000,
     command=&gt;'mvn -f src/test/resources/scratch clean',
-    output=&gt;!*/sys/tmp/713cd73f]
+    output=&gt;!*/sys/tmp/e43f7406]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 ==&gt;{4}'WARNING: A terminally deprecated method in sun.misc.Unsafe has been called'
 ==&gt;{4}'WARNING: sun.misc.Unsafe::staticFieldBase has been called by com.google.inject.internal.aop.HiddenClassDefiner (file:/home/killswitch/.sdkman/candidates/maven/current/lib/guice-5.1.0-classes.jar)'
@@ -561,11 +573,11 @@ mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 ==&gt;{4}'[INFO] Nothing to compile - all classes are up to date.'
 ==&gt;{12}'[INFO] ------------------------------------------------------------------------'
 ==&gt;{4}'[INFO] BUILD SUCCESS'
-==&gt;{4}'[INFO] Total time:  0.251 s'
-==&gt;{4}'[INFO] Finished at: 2026-09-07T05:00:16-06:00'
+==&gt;{4}'[INFO] Total time:  0.277 s'
+==&gt;{4}'[INFO] Finished at: 2026-09-07T19:17:58-06:00'
 </code></pre>
-<p>The project's uri subgraph (tree) can be displayed using the <code>tree::T</code> widget.</p>
-<pre><code class="language-mtron">mtron&gt; tree::[root=&gt;/dev/scratch, max=&gt;3].as?str&lt;=widget(str::T)
+<p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
+<pre><code class="language-mtron">mtron&gt; tree_widget::[root=&gt;/dev/scratch, max=&gt;3, xref=&gt;[=&gt;]].as?str&lt;=widget(str::T)
 ==&gt;&quot;&quot;&quot;
    scratch
    ├─ code
@@ -575,13 +587,20 @@ mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
    │   └─ mvn_exec
    ├─ idx
    ├─ root
-   └─ src
-       ├─ Calculator
-       ├─ Echo
-       ├─ EchoTest
-       └─ Operation
+   ├─ src
+   │   ├─ Calculator
+   │   ├─ Echo
+   │   ├─ EchoTest
+   │   └─ Operation
+   └─ sub
+       └─ auto_save
+           ├─ code
+           └─ target
    &quot;&quot;&quot;
 </code></pre>
+<p><strong>NOTE</strong>: The <code>sub</code> branch of the project graph maintains pub/sub <code>?subq</code> subscriptions (<code>sub::T</code>). The actual
+subscription registered with the query processor maintains an auto_from pointer to the code component of the <code>sub::T</code>.
+In this way, edits to the subscription code entries will automatically take hold without requiring resubscription.</p>
 <p>The Java source files have a <code>str::T &gt; web:java::T</code> encoding accessible via <code>src</code>.</p>
 <pre><code class="language-mtron"></code></pre>
 <p>The file name serves as the key and a lambda <code>inst</code> serves as a lazy constructor of an <code>ide:java::T</code>. Calling the file
@@ -633,7 +652,7 @@ mtron&gt; */dev/scratch/idx/Echo
     method=&gt;[
      speak=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/4/speak,
      name=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/6/name]]
-mtron&gt; tree::[root=&gt;/dev/scratch, max=&gt;3].as?str&lt;=widget(str::T)
+mtron&gt; tree_widget::[root=&gt;/dev/scratch, max=&gt;3, xref=&gt;[=&gt;]].as?str&lt;=widget(str::T)
 ==&gt;&quot;&quot;&quot;
    scratch
    ├─ code
@@ -660,20 +679,22 @@ mtron&gt; tree::[root=&gt;/dev/scratch, max=&gt;3].as?str&lt;=widget(str::T)
    │       ├─ field
    │       └─ method
    ├─ root
-   └─ src
-       ├─ Calculator
-       ├─ Echo
-       ├─ EchoTest
-       └─ Operation
+   ├─ src
+   │   ├─ Calculator
+   │   ├─ Echo
+   │   ├─ EchoTest
+   │   └─ Operation
+   └─ sub
+       └─ auto_save
+           ├─ code
+           └─ target
    &quot;&quot;&quot;
 </code></pre>
-<p><code>idx</code> offers a human-readable path scheme that projects to the <code>code</code> uri subgraph. Due to the <code>!*</code> nature of the <code>idx</code>
-objs, any updates to
-<code>idx</code> redirect to <code>code</code>. When <code>code</code> is <strong>re-saved</strong>, a <code>?subq</code> listener fires, mapping the <code>ide:java::T</code> to
-<code>web:java::T</code>
-and then to disk. The subscription then pulls the file from disk to a <code>web:java::T</code> and then a <code>ide:java::T</code> in <code>code</code>
-and <code>idx</code>. In this way,
-<code>code</code> serves as a metatron encoded proxy to the file system representation of the project's source code.</p>
+<p><code>idx</code> offers a human-readable path scheme that projects to the <code>code</code> uri subgraph. Due to the <code>!@</code>-nature of the <code>idx</code>
+objs, any updates to <code>idx</code> redirect to <code>code</code>. When <code>code</code> is <strong>re-saved</strong>, a <code>?subq</code> listener fires, mapping the
+<code>ide:java::T</code> to <code>web:java::T</code> and then to disk. The subscription then pulls the file from disk to a <code>web:java::T</code> and
+then a <code>ide:java::T</code> in <code>code</code> and <code>idx</code>. In this way, <code>code</code> serves as a metatron encoded proxy to the file system
+representation of the project's source code.</p>
 <pre><code>         ┌──────► idx 
          │         │
    src ──┤         │
@@ -683,17 +704,17 @@ and <code>idx</code>. In this way,
     ⋮… … … … sub:[...]   
 </code></pre>
 <p>Zooming in on the <code>idx</code> branch.</p>
-<pre><code class="language-mtron">mtron&gt; tree::[root=&gt;/dev/scratch/idx, max=&gt;5].as?str&lt;=widget(str::T)
+<pre><code class="language-mtron">mtron&gt; tree_widget::[root=&gt;/dev/scratch/idx, max=&gt;5,xref=&gt;[=&gt;]].as?str&lt;=widget(str::T)
 ==&gt;&quot;&quot;&quot;
    idx
    └─ Echo
        ├─ comment
        ├─ constructor
-       │   └─ Echo
-       ├─ field
+       │   └─ Echo  »Echo
+       ├─ field  ──(2)──&gt; members
        │   ├─ PREFIX
        │   └─ name
-       └─ method
+       └─ method  ──(2)──&gt; members
            ├─ name
            └─ speak
    &quot;&quot;&quot;
@@ -716,7 +737,7 @@ space-only.</p>
     text=&gt;&quot;&quot;&quot;
        public String speak(String who) {
            return who;
-   ...&quot;&quot;&quot;]@/dev/scratch/code/1/classes/Echo/0/members/4/speak
+   ...&quot;&quot;&quot;]
 mtron&gt; */dev/scratch/idx/Echo/method/speak/body.-&lt;'\n'.as(rec::T)
 ==&gt;[
     0=&gt;'{',
@@ -737,44 +758,9 @@ mtron&gt; @/dev/scratch/idx/Echo/method/speak &gt;&gt;= [body=&gt; '{ return &qu
        public String speak(String who) {
            return who;
    ...&quot;&quot;&quot;]
-mtron&gt; *&lt;mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java&gt;
-==&gt;java::&quot;&quot;&quot;package com.example.scratch;
-   
-   /**
-    * A simple greeter used as a scratch fixture for the agent IDE.
-    */
-   public class Echo {
-   
-       public static final String PREFIX = &quot;...thus spoke&quot;;
-   
-       private final String name;
-   
-       public Echo(String name) {
-           this.name = name;
-       }
-   
-       /**
-        * Speak to a person.
-        *
-        * @param who the person to speak with
-        * @return the spoken words
-        */
-       public String speak(String who) {
-           return who;
-       }
-   
-       /**
-        * The name this speaker was built with.
-        *
-        * @return the speekers name
-        */
-       public String name() {
-           return this.name;
-       }
-   }
-   &quot;&quot;&quot;
 </code></pre>
-<p>Finally, to check if the update to <code>Echo::speak</code> made it to disk, dereference the uri disk pointer.</p>
+<p>Finally, to determine if the registered <code>sub::T</code> wrote the updated <code>Echo::speak</code> to disk, dereference the
+respective <code>fsspace::T</code> pointer.</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java&gt;
 ==&gt;java::&quot;&quot;&quot;package com.example.scratch;
    
@@ -833,6 +819,20 @@ with it, then save (<code>code/N.to</code>).</p>
                                                    │                           └ src lines to single src string 
                                                    └ single src string to src lines
 </code></pre>
+<pre><code class="language-mtron">mtron&gt; @/dev/scratch/idx/Echo/method/speak &gt;&gt;= [body =&gt;
+         -&lt;'\n'.as(rec::T)&gt;&gt;=(
+         [?&gt;2.?&lt;4 =&gt; 'return &quot;marko&quot;;']&gt;&gt;.
+             &gt;-?str&lt;=str{*}('\n'))].explain()
+==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '= [body =&gt;
+         -&lt;'
+'.as(rec::T)&gt;&gt;=(
+         [?&gt;2.?&lt;4 =&gt; 'return &quot;marko&quot;;']&gt;&gt;.
+             &gt;-?str&lt;=str{*}('
+'))].explain()'
+</code></pre>
+<p><strong>NOTE</strong>: when working in the <code>console::T</code>, the the interactive <code>explain_tool::T</code> provides a much richer analysis of an
+expression with pre- and post- compilation switching, drill down into nested code structures, and access reified
+information pertaining to any obj displayed.</p>
 <table>
 <thead>
 <tr><th>pattern</th><th>example</th><th>discussion</th></tr>
@@ -858,12 +858,13 @@ Different subscriptions can be defined to provide any number of useful reactions
 </ol>
 <p>The current <code>sub::T</code> is:</p>
 <pre><code class="language-mtron">mtron&gt; */dev/scratch/code/#?subq
-==&gt;[sub::[
-    code=&gt;rshift(0).as(rec::T).rshift(path).select([id(),id(),id(),id(),id(),id()]).to(temp).as?rng=uri&amp;dom=lst(uri::T).to(x).*id().update([location=&gt;none]).as(java::T).to(**x.rshift(location).side(split([
-     location=&gt;id(),
-     status=&gt;saved,
-     time=&gt;!math:datetime_now()]).print('saved ',id(),'\n'))).map(map(/dev/scratch/src).mult(*temp.reverse().merge().take(1))),
-    target=&gt;/dev/scratch/code/#]]
+==&gt;[
+    sub::[
+     target=&gt;/dev/scratch/code/#,
+     code=&gt;[code=&gt;!*/dev/scratch/sub/auto_save/code.apply(id())]],
+    sub::[
+     target=&gt;/dev/scratch/code/#,
+     code=&gt;[code=&gt;!*/dev/scratch/sub/auto_save/code.apply(id())]]]
 </code></pre>
 <h3>gotchas (learned the hard way)</h3>
 <ul>
@@ -895,13 +896,13 @@ stable within a run and safe to rely on for line numbers.</li>
 <li><strong>the mtron MCP eval has a single-obj echo bug:</strong> bare single-obj expressions can return <code>noobj</code> even when server
 side they are fine — wrap for a liveness check with <code>1-&lt;[expr]</code> (returns the address/uri when live; note <code>1-&lt;[a,b]</code>
 <em>splits</em> lists, so use it for single values). List-valued expressions render normally.</li>
-<li><strong>The doc examples side-effect</strong>: the <code>body=&gt;</code> edit rewrites the project's
+<li><strong>The doc examples side effect</strong>: the <code>body=&gt;</code> edit rewrites the project's
 <code>memSpace.java</code> on disk at build time. The mvn site build excludes this doc (toy project pending) so the examples can
 be run safely.</li>
 <li>Only <code>.java</code> so far.</li>
 </ul>
 <h3>running as a container app</h3>
-<p>The agent ide ships as a metatron app: <code>boot/agent-ide.boot.mtron</code> builds the whole workspace (home memspace, scratch
+<p>The agent ide ships as a metatron app: <code>boot/agent-ide.boot.mtron</code> builds the workspace (home memspace, scratch
 project at <code>/dev/scratch</code>, write-back subscription, command palette) and the launcher runs it in a container with the
 repo mounted at <code>/work</code> (= the <code>mfs:</code> root).</p>
 <pre><code>bin/agent-ide-docker                 # up: ws://localhost:8555/mtron, http://localhost:8777/mcp
@@ -911,9 +912,9 @@ docker stop agent-ide                # down
 <p>The launcher passes <code>--user $(id -u):$(id -g)</code>: the image's own uid cannot write the mounted repo and an mfs write then
 <strong>hangs</strong> rather than failing — always run the container as the host user.</p>
 <p>Poke surface (in the app):</p>
-<pre><code>*/dev/scratch/name                    # 'scratch'
-*/dev/scratch/command/+               # mvn_build / mvn_clean / mvn_test / mvn_exec / code_tree
-*/log/metatron/event/+                      # the save audit trail (empty until a save fires)
+<pre><code>*/dev/scratch/name                    [-- 'scratch'
+*/dev/scratch/command/+               [-- mvn_build / mvn_clean / mvn_test / mvn_exec / code_tree
+*/log/metatron/event/+                [-- the save audit trail (empty until a save fires)
 bin/agent-ide-eval '/dev/scratch/command/mvn_build()'
 </code></pre>
 <p>No maven in the runtime image: <code>mvn_build()</code> fails in-container by design right now (documented gap; the docker socket

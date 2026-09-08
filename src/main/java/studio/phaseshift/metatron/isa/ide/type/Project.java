@@ -38,7 +38,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.ide.ideInstSet.IDE_PROJECT_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_at_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -68,18 +68,21 @@ public class Project extends MRec {
         ////////////////////////////////////////////////////////////////
         project.at(CODE, lst(), MUTABLE);
         project.at("idx", rec(), MUTABLE);
+        final Rec subscription = ObjmtronSerializer.parse("""
+                                                          sub::[target=> <%s/code/#>,
+                                                                code  => >>0.as(rec::T)>>path==[_,_,_,_,_,_].to(temp).
+                                                                           as?uri<=lst(uri::T).to(x).*(_).>>=[location=>none].as(web:java::T).
+                                                                           to(*(*x.>>location).side(-<[location=>_,status=>saved,time=>!math:datetime_now()].print("saved ", _, "\\n"))).
+                                                                           map(<%s/src>.mult(*temp.reverse().>-.take(1)))]
+                                                          """.formatted(root.vid(), root.vid()));
 
-        ObjmtronSerializer.parse("""
-                                 %s/code/#?subq -> sub::[code=> >>0.as(rec::T)>>path==[_,_,_,_,_,_].to(temp).
-                                                         as?uri<=lst(uri::T).to(x).*(_).>>=[location=>none].as(web:java::T).
-                                                         to(*(*x.>>location).side(-<[location=>_,status=>saved,time=>!math:datetime_now()].print("saved ", _, "\\n"))).
-                                                         map(%s/src.mult(*temp.reverse().>-.take(1)))];
-                                 """.formatted(root.vid(), root.vid())).apply();
+        project.at(SUB, rec("auto_save", subscription), MUTABLE);
+        Router.writeToSpace(root.vid().extend("code/#").addQ(SUBQ), rec(CODE, auto_from_(root.vid().extend(f("sub/auto_save/code"))).apply_(id_()).tryToInst()));
         return project(project.selfTID(IDE_PROJECT_TID).asRec());
     }
 
     public void addSubscription() {
-        
+
     }
 
     public void addCommand() {
@@ -135,7 +138,7 @@ public class Project extends MRec {
                                                 final Rec kindRec = members.at(kind).orElse(rec());
                                                 final Obj membersObjs = kindRec.at(m.at(NAME).strValue());
                                                 members.at(kind, kindRec.at(m.at(NAME).strValue(),
-                                                        membersObjs.append(auto_at_(codeID.extend(memberSegment).extend(m.at(NAME).strValue()))),
+                                                        membersObjs.append(auto_at_(codeID.extend(memberSegment).extend(m.at(NAME).strValue())).tryToInst()),
                                                         MUTABLE), MUTABLE);
                                             });
                                         }

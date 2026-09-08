@@ -71,6 +71,12 @@ public class Highlighter implements org.jline.reader.Highlighter {
         this.serializer = serializer;
     }
 
+    public Highlighter(final ObjSerializer<String> serializer, final boolean ignoreGraphitty) {
+        this.syntaxHighlighter = SyntaxHighlighter.build(Highlighter.configurations.getConfig("jnanorc"), "mtron");
+        this.graphitty = ignoreGraphitty ? null : new Graphitty(Map.of(), new ByteArrayOutputStream());
+        this.serializer = serializer;
+    }
+
     public Highlighter justify(final boolean leftJustify) {
         this.serializer = new ObjmtronSerializer(leftJustify);
         return this;
@@ -112,7 +118,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
                 final String str = object.toString();
                 if (containsBoxDrawing(str))
                     return this.preserveBoxDrawing(str);
-                return this.GRAPHITTY_PATTERN.matcher(str).find()
+                return null != this.graphitty && this.GRAPHITTY_PATTERN.matcher(str).find()
                         ? this.graphitty.writeToString(str)
                         : this.highlight(null, str).toAnsi();
             }
@@ -130,7 +136,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
      * Graphitty markup) rather than passing it through the ANSI converter.
      */
     private String preserveBoxDrawing(final String string) {
-        return this.GRAPHITTY_PATTERN.matcher(string).find()
+        return null != this.graphitty && this.GRAPHITTY_PATTERN.matcher(string).find()
                 ? this.graphitty.writeToString(string)
                 : string;
     }
@@ -145,11 +151,15 @@ public class Highlighter implements org.jline.reader.Highlighter {
 
     @Override
     public AttributedString highlight(final LineReader reader, final String buffer) {
-        final Matcher matcher = this.GRAPHITTY_PATTERN.matcher(buffer);
-        if (matcher.find()) {
-            return new AttributedString(this.graphitty.writeToString(buffer));
-        } else {
+        if (null == this.graphitty) {
             return this.syntaxHighlighter.highlight(buffer);
+        } else {
+            final Matcher matcher = this.GRAPHITTY_PATTERN.matcher(buffer);
+            if (matcher.find()) {
+                return new AttributedString(this.graphitty.writeToString(buffer));
+            } else {
+                return this.syntaxHighlighter.highlight(buffer);
+            }
         }
     }
 }

@@ -276,7 +276,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             final Builtins builtins = new Builtins(currentDir, Console.configurations, null);
             SystemRegistry systemRegistry = new SystemRegistryImpl(parser, terminal, currentDir, Console.configurations);
             systemRegistry.setCommandRegistries(builtins);
-            final Highlighter highlighter = new Highlighter(new ObjConsoleSerializer());
+            final Highlighter highlighter = new Highlighter(new ObjConsoleSerializer(), true);
             highlighter.setTerminal(terminal);
             Highlighter.single().setTerminal(terminal);
             this.reader = LineReaderBuilder.builder()

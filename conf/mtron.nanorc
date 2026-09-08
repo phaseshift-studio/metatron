@@ -89,3 +89,12 @@ color gray "<[^>]>"
 color gray start="\[--" end="--]"
 color gray start="\[==" end="==]"
 
+
+### X=> match marker vs identifiers ending in X (e.g. PREFIX=>)
+# The red "X=>" marker above is meant for type-match positions printed at a
+# boundary (indented diagnostics, [X=>Y]).  An identifier whose name ends in
+# 'X' followed by '=>' (PREFIX=>, myX=>) is a plain rec key — the trailing X
+# must not turn red.  Later rules win, so repaint those spans in the rec-key
+# cyan here (arrow restored to the sugar color right after).
+color cyan "[[:alnum:]_]+X=>"
+color magenta "=>"

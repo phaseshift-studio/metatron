@@ -38,11 +38,13 @@ import static java.util.Map.entry;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.update_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.IMMUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -939,5 +941,55 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
         // isolate: the update RESULT (vs. what gets stored)
         ObjmtronSerializer.parse(state).apply();
         AbstractMetatronTest.checkCodeParseApply(LOG, update, expected);
+    }
+
+    /**
+     * Regression: atDirect(key) with a single-segment key on a rec whose map keys are
+     * deeper (multi-segment) uris must still return the raw stored value (e.g. a raw
+     * !* / !@ auto pointer) rather than falling into atToggle's pattern-collection
+     * branch and returning an objs/derived wrapper.
+     */
+    /**
+     * atDirect on a rec keyed by full (multi-segment) uris: a single-segment key that
+     * uniquely names a stored key's leaf must return that raw stored value — it must
+     * not silently return noobj / a pattern wrapper.  (Tree-style loaders key recs by
+     * the child's full path, and callers address children by node name.)
+     */
+    @Test
+    public void testAtDirectSingleSegmentOnDeepKeyedRec() {
+        final Obj ptr = auto_from_(f("local:src/a_main")).tryToInst();
+        final Rec r = rec(uri("usr/marko/Echo"), ptr);
+        final Obj direct = r.atDirect(uri("Echo"));
+        LOG.info("atDirect(uri('Echo')) on deep-keyed rec -> %s", direct);
+        assertTrue(Obj.Helper.getAutoPointer(direct).isPresent(),
+                "atDirect(uri('Echo')) should find the unique deep key 'usr/marko/Echo', got: " + direct);
+        // the full-path key form must keep working too
+        assertTrue(Obj.Helper.getAutoPointer(r.atDirect(uri("usr/marko/Echo"))).isPresent(),
+                "atDirect(full path key) should return the raw !@ inst, got: " + r.atDirect(uri("usr/marko/Echo")));
+    }
+
+    /**
+     * at()/atDirect() crossing the rec -> lst boundary and back: a rec whose value is a
+     * lst whose element is a rec (the metatron tree layout, e.g. members lists inside
+     * class recs).  Uri paths with multiple segments may surface results wrapped in an
+     * objs (a poly may address several matches), so assert over the stream.
+     */
+    @Test
+    public void testAtCrossesRecLstBoundary() {
+        final Rec r = rec(uri("m"), lst(rec(uri("x"), jnt(41)), jnt(7)));
+        // rec -> lst -> rec leaf
+        assertTrue(r.at(uri("m/0/x")).stream().anyMatch(o -> o.equals(jnt(41))),
+                "at(m/0/x) should reach the rec leaf inside the lst, got: " + r.at(uri("m/0/x")));
+        assertTrue(r.atDirect(uri("m/0/x")).stream().anyMatch(o -> o.equals(jnt(41))),
+                "atDirect(m/0/x) should reach the raw leaf inside the lst, got: " + r.atDirect(uri("m/0/x")));
+        // rec -> lst plain element
+        assertTrue(r.at(uri("m/1")).stream().anyMatch(o -> o.equals(jnt(7))),
+                "at(m/1) should reach the plain lst element, got: " + r.at(uri("m/1")));
+        assertTrue(r.atDirect(uri("m/1")).stream().anyMatch(o -> o.equals(jnt(7))),
+                "atDirect(m/1) should reach the raw lst element, got: " + r.atDirect(uri("m/1")));
+        // rec -> lst -> lst deeper
+        final Rec deep = rec(uri("m"), lst(lst(jnt(9), jnt(8)), jnt(7)));
+        assertTrue(deep.at(uri("m/0/1")).stream().anyMatch(o -> o.equals(jnt(8))),
+                "at(m/0/1) should reach the nested lst element, got: " + deep.at(uri("m/0/1")));
     }
 }

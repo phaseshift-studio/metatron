@@ -183,6 +183,7 @@ public final class Tokens {
     public static final String MQL = "mql";
     public static final String MIN = "min";
     public static final String MAX = "max";
+    public static final String XREF = "xref";
     public static final String PATH = "path";
     public static final String POLY = "poly";
     public static final String PERSIST = "persist";

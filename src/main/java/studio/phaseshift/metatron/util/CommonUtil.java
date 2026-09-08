@@ -852,9 +852,17 @@ public final class CommonUtil {
      * @param depth      0 = root
      * @param isLast     true if this node is the last child of its parent
      * @param childCount number of immediate children (0 = leaf)
+     * @param xref       the canonical target URI when this node's stored value is an
+     *                   auto pointer ({@code !*} / {@code !@}); null when it is a
+     *                   plain value or when the raw value was not an auto pointer
      */
     public record TreeEntry(fURI uri, String name, Obj obj, int depth,
-                            boolean isLast, int childCount) {
+                            boolean isLast, int childCount, fURI xref) {
+        public TreeEntry(final fURI uri, final String name, final Obj obj, final int depth,
+                         final boolean isLast, final int childCount) {
+            this(uri, name, obj, depth, isLast, childCount, null);
+        }
+
         /**
          * @return true if this node has children to expand.
          */
@@ -903,38 +911,73 @@ public final class CommonUtil {
 
     private static void _treeWalk(final fURI uri, final int maxDepth, final int depth,
                                   final boolean isLast, final Consumer<TreeEntry> consumer) {
-        _treeWalk(uri, maxDepth, Set.of(), depth, isLast, consumer);
+        _treeWalk(uri, maxDepth, Set.of(), depth, isLast, null, consumer);
     }
 
     private static void _treeWalk(final fURI uri, final int maxDepth,
                                   final Set<fURI> forceExpand,
                                   final int depth, final boolean isLast,
                                   final Consumer<TreeEntry> consumer) {
+        _treeWalk(uri, maxDepth, forceExpand, depth, isLast, null, consumer);
+    }
+
+    private static void _treeWalk(final fURI uri, final int maxDepth,
+                                  final Set<fURI> forceExpand,
+                                  final int depth, final boolean isLast,
+                                  final fURI xref, final Consumer<TreeEntry> consumer) {
         final Obj obj = Router.readFromSpace(uri);
         // Directories carry the trailing / (a branch); the display name is the last real
         // segment, so strip the branch marker before naming (keep the branch uri for navigation).
         final String name = uri.asNode().name();
 
         final java.util.List<fURI> childUris = new java.util.ArrayList<>();
+        final java.util.Map<fURI, fURI> childXrefs = new java.util.HashMap<>();
         if (depth < maxDepth || forceExpand.contains(uri)) {
             // Read direct children via +/ on the specific parent URI.
             // Each space implements +/ to return the immediate children
             // of the given node (e.g. local:a/+/ → a1, a2).  This is the
             // universal "list children" query pattern.
-            Router.readFromSpace(uri.extend("+/")).stream()
-                    .filter(o -> !o.isNoObj())
-                    .forEach(o -> {
-                        final Rel rel = o.asRel();
-                        childUris.add(rel.first().uriValue());
-                    });
+            // Preferred source: the space's raw readStream (uri → stored obj pairs,
+            // concrete uris).  Spaces that override it return the raw stored values,
+            // so a child whose value is an auto pointer (!* / !@) reveals its
+            // canonical target here with no extra reads.  Spaces without a native
+            // override fall back to the resolved readFromSpace listing below.
+            final java.util.List<fURI> streamedUris = new java.util.ArrayList<>();
+            final java.util.Map<fURI, fURI> streamedXrefs = new java.util.HashMap<>();
+            try {
+                Router.global().readStream(uri.extend("+/")).forEach(id -> {
+                    final fURI childUri = id.furi();
+                    if (null == childUri || childUri.equals(uri) || childUri.hasPattern()) return;
+                    streamedUris.add(childUri);
+                    final Obj raw = id.obj();
+                    if (null != raw && !raw.isNoObj())
+                        Obj.Helper.getAutoPointer(raw).ifPresent(target -> streamedXrefs.put(childUri, target));
+                });
+            } catch (final RuntimeException ignored) {
+                streamedUris.clear();
+                streamedXrefs.clear();
+            }
+            if (!streamedUris.isEmpty()) {
+                childUris.addAll(streamedUris);
+                childXrefs.putAll(streamedXrefs);
+            } else {
+                Router.readFromSpace(uri.extend("+/")).stream()
+                        .filter(o -> !o.isNoObj())
+                        .forEach(o -> {
+                            final Rel rel = o.asRel();
+                            final fURI childUri = rel.first().uriValue();
+                            childUris.add(childUri);
+                            Obj.Helper.getAutoPointer(rel.secondDirect()).ifPresent(target -> childXrefs.put(childUri, target));
+                        });
+            }
             childUris.sort(java.util.Comparator.comparing(f -> f.asNode().name()));
         }
 
-        consumer.accept(new TreeEntry(uri, name, obj, depth, isLast, childUris.size()));
+        consumer.accept(new TreeEntry(uri, name, obj, depth, isLast, childUris.size(), xref));
 
         for (int i = 0; i < childUris.size(); i++) {
             _treeWalk(childUris.get(i), maxDepth, forceExpand, depth + 1,
-                    i == childUris.size() - 1, consumer);
+                    i == childUris.size() - 1, childXrefs.get(childUris.get(i)), consumer);
         }
     }
 
