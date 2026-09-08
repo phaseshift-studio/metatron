@@ -31,7 +31,7 @@ import java.util.Map;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public abstract class AbstractObjSerializer<T> extends MRec implements ObjSerializer<T> {
+public abstract class AbstractObjSerializer<T> extends AbstractSerializer<Obj, T> implements ObjSerializer<T> {
 
     protected AbstractObjSerializer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);

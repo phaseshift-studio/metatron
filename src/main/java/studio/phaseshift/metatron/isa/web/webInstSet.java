@@ -460,6 +460,15 @@ public class webInstSet extends AbstractInstSet {
                                                                                                                                                                 [tag...]]]]"""),
                         instC(AS_INST_TID.dom(REC_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> str(ObjHTMLSerializer.single().write(lhs).outerHtml(), HTML_TID, null)),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjMarkdownSerializer.parse(lhs.strValue())),
+                        // md ⇄ html via HTMLMarkdownSerializer — the generalized markdown⇄html
+                        // converter (flexmark + tables/strikethrough/tasklists/autolink/jekyll-fm),
+                        // the same engine the docs site-html pass uses. html::T → markdown::T
+                        // (its read() direction) was added together with that swap. A dereferenced
+                        // .md file already comes back as a markdown::T str (fsSpace MIME-read), so
+                        // the instructions run on the raw document text.
+                        instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> str(HTMLMarkdownSerializer.toHTML(lhs.strValue()), HTML_TID, null)),
+                        instC(AS_INST_TID.dom(HTML_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> str(HTMLMarkdownSerializer.toMarkdown(lhs.strValue()), MARKDOWN_TID, null)),
+
                         instC(AS_INST_TID.dom(REC_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().write(lhs).getChars().toString(), MARKDOWN_TID, null)),
                         instC(AS_INST_TID.dom(JAVA_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjJavaSerializer.single().inputBytes(lhs.strValue().getBytes())),
                         instC(AS_INST_TID.dom(REC_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> str(new String(ObjJavaSerializer.single().outputBytes(lhs).array()), JAVA_TID, null)),
@@ -470,7 +479,6 @@ public class webInstSet extends AbstractInstSet {
                         // cs (coarse schema) — cs_java::T is a rec::T refinement: the parse IS the
                         // cast.  as?cs_java<=java(cs_java::T) parses a dereferenced java::T str into
                         // the coarse rec; the rec↔cs_java paths re-tag (rec::T <-> cs_java::T).
-                        instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().toHTML(ObjMarkdownSerializer.single().write(lhs)), HTML_TID, null)),
                         instC(AS_INST_TID.dom(MCP_CLIENT_TID).rng(WEB_JSON_TID), lst(WEB_JSON_TYPE), (lhs, inst) -> {
                             final mcpClient client = (mcpClient) lhs;
                             final Map<Obj, Obj> configMap = new LinkedHashMap<>();

@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -202,7 +203,17 @@ public final class MtronPreprocessor {
         boolean noHeader = false;
         final StringBuilder acc = new StringBuilder();
 
+        // ── Statement-scoped directive state ──────────────────────────────
+        // Directives are read from any physical line of a statement and apply
+        // to the whole statement — including a multi-line statement whose
+        // physical lines end with "/" and are joined before evaluation.  The
+        // state is reset once the statement has been evaluated.
         boolean noPrompt = false;
+        boolean noOutput = false;
+        boolean error = false;
+        boolean hidden = false;
+        int maxOutput = 100;
+
         for (String raw : body.split("\n")) {
             raw = raw.stripTrailing();
             // ── Callout number: [-- <N> --] ──
@@ -213,22 +224,21 @@ public final class MtronPreprocessor {
                 raw = cm.replaceAll("").stripTrailing();
             }
 
-            // ── Directives ──
+            // ── Header line ──
             final Matcher hm = HEADER.matcher(raw);
             if (hm.matches()) {
                 headers.add(hm.group(1));
                 continue;
             }
-            boolean error = false;
-            boolean noOutput = false;
-            int maxOutput = 100;
+
+            // ── Directives (statement-scoped) ──
             if (NOHDR.matcher(raw).find()) noHeader = true;
             if (ERROR.matcher(raw).find()) error = true;
             if (NOOUT.matcher(raw).find()) noOutput = true;
             if (NOPROMPT.matcher(raw).find()) noPrompt = true;
+            if (HIDDEN.matcher(raw).find()) hidden = true;
             final Matcher maxm = MAXOUTPUT.matcher(raw);
             if (maxm.find()) maxOutput = Integer.parseInt(maxm.group(1));
-            final boolean hidden = HIDDEN.matcher(raw).find();
 
             // ── Line continuation ──
             if (raw.endsWith("/")) {
@@ -237,25 +247,23 @@ public final class MtronPreprocessor {
             }
 
             acc.append(raw);
-            String expr = HIDDEN.matcher(acc).replaceAll("").replace("%", "").strip();
+            // Strip AFTER the directive tokens are removed so that a directive
+            // such as "[MAXOUTPUT 5] code" does not leave its trailing space
+            // behind and render as a doubled space after the "mtron> " prompt.
+            String expr = HIDDEN.matcher(acc).replaceAll("").replace("%", "");
             expr = ERROR.matcher(expr).replaceAll("");
             expr = NOHDR.matcher(expr).replaceAll("");
             expr = NOOUT.matcher(expr).replaceAll("");
             expr = CALLOUT.matcher(expr).replaceAll("");
             expr = NOPROMPT.matcher(expr).replaceAll("");
-            expr = MAXOUTPUT.matcher(expr).replaceAll("");
+            expr = MAXOUTPUT.matcher(expr).replaceAll("").strip();
             acc.setLength(0);
             if (expr.isEmpty()) continue;
 
-            // ── Build input line ──
-            if (!hidden) {
-                String prefix = (noPrompt ? "" : "mtron> ") + expr;
-                if (calloutNumber != null)
-                    prefix += " ".repeat(5) + "​" + calloutNumber + "​";
-                lines.add(prefix);
-            }
-
-            // ── Evaluate ──
+            // ── Evaluate: the results accumulate into `outputs` so that the
+            //    input line(s) never count toward, nor get clipped by,
+            //    [MAXOUTPUT] ──
+            final var outputs = new ArrayList<String>();
             try {
                 TypeCheck.disable(TypeCheck.code_resolve, TypeCheck.inst_rng);
                 final Obj input = ObjmtronSerializer.singleNoClip().read(expr);
@@ -265,36 +273,38 @@ public final class MtronPreprocessor {
                     //System.exit(1);
                 }
                 if (!hidden && !noOutput && !result.isNoObj()) {
-                    result.stream().forEach(o -> lines.add("==>" + SER.write(o).replace("\n", "\n   ")));
+                    result.stream().forEach(o -> outputs.add("==>" + SER.write(o).replace("\n", "\n   ")));
                 } else if (noOutput) {
-                    lines.add("...");
+                    outputs.add("...");
                 } else if (!result.isNoObj() && input.isType()) {
-                    lines.add("==>" + SER.write(input).replace("\n", "\n   ")); // replacement so second+ lines are indented past the result prompt
+                    outputs.add("==>" + SER.write(input).replace("\n", "\n   ")); // replacement so second+ lines are indented past the result prompt
                 }
                 // Clear fail stack so errors don't leak across blocks
                 if (!hidden) ObjmtronSerializer.singleNoClip().inputBytes("/sys/fail/+ -> noobj").apply();
             } catch (final Exception e) {
-                if (!hidden) lines.add("==>ERROR: " + e.getMessage());
+                if (!hidden) outputs.add("==>ERROR: " + e.getMessage());
             }
-            if (lines.size() > maxOutput) {
-                final List<String> shortList = new ArrayList<>(lines.subList(0, maxOutput));
-                lines.clear();
-                lines.addAll(shortList);
-                lines.add("   ...");
+
+            // ── Build the input line (always shown in full) ──
+            if (!hidden) {
+                String prefix = (noPrompt ? "" : "mtron> ") + expr;
+                if (calloutNumber != null)
+                    prefix += " ".repeat(5) + "\u200B" + calloutNumber + "\u200B";
+                lines.add(prefix);
             }
-            final int maxOutputFinal = maxOutput;
-            final List<String> newShort = new ArrayList<>(lines.stream().map(l -> new ArrayList<>(List.of(l.split("\n")))).map(l -> {
-                if (l.size() > maxOutputFinal) {
-                    final List<String> shortList = new ArrayList<>(l.subList(0, maxOutputFinal));
-                    l.clear();
-                    l.addAll(shortList);
-                    l.add("   ...");
-                }
-                return l.stream().reduce("", (a, b) -> a + "\n" + b).trim();
-            }).toList());
-            lines.clear();
-            lines.addAll(newShort);
+
+            // ── [MAXOUTPUT n]: clip the statement's rendered result lines
+            //    only — the input line never counts toward the limit ──
+            if (!outputs.isEmpty())
+                MtronPreprocessor.clipOutputs(outputs, maxOutput);
+            lines.addAll(outputs);
+
+            // statement complete — reset statement-scoped directive state
             noPrompt = false;
+            noOutput = false;
+            error = false;
+            hidden = false;
+            maxOutput = 100;
         }
 
         // ── Prepend headers ──
@@ -304,5 +314,36 @@ public final class MtronPreprocessor {
             return new EvalResult(all, noHeader);
         }
         return new EvalResult(lines, noHeader);
+    }
+
+    /**
+     * Clip the rendered result entries of a single statement so that their
+     * total physical line count (every {@code "\n"}-separated part of each
+     * entry) is at most {@code maxOutput}.  When anything is dropped, a
+     * trailing {@code "   ..."} marker line is appended.  The statement's
+     * input line is never part of {@code outputs}, so it is never clipped
+     * nor counted toward the limit.
+     */
+    private static void clipOutputs(final List<String> outputs, final int maxOutput) {
+        int total = 0;
+        for (final String output : outputs)
+            total += output.split("\n").length;
+        if (total <= maxOutput) return;
+        final var clipped = new ArrayList<String>();
+        int budget = maxOutput;
+        for (final String output : outputs) {
+            if (budget <= 0) break;                     // drop every remaining entry
+            final String[] parts = output.split("\n");
+            if (parts.length <= budget) {
+                clipped.add(output);
+                budget -= parts.length;
+            } else {
+                clipped.add(String.join("\n", Arrays.copyOf(parts, budget)));   // cut the entry mid-line
+                budget = 0;
+            }
+        }
+        outputs.clear();
+        outputs.addAll(clipped);
+        outputs.add("   ...");
     }
 }

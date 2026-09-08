@@ -28,7 +28,7 @@ import java.nio.ByteBuffer;
 
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
-public interface ObjSerializer<T> extends Rec {
+public interface ObjSerializer<T> extends Rec, Serializer<Obj, T> {
 
     fURI OBJ_SERIAL_TID = fURI.Singleton.f("/m/mach/io");
     fURI OBJ_MTRON_SERIALIZER_TID = OBJ_SERIAL_TID.extend("serializer").extend("mtron");

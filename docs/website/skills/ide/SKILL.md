@@ -190,9 +190,9 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
 mtron> */dev/scratch/command/mvn_clean
 ==>result{4}::[
     status=>success,
-    runtime=>millis::981.0000,
+    runtime=>millis::772.0000,
     command=>'mvn -f src/test/resources/scratch clean',
-    output=>!*/sys/tmp/e43f7406]
+    output=>!*/sys/tmp/f259a2c0]
 mtron> */dev/scratch/command/mvn_build>>output
 ==>{4}'WARNING: A terminally deprecated method in sun.misc.Unsafe has been called'
 ==>{4}'WARNING: sun.misc.Unsafe::staticFieldBase has been called by com.google.inject.internal.aop.HiddenClassDefiner (file:/home/killswitch/.sdkman/candidates/maven/current/lib/guice-5.1.0-classes.jar)'
@@ -210,8 +210,8 @@ mtron> */dev/scratch/command/mvn_build>>output
 ==>{4}'[INFO] Nothing to compile - all classes are up to date.'
 ==>{12}'[INFO] ------------------------------------------------------------------------'
 ==>{4}'[INFO] BUILD SUCCESS'
-==>{4}'[INFO] Total time:  0.277 s'
-==>{4}'[INFO] Finished at: 2026-09-07T19:17:58-06:00'
+==>{4}'[INFO] Total time:  0.258 s'
+==>{4}'[INFO] Finished at: 2026-09-07T19:36:40-06:00'
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.
 
