@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.mach.ui;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -49,7 +48,9 @@ public class uiInstSetTest extends AbstractInstSetTest {
         super(uiInstSet::new);
     }
 
-    /** Wrap a map in a mutable-backed MRec so Style.from() can copy it. */
+    /**
+     * Wrap a map in a mutable-backed MRec so Style.from() can copy it.
+     */
     private static MRec wrap(final Map<Obj, Obj> jvm) {
         return new MRec(new LinkedHashMap<>(jvm), null, null);
     }
@@ -162,19 +163,21 @@ public class uiInstSetTest extends AbstractInstSetTest {
         // Widget even without a terminal (headless eval / MCP), so the display/as
         // insts' (Widget<?>) cast can never hit a bare MRec.
         for (final String code : new String[]{
-                "swipe_panel::[obj=>[1,2,3,4]]",
-                "menu_bar::[height=>1,lines=>[]]",
-                "modal::[title=>'hello',body=>'world']"
+                "swipe_panel_widget::[obj=>[1,2,3,4]]",
+                "menu_bar_widget::[height=>1,lines=>[]]",
+                "modal_widget::[title=>'hello',body=>'world']"
         }) {
             final Obj cd = ObjmtronSerializer.parse(code);
             assertTrue(cd instanceof Widget, code + " should construct to a Widget without a terminal");
         }
         // format() and the widget-as-str inst must also be terminal-free
         // for embedding (widget-as-str).
-        final Obj swipe = ObjmtronSerializer.parse("swipe_panel::[obj=>[1,2,3,4]]");
+        final Obj swipe = ObjmtronSerializer.parse("swipe_panel_widget::[obj=>[1,2,3,4]]");
         assertNotNull(((Widget) swipe).format());
-        final Obj asStr = ObjmtronSerializer.parse("swipe_panel::[obj=>[1,2,3,4]].as(str::T)").apply(noobj());
+        final Obj asStr = ObjmtronSerializer.parse("swipe_panel_widget::[obj=>[1,2,3,4]].as(str::T)").apply(noobj());
         assertTrue(asStr.isStr(), "swipe_panel.as(str::T) should produce a str headless: " + asStr);
+        LOG.warn(asStr.toCleanString());
+        assertFalse(asStr.strValue().startsWith("swipe_panel_widet"), "swipe_panel.as(str::T) should produce a str headless: " + asStr);
     }
 
     // ── Modal type ─────────────────────────────────────────────────
@@ -182,7 +185,7 @@ public class uiInstSetTest extends AbstractInstSetTest {
     @Test
     public void shouldCreateModalViaIsa() {
         final ModalTool modal = (ModalTool) ObjmtronSerializer
-                .parse("modal::[title=>'ISA Test',body=>'Created via ISA type']");
+                .parse("modal_widget::[title=>'ISA Test',body=>'Created via ISA type']");
         final String formatted = modal.format();
         assertTrue(formatted.contains("ISA Test"), "modal format should carry the title: " + formatted);
         assertTrue(formatted.contains("Created via ISA type"),
@@ -193,7 +196,7 @@ public class uiInstSetTest extends AbstractInstSetTest {
     @Test
     public void shouldSetModalZIndexFromMtron() {
         final ModalTool modal = (ModalTool) ObjmtronSerializer.parse(
-                "modal::[title=>'x',body=>'y',style=>style::[anchor=>middle,zIndex=>100]]");
+                "modal_widget::[title=>'x',body=>'y',style=>style::[anchor=>middle,zIndex=>100]]");
         assertEquals(100, modal.getStyle().zIndex(),
                 "the modal's own style should carry zIndex so the FloatingSurface sorts it on top");
         assertEquals(FloatingSurface.Anchor.MIDDLE, modal.getStyle().anchor(),
@@ -203,7 +206,7 @@ public class uiInstSetTest extends AbstractInstSetTest {
     @Test
     public void shouldRenderStyledModalColors() {
         final ModalTool modal = (ModalTool) ObjmtronSerializer.parse(
-                "modal::[title => 'agent response',\n" +
+                "modal_widget::[title => 'agent response',\n" +
                         "        body  => 'x',\n" +
                         "        style => style::[border    =>continuous,\n" +
                         "                         background=>\"{{[k]}}\",\n" +
@@ -237,8 +240,8 @@ public class uiInstSetTest extends AbstractInstSetTest {
     @Test
     public void shouldApplyModalStyleFromMtron() {
         for (final String code : new String[]{
-                "modal::[title=>'x',body=>'y',style=>style::[border=>continuous,anchor=>middle]]",
-                "modal::[title=>'x',body=>'y',style=>[border=>continuous,anchor=>middle]]"
+                "modal_widget::[title=>'x',body=>'y',style=>style::[border=>continuous,anchor=>middle]]",
+                "modal_widget::[title=>'x',body=>'y',style=>[border=>continuous,anchor=>middle]]"
         }) {
             final Obj obj = ObjmtronSerializer.parse(code);
             assertTrue(obj instanceof ModalTool,

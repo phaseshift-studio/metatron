@@ -244,7 +244,24 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                             rel(asNode, autoToggle(arec, arec.jvm().get(asNode), doAuto)) :
                             autoToggle(arec, arec.jvm().get(asNode), doAuto)).c(c -> c.mult(cKey));
                 } else { // this.recValue().containsKey(uri(step))
-                    final Obj temp = autoToggle(arec, arec.jvm().getOrDefault(uri(step), NoObj.noobj()), doAuto);
+                    if (singleSegment && !isBranch && !doAuto) {
+                        // A single-segment atDirect key may name a leaf of a deep
+                        // (full-path) keyed rec.  If exactly one stored key has that
+                        // node name, return its raw value directly (no pattern-
+                        // collection wrapper); several matches stay an objs; none
+                        // falls through.  (at() keeps its historical semantics so
+                        // structural reads/type-matching are unaffected.)
+                        final java.util.List<Map.Entry<Obj, Obj>> named = arec.jvm().entrySet().stream()
+                                .filter(kv -> kv.getKey().isUri())
+                                .filter(kv -> step.equals(kv.getKey().uriValue().asNode().name()))
+                                .toList();
+                        if (named.size() == 1)
+                            return (OBJ) autoToggle(arec, named.get(0).getValue(), doAuto).c(c -> c.mult(cKey));
+                        else if (named.size() > 1)
+                            return (OBJ) objs(named.stream()
+                                    .map(kv -> autoToggle(arec, kv.getValue(), doAuto).c(c -> c.mult(cKey))));
+                    }
+                    final Obj temp = autoToggle(arec, arec.jvm().getOrDefault(uri(step), noobj()), doAuto);
                     if (temp.isNoObj()) {
                         return (OBJ) objs(arec.jvm().entrySet()
                                 .stream()

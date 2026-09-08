@@ -180,7 +180,7 @@ public class ideInstSet extends AbstractInstSet {
                                                         // a raw element: keep or mint its !* reference as the lazy text
                                                         if (e.isUri()) {
                                                             fileUri = e.uriValue();
-                                                            text = (Obj) auto_from_(e.uriValue());
+                                                            text = auto_from_(e.uriValue()).tryToInst();
                                                         } else {
                                                             fileUri = e.asCode().insts().getFirst().arg(0).uriValue();
                                                             text = e;

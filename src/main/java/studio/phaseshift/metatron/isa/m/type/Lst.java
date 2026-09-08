@@ -286,10 +286,15 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                 if (key.uriValue().segmentLength() == 1) {
                     return (OBJ) objs(result.filter(x -> !x.isNoObj()).map(x -> x.c(c -> c.mult(cKey)).parent(alst)));
                 } else {
+                    // Multi-segment path: recurse into the matched element keeping the
+                    // doAuto toggle — atDirect must stay raw to the very end (only the
+                    // final stored value is resolved/unresolved by the toggle).
                     return (OBJ) objs(result.filter(x -> !x.isNoObj()).filter(Obj::isPoly).map(x -> (Poly<?, ?>) x.c(c -> c.mult(cKey)).parent(alst))
                             .map(r -> isBranch ?
-                                    r.at(uri(key.<Uri>as().uriValue().pretract(1).asBranch())) :
-                                    r.at(uri(key.<Uri>as().uriValue().pretract(1)))));
+                                    (doAuto ? r.at(uri(key.<Uri>as().uriValue().pretract(1).asBranch()))
+                                            : r.atDirect(uri(key.<Uri>as().uriValue().pretract(1).asBranch()))) :
+                                    (doAuto ? r.at(uri(key.<Uri>as().uriValue().pretract(1)))
+                                            : r.atDirect(uri(key.<Uri>as().uriValue().pretract(1))))));
                 }
             } else {
                 throw MTronException.of("unknown key for lst: %s", key);

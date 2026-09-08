@@ -90,11 +90,15 @@ Now that the project is stored in space, build commands can be added and the pro
 */dev/scratch/command/mvn_build>>output
 ```
 
-The project's uri subgraph (tree) can be displayed using the `tree::T` widget.
+The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.
 
 ```mtron_pre
-tree::[root=>/dev/scratch, max=>3].as?str<=widget(str::T)
+tree_widget::[root=>/dev/scratch, max=>3, xref=>[=>]].as?str<=widget(str::T)
 ```
+
+**NOTE**: The `sub` branch of the project graph maintains pub/sub `?subq` subscriptions (`sub::T`). The actual
+subscription registered with the query processor maintains an auto_from pointer to the code component of the `sub::T`.
+In this way, edits to the subscription code entries will automatically take hold without requiring resubscription.
 
 The Java source files have a `str::T > web:java::T` encoding accessible via `src`.
 
@@ -109,16 +113,14 @@ name pulls the raw `src` into both `code` and `idx`.
 /dev/scratch/src/Echo() 
 [MAXOUTPUT 25] */dev/scratch/code/0
 */dev/scratch/idx/Echo
-tree::[root=>/dev/scratch, max=>3].as?str<=widget(str::T)
+tree_widget::[root=>/dev/scratch, max=>3, xref=>[=>]].as?str<=widget(str::T)
 ```
 
-`idx` offers a human-readable path scheme that projects to the `code` uri subgraph. Due to the `!*` nature of the `idx`
-objs, any updates to
-`idx` redirect to `code`. When `code` is **re-saved**, a `?subq` listener fires, mapping the `ide:java::T` to
-`web:java::T`
-and then to disk. The subscription then pulls the file from disk to a `web:java::T` and then a `ide:java::T` in `code`
-and `idx`. In this way,
-`code` serves as a metatron encoded proxy to the file system representation of the project's source code.
+`idx` offers a human-readable path scheme that projects to the `code` uri subgraph. Due to the `!@`-nature of the `idx`
+objs, any updates to `idx` redirect to `code`. When `code` is **re-saved**, a `?subq` listener fires, mapping the
+`ide:java::T` to `web:java::T` and then to disk. The subscription then pulls the file from disk to a `web:java::T` and
+then a `ide:java::T` in `code` and `idx`. In this way, `code` serves as a metatron encoded proxy to the file system
+representation of the project's source code.
 
 ```
          ┌──────► idx 
@@ -133,7 +135,7 @@ and `idx`. In this way,
 Zooming in on the `idx` branch.
 
 ```mtron_pre
-tree::[root=>/dev/scratch/idx, max=>5].as?str<=widget(str::T)
+tree_widget::[root=>/dev/scratch/idx, max=>5,xref=>[=>]].as?str<=widget(str::T)
 ```
 
 **edit, then save — two steps** (verified against a live VM, 2026-09-04): the `>>=` edit lands in the `code` space
@@ -177,6 +179,17 @@ itemized in the subsequent table.
                                                    │                           └ src lines to single src string 
                                                    └ single src string to src lines
 ```
+
+```mtron_pre
+@/dev/scratch/idx/Echo/method/speak >>= [body => /
+  -<'\n'.as(rec::T)>>=(                          /   
+  [?>2.?<4 => 'return "marko";']>>.              /
+      >-?str<=str{*}('\n'))].explain()   
+```
+
+**NOTE**: when working in the `console::T`, the the interactive `explain_tool::T` provides a much richer analysis of an
+expression with pre- and post- compilation switching, drill down into nested code structures, and access reified
+information pertaining to any obj displayed.
 
 | pattern           | example                                | discussion               |
 |-------------------|----------------------------------------|--------------------------|
@@ -236,14 +249,14 @@ The current `sub::T` is:
 - **the mtron MCP eval has a single-obj echo bug:** bare single-obj expressions can return `noobj` even when server
   side they are fine — wrap for a liveness check with `1-<[expr]` (returns the address/uri when live; note `1-<[a,b]`
   *splits* lists, so use it for single values). List-valued expressions render normally.
-- **The doc examples side-effect**: the `body=>` edit rewrites the project's
+- **The doc examples side effect**: the `body=>` edit rewrites the project's
   `memSpace.java` on disk at build time. The mvn site build excludes this doc (toy project pending) so the examples can
   be run safely.
 - Only `.java` so far.
 
 ## running as a container app
 
-The agent ide ships as a metatron app: `boot/agent-ide.boot.mtron` builds the whole workspace (home memspace, scratch
+The agent ide ships as a metatron app: `boot/agent-ide.boot.mtron` builds the workspace (home memspace, scratch
 project at `/dev/scratch`, write-back subscription, command palette) and the launcher runs it in a container with the
 repo mounted at `/work` (= the `mfs:` root).
 
@@ -259,9 +272,9 @@ The launcher passes `--user $(id -u):$(id -g)`: the image's own uid cannot write
 Poke surface (in the app):
 
 ```
-*/dev/scratch/name                    # 'scratch'
-*/dev/scratch/command/+               # mvn_build / mvn_clean / mvn_test / mvn_exec / code_tree
-*/log/metatron/event/+                      # the save audit trail (empty until a save fires)
+*/dev/scratch/name                    [-- 'scratch'
+*/dev/scratch/command/+               [-- mvn_build / mvn_clean / mvn_test / mvn_exec / code_tree
+*/log/metatron/event/+                [-- the save audit trail (empty until a save fires)
 bin/agent-ide-eval '/dev/scratch/command/mvn_build()'
 ```
 

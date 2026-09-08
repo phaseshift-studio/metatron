@@ -30,13 +30,18 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 
 public class LstTest extends AbstractAlgebraTest<Lst> {
@@ -463,5 +468,46 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
         assertEquals(expectedCloneCount, clone.count());
         if (expectedCloneCount > 1)
             assertTrue(mParser.m_obj().parse(cloneIdx1).get().equals(clone.at(jnt(1))));
+    }
+
+    /**
+     * at/atDirect correlate on lists (mirrors the Rec deep-keyed regression): when a
+     * list element is itself a deep-keyed rec, the full uri path 0/Echo must surface
+     * the raw !@ pointer under atDirect — the atToggle doAuto toggle must propagate
+     * through the whole path, not just the first segment.  (Lst uri access wraps its
+     * results in an objs, so check by streaming.)
+     */
+    @org.junit.jupiter.api.Test
+    public void testAtDirectDeepPathRespectsRawToggle() {
+        final Obj ptr = auto_from_(f("local:src/a_main")).tryToInst();
+        final Lst l = lst(rec(uri("usr/marko/Echo"), ptr));
+        final Obj direct = l.atDirect(uri("0/Echo"));
+        LOG.info("atDirect(uri('0/Echo')) -> %s", direct);
+        final boolean rawPointer = direct.stream()
+                .map(Obj.Helper::getAutoPointer).anyMatch(Optional::isPresent);
+        assertTrue(rawPointer,
+                "atDirect('0/Echo') should surface the raw !@ inst of the deep element, got: " + direct);
+    }
+
+    /**
+     * at()/atDirect() crossing the lst -> rec boundary and back: a lst whose element is
+     * a rec whose value holds deeper structure (metatron tree layout).  Uri paths with
+     * multiple segments may surface results wrapped in an objs, so assert over stream.
+     */
+    @org.junit.jupiter.api.Test
+    public void testAtCrossesLstRecBoundary() {
+        final Lst l = lst(rec(uri("x"), jnt(41)), jnt(7));
+        // lst -> rec leaf
+        assertTrue(l.at(uri("0/x")).stream().anyMatch(o -> o.equals(jnt(41))),
+                "at(0/x) should reach the rec leaf, got: " + l.at(uri("0/x")));
+        assertTrue(l.atDirect(uri("0/x")).stream().anyMatch(o -> o.equals(jnt(41))),
+                "atDirect(0/x) should reach the raw rec leaf, got: " + l.atDirect(uri("0/x")));
+        // lst -> rec -> lst deeper (rec value is another lst)
+        final Lst nested = lst(rec(uri("m"), lst(jnt(9), jnt(8))), jnt(7));
+        assertTrue(nested.at(uri("0/m/1")).stream().anyMatch(o -> o.equals(jnt(8))),
+                "at(0/m/1) should cross lst -> rec -> lst, got: " + nested.at(uri("0/m/1")));
+        // plain list element beside the rec
+        assertTrue(l.at(uri("1")).stream().anyMatch(o -> o.equals(jnt(7))),
+                "at(1) should reach the plain element, got: " + l.at(uri("1")));
     }
 }
