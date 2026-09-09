@@ -136,6 +136,8 @@ public class mParser {
 
     private static final String REDUCED_FURI_CHARS = "~/%$!#_-@+:*";
     private static final String FULL_FURI_CHARS = REDUCED_FURI_CHARS + ". ";
+    private static final String QMAP_VALUE_CHARS = FULL_FURI_CHARS + "\"\\'";
+    private static final String QMAP_POLY_VALUE_CHARS = QMAP_VALUE_CHARS + ">,=";
 
     static {
         new mInstSet().sugars().forEach(mParser::addSugar);
@@ -953,7 +955,11 @@ public class mParser {
                 opt(of("&"), ""),
                 opt(choice(
                         m_furi_template(), // Template expressions like ${[q=>hello]}
-                        seq((word().or(anyOf("+#_-"))).plus(), opt(seq(of("="), choice(m_furi_no_query(), word().or(anyOf(FULL_FURI_CHARS)).star())), ""))
+                        seq((word().or(anyOf("+#_-"))).plus(),
+                                opt(seq(of("="), choice(
+                                        seq(of("["), word().or(anyOf(QMAP_POLY_VALUE_CHARS)).star(), of("]")),
+                                        m_furi_no_query(),
+                                        word().or(anyOf(QMAP_VALUE_CHARS)).star())), ""))
                 ).separatedBy(of("&")), "").flatten())
         ).map(t -> mParser.<List<String>>pick(t, 1).stream().reduce((a, b) -> a + b).orElse(""));
     }

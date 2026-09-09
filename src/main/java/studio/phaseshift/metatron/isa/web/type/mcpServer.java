@@ -25,18 +25,27 @@ import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_SUB_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -127,6 +136,7 @@ public class mcpServer extends MRec {
                 case "prompts/get" -> handlePromptsGet(id, params);
                 case "initialize" -> handleInitialize(id, params);
                 case "server/discover" -> handleServerDiscover(id, params);
+                case "subscriptions/listen" -> handleSubscriptionsListen(id, params);
                 case "ping" -> handlePing(id, params);
                 case "notifications/initialized", "notifications/cancelled" -> handleNotifications(id, method);
                 default -> handleUnknownMethod(id, method);
@@ -227,14 +237,8 @@ public class mcpServer extends MRec {
                 return mcpError(id, jnt(-32601), str("tool not found: " + toolName));
             } else {
                 final Inst toolInst = toolEntry.asInst();
-                final Map<Obj, Obj> argMap = arguments.jvm();
-                final Poly<?, ?> args = toolInst.args().isNoObj() ? lst() : (toolInst.args().isLst() ?
-                        lst(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).map(Map.Entry::getValue).collect(Collectors.toList())) :
-                        rec(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).collect(Collectors.toMap(e -> uri(e.getKey().toString()), Map.Entry::getValue))));
-                final Obj toolLhs = argMap.containsKey(uri(LHS)) && argMap.get(uri(LHS)) != null ? argMap.get(uri(LHS)) : noobj();
-                final Obj toolResult = toolInst.args(args).apply(toolLhs);
+                final Obj toolResult = mTool.applyArguments(toolInst, arguments);
                 if (toolResult.isFail()) {
-                    //LOG.error("lhs: %s\nargs: %s\nresult: %s", toolLhs, args, toolResult);
                     return mcpError(id, jnt(-32603), str(toolResult.asFail().message()));
                 }
                 // Result is serialized to plain (TRANSPARENT) JSON — no OPAQUE
@@ -374,6 +378,86 @@ public class mcpServer extends MRec {
                 uri("serverInfo"), rec(
                         uri(NAME), str("metatron-mcp"),
                         uri("version"), str("0.1.0"))));
+    }
+
+    /**
+     * Handle a {@code subscriptions/listen} request (2026-07-28 spec "Subscriptions").
+     * <p>
+     * Registers a metatron {@code ?subq} pub/sub subscription for each URI in
+     * {@code params.notifications.resourceSubscriptions}, then acknowledges the
+     * subset it agreed to honor. When a subscribed resource mutates, the sub's code
+     * fires and captures a {@code notifications/resources/updated} rec into a
+     * per-server outbox ({@code <server>subscriptions/<id>?incrq}).
+     * <p>
+     * NOTE: {@code subscriptions/listen} is a long-lived (SSE) stream in the spec —
+     * the acknowledgment and pushed notifications normally travel out-of-band on
+     * that stream. This server is request/response, so delivery is deferred: we
+     * register the subscription and return the acknowledgment as the JSON-RPC
+     * response, while fired notifications accumulate in the outbox for a future
+     * transport to drain.
+     */
+    protected Obj handleSubscriptionsListen(final Obj id, final Rec params) {
+        final Obj notifications = params.at(uri("notifications"));
+        final Rec acked = rec();
+        if (!notifications.isNoObj() && notifications.isRec()) {
+            final Rec notif = notifications.asRec();
+            final Obj resourceSubs = notif.at(uri("resourceSubscriptions"));
+            if (!resourceSubs.isNoObj() && resourceSubs.isLst()) {
+                final List<Obj> ackedUris = new ArrayList<>();
+                for (final Obj u : resourceSubs.asLst().lstValue()) {
+                    final fURI target = f(u.toCleanString());
+                    if (this.subscribeResource(id, target))
+                        ackedUris.add(uri(target));
+                }
+                acked.at(uri("resourceSubscriptions"), lst(ackedUris), MUTABLE);
+            }
+            // echo the list-changed booleans the server agrees to honor (we accept them
+            // but do not yet emit list_changed notifications — see the deferral note).
+            for (final String flag : List.of("toolsListChanged", "promptsListChanged", "resourcesListChanged")) {
+                final Obj v = notif.at(uri(flag));
+                if (!v.isNoObj()) acked.at(uri(flag), v, MUTABLE);
+            }
+        }
+        return mcpResponse(id, rec(uri("notifications"), acked));
+    }
+
+    /**
+     * Register a {@code ?subq} subscription for {@code target}. The sub's code fires
+     * with {@code lhs = pub::T = lst([changed_uri, new_obj])} whenever {@code target}
+     * mutates, and captures a {@code notifications/resources/updated} rec to the
+     * server's subscription outbox. Returns false (and skips registration) when the
+     * target is not backed by any registered space.
+     */
+    private boolean subscribeResource(final Obj id, final fURI target) {
+        if (!Router.global().hasSpaceFor(target)) {
+            LOG.warn("no space for resource subscription target %s — skipping", target);
+            return false;
+        }
+        final fURI outbox = this.subscriptionOutbox(id);
+        Router.global().write(target.addQ(SUBQ), rec(mutableMap(
+                uri(TARGET), uri(target),
+                uri(CODE), instC(f("mcp_resource_updated").dom(LST_TID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {
+                    final Obj changed = lhs.asLst().at(0);
+                    final Obj value = lhs.asLst().at(1);
+                    Router.global().write(outbox, rec(mutableMap(
+                            uri(METHOD), uri("notifications/resources/updated"),
+                            uri("params"), rec(uri(URI), changed, uri(VALUE), value),
+                            uri("subscriptionId"), id)));
+                    return noobj();
+                })), SUBQ_SUB_TID, null));
+        return true;
+    }
+
+    /**
+     * The location where fired subscription notifications are captured, keyed by the
+     * {@code subscriptions/listen} request id so concurrent subscriptions don't collide.
+     * Falls back to a fixed region when the server has no vid (bare test servers).
+     */
+    private fURI subscriptionOutbox(final Obj id) {
+        final fURI base = null == this.vid()
+                ? f("/m/web/mcp/subscriptions")
+                : this.vid().extend("subscriptions");
+        return base.extend(id.toCleanString()).addQ(INCRQ);
     }
 
     /**

@@ -237,18 +237,20 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 
 **Language & types**
 
-* [Full Language Reference](references/mtron-language-reference.md) -- types, operators, instruction sets, expression
+* [Full Language Reference](references/language-reference_mtron.md) -- types, operators, instruction sets, expression
   model.
 * [Type System](references/type-system-mtron.md) -- vid/tid, nominal vs structural, pattern types.
-* [Math Instruction Set](references/math_instset.md) -- `/m/math` constants, unit types, the `mathInstSet`.
+* [Math Instruction Set](references/math_instset_mtron.md) -- `/m/math` constants, unit types, the `mathInstSet`.
+* [System Instruction Set](references/sys-instset-mtron.md) -- `/m/sys` `bash`/`native`/`sleep`/`stdout`/`stdin`; the
+  guarded shell.
 
 **Spaces & data sources**
 
-* [fsSpace](references/mtron-fsspace.md) -- file system as space; MIME, `?mimeq`, file I/O.
+* [fsSpace](references/fsspace_mtron.md) -- file system as space; MIME, `?mimeq`, file I/O.
 * [Connecting Data Sources](references/connecting-datasources.md) -- the pattern + route model for external sources;
   `!*` references.
-* [dckrSpace](references/dckrspace.md) -- Docker: containers, images, volumes, compose as a space.
-* [httpPage Fetching](references/http-page-fetching.md) -- HTTP pages, HTML parse trees, traversal.
+* [dckrSpace](references/dckrspace_mtron.md) -- Docker: containers, images, volumes, compose as a space.
+* [httpPage Fetching](references/web_instset_mtron.md) -- HTTP pages, HTML parse trees, traversal.
 
 **Protocol & services**
 

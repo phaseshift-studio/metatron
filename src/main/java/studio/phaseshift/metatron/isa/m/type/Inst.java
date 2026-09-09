@@ -290,7 +290,8 @@ public interface Inst extends Call {
                 /*if (cacheKey != null) {
                     RESOLUTION_CACHE.putIfAbsent(cacheKey, resolved);
                 }*/
-                return resolved;
+                // copy over any api query maps not already on the user instruction
+                return resolved.selfTID(resolved.tid().copyQ(this.tid())).as();
             } else {
                 LOG.debug("unable to resolve: %s", this);
             }
@@ -305,6 +306,8 @@ public interface Inst extends Call {
         final Inst domainInst = (uniqueDomains.size() == 1 && uniqueDomains.getFirst().equals(lhs.tid().c())) ? this.dom(lhs.type()) : this;
         this.logger().trace("performing runtime resolution of %s => %s", lhs, domainInst);
         resolved2 = domainInst.hasDomOrRng() ? resolved2.tid(domainInst.tid()) : resolved2;
+        // copy over any api query maps not already on the user instruction
+        resolved2 = resolved2.selfTID(resolved2.tid().copyQ(this.tid()));
         if (resolved2.isNoObj()) {
             LOG.debug("%s could not be resolved in any space", domainInst);
             return noobj();

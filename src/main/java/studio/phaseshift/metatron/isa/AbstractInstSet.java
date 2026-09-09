@@ -187,6 +187,8 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                     .flatMap(kv -> kv.getValue().stream())
                     .filter(i -> !pattern.hasDom() || i.dom().vidOrTid().test(pattern.dom()))
                     .filter(i -> !pattern.hasRng() || i.rng().vidOrTid().test(pattern.rng()))
+                    // copy any user qs to api inst
+                    .map(i -> pattern.hasNonDomRngQ() ? i.clone().selfTID(i.tid().copyQ(pattern)) : i)
                     .map(i -> pattern.isNode() ? i : rel(i.tid().toUri(), i)))
                     .append(objs(TYPE_TABLE.entrySet()
                             .stream()

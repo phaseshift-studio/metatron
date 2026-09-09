@@ -42,7 +42,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -561,23 +560,6 @@ public class AgentTest extends AbstractMetatronTest {
     // ========================================================================
     //  agent => skill (as?skill<=agent)
     // ========================================================================
-
-    public static ToolFeature toolFeature() {
-        return new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null);
-    }
-
-    public static Inst findTool(final Agent agent, final Feature feature, final String toolNameRegEx) {
-        feature.onBeforeChat(agent);
-        return agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as()
-                .tools()
-                .elements()
-                .map(t -> t.asRec().at(uri(INST)).<Obj>as())
-                .filter(Obj::isObjInst)
-                .map(Obj::asInst)
-                .filter(i -> Pattern.compile(toolNameRegEx).matcher(i.tid().toString()).find())
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("bash tool not registered by BashFeature.onBeforeChat"));
-    }
 
 
     @Test

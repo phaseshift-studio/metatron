@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -437,6 +438,69 @@ public class fURITest extends AbstractMetatronTest {
                     "\n\tcomponent: {{b}}%s{{X}}", parse, components);
             checkEquals(parse, components);
         }
+    }
+
+    // ── query parameter values (lst and rec) ────────────────────────
+
+    /**
+     * A query-parameter value is captured verbatim — in particular, a rec value
+     * {@code [a=>b,c=>d]} must not be truncated at the {@code =} inside {@code =>}.
+     * The {@code =>} only appears one level deep (no nested polys in q-values yet).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // lst value
+            "bash?reject=['x']                      | reject | ['x']",
+            "bash?reject=['x','y']                  | reject | ['x','y']",
+            // rec value (=> inside [ ])
+            "bash?env=[a=>b]                        | env    | [a=>b]",
+            "bash?env=[a=>b,c=>d]                   | env    | [a=>b,c=>d]",
+            "bash?env=[first=>marko,last=>r]        | env    | [first=>marko,last=>r]",
+            // lst + rec + scalar in one query
+            "bash?reject=['x']&env=[a=>b]           | reject | ['x']",
+            "bash?reject=['x']&env=[a=>b]           | env    | [a=>b]",
+            "bash?reject=['x']&env=[a=>b,c=>d]&z=2  | env    | [a=>b,c=>d]",
+            "bash?reject=['x']&env=[a=>b,c=>d]&z=2  | z      | 2",
+            // rec before lst (order-independent)
+            "bash?env=[a=>b,c=>d]&reject=['x']      | env    | [a=>b,c=>d]"
+    }, delimiter = '|', quoteCharacter = '~')
+    public void testQueryParamValue(final String furi, final String key, final String expected) {
+        assertEquals(expected, idem(furi).q(key),
+                "q-value '%s' must be captured verbatim (not truncated at a rec '=>')".formatted(key));
+    }
+
+    /**
+     * A lst query value round-trips back into a {@code lst::T} via {@code qValue(..., Lst.class)}.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "bash?reject=['x']      | reject | 1 | x",
+            "bash?reject=['x','y']  | reject | 2 | y",
+            "bash?nums=[1,2,3]      | nums   | 3 | 3"
+    }, delimiter = '|', quoteCharacter = '~')
+    public void testQueryParamLstValue(final String furi, final String key, final int size, final String last) {
+        final Obj value = idem(furi).qValue(key, Lst.class);
+        assertTrue(value.isLst(), "q-value '%s' should round-trip to a lst::T, got %s".formatted(key, value.tid()));
+        assertFalse(value.isRec(), "lst q-value '%s' must not come back as a rec::T".formatted(key));
+        final Lst lst = value.asLst();
+        assertEquals(size, lst.lstValue().size(), "lst q-value '%s' should round-trip to a lst of the expected size".formatted(key));
+        assertEquals(last, lst.at(size - 1).toCleanString(), "last element of '%s' should survive the round-trip".formatted(key));
+    }
+
+    /**
+     * A rec query value round-trips back into a {@code rec::T} via {@code qValue(..., Rec.class)}.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "bash?env=[a=>b]                    | env | 1",
+            "bash?env=[a=>b,c=>d]               | env | 2",
+            "bash?env=[first=>marko,last=>r]    | env | 2"
+    }, delimiter = '|', quoteCharacter = '~')
+    public void testQueryParamRecValue(final String furi, final String key, final int size) {
+        final Obj value = idem(furi).qValue(key, Rec.class);
+        assertTrue(value.isRec(), "q-value '%s' should round-trip to a rec::T, got %s".formatted(key, value.tid()));
+        assertFalse(value.isLst(), "rec q-value '%s' must not come back as a lst::T".formatted(key));
+        assertEquals(size, value.asRec().jvm().size(), "rec q-value '%s' should carry the expected number of pairs".formatted(key));
     }
 
 

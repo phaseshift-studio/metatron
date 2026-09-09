@@ -222,7 +222,7 @@ public final class QCollection {
                             uri(TARGET), "the pattern that will trigger the code callback (automatically added when new sub created)",
                             uri(CODE), "the code to execute when target state changes"),
                     "subscribe to mutations over regions of space",
-                    "abc?subq -> sub::[code=>print(==obj+1)] [-- mutations to abc generate pub::T objs pass through sub::T code --]",
+                    "abc?subq -> sub::[code=>print(>>1+1)] [-- mutations to abc generate pub::T objs pass through sub::T code --]",
                     "abc -> 5                                [-- prints 6 to stdout                                             --]",
                     "see pub::T");
     public static final Type PUB_TYPE =

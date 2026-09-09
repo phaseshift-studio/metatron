@@ -182,6 +182,25 @@ public abstract class AbstractMcpHandlerTest extends AbstractMetatronTest {
     }
 
     @Test
+    public void testSubscriptionsListen() {
+        this.testSpace.addQ(QCollection.subq());
+        final fURI target = this.testSpacePattern().retractPattern().extend("mcp_sub_res1");
+        final Rec res = mcpRequest(request(30, "subscriptions/listen", rec(
+                uri("notifications"), rec(
+                        uri("resourceSubscriptions"), lst(uri(target.toString()))))));
+        final Rec result = res.at(uri(RESULT)).asRec();
+        final Obj notifications = result.at(uri("notifications"));
+        assertFalse(notifications.isNoObj(), "subscriptions/listen should ack notifications");
+        final Obj subs = notifications.asRec().at(uri("resourceSubscriptions"));
+        assertTrue(subs.isLst(), "ack resourceSubscriptions should be a list");
+        assertFalse(subs.asLst().lstValue().isEmpty(), "ack should echo the subscribed uri");
+        final Obj registered = Router.readFromSpace(target.addQ(SUBQ));
+        assertFalse(registered.isNoObj(), "subscribed target should have a registered ?subq sub");
+        assertFalse(registered.isLst() && registered.asLst().lstValue().isEmpty(),
+                "subscribed target should not have an empty ?subq sub list");
+    }
+
+    @Test
     public void testToolsListReturnsWellFormedResponse() {
         final Rec res = mcpRequest(request(3, "tools/list", rec()));
         final Obj tools = res.at(uri(RESULT)).asRec().at(uri("tools"));
