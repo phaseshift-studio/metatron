@@ -179,6 +179,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_grph.html"><img
                             src="../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
                             alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_ide.html"><img
+                            src="../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                            alt="ide"/>/m/ide</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_iot.html"><img
                             src="../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -205,9 +208,6 @@
                             alt="vec"/>/m/vec</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_web.html"><img
                             src="../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
-                            alt="web"/>/m/web</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_ide.html"><img
-                            src="../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                 </ul>
             </li>
@@ -525,9 +525,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result{4}::[
     status=&gt;success,
-    runtime=&gt;millis::845.0000,
+    runtime=&gt;millis::724.0000,
     command=&gt;'mvn -f src/test/resources/scratch clean',
-    output=&gt;!*/sys/tmp/9d0d8ae7]
+    output=&gt;!*/sys/tmp/ad32b09a]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 ==&gt;{4}'WARNING: A terminally deprecated method in sun.misc.Unsafe has been called'
 ==&gt;{4}'WARNING: sun.misc.Unsafe::staticFieldBase has been called by com.google.inject.internal.aop.HiddenClassDefiner (file:/home/killswitch/.sdkman/candidates/maven/current/lib/guice-5.1.0-classes.jar)'
@@ -545,8 +545,8 @@ mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 ==&gt;{4}'[INFO] Nothing to compile - all classes are up to date.'
 ==&gt;{12}'[INFO] ------------------------------------------------------------------------'
 ==&gt;{4}'[INFO] BUILD SUCCESS'
-==&gt;{4}'[INFO] Total time:  0.250 s'
-==&gt;{4}'[INFO] Finished at: 2026-09-08T18:36:47-06:00'
+==&gt;{4}'[INFO] Total time:  0.260 s'
+==&gt;{4}'[INFO] Finished at: 2026-09-09T03:14:31-06:00'
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
 <pre><code class="language-mtron">mtron&gt; tree_widget::[root=&gt;/dev/scratch, max=&gt;3, xref=&gt;[=&gt;]].as?str&lt;=widget(str::T)
@@ -670,6 +670,7 @@ mtron&gt; tree_widget::[root=&gt;/dev/scratch, max=&gt;4, xref=&gt;[=&gt;]].as?s
            └─ target
    &quot;&quot;&quot;
 </code></pre>
+<p><strong>IMPORTANT</strong>: pulling <code>Echo</code> is a inst call -- no <code>*</code> should be prefixed. <code>()</code> is the inst equivalent of dereference.</p>
 <p><code>idx</code> offers a human-readable path scheme that projects to the <code>code</code> uri subgraph. Due to the <code>!@</code>-nature of the <code>idx</code>
 objs, any updates to <code>idx</code> redirect to <code>code</code>. When <code>code</code> is <strong>re-saved</strong>, a <code>?subq</code> listener fires, mapping the
 <code>ide:java::T</code> to <code>web:java::T</code> and then to disk. The subscription then pulls the file from disk to a <code>web:java::T</code> and

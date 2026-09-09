@@ -40,6 +40,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjPlainTextSerializer;
+import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -77,7 +78,7 @@ public class mcpClient extends MRec {
         this.client = DefaultMcpClient.builder()
                 .clientName(METATRON)
                 .clientVersion(METATRON_VERSION)
-                .protocolVersion("2024-11-05")
+                .protocolVersion(mcpServer.PROTOCOL_VERSION)
                 //.roots(List.of(new McpRoot("metatron", "http://localhost:8999")))
                 .logHandler(message -> as().logger().log(message.level().name(), "mcp log: %s", message))
                 .transport(createTransport(

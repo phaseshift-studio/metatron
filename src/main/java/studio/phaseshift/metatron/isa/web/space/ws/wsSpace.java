@@ -41,6 +41,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -333,7 +334,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             try {
                 if (ignore(conn)) return;
                 final WebSocketObj session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
-                session.onMessage(conn, session.getIO().input().fromBytes(message));
+                session.onMessage(conn, message);
             } catch (final Exception e) {
                 LOG.status(DEBUG, e);
             } catch (final Throwable e) {
@@ -356,7 +357,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             try {
                 if (ignore(conn)) return;
                 final WebSocketObj session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
-                session.onMessage(conn, session.getIO().input().fromBytes(message.array()));
+                session.onMessage(conn, new String(message.array(), StandardCharsets.UTF_8));
             } catch (final Exception e) {
                 LOG.status(DEBUG, e);
             } catch (final Throwable e) {

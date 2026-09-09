@@ -493,10 +493,11 @@ public class mParser {
                 continue;
             final Obj key = pick(kv, 0);
             final Obj value = pick(kv, 2);
-            if (null == key || null == value) {
-                throw MTronException.of("rec entry malformed (missing key or value): %s", kv);
+            if (null != key && null != value) {
+                m.merge(key, value, Obj::append);
+                //throw MTronException.of("rec entry malformed (missing key or value): %s", kv);
             }
-            m.merge(key, value, Obj::append);
+
         }
         return m;
     }

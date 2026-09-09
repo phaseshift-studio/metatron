@@ -179,6 +179,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="./instset/m_grph.html"><img
                             src="./images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
                             alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="./instset/m_ide.html"><img
+                            src="./images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                            alt="ide"/>/m/ide</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="./instset/m_iot.html"><img
                             src="./images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -642,22 +645,7 @@ fsspace::[pattern   =&gt;local:#,route =&gt;[local: =&gt; &lt;~/&gt;]]       @/s
 httpspace::[pattern =&gt;http://#,
              host    =&gt;http://localhost:8765,
              route   =&gt;[/            =&gt;local:]]@/sys/space/http;
-==&gt;ERROR: unable to construct httpspace::T: fail::[apply failure:
-	[lhs]    │ [
- pattern=&gt;http://#,
- host=&gt;http://localhost:8765,
- route=&gt;[/=&gt;local:]]@/sys/space/http
-	 \_type  │ /m/rec
-	  \_pred │ []
-	[inst]   │ /m/web/space/httpspace/ctor?rng=httpspace&amp;dom=#{?}([
-  pattern=&gt;http://#,
-  host=&gt;http://localhost:8765,
-  route=&gt;[/=&gt;local:]]@/sys/space/http){&lt;j&gt;}
-	 \_dom   │ #{?}::T
-	 \_args  │ [[
- pattern=&gt;http://#,
- host=&gt;http://localhost:8765,
- route=&gt;[/=&gt;local:]]@/sys/space/http][Net&lt;-2&gt;:Address already in use[Net&lt;-2&gt;:Address already in use] ← Address already in use]][Address already in use[Net&lt;-2&gt;:Address already in use]][Address already in use]@/sys/fail/1226
+==&gt;ERROR: unable to construct httpspace::T: fail::[inst apply failure: Address already in use[Net&lt;-2&gt;:Address already in use]]@/sys/fail/1218
 console::[=&gt;]@/usr/ui/console;
 ==&gt;console::[=&gt;]@/usr/ui/console</code></pre>
 </div>

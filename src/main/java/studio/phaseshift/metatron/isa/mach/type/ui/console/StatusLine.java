@@ -110,6 +110,10 @@ public class StatusLine implements Runnable {
         this.widgets.at(uri(name), instC(name.prepend("status.").dom(ALL.maybe()).rng(STR_TID), lst(), (lhs, inst) -> str(widget.get())), MUTABLE);
     }
 
+    public void addWidget(final Uri name, final Call widgetText) {
+        this.widgets.at(uri(name.uriValue()), instC(name.uriValue().prepend("status.").dom(ALL.maybe()).rng(STR_TID), lst(), (lhs, inst) -> widgetText.apply()), MUTABLE);
+    }
+
     private void compileWidgets() {
         final String back = this.getBackgroundColor();
         final String fore = this.getForegroundColor();

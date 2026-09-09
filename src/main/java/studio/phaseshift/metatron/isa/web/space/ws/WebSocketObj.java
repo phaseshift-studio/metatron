@@ -63,6 +63,15 @@ public interface WebSocketObj extends Rec, Closeable {
 
     void onMessage(final WebSocket conn, final Obj message);
 
+    /**
+     * Text-frame entry point: parse the raw frame through the configured input
+     * serializer and delegate to {@link #onMessage(WebSocket, Obj)}.  Handlers that
+     * need the raw string (e.g. schema-aware MCP argument parsing) override this.
+     */
+    default void onMessage(final WebSocket conn, final String message) {
+        this.onMessage(conn, this.getIO().input().fromBytes(message));
+    }
+
     void onError(final WebSocket conn, final Exception ex);
 
     WebSocket getWebSocket();

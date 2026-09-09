@@ -417,11 +417,8 @@ public class SwarmMachine extends VirtualThread implements Machine {
         if (monad.obj().unique() && (monad.inst().dom().c().isOne() || monad.inst().dom().c().isAny()))
             return monad;
         if (monad.inst().dom().c().isZero() && !monad.obj().c().isZeroable())
-            throw MTronException.of("monad obj coefficient is greater than inst domain coefficient: " +
-                    "\n\tobj       => %s" +
-                    "\n\t\\_c       => %s" +
-                    "\n\tinst     X=> %s" +
-                    "\n\t\\_dom_c  X=> %s", monad.obj(), monad.obj().c(), monad.inst(), monad.inst().dom().c());
+            throw MTronException.of("monad obj coefficient is greater than inst dom coefficient:" +
+                    "\n\t%s [{%s} X=> {%s}] %s", monad.obj(), monad.obj().c(), monad.inst().dom().c(), monad.inst());
         final Tuple.Pair<Obj, Obj> pair =
                 monad.obj().c().gte(monad.inst().dom().c()) ?
                         monad.obj().take(monad.inst().dom().c().most()) :

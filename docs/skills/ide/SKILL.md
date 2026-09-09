@@ -121,6 +121,8 @@ name pulls the raw `src` into both `code` and `idx`.
 tree_widget::[root=>/dev/scratch, max=>4, xref=>[=>]].as?str<=widget(str::T)
 ```
 
+**IMPORTANT**: pulling `Echo` is a inst call -- no `*` should be prefixed. `()` is the inst equivalent of dereference.
+
 `idx` offers a human-readable path scheme that projects to the `code` uri subgraph. Due to the `!@`-nature of the `idx`
 objs, any updates to `idx` redirect to `code`. When `code` is **re-saved**, a `?subq` listener fires, mapping the
 `ide:java::T` to `web:java::T` and then to disk. The subscription then pulls the file from disk to a `web:java::T` and

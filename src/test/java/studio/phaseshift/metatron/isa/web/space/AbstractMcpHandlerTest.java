@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -106,9 +107,13 @@ public abstract class AbstractMcpHandlerTest extends AbstractMetatronTest {
     /**
      * Dispatch a JSON-RPC request through the mcpServer and assert it
      * returns a valid, non-failing Rec response.
+     * <p>
+     * Serializes to JSON and re-parses through the schema-aware transport entry so
+     * direct tests exercise the same str→uri/code/inst disambiguation as the wire.
      */
     protected Rec mcpRequest(final Rec request) {
-        final Obj response = this.mcp.handleMessage(request);
+        final String rawJson = ObjJSONSerializer.simple().write(request).toString();
+        final Obj response = this.mcp.handleMessage(rawJson);
         assertNotNull(response, "mcp response should not be null");
         assertFalse(response.isFail(), "response should not be a fail: " + response);
         assertTrue(response.isRec(), "response should be a Rec, got: " + response.getClass().getSimpleName());
@@ -119,7 +124,8 @@ public abstract class AbstractMcpHandlerTest extends AbstractMetatronTest {
      * Dispatch a JSON-RPC notification and assert it returns noobj (no response).
      */
     protected void mcpNotification(final Rec notification) {
-        final Obj response = this.mcp.handleMessage(notification);
+        final String rawJson = ObjJSONSerializer.simple().write(notification).toString();
+        final Obj response = this.mcp.handleMessage(rawJson);
         assertTrue(response.isNoObj(), "notification should return noobj, got: " + response);
     }
 
@@ -163,6 +169,16 @@ public abstract class AbstractMcpHandlerTest extends AbstractMetatronTest {
         assertFalse(result.at(uri("protocolVersion")).isNoObj(), "should have protocolVersion");
         assertFalse(result.at(uri("capabilities")).isNoObj(), "should have capabilities");
         assertFalse(result.at(uri("serverInfo")).isNoObj(), "should have serverInfo");
+    }
+
+    @Test
+    public void testServerDiscover() {
+        final Rec res = mcpRequest(request(21, "server/discover", rec()));
+        final Rec result = res.at(uri(RESULT)).asRec();
+        assertEquals(str("complete"), result.at(uri("resultType")), "discover resultType should be complete");
+        assertFalse(result.at(uri("supportedVersions")).isNoObj(), "discover should list supportedVersions");
+        assertFalse(result.at(uri("capabilities")).isNoObj(), "discover should list capabilities");
+        assertEquals(str("metatron-mcp"), result.at(uri("serverInfo")).asRec().at(uri(NAME)), "discover should identify the server");
     }
 
     @Test

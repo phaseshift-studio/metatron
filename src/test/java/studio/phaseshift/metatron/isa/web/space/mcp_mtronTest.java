@@ -23,8 +23,11 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.type.mcp.mcpClient;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
@@ -49,6 +52,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -437,5 +441,95 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
         final String resp = sendAndReceive("{\"jsonrpc\":\"2.0\",\"id\":6,\"method\":\"ping\"}");
         assertNotNull(resp);
         assertTrue(resp.contains("\"result\""), "ping should return result");
+    }
+
+    // ========================================
+    // eval_mtron — full-stack corner cases (mcpClient → httpSpace + wsSpace)
+    // ========================================
+
+    private static final String[][] EVAL_MTRON_CASES = {
+            // ── overloaded-string corner cases (str / uri / code / fail) ─────
+            {"1", "1"},
+            {"\"text with literal placeholder\"", "\"text with literal placeholder\""},
+            {"hello", "hello"},
+            {"\"hello\"", "hello"},
+            {"<hello>", "hello"},
+            {"1-<[_,_]", "[1,1]"},
+            {"1-<[_,_", "<ERROR>"},
+            {"1+a", "<ERROR>"},
+            // ── easy: scalar arithmetic ─────────────────────────────────────
+            {"1.plus(2)", "3"},
+            {"1.plus(1.plus(1))", "3"},
+            {"2.plus?dom=int(1)", "3"},
+            {"math('1+2')", "3.0"},
+            // ── medium: collections ─────────────────────────────────────────
+            {"{1,2,3}.plus(2)", "{3,4,5}"},
+            {"{1,2,3,4}.take(2)", "{1,2}"},
+            {"{1,2,3,4}.skip(2)", "{3,4}"},
+            {"{1,2,3,4}.prod()", "24"},
+            {"{1,2,3,4}.count()", "4"},
+            {"{1,2,3,4}.map(+2)", "{3,4,5,6}"},
+            // ── complicated: reduce / repeat / lambda / math ────────────────
+            {"{1,2,3,4,5}.reduce(|plus(0))", "15"},
+            {"{1,2,3,4,5}.reduce(|mult(2))", "240"},
+            {"1.repeat(code=>plus(1),until=>is(gt(10)))", "11"},
+            {"{1,2,3,4}.sum{2}().count()", "2"},
+            {"1.inst(a=>plus(2)){ plus(*a) }", "4"},
+            {"10.to(a).plus(10).to(b).math('a+b')", "30.0"},
+            // ── uri merge (bare letters must survive as uri, not str) ───────
+            {"{a,b,c}.prod()", "a/b/c"},
+            // ── error cases (type/coefficient mismatch) ─────────────────────
+            {"{1,2,3}.map?int<=real(1)", "<ERROR>"},
+            {"{4}1.plus?int{5}<=int{5}(2)", "<ERROR>"},
+    };
+
+    /**
+     * Drive {@code eval_mtron} through a live {@link mcpClient} connected to the
+     * {@link httpSpace} route, exercising the full transport + JSON parse +
+     * handler + protocol stack — not just {@code mcpServer.handleMessage}, which
+     * hides the string⇄type serialization issues that only surface on the wire.
+     * <p>
+     * For now this asserts only the error/no-error outcome; the exact result text
+     * is logged so the string-serialization corner cases can be tightened next.
+     */
+    @Test
+    public void testEvalMtronOverHttpStack() {
+        runEvalMtronCases(new mcpClient(
+                CommonUtil.mutableMap(uri(HOST), uri(baseUrl() + "/mcp")),
+                MCP_CLIENT_TID, null), "http");
+    }
+
+    /**
+     * Same corner cases over the WebSocket transport — the schema-aware argument
+     * parse must hold for both stacks, not just Streamable HTTP.
+     */
+    @Test
+    public void testEvalMtronOverWsStack() {
+        runEvalMtronCases(new mcpClient(
+                CommonUtil.mutableMap(uri(HOST), uri("ws://" + wsHost + ":" + wsPort + "/mcp-mtron")),
+                MCP_CLIENT_TID, null), "ws");
+    }
+
+    private void runEvalMtronCases(final mcpClient client, final String transport) {
+        for (final String[] c : EVAL_MTRON_CASES) {
+            final String code = c[0];
+            final String expected = c[1];
+            final Obj result = evalMtron(client, code);
+            LOG.warn("full-stack[%s] eval_mtron(%s) => %s (expected %s)", transport, code, result, expected);
+            if ("<ERROR>".equals(expected)) {
+                assertTrue(result.isFail(), transport + ": expected fail for code: " + code + " but got: " + result);
+            } else {
+                assertFalse(result.isFail(), transport + ": expected success for code: " + code + " but got: " + result);
+            }
+        }
+    }
+
+    /**
+     * Invoke the {@code eval_mtron} tool registered on the given {@code mcpClient}.
+     */
+    private static Obj evalMtron(final mcpClient client, final String code) {
+        final Rec tools = client.at(uri(TOOL)).asRec();
+        final Inst evalInst = tools.at(uri("m_web_mcp_mcp_mtron_eval_mtron")).asRec().at(uri(INST)).asInst();
+        return evalInst.args(rec(uri("code"), str(code))).apply(noobj());
     }
 }

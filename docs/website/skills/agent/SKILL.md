@@ -42,15 +42,12 @@ A more interesting way to approach the problem involves defining a `task` type.
 
 ```mtron
 mtron> rec::T[done=>bool::T,desc=>str::T,start{?}::T,end{?}::T]@/usr/agent/task
-==>ERROR: monad obj coefficient is greater than inst domain coefficient: 
-	obj       => rec::T
-	\_c       => 1
-	inst     X=> start?rng=A{**}&dom=noobj{0}([
+==>ERROR: monad obj coefficient is greater than inst dom coefficient:
+	rec::T [{1} X=> {0}] start?rng=A{**}&dom=noobj{0}([
   done=>bool::T,
   desc=>str::T,
   start{?}::T,
   end{?}::T]@/usr/agent/task){<j>}@<1>
-	\_dom_c  X=> 0
 mtron> [,]@/usr/agent/todo
 ==>[,]@/usr/agent/todo
 mtron> datetime_now()-<task::[done=>false,desc=>"review metatron docs",start=>_]>-@/usr/agent/todo
@@ -58,11 +55,11 @@ mtron> datetime_now()-<task::[done=>false,desc=>"review metatron docs",start=>_]
     task::[
      done=>false,
      desc=>'review metatron docs',
-     start=>datetime::<//2026.09:8/18/34/27/822?tz=-0600>],
+     start=>datetime::<//2026.09:9/03/12/21/364?tz=-0600>],
     task::[
      done=>false,
      desc=>'review metatron docs',
-     start=>datetime::<//2026.09:8/18/34/27/303?tz=-0600>]]@/usr/agent/todo
+     start=>datetime::<//2026.09:9/03/12/20/887?tz=-0600>]]@/usr/agent/todo
 ```
 The current time is split across the defined task. Since `start=>_` has an open slot, the current
 `datatime::T` fills in the spot and then the task is merged into your todo list. To get a structured understanding of
@@ -78,7 +75,7 @@ mtron> @/usr/agent/todo/0 >>= [done=>true]
 ==>task::[
     done=>true,
     desc=>'review metatron docs',
-    start=>datetime::<//2026.09:8/18/34/27/822?tz=-0600>]
+    start=>datetime::<//2026.09:9/03/12/21/364?tz=-0600>]
 ```
 As you learn about metatron and the mtron language, you'll come up with clever ways to manipulate your `/usr/agent`
 space.

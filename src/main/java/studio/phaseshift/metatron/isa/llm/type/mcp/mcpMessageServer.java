@@ -173,8 +173,8 @@ public class mcpMessageServer {
     // ========================================
 
     private static Obj addMessage(final Inst inst) {
-        final Uri messageKind = uri(Str.Helper.cleanString(inst.arg(KIND, 1), true));
-        final String text = Str.Helper.cleanString(inst.arg(TEXT, 2), true);
+        final Uri messageKind = uri(Str.Helper.cleanString(inst.arg(KIND, 1), true)); // union — deferred (#9)
+        final String text = inst.arg(TEXT, 2).strValue();
         final Obj session = inst.arg(SESSION, 3);
         final Obj name = inst.arg(NAME, 4);
         final Obj contents = inst.arg(CONTENTS, 5);
@@ -214,7 +214,7 @@ public class mcpMessageServer {
         // envelope — the native ledger carries text, time, session, depth, chat_id
         builder.depth(1); // top-level remote message (dsh-mtron bus convention: top-level depth is 1)
         if (!session.isNoObj())
-            builder.session(uri(Str.Helper.cleanString(session, true)).uriValue());
+            builder.session(session.uriValue());
         if (!chatId.isNoObj())
             builder.chatId(chatId.asInt().intValue().intValue());
         if (!time.isNoObj())
@@ -227,15 +227,17 @@ public class mcpMessageServer {
             attributes.asRec().jvm().forEach((k, v) -> builder.put(k.toString(), v));
 
         // write to <root>/message/_?incrq and return the written rec (vid assigned by the space)
-        return builder.create(f(Str.Helper.cleanString(inst.arg(ROOT, 0), true)).extend(MESSAGE).extend("_").addQ(INCRQ));
+        final Rec written = builder.create(inst.arg(ROOT, 0).uriValue().extend(MESSAGE).extend("_").addQ(INCRQ));
+        return withIdentity(written);
     }
 
     private static Lst buildToolRequests(final Obj toolRequests) {
         Obj requests = toolRequests;
-        if (requests.isStr()) {
+        if (requests.isStr() || requests.isUri()) {
             // an mcp client may deliver tool_requests as a json string — the
             // json serializer decodes it to a typed lst(rec); the mtron parser
-            // garbles json (list-of-recs lands as objs). the same idiom the
+            // garbles json (list-of-recs lands as objs). the schema-blind bias
+            // may hand it back as a uri, so clean either way. the same idiom the
             // emulator's install uses for its mcpServers snippet
             requests = ObjJSONSerializer.simple().inputBytes(Str.Helper.cleanString(requests, true));
         }
@@ -274,22 +276,32 @@ public class mcpMessageServer {
         return new SpaceChatSessionStore(null, space, 1, 0, rootF);
     }
 
+    /**
+     * Expose a message's kind (tid) and location (vid) as rec fields so they
+     * survive TRANSPARENT JSON — the plain-JSON wire drops Obj tid/vid meta.
+     */
+    private static Rec withIdentity(final Rec message) {
+        return message
+                .at(uri(KIND), uri(message.tid().name()), MUTABLE)
+                .at(uri(LOCATION), uri(message.vid()), MUTABLE);
+    }
+
     private static Obj readMessages(final Inst inst, final int sessionIdx, final int maxIdx) {
-        final fURI rootF = f(Str.Helper.cleanString(inst.arg(ROOT, 0), true));
-        final fURI sessF = f(Str.Helper.cleanString(inst.arg(SESSION, sessionIdx), true));
+        final fURI rootF = inst.arg(ROOT, 0).uriValue();
+        final fURI sessF = inst.arg(SESSION, sessionIdx).uriValue();
         final int max = Math.min(inst.arg(MAX, maxIdx).orElse(jnt(DEFAULT_MAX_MESSAGES)).asInt().intValue().intValue(), HARD_MAX_MESSAGES);
         // The store owns the window — session scope, turn/tool-pair integrity,
         // and the bus sentinel — and hands back full-fidelity records (vids,
         // thinking, envelope); the bus sees them newest-first
         final List<Rec> window = storeAt(rootF, sessF).busWindow(sessF, max);
         Collections.reverse(window);
-        return lst(window.stream().<Obj>map(m -> m).toList());
+        return lst(window.stream().map(m -> (Obj) withIdentity(m)).toList());
     }
 
     private static Obj searchMessages(final Inst inst) {
-        final fURI rootF = f(Str.Helper.cleanString(inst.arg(ROOT, 0), true));
-        final String pattern = Str.Helper.cleanString(inst.arg(PATTERN, 1), true);
-        final fURI sessF = f(Str.Helper.cleanString(inst.arg(SESSION, 2), true));
+        final fURI rootF = inst.arg(ROOT, 0).uriValue();
+        final String pattern = inst.arg(PATTERN, 1).strValue();
+        final fURI sessF = inst.arg(SESSION, 2).uriValue();
         final int max = Math.min(inst.arg(MAX, 3).orElse(jnt(DEFAULT_MAX_MESSAGES)).asInt().intValue().intValue(), HARD_MAX_MESSAGES);
         // search over the bus window (sentinel-safe, pair-safe) — a
         // case-sensitive regex find() against each record's text
@@ -298,7 +310,7 @@ public class mcpMessageServer {
         final List<Obj> hits = new ArrayList<>();
         for (final Rec message : window)
             if (message.at(uri(TEXT)).isStr() && rx.matcher(Str.Helper.cleanString(message.at(uri(TEXT)))).find())
-                hits.add(message);
+                hits.add(withIdentity(message));
         Collections.reverse(hits);
         return lst(hits);
     }

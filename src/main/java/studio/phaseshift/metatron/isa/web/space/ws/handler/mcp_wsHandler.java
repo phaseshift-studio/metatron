@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws.handler;
 
+import org.java_websocket.WebSocket;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -119,6 +120,24 @@ public class mcp_wsHandler extends WebSocketRec {
         return new IO(
                 MIME.MIMEType.of(this.at(IN).orElse(uri(MIME.MIMEType.APPLICATION_JSON.value)).uriValue().toString()),
                 MIME.MIMEType.of(this.at(OUT).orElse(uri(MIME.MIMEType.APPLICATION_JSON.value)).uriValue().toString()));
+    }
+
+    /**
+     * Override the text-frame entry so the raw JSON string reaches
+     * {@link mcpServer#handleMessage(String)} — the schema-aware argument parse
+     * needs the raw string, not the already-mangled Obj that
+     * {@link #onMessage(WebSocket, Obj)} would hand it.
+     */
+    @Override
+    public void onMessage(final WebSocket conn, final String message) {
+        try {
+            LOG.debug("incoming mcp message from %s: %s", this.getOtherVID(), message);
+            final Obj result = this.mcp.handleMessage(message);
+            if (null != result && !result.isNoObj()) send(result);
+        } catch (final Exception e) {
+            LOG.error("error sending mcp response: %s", e.getMessage() == null ? e.getClass().getName() : e.getMessage());
+            send(fail(e));
+        }
     }
 
 }

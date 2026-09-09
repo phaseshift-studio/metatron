@@ -25,7 +25,6 @@ import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -44,9 +43,9 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -114,27 +113,6 @@ public final class mcpMetatronBuilder {
     // ========================================
 
     /**
-     * Re-parse a string-valued MCP argument through the mtron parser.
-     * JSON deserialization collapses str, uri, code, and inst into
-     * {@code "string"} — the mtron parser is the authoritative deserializer.
-     */
-    private static Obj normArg(final Obj arg) {
-        if (arg.isUri()) {
-            try {
-                final Obj reparsed = ObjmtronSerializer.singleNoClip()
-                        .inputBytes(studio.phaseshift.metatron.isa.m.type.Str.Helper.cleanString(arg));
-                // Only replace if mtron found a better type — URI→URI means the
-                // original was correct and re-parsing would double-resolve paths.
-                if (!reparsed.isFail() && !reparsed.isUri())
-                    return reparsed;
-            } catch (final Exception ignored) {
-                // plain text that isn't mtron — keep original
-            }
-        }
-        return arg;
-    }
-
-    /**
      * Build the metatron-native MCP tool definitions and merge them into the
      * supplied jvm map.  Caller-supplied entries always win — this method
      * never overwrites existing keys.
@@ -160,9 +138,9 @@ public final class mcpMetatronBuilder {
                                 final Obj currentMemory = inst.arg(f("current_memory"), 0).vid(CommonUtil.mintShortUUID(memoryBasePath, true));
                                 return rel(previousMemory, currentMemory, REL_TID, CommonUtil.mintShortUUID(memoryBasePath, true));
                             }), "noobj lhs", "an memory chain relation (previous => current)@<vid> w/ id for future lookup",
-                    Map.of(uri("current_memory"), "the memory to remember -- a str::T, a markdown::T, etc.",
+                    Map.of(uri("current_memory"), "the memory to remember -- e.g. a str::T, a markdown::T, etc.",
                             uri("previous_memory"), "a previous memory vid to chain current memory to"),
-                    "(experimental) returns a memory relation of the form(current@<vid> => previous@<vid>)@<vid>"), MUTABLE);
+                    "(experimental) returns a memory relation of the form (current@<vid> => previous@<vid>)@<vid>"), MUTABLE);
             tools.at(uri(mTool.toolName(toolTid("read_memory"))), docWrap(instC(toolTid("read_memory").dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
                             rec(uri("memory_vid").maybe().asUri(), URI_TYPE), (lhs, inst) -> {
                                 final Obj memId = inst.arg(f("memory_vid"), 0);
@@ -176,10 +154,11 @@ public final class mcpMetatronBuilder {
             // eval_mtron — the foundational tool: evaluate metatron expressions
             tools.at(uri(mTool.toolName(toolTid("eval_mtron"))), docWrap(instC(
                             f(mTool.toolName(toolTid("eval_mtron"))).dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
-                            rec(uri(CODE), STR_TYPE), (lhs, inst) -> {
-                                // LOG.warn("%s [%s]", inst.arg(0), inst.arg(0).type());
+                            rec(uri(CODE), CODE_TYPE), (lhs, inst) -> {
+                                // code arrives already parsed to code::T by the schema-aware JSON
+                                // layer — no JSON-massaging here; just evaluate it.
                                 try {
-                                    return ObjmtronSerializer.parse(inst.arg(0).toString()).apply();
+                                    return inst.arg(0).apply();
                                 } catch (final Exception e) {
                                     return fail(e);
                                 }
