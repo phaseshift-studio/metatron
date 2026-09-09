@@ -5,7 +5,8 @@ description: Complete mtron language reference — mono, poly, and call types, o
 
 # mtron Language Reference
 
-A data-flow language over the metatron object graph.  Every value is an **Obj** — int, str, real, bool, uri, rec, lst, inst, code, bytes, etc.  Expressions chain left-to-right: `lhs.inst(rhs)`.
+A data-flow language over the metatron object graph. Every value is an **Obj** — int, str, real, bool, uri, rec, lst,
+inst, code, bytes, etc. Expressions chain left-to-right: `lhs.inst(rhs)`.
 
 ---
 
@@ -19,7 +20,6 @@ false       [-- bool --]
 "metatron"  [-- str (double-quoted) --]
 'mtron'     [-- str (single-quoted) --]
 """mtron""" [-- str (triple double-quoted, multi-line) --]
-'''mtron''' [-- str (triple single-quoted, multi-line --]
 <a.b.c>     [-- uri (angle-bracket necessary of uri has . or space) --]
 /foo/bar    [-- uri (path literal) --]
 a           [-- uri (bare name — no angle brackets if alphanumeric) --]
@@ -43,7 +43,7 @@ noobj       [-- "no obj" (empty, none) --]
 ### rec (`[key=>val, ...]` — unordered, keyed)
 
 ```mtron_pre
-[name=>'Alice', age=>30]
+[name=>'marko', age=>29]
 [1=>2, 2=>3, 3=>4]
 ```
 
@@ -56,24 +56,31 @@ noobj       [-- "no obj" (empty, none) --]
 
 ### Indexing / Access
 
-```mtron_pre
-[1,2,3].0         [--
-[1,2,3]>>0        [--
-[a=>1,b=>2].a     [--
-[a=>1,b=>2]>>a    [--
+```mtron_pre        
+[1,2,3]>>0       
+[a=>1,b=>2]>>a   
+[a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b
+[a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b/d
+[a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b/d/e
 ```
 
 ### Rel (relation) — key/value pair
 
-```mtron_pre
-a=>1              [-- URI a
-name=>'Alice'     [-- URI name
+```mtron_pre             
+name=>'marko'
+name=>'marko'=>age=>29
+name=>'marko'=>age=>29.>>.>>.>>
 ```
 
 Objs can carry a **vid** (address URI) via `@`:
+
 ```mtron_pre
-[a=>1]@myVid            [-- list anchored at uri myVid --]
-[1,2,3,4]@a              [-- list anchored at *a --]
+[a=>1]@a                 [-- rec anchored at uri myVid --]
+[1,2,3,4]@b              [-- lst anchored at *a --]
+*a + [b=>2]
+*a
+@b + [5,6]
+*b
 ```
 
 ---
@@ -81,6 +88,7 @@ Objs can carry a **vid** (address URI) via `@`:
 ## 3. Coefficients (count / multiplicity)
 
 Every obj has a coefficient. Shorthand is `{n}obj` -- standing for `type{n}::obj`:
+
 ```mtron_pre
 3                      [-- coefficient {1} (default) --]
 {0}3                   [-- equivalent to noobj (0 3s) --]
@@ -91,6 +99,7 @@ int{5}::3              [-- coefficient {5} represents 5 3s --]
 ```
 
 Coefficients propagate through arithmetic and affect count, sum, repeat:
+
 ```mtron_pre
 {1,2,3}.count()               [-- 3  (sum of coefficients) --]
 {1,2,{10}3}.count()           [-- 13  (sum of coefficients) --]
@@ -115,12 +124,14 @@ int{50}::10.mult(10)          [-- int{50}::100 (coefficient account for) --]
 ```
 
 **Short-circuit:** `_` (underscore) is the identity function — returns the unmodified lhs:
+
 ```mtron_pre
 1.plus(_)                   [-- 2 --]
 {1,2,3}.map(_).plus(2)      [-- {3,4,5} --]
 ```
 
 **Compound ops:** `?inst<=type(body)` for inline insts (lambdas):
+
 ```mtron_pre
 {1,2,3}.inst?int<=int(a=>plus(2)){ plus(*a) }     [-- {4,8,18} --]
 ```
@@ -156,30 +167,31 @@ int{50}::10.mult(10)          [-- int{50}::100 (coefficient account for) --]
 `*` dereferences a uri to its referent in space:
 `@` anchors a uri to its referent in space
 
-```mtron_pre
+```mtron
 */path/to/obj              [-- read obj at uri (detached) --]
 @/path/to/obj              [-- real obj at uri (attached) --]
-*local:software/           [-- read with trailing /
-*</path/to/obj>            [-- angle-bracket handles special chars --]
+*local:software/           [-- read with trailing --]
+*</pa.th/to/o b .j>        [-- angle-bracket handles special chars --]
 ```
 
 Wildcards:
-```mtron_pre
+
+```mtron
 */path/+/obj               [-- + matches one segment --]
 */path/+/+                 [-- ++, children at depth 2 --]
-*/path/#                   [-- [-- matches all remaining segments (recursive) --] --]
+*/path/#                   [-- matches all remaining segments (recursive) --]
 ```
 
 **uri::T** type drives URI-specific operations:
+
 ```mtron_pre
-http://abc:123/a/b/c.>>scheme        [-- http --]
-http://abc:123/a/b/c.>>host          [-- abc --]
-http://abc:123/a/b/c.>>port          [-- 123 (noobj if no port) --]
-http://abc:123/a/b/c.>>authority     [-- abc:123 --]
-http://abc:123/a/b/c.>>{schema,path} [-- {http,/a/b/c} --]
-/a/b/c>>0                            [-- a --]
-/a/b/c>>2                            [-- b --]
+http://abc:123/a/b/c.as(rec::T)>>scheme        [-- http --]
+http://abc:123/a/b/c.as(rec::T)>>host          [-- abc --]
+http://abc:123/a/b/c.as(rec::T)>>port          [-- 123 (noobj if no port) --]
+http://abc:123/a/b/c.as(rec::T)>>authority     [-- abc:123 --]
+http://abc:123/a/b/c.as(rec::T)>>{schema,path} [-- {http,/a/b/c} --]
 ```
+
 ---
 
 ## 7. Type Casting (`.as(type::T)`)
@@ -195,6 +207,7 @@ true.as(int::T)           [-- 1 --]
 ```
 
 Custom types via `tid::T[predicate][constructor]@vid`:
+
 ```mtron_pre
 int::T[is(gt(0))]@nat     [-- type nat, only positive ints --]
 int::T[?>0]@nat           [-- syntax sugar on is(gt(0)) --]
@@ -261,6 +274,7 @@ Unwraps collections: `{1,2,3}>-`   # {1,2,3} (flattens coefficient barriers)
 ### Split (`-<`)
 
 Distributes elements:
+
 ```mtron_pre
 1-<[_,_]                            [-- [1,1] --]
 {1,2,3}-<[plus(1),plus(2)]          [-- {2,3,4,5} --]
@@ -280,6 +294,7 @@ Distributes elements:
 Traverse into structures:
 
 ### On lst
+
 ```mtron_pre
 [1,2,[a=>3],4]<<2                  [-- [[a=>3],4] --]
 [1,2,[a=>3],4]>>2                  [-- [1,2] --]
@@ -288,6 +303,7 @@ Traverse into structures:
 ```
 
 ### On records
+
 ```mtron_pre
 [a=>1,b=>2,c=>[d=>3]].dom()        [-- {a,b,c}           (extract keys) --]
 [a=>1,b=>2,c=>[d=>3]].rng()        [-- {1,2,[d=>3]}      (extract values) --]
@@ -296,6 +312,7 @@ Traverse into structures:
 ```
 
 ### On URIs
+
 ```mtron_pre
 a/b/c<<                   [-- b/c    (drop leftmost segment) --]
 a/b/c>>                   [-- a/b    (drop rightmost segment) --]
@@ -340,6 +357,7 @@ Modifies a value at a URI address and writes back:
 ```
 
 `@` means "anchor the write-back to the VID" (persist).  `*` means "anonymous copy" (no write-back):
+
 ```mtron_pre
 @a/b/c>>= +10      [-- modifies *a/b/c and writes back --]
 *a/b/c>>= +10      [-- evaluates but discards the result --]
@@ -356,9 +374,11 @@ Lazy cross-reference via the Router:
 [company=>!@db:companies/101]     [-- auto_at — resolved on access, with anchor --]
 ```
 
-`!*` is sugar for `auto_from(uri)`.  When you `.at(company)` on the record, the Router resolves `db:companies/101` and returns the target Obj.
+`!*` is sugar for `auto_from(uri)`. When you `.at(company)` on the record, the Router resolves `db:companies/101` and
+returns the target Obj.
 
 Chain through auto-refs:
+
 ```mtron_pre
 *a>>x>>x           [-- follows !* chain to the final target --]
 *a>>x/x            [-- reads a field after resolving the auto-ref --]
@@ -369,6 +389,7 @@ Chain through auto-refs:
 ## 16. Math Instruction
 
 Embedded mathematical expressions:
+
 ```mtron_pre
 math('1+2')                           [-- 3.0 --]
 10.to(a).math('a^2')                  [-- 100.0 --]
@@ -408,6 +429,7 @@ Braces create a multi-value Objs collection (coefficient barrier):
 ```
 
 Collections distribute operations:
+
 ```mtron_pre
 {1,2,3}.plus(2)                [-- {3,4,5} --]
 {1,2,3}>-                      [-- unmerge — flattens barriers --]
@@ -418,6 +440,7 @@ Collections distribute operations:
 ## 20. Type Annotations
 
 Inline type predicates:
+
 ```mtron_pre
 ?int::T                        [-- test: is this an int? --]
 ?uri::T                        [-- is this a uri? --]
@@ -427,6 +450,7 @@ int{?}::10                     [-- optional coefficient {0,1} --]
 ```
 
 `==`
+
 ```mtron_pre
 [a=>1,b=>2,c=>3]==[a=>_]     [-- select with pattern match --]
 [a=>1,b=>2,c=>3]==[a=>is(gt(1))]  [-- select with filter --]
@@ -447,26 +471,26 @@ int{?}::10                     [-- optional coefficient {0,1} --]
 
 ## 22. Sugar & Syntax Summary
 
-| Sugar | Expansion | Use |
-|-------|-----------|-----|
-| `*uri` | `from(uri)` | Dereference URI |
-| `!*uri` | `auto_from(uri)` | Lazy cross-ref |
-| `@uri` | `at(uri)` | Anchor to URI location |
-| `_` | `id()` | Identity function |
-| `>>=` | `update()` | Update-and-write-back |
-| `>>` | `rshift()` | Right-shift (drop last) |
-| `<<` | `lshift()` | Left-shift (drop first) |
-| `>-` | `merge()` | Flatten / merge barrier |
-| `-<` | `split()` | Distribute into branches |
-| `\|` | `barrier()` | Monadic barrier |
-| `_/...\\_` | `within()` | Structural within-block |
-| `.` | `.plus(1)` | Dot-instruction call |
-| `=>` | `rel()` | Key → value relation |
-| `->` | `ref()` | Write to URI reference |
-| `;` | `end()` | Sequence separator |
-| `?pred` | `is(pred)` | Type/condition check |
-| `==` | `select()` | Structural select |
-| `=?=` | `where()` | Filter after select |
+| Sugar      | Expansion        | Use                      |
+|------------|------------------|--------------------------|
+| `*uri`     | `from(uri)`      | Dereference URI          |
+| `!*uri`    | `auto_from(uri)` | Lazy cross-ref           |
+| `@uri`     | `at(uri)`        | Anchor to URI location   |
+| `_`        | `id()`           | Identity function        |
+| `>>=`      | `update()`       | Update-and-write-back    |
+| `>>`       | `rshift()`       | Right-shift (drop last)  |
+| `<<`       | `lshift()`       | Left-shift (drop first)  |
+| `>-`       | `merge()`        | Flatten / merge barrier  |
+| `-<`       | `split()`        | Distribute into branches |
+| `\|`       | `barrier()`      | Monadic barrier          |
+| `_/...\\_` | `within()`       | Structural within-block  |
+| `.`        | `.plus(1)`       | Dot-instruction call     |
+| `=>`       | `rel()`          | Key → value relation     |
+| `->`       | `ref()`          | Write to URI reference   |
+| `;`        | `end()`          | Sequence separator       |
+| `?pred`    | `is(pred)`       | Type/condition check     |
+| `==`       | `select()`       | Structural select        |
+| `=?=`      | `where()`        | Filter after select      |
 
 ---
 

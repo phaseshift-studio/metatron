@@ -105,6 +105,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_EMBED_FEATURE_TID = LLM_FEATURE_TID.extend("embed_feature");
     //public static final fURI LLM_MESSAGE_FEATURE_TID = f(LLM_MESSAGE_FEATURE_TID_STRING);
     public static final fURI LLM_SKILL_FEATURE_TID = LLM_FEATURE_TID.extend("skill_feature");
+    public static final fURI LLM_TODO_FEATURE_TID = LLM_FEATURE_TID.extend("todo_feature");
     public static final fURI LLM_THINK_FEATURE_TID = LLM_FEATURE_TID.extend("think_feature");
     public static final fURI LLM_CONCEPT_FEATURE_TID = LLM_FEATURE_TID.extend("concept_feature");
     public static final fURI LLM_COMPACTION_FEATURE_TID = LLM_FEATURE_TID.extend("compaction_feature");

@@ -179,6 +179,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_grph.html"><img
                             src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
                             alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_ide.html"><img
+                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                            alt="ide"/>/m/ide</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_iot.html"><img
                             src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -205,9 +208,6 @@
                             alt="vec"/>/m/vec</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_web.html"><img
                             src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
-                            alt="web"/>/m/web</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_ide.html"><img
-                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                 </ul>
             </li>
@@ -383,7 +383,8 @@
     </div>
     <div class="markdown-body">
 <h2>mtron Language Reference</h2>
-<p>A data-flow language over the metatron object graph.  Every value is an <strong>Obj</strong> — int, str, real, bool, uri, rec, lst, inst, code, bytes, etc.  Expressions chain left-to-right: <code>lhs.inst(rhs)</code>.</p>
+<p>A data-flow language over the metatron object graph. Every value is an <strong>Obj</strong> — int, str, real, bool, uri, rec, lst,
+inst, code, bytes, etc. Expressions chain left-to-right: <code>lhs.inst(rhs)</code>.</p>
 <hr />
 <h3>1. Mono Types</h3>
 <pre><code class="language-mtron">mtron&gt; 1           [-- int (64-bit signed) --]
@@ -400,12 +401,6 @@ mtron&gt; 'mtron'     [-- str (single-quoted) --]
 ==&gt;'mtron'
 mtron&gt; &quot;&quot;&quot;mtron&quot;&quot;&quot; [-- str (triple double-quoted, multi-line) --]
 ==&gt;'mtron'
-mtron&gt; '''mtron''' [-- str (triple single-quoted, multi-line --]
-==&gt;ERROR: monad obj coefficient is greater than inst domain coefficient: 
-	obj       =&gt; ''
-	\_c       =&gt; 1
-	inst     X=&gt; start?rng=A{**}&amp;dom=noobj{0}('mtron'){&lt;j&gt;}@&lt;1&gt;
-	\_dom_c  X=&gt; 0
 mtron&gt; &lt;a.b.c&gt;     [-- uri (angle-bracket necessary of uri has . or space) --]
 ==&gt;&lt;a.b.c&gt;
 mtron&gt; /foo/bar    [-- uri (path literal) --]
@@ -429,8 +424,8 @@ mtron&gt; [,]               [-- Empty list --]
 ==&gt;[,]
 </code></pre>
 <h4>rec (<code>[key=&gt;val, ...]</code> — unordered, keyed)</h4>
-<pre><code class="language-mtron">mtron&gt; [name=&gt;'Alice', age=&gt;30]
-==&gt;[name=&gt;'Alice',age=&gt;30]
+<pre><code class="language-mtron">mtron&gt; [name=&gt;'marko', age=&gt;29]
+==&gt;[name=&gt;'marko',age=&gt;29]
 mtron&gt; [1=&gt;2, 2=&gt;3, 3=&gt;4]
 ==&gt;[1=&gt;2,2=&gt;3,3=&gt;4]
 </code></pre>
@@ -444,34 +439,35 @@ mtron&gt; {1,1,2} [-- becomes {{2}1,2} (duplicates merged on coefficient) --]
 ==&gt;2
 </code></pre>
 <h4>Indexing / Access</h4>
-<pre><code class="language-mtron">mtron&gt; [1,2,3].0         [--
-==&gt;ERROR: monad obj coefficient is greater than inst domain coefficient: 
-	obj       =&gt; [1,2,3]
-	\_c       =&gt; 1
-	inst     X=&gt; start?rng=A{**}&amp;dom=noobj{0}(0){&lt;j&gt;}@&lt;1&gt;
-	\_dom_c  X=&gt; 0
-mtron&gt; [1,2,3]&gt;&gt;0        [--
+<pre><code class="language-mtron">mtron&gt; [1,2,3]&gt;&gt;0
 ==&gt;1
-mtron&gt; [a=&gt;1,b=&gt;2].a     [--
-==&gt;ERROR: monad obj coefficient is greater than inst domain coefficient: 
-	obj       =&gt; [a=&gt;1,b=&gt;2]
-	\_c       =&gt; 1
-	inst     X=&gt; start?rng=A{**}&amp;dom=noobj{0}(a){&lt;j&gt;}@&lt;1&gt;
-	\_dom_c  X=&gt; 0
-mtron&gt; [a=&gt;1,b=&gt;2]&gt;&gt;a    [--
+mtron&gt; [a=&gt;1,b=&gt;2]&gt;&gt;a
 ==&gt;1
+mtron&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[e=&gt;4]]]&gt;&gt;a/b
+mtron&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[e=&gt;4]]]&gt;&gt;a/b/d
+mtron&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[e=&gt;4]]]&gt;&gt;a/b/d/e
 </code></pre>
 <h4>Rel (relation) — key/value pair</h4>
-<pre><code class="language-mtron">mtron&gt; a=&gt;1              [-- URI a
-==&gt;a=&gt;1
-mtron&gt; name=&gt;'Alice'     [-- URI name
-==&gt;name=&gt;'Alice'
+<pre><code class="language-mtron">mtron&gt; name=&gt;'marko'
+==&gt;name=&gt;'marko'
+mtron&gt; name=&gt;'marko'=&gt;age=&gt;29
+==&gt;name=&gt;('marko'=&gt;(age=&gt;29))
+mtron&gt; name=&gt;'marko'=&gt;age=&gt;29.&gt;&gt;.&gt;&gt;.&gt;&gt;
+==&gt;29
 </code></pre>
 <p>Objs can carry a <strong>vid</strong> (address URI) via <code>@</code>:</p>
-<pre><code class="language-mtron">mtron&gt; [a=&gt;1]@myVid            [-- list anchored at uri myVid --]
-==&gt;[a=&gt;1]@myVid
-mtron&gt; [1,2,3,4]@a              [-- list anchored at *a --]
-==&gt;[1,2,3,4]@a
+<pre><code class="language-mtron">mtron&gt; [a=&gt;1]@a                 [-- rec anchored at uri myVid --]
+==&gt;[a=&gt;1]@a
+mtron&gt; [1,2,3,4]@b              [-- lst anchored at *a --]
+==&gt;[1,2,3,4]@b
+mtron&gt; *a + [b=&gt;2]
+==&gt;[a=&gt;1,b=&gt;2]
+mtron&gt; *a
+==&gt;[a=&gt;1]
+mtron&gt; @b + [5,6]
+==&gt;[1,2,3,4,5,6,5,6]@b
+mtron&gt; *b
+==&gt;[1,2,3,4,5,6,5,6]
 </code></pre>
 <hr />
 <h3>3. Coefficients (count / multiplicity)</h3>
@@ -573,95 +569,31 @@ mtron&gt; 'ab3cd'.regex('\d{2}')        [-- [,]  (no match — empty pair) --]
 <h3>6. URI Dereferencing (<code>*</code> — <code>from()</code>)</h3>
 <p><code>*</code> dereferences a uri to its referent in space:
 <code>@</code> anchors a uri to its referent in space</p>
-<pre><code class="language-mtron">mtron&gt; */path/to/obj              [-- read obj at uri (detached) --]
-==&gt;fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ */path/to/obj
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/1988
-mtron&gt; @/path/to/obj              [-- real obj at uri (attached) --]
-==&gt;fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ at?rng=B{*}&amp;dom=A{?}(/path/to/obj){&lt;j&gt;}@&lt;0&gt;
-   	 \_dom   │ A{?}::T
-   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/1992
-mtron&gt; *local:software/           [-- read with trailing
-       *&lt;/path/to/obj&gt;            [-- angle-bracket handles special chars --]
-==&gt;fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ */path/to/obj
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/1996
+<pre><code class="language-mtron">*/path/to/obj              [-- read obj at uri (detached) --]
+@/path/to/obj              [-- real obj at uri (attached) --]
+*local:software/           [-- read with trailing --]
+*&lt;/pa.th/to/o b .j&gt;        [-- angle-bracket handles special chars --]
 </code></pre>
 <p>Wildcards:</p>
-<pre><code class="language-mtron">mtron&gt; */path/+/obj               [-- + matches one segment --]
-==&gt;fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ */path/+/obj
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/obj][MTronException&lt;137&gt;:no active space supports pattern /path/+/obj]][no active space supports pattern /path/+/obj]@/sys/fail/2000
-mtron&gt; */path/+/+                 [-- ++, children at depth 2 --]
-==&gt;fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ */path/+/+
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/+][MTronException&lt;137&gt;:no active space supports pattern /path/+/+]][no active space supports pattern /path/+/+]@/sys/fail/2004
-mtron&gt; */path/#                   [-- [-- matches all remaining segments (recursive) --] --]
-==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '--]'
+<pre><code class="language-mtron">*/path/+/obj               [-- + matches one segment --]
+*/path/+/+                 [-- ++, children at depth 2 --]
+*/path/#                   [-- matches all remaining segments (recursive) --]
 </code></pre>
 <p><strong>uri::T</strong> type drives URI-specific operations:</p>
-<pre><code class="language-mtron">mtron&gt; http://abc:123/a/b/c.&gt;&gt;scheme        [-- http --]
-==&gt;fail::[apply failure:
-   	[lhs]    │ http://abc:123/a/b/c
-   	 \_type  │ /m/uri
-   	  \_pred │ []
-   	[inst]   │ rshift?rng=#{*}&amp;dom=uri(scheme){&lt;j&gt;}@&lt;1&gt;
-   	 \_dom   │ uri::T
-   	 \_args  │ [scheme][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/scheme]][no active space supports pattern http://abc:123/a/b/c/scheme]@/sys/fail/2034
-mtron&gt; http://abc:123/a/b/c.&gt;&gt;host          [-- abc --]
-==&gt;fail::[apply failure:
-   	[lhs]    │ http://abc:123/a/b/c
-   	 \_type  │ /m/uri
-   	  \_pred │ []
-   	[inst]   │ rshift?rng=#{*}&amp;dom=uri(host){&lt;j&gt;}@&lt;1&gt;
-   	 \_dom   │ uri::T
-   	 \_args  │ [host][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/host]][no active space supports pattern http://abc:123/a/b/c/host]@/sys/fail/2062
-mtron&gt; http://abc:123/a/b/c.&gt;&gt;port          [-- 123 (noobj if no port) --]
-==&gt;fail::[apply failure:
-   	[lhs]    │ http://abc:123/a/b/c
-   	 \_type  │ /m/uri
-   	  \_pred │ []
-   	[inst]   │ rshift?rng=#{*}&amp;dom=uri(port){&lt;j&gt;}@&lt;1&gt;
-   	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/port]][no active space supports pattern http://abc:123/a/b/c/port]@/sys/fail/2090
-mtron&gt; http://abc:123/a/b/c.&gt;&gt;authority     [-- abc:123 --]
-==&gt;fail::[apply failure:
-   	[lhs]    │ http://abc:123/a/b/c
-   	 \_type  │ /m/uri
-   	  \_pred │ []
-   	[inst]   │ rshift?rng=#{*}&amp;dom=uri(authority){&lt;j&gt;}@&lt;1&gt;
-   	 \_dom   │ uri::T
-   	 \_args  │ [authority][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/authority]][no active space supports pattern http://abc:123/a/b/c/authority]@/sys/fail/2118
-mtron&gt; http://abc:123/a/b/c.&gt;&gt;{schema,path} [-- {http,/a/b/c} --]
-mtron&gt; /a/b/c&gt;&gt;0                            [-- a --]
-==&gt;/a/b/c
-mtron&gt; /a/b/c&gt;&gt;2                            [-- b --]
-```---
-
-## 7. Type Casting (`.as(type::T)`)
-
-```mtron
-mtron&gt; 1.as(str::T)              [-- &quot;1&quot; --]
+<pre><code class="language-mtron">mtron&gt; http://abc:123/a/b/c.as(rec::T)&gt;&gt;scheme        [-- http --]
+==&gt;http
+mtron&gt; http://abc:123/a/b/c.as(rec::T)&gt;&gt;host          [-- abc --]
+==&gt;abc
+mtron&gt; http://abc:123/a/b/c.as(rec::T)&gt;&gt;port          [-- 123 (noobj if no port) --]
+==&gt;123
+mtron&gt; http://abc:123/a/b/c.as(rec::T)&gt;&gt;authority     [-- abc:123 --]
+==&gt;abc:123
+mtron&gt; http://abc:123/a/b/c.as(rec::T)&gt;&gt;{schema,path} [-- {http,/a/b/c} --]
+==&gt;[&lt;&gt;,a,b,c]
+</code></pre>
+<hr />
+<h3>7. Type Casting (<code>.as(type::T)</code>)</h3>
+<pre><code class="language-mtron">mtron&gt; 1.as(str::T)              [-- &quot;1&quot; --]
 ==&gt;'1'
 mtron&gt; 1.0.as(int::T)            [-- 1 --]
 ==&gt;1
@@ -862,7 +794,8 @@ mtron&gt; *a/b/c&gt;&gt;= +10      [-- evaluates but discards the result --]
 mtron&gt; [company=&gt;!@db:companies/101]     [-- auto_at — resolved on access, with anchor --]
 ==&gt;[company=&gt;!@db:companies/101]
 </code></pre>
-<p><code>!*</code> is sugar for <code>auto_from(uri)</code>.  When you <code>.at(company)</code> on the record, the Router resolves <code>db:companies/101</code> and returns the target Obj.</p>
+<p><code>!*</code> is sugar for <code>auto_from(uri)</code>. When you <code>.at(company)</code> on the record, the Router resolves <code>db:companies/101</code> and
+returns the target Obj.</p>
 <p>Chain through auto-refs:</p>
 <pre><code class="language-mtron">mtron&gt; *a&gt;&gt;x&gt;&gt;x           [-- follows !* chain to the final target --]
 mtron&gt; *a&gt;&gt;x/x            [-- reads a field after resolving the auto-ref --]
@@ -976,11 +909,8 @@ mtron&gt; ?int::T    [-- check if type is int --]
 </ol>
 <pre><code class="language-mtron">mtron&gt; [-- Chaining example (read test data from test file): --]
 mtron&gt; {1,2,3,4}.sum{2}().sum?int&lt;=int{1,7}().sum()-&lt;[_,_]&gt;-.sum?int&lt;=int{2}()  #
-==&gt;ERROR: monad obj coefficient is greater than inst domain coefficient: 
-	obj       =&gt; 40
-	\_c       =&gt; 1
-	inst     X=&gt; start?rng=A{**}&amp;dom=noobj{0}(&lt;#&gt;){&lt;j&gt;}@&lt;6&gt;
-	\_dom_c  X=&gt; 0
+==&gt;ERROR: monad obj coefficient is greater than inst dom coefficient:
+	40 [{1} X=&gt; {0}] start?rng=A{**}&amp;dom=noobj{0}(&lt;#&gt;){&lt;j&gt;}@&lt;6&gt;
 </code></pre>
 
     </div>

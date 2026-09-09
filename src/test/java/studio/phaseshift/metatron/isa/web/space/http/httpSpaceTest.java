@@ -145,7 +145,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
         assertEquals((Obj) ObjmtronSerializer.parse("42"), base.at(f("number")), "number");
         assertEquals((Obj) ObjmtronSerializer.parse("true"), base.at(f("active")), "active");
         assertTrue(base.at(f("nothing")).isNoObj(), "nothing");
-        assertEquals((Obj) ObjmtronSerializer.parse("<2024-06-01T12:00:00Z>"), base.at(f("meta/created")), "meta/created");
+        assertEquals((Obj) ObjmtronSerializer.parse("'2024-06-01T12:00:00Z'"), base.at(f("meta/created")), "meta/created");
         assertEquals((Obj) ObjmtronSerializer.parse("99.5"), base.at(f("meta/details/score")), "meta/details/score");
         assertEquals((Obj) ObjmtronSerializer.parse("false"), base.at(f("meta/details/valid")), "meta/details/valid");
         assertEquals((Obj) ObjmtronSerializer.parse("1"), base.at(f("items/0")), "items/0");

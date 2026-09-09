@@ -79,6 +79,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
     private static final fURI KEY_WRAP_URI = fURI.Singleton.f("wrap_uri");
     private static final fURI KEY_BIAS_URI = fURI.Singleton.f("bias_towards_uri");
     private static final fURI KEY_BIAS_OBJS = fURI.Singleton.f("bias_towards_objs");
+    private static final fURI KEY_SCHEMA = fURI.Singleton.f("schema");
 
     private static final ObjJSONSerializer INSTANCE = new ObjJSONSerializer();
 
@@ -108,6 +109,35 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
         return s;
     }
 
+    /**
+     * Parameterize this serializer with the tool's argument schema — a rec mapping
+     * argument name (uri) to its declared type (e.g. {@code code=>code::T}).  When
+     * {@link #read(JsonElement)} hits a string under a schema'd key it disambiguates
+     * to the declared type instead of guessing (str/uri/code/inst), so the tools
+     * above never have to "massage" a JSON string back into its mtron type.
+     */
+    public ObjJSONSerializer schema(final Rec schema) {
+        this.at(KEY_SCHEMA, schema, Poly.MUTABLE);
+        return this;
+    }
+
+    /**
+     * Read a JSON string through this serializer's configuration (density, bias, and
+     * any {@link #schema(Rec)}), with lenient JSON — the same entry the MIME path uses.
+     */
+    public Obj readString(final String json) {
+        JsonReader reader = new JsonReader(new StringReader(json));
+        reader.setStrictness(Strictness.LENIENT);
+        return this.read(JsonParser.parseReader(reader));
+    }
+
+    private fURI schemaTid(final String key) {
+        final Obj schema = this.at(KEY_SCHEMA);
+        if (schema.isNoObj() || !schema.isRec()) return null;
+        final Obj t = schema.asRec().at(uri(key));
+        return t.isNoObj() ? null : t.tid();
+    }
+
     public ObjJSONSerializer() {
         super(OBJ_JSON_SERIALIZER_TID, OBJ_JSON_SERIALIZER_VID);
         this.at(KEY_DENSITY, uri("OPAQUE"), Poly.MUTABLE);
@@ -135,6 +165,10 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
 
     @Override
     public Obj read(final JsonElement json) {
+        return this.read(json, null);
+    }
+
+    private Obj read(final JsonElement json, final fURI expectedTid) {
         if (json.isJsonNull()) return noobj();
 
         fURI tid = null, vid = null, bid = null;
@@ -148,6 +182,8 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
             if (jo.has(VID_KEY)) vid = f(jo.get(VID_KEY).getAsString());
             if (jo.has(BID_KEY)) bid = Router.global().redirect(f(jo.get(BID_KEY).getAsString()), true);
         }
+        // schema-declared type (tool arg) supplies the tid when the wire carries no envelope
+        if (tid == null && expectedTid != null) tid = expectedTid;
 
         JsonElement value = json;
         if (json.isJsonObject() && json.getAsJsonObject().has(VALUE_KEY)) {
@@ -176,6 +212,15 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
                     obj = ObjmtronSerializer.parse(jpstr);
                 } else if ((bid != null && T(bid).isRefinementOf(INST_TYPE)) || (tid != null && T(tid).isRefinementOf(INST_TYPE))) {
                     obj = ObjmtronSerializer.parse(jpstr);
+                } else if (tid != null && T(tid).isRootType()) {
+                    // #::T (any type) — the value could be anything, so hand the string straight
+                    // to the mtron parser (no str/uri/code shortcut); a plain str only when it
+                    // isn't parseable mtron.
+                    try {
+                        obj = ObjmtronSerializer.parse(jpstr);
+                    } catch (final Exception e) {
+                        obj = str(jpstr, tid, null);
+                    }
                 } else {
                     try {
                         if ((jpstr.startsWith("\"") || jpstr.startsWith("'") && jpstr.endsWith("\"") || jpstr.endsWith("'"))) {
@@ -186,16 +231,19 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
                             obj = uri(f(clean), tid, null);
                         } else {
                             try {
-                                obj = ObjmtronSerializer.parse(jpstr).apply();
+                                obj = ObjmtronSerializer.parse(jpstr);
                             } catch (final Exception e) {
-                                if (biasTowardsUri() && !jpstr.contains(" "))
+                                // uri-bias only when the schema declared nothing — a declared
+                                // structural type (lst/rec/etc.) means the string is a mismatch
+                                // the tool should handle, not a uri to be mangled by uri-parse
+                                if (tid == null && biasTowardsUri() && !jpstr.contains(" "))
                                     obj = uri(jpstr);
                                 else
-                                    obj = str(jpstr, tid, null);
+                                    obj = str(jpstr);
                             }
                         }
                     } catch (Exception e) {
-                        obj = str(jpstr, tid, null);
+                        obj = str(jpstr);
                     }
                 }
             }
@@ -203,14 +251,14 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
             final JsonArray ja = (JsonArray) value;
             if (bid != null && T(bid).isRefinementOf(REC_TYPE) &&
                     !ja.isEmpty() && ja.asList().stream().allMatch(e -> e.isJsonArray() && e.getAsJsonArray().size() == 2)) {
-                obj = ja.asList().stream().map(e -> rel(read(e.getAsJsonArray().get(0)), read(e.getAsJsonArray().get(1)))).collect(new CommonUtil.RecCollector(bid, vid));
+                obj = ja.asList().stream().map(e -> rel(read(e.getAsJsonArray().get(0), null), read(e.getAsJsonArray().get(1), null))).collect(new CommonUtil.RecCollector(bid, vid));
             } else if (ja.size() == 2 && bid != null && TYPE_TID.equals(bid.basePath())) {
                 final fURI typeName = null != rawTid ? rawTid : tid;
                 final Obj parsed = ObjmtronSerializer.parse(typeName.toString() + "::T");
                 obj = parsed.isObjCall() ? ((Call) parsed).tryToInst() : parsed;
             } else {
                 List<Obj> list = new ArrayList<>();
-                for (var j : ja) list.add(read(j));
+                for (var j : ja) list.add(read(j, null));
                 final boolean isLst = (bid != null && LST_TID.equals(bid.basePath()))
                         || (bid == null && tid != null && LST_TID.equals(tid.basePath()));
                 if (isLst) {
@@ -225,7 +273,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
             final JsonObject jo = (JsonObject) value;
             Map<Obj, Obj> map = new LinkedHashMap<>();
             for (var entry : jo.entrySet()) {
-                map.put(uri(f(entry.getKey())), read(entry.getValue()));
+                map.put(uri(f(entry.getKey())), this.read(entry.getValue(), this.schemaTid(entry.getKey())));
             }
             obj = rec(map, tid == null ? REC_TID : tid, null);
         }
@@ -236,7 +284,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
 
     @Override
     public JsonElement write(final Obj obj) {
-        if (obj.isNoObj()) return JsonNull.INSTANCE;
+        if (null == obj || obj.isNoObj()) return JsonNull.INSTANCE;
 
         JsonElement element;
         if (obj.isFail()) element = new JsonPrimitive(obj.failValue().getMessage());
@@ -265,7 +313,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
             element = arr;
         } else if (obj.isRec()) {
             JsonObject jo = new JsonObject();
-            obj.recValue().forEach((k, v) -> jo.add(k.uriValue().toString(), write(v)));
+            obj.recValue().forEach((k, v) -> jo.add(k.toCleanString(), write(v)));
             element = jo;
         } else throw MTronException.of("unsupported type: %s", obj.tid());
 
@@ -294,7 +342,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
 
     @Override
     public Obj inputBytes(ByteBuffer bytes) throws MTronException {
-        return parse(new String(bytes.array(), StandardCharsets.UTF_8));
+        return this.readString(new String(bytes.array(), StandardCharsets.UTF_8));
     }
 
     @Override

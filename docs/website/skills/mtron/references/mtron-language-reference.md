@@ -5,7 +5,8 @@ description: Complete mtron language reference — mono, poly, and call types, o
 
 # mtron Language Reference
 
-A data-flow language over the metatron object graph.  Every value is an **Obj** — int, str, real, bool, uri, rec, lst, inst, code, bytes, etc.  Expressions chain left-to-right: `lhs.inst(rhs)`.
+A data-flow language over the metatron object graph. Every value is an **Obj** — int, str, real, bool, uri, rec, lst,
+inst, code, bytes, etc. Expressions chain left-to-right: `lhs.inst(rhs)`.
 
 ---
 
@@ -26,12 +27,6 @@ mtron> 'mtron'     [-- str (single-quoted) --]
 ==>'mtron'
 mtron> """mtron""" [-- str (triple double-quoted, multi-line) --]
 ==>'mtron'
-mtron> '''mtron''' [-- str (triple single-quoted, multi-line --]
-==>ERROR: monad obj coefficient is greater than inst domain coefficient: 
-	obj       => ''
-	\_c       => 1
-	inst     X=> start?rng=A{**}&dom=noobj{0}('mtron'){<j>}@<1>
-	\_dom_c  X=> 0
 mtron> <a.b.c>     [-- uri (angle-bracket necessary of uri has . or space) --]
 ==><a.b.c>
 mtron> /foo/bar    [-- uri (path literal) --]
@@ -61,8 +56,8 @@ mtron> [,]               [-- Empty list --]
 ### rec (`[key=>val, ...]` — unordered, keyed)
 
 ```mtron
-mtron> [name=>'Alice', age=>30]
-==>[name=>'Alice',age=>30]
+mtron> [name=>'marko', age=>29]
+==>[name=>'marko',age=>29]
 mtron> [1=>2, 2=>3, 3=>4]
 ==>[1=>2,2=>3,3=>4]
 ```
@@ -80,43 +75,46 @@ mtron> {1,1,2} [-- becomes {{2}1,2} (duplicates merged on coefficient) --]
 ### Indexing / Access
 
 ```mtron
-mtron> [1,2,3].0         [--
-==>ERROR: monad obj coefficient is greater than inst domain coefficient: 
-	obj       => [1,2,3]
-	\_c       => 1
-	inst     X=> start?rng=A{**}&dom=noobj{0}(0){<j>}@<1>
-	\_dom_c  X=> 0
-mtron> [1,2,3]>>0        [--
+mtron> [1,2,3]>>0
 ==>1
-mtron> [a=>1,b=>2].a     [--
-==>ERROR: monad obj coefficient is greater than inst domain coefficient: 
-	obj       => [a=>1,b=>2]
-	\_c       => 1
-	inst     X=> start?rng=A{**}&dom=noobj{0}(a){<j>}@<1>
-	\_dom_c  X=> 0
-mtron> [a=>1,b=>2]>>a    [--
+mtron> [a=>1,b=>2]>>a
 ==>1
+mtron> [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b
+mtron> [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b/d
+mtron> [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b/d/e
 ```
 ### Rel (relation) — key/value pair
 
 ```mtron
-mtron> a=>1              [-- URI a
-==>a=>1
-mtron> name=>'Alice'     [-- URI name
-==>name=>'Alice'
+mtron> name=>'marko'
+==>name=>'marko'
+mtron> name=>'marko'=>age=>29
+==>name=>('marko'=>(age=>29))
+mtron> name=>'marko'=>age=>29.>>.>>.>>
+==>29
 ```
 Objs can carry a **vid** (address URI) via `@`:
+
 ```mtron
-mtron> [a=>1]@myVid            [-- list anchored at uri myVid --]
-==>[a=>1]@myVid
-mtron> [1,2,3,4]@a              [-- list anchored at *a --]
-==>[1,2,3,4]@a
+mtron> [a=>1]@a                 [-- rec anchored at uri myVid --]
+==>[a=>1]@a
+mtron> [1,2,3,4]@b              [-- lst anchored at *a --]
+==>[1,2,3,4]@b
+mtron> *a + [b=>2]
+==>[a=>1,b=>2]
+mtron> *a
+==>[a=>1]
+mtron> @b + [5,6]
+==>[1,2,3,4,5,6,5,6]@b
+mtron> *b
+==>[1,2,3,4,5,6,5,6]
 ```
 ---
 
 ## 3. Coefficients (count / multiplicity)
 
 Every obj has a coefficient. Shorthand is `{n}obj` -- standing for `type{n}::obj`:
+
 ```mtron
 mtron> 3                      [-- coefficient {1} (default) --]
 ==>3
@@ -131,6 +129,7 @@ mtron> {1,2,3}.sum{2}().sum() [-- {2}6 merged by sum is 12 --]
 ==>12
 ```
 Coefficients propagate through arithmetic and affect count, sum, repeat:
+
 ```mtron
 mtron> {1,2,3}.count()               [-- 3  (sum of coefficients) --]
 ==>3
@@ -170,6 +169,7 @@ mtron> {1,2,3,4,5}.reduce(|plus(0))   [-- 15 (| necessary to block evaluation) -
 ==>15
 ```
 **Short-circuit:** `_` (underscore) is the identity function — returns the unmodified lhs:
+
 ```mtron
 mtron> 1.plus(_)                   [-- 2 --]
 ==>2
@@ -179,6 +179,7 @@ mtron> {1,2,3}.map(_).plus(2)      [-- {3,4,5} --]
 ==>5
 ```
 **Compound ops:** `?inst<=type(body)` for inline insts (lambdas):
+
 ```mtron
 mtron> {1,2,3}.inst?int<=int(a=>plus(2)){ plus(*a) }     [-- {4,8,18} --]
 ==>4
@@ -230,92 +231,35 @@ mtron> 'ab3cd'.regex('\d{2}')        [-- [,]  (no match — empty pair) --]
 `@` anchors a uri to its referent in space
 
 ```mtron
-mtron> */path/to/obj              [-- read obj at uri (detached) --]
-==>fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ */path/to/obj
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException<137>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/1988
-mtron> @/path/to/obj              [-- real obj at uri (attached) --]
-==>fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ at?rng=B{*}&dom=A{?}(/path/to/obj){<j>}@<0>
-   	 \_dom   │ A{?}::T
-   	 \_args  │ [/path/to/obj][MTronException<137>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/1992
-mtron> *local:software/           [-- read with trailing
-       *</path/to/obj>            [-- angle-bracket handles special chars --]
-==>fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ */path/to/obj
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException<137>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/1996
+*/path/to/obj              [-- read obj at uri (detached) --]
+@/path/to/obj              [-- real obj at uri (attached) --]
+*local:software/           [-- read with trailing --]
+*</pa.th/to/o b .j>        [-- angle-bracket handles special chars --]
 ```
+
 Wildcards:
+
 ```mtron
-mtron> */path/+/obj               [-- + matches one segment --]
-==>fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ */path/+/obj
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/obj][MTronException<137>:no active space supports pattern /path/+/obj]][no active space supports pattern /path/+/obj]@/sys/fail/2000
-mtron> */path/+/+                 [-- ++, children at depth 2 --]
-==>fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ */path/+/+
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/+][MTronException<137>:no active space supports pattern /path/+/+]][no active space supports pattern /path/+/+]@/sys/fail/2004
-mtron> */path/#                   [-- [-- matches all remaining segments (recursive) --] --]
-==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at '--]'
+*/path/+/obj               [-- + matches one segment --]
+*/path/+/+                 [-- ++, children at depth 2 --]
+*/path/#                   [-- matches all remaining segments (recursive) --]
 ```
+
 **uri::T** type drives URI-specific operations:
+
 ```mtron
-mtron> http://abc:123/a/b/c.>>scheme        [-- http --]
-==>fail::[apply failure:
-   	[lhs]    │ http://abc:123/a/b/c
-   	 \_type  │ /m/uri
-   	  \_pred │ []
-   	[inst]   │ rshift?rng=#{*}&dom=uri(scheme){<j>}@<1>
-   	 \_dom   │ uri::T
-   	 \_args  │ [scheme][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/scheme]][no active space supports pattern http://abc:123/a/b/c/scheme]@/sys/fail/2034
-mtron> http://abc:123/a/b/c.>>host          [-- abc --]
-==>fail::[apply failure:
-   	[lhs]    │ http://abc:123/a/b/c
-   	 \_type  │ /m/uri
-   	  \_pred │ []
-   	[inst]   │ rshift?rng=#{*}&dom=uri(host){<j>}@<1>
-   	 \_dom   │ uri::T
-   	 \_args  │ [host][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/host]][no active space supports pattern http://abc:123/a/b/c/host]@/sys/fail/2062
-mtron> http://abc:123/a/b/c.>>port          [-- 123 (noobj if no port) --]
-==>fail::[apply failure:
-   	[lhs]    │ http://abc:123/a/b/c
-   	 \_type  │ /m/uri
-   	  \_pred │ []
-   	[inst]   │ rshift?rng=#{*}&dom=uri(port){<j>}@<1>
-   	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/port]][no active space supports pattern http://abc:123/a/b/c/port]@/sys/fail/2090
-mtron> http://abc:123/a/b/c.>>authority     [-- abc:123 --]
-==>fail::[apply failure:
-   	[lhs]    │ http://abc:123/a/b/c
-   	 \_type  │ /m/uri
-   	  \_pred │ []
-   	[inst]   │ rshift?rng=#{*}&dom=uri(authority){<j>}@<1>
-   	 \_dom   │ uri::T
-   	 \_args  │ [authority][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/authority]][no active space supports pattern http://abc:123/a/b/c/authority]@/sys/fail/2118
-mtron> http://abc:123/a/b/c.>>{schema,path} [-- {http,/a/b/c} --]
-mtron> /a/b/c>>0                            [-- a --]
-==>/a/b/c
-mtron> /a/b/c>>2                            [-- b --]
-```---
+mtron> http://abc:123/a/b/c.as(rec::T)>>scheme        [-- http --]
+==>http
+mtron> http://abc:123/a/b/c.as(rec::T)>>host          [-- abc --]
+==>abc
+mtron> http://abc:123/a/b/c.as(rec::T)>>port          [-- 123 (noobj if no port) --]
+==>123
+mtron> http://abc:123/a/b/c.as(rec::T)>>authority     [-- abc:123 --]
+==>abc:123
+mtron> http://abc:123/a/b/c.as(rec::T)>>{schema,path} [-- {http,/a/b/c} --]
+==>[<>,a,b,c]
+```
+---
 
 ## 7. Type Casting (`.as(type::T)`)
 
@@ -336,6 +280,7 @@ mtron> [a,b].as(rec::T)          [-- [0=>a,1=>b] --]
 ==>[0=>a,1=>b]
 ```
 Custom types via `tid::T[predicate][constructor]@vid`:
+
 ```mtron
 mtron> int::T[is(gt(0))]@nat     [-- type nat, only positive ints --]
 ==>int::T[is(gt(0))]@/m/math/nat
@@ -439,6 +384,7 @@ mtron> [a=>1,b=>2]>-.>-[b=>2]              [-- [a=>1,b=>2]  (merge into existing
 ### Split (`-<`)
 
 Distributes elements:
+
 ```mtron
 mtron> 1-<[_,_]                            [-- [1,1] --]
 ==>[1,1]
@@ -463,6 +409,7 @@ mtron> {1,2}-<|[?>1 => +100, _=> +2]>>    [-- {3,102} --]
 Traverse into structures:
 
 ### On lst
+
 ```mtron
 mtron> [1,2,[a=>3],4]<<2                  [-- [[a=>3],4] --]
 mtron> [1,2,[a=>3],4]>>2                  [-- [1,2] --]
@@ -476,6 +423,7 @@ mtron> [1,2,[a=>3],4]>>+                  [-- {1,2,[a=>3],4} (selectors are uris
 ==>4
 ```
 ### On records
+
 ```mtron
 mtron> [a=>1,b=>2,c=>[d=>3]].dom()        [-- {a,b,c}           (extract keys) --]
 ==>a
@@ -491,6 +439,7 @@ mtron> [a=>1,b=>2,c=>[d=>[e=>3]]]>>c/d/e  [-- 3                 (walk nested str
 ==>3
 ```
 ### On URIs
+
 ```mtron
 mtron> a/b/c<<                   [-- b/c    (drop leftmost segment) --]
 ==>a/b
@@ -547,6 +496,7 @@ mtron> @<people/+>.>>= [name=>"Micky Mouse"]   [-- wildcard update --]
 ==>[name=>'Micky Mouse',role=>oracle]
 ```
 `@` means "anchor the write-back to the VID" (persist).  `*` means "anonymous copy" (no write-back):
+
 ```mtron
 mtron> @a/b/c>>= +10      [-- modifies *a/b/c and writes back --]
 mtron> *a/b/c>>= +10      [-- evaluates but discards the result --]
@@ -563,9 +513,11 @@ mtron> [company=>!*db:companies/101]     [-- auto_from — resolved on access --
 mtron> [company=>!@db:companies/101]     [-- auto_at — resolved on access, with anchor --]
 ==>[company=>!@db:companies/101]
 ```
-`!*` is sugar for `auto_from(uri)`.  When you `.at(company)` on the record, the Router resolves `db:companies/101` and returns the target Obj.
+`!*` is sugar for `auto_from(uri)`. When you `.at(company)` on the record, the Router resolves `db:companies/101` and
+returns the target Obj.
 
 Chain through auto-refs:
+
 ```mtron
 mtron> *a>>x>>x           [-- follows !* chain to the final target --]
 mtron> *a>>x/x            [-- reads a field after resolving the auto-ref --]
@@ -575,6 +527,7 @@ mtron> *a>>x/x            [-- reads a field after resolving the auto-ref --]
 ## 16. Math Instruction
 
 Embedded mathematical expressions:
+
 ```mtron
 mtron> math('1+2')                           [-- 3.0 --]
 ==>3.0000
@@ -623,6 +576,7 @@ mtron> >-.sum()                       [-- sum flattens the coefficient barrier -
 ==>0
 ```
 Collections distribute operations:
+
 ```mtron
 mtron> {1,2,3}.plus(2)                [-- {3,4,5} --]
 ==>3
@@ -638,6 +592,7 @@ mtron> {1,2,3}>-                      [-- unmerge — flattens barriers --]
 ## 20. Type Annotations
 
 Inline type predicates:
+
 ```mtron
 mtron> ?int::T                        [-- test: is this an int? --]
 mtron> ?uri::T                        [-- is this a uri? --]
@@ -647,6 +602,7 @@ mtron> int{?}::10                     [-- optional coefficient {0,1} --]
 ==>{?}10
 ```
 `==`
+
 ```mtron
 mtron> [a=>1,b=>2,c=>3]==[a=>_]     [-- select with pattern match --]
 ==>[a=>1]
@@ -666,26 +622,26 @@ mtron> ?int::T    [-- check if type is int --]
 
 ## 22. Sugar & Syntax Summary
 
-| Sugar | Expansion | Use |
-|-------|-----------|-----|
-| `*uri` | `from(uri)` | Dereference URI |
-| `!*uri` | `auto_from(uri)` | Lazy cross-ref |
-| `@uri` | `at(uri)` | Anchor to URI location |
-| `_` | `id()` | Identity function |
-| `>>=` | `update()` | Update-and-write-back |
-| `>>` | `rshift()` | Right-shift (drop last) |
-| `<<` | `lshift()` | Left-shift (drop first) |
-| `>-` | `merge()` | Flatten / merge barrier |
-| `-<` | `split()` | Distribute into branches |
-| `\|` | `barrier()` | Monadic barrier |
-| `_/...\\_` | `within()` | Structural within-block |
-| `.` | `.plus(1)` | Dot-instruction call |
-| `=>` | `rel()` | Key → value relation |
-| `->` | `ref()` | Write to URI reference |
-| `;` | `end()` | Sequence separator |
-| `?pred` | `is(pred)` | Type/condition check |
-| `==` | `select()` | Structural select |
-| `=?=` | `where()` | Filter after select |
+| Sugar      | Expansion        | Use                      |
+|------------|------------------|--------------------------|
+| `*uri`     | `from(uri)`      | Dereference URI          |
+| `!*uri`    | `auto_from(uri)` | Lazy cross-ref           |
+| `@uri`     | `at(uri)`        | Anchor to URI location   |
+| `_`        | `id()`           | Identity function        |
+| `>>=`      | `update()`       | Update-and-write-back    |
+| `>>`       | `rshift()`       | Right-shift (drop last)  |
+| `<<`       | `lshift()`       | Left-shift (drop first)  |
+| `>-`       | `merge()`        | Flatten / merge barrier  |
+| `-<`       | `split()`        | Distribute into branches |
+| `\|`       | `barrier()`      | Monadic barrier          |
+| `_/...\\_` | `within()`       | Structural within-block  |
+| `.`        | `.plus(1)`       | Dot-instruction call     |
+| `=>`       | `rel()`          | Key → value relation     |
+| `->`       | `ref()`          | Write to URI reference   |
+| `;`        | `end()`          | Sequence separator       |
+| `?pred`    | `is(pred)`       | Type/condition check     |
+| `==`       | `select()`       | Structural select        |
+| `=?=`      | `where()`        | Filter after select      |
 
 ---
 
@@ -700,9 +656,6 @@ mtron> ?int::T    [-- check if type is int --]
 ```mtron
 mtron> [-- Chaining example (read test data from test file): --]
 mtron> {1,2,3,4}.sum{2}().sum?int<=int{1,7}().sum()-<[_,_]>-.sum?int<=int{2}()  #
-==>ERROR: monad obj coefficient is greater than inst domain coefficient: 
-	obj       => 40
-	\_c       => 1
-	inst     X=> start?rng=A{**}&dom=noobj{0}(<#>){<j>}@<6>
-	\_dom_c  X=> 0
+==>ERROR: monad obj coefficient is greater than inst dom coefficient:
+	40 [{1} X=> {0}] start?rng=A{**}&dom=noobj{0}(<#>){<j>}@<6>
 ```

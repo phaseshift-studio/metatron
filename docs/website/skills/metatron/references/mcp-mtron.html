@@ -179,6 +179,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_grph.html"><img
                             src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
                             alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_ide.html"><img
+                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                            alt="ide"/>/m/ide</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_iot.html"><img
                             src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -205,9 +208,6 @@
                             alt="vec"/>/m/vec</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_web.html"><img
                             src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
-                            alt="web"/>/m/web</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_ide.html"><img
-                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                 </ul>
             </li>
@@ -394,21 +394,7 @@
         }
        }
        &quot;&quot;&quot;.as(json::T).as(mcp_client::T).to(/usr/marko/mcp/intellij)
-==&gt;fail::[apply failure:
-   	[lhs]    │ json::&quot;&quot;&quot;
-          {
-           &quot;type&quot;: &quot;streamable-http&quot;,
-           &quot;url&quot;: &quot;http://127.0.0.1:64342/stream&quot;,
-           &quot;headers&quot;: {
-            &quot;IJ_MCP_SERVER_PROJECT_PATH&quot;: &quot;~/software/metatron&quot;
-           }
-          }
-          &quot;&quot;&quot;
-   	 \_type  │ /m/web/mime/json
-   	  \_pred │ [/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]
-   	[inst]   │ as?rng=mcp_client{+}&amp;dom=json(mcp_client::T){&lt;j&gt;}@&lt;2&gt;
-   	 \_dom   │ str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/json
-   	 \_args  │ [mcp_client::T][SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/790
+==&gt;fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;).]@/sys/fail/790
 </code></pre>
 <p>If the snippet provided has an <code>mcpServer</code> outer wrapping, then do:</p>
 <pre><code class="language-mtron">mtron&gt; &quot;&quot;&quot;
@@ -421,25 +407,7 @@
           }
         }}}
        &quot;&quot;&quot;.as(json::T).as(rec::T)&gt;&gt;mcpServers/intellij.as(json::T).as(mcp_client::T)
-==&gt;fail::[apply failure:
-   	[lhs]    │ json::'{&quot;type&quot;:&quot;streamable-http&quot;,&quot;url&quot;:&quot;http://127.0.0.1:64342/stream&quot;,&quot;headers&quot;:{&quot;IJ_MCP_SERVER_PROJECT_PATH&quot;:{&quot;code&quot;:&quot;/software/metatron&quot;,&quot;source&quot;:&quot;!*/sys/thread/main&quot;,&quot;start&quot;:null,&quot;state&quot;:&quot;stop&quot;,&quot;result&quot;:&quot;/software/metatron&quot;}}}'
-   	 \_type  │ /m/web/mime/json
-   	  \_pred │ [/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]
-   	[inst]   │ as?rng=mcp_client{+}&amp;dom=json(mcp_client::T){&lt;j&gt;}@&lt;5&gt;
-   	 \_dom   │ str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/json
-   	 \_args  │ [mcp_client::T][Utils&lt;394&gt;:java.lang.IllegalArgumentException: invalid header value: &quot;{code=/software/metatron, source=core::[... ← java.lang.IllegalArgumentException: invalid header value: &quot;{code=/software/metatron, source=core::[... ← invalid header value: &quot;{code=/software/metatron, source=core::[...]][java.lang.IllegalArgumentException: invalid header value: &quot;{code=/software/metatron, source=core::[
-    code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-    start=&gt;noobj,
-    state=&gt;stop,
-    result=&gt;noobj]@/sys/thread/main, state=stop, result=/software/metatron}&quot;[Utils&lt;394&gt;:java.lang.IllegalArgumentException: invalid header value: &quot;{code=/software/metatron, source=core::[... ← invalid header value: &quot;{code=/software/metatron, source=core::[...]][java.lang.IllegalArgumentException: invalid header value: &quot;{code=/software/metatron, source=core::[
-    code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-    start=&gt;noobj,
-    state=&gt;stop,
-    result=&gt;noobj]@/sys/thread/main, state=stop, result=/software/metatron}&quot;][invalid header value: &quot;{code=/software/metatron, source=core::[
-    code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-    start=&gt;noobj,
-    state=&gt;stop,
-    result=&gt;noobj]@/sys/thread/main, state=stop, result=/software/metatron}&quot;]@/sys/fail/818
+==&gt;fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;).]@/sys/fail/818
 </code></pre>
 <p>Moreover, if the <code>mcpServer</code> snippet has multiple inner servers endpoints defined, to load all of them, do:</p>
 <pre><code class="language-mtron">mtron&gt; {&quot;mcpServers&quot;: {
@@ -463,13 +431,7 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron&gt; mcp_client::[host=&gt;http://localhost:8777/mcp]@a
-==&gt;ERROR: unable to construct mcp_client::T: fail::[apply failure:
-	[lhs]    │ [host=&gt;http://localhost:8777/mcp]@a
-	 \_type  │ /m/rec
-	  \_pred │ []
-	[inst]   │ ctor?rng=mcp_client&amp;dom=#{?}([host=&gt;http://localhost:8777/mcp]@a){&lt;j&gt;}
-	 \_dom   │ #{?}::T
-	 \_args  │ [[host=&gt;http://localhost:8777/mcp]@a][SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl&lt;204&gt;:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/830
+==&gt;ERROR: unable to construct mcp_client::T: fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;).]@/sys/fail/830
 mtron&gt; *a&gt;&gt;tool
 mtron&gt; [-- =&gt; [m_inst_eval_mtron=&gt;tool::[inst=&gt;..., name=&gt;m_inst_eval_mtron, desc=&gt;..., arg=&gt;...], ...] --]
 mtron&gt; [-- invoke a tool by applying its inst field --]

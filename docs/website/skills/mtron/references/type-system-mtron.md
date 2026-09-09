@@ -202,18 +202,12 @@ mtron> nat -> int::T[?>0][-<|[is(lt(0)) => * -1, _ => _]>>]
 ==>int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]
 mtron> [-- Predicate test: is it > 0? --]
 mtron> 2.test(nat::T)        [-- true --]
-==>fail::[unable to locate inst-f of test(nat::T)@<1>]@/sys/fail/2666
+==>fail::[unable to locate inst-f of test(nat::T)@<1>]@/sys/fail/2398
 mtron> -2.test(nat::T)  [-- false --]
-==>fail::[unable to locate inst-f of test(nat::T)@<1>]@/sys/fail/2670
+==>fail::[unable to locate inst-f of test(nat::T)@<1>]@/sys/fail/2402
 mtron> [-- Constructor application: coerce to fit --]
 mtron> -2.as(nat::T)         [-- nat::2  (constructor applied: abs) --]
-==>fail::[apply failure:
-   	[lhs]    │ -2
-   	 \_type  │ /m/int
-   	  \_pred │ []
-   	[inst]   │ as?rng=nat&dom=int(nat::T){<j>}@<1>
-   	 \_dom   │ int::T
-   	 \_args  │ [nat::T][MTronException<137>:-2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@/m/math/nat [structural]]][-2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@/m/math/nat [structural]]@/sys/fail/2674
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@/m/math/nat [structural]]@/sys/fail/2406
 ```
 The `as()` instruction applies the constructor. If the predicate passes, the value is returned as-is. If not, the
 constructor runs. If the constructor's result passes the predicate, the transformed value is returned. Otherwise, it
@@ -256,13 +250,7 @@ mtron> chicken -> being::T@chicken
 ==>being::T@chicken
 mtron> [-- A human is NOT a chicken, despite identical structure --]
 mtron> human::[name=>'marko',age=>29].as(chicken::T)
-==>fail::[apply failure:
-   	[lhs]    │ human::[name=>'marko',age=>29]
-   	 \_type  │ human
-   	  \_pred │ [isa([name=>str::T,age=>int::T])]
-   	[inst]   │ as?rng=chicken&dom=rec(chicken::T){<j>}@<1>
-   	 \_dom   │ rec::T
-   	 \_args  │ [chicken::T][MTronException<137>:human::[name=>'marko',age=>29] is not a being::T@chicken [nominal]]][human::[name=>'marko',age=>29] is not a being::T@chicken [nominal]]@/sys/fail/2678
+==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal]]@/sys/fail/2410
 ```
 This is the difference between **experiential knowledge** (structural — what can be observed) and **authoritative
 knowledge** (nominal — what has been declared).
@@ -300,7 +288,7 @@ mtron> /m/inst?#{*}<=#{?}(#::T)
 ==>fail::[unable to determine inst function:
    	noobj       => inst?rng=#{*}&dom=#{?}(#::T)@<0>   | [inst]
    	noobj       => #{?}::T   |  \_dom
-   	noobj      X=> [#::T]   |  \_args]@/sys/fail/2682
+   	noobj      X=> [#::T]   |  \_args]@/sys/fail/2414
 ```
 ## Type checking and casting
 
@@ -311,48 +299,18 @@ Tests whether a value satisfies a type's predicate (and nominal ancestry):
 ```mtron
 mtron> [-- value vs type --]
 mtron> 1.is(int::T)           [-- true --]
-==>fail::[apply failure:
-   	[lhs]    │ 1
-   	 \_type  │ /m/int
-   	  \_pred │ []
-   	[inst]   │ is?rng=int{?}&dom=int{?}(1){<j>}@<1>
-   	 \_dom   │ int{?}::T
-   	 \_args  │ [1][Obj$ObjType<1303>:unable to convert int::T to bool[Obj$ObjType<1303>:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert int::T to bool[Obj$ObjType<1303>:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/2686
+==>fail::[inst apply failure: java.lang.ClassCastException: class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/2418
 mtron> 'a string'.is(int::T)  [-- false --]
-==>fail::[apply failure:
-   	[lhs]    │ 'a string'
-   	 \_type  │ /m/str
-   	  \_pred │ []
-   	[inst]   │ is?rng=str{?}&dom=str{?}(int::T){<j>}@<1>
-   	 \_dom   │ str{?}::T
-   	 \_args  │ [int::T][Obj$ObjType<1303>:unable to convert type to bool[Obj$ObjType<1303>:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert type to bool[Obj$ObjType<1303>:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/2690
+==>fail::[inst apply failure: java.lang.ClassCastException: class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/2422
 mtron> 2.is(nat::T)           [-- true (2 > 0) --]
-==>fail::[apply failure:
-   	[lhs]    │ 2
-   	 \_type  │ /m/int
-   	  \_pred │ []
-   	[inst]   │ is?rng=int{?}&dom=int{?}(2){<j>}@<1>
-   	 \_dom   │ int{?}::T
-   	 \_args  │ [2][Obj$ObjType<1303>:unable to convert int::T to bool[Obj$ObjType<1303>:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert int::T to bool[Obj$ObjType<1303>:class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/2694
+==>fail::[inst apply failure: java.lang.ClassCastException: class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/2426
 mtron> -1.is(nat::T)          [-- false (-1 is not > 0) --]
-==>fail::[apply failure:
-   	[lhs]    │ -1
-   	 \_type  │ /m/int
-   	  \_pred │ []
-   	[inst]   │ is?rng=int{?}&dom=int{?}(nat::T){<j>}@<1>
-   	 \_dom   │ int{?}::T
-   	 \_args  │ [nat::T][Obj$ObjType<1303>:unable to convert type to bool[Obj$ObjType<1303>:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert type to bool[Obj$ObjType<1303>:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/2698
+==>fail::[inst apply failure: java.lang.ClassCastException: class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/2430
 mtron> [-- type vs type (refinement check) --]
 mtron> nat::T.is(int::T)      [-- true (nat is-a int) --]
-==>fail::[maCHIne fAILeD][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/2750
+==>fail::[MAChinE FaILeD][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/2482
 mtron> int::T.is(nat::T)      [-- false (int is not-a nat) --]
-==>fail::[apply failure:
-   	[lhs]    │ int::T
-   	 \_type  │ /m/int
-   	  \_pred │ []
-   	[inst]   │ is?rng=int{?}&dom=int{?}(nat::T){<j>}@<1>
-   	 \_dom   │ int{?}::T
-   	 \_args  │ [nat::T][Obj$ObjType<1303>:unable to convert type to bool[Obj$ObjType<1303>:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][unable to convert type to bool[Obj$ObjType<1303>:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/2770
+==>fail::[inst apply failure: java.lang.ClassCastException: class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/sys/fail/2494
 ```
 ### `.as()` — constructor application
 
@@ -364,22 +322,10 @@ mtron> [-- nat has constructor: absolute value --]
 mtron> 2.as(nat::T)             [-- nat::2  (already fits) --]
 ==>nat::2
 mtron> -2.as(nat::T)            [-- nat::2  (constructor applied) --]
-==>fail::[apply failure:
-   	[lhs]    │ -2
-   	 \_type  │ /m/int
-   	  \_pred │ []
-   	[inst]   │ as?rng=nat&dom=int(nat::T){<j>}@<1>
-   	 \_dom   │ int::T
-   	 \_args  │ [nat::T][MTronException<137>:-2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@/m/math/nat [structural]]][-2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@/m/math/nat [structural]]@/sys/fail/2790
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@/m/math/nat [structural]]@/sys/fail/2514
 mtron> [-- Without a constructor, .as() is a pure test --]
 mtron> -2.as(int::T[?>0])  [-- fails: no constructor to rescue --]
-==>fail::[apply failure:
-   	[lhs]    │ -2
-   	 \_type  │ /m/int
-   	  \_pred │ []
-   	[inst]   │ as?rng=int&dom=int(int::T){<j>}@<1>
-   	 \_dom   │ int::T
-   	 \_args  │ [int::T][MTronException<137>:-2 is not a int::T[is(gt(0))] [structural]]][-2 is not a int::T[is(gt(0))] [structural]]@/sys/fail/2794
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural]]@/sys/fail/2518
 ```
 `.as()` is also used for nominal type casting:
 
@@ -387,13 +333,7 @@ mtron> -2.as(int::T[?>0])  [-- fails: no constructor to rescue --]
 mtron> [name=>'fuzzy feet',age=>2].as(chicken::T)    [-- ok: structurally a chicken --]
 ==>chicken::[name=>'fuzzy feet',age=>2]
 mtron> human::[name=>'marko',age=>29].as(chicken::T) [-- ERROR: nominally not a chicken --]
-==>fail::[apply failure:
-   	[lhs]    │ human::[name=>'marko',age=>29]
-   	 \_type  │ human
-   	  \_pred │ [isa([name=>str::T,age=>int::T])]
-   	[inst]   │ as?rng=chicken&dom=rec(chicken::T){<j>}@<1>
-   	 \_dom   │ rec::T
-   	 \_args  │ [chicken::T][MTronException<137>:human::[name=>'marko',age=>29] is not a being::T@chicken [nominal]]][human::[name=>'marko',age=>29] is not a being::T@chicken [nominal]]@/sys/fail/2798
+==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal]]@/sys/fail/2522
 ```
 ## LCD (Lowest Common Denominator)
 
@@ -402,13 +342,7 @@ The most specific type that subsumes a set of types. Two types always have an LC
 ```mtron
 mtron> [-- Mono with non-isa predicates: OR the constraints --]
 mtron> int::T[?>0] + int::T[?<120]
-==>fail::[apply failure:
-   	[lhs]    │ int::T[is(gt(0))]
-   	 \_type  │ /m/int
-   	  \_pred │ [is(gt(0))]
-   	[inst]   │ plus?rng=int&dom=int(int::T){<j>}@<1>
-   	 \_dom   │ int::T
-   	 \_args  │ [int::T][MTronException<137>:int::T[is(gt(0))] [type] unable to convert int::T]][int::T[is(gt(0))] [type] unable to convert int::T]@/sys/fail/2802
+==>fail::[inst apply failure: int::T[is(gt(0))] [type] unable to convert int::T]@/sys/fail/2526
 mtron> [-- Record with isa predicates: merge fields structurally --]
 mtron> rec::T[?[age=>int::T,name=>str::T]]@person
 ==>rec::T[?[age=>int::T,name=>str::T]]
@@ -416,11 +350,5 @@ mtron> + rec::T[?[age=>int::T]]@artifact
 mtron> [-- name becomes optional (str{?}) since not all inputs require it --]
 mtron> [-- Disjoint hierarchies: fall back to universal type --]
 mtron> int::T + str::T [-- {*}::T --]
-==>fail::[apply failure:
-   	[lhs]    │ int::T
-   	 \_type  │ /m/int
-   	  \_pred │ []
-   	[inst]   │ plus?rng=str&dom=int(str::T){<j>}@<1>
-   	 \_dom   │ int::T
-   	 \_args  │ [str::T][MTronException<137>:int::T [int::T] unable to convert str::T]][int::T [int::T] unable to convert str::T]@/sys/fail/2806
+==>fail::[inst apply failure: int::T [int::T] unable to convert str::T]@/sys/fail/2530
 ```

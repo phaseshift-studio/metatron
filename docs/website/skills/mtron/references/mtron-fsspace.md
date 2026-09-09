@@ -133,7 +133,7 @@ are treated as `inst::T` and can be invoked directly:
 ```mtron
 mtron> *<local:script.sh>        [-- bytes::T if binary, str::T if text                    --]
 mtron> <local:script.sh>.exec()  [-- execute (shell scripts, via application/x-mtron exec) --]
-==>fail::[unable to locate inst-f of exec()@<1>]@/sys/fail/1734
+==>fail::[unable to locate inst-f of exec()@<1>]@/sys/fail/1398
 ```
 ## Pattern-Based Access
 
@@ -155,34 +155,14 @@ edits without loading the entire file:
 ```mtron
 mtron> [-- Read lines 10-20 of a file --]
 mtron> *<local:src/main.java?lineq=10..20>
-==>fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ *<local:src/main.java?lineq=10..20>
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [<local:src/main.java?lineq=10..20>][NumberFormatException<67>:For input string: "10..20"[NumberFormatException<67>:For input string: "10..20"] ← For input string: "10..20"]][For input string: "10..20"[NumberFormatException<67>:For input string: "10..20"]][For input string: "10..20"]@/sys/fail/1740
+==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "10..20"]@/sys/fail/1404
 mtron> [-- Replace lines 5-10 with new content --]
 mtron> <local:src/main.java?lineq=5..10> -> """
          public void newMethod() {
            // new implementation
          }
        """
-==>fail::[apply failure:
-   	[lhs]    │ <local:src/main.java?lineq=5..10>
-   	 \_type  │ /m/uri
-   	  \_pred │ []
-   	[inst]   │ ref?rng=#{*}&dom=#("""
-            public void newMethod() {
-              // new implementation
-            }
-          """){<j>}@<1>
-   	 \_dom   │ #::T
-   	 \_args  │ ["""
-            public void newMethod() {
-              // new implementation
-            }
-          """][NumberFormatException<67>:For input string: "5..10"[NumberFormatException<67>:For input string: "5..10"] ← For input string: "5..10"]][For input string: "5..10"[NumberFormatException<67>:For input string: "5..10"]][For input string: "5..10"]@/sys/fail/1744
+==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "5..10"]@/sys/fail/1408
 ```
 ### Boot Configuration Example
 
@@ -204,19 +184,10 @@ mtron> fsspace::[
     route=>[local:=>/m/inst/thread(/src)]]@/sys/space/fs/src
 mtron> [-- Then use in expressions: --]
 mtron> *<local:Main.java?lineq=1..50>
-==>fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ *<local:Main.java?lineq=1..50>
-   	 \_dom   │ #{?}::T
-   	 \_args  │ [<local:Main.java?lineq=1..50>][NumberFormatException<67>:For input string: "1..50"[NumberFormatException<67>:For input string: "1..50"] ← For input string: "1..50"]][For input string: "1..50"[NumberFormatException<67>:For input string: "1..50"]][For input string: "1..50"]@/sys/fail/1748
+==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "1..50"]@/sys/fail/1412
 mtron> <local:index.html?mimeq=application/x-mtron>/html/head/title
-==>ERROR: monad obj coefficient is greater than inst domain coefficient: 
-	obj       => <local:index.html?mimeq=application/x-mtron>
-	\_c       => 1
-	inst     X=> start?rng=A{**}&dom=noobj{0}(/html/head/title){<j>}@<1>
-	\_dom_c  X=> 0
+==>ERROR: monad obj coefficient is greater than inst dom coefficient:
+	<local:index.html?mimeq=application/x-mtron> [{1} X=> {0}] start?rng=A{**}&dom=noobj{0}(/html/head/title){<j>}@<1>
 ```
 ## Type Round-Trip
 
@@ -227,24 +198,12 @@ mtron> [-- Read HTML, cast to rec, modify, cast back to html string, write --]
 mtron> <local:page.html> -> *<local:page.html?mimeq=application/x-mtron>
          .at(html/head/title -> 'New Title')
          .as(html::T)
-==>fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ at?rng=B{*}&dom=A{?}('New Title'){<j>}@<2>
-   	 \_dom   │ A{?}::T
-   	 \_args  │ ['New Title'][MTronException<137>:'New Title' [str::T] unable to convert uri::T]]['New Title' [str::T] unable to convert uri::T]@/sys/fail/1770
+==>fail::[inst apply failure: 'New Title' [str::T] unable to convert uri::T]@/sys/fail/1450
 mtron> [-- Read JSON config, modify a value, write back --]
 mtron> <local:config.json> -> *<local:config.json?mimeq=application/x-mtron>
          .at(database/host -> 'new-host')
          .as(json::T)
-==>fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ at?rng=B{*}&dom=A{?}('new-host'){<j>}@<2>
-   	 \_dom   │ A{?}::T
-   	 \_args  │ ['new-host'][MTronException<137>:'new-host' [str::T] unable to convert uri::T]]['new-host' [str::T] unable to convert uri::T]@/sys/fail/1790
+==>fail::[inst apply failure: 'new-host' [str::T] unable to convert uri::T]@/sys/fail/1486
 ```
 The `.as(html::T)` / `.as(json::T)` serialization passes through `ObjHTMLSerializer.write()` /
 `ObjJSONSerializer.write()` which handle both `str::T` (pass-through) and `rec::T` (structural render).

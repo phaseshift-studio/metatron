@@ -208,7 +208,7 @@ public interface Inst extends Call {
     default Obj seed() {
         return null == this.jvm() ? noobj() : this.jvm().get2();
     }
-    
+
     default boolean isResolved(final boolean nested) {
         boolean resolved = this.hasf();
         return (!nested || !resolved) ? resolved : this.<Inst>as().args().elements().allMatch(c -> c.isResolved(true));
@@ -401,14 +401,18 @@ public interface Inst extends Call {
                         return rhs;
                     Graphitty.log(cinst).trace("%s (lhs) => %s (inst) => %s (rhs) evaluated successfully", clhs, cinst, rhs);
                 } catch (final Exception e) {
-                    throw MTronException.of(e, "apply failure:" +
+                    if (!cinst.args().test(this.args()))
+                        throw MTronException.of("args do not match inst args:\n\t%s", Poly.Helper.diffObjRecursion(cinst.args(), this.args()));
+                    else
+                        throw MTronException.of("inst apply failure: %s", e);
+                    /*throw MTronException.of(e, "apply failure:" +
                                     "\n\t[lhs]    │ %s" +
                                     "\n\t \\_type  │ %s" +
                                     "\n\t  \\_pred │ %s" +
                                     "\n\t[inst]   │ %s" +
                                     "\n\t \\_dom   │ %s" +
                                     "\n\t \\_args  │ %s",
-                            clhs, clhs.tid(), clhs.type().predicateStack(), cinst, cinst.dom(), cinst.args());
+                            clhs, clhs.tid(), clhs.type().predicateStack(), cinst, cinst.dom(), cinst.args());*/
                     // e.printStackTrace();
                 } finally {
                     Router.stack().pop();

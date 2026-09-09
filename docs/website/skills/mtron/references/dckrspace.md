@@ -92,23 +92,7 @@ mtron> docker:container/web -> [
          environment => [NGINX_HOST => localhost],
          volumes     => ['myvol:/usr/share/nginx/html'],
          network     => mynet]
-==>fail::[apply failure:
-   	[lhs]    │ docker:container/web
-   	 \_type  │ /m/uri
-   	  \_pred │ []
-   	[inst]   │ ref?rng=#{*}&dom=#([
-     image=>'nginx:alpine',
-     ports=>[<8080:80>,<443:443>],
-     environment=>[NGINX_HOST=>localhost],
-     volumes=>['myvol:/usr/share/nginx/html'],
-     network=>mynet]){<j>}@<1>
-   	 \_dom   │ #::T
-   	 \_args  │ [[
-    image=>'nginx:alpine',
-    ports=>[<8080:80>,<443:443>],
-    environment=>[NGINX_HOST=>localhost],
-    volumes=>['myvol:/usr/share/nginx/html'],
-    network=>mynet]][MTronException<137>:exit 125: docker run -d --name web -p 8080:80 -p 443:443 -e NGINX_HOST=localhost -v myvol:/usr/share/nginx/html --network mynet nginx:alpine...]][exit 125: docker run -d --name web -p 8080:80 -p 443:443 -e NGINX_HOST=localhost -v myvol:/usr/share/nginx/html --network mynet nginx:alpine
+==>fail::[inst apply failure: exit 125: docker run -d --name web -p 8080:80 -p 443:443 -e NGINX_HOST=localhost -v myvol:/usr/share/nginx/html --network mynet nginx:alpine
    ]@/sys/fail/998
 ```
 Image pull happens automatically via `docker run`. Pull progress streams through the `progress_table::T` widget if
@@ -129,45 +113,46 @@ configured.
 ```mtron
 mtron> *docker:image/+.take(5)              [-- first 5 images (keyed by repository:tag) --]
 ==>[
-    containers=>1,
-    created_at=>datetime::<//2024.11:4/13/52/12/000?tz=-0700>,
-    created_since=><22 months ago>,
-    id=><35d26c822908>,
-    repository=>mariadb,
-    size=>mB::405.0000,
-    tag=>11.2000]
-==>[
     containers=>0,
     created_at=>datetime::<//2026.09:2/23/47/07/000?tz=-0600>,
-    created_since=><5 days ago>,
+    created_since=><6 days ago>,
     id=>b596dc322997,
     repository=>metatron,
     size=>mB::635.0000,
     tag=>local]
 ==>[
-    containers=>0,
-    created_at=>datetime::<//2026.09:4/00/38/58/000?tz=-0600>,
-    created_since=><4 days ago>,
-    id=><0aad55775c84>,
-    repository=>metatron,
-    size=>mB::635.0000,
-    tag=>dev]
+    containers=>1,
+    created_at=>datetime::<//2026.07:15/17/57/33/000?tz=-0600>,
+    created_since=><7 weeks ago>,
+    id=>f0ba77f796e5,
+    repository=>nginx,
+    size=>mB::62.4000,
+    tag=>alpine,
+    container=>[!*docker:container/web]]
 ==>[
     containers=>0,
-    created_at=>datetime::<//2025.11:13/16/22/24/000?tz=-0700>,
+    created_at=>datetime::<//2026.08:13/13/16/08/000?tz=-0600>,
+    created_since=><3 weeks ago>,
+    id=><19d88319bea9>,
+    repository=>postgres,
+    size=>mB::451.0000,
+    tag=>16]
+==>[
+    containers=>0,
+    created_at=>datetime::<//2025.12:2/14/30/17/000?tz=-0700>,
     created_since=><9 months ago>,
-    id=><3105709a9740>,
-    repository=>eclipse-temurin,
-    size=>mB::391.0000,
-    tag=>25]
+    id=>dd2395ffc43b,
+    repository=>openjdk,
+    size=>mB::617.0000,
+    tag=>start(26).minus(ea-26-jdk)]
 ==>[
     containers=>0,
-    created_at=>datetime::<//2025.03:27/10/03/48/000?tz=-0600>,
-    created_since=><17 months ago>,
-    id=><56f8d43cf2e0>,
-    repository=>maven,
-    size=>mB::481.0000,
-    tag=><3.9.9-eclipse-temurin-24>]
+    created_at=>datetime::<//2026.07:16/16/06/26/000?tz=-0600>,
+    created_since=><7 weeks ago>,
+    id=><9a18aed4ecdd>,
+    repository=>postgres,
+    size=>mB::445.0000,
+    tag=>15]
 mtron> *docker:container/+                  [-- all containers                           --]
 ==>[ command=></app/entrypoint.sh --help>,
     created_at=>datetime::<//2026.09:2/12/04/38/000?tz=-0600>,
@@ -203,9 +188,9 @@ mtron> *docker:container/+                  [-- all containers                  
     size=>bB::0.0000,
     state=>exited,
     ...(2 more)]
-==>[ command=></app/entrypoint.sh [boot=><boot/agent-ide.boot.mtron>,log=>info]>,
-    created_at=>datetime::<//2026.09:2/20/02/38/000?tz=-0600>,
-    id=>bcfdf84a298f060eadb8d7a113a49ed556a8256e0c8b444cc8d70695ed4a6939,
+==>[ command=></app/entrypoint.sh [boot=><boot/_T2.boot.mtron>,log=>info]>,
+    created_at=>datetime::<//2026.09:2/19/41/54/000?tz=-0600>,
+    id=>f1373026426174fb2d705e8c246fe2893fac897df538d6619d52542fd06369a5,
     image=>!*<docker:image/ghcr.io/phaseshift-studio/metatron:main>,
     labels=>[
      <org.opencontainers.image.description>=>'a distributed data-oriented computing language and virtual ...',
@@ -216,27 +201,10 @@ mtron> *docker:container/+                  [-- all containers                  
      <org.opencontainers.image.version>=>start(0.1000).minus(SNAPSHOT)],
     local_volumes=>0,
     mounts=>/home/killswitch/software/metatron/boot,/home/killswitch/software/metatron,
-    names=>A1F,
+    names=><T2>,
     ports=><8555/tcp, 8777/tcp>,
-    running_for=><5 days ago>,
+    running_for=><6 days ago>,
     ...(4 more)]
-==>[ command=>'/app/entrypoint.sh [boot=><boot/docker.boot.mtron>,user=><k...',
-    created_at=>datetime::<//2026.08:27/09/35/17/000?tz=-0600>,
-    id=><1e5de17716a878b68faad08cdeacdb85c16410ff515a358a1a56efb35a1571cb>,
-    image=>!*docker:image/sha256:a458e6353116963c566c300fb8220e210ea1c174b13927f0a8bebd4c0bab3bb5,
-    labels=>[
-     <org.opencontainers.image.description>=>'a distributed data-oriented computing language and virtual ...',
-     <org.opencontainers.image.licenses>=><AGPL-3.0>,
-     <org.opencontainers.image.source>=><https://github.com/phaseshift-studio/metatron>,
-     <org.opencontainers.image.title>=>metatron,
-     <org.opencontainers.image.vendor>=>'PhaseShift Studio',
-     <org.opencontainers.image.version>=>start(0.1000).minus(SNAPSHOT)],
-    local_volumes=>0,
-    mounts=></home/killswitch/software/metatron/boot,/home/killswitch/software/metatron/conf,/var/run/docker.sock>,
-    names=>metatron,
-    running_for=><12 days ago>,
-    size=>bB::0.0000,
-    ...(3 more)]
 ==>[ command=><tail -f /dev/null>,
     created_at=>datetime::<//2026.08:27/08/33/01/000?tz=-0600>,
     id=><14ffc8d6d3a69e2a2fa0070cd1dd8d0b1d748cb52555c594bbe42e79a55abce1>,
@@ -258,31 +226,36 @@ mtron> *docker:container/+                  [-- all containers                  
     size=>bB::0.0000,
     ...(3 more)]
 ==>[ command=></docker-entrypoint.sh nginx -g 'daemon off;>,
-    created_at=>datetime::<//2026.09:7/03/50/19/000?tz=-0600>,
-    id=>a45e8b32a9c61b2170dff261822aad4520f0147190f41a9dafede017e778bf3f,
-    image=>!*docker:image/nginx,
-    labels=>[
-     <com.docker.compose.config-hash>=>f3bd03ea666f08645557a71e46313f367713e950177918b309e8a1e5bde8397c,
+    created_at=>datetime::<//2026.09:9/03/16/34/000?tz=-0600>,
+    id=><035165026a7c80906898b2d951f67e8329be00497315021bcf4915db7111bf5f>,
+    image=>!*docker:image/nginx:alpine,
+    labels=>[maintainer=>'NGINX Docker Maintainers <docker-maint@nginx.com>'],
+    local_volumes=>1,
+    names=>web,
+    running_for=><5 seconds ago>,
+    size=>bB::0.0000,
+    state=>created,
+    ...(3 more)]
+==>[ command=><docker-entrypoint.sh mariadbd>,
+    created_at=>datetime::<//2026.09:2/02/36/13/000?tz=-0600>,
+    id=><8673b240288781fb2d0dddc76a2cf3cac3fce71bca6830f95e7ac8a75ea7c70d>,
+    image=>!*<docker:image/mariadb:11.2>,
+    labels=>[  <com.docker.compose.config-hash>=>c0d9b351c9f96fc5f6c650960fd4fee862d6ef67c0e79cbc28ddd1b365a63f81,
      <com.docker.compose.container-number>=>1,
-     <com.docker.compose.image>=>sha256:4e5db4761e0ff445f7fd29aad680ad28e8abf7d204895557f145d65535abcc1c,
+     <com.docker.compose.image>=>sha256:35d26c822908fba9f7ff591a95e6abcd7e9c6a0b354af8cb0f4dbd6441dac0fb,
      <com.docker.compose.oneoff>=>False,
-     <com.docker.compose.project.config_files>=></tmp/metatron-docker/my-stack/docker-compose.yml>,
-     <com.docker.compose.project.working_dir>=>/tmp/metatron-docker/my-stack,
-     <com.docker.compose.project>=>my-stack,
+     <com.docker.compose.project.config_files>=></tmp/metatron-docker/vtest_a/docker-compose.yml>,
+     <com.docker.compose.project.working_dir>=>/tmp/metatron-docker/vtest_a,
+     <com.docker.compose.project>=>vtest_a,
+     <com.docker.compose.service>=>a,
+     <com.docker.compose.version>=><2.40.3>,
+     <org.opencontainers.image.authors>=>'MariaDB Community',
+     ...(10 more)],
+    local_volumes=>1,
+    names=>vtest_a-a-1,
+    running_for=><7 days ago>,
    ...
 mtron> *docker:volume/+                     [-- all volumes                              --]
-==>[
-    driver=>local,
-    labels=>[=>],
-    mountpoint=>/var/lib/docker/volumes/0e43bb3fc84194a58954343e1f4d1a3420400d4c0b32f35cc6124a0610e6372f/_data,
-    name=><0e43bb3fc84194a58954343e1f4d1a3420400d4c0b32f35cc6124a0610e6372f>,
-    scope=>local]
-==>[
-    driver=>local,
-    labels=>[=>],
-    mountpoint=>/var/lib/docker/volumes/3145968f1dc497633f70b63d52de55cd8c1b1216fa010aebcc5415a6b538b11f/_data,
-    name=><3145968f1dc497633f70b63d52de55cd8c1b1216fa010aebcc5415a6b538b11f>,
-    scope=>local]
 ==>[
     driver=>local,
     labels=>[=>],
@@ -316,33 +289,8 @@ mtron> *docker:volume/+                     [-- all volumes                     
 ==>[
     driver=>local,
     labels=>[=>],
-    mountpoint=>/var/lib/docker/volumes/05db2a667915001a9ec7070129967121b9bb7488772fd89cf47a541bc92e3f9d/_data,
-    name=><05db2a667915001a9ec7070129967121b9bb7488772fd89cf47a541bc92e3f9d>,
-    scope=>local]
-==>[
-    driver=>local,
-    labels=>[=>],
-    mountpoint=>/var/lib/docker/volumes/65bd6ac30590a8b65707a1ca30563c87ef80fa35b2f75bc78c045b715f313826/_data,
-    name=><65bd6ac30590a8b65707a1ca30563c87ef80fa35b2f75bc78c045b715f313826>,
-    scope=>local]
-==>[
-    driver=>local,
-    labels=>[=>],
-    mountpoint=>/var/lib/docker/volumes/b00e05ec792e283dc3f20ac26893169ca15e165de57e7d935293979091a1cbba/_data,
-    name=>b00e05ec792e283dc3f20ac26893169ca15e165de57e7d935293979091a1cbba,
-    scope=>local,
-    container=>[docker:container/vtest_a-a-1]]
-==>[
-    driver=>local,
-    labels=>[=>],
     mountpoint=>/var/lib/docker/volumes/75031acd765dadc2102706be8f612c7170bc4f6848cee8b0f7b4150ddde7c4ec/_data,
     name=><75031acd765dadc2102706be8f612c7170bc4f6848cee8b0f7b4150ddde7c4ec>,
-    scope=>local]
-==>[
-    driver=>local,
-    labels=>[=>],
-    mountpoint=>/var/lib/docker/volumes/36601db792b20f41259002027539cb64a4b3b6c5bbac44d5207c3f3b4765416e/_data,
-    name=><36601db792b20f41259002027539cb64a4b3b6c5bbac44d5207c3f3b4765416e>,
     scope=>local]
 ==>[
     driver=>local,
@@ -359,18 +307,55 @@ mtron> *docker:volume/+                     [-- all volumes                     
 ==>[
     driver=>local,
     labels=>[=>],
-    mountpoint=>/var/lib/docker/volumes/fc3b59145e4a7679ad9295f483eb2c4051b180f4ac16e6ca9882b691f3bb666f/_data,
-    name=>fc3b59145e4a7679ad9295f483eb2c4051b180f4ac16e6ca9882b691f3bb666f,
-    scope=>local]
-==>[
-    driver=>local,
-    labels=>[=>],
     mountpoint=>/var/lib/docker/volumes/c78a134e31ab93f90b8f2632cc767a78e8b755b1815822c1ae3e03d41391ea49/_data,
     name=>c78a134e31ab93f90b8f2632cc767a78e8b755b1815822c1ae3e03d41391ea49,
     scope=>local]
 ==>[
     driver=>local,
     labels=>[=>],
+    mountpoint=>/var/lib/docker/volumes/4d4e411d7a6eb5e05c50cda6238f183d2dec5eeea8807648bcf429c142c9dafd/_data,
+    name=><4d4e411d7a6eb5e05c50cda6238f183d2dec5eeea8807648bcf429c142c9dafd>,
+    scope=>local]
+==>[
+    driver=>local,
+    labels=>[=>],
+    mountpoint=>/var/lib/docker/volumes/7bdaf667ce61d7ef1b033726edfaec05a20f77c7bb42a5f1959578d383b4993c/_data,
+    name=><7bdaf667ce61d7ef1b033726edfaec05a20f77c7bb42a5f1959578d383b4993c>,
+    scope=>local]
+==>[
+    driver=>local,
+    labels=>[=>],
+    mountpoint=>/var/lib/docker/volumes/9000b84a39160189684fa7149b69a58c888808f0c74e09f88cd7dc621db5fe67/_data,
+    name=><9000b84a39160189684fa7149b69a58c888808f0c74e09f88cd7dc621db5fe67>,
+    scope=>local]
+==>[
+    driver=>local,
+    labels=>[=>],
+    mountpoint=>/var/lib/docker/volumes/43a4aaa45e7342b5869ca61a417800210e699e6f1af8689f0992118d3eb30365/_data,
+    name=><43a4aaa45e7342b5869ca61a417800210e699e6f1af8689f0992118d3eb30365>,
+    scope=>local]
+==>[
+    driver=>local,
+    labels=>[=>],
+    mountpoint=>/var/lib/docker/volumes/f28b7ade1c140fc82c033f7e6c60860d460ae4467ed99b2a38436eb221596b95/_data,
+    name=>f28b7ade1c140fc82c033f7e6c60860d460ae4467ed99b2a38436eb221596b95,
+    scope=>local]
+==>[
+    driver=>local,
+    labels=>[=>],
+    mountpoint=>/var/lib/docker/volumes/6b5e0f05a976195281987a3e1e2f2c58ffc4068dfd93a0693bd82c647490e47b/_data,
+    name=><6b5e0f05a976195281987a3e1e2f2c58ffc4068dfd93a0693bd82c647490e47b>,
+    scope=>local]
+==>[
+    driver=>local,
+    labels=>[=>],
+    mountpoint=>/var/lib/docker/volumes/0454140adc3aade618ce2082739cc046814093a4e10526d1d91698b5d2a8b7e5/_data,
+    name=><0454140adc3aade618ce2082739cc046814093a4e10526d1d91698b5d2a8b7e5>,
+    scope=>local]
+==>[
+    driver=>local,
+    labels=>[=>],
+    mountpoint=>/var/lib/docker/volumes/7dc192fc64c983d86ea8d6f53b782d8ee091a12f1db9713e0b64e4a5b6115b0f/_data,
    ...
 mtron> *docker:network/+                    [-- all networks                             --]
 ==>[
@@ -381,10 +366,10 @@ mtron> *docker:network/+                    [-- all networks                    
     ipv6=>false,
     internal=>false,
     labels=>[
+     <com.docker.compose.config-hash>=>dcfdb94ed5044fb11e16ff38ab584fd0bda75806da995978e02547c50430328a,
      <com.docker.compose.network>=>default,
      <com.docker.compose.project>=>test_sqlite,
-     <com.docker.compose.version>=><2.40.3>,
-     <com.docker.compose.config-hash>=>dcfdb94ed5044fb11e16ff38ab584fd0bda75806da995978e02547c50430328a],
+     <com.docker.compose.version>=><2.40.3>],
     name=>test_sqlite_default,
     scope=>local,
     container=>[!*docker:container/test_sqlite-sqlite-1]]
@@ -427,21 +412,6 @@ mtron> *docker:network/+                    [-- all networks                    
     scope=>local,
     container=>[!*docker:container/metatron2,!*docker:container/A1F,!*docker:container/T2,!*docker:container/D4,!*docker:container/S7,!*docker:container/B4,!*docker:container/laughing_galileo,!*docker:container/hindsight,!*docker:container/webprobe-630547,!*docker:container/metatron,...(4 more)]]
 ==>[
-    created_at=>datetime::<//2026.09:7/03/50/19/007?tz=+0000>,
-    driver=>bridge,
-    id=><53c526cb9890>,
-    ipv4=>true,
-    ipv6=>false,
-    internal=>false,
-    labels=>[
-     <com.docker.compose.config-hash>=><58c75ad45450a419e19489859bceed95b344afac255832f7cedc5ea678321155>,
-     <com.docker.compose.network>=>default,
-     <com.docker.compose.project>=>my-stack,
-     <com.docker.compose.version>=><2.40.3>],
-    name=>my-stack_default,
-    scope=>local,
-    container=>[!*docker:container/my-stack-web-1]]
-==>[
     created_at=>datetime::<//2026.08:6/14/09/25/425?tz=+0000>,
     driver=>bridge,
     id=><12f02ba20a4f>,
@@ -449,10 +419,10 @@ mtron> *docker:network/+                    [-- all networks                    
     ipv6=>false,
     internal=>false,
     labels=>[
-     <com.docker.compose.config-hash>=>b82bc38b085051212ab2999d5d8a56646d5a2f6cd18fb5f3cbf5d7d6624c75fc,
      <com.docker.compose.network>=>default,
      <com.docker.compose.project>=>dr,
-     <com.docker.compose.version>=><2.40.3>],
+     <com.docker.compose.version>=><2.40.3>,
+     <com.docker.compose.config-hash>=>b82bc38b085051212ab2999d5d8a56646d5a2f6cd18fb5f3cbf5d7d6624c75fc],
     name=>dr_default,
     scope=>local,
     container=>[!*docker:container/dr-sqlite-1]]
@@ -473,6 +443,21 @@ mtron> *docker:network/+                    [-- all networks                    
 ==>[
     created_at=>datetime::<//2026.09:1/04/27/23/379?tz=+0000>,
     driver=>bridge,
+    id=><774da16cc6f7>,
+    ipv4=>true,
+    ipv6=>false,
+    internal=>false,
+    labels=>[
+     <com.docker.compose.config-hash>=><9d7009a3047bdf2dc1c415111e39b9a6547b84dc375bcdf59d01fea94b7d428d>,
+     <com.docker.compose.network>=>default,
+     <com.docker.compose.project>=>l3,
+     <com.docker.compose.version>=><2.40.3>],
+    name=>l3_default,
+    scope=>local]
+==>[
+    created_at=>datetime::<//2026.09:1/02/54/30/746?tz=+0000>,
+    driver=>bridge,
+    id=><6b91b0807ad3>,
    ...
 ```
 ### Inspect a resource
@@ -490,13 +475,13 @@ mtron> *docker:image/nginx:alpine           [-- full image rec --]
     container=>[!*docker:container/web]]
 mtron> *docker:container/web                [-- full container rec --]
 ==>[ command=></docker-entrypoint.sh nginx -g 'daemon off;>,
-    created_at=>datetime::<//2026.09:8/18/38/55/000?tz=-0600>,
-    id=>ceebff7d2dff0ca6d1e4e4bb91ad0b55cf8486ac195ba8e9689958657bdd1b41,
+    created_at=>datetime::<//2026.09:9/03/16/34/000?tz=-0600>,
+    id=><035165026a7c80906898b2d951f67e8329be00497315021bcf4915db7111bf5f>,
     image=>!*docker:image/nginx:alpine,
     labels=>[maintainer=>'NGINX Docker Maintainers <docker-maint@nginx.com>'],
     local_volumes=>1,
     names=>web,
-    running_for=><30 seconds ago>,
+    running_for=><14 seconds ago>,
     size=>bB::0.0000,
     state=>created,
     ...(3 more)]
@@ -556,13 +541,7 @@ mtron> *docker:image/nginx:alpine/tag         [-- alpine --]
 
 ```mtron
 mtron> docker:volume/myvol -> [driver => local]
-==>fail::[apply failure:
-   	[lhs]    │ docker:volume/myvol
-   	 \_type  │ /m/uri
-   	  \_pred │ []
-   	[inst]   │ ref?rng=#{*}&dom=#([driver=>local]){<j>}@<1>
-   	 \_dom   │ #::T
-   	 \_args  │ [[driver=>local]][ProcessBuilder<1065>:fail[ProcessBuilder<1065>:(NullPointerException)] ← (NullPointerException)]][fail[ProcessBuilder<1065>:(NullPointerException)]][]@/sys/fail/1338
+==>fail::[inst apply failure: fail[ProcessBuilder<1065>:(NullPointerException)]]@/sys/fail/1002
 ```
 ### Remove a volume
 
@@ -580,14 +559,8 @@ mtron> docker:volume/myvol -> noobj
 
 ```mtron
 mtron> docker:network/mynet -> [driver => bridge]
-==>fail::[apply failure:
-   	[lhs]    │ docker:network/mynet
-   	 \_type  │ /m/uri
-   	  \_pred │ []
-   	[inst]   │ ref?rng=#{*}&dom=#([driver=>bridge]){<j>}@<1>
-   	 \_dom   │ #::T
-   	 \_args  │ [[driver=>bridge]][MTronException<137>:exit 1: docker network create mynet -d bridge...]][exit 1: docker network create mynet -d bridge
-   ]@/sys/fail/1340
+==>fail::[inst apply failure: exit 1: docker network create mynet -d bridge
+   ]@/sys/fail/1004
 ```
 ### Remove a network
 
@@ -674,28 +647,8 @@ mtron> docker:container/sqlite -> [
          command => ['sh', '-c', 'sqlite3 /data/mydb.sqlite ".databases" && chmod 777 /data /data/mydb.sqlite'],
          volumes => ['/tmp/mtron-dbs:/data']
        ]
-==>fail::[apply failure:
-   	[lhs]    │ docker:container/sqlite
-   	 \_type  │ /m/uri
-   	  \_pred │ []
-   	[inst]   │ ref?rng=#{*}&dom=#([
-     user=>root,
-     image=>'keinos/sqlite3:latest',
-     command=>[
-      'sh',
-      '-c',
-      'sqlite3 /data/mydb.sqlite ".databases" && chmod 777 /data /data/mydb.sqlite'],
-     volumes=>['/tmp/mtron-dbs:/data']]){<j>}@<1>
-   	 \_dom   │ #::T
-   	 \_args  │ [[
-    user=>root,
-    image=>'keinos/sqlite3:latest',
-    command=>[
-     'sh',
-     '-c',
-     'sqlite3 /data/mydb.sqlite ".databases" && chmod 777 /data /data/mydb.sqlite'],
-    volumes=>['/tmp/mtron-dbs:/data']]][MTronException<137>:exit 125: docker run -d --name sqlite --user root -v /tmp/mtron-dbs:/data keinos/sqlite3:latest sh -c sqlite3 /data/mydb.sqlite ".databases" && chmod 777 /data /data/mydb.sqlite...]][exit 125: docker run -d --name sqlite --user root -v /tmp/mtron-dbs:/data keinos/sqlite3:latest sh -c sqlite3 /data/mydb.sqlite ".databases" && chmod 777 /data /data/mydb.sqlite
-   ]@/sys/fail/1342
+==>fail::[inst apply failure: exit 125: docker run -d --name sqlite --user root -v /tmp/mtron-dbs:/data keinos/sqlite3:latest sh -c sqlite3 /data/mydb.sqlite ".databases" && chmod 777 /data /data/mydb.sqlite
+   ]@/sys/fail/1006
 ```
 The bind mount `'/tmp/mtron-dbs:/data'` maps the host directory into the container. The user `root` is necessary for
 command permissions.
@@ -752,13 +705,8 @@ mtron> *mydb:people/+.=?=[role=>developer]==[name=>_].explain() [-- sql rewrite 
 mtron> *mydb:people/+.count()                                   [-- number of rows        --]
 ==>3
 mtron> *mydb:people/+.count().explain()                         [-- sql rewrite usage     --]
-==>fail::[apply failure:
-   	[lhs]    │ noobj
-   	 \_type  │ noobj{0}
-   	  \_pred │ []
-   	[inst]   │ /m/inst/explain_compute?rng=str&dom=noobj{0}(/m/tble/inst/rewrite/sql_count?int<=#{0}(people/+)){<j>}@<0>
-   	 \_dom   │ noobj
-   	 \_args  │ [/m/tble/inst/rewrite/sql_count?int<=#{0}(people/+)][Obj<681>:unable to convert minst to code[Obj<681>:class studio.phaseshift.metatron.isa.m.type.impl.MInst cannot be cast to class studio.phaseshift.metatron.isa.m.type.Code (studio.phaseshift.metatron.isa.m.type.impl.MInst and studio.phaseshift.metatron.isa.m.type.Code are in unnamed module of loader 'app')] ← class studio.phaseshift.metatron.isa.m.type.impl.MInst cannot be cast to class studio.phaseshift.metatron.isa.m.type.Code (studio.phaseshift.metatron.isa.m.type.impl.MInst and studio.phaseshift.metatron.isa.m.type.Code are in unnamed module of loader 'app')]][unable to convert minst to code[Obj<681>:class studio.phaseshift.metatron.isa.m.type.impl.MInst cannot be cast to class studio.phaseshift.metatron.isa.m.type.Code (studio.phaseshift.metatron.isa.m.type.impl.MInst and studio.phaseshift.metatron.isa.m.type.Code are in unnamed module of loader 'app')]][class studio.phaseshift.metatron.isa.m.type.impl.MInst cannot be cast to class studio.phaseshift.metatron.isa.m.type.Code (studio.phaseshift.metatron.isa.m.type.impl.MInst and studio.phaseshift.metatron.isa.m.type.Code are in unnamed module of loader 'app')]@/sys/fail/1346
+==>fail::[args do not match inst args:
+   	[X=>/m/tble/inst/rewrite/sql_count?int<=#{0}(people/+)]]@/sys/fail/1010
 ```
 ### Step 5: The container sees the same data
 

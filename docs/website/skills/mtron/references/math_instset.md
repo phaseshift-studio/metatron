@@ -71,7 +71,7 @@ mtron> second::60.0.gt(millis::500.0)
 ```mtron
 mtron> [-- Current system time --]
 mtron> datetime_now()
-==>datetime::<//2026.09:8/18/42/18/247?tz=-0600>
+==>datetime::<//2026.09:9/03/18/46/508?tz=-0600>
 mtron> [-- From record (goes through .as(uri::T) first) --]
 mtron> [host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],
         c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T)
@@ -87,21 +87,9 @@ Bare URIs like `<//2024.12:25/...>` work with standard URI operations (`>>host`,
 ```mtron
 mtron> [-- Standard URI projections work on bare URIs --]
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>>>host
-==>fail::[apply failure:
-   	[lhs]    │ <//2024.12:25/09/00/00/000?tz=-0500>
-   	 \_type  │ /m/uri
-   	  \_pred │ []
-   	[inst]   │ rshift?rng=#{*}&dom=uri(host){<j>}@<1>
-   	 \_dom   │ uri::T
-   	 \_args  │ [host][MTronException<137>:no active space supports pattern <//2024.12:25/09/00/00/000/host?tz=-0500>]][no active space supports pattern <//2024.12:25/09/00/00/000/host?tz=-0500>]@/sys/fail/1422
+==>fail::[inst apply failure: no active space supports pattern <//2024.12:25/09/00/00/000/host?tz=-0500>]@/sys/fail/1086
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>>>port
-==>fail::[apply failure:
-   	[lhs]    │ <//2024.12:25/09/00/00/000?tz=-0500>
-   	 \_type  │ /m/uri
-   	  \_pred │ []
-   	[inst]   │ rshift?rng=#{*}&dom=uri(port){<j>}@<1>
-   	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException<137>:no active space supports pattern <//2024.12:25/09/00/00/000/port?tz=-0500>]][no active space supports pattern <//2024.12:25/09/00/00/000/port?tz=-0500>]@/sys/fail/1450
+==>fail::[inst apply failure: no active space supports pattern <//2024.12:25/09/00/00/000/port?tz=-0500>]@/sys/fail/1114
 mtron> [-- Vocabulary projections require datetime:: prefix --]
 mtron> datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>year
 ==>2024
@@ -160,13 +148,7 @@ All standard URI operations apply: `==` (select), `=?=` (where), plus `>>=` (rec
 ```mtron
 mtron> [-- Select mutation: change day --]
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>==[port=>31]>>port
-==>fail::[apply failure:
-   	[lhs]    │ <//2024.12:31/09/00/00/000?tz=-0500>
-   	 \_type  │ /m/uri
-   	  \_pred │ []
-   	[inst]   │ rshift?rng=#{*}&dom=uri(port){<j>}@<2>
-   	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException<137>:no active space supports pattern <//2024.12:31/09/00/00/000/port?tz=-0500>]][no active space supports pattern <//2024.12:31/09/00/00/000/port?tz=-0500>]@/sys/fail/1622
+==>fail::[inst apply failure: no active space supports pattern <//2024.12:31/09/00/00/000/port?tz=-0500>]@/sys/fail/1286
 mtron> [-- Where filter: match day 25 --]
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>=?=[port=>25]
 ==><//2024.12:25/09/00/00/000?tz=-0500>

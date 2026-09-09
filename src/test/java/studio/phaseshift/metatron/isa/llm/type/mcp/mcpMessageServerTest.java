@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.space.AbstractMcpHandlerTest;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
 
@@ -105,7 +106,10 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
             throw new IllegalStateException("tools/call for " + tool + " returned an error: " + res);
         final Obj content = result.asRec().at(uri(CONTENT));
         assertFalse(content.isNoObj(), tool + " must return a content entry: " + res);
-        return content.asLst().at(0).asRec().at(uri(TEXT)).toCleanString();
+        final String text = content.asLst().at(0).asRec().at(uri(TEXT)).toCleanString();
+        // the result text is JSON on the wire — parse it back to an Obj so callers
+        // keep asserting on the mtron rendering, not the raw JSON
+        return ObjJSONSerializer.simple().readString(text).toString();
     }
 
     // ========================================
@@ -329,9 +333,6 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
     @ParameterizedTest
     @Disabled
     @CsvSource(value = {
-            // (note: "(x?)*y" also looks catastrophic, but the mcp wire layer
-            //  (normArg) re-parses mtron-syntactic strings before the guard
-            //  sees them — that quirk is tracked separately)
             "(a+)+$",
             "^(.+)+z",
     }, delimiter = '%')

@@ -121,15 +121,16 @@ public class mcp_httpHandler extends HttpRec {
 
         // Detect initialize to create a new session
         final Rec json = request.asRec();
-        final String method = json.at(uri("method")).isNoObj() ? "" : json.at(uri("method")).uriValue().toString();
+        final String method = json.at(uri("method")).isNoObj() ? "" : json.at(uri("method")).toCleanString();
         if ("initialize".equals(method)) {
             this.sessionId = java.util.UUID.randomUUID().toString();
             sessions.put(this.sessionId, this.vid());
             LOG.status(DEBUG, "created mcp session: %s", this.sessionId);
         }
 
-        // Dispatch to protocol handler
-        final Obj result = this.mcp.handleMessage(request);
+        // Dispatch to protocol handler — reuse the already-parsed `request` for the
+        // blind pass and hand the raw body so the schema-aware argument parse can run
+        final Obj result = this.mcp.handleMessage(request, body);
 
         if (result.isNoObj()) {
             // Notification — 202 Accepted, no body

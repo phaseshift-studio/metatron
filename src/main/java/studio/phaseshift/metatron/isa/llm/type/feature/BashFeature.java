@@ -112,9 +112,16 @@ public class BashFeature extends AbstractFeature {
                 "maybe an obj",
                 "a lst[str] of results",
                 Map.of(
-                        uri(CMD), "the terminal command to evaluate",
-                        uri(TIMEOUT).maybe(), "timeout of the process (default: %s)".formatted(this.at(TIMEOUT).orElse(DEFAULT_TIMEOUT))),
-                "evaluate bash command")));
+                        uri(CMD), "the terminal command to evaluate (uses bash('-c',${cmd}) behind the scenes)",
+                        uri(TIMEOUT).maybe(), """
+                                              a real number denoting timeout of the process (default: %s).
+                                              e.g. millis::1000.0 or second::1.0. note that this field is optional
+                                              so when in doubt, just don't fill it out.
+                                              """.formatted(this.at(TIMEOUT).orElse(DEFAULT_TIMEOUT))),
+                """
+                evaluate bash command. *important* the timeout argument is optional. if you do use the timeout argument, it takes a real value, not an int.
+                you can type the real value as millis::1000.0 or second::1.0.
+                """)));
         return noobj();
     }
 }

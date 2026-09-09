@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler;
 
@@ -60,6 +61,9 @@ public class mcpServer extends MRec {
 
     protected final GraphittyLogger LOG = Graphitty.log(this);
     private static final String DESCRIPTION = "description";
+
+    /** The MCP protocol version this server advertises in {@code initialize}. */
+    public static final String PROTOCOL_VERSION = "2025-03-26";
 
     public mcpServer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -107,7 +111,7 @@ public class mcpServer extends MRec {
                 return message;
             }
             final Rec json = message.asRec();
-            final String method = json.at(uri("method")).isNoObj() ? "" : json.at(uri("method")).uriValue().toString();
+            final String method = json.at(uri("method")).isNoObj() ? "" : json.at(uri("method")).toCleanString();
             final Obj id = json.at(uri(ID));
             final Rec params = json.at(uri("params")).isNoObj() ? rec() : json.at(uri("params")).asRec();
 
@@ -122,6 +126,7 @@ public class mcpServer extends MRec {
                 case "prompts/list" -> handlePromptsList(id, params);
                 case "prompts/get" -> handlePromptsGet(id, params);
                 case "initialize" -> handleInitialize(id, params);
+                case "server/discover" -> handleServerDiscover(id, params);
                 case "ping" -> handlePing(id, params);
                 case "notifications/initialized", "notifications/cancelled" -> handleNotifications(id, method);
                 default -> handleUnknownMethod(id, method);
@@ -136,6 +141,51 @@ public class mcpServer extends MRec {
                 LOG.error("  at %s.%s(%s:%d)", ste.getClassName(), ste.getMethodName(), ste.getFileName(), ste.getLineNumber());
             }
             return fail(e);
+        }
+    }
+
+    /**
+     * Transport entry point that parses a raw JSON-RPC body with schema awareness.
+     * <p>
+     * A single schema-blind pass ({@code MIME.APPLICATION_JSON.fromBytes}) mangles
+     * string arguments — a {@code code::T} argument gets mtron-parsed or
+     * quote-stripped before the tool ever sees it.  This does a two-phase parse: a
+     * blind pass to resolve the tool, then a schema-aware pass (via a
+     * {@link ObjJSONSerializer} parameterized with the tool's typed args) that
+     * disambiguates each {@code arguments} value to its declared inst type — so the
+     * tool never has to massage a JSON string back into its own type.
+     *
+     * @param rawJson the raw JSON-RPC body
+     * @return the JSON-RPC response (noobj for notifications)
+     */
+    public Obj handleMessage(final String rawJson) {
+        return this.handleMessage(ObjJSONSerializer.parse(rawJson), rawJson);
+    }
+
+    /**
+     * Schema-aware dispatch given an already-blind-parsed message plus the raw JSON.
+     * Reusing the caller's blind parse avoids re-parsing the body a second time
+     * (the HTTP handler already parsed it for session detection).
+     */
+    public Obj handleMessage(final Obj blind, final String rawJson) {
+        if (!blind.isRec()) return this.handleMessage(blind);
+        final Rec json = blind.asRec();
+        final String method = json.at(uri("method")).isNoObj() ? "" : json.at(uri("method")).toCleanString();
+        if (!"tools/call".equals(method)) return this.handleMessage(blind);
+        final Obj params = json.at(uri("params"));
+        if (params.isNoObj() || !params.isRec()) return this.handleMessage(blind);
+        final String toolName = params.asRec().at(uri(NAME)).isNoObj() ? "" : params.asRec().at(uri(NAME)).toCleanString();
+        final Obj toolEntry = this.at(TOOL).orElse(rec0()).at(uri(toolName));
+        if (toolEntry.isNoObj() || !toolEntry.isObjInst() || !toolEntry.asInst().args().isRec()) return this.handleMessage(blind);
+        try {
+            final Obj schemaAware = new ObjJSONSerializer()
+                    .schema(toolEntry.asInst().args().asRec())
+                    .readString(rawJson);
+            return this.handleMessage(schemaAware);
+        } catch (final Exception e) {
+            // a schema'd argument failed to parse (e.g. malformed code::T) —
+            // surface it as a JSON-RPC error rather than a transport-level 400
+            return mcpError(json.at(uri(ID)), jnt(-32603), str("invalid arguments: " + e.getMessage()));
         }
     }
 
@@ -172,9 +222,6 @@ public class mcpServer extends MRec {
         try {
             final String toolName = params.at(uri(NAME)).isNoObj() ? "" : params.at(uri(NAME)).toCleanString();
             final Rec arguments = params.at(uri("arguments")).isNoObj() ? rec() : params.at(uri("arguments")).asRec();
-            // ── wire-key alias: "arguments" → "args" for metatron convention ──
-            if (!arguments.jvm().containsKey(uri(ARGS)) && arguments.jvm().containsKey(uri("arguments")))
-                arguments.jvm().put(uri(ARGS), arguments.jvm().get(uri("arguments")));
             final Obj toolEntry = this.at(TOOL).orElse(rec0()).at(uri(toolName));
             if (toolEntry.isNoObj()) {
                 return mcpError(id, jnt(-32601), str("tool not found: " + toolName));
@@ -190,9 +237,15 @@ public class mcpServer extends MRec {
                     //LOG.error("lhs: %s\nargs: %s\nresult: %s", toolLhs, args, toolResult);
                     return mcpError(id, jnt(-32603), str(toolResult.asFail().message()));
                 }
+                // Result is serialized to plain (TRANSPARENT) JSON — no OPAQUE
+                // _tid/_bid envelope, so stock MCP clients can consume it.
+                // NOTE: TRANSPARENT flattens objs/rel/type to a JSON array, which
+                // the client currently reads back as lst::T (not objs/rel/type).
+                // Recovering those faithfully needs the client to know the tool's
+                // rng (an outputSchema in tools/list) — deferred.
                 return mcpResponse(id, rec(uri(CONTENT), lst(rec(
                         uri(TYPE), str(TEXT),
-                        uri(TEXT), str(Str.Helper.stripQuotes(toolResult.toString()))))));
+                        uri(TEXT), str(ObjJSONSerializer.simple().write(toolResult).toString())))));
             }
         } catch (final Exception e) {
             return mcpError(id, jnt(-32603), str("error: %s".formatted(e)));
@@ -294,7 +347,29 @@ public class mcpServer extends MRec {
         if (hasResources) caps.at(uri("resources"), rec(), Rec.MUTABLE);
         if (hasPrompts) caps.at(uri("prompts"), rec(), Rec.MUTABLE);
         return mcpResponse(id, rec(
-                uri("protocolVersion"), str("2025-03-26"),
+                uri("protocolVersion"), str(PROTOCOL_VERSION),
+                uri("capabilities"), caps,
+                uri("serverInfo"), rec(
+                        uri(NAME), str("metatron-mcp"),
+                        uri("version"), str("0.1.0"))));
+    }
+
+    /**
+     * Handle a {@code server/discover} request (2026-07-28 spec "Discovery").
+     * Lets a client query supported protocol versions, capabilities, and identity
+     * before any other request.  We only advertise the version we actually speak.
+     */
+    protected Obj handleServerDiscover(final Obj id, final Rec params) {
+        final boolean hasTools = !this.at(TOOL).isNoObj();
+        final boolean hasResources = !this.at(RESOURCE).isNoObj();
+        final boolean hasPrompts = !this.at(PROMPT).isNoObj();
+        final Rec caps = rec();
+        if (hasTools) caps.at(uri("tools"), rec(), Rec.MUTABLE);
+        if (hasResources) caps.at(uri("resources"), rec(), Rec.MUTABLE);
+        if (hasPrompts) caps.at(uri("prompts"), rec(), Rec.MUTABLE);
+        return mcpResponse(id, rec(
+                uri("resultType"), str("complete"),
+                uri("supportedVersions"), lst(str(PROTOCOL_VERSION)),
                 uri("capabilities"), caps,
                 uri("serverInfo"), rec(
                         uri(NAME), str("metatron-mcp"),

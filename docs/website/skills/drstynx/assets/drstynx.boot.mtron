@@ -296,7 +296,7 @@ agent::[
   think_feature::::::[on_agent_ctor => inst(a=>agent::T){
                                           accordion_widget::[title => "thoughts", 
                                                              body  => "",
-                                                             style => style::[anchor=>top_right,right=>10,top=>3,height=>10,width=>80]]@<think_widget> },
+                                                             style => style::[anchor=>top_middle,right=>10,top=>3,height=>10,width=>80]]@<think_widget> },
                      on_before_chat => inst(){ @<think_widget> >>= [body=>""] },
                      root           => /usr/dr/message,
                      think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],

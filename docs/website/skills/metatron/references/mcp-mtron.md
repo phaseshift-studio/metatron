@@ -19,21 +19,7 @@ mtron> """
         }
        }
        """.as(json::T).as(mcp_client::T).to(/usr/marko/mcp/intellij)
-==>fail::[apply failure:
-   	[lhs]    │ json::"""
-          {
-           "type": "streamable-http",
-           "url": "http://127.0.0.1:64342/stream",
-           "headers": {
-            "IJ_MCP_SERVER_PROJECT_PATH": "~/software/metatron"
-           }
-          }
-          """
-   	 \_type  │ /m/web/mime/json
-   	  \_pred │ [/m/inst/pred?rng=#{?}&dom=#{?}(#{*}::T){<j>}]
-   	[inst]   │ as?rng=mcp_client{+}&dom=json(mcp_client::T){<j>}@<2>
-   	 \_dom   │ str::T[/m/inst/pred?rng=#{?}&dom=#{?}(#{*}::T){<j>}]@/m/web/mime/json
-   	 \_args  │ [mcp_client::T][SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/790
+==>fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26").]@/sys/fail/790
 ```
 If the snippet provided has an `mcpServer` outer wrapping, then do:
 
@@ -48,25 +34,7 @@ mtron> """
           }
         }}}
        """.as(json::T).as(rec::T)>>mcpServers/intellij.as(json::T).as(mcp_client::T)
-==>fail::[apply failure:
-   	[lhs]    │ json::'{"type":"streamable-http","url":"http://127.0.0.1:64342/stream","headers":{"IJ_MCP_SERVER_PROJECT_PATH":{"code":"/software/metatron","source":"!*/sys/thread/main","start":null,"state":"stop","result":"/software/metatron"}}}'
-   	 \_type  │ /m/web/mime/json
-   	  \_pred │ [/m/inst/pred?rng=#{?}&dom=#{?}(#{*}::T){<j>}]
-   	[inst]   │ as?rng=mcp_client{+}&dom=json(mcp_client::T){<j>}@<5>
-   	 \_dom   │ str::T[/m/inst/pred?rng=#{?}&dom=#{?}(#{*}::T){<j>}]@/m/web/mime/json
-   	 \_args  │ [mcp_client::T][Utils<394>:java.lang.IllegalArgumentException: invalid header value: "{code=/software/metatron, source=core::[... ← java.lang.IllegalArgumentException: invalid header value: "{code=/software/metatron, source=core::[... ← invalid header value: "{code=/software/metatron, source=core::[...]][java.lang.IllegalArgumentException: invalid header value: "{code=/software/metatron, source=core::[
-    code=>inst?#{*}<=#{?}(#{*}::T),
-    start=>noobj,
-    state=>stop,
-    result=>noobj]@/sys/thread/main, state=stop, result=/software/metatron}"[Utils<394>:java.lang.IllegalArgumentException: invalid header value: "{code=/software/metatron, source=core::[... ← invalid header value: "{code=/software/metatron, source=core::[...]][java.lang.IllegalArgumentException: invalid header value: "{code=/software/metatron, source=core::[
-    code=>inst?#{*}<=#{?}(#{*}::T),
-    start=>noobj,
-    state=>stop,
-    result=>noobj]@/sys/thread/main, state=stop, result=/software/metatron}"][invalid header value: "{code=/software/metatron, source=core::[
-    code=>inst?#{*}<=#{?}(#{*}::T),
-    start=>noobj,
-    state=>stop,
-    result=>noobj]@/sys/thread/main, state=stop, result=/software/metatron}"]@/sys/fail/818
+==>fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26").]@/sys/fail/818
 ```
 Moreover, if the `mcpServer` snippet has multiple inner servers endpoints defined, to load all of them, do:
 
@@ -97,13 +65,7 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron> mcp_client::[host=>http://localhost:8777/mcp]@a
-==>ERROR: unable to construct mcp_client::T: fail::[apply failure:
-	[lhs]    │ [host=>http://localhost:8777/mcp]@a
-	 \_type  │ /m/rec
-	  \_pred │ []
-	[inst]   │ ctor?rng=mcp_client&dom=#{?}([host=>http://localhost:8777/mcp]@a){<j>}
-	 \_dom   │ #{?}::T
-	 \_args  │ [[host=>http://localhost:8777/mcp]@a][SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)] ← java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← ...]][java.util.concurrent.ExecutionException: java.net.ConnectException[SocketChannelImpl<204>:java.util.concurrent.ExecutionException: java.net.ConnectException ← java.net.ConnectException ← (ConnectException) ← (ClosedChannelException)]][java.util.concurrent.ExecutionException: java.net.ConnectException][java.net.ConnectException][][]@/sys/fail/830
+==>ERROR: unable to construct mcp_client::T: fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26").]@/sys/fail/830
 mtron> *a>>tool
 mtron> [-- => [m_inst_eval_mtron=>tool::[inst=>..., name=>m_inst_eval_mtron, desc=>..., arg=>...], ...] --]
 mtron> [-- invoke a tool by applying its inst field --]

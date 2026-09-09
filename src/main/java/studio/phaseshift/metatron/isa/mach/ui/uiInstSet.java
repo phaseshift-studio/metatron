@@ -79,11 +79,11 @@ public class uiInstSet extends AbstractInstSet {
     public static Type UI_WIDGET_TYPE;
     public static final fURI UI_STYLE_TID = UI_ISA_TID.extend("style");
     public static Type UI_STYLE_TYPE;
-    public static final fURI UI_ACCORDION_TID = UI_ISA_TID.extend("accordion_widget");
+    public static final fURI UI_ACCORDION_TID = UI_WIDGET_TID.extend("accordion_widget");
     public static Type UI_ACCORDION_TYPE;
-    public static final fURI UI_PROGRESS_TID = UI_ISA_TID.extend("progress_widget");
+    public static final fURI UI_PROGRESS_TID = UI_WIDGET_TID.extend("progress_widget");
     public static Type UI_PROGRESS_TYPE;
-    public static final fURI UI_PROGRESS_TABLE_TID = UI_ISA_TID.extend("progress_table_widget");
+    public static final fURI UI_PROGRESS_TABLE_TID = UI_WIDGET_TID.extend("progress_table_widget");
     public static Type UI_PROGRESS_TABLE_TYPE;
     public static final fURI UI_TABLE_TID = UI_WIDGET_TID.extend("table_widget");
     public static Type UI_TABLE_TYPE;
