@@ -18,20 +18,27 @@
 
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.service.tool.ToolExecutor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -280,6 +287,55 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
 
     protected static Rec toolResult(final String name, final String result) {
         return rec(uri(NAME), str(name), uri(RESULT), str(result));
+    }
+
+    // ── Tool-through-the-stack rigging ──────────────────────────────
+
+    /**
+     * Locate a tool registered into the agent's {@link ToolFeature} by
+     * {@code feature.onBeforeChat(agent)}, matched by regex against its
+     * flattened tid (e.g. {@code "bash"} matches {@code /m/llm/.../bash}).
+     */
+    protected static Inst findTool(final Agent agent, final AbstractFeature feature, final String toolNameRegex) {
+        feature.onBeforeChat(agent);
+        return agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as()
+                .tools().elements()
+                .map(t -> t.asRec().at(uri(INST)).<Obj>as())
+                .filter(Obj::isObjInst)
+                .map(Obj::asInst)
+                .filter(i -> Pattern.compile(toolNameRegex).matcher(i.tid().toString()).find())
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("tool not registered: " + toolNameRegex));
+    }
+
+    /**
+     * Invoke a registered tool through the <em>full</em> {@code mTool} spec/executor
+     * stack — the same path LC4j uses when an agent calls a tool — rather than
+     * applying the inst directly. Arguments are round-tripped through JSON and
+     * parsed schema-aware against the tool's declared arg types (exactly as
+     * {@link studio.phaseshift.metatron.isa.llm.mToolExecutor} does), so a
+     * {@code uri}/{@code code}/{@code inst}/{@code str} argument arrives as its
+     * declared type instead of a guessed string.
+     * <p>
+     * Returns the raw {@link Obj} result (recovered from the executor's result
+     * stash), so callers can assert on {@code fail::T} and typed results exactly
+     * as production code sees them — not a lossy JSON re-parse.
+     */
+    protected static Obj runToolThroughStack(final Agent agent, final AbstractFeature feature,
+                                             final String toolNameRegex, final Rec arguments) {
+        final Inst tool = findTool(agent, feature, toolNameRegex);
+        final Tuple.Pair<ToolSpecification, ToolExecutor> specExec =
+                mTool.mtronInstToolSpecification(mTool.mtronInstToDocs(tool));
+        final String callId = "test-" + UUID.randomUUID();
+        final String argsJson = ObjJSONSerializer.simple().write(arguments).toString();
+        final ToolExecutionRequest request = ToolExecutionRequest.builder()
+                .id(callId)
+                .name(specExec.get0().name())
+                .arguments(argsJson)
+                .build();
+        specExec.get1().execute(request, null);
+        final Obj raw = mTool.resultStash.remove(callId);
+        return null == raw ? str(specExec.get0().name() + " returned no stashed result") : raw;
     }
 
     private void assertValidResult(final ChatResult result) {

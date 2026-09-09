@@ -585,6 +585,27 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return !this.qMap().isEmpty();
     }
 
+    default boolean hasNonDomRngQ() {
+        int counter = 0;
+        if (this.hasRng())
+            counter++;
+        if (this.hasDom())
+            counter++;
+        return this.qMap().size() > counter;
+    }
+
+    default fURI copyQ(final fURI furi) {
+        if (!furi.hasQ())
+            return this;
+        final Map<String, String> rhsQ = furi.qMap();
+        final Map<String, String> lhsQ = this.qMap();
+        final Map<String, String> newQ = new LinkedHashMap<>();
+        newQ.putAll(rhsQ);
+        newQ.putAll(lhsQ);
+        return this.q(newQ);
+
+    }
+
     /**
      * A relative furi has no leading /
      *
@@ -715,7 +736,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                         "(\\?" +
                         "((?<rng>[^<&]+)<=(?<dom>[^&?]+))?" +
                         "&?" +
-                        "(?<query>[^&=]+(=[^&=]+)?(&[^&=]+(=[^&=]+)?)*)?)?");
+                        "(?<query>[^&=]+(?:=(?:\\[[^\\]]*\\]|[^&=]+))?(&[^&=]+(?:=(?:\\[[^\\]]*\\]|[^&=]+))?)*)?)?");
         // Template-aware pattern: allows ${...} in scheme, host, port, path, query components
         // Key differences from FURI_PATTERN:
         // - scheme: allows ${...} via alternation
@@ -814,7 +835,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         }
 
         static Map<String, String> parseQuery(final String query) {
-            return query == null ? Map.of() : Arrays.stream(query.split("&")).map(s -> s.split("=")).collect(Collectors.toMap(a -> a[0], a -> a.length > 1 ? a[1] : "", (v1, v2) -> v1 + ";" + v2, LinkedHashMap::new));
+            return query == null ? Map.of() : Arrays.stream(query.split("&")).map(s -> s.split("=", 2)).collect(Collectors.toMap(a -> a[0], a -> a.length > 1 ? a[1] : "", (v1, v2) -> v1 + ";" + v2, LinkedHashMap::new));
         }
 
         /**

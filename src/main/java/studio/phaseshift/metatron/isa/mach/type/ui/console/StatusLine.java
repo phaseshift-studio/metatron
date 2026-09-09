@@ -67,6 +67,8 @@ public class StatusLine implements Runnable {
     private final Status status;
     private final TypedRec<Uri, Call> widgets = typedRec();
     private static String lastMessage = "";
+    private static long lastMessageTime = 0L;
+    private static String lastMessageColor = "b";
 
     public StatusLine(final Console console) {
         this.line = new ArrayList<>();
@@ -77,7 +79,7 @@ public class StatusLine implements Runnable {
         this.addWidget(f("in_bytes"), () -> " {{w}}\uD83D\uDCE5 {{%s}}%s ".formatted(getForegroundColor(), bytesFormat(Router.global().stats().ioStats().bytesRecv())));
         this.addWidget(f("out_bytes"), () -> "{{w}}\uD83D\uDCE4 {{%s}}%s ".formatted(getForegroundColor(), bytesFormat(Router.global().stats().ioStats().bytesSent())));
         this.addWidget(f("time"), () -> "{{%s}}⏳{{%s}}%s ".formatted(this.runningTime() > 10000 ? "r" : "w", getForegroundColor(), timeFormat(this.runningTime())));
-        this.addWidget(f("message"), () -> "{{[%s]}}✉️ {{[%s]}} %s".formatted(StatusLine.lastMessage.toLowerCase().contains("error") ? "r" : getBackgroundColor(), getBackgroundColor(), StatusLine.lastMessage));
+        this.addWidget(f("message"), () -> "{{[%s]}}✉️ {{[%s]}} %s".formatted(StatusLine.lastMessageColor, getBackgroundColor(), StatusLine.lastMessage));
         /*this.addWidget(f("run"), () -> "{{w}}run:{{y}}%d".formatted(Router.global().stats().monadicStats().runningMonads()));
         this.addWidget(f("halt"), () -> "{{w}}halt:{{y}}%d".formatted(Router.global().stats().monadicStats().haltedMonads()));
         this.addWidget(f("kill"), () -> "{{w}}kill:{{y}}%d".formatted(Router.global().stats().monadicStats().killedMonads()));
@@ -91,6 +93,8 @@ public class StatusLine implements Runnable {
 
     public synchronized static void message(final Obj message) {
         StatusLine.lastMessage = formatMessage(Str.Helper.cleanString(message));
+        StatusLine.lastMessageTime = System.currentTimeMillis();
+        StatusLine.lastMessageColor = StatusLine.lastMessage.toLowerCase().contains("error") ? "r" : "g";
     }
 
     private static String formatMessage(final String message) {
@@ -117,6 +121,8 @@ public class StatusLine implements Runnable {
     private void compileWidgets() {
         final String back = this.getBackgroundColor();
         final String fore = this.getForegroundColor();
+        if (0 == StatusLine.lastMessageTime || (System.currentTimeMillis() - StatusLine.lastMessageTime) > 5000)
+            StatusLine.lastMessageColor = back;
         this.line.clear();
         boolean capped = false;
         for (final Map.Entry<Uri, Call> ws : this.widgets.jvmTyped().entrySet()) {
@@ -225,11 +231,9 @@ public class StatusLine implements Runnable {
 
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
-            final boolean serverRunning = Router.loaded();
-            if (!serverRunning)
+            if (!Router.loaded()) {
                 this.setState(ERROR);
-            /// ////////////////////////////////////////////////
-            if (Router.loaded()) {
+            } else {
                 this.compileWidgets();
                 this.status.update(this.line);
             }

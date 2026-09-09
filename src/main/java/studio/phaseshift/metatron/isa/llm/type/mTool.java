@@ -24,21 +24,23 @@ import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.service.tool.ToolExecutor;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.llm.mToolExecutor;
 import studio.phaseshift.metatron.isa.llm.parser.JsonSchemaGenerator;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static dev.langchain4j.internal.Json.fromJson;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -133,6 +135,32 @@ public class mTool extends MRec {
         return tid.basePath().toString().replaceAll("^/+", "").replace("/", "_");
     }
 
+    /**
+     * Apply a tool inst to an already-parsed {@code arguments} Obj — the single
+     * shared invocation path for both the MCP server and the LC4j agent tool.
+     * <p>
+     * Handles the {@code lhs}/dom key and both lst- and rec-arg insts.  The caller
+     * is responsible for schema-aware parsing (see {@code ObjJSONSerializer#schema}),
+     * so that a {@code uri::T}/{@code code::T}/{@code inst::T} argument arrives as
+     * its declared type rather than a guessed string.
+     *
+     * @param inst      the tool instruction to apply
+     * @param arguments the parsed arguments (a rec of name→value, or a lst for positional)
+     * @return the tool's result
+     */
+    public static Obj applyArguments(final Inst inst, final Obj arguments) {
+        if (arguments.isNoObj())
+            return inst.args(lst()).apply(noobj());
+        if (!arguments.isRec())
+            return inst.args(arguments.asPoly()).apply(noobj());
+        final Map<Obj, Obj> argMap = arguments.asRec().jvm();
+        final Poly<?, ?> args = inst.args().isNoObj() ? lst() : (inst.args().isLst() ?
+                lst(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).map(Map.Entry::getValue).collect(Collectors.toList())) :
+                rec(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).collect(Collectors.toMap(e -> uri(e.getKey().toString()), Map.Entry::getValue))));
+        final Obj lhs = argMap.containsKey(uri(LHS)) && argMap.get(uri(LHS)) != null ? argMap.get(uri(LHS)) : noobj();
+        return inst.args(args).apply(lhs);
+    }
+
     public Tuple.Pair<ToolSpecification, ToolExecutor> toolSpecification() {
         return mtronInstToolSpecification(doc(this.at(INST).asInst()));
     }
@@ -171,20 +199,7 @@ public class mTool extends MRec {
                 .description(doc.description())
                 .parameters(parameters.build());
 
-        ToolExecutor toolExecutor = (toolExecutionRequest, memoryId) -> {
-            Map<String, Object> arguments = fromJson(toolExecutionRequest.arguments(), Map.class);
-            final Poly<?, ?> args = inst.args().isNoObj() ? lst() : (inst.args().isLst() ?
-                    lst(arguments.entrySet().stream().filter(e -> !e.getKey().equals(LHS)).map(e -> ObjmtronSerializer.<Obj>parse(e.getValue().toString())).collect(Collectors.toList())) :
-                    rec(arguments.entrySet().stream().filter(e -> !e.getKey().equals(LHS)).collect(Collectors.toMap(e -> uri(e.getKey()), e -> ObjmtronSerializer.parse(e.getValue().toString())))));
-            final Obj result = inst
-                    .args(args)
-                    .apply(ObjmtronSerializer.compact().read(Optional.ofNullable(arguments.get(LHS)).orElse(noobj()).toString()));
-            inst.logger().debug("evaluating mtron_inst tool: %s => %s => %s", Optional.ofNullable(arguments.get(LHS)).orElse(noobj()), inst, result);
-            // Stash the raw Obj so ToolFeature can embed it in the monad tree
-            resultStash.put(toolExecutionRequest.id(), result);
-            final String stringResult = result.toCleanString();
-            return (null == stringResult || stringResult.isBlank()) ? "noobj" : stringResult; // prevents llm protocol from failing on empty or null results
-        };
+        ToolExecutor toolExecutor = new mToolExecutor(inst);
         return Tuple.Pair.with(toolSpecBuilder.build(), toolExecutor);
     }
 

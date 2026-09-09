@@ -24,7 +24,6 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.io.Closeable;
@@ -114,12 +113,12 @@ public interface WebSocketObj extends Rec, Closeable {
             if (outType.isText()) {
                 // send as a websocket text frame so clients using onText listeners receive it
                 final String outgoing = new String(bytes.array(), StandardCharsets.UTF_8);
-                Graphitty.log(this).debug("sending %s to %s", outgoing, this.getWebSocket().getRemoteSocketAddress());
                 this.getWebSocket().send(outgoing);
+                this.logger().status(DEBUG, "sent %s to %s", message, this.getWebSocket().getRemoteSocketAddress());
             } else
                 this.getWebSocket().send(bytes);
         } catch (final Exception e) {
-            Graphitty.log(this).error("error sending %s: %s", message, e);
+            this.logger().status(ERROR, "error sending %s to %s: %s", message, this.getWebSocket().getRemoteSocketAddress(), e);
         }
     }
 

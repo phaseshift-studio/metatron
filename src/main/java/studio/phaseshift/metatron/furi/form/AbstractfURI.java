@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.furi.form;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -30,6 +32,11 @@ import static studio.phaseshift.metatron.Tokens.DOM;
 import static studio.phaseshift.metatron.Tokens.RNG;
 import static studio.phaseshift.metatron.furi.fURI.Component.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 
 /*
@@ -635,7 +642,28 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public <T> T qValue(final String key, final Class<T> valueClass) {
-        if (String.class.isAssignableFrom(valueClass))
+        if (!this.hasQ(key))
+            return null;
+        // MTRON OBJECTS /////////////////////////////////
+        if (Str.class.isAssignableFrom(valueClass))
+            return (T) str(this.qMap().get(key));
+        else if (Uri.class.isAssignableFrom(valueClass))
+            return (T) uri(this.qMap().get(key));
+        else if (Int.class.isAssignableFrom(valueClass))
+            return (T) jnt(Long.valueOf(this.qMap().get(key)));
+        else if (Real.class.isAssignableFrom(valueClass))
+            return (T) real(Double.valueOf(this.qMap().get(key)));
+        else if (Bool.class.isAssignableFrom(valueClass))
+            return (T) bool(Boolean.valueOf(this.qMap().get(key)));
+        else if (Lst.class.isAssignableFrom(valueClass)) {
+            final String listValue = this.qMap().get(key);
+            return ObjmtronSerializer.parse(listValue);
+        } else if (Rec.class.isAssignableFrom(valueClass)) {
+            final String recValue = this.qMap().get(key);
+            return ObjmtronSerializer.parse(recValue);
+        }
+        // NATIVE JAVA OBJECTS ////////////////////////////
+        else if (String.class.isAssignableFrom(valueClass))
             return (T) this.qMap().get(key);
         else if (fURI.class.isAssignableFrom(valueClass))
             return (T) f(this.qMap().get(key));
@@ -647,7 +675,10 @@ public abstract class AbstractfURI implements fURI {
             return (T) Double.valueOf(this.qMap().get(key));
         else if (Boolean.class.isAssignableFrom(valueClass))
             return (T) Boolean.valueOf(this.qMap().get(key));
-        else
+        else if (List.class.isAssignableFrom(valueClass)) {
+            final String listValue = this.qMap().get(key);
+            return (T) ObjmtronSerializer.parse(listValue).lstValue();
+        } else
             throw MTronException.of("no known conversion of %s to %s", this.qMap().get(key), valueClass);
     }
 

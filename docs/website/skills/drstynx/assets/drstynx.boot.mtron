@@ -205,7 +205,6 @@ grphspace::[pattern   => h:#,
       -<[mvn_build   => mvn_build -> ide:command('mvn -f ${*temp} compile'),
          mvn_clean   => mvn_clean -> ide:command('mvn -f ${*temp} clean'),
          mvn_exec    => mvn_exec  -> ide:command('mvn -f ${*temp} compile exec:java'),
-         bash        => bash      -> |root:bash('-c',as(str::T)),
          git         => git       -> ide:command(cmd=>|'git ${>>op.as(str::T)}',op=>uri::T)].
   to(/usr/marko/metatron/command);
   /usr/marko/metatron/code/#?subq -> sub::[code=> >>0.as(rec::T)>>path==[_,_,_,_,_,_].
@@ -289,6 +288,7 @@ agent::[
                       response      => [complete => print(-<modal_widget::[title => '{{r}}agent response{{b}}',
                                                                      body  => "{{y}}${>>chat}",
                                                                      style => style::[border    =>continuous,
+                                                                                      width     =>200,
                                                                                       background=>"{{[k]}}",
                                                                                       foreground=>"{{b}}",
                                                                                       zIndex    => 100]].as?str<=widget(str::T))],
@@ -317,7 +317,7 @@ agent::[
                                                                               left=>-2,top=>8,foreground =>"{{y}}"]]@<audit_widget> },
                       to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() },
                       root          => /usr/dr/audit],
-  bash_feature:::::::[reject        => ["\brm\b"]],
+  [== bash_feature:::::::[reject        => ["\brm\b"]], ==]
   summarize_feature::[root          => /usr/dr],
   embed_feature::::::[root          => embed:chat_result,
                       model         => model::[provider     => ollama,
@@ -328,6 +328,7 @@ agent::[
   tool_feature:::::::[tool          => [!*gremlin,
                                         !*sql,
                                         !*codegraph,
+                                        !*bash?reject=['\brm\b'],
                                         mcp_client::[host=><http://localhost:8777/mcp>],
                                         forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
   cost_feature:::::::[root          => /usr/dr/cost,

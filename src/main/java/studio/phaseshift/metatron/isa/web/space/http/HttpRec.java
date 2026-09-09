@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
@@ -76,12 +77,16 @@ public class HttpRec extends MRec {
     // "stream closed", "insufficient bytes written", and orphaned sockets.
     private final ThreadLocal<HttpExchange> EXCHANGE = new ThreadLocal<>();
 
-    /** The current request's exchange for this thread; null during type-checking. */
+    /**
+     * The current request's exchange for this thread; null during type-checking.
+     */
     protected HttpExchange exchange() {
         return EXCHANGE.get();
     }
 
-    /** Bind the current request's exchange for the handling thread. */
+    /**
+     * Bind the current request's exchange for the handling thread.
+     */
     protected void exchange(final HttpExchange ex) {
         EXCHANGE.set(ex);
     }
@@ -306,8 +311,9 @@ public class HttpRec extends MRec {
             try (final OutputStream os = this.exchange().getResponseBody()) {
                 os.write(bytes);
             }
+            StatusLine.message(str(message.toCleanString()));
         } catch (final Exception e) {
-            LOG.error("error sending response: %s", e.getMessage());
+            LOG.status(ERROR, "error sending response: %s", e.getMessage());
             try {
                 if (this.exchange() != null)
                     sendError(500, "error sending response: " + e.getMessage());

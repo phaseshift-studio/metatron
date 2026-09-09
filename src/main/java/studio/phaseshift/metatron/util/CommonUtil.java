@@ -182,7 +182,6 @@ public final class CommonUtil {
         return Arrays.stream(s.split("(?=[A-Z])")).map(String::toLowerCase).collect(Collectors.joining("_"));
     }
 
-
     public static void sleepThread(final long millis) {
         try {
             Thread.sleep(millis);
