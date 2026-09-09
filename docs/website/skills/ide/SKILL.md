@@ -11,7 +11,7 @@ mcp server tool `eval` (`m_inst_eval_mtron`).
 An agent edits a project's source by **pulling** a file into the code space, **editing** the rec-encoded member's, and
 letting a **subscription** on `code/#` write back to disk and **log** a `saved` event.
 
-## setup: build the infrastructure
+## building project infrastructure
 
 First, load necessary instruction sets. Second, open three spaces:
 
@@ -19,24 +19,32 @@ First, load necessary instruction sets. Second, open three spaces:
 2. access to the file system where source code is stored (`fsspace`).
 3. an optional space for storing mutation event logs (`tblespace`).
 
+**NOTE**: these steps are only necessary if the `project::T` doesn't already exist. As an agent, typically, the project
+uri will be provided to you and thus, this section can be skipped.
+
 ```mtron
-mtron>  import(/m/ide,ide)
+mtron> import(/m/ide,ide)
 ==>instset::[
     pattern=>/m/ide/#,
     q=>[docq::[
     pattern=>docq,
     pre_read=>inst?#{*}<=#{?}(uri::T),
    ...
-mtron>  import(/m/web,web)
+mtron> import(/m/web,web)
 ==>instset::[
     pattern=>/m/web/#,
     q=>[docq::[
     pattern=>docq,
     pre_read=>inst?#{*}<=#{?}(uri::T),
    ...
-mtron>  import(/m/math,math)
-...
-mtron>  memspace::[
+mtron> import(/m/math,math)
+==>instset::[
+    pattern=>/m/math/#,
+    q=>[docq::[
+    pattern=>docq,
+    pre_read=>inst?#{*}<=#{?}(uri::T),
+   ...
+mtron> memspace::[
          pattern => </dev/scratch/#>,
                q => [mintq::[=>],docq::[=>],subq::[=>],
                      mimeq::[=>], lineq::[=>],lockq::[=>],
@@ -46,39 +54,11 @@ mtron>  memspace::[
     q=>[
      mintq::[
       pattern=>mintq,
-      pre_write=>inst?#{*}<=#{?}(uri::T,#::T)],
-     docq::[
-      pattern=>docq,
-      pre_read=>inst?#{*}<=#{?}(uri::T),
-      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
-      obj=>memspace::[pattern=><#>],
-      inst=>instset::[pattern=><#>]],
-     subq::[
-      pattern=>subq,
-      pre_read=>inst?#{*}<=#{?}(uri::T),
-      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
-      qless_write=>inst?#{*}<=#{?}(uri::T,#::T),
-      obj=>[,]],
-     mimeq::[
-      pattern=>mimeq,
-      post_read=>inst?#{*}<=#{?}(uri::T,#::T)],
-     lineq::[
-      pattern=>lineq,
-      post_read=>inst?#{*}<=#{?}(uri::T,#::T),
-      pre_write=>inst?#{*}<=#{?}(uri::T,#::T)],
-     lockq::[
-      pattern=>lockq,
-      pre_read=>inst?#{*}<=#{?}(uri::T),
-      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
-      qless_write=>inst?#{*}<=#{?}(uri::T,#::T),
-      obj=>[,]],
-     incrq::[
-      pattern=>incrq,
-      pre_write=>inst?#{*}<=#{?}(uri::T,#::T)]]]@/sys/space/dev/metatron
-mtron>  fsspace::[pattern      => mfs:#,
+   ...
+mtron> fsspace::[pattern      => mfs:#,
                   route       => [mfs:=><.>]]@/sys/space/fs/mfs
 ==>fsspace::[pattern=>mfs:#,route=>[mfs:=><>]]@/sys/space/fs/mfs
-mtron>  tblespace::[pattern    => </log/scratch/#>,
+mtron> tblespace::[pattern    => </log/scratch/#>,
                    host       => <sqlite:target/log_scratch.sqlite>,
                    driver     => <org.sqlite.JDBC>,
                    table      => [,],
@@ -89,32 +69,19 @@ mtron>  tblespace::[pattern    => </log/scratch/#>,
     host=><sqlite:target/log_scratch.sqlite>,
     driver=><org.sqlite.JDBC>,
     table=>[,],
-    q=>[
-     incrq::[
-      pattern=>incrq,
-      pre_write=>inst?#{*}<=#{?}(uri::T,#::T)],
-     subq::[
-      pattern=>subq,
-      pre_read=>inst?#{*}<=#{?}(uri::T),
-      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
-      qless_write=>inst?#{*}<=#{?}(uri::T,#::T),
-      obj=>[,]],
-     mimeq::[
-      pattern=>mimeq,
-      post_read=>inst?#{*}<=#{?}(uri::T,#::T)]],
-    route=>[/log/scratch/=><>]]@/sys/space/log/scratch
+   ...
 ```
-## encodings
+## understanding source embeddings
 
-A loaded Java file has two encodings:
+A loaded Java file has two embeddings:
 
-- **rec encoding** — each member is a rec: `kind`, `name`, `signature`,
+- **rec embedding** — each member is a rec: `kind`, `name`, `signature`,
   `header` (up to `{`), `body` (`{...}`), `footer`, and `text` = **derived** (header + body + footer).
 - **uri-graph (`idx`) encoding** — navigate the source with path syntax:
   `*/dev/metatron/idx/memSpace/method/close`.
 
 The pull (`src/.../${class}()`) returns the class's **rec encoding** (the
-`ide:java::T` value) and stores it in the `code` list beside the project root.
+`ide:java::T` value) and stores it in the `code` list under the project root.
 `ide:index(root)` re-projects that code list into `root/idx`:
 `class => kind => name => !@.../code/N/classes/cls/0/members/i/name` — *anchors* pointing into the code space. That
 anchor is the write surface, and it also resolves back through the space to the stored member (the round trip is
@@ -128,7 +95,7 @@ asserted in the acceptance test).
 | `footer`    | trailing bits                       |
 | `text`      | **derived** -- do not hand-edit     |
 
-## writing code in mtron
+## embedding a project
 
 An example Java/Maven3 project is provided with metatron. This project is used for the following examples.
 
@@ -157,7 +124,7 @@ mtron> <mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/sc
     idx=>[=>],
     sub=>[auto_save=>sub::[
     target=>/dev/scratch/code/#,
-    code=>rshift(0).as(rec::T).rshift(path).select([id(),id(),id(),id(),id(),id()]).to(temp).as?rng=uri&dom=lst(uri::T).to(x).*id().update([location=>none]).as(java::T).to(**x.rshift(location).side(split([
+    code=>print('saving...').rshift(0).as(rec::T).rshift(path).select([id(),id(),id(),id(),id(),id()]).to(temp).as?rng=uri&dom=lst(uri::T).to(x).*id().update([location=>none]).as(java::T).to(**x.rshift(location).side(split([
      location=>id(),
      status=>saved,
      time=>!math:datetime_now()]).print('saved ',id(),'\n'))).map(map(/dev/scratch/src).mult(*temp.reverse().merge().take(1)))]]]@/dev/scratch
@@ -179,7 +146,7 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
     idx=>[=>],
     sub=>[auto_save=>sub::[
     target=>/dev/scratch/code/#,
-    code=>rshift(0).as(rec::T).rshift(path).select([id(),id(),id(),id(),id(),id()]).to(temp).as?rng=uri&dom=lst(uri::T).to(x).*id().update([location=>none]).as(java::T).to(**x.rshift(location).side(split([
+    code=>print('saving...').rshift(0).as(rec::T).rshift(path).select([id(),id(),id(),id(),id(),id()]).to(temp).as?rng=uri&dom=lst(uri::T).to(x).*id().update([location=>none]).as(java::T).to(**x.rshift(location).side(split([
      location=>id(),
      status=>saved,
      time=>!math:datetime_now()]).print('saved ',id(),'\n'))).map(map(/dev/scratch/src).mult(*temp.reverse().merge().take(1)))]],
@@ -190,9 +157,9 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
 mtron> */dev/scratch/command/mvn_clean
 ==>result{4}::[
     status=>success,
-    runtime=>millis::772.0000,
+    runtime=>millis::845.0000,
     command=>'mvn -f src/test/resources/scratch clean',
-    output=>!*/sys/tmp/f259a2c0]
+    output=>!*/sys/tmp/9d0d8ae7]
 mtron> */dev/scratch/command/mvn_build>>output
 ==>{4}'WARNING: A terminally deprecated method in sun.misc.Unsafe has been called'
 ==>{4}'WARNING: sun.misc.Unsafe::staticFieldBase has been called by com.google.inject.internal.aop.HiddenClassDefiner (file:/home/killswitch/.sdkman/candidates/maven/current/lib/guice-5.1.0-classes.jar)'
@@ -210,8 +177,8 @@ mtron> */dev/scratch/command/mvn_build>>output
 ==>{4}'[INFO] Nothing to compile - all classes are up to date.'
 ==>{12}'[INFO] ------------------------------------------------------------------------'
 ==>{4}'[INFO] BUILD SUCCESS'
-==>{4}'[INFO] Total time:  0.258 s'
-==>{4}'[INFO] Finished at: 2026-09-07T19:36:40-06:00'
+==>{4}'[INFO] Total time:  0.250 s'
+==>{4}'[INFO] Finished at: 2026-09-08T18:36:47-06:00'
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.
 
@@ -245,6 +212,8 @@ The Java source files have a `str::T > web:java::T` encoding accessible via `src
 
 ```mtron
 ```
+## writing code
+
 The file name serves as the key and a lambda `inst` serves as a lazy constructor of an `ide:java::T`. Calling the file
 name pulls the raw `src` into both `code` and `idx`.
 
@@ -259,7 +228,7 @@ mtron> /dev/scratch/src/Echo()
     method=>[
      speak=>!@/dev/scratch/code/1/classes/Echo/0/members/4/speak,
      name=>!@/dev/scratch/code/1/classes/Echo/0/members/6/name]]]
-mtron>  */dev/scratch/code/0
+mtron> */dev/scratch/code/0
 ==>java::[
     package=>'package com.example.scratch;',
     preamble=>"""package com.example.scratch;
@@ -296,18 +265,20 @@ mtron> */dev/scratch/idx/Echo
     method=>[
      speak=>!@/dev/scratch/code/1/classes/Echo/0/members/4/speak,
      name=>!@/dev/scratch/code/1/classes/Echo/0/members/6/name]]
-mtron> tree_widget::[root=>/dev/scratch, max=>3, xref=>[=>]].as?str<=widget(str::T)
+mtron> tree_widget::[root=>/dev/scratch, max=>4, xref=>[=>]].as?str<=widget(str::T)
 ==>"""
    scratch
    ├─ code
    │   ├─ 0
    │   │   ├─ classes
+   │   │   │   └─ Echo
    │   │   ├─ location
    │   │   ├─ package
    │   │   ├─ postscript
    │   │   └─ preamble
    │   └─ 1
    │       ├─ classes
+   │       │   └─ Echo
    │       ├─ location
    │       ├─ package
    │       ├─ postscript
@@ -320,8 +291,13 @@ mtron> tree_widget::[root=>/dev/scratch, max=>3, xref=>[=>]].as?str<=widget(str:
    │   └─ Echo
    │       ├─ comment
    │       ├─ constructor
-   │       ├─ field
-   │       └─ method
+   │       │   └─ Echo  »Echo
+   │       ├─ field  ──(2)──> members
+   │       │   ├─ PREFIX
+   │       │   └─ name
+   │       └─ method  ──(2)──> members
+   │           ├─ name
+   │           └─ speak
    ├─ root
    ├─ src
    │   ├─ Calculator
@@ -367,13 +343,6 @@ mtron> tree_widget::[root=>/dev/scratch/idx, max=>5,xref=>[=>]].as?str<=widget(s
            ├─ name
            └─ speak
    """
-```
-**edit, then save — two steps** (verified against a live VM, 2026-09-04): the `>>=` edit lands in the `code` space
-immediately, but the **disk write-back fires on the class-level save** (`code/N.to(...)`) — the subscription
-serializes the class rec (header + body + footer of each member) and writes the file. An edit that is never saved is
-space-only.
-
-```mtron
 mtron> */dev/scratch/idx/Echo/method/speak
 ==>[
     kind=>method,
@@ -389,14 +358,13 @@ mtron> */dev/scratch/idx/Echo/method/speak
        public String speak(String who) {
            return who;
    ..."""]
-mtron> */dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T)
-==>[
-    0=>'{',
-    1=>'        return who;',
-    2=>'    }']
-mtron> */dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T) >>= [1 => "return who;"]
-==>[0=>'{',1=>'return who;',2=>'    }']
-mtron> @/dev/scratch/idx/Echo/method/speak >>= [body=> '{ return "marko"; }']
+```
+To edit the existing `Echo::speak` method source code, update the component using an anchored uri. The `>>=` edit lands
+in `code` (due to `idx` redirection) and then the `auto_save` subscription fires and serializes the code `rec::T` to a
+`ide:java::T` before writing to disk.
+
+```mtron
+mtron> @/dev/scratch/idx/Echo/method/speak >>= [body=> """{ return "marko"; }"""]
 ==>[
     body=>'{ return "marko"; }',
     kind=>method,
@@ -410,8 +378,9 @@ mtron> @/dev/scratch/idx/Echo/method/speak >>= [body=> '{ return "marko"; }']
            return who;
    ..."""]
 ```
-Finally, to determine if the registered `sub::T` wrote the updated `Echo::speak` to disk, dereference the
-respective `fsspace::T` pointer.
+A "saved" messages is displayed via `stdout`. However, to be certain the registered `sub::T` wrote the updated
+`Echo::speak` to disk, dereference the respective `fsspace::T` pointer. That is, pull the Java source code (as an
+`str::T`) back into metatron.
 
 ```mtron
 mtron> *<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>
@@ -477,14 +446,13 @@ itemized in the subsequent table.
 ```mtron
 mtron> @/dev/scratch/idx/Echo/method/speak >>= [body =>
          -<'\n'.as(rec::T)>>=(
-         [?>2.?<4 => 'return "marko";']>>.
-             >-?str<=str{*}('\n'))].explain()
-==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at '= [body =>
-         -<'
-'.as(rec::T)>>=(
-         [?>2.?<4 => 'return "marko";']>>.
-             >-?str<=str{*}('
-'))].explain()'
+         [?>2.?<4 => 'return "marko";'])>>.
+         >-?str<=str{*}('\n')].explain()
+==>"""
+    op      dom      rng        args                                                                                                                     f    desc      c_dom  c_rng 
+    at      A{?}::T  rec{*}::T  /dev/scratch/idx/Echo/method/speak                                                                                       <j>  standard  {?}    {*}   
+    update  A::T     B{*}::T    [body=>split('\n').as(rec::T).update([is(gt(2)).is(lt(4))=>'return "marko";']).rshift().merge?rng=str&dom=str{*}('\n')]  <j>  standard  {1}    {*}   
+   """
 ```
 **NOTE**: when working in the `console::T`, the the interactive `explain_tool::T` provides a much richer analysis of an
 expression with pre- and post- compilation switching, drill down into nested code structures, and access reified
@@ -510,17 +478,18 @@ Different subscriptions can be defined to provide any number of useful reactions
 4. record stats (points to sections of the code).
 5. ...
 
-The current `sub::T` is:
+The dwe `sub::T` is:
 
 ```mtron
 mtron> */dev/scratch/code/#?subq
 ==>[
     sub::[
      target=>/dev/scratch/code/#,
-     code=>[code=>!*/dev/scratch/sub/auto_save/code.apply(id())]],
+     code=>!*/dev/scratch/sub/auto_save/code],
     sub::[
      target=>/dev/scratch/code/#,
-     code=>[code=>!*/dev/scratch/sub/auto_save/code.apply(id())]]]
+     code=>!*/dev/scratch/sub/auto_save/code]]
+mtron> */dev/scratch/code/#?subq>>0>>code
 ```
 ## gotchas (learned the hard way)
 

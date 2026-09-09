@@ -33,8 +33,10 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.mach.ui.uiInstSet;
 import studio.phaseshift.metatron.isa.rdf.rdfInstSet;
 import studio.phaseshift.metatron.isa.tble.tbleInstSet;
+import studio.phaseshift.metatron.isa.vec.vecInstSet;
 import studio.phaseshift.metatron.isa.web.webInstSet;
 
 import java.io.IOException;
@@ -146,10 +148,10 @@ public class InstSetDocGenerator {
         final Path outputPath = Path.of(outputDir).toAbsolutePath().normalize();
         Files.createDirectories(outputPath);
 
-        LOG.info("Booting metatron VM ...");
+        LOG.info("booting metatron VM ...");
         boot(bootFile);
 
-        SER = ObjmtronSerializer.single();
+        SER = ObjmtronSerializer.singleNoClip();
         final String depth = relativeDepth;
         try {
             final List<Meta> metas = new ArrayList<>();
@@ -163,7 +165,7 @@ public class InstSetDocGenerator {
                 try {
                     if (!vid.equals("/m"))
                         InstSet.importInstSet(f(vid));
-                    LOG.info("Fetching: " + vid);
+                    LOG.info("fetching: " + vid);
                     final InstSet is = (InstSet) Router.readFromSpace(f(vid));
                     LOG.info("  read " + vid + " type=" + is.getClass().getSimpleName() + " noObj=" + is.isNoObj());
 
@@ -256,6 +258,7 @@ public class InstSetDocGenerator {
         for (final InstSet is : new InstSet[]{
                 new mathInstSet(), new webInstSet(), new iotInstSet(),
                 new grphInstSet(), new llmInstSet(), new tbleInstSet(),
+                new uiInstSet(), new vecInstSet(),
                 new dcmntInstSet(), new rdfInstSet()
         }) {
             Router.global().addSpace(is);

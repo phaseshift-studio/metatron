@@ -22,16 +22,12 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.MONAD;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
@@ -93,21 +89,27 @@ public interface Code extends Call {
 
     @Override
     default Code resolve(final Obj lhs) {
-        GraphittyLogger LOG = Graphitty.log(this);
-        // LOG.debug("reading code:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjmtronSerializer.prettyPrintCode(this));
         final Code rewrittenCode = this.rewrite();
-        // LOG.debug("rewriting code:\n        [{{y}}REWRITTEN{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjmtronSerializer.prettyPrintCode(rewrittenCode));
         return InstResolver.get().resolveCode(lhs, rewrittenCode);
     }
 
     default Inst nextInst(final Inst inst) {
         if (inst.isNoObj()) return noobj();
-        int i = Integer.valueOf(inst.vid().toString()) + 1;
+        int i = Integer.parseInt(inst.vid().toString()) + 1;
         for (final Inst in : this.jvm()) {
-            if (Integer.valueOf(in.vid().toString()) == i)
+            if (Integer.parseInt(in.vid().toString()) == i)
                 return in;
         }
         return noobj();
+    }
+
+    default boolean isAuto() {
+        if (this.isNoObj())
+            return false;
+        if (this.codeValue().isEmpty())
+            return false;
+        final fURI firstBase = this.codeValue().getFirst().tid().basePath();
+        return firstBase.equals(AUTO_FROM_INST_TID) || firstBase.equals(AUTO_AT_INST_TID) || firstBase.equals(AUTO_INST_TID);
     }
 
     @Override
@@ -162,23 +164,6 @@ public interface Code extends Call {
         }
 
     }
-
-    public static class Helper {
-
-        public static Obj tryRewrite(final Obj obj) {
-            if (obj.isCode())
-                return obj.asCode().rewrite();
-            if (obj.isInst())
-                return obj.asInst().args(tryRewrite(obj.asInst().args()).as());
-            if (obj.isLst())
-                return obj.selfJVM(obj.asLst().elements().map(Code.Helper::tryRewrite).toList());
-            if (obj.isRec())
-                return obj.selfJVM(obj.asRec().elements().map(r -> Tuple.Pair.with(r.first(), tryRewrite(r.second()))).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1, (a, b) -> a)));
-            return obj;
-        }
-
-    }
-
     // Code resolve(final Obj start);
 
 }

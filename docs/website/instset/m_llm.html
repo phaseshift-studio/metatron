@@ -189,6 +189,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_mach.html"><img
                             src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
                             alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_mach_ui.html"><img
+                            src="../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                            alt="ui"/>/m/mach/ui</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math.html"><img
                             src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
@@ -203,6 +206,9 @@
                             alt="vec"/>/m/vec</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_web.html"><img
                             src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_ide.html"><img
+                            src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                 </ul>
             </li>
@@ -402,10 +408,54 @@
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- type=&gt;[model::T,tool::T,session{?}::T,iteration::T,claim::T,loose_end::T,system::T,chat_result::T,user::T,tool_request::T,...(23 more)],
- inst=&gt;[as?model&lt;=rec(model::T),as?tool&lt;=docs(tool::T),as?tool&lt;=inst(tool::T),as?skill&lt;=uri(skill::T),as?skill&lt;=agent(skill::T),chat?chat_result&lt;=agent(str::T),embed?/m/vec/vec&lt;=model(#::T),interrupt?noobj{0}&lt;=agent(),chat?chat_result&lt;=agent(str::T,rec::T),summary?rec&lt;=session{?}({?}session=&gt;session{?}::T,{?}model=&gt;choose([
+ type=&gt;[
+  model::T,
+  tool::T,
+  session{?}::T,
+  iteration::T,
+  claim::T,
+  loose_end::T,
+  system::T,
+  chat_result::T,
+  user::T,
+  tool_request::T,
+  ai::T,
+  tool_result::T,
+  thinking::T,
+  compaction::T,
+  message::T,
+  skill::T,
+  feature::T,
+  agent::T,
+  chat_feature::T,
+  summarize_feature::T,
+  message_feature::T,
+  tool_feature::T,
+  embed_feature::T,
+  skill_feature::T,
+  system_feature::T,
+  think_feature::T,
+  concept_feature::T,
+  cost_feature::T,
+  compaction_feature::T,
+  audit_feature::T,
+  bash_feature::T,
+  loop_feature::T,
+  mcp_message::T],
+ inst=&gt;[
+  as?model&lt;=rec(model::T),
+  as?tool&lt;=docs(tool::T),
+  as?tool&lt;=inst(tool::T),
+  as?skill&lt;=uri(skill::T),
+  as?skill&lt;=agent(skill::T),
+  chat?chat_result&lt;=agent(str::T),
+  embed?vec&lt;=model(#::T),
+  interrupt?noobj{0}&lt;=agent(),
+  chat?chat_result&lt;=agent(str::T,rec::T),
+  summary?rec&lt;=session{?}({?}session=&gt;session{?}::T,{?}model=&gt;choose([
   isa(model::T)=&gt;id(),
-  isa(session{?}::T)=&gt;*rshift(agent).mult(model)]).rshift(),{?}scope=&gt;union(time::T,datetime::T),{?}kind=&gt;lst::T,{?}concept=&gt;lst::T),...(1 more)]]@/m/llm</code></pre>
+  isa(session{?}::T)=&gt;*rshift(agent).mult(model)]).rshift(),{?}scope=&gt;union(time::T,datetime::T),{?}kind=&gt;lst::T,{?}concept=&gt;lst::T),
+  compact?rec&lt;=agent{?}({?}agent=&gt;agent::T,{?}model=&gt;model::T,{?}prompt=&gt;str::T)]]@/m/llm</code></pre>
                     </div>
                 </div>
             </div>
@@ -943,14 +993,14 @@
     <p class="mb-0 text-light">populate a model reference rec using data from the ai provider&#39;s http-endpoint</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
-  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#"the model's context window size in tokens"" class="text-info">&quot;the model&#39;s context window size in tokens&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#"the model's context window size in tokens"" class="text-info">&quot;the model&#39;s context window size in tokens&quot;</a>
   <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
   <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
   <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
   <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
   <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
   <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
+  <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1241,7 +1291,7 @@
         </span>
         <small class="text-muted code">/m/llm/inst/embed?rng=/m/vec/vec&amp;dom=/m/llm/model</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__llm__inst__embed?rng=__m__vec__vec&dom=__m__llm__model-doc-0-tab').click();document.getElementById('__m__llm__inst__embed?rng=__m__vec__vec&dom=__m__llm__model-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">embed?rng=<a href="m_vec.html#__m__vec__vec" data-bs-toggle="tooltip" title="range" class="code text-success">vec</a>&dom=model(#::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__llm__inst__embed?rng=__m__vec__vec&dom=__m__llm__model-doc-0-tab').click();document.getElementById('__m__llm__inst__embed?rng=__m__vec__vec&dom=__m__llm__model-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">embed?rng=vec&dom=model(#::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[mapper] embed an object with an llm

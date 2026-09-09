@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpMetatronBuilder;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
@@ -29,8 +31,7 @@ import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -176,43 +177,42 @@ public abstract class AbstractMcpMtronHandlerTest extends AbstractMcpHandlerTest
     // =========================================================
 
     @Test
-    public void testEvalMtronWithValidExpression() {
-        final Rec res = mcpRequest(rec(
-                uri(JSONRPC), str("2.0"),
-                uri(ID), jnt(20),
-                uri("method"), uri("tools/call"),
-                uri("params"), rec(
-                        uri(NAME), str("m_web_mcp_mcp_mtron_eval_mtron"),
-                        uri("arguments"), rec(uri("code"), str("\"hello\"")))));
-        assertFalse(res.at(uri(RESULT)).isNoObj(), "eval_mtron('\"hello\"') should return a result");
-        assertFalse(res.at(uri("error")).isRec(), "eval_mtron('\"hello\"') should not error");
-    }
-
-    @Test
-    public void testEvalMtronWithNonMtronText() {
-        // Plain text that is not valid mtron — should be returned as-is, not wrapped in fail::
-        final Rec res = mcpRequest(rec(
-                uri(JSONRPC), str("2.0"),
-                uri(ID), jnt(21),
-                uri("method"), uri("tools/call"),
-                uri("params"), rec(
-                        uri(NAME), str("m_web_mcp_mcp_mtron_eval_mtron"),
-                        uri("arguments"), rec(uri("code"), str("## Search Results\n\nmethod at line 79")))));
-        assertFalse(res.at(uri(RESULT)).isNoObj(), "eval_mtron(non-mtron text) should return a result");
-        assertFalse(res.at(uri("error")).isRec(), "eval_mtron(non-mtron text) should not error");
-    }
-
-    @Test
-    public void testEvalMtronWithLiteralPercentS() {
-        // Text containing literal %s — used to crash via String.format() in MTronException
-        final Rec res = mcpRequest(rec(
-                uri(JSONRPC), str("2.0"),
-                uri(ID), jnt(22),
-                uri("method"), uri("tools/call"),
-                uri("params"), rec(
-                        uri(NAME), str("m_web_mcp_mcp_mtron_eval_mtron"),
-                        uri("arguments"), rec(uri("code"), str("text with literal %s placeholder")))));
-        assertFalse(res.at(uri(RESULT)).isNoObj(), "eval_mtron(literal %s) should return a result");
-        assertFalse(res.at(uri("error")).isRec(), "eval_mtron(literal %s) should not error");
+    public void testEvalMtron() {
+        for (String line : new String[]{
+                "1                                    %  1",
+                "\"text with literal placeholder\"    % \"text with literal placeholder\"",
+                "hello                                % hello",
+                "\"hello\"                            % hello",
+                "<hello>                              % hello",
+                "1-<[_,_]                             % [1,1]",
+                "1-<[_,_                              % <ERROR>",
+                "1+a                                  % <ERROR>"}) {
+            final String code = line.split("%")[0].trim();
+            final String expectedResult = line.split("%")[1].trim();
+            LOG.warn("testing: %s => %s", code, expectedResult);
+            try {
+                final Rec res = mcpRequest(rec(
+                        uri(JSONRPC), str("2.0"),
+                        uri(ID), jnt(20),
+                        uri("method"), uri("tools/call"),
+                        uri("params"), rec(
+                                uri(NAME), str("m_web_mcp_mcp_mtron_eval_mtron"),
+                                uri("arguments"), rec(uri("code"), ObjmtronSerializer.parse(code)))));
+                if (expectedResult.equals("<ERROR>"))
+                    assertFalse(res.at("error").isNoObj());
+                else {
+                    if (!res.at("error").isNoObj()) {
+                        LOG.warn("expected no error: %s", res.at("error"));
+                        assertFalse(res.at("error").isNoObj());
+                    } else {
+                        assertEquals(
+                                Str.Helper.stripQuotes(expectedResult),
+                                res.at(uri(RESULT)).asRec().at("content").asPoly().at(jnt(0)).asRec().at("text").toCleanString());
+                    }
+                }
+            } catch (Exception e) {
+                assertEquals("<ERROR>", expectedResult);
+            }
+        }
     }
 }

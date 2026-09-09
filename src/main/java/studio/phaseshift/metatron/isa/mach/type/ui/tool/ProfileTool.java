@@ -21,13 +21,16 @@ package studio.phaseshift.metatron.isa.mach.type.ui.tool;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.AbstractWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
+import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.List;
 
+import static studio.phaseshift.metatron.Tokens.ROW;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /*
@@ -62,6 +65,11 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
         }
         this.style().attachment(this.instTable, true).apply();
     }
+
+    public Lst getTable() {
+        return this.instTable.at(ROW).stream().collect(new CommonUtil.LstCollector());
+    }
+
 
     private static String generateArgsString(final Poly<?, ?> args) {
         final String argsString;

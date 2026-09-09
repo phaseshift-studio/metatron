@@ -1782,7 +1782,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         );
     }
 
-    @ParameterizedTest(name = "[{index}] {0}")
+    @ParameterizedTest
     @MethodSource("provideKVStoreRewriteTestCases")
     public void testKVStoreRewrites(String description, String code, Obj expected) throws Exception {
         seedKVData();

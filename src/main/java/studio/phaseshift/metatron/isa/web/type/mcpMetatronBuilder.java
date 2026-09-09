@@ -48,6 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -176,21 +177,11 @@ public final class mcpMetatronBuilder {
             tools.at(uri(mTool.toolName(toolTid("eval_mtron"))), docWrap(instC(
                             f(mTool.toolName(toolTid("eval_mtron"))).dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
                             rec(uri(CODE), STR_TYPE), (lhs, inst) -> {
-                                final Obj codeArg = normArg(inst.arg(CODE, 0));
-                                if (codeArg.isCall())
-                                    return codeArg.apply();
-                                else {
-                                    try {
-                                        final Obj parsed = ObjmtronSerializer.singleNoClip().inputBytes(codeArg.strValue());
-                                        // read() swallows parse errors into fail() — propagate as exception
-                                        // so the catch block returns the original non-mtron text as-is
-                                        if (parsed.isFail())
-                                            throw new RuntimeException("non-mtron input");
-                                        return parsed.apply();
-                                    } catch (final Exception e) {
-                                        // non-mtron text (e.g. already-evaluated result) — return as-is
-                                        return codeArg;
-                                    }
+                                // LOG.warn("%s [%s]", inst.arg(0), inst.arg(0).type());
+                                try {
+                                    return ObjmtronSerializer.parse(inst.arg(0).toString()).apply();
+                                } catch (final Exception e) {
+                                    return fail(e);
                                 }
                             }), "noobj lhs", "the result of the code evaluation",
                     Map.of(uri(CODE), "mtron code to evaluate"), "returns the result of evaluating the provided mtron expression"), MUTABLE);
@@ -275,7 +266,9 @@ public final class mcpMetatronBuilder {
         }
 
         // ── resources ──────────────────────────────────────────────────────────
-        if (!jvm.containsKey(uri(RESOURCE))) {
+        if (!jvm.containsKey(
+
+                uri(RESOURCE))) {
             final Rec resources = rec(mutableMap());
             final Path skillDir = Path.of(".metatron/skills/mtron");
             mSkill.of(skillDir.toFile()).toSkill().resources().stream()

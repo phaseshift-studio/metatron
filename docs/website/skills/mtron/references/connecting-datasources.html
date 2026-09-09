@@ -188,6 +188,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach.html"><img
                             src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
                             alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach_ui.html"><img
+                            src="../../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                            alt="ui"/>/m/mach/ui</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math.html"><img
                             src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
@@ -202,6 +205,9 @@
                             alt="vec"/>/m/vec</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_web.html"><img
                             src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_ide.html"><img
+                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                 </ul>
             </li>
@@ -406,6 +412,65 @@ are represented as space-specific <code>instsets</code> (instruction sets).</p>
 </ul>
 <h3>Universal (all environments)</h3>
 <pre><code class="language-mtron">mtron&gt; */sys/space/+/+/                         [-- List all spaces --]
+==&gt;/sys/space/dev/metatron=&gt;memspace::[
+    pattern=&gt;/dev/scratch/#,
+    q=&gt;[
+     mintq::[
+      pattern=&gt;mintq,
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     docq::[
+      pattern=&gt;docq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+     subq::[
+      pattern=&gt;subq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;[
+       sub::[
+        target=&gt;/dev/scratch/code/#,
+        code=&gt;!*/dev/scratch/sub/auto_save/code],
+       sub::[
+        target=&gt;/dev/scratch/code/#,
+        code=&gt;!*/dev/scratch/sub/auto_save/code]]],
+     mimeq::[
+      pattern=&gt;mimeq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     lineq::[
+      pattern=&gt;lineq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     lockq::[
+      pattern=&gt;lockq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;[,]],
+     incrq::[
+      pattern=&gt;incrq,
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]]]@/sys/space/dev/metatron
+==&gt;/sys/space/log/scratch=&gt;tblespace::[
+    pattern=&gt;/log/scratch/#,
+    host=&gt;&lt;sqlite:target/log_scratch.sqlite&gt;,
+    driver=&gt;&lt;org.sqlite.JDBC&gt;,
+    table=&gt;[,],
+    q=&gt;[
+     incrq::[
+      pattern=&gt;incrq,
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     subq::[
+      pattern=&gt;subq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;[,]],
+     mimeq::[
+      pattern=&gt;mimeq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
+    route=&gt;[/log/scratch/=&gt;&lt;&gt;]]@/sys/space/log/scratch
 mtron&gt; */sys/space/${space}                     [-- View space config --]
 mtron&gt; !*&lt;uri&gt;                                  [-- Create reference (lazy) --]
 ==&gt;uri::T

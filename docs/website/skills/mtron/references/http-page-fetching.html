@@ -188,6 +188,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach.html"><img
                             src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
                             alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach_ui.html"><img
+                            src="../../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                            alt="ui"/>/m/mach/ui</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math.html"><img
                             src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
@@ -202,6 +205,9 @@
                             alt="vec"/>/m/vec</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_web.html"><img
                             src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_ide.html"><img
+                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                 </ul>
             </li>
@@ -418,7 +424,7 @@ mounted so <code>?mimeq=</code> query parameters work:</p>
  q=&gt;[mimeq::[
  pattern=&gt;mimeq,
  post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
- route=&gt;[/=&gt;local:web]]][Net&lt;-2&gt;:Address already in use[Net&lt;-2&gt;:Address already in use] ← Address already in use]][Address already in use[Net&lt;-2&gt;:Address already in use]][Address already in use]@/sys/fail/40
+ route=&gt;[/=&gt;local:web]]][Net&lt;-2&gt;:Address already in use[Net&lt;-2&gt;:Address already in use] ← Address already in use]][Address already in use[Net&lt;-2&gt;:Address already in use]][Address already in use]@/sys/fail/1348
 </code></pre>
 <h3>Basic Dereference — Typed String (default)</h3>
 <p>Default reads return a typed <code>html::&quot;...&quot;</code> string with <code>tid = /m/web/mime/html</code>:</p>
@@ -429,9 +435,9 @@ mounted so <code>?mimeq=</code> query parameters work:</p>
    	  \_pred │ []
    	[inst]   │ *&lt;http://example.com&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://example.com&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com&gt;]][no active space supports pattern &lt;http://example.com&gt;]@/sys/fail/44
+   	 \_args  │ [&lt;http://example.com&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com&gt;]][no active space supports pattern &lt;http://example.com&gt;]@/sys/fail/1352
 mtron&gt; *&lt;http://example.com&gt;.test(html::T)
-==&gt;fail::[unable to locate inst-f of test(html::T)@&lt;1&gt;]@/sys/fail/52
+==&gt;fail::[unable to locate inst-f of test(html::T)@&lt;1&gt;]@/sys/fail/1360
 </code></pre>
 <p>The string is predicate-validated: <code>html::T</code>'s predicate checks that the content is valid HTML.</p>
 <h3>Structural Parse — rec::T DOM Tree</h3>
@@ -444,7 +450,7 @@ mtron&gt; *&lt;http://example.com?mimeq=application/x-mtron&gt;
    	  \_pred │ []
    	[inst]   │ *&lt;http://example.com?mimeq=application/x-mtron&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://example.com?mimeq=application/x-mtron&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com?mimeq=application/x-mtron&gt;]][no active space supports pattern &lt;http://example.com?mimeq=application/x-mtron&gt;]@/sys/fail/56
+   	 \_args  │ [&lt;http://example.com?mimeq=application/x-mtron&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com?mimeq=application/x-mtron&gt;]][no active space supports pattern &lt;http://example.com?mimeq=application/x-mtron&gt;]@/sys/fail/1364
 mtron&gt; [-- via .as(rec::T) on a typed string --]
 mtron&gt; *&lt;http://example.com&gt;.as(rec::T)
 ==&gt;fail::[apply failure:
@@ -453,7 +459,7 @@ mtron&gt; *&lt;http://example.com&gt;.as(rec::T)
    	  \_pred │ []
    	[inst]   │ *&lt;http://example.com&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://example.com&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com&gt;]][no active space supports pattern &lt;http://example.com&gt;]@/sys/fail/60
+   	 \_args  │ [&lt;http://example.com&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com&gt;]][no active space supports pattern &lt;http://example.com&gt;]@/sys/fail/1368
 </code></pre>
 <p>The <code>?mimeq=application/x-mtron</code> query is handled by <code>QCollection.mimeQ()</code> postRead processor, which (1) probes the
 content type from the response headers or URI extension, (2) tags the string with the correct TID (triggering predicate
@@ -530,7 +536,7 @@ mtron&gt; *&lt;http://example.com&gt;.as(rec::T)
    	  \_pred │ []
    	[inst]   │ *&lt;http://example.com/data.json&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://example.com/data.json&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com/data.json&gt;]][no active space supports pattern &lt;http://example.com/data.json&gt;]@/sys/fail/78
+   	 \_args  │ [&lt;http://example.com/data.json&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com/data.json&gt;]][no active space supports pattern &lt;http://example.com/data.json&gt;]@/sys/fail/1386
 mtron&gt; *&lt;http://example.com/data.json?mimeq=application/x-mtron&gt;
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
@@ -538,7 +544,7 @@ mtron&gt; *&lt;http://example.com/data.json?mimeq=application/x-mtron&gt;
    	  \_pred │ []
    	[inst]   │ *&lt;http://example.com/data.json?mimeq=application/x-mtron&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://example.com/data.json?mimeq=application/x-mtron&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com/data.json?mimeq=application/x-mtron&gt;]][no active space supports pattern &lt;http://example.com/data.json?mimeq=application/x-mtron&gt;]@/sys/fail/82
+   	 \_args  │ [&lt;http://example.com/data.json?mimeq=application/x-mtron&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com/data.json?mimeq=application/x-mtron&gt;]][no active space supports pattern &lt;http://example.com/data.json?mimeq=application/x-mtron&gt;]@/sys/fail/1390
 mtron&gt; *&lt;http://example.com/data.json&gt;.as(rec::T)
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
@@ -546,7 +552,7 @@ mtron&gt; *&lt;http://example.com/data.json&gt;.as(rec::T)
    	  \_pred │ []
    	[inst]   │ *&lt;http://example.com/data.json&gt;
    	 \_dom   │ #{?}::T
-   	 \_args  │ [&lt;http://example.com/data.json&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com/data.json&gt;]][no active space supports pattern &lt;http://example.com/data.json&gt;]@/sys/fail/86
+   	 \_args  │ [&lt;http://example.com/data.json&gt;][MTronException&lt;137&gt;:no active space supports pattern &lt;http://example.com/data.json&gt;]][no active space supports pattern &lt;http://example.com/data.json&gt;]@/sys/fail/1394
 </code></pre>
 <h3>MIME Type → TID Mapping</h3>
 <p><code>MIME.MIMEType.toTid()</code> provides the reverse mapping used by the <code>mimeq</code> query processor:</p>

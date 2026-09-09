@@ -25,12 +25,18 @@ It uses the exact runners and JVM flags as `bin/metatron-build-docker docs`, jus
 run locally (no docker). Build output streams to `target/docs-build.log` (a "Open log" action appears on the
 result notification).
 
+Like `bin/metatron`, the action first applies the same **"compile if src changed"** check to the uber-jar it
+executes: when the jar is missing, or any source under `src/` (or `pom.xml`) is newer than it, it rebuilds the
+jar with `./mvnw install -DskipTests` (streaming into the same log) and only then runs the doc compiler. So a
+right-click after editing metatron Java code Just Works — no manual `./mvnw install` first.
+
 ## Prerequisites
 
 - **IntelliJ IDEA installed** on this machine — the build compiles against its local `lib/*.jar`. **No SDK
   download, no Gradle.**
-- **metatron built once** so the uber-jar exists: `./mvnw install -DskipTests`
-  (the plugin auto-finds `target/metatron-*-jar-with-dependencies.jar`).
+- **The metatron repo** opened as the project. The action finds and, when stale, rebuilds the uber-jar itself
+  (`./mvnw install -DskipTests`, same "compile if src changed" contract as `bin/metatron`) — the first
+  right-click after Java changes takes longer while it rebuilds.
 
 ## Build + install
 
@@ -67,3 +73,7 @@ docs/intellij-plugin/
   the processed markdown and the rendered page.
 - **Not compiled by the metatron Maven build** — it's under `docs/`, not `src/`, so `./mvnw` never touches it.
   Its only coupling to metatron is the `java -cp <uber-jar> …Runner` call.
+- **Auto-rebuild**: freshness is judged by mtimes — the jar must be newer than `pom.xml`, every file under
+  `src/main/java` / `src/main/resources`, and `target/classes`. Deletions aren't tracked (same as
+  `bin/metatron`). Rebuilds are serialized, and both the rebuild and the doc run stream into
+  `target/docs-build.log`, which opens as a live editor tab.

@@ -243,9 +243,9 @@ public class ideInstSet extends AbstractInstSet {
                                 "ide:command(command=>'mvn compile')                   [-- an enriched build instruction --]",
                                 "ide:command([command=>'mvn -q test'])                 [-- the command as a rec          --]",
                                 "my_build -> cs_command(command=>'mvn clean install')  [-- name it anything, curate a palette --]"))));
-        super.setup();
         docWrap(this, "the agent ide — project::T definition, build result::T and the links between them.",
                 "ide:command(command=>'mvn compile')");
+        super.setup();
     }
 
     /// ///////////////////////////////////////////////////////////////////////////////////////////

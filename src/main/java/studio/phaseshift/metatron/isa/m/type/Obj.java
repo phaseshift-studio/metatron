@@ -1251,7 +1251,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     /*docWrap(*/instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs).vid(null)),
                     //"maybe an obj", "the obj referred to by the uri arg", Map.of(jnt(0).maybe(), "the uri to dereference"), "like from(uri), except that dereferencing happens immediately upon accessing the instruction (no inst apply required)."),
-                    /*docWrap(*/instC(AUTO_AT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs).selfVID(inst.arg(0).uriValue())),
+                    /*docWrap(*/instC(AUTO_AT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> {
+                        final Obj resolved = Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs);
+                        return resolved.hasVID() ? resolved : resolved.selfVID(inst.arg(0).uriValue());
+                    }),
                     // "maybe an obj", "the obj referred to by the uri arg", Map.of(jnt(0).maybe(), "the uri to dereference"), "like at(uri), except that dereferencing happens immediately upon accessing the instruction (no inst apply required)."),
                     docWrap(instC(AUTO_TO_INST_TID.dom(ALL.maybe()).rng(ALL), lst(ALL_TYPE), (lhs, inst) -> (null == lhs.vid() || lhs.isAutoFrom()) ? lhs : auto_from_(lhs.vid()).tryToInst()),
                             "any obj", "the uri (if possible) that refers to the obj arg", Map.of(jnt(0), "the obj to reference"), "like !*(vid), except that the obj arg is converted to an !* reference (an inverse dereference) immediately upon inst access (no inst apply required)."),
@@ -1267,8 +1270,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         final fURI pattern = inst.arg(0).uriValue();
                         if (pattern.hasPattern()) {
                             return objs(Router.readFromSpace(pattern.asBranch()).stream().map(x -> x.asRel().second().selfVID(x.asRel().first().uriValue())));
-                        } else
-                            return Router.readFromSpace(pattern).selfVID(pattern);
+                        } else {
+                            final Obj resolved = Router.readFromSpace(pattern);
+                            return resolved.hasVID() ? resolved : resolved.selfVID(pattern);
+                        }
                     }),
                     docWrap(instC(ID_INST_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                             "an rhs obj", "an lhs obj", Map.of(), "the obj identity function \\(f(x)\\to x\\)"),

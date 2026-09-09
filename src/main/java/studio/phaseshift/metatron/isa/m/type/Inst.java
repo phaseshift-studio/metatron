@@ -208,7 +208,7 @@ public interface Inst extends Call {
     default Obj seed() {
         return null == this.jvm() ? noobj() : this.jvm().get2();
     }
-
+    
     default boolean isResolved(final boolean nested) {
         boolean resolved = this.hasf();
         return (!nested || !resolved) ? resolved : this.<Inst>as().args().elements().allMatch(c -> c.isResolved(true));
@@ -234,6 +234,14 @@ public interface Inst extends Call {
                 base.equals(REPEAT_INST_TID) ||
                 base.equals(ELSE_INST_TID) ||
                 base.equals(CATCH_INST_TID);
+    }
+
+    @Override
+    default boolean isAuto() {
+        if (this.isNoObj())
+            return false;
+        final fURI base = this.tid().basePath();
+        return base.equals(AUTO_FROM_INST_TID) || base.equals(AUTO_AT_INST_TID) || base.equals(AUTO_INST_TID);
     }
 
     @Override

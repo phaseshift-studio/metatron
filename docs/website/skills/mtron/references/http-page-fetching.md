@@ -55,7 +55,7 @@ mtron> httpspace::[
  q=>[mimeq::[
  pattern=>mimeq,
  post_read=>inst?#{*}<=#{?}(uri::T,#::T)]],
- route=>[/=>local:web]]][Net<-2>:Address already in use[Net<-2>:Address already in use] ← Address already in use]][Address already in use[Net<-2>:Address already in use]][Address already in use]@/sys/fail/40
+ route=>[/=>local:web]]][Net<-2>:Address already in use[Net<-2>:Address already in use] ← Address already in use]][Address already in use[Net<-2>:Address already in use]][Address already in use]@/sys/fail/1348
 ```
 ## Basic Dereference — Typed String (default)
 
@@ -69,9 +69,9 @@ mtron> *<http://example.com>
    	  \_pred │ []
    	[inst]   │ *<http://example.com>
    	 \_dom   │ #{?}::T
-   	 \_args  │ [<http://example.com>][MTronException<137>:no active space supports pattern <http://example.com>]][no active space supports pattern <http://example.com>]@/sys/fail/44
+   	 \_args  │ [<http://example.com>][MTronException<137>:no active space supports pattern <http://example.com>]][no active space supports pattern <http://example.com>]@/sys/fail/1352
 mtron> *<http://example.com>.test(html::T)
-==>fail::[unable to locate inst-f of test(html::T)@<1>]@/sys/fail/52
+==>fail::[unable to locate inst-f of test(html::T)@<1>]@/sys/fail/1360
 ```
 The string is predicate-validated: `html::T`'s predicate checks that the content is valid HTML.
 
@@ -88,7 +88,7 @@ mtron> *<http://example.com?mimeq=application/x-mtron>
    	  \_pred │ []
    	[inst]   │ *<http://example.com?mimeq=application/x-mtron>
    	 \_dom   │ #{?}::T
-   	 \_args  │ [<http://example.com?mimeq=application/x-mtron>][MTronException<137>:no active space supports pattern <http://example.com?mimeq=application/x-mtron>]][no active space supports pattern <http://example.com?mimeq=application/x-mtron>]@/sys/fail/56
+   	 \_args  │ [<http://example.com?mimeq=application/x-mtron>][MTronException<137>:no active space supports pattern <http://example.com?mimeq=application/x-mtron>]][no active space supports pattern <http://example.com?mimeq=application/x-mtron>]@/sys/fail/1364
 mtron> [-- via .as(rec::T) on a typed string --]
 mtron> *<http://example.com>.as(rec::T)
 ==>fail::[apply failure:
@@ -97,7 +97,7 @@ mtron> *<http://example.com>.as(rec::T)
    	  \_pred │ []
    	[inst]   │ *<http://example.com>
    	 \_dom   │ #{?}::T
-   	 \_args  │ [<http://example.com>][MTronException<137>:no active space supports pattern <http://example.com>]][no active space supports pattern <http://example.com>]@/sys/fail/60
+   	 \_args  │ [<http://example.com>][MTronException<137>:no active space supports pattern <http://example.com>]][no active space supports pattern <http://example.com>]@/sys/fail/1368
 ```
 The `?mimeq=application/x-mtron` query is handled by `QCollection.mimeQ()` postRead processor, which (1) probes the
 content type from the response headers or URI extension, (2) tags the string with the correct TID (triggering predicate
@@ -194,7 +194,7 @@ mtron> *<http://example.com/data.json>
    	  \_pred │ []
    	[inst]   │ *<http://example.com/data.json>
    	 \_dom   │ #{?}::T
-   	 \_args  │ [<http://example.com/data.json>][MTronException<137>:no active space supports pattern <http://example.com/data.json>]][no active space supports pattern <http://example.com/data.json>]@/sys/fail/78
+   	 \_args  │ [<http://example.com/data.json>][MTronException<137>:no active space supports pattern <http://example.com/data.json>]][no active space supports pattern <http://example.com/data.json>]@/sys/fail/1386
 mtron> *<http://example.com/data.json?mimeq=application/x-mtron>
 ==>fail::[apply failure:
    	[lhs]    │ noobj
@@ -202,7 +202,7 @@ mtron> *<http://example.com/data.json?mimeq=application/x-mtron>
    	  \_pred │ []
    	[inst]   │ *<http://example.com/data.json?mimeq=application/x-mtron>
    	 \_dom   │ #{?}::T
-   	 \_args  │ [<http://example.com/data.json?mimeq=application/x-mtron>][MTronException<137>:no active space supports pattern <http://example.com/data.json?mimeq=application/x-mtron>]][no active space supports pattern <http://example.com/data.json?mimeq=application/x-mtron>]@/sys/fail/82
+   	 \_args  │ [<http://example.com/data.json?mimeq=application/x-mtron>][MTronException<137>:no active space supports pattern <http://example.com/data.json?mimeq=application/x-mtron>]][no active space supports pattern <http://example.com/data.json?mimeq=application/x-mtron>]@/sys/fail/1390
 mtron> *<http://example.com/data.json>.as(rec::T)
 ==>fail::[apply failure:
    	[lhs]    │ noobj
@@ -210,7 +210,7 @@ mtron> *<http://example.com/data.json>.as(rec::T)
    	  \_pred │ []
    	[inst]   │ *<http://example.com/data.json>
    	 \_dom   │ #{?}::T
-   	 \_args  │ [<http://example.com/data.json>][MTronException<137>:no active space supports pattern <http://example.com/data.json>]][no active space supports pattern <http://example.com/data.json>]@/sys/fail/86
+   	 \_args  │ [<http://example.com/data.json>][MTronException<137>:no active space supports pattern <http://example.com/data.json>]][no active space supports pattern <http://example.com/data.json>]@/sys/fail/1394
 ```
 ## MIME Type → TID Mapping
 

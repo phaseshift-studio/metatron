@@ -98,6 +98,53 @@ public class MarkdownRunnerTest {
         }
     }
 
+    @Test
+    public void testSiteHtmlPassSkipsStrayMarkdownInContainer(@TempDir final Path tmp) throws IOException {
+        // The container holds a real skill (SKILL.md + references/) and a stray .md
+        // (mtron/assets/README.md). The site-html pass must render the skill docs and
+        // skip the stray file — not crash climbing its parents up to the filesystem
+        // root, where Path.getFileName() is null (docs/website/skills carries such a
+        // stray: mtron/assets/README.md).
+        final Path skillsDir = tmp.resolve("skills");
+        final Path skillRoot = skillsDir.resolve("mtron");
+        Files.createDirectories(skillRoot.resolve("references"));
+        Files.createDirectories(skillRoot.resolve("assets"));
+        Files.writeString(skillRoot.resolve("SKILL.md"), """
+                ---
+                name: mtron
+                description: stray-file probe skill
+                ---
+
+                # The skill
+
+                body here
+                """);
+        Files.writeString(skillRoot.resolve("references").resolve("ops.md"), """
+                ---
+                name: ops
+                description: reference doc
+                ---
+
+                # Ops
+
+                reference body
+                """);
+        Files.writeString(skillRoot.resolve("assets").resolve("README.md"), """
+                # asset notes (not a skill doc — must neither crash nor render)
+                """);
+
+        assertTrue(MarkdownRunner.renderSiteHtml(skillsDir) >= 1, "the skill docs must be rendered");
+        assertTrue(Files.exists(skillRoot.resolve("SKILL.html")), "SKILL.md must get a sibling html");
+        assertTrue(Files.exists(skillRoot.resolve("references").resolve("ops.html")),
+                "references/*.md must get a sibling html");
+        assertFalse(Files.exists(skillRoot.resolve("assets").resolve("README.html")),
+                "a stray non-skill .md must not be rendered to html");
+        // page chrome must link the website stylesheet (depth-rewritten by loadWebsiteHeader)
+        final String html = Files.readString(skillRoot.resolve("SKILL.html"));
+        assertTrue(html.contains("css/metatron.css"), "page chrome must link the website stylesheet: " + html);
+        assertEquals(0, MarkdownRunner.renderSiteHtml(skillsDir), "a second pass must write nothing (idempotent)");
+    }
+
     private static boolean containsAny(final String s, final String chars) {
         for (int i = 0; i < chars.length(); i++) {
             if (s.indexOf(chars.charAt(i)) >= 0) return true;

@@ -53,6 +53,11 @@ import java.util.Locale;
  * {@code bin/metatron-build-docker docs}. Build output is teed to {@code target/docs-build.log};
  * on failure that log is opened in the editor.
  *
+ * <p>Like {@code bin/metatron}, the action first applies a "compile if src changed" check to the
+ * uber-jar the runners execute from: when the jar is missing, or a source under {@code src/} (or
+ * {@code pom.xml}) is newer than it, the action rebuilds it with {@code ./mvnw install -DskipTests}
+ * (streaming into the same log) before running the doc compiler.
+ *
  * <p>Deliberately uses only long-stable, core platform APIs (AnAction, VirtualFile,
  * ApplicationManager, FileEditorManager, BrowserUtil, Notifications) so it compiles against a
  * wide range of IntelliJ versions.
@@ -61,6 +66,8 @@ public class DocsBuildAction extends AnAction {
 
     private static final Logger LOG = Logger.getInstance(DocsBuildAction.class);
     private static final String GROUP = "metatron.docs";
+    /// Serializes rebuilds so two simultaneous right-clicks never run two maven builds into target/.
+    private static final Object REBUILD_LOCK = new Object();
 
     private static final String ADOC_DIR = "docs/website/adoc";
     private static final String SKILLS_DIR = "docs/skills";
@@ -179,25 +186,56 @@ public class DocsBuildAction extends AnAction {
             target = srcRel;
         }
 
-        final File jar = findJar(root);
-        if (jar == null) {
-            notify("docs build skipped",
-                    "metatron uber-jar not found (looked under " + root + "/target).\n\n"
-                            + "build it first:  ./mvnw install -DskipTests",
-                    NotificationType.WARNING);
-            return;
-        }
-
         // Open a live progress tab: the build tees its output to target/docs-build.log as it streams.
         openProgressTab(project, root);
+        final File logFile = new File(root, "target/docs-build.log");
 
-        notify("docs build: " + file.getName(), "booting metatron vm (takes a few seconds)…",
+        notify("docs build: " + file.getName(), "checking whether metatron needs a rebuild…",
                 NotificationType.INFORMATION);
 
-        final List<String> command = buildCommand(root, kind, target, jar);
-        LOG.info("docsBuild: " + String.join(" ", command));
-        ApplicationManager.getApplication().executeOnPooledThread(() ->
-                run(project, kind, root, target, file, command));
+        // Everything below is slow (a possible maven rebuild, then the VM boot) — off the EDT.
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            try {
+                // Same "compile if src changed" contract as bin/metatron, applied to the packaged
+                // uber-jar the runners execute from.
+                synchronized (REBUILD_LOCK) {
+                    final File existing = findJar(root);
+                    if (existing == null || needsRebuild(root, existing)) {
+                        onEdt(() -> notify("metatron build",
+                                "sources changed since the last uber-jar → running ./mvnw install -DskipTests…",
+                                NotificationType.INFORMATION));
+                        final String buildError = rebuildUberJar(root, logFile);
+                        if (buildError != null) {
+                            final String error = buildError;
+                            onEdt(() -> {
+                                openLog(project, logFile);
+                                notify("metatron build FAILED", error + "\n\nfull output: " + logFile,
+                                        NotificationType.ERROR);
+                            });
+                            return;
+                        }
+                    }
+                }
+                final File jar = findJar(root);
+                if (jar == null) {
+                    onEdt(() -> notify("docs build skipped",
+                            "no uber-jar under " + root + "/target after the build.",
+                            NotificationType.WARNING));
+                    return;
+                }
+                onEdt(() -> notify("docs build: " + file.getName(),
+                        "booting metatron vm (takes a few seconds)…", NotificationType.INFORMATION));
+                final List<String> command = buildCommand(root, kind, target, jar);
+                LOG.info("docsBuild: " + String.join(" ", command));
+                run(project, kind, root, target, file, command);
+            } catch (final InterruptedException interrupt) {
+                Thread.currentThread().interrupt();
+                onEdt(() -> notify("docs build interrupted", "cancelled", NotificationType.ERROR));
+            } catch (final IOException io) {
+                final String msg = io.getMessage() == null ? "io error" : io.getMessage();
+                onEdt(() -> notify("docs build error", msg, NotificationType.ERROR));
+            }
+        });
     }
 
     // ── Command construction (all relative paths, cwd = project root) ──
@@ -258,6 +296,93 @@ public class DocsBuildAction extends AnAction {
         return ".metatron/skills/_probe"; // probe mode for non-skills .md
     }
 
+    // ── Rebuild-if-stale (mirrors bin/metatron's "compile if src changed") ──
+
+    /// The maven launcher for a rebuild, mirroring bin/metatron: prefer the in-repo, patched
+    /// ./mvnw (it self-configures .build/jdk and .build/m2), fall back to `mvn` on PATH.
+    private static String maven(final File root) {
+        if (new File(root, ".mvn/wrapper/maven-wrapper.properties").isFile()) {
+            return new File(root, "mvnw").getAbsolutePath();
+        }
+        return "mvn";
+    }
+
+    /// True when the uber-jar is missing or stale: a rebuild is required when pom.xml, any
+    /// source, or any resource is newer than the jar — or when a post-jar `mvn compile` left
+    /// target/classes newer than it. (Deletions are not tracked, exactly like bin/metatron.)
+    private static boolean needsRebuild(final File root, final File jar) {
+        final long jarTime = jar.lastModified();
+        final File pom = new File(root, "pom.xml");
+        if (pom.isFile() && pom.lastModified() > jarTime) {
+            return true;
+        }
+        if (newerThan(new File(root, "src/main/java"), jarTime, ".java")
+                || newerThan(new File(root, "src/main/resources"), jarTime, null)) {
+            return true;
+        }
+        final File classes = new File(root, "target/classes");
+        return classes.isDirectory() && classes.lastModified() > jarTime;
+    }
+
+    /// True when any file under dir (recursively) with the given suffix — or any file at all when
+    /// suffix is null — was modified after time.
+    private static boolean newerThan(final File dir, final long time, final String suffix) {
+        final File[] kids = dir.listFiles();
+        if (kids == null) {
+            return false;
+        }
+        for (final File kid : kids) {
+            if (kid.isDirectory()) {
+                if (newerThan(kid, time, suffix)) {
+                    return true;
+                }
+            } else if (kid.lastModified() > time && (suffix == null || kid.getName().endsWith(suffix))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// Rebuild the uber-jar from source. Maven's install phase runs the assembly that produces
+    /// target/metatron-*-jar-with-dependencies.jar. Output streams into docs-build.log (appended
+    /// after the openProgressTab truncation). Returns null when the build succeeded, else a short
+    /// error message — the full output is in the log.
+    private static String rebuildUberJar(final File root, final File logFile)
+            throws IOException, InterruptedException {
+        final List<String> command = new ArrayList<>();
+        command.add(maven(root));
+        command.add("install");
+        command.add("-DskipTests");
+        command.add("-q");
+        final ProcessBuilder builder = new ProcessBuilder(command)
+                .directory(new File(root.getAbsolutePath()))
+                .redirectErrorStream(true);
+        final Process process = builder.start();
+        final List<String> tail = new ArrayList<>();
+        try (final Writer writer = new OutputStreamWriter(
+                new FileOutputStream(logFile, true), StandardCharsets.UTF_8)) {
+            writer.write("── metatron rebuild: " + String.join(" ", command) + System.lineSeparator());
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    writer.write(line);
+                    writer.write(System.lineSeparator());
+                    tail.add(line);
+                    if (tail.size() > 40) {
+                        tail.remove(0);
+                    }
+                }
+            }
+            writer.flush();
+        }
+        final int exit = process.waitFor();
+        if (exit != 0) {
+            return "mvn install exited " + exit + "\n\n" + String.join("\n", tail);
+        }
+        return null;
+    }
+
     // ── Run + report ───────────────────────────────────────────────────
     private static void run(final Project project, final BuildKind kind, final File root,
                             final String srcRel, final VirtualFile source, final List<String> command) {
@@ -273,7 +398,9 @@ public class DocsBuildAction extends AnAction {
             final List<String> tail = new ArrayList<>();
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
-                 final Writer writer = new OutputStreamWriter(new FileOutputStream(logFile), StandardCharsets.UTF_8)) {
+                 // append: openProgressTab truncated at action start and a maven rebuild may have
+                 // streamed into this same log first — keep that output visible above the run.
+                 final Writer writer = new OutputStreamWriter(new FileOutputStream(logFile, true), StandardCharsets.UTF_8)) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     writer.write(line);

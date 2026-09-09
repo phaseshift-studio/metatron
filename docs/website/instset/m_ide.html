@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>iot - metatron Instruction Set</title>
+    <title>ide - metatron Instruction Set</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -381,7 +381,7 @@
 <div class="container-xxl py-4">
     <div class="text-center mb-2">
         <h1 class="text-primary glow-text mb-1">
-            <span class="text-light">/m/</span>iot
+            <span class="text-light">/m/</span>ide
         </h1>
         <p style="margin-top:0;margin-bottom:0;" class="subtitle text-light">instruction set reference</p>
     </div>
@@ -393,14 +393,14 @@
                     <button class="accordion-button collapsed" type="button"
                         data-bs-toggle="collapse" data-bs-target="#flush-collapseOne"
                         aria-expanded="false" aria-controls="flush-collapseOne">
-                        <i class="bi bi-code-slash me-2"></i>/m/iot instset obj
+                        <i class="bi bi-code-slash me-2"></i>/m/ide instset obj
                     </button>
                 </h2>
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[
- pattern=&gt;/m/iot/#,
+ pattern=&gt;/m/ide/#,
  q=&gt;[docq::[
  pattern=&gt;docq,
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
@@ -409,8 +409,18 @@
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
  type=&gt;[
-  mqttspace::T,
-  haos::T]]@/m/iot</code></pre>
+  obj_ide_java::T,
+  java::T,
+  result::T,
+  project::T],
+ inst=&gt;[
+  as?project&lt;=uri(project::T),
+  as?skill&lt;=project(#::T),
+  as?java&lt;=java(java::T),
+  as?java&lt;=java(java::T),
+  find?uri{*}&lt;=uri(class=&gt;uri::T,member=&gt;str{?}::T,text=&gt;str{?}::T),
+  search?uri{*}&lt;=uri(str::T),
+  command?inst&lt;=#{?}(command=&gt;str::T)]]@/m/ide</code></pre>
                     </div>
                 </div>
             </div>
@@ -418,57 +428,184 @@
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">1</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><button class="btn btn-outline-secondary" disabled>insts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">4</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
         <div class="card-header"><h5 class="mb-0 text-primary">index</h5></div>
         <div class="card-body"><div class="mb-3">
     <h6 class="text-primary mb-2">types</h6>
-    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">haos&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">space</small></div></div><div class="d-flex flex-wrap"><a href="#__m__iot__haos__space__haos" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">haos</span>
+    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">ide</small></div><div class="d-flex flex-wrap"><a href="#__m__ide__java" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">java</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__ide__project" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">project</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__ide__result" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">result</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">serializer</small></div><div class="d-flex flex-wrap"><a href="#__m__ide__serializer__obj_ide_java" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">obj_ide_java</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
 </div><div class="mb-3">
-    <h6 class="text-primary mb-2">spaces</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__iot__space__mqttspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">mqttspace</span>
-    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+    <h6 class="text-primary mb-2">insts</h6>
+    <div class="d-flex flex-wrap"><a href="#__m__ide__inst__command?rng=__m__inst&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">command</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__ide__inst__find?rng=__m__uri{*}&dom=__m__uri" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">find</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__ide__inst__search?rng=__m__uri{*}&dom=__m__uri" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">search</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
 </a></div>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">1</span></h3>
-    <div class="card mb-3" id="__m__iot__haos__space__haos">
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">4</span></h3>
+    <div class="card mb-3" id="__m__ide__java">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
-            <span class="code text-primary fw-bold">haos::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__iot__space__mqttspace" class="instset-doc-small-code text-info code">/m/iot/space/mqttspace::T</a></span>
+            <span class="code text-primary fw-bold">java::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
-        <small class="text-muted code">/m/iot/haos/space/haos</small>
+        <small class="text-muted code">/m/ide/java</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mqttspace::T[][inst(?[pattern=&gt;uri::T])]@/m/iot/haos/space/haos</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__space__mqttspace" class="code inherited-link">mqttspace::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[host=&gt;uri::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- pattern=&gt;uri::T,
- {?}q=&gt;[qproc{?}::T],
- {?}route=&gt;[uri{?}::T=&gt;uri::T],
- {?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+  classes=&gt;[#::T=&gt;lst::T],
+  {?}package=&gt;str::T,
+  {?}imports=&gt;lst::T,
+  {?}preamble=&gt;str::T,
+  {?}postscript=&gt;str::T]]@/m/ide/java</code></pre></div>
     
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a coarse rec encoding of a java source file optimized for semantic editing</p>
 </div>
-</div><div class="container-xxl mb-4" id="spaces">
-    <h3 class="text-primary mb-3">spaces <span class="pill-label badge bg-info">1</span></h3>
-    <div class="card mb-3" id="__m__iot__space__mqttspace">
+</div><div class="card mb-3" id="__m__ide__serializer__obj_ide_java">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <a href="m_iot_space_mqttspace.html" class="code text-primary fw-bold text-decoration-none">mqttspace</a>
-        <small class="text-muted code">/m/iot/space/mqttspace</small>
+        <span>
+            <span class="code text-primary fw-bold">obj_ide_java::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ide__serializer" class="instset-doc-small-code text-info code">/m/ide/serializer::T</a></span>
+        </span>
+        <small class="text-muted code">/m/ide/serializer/obj_ide_java</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T]][inst?mqttspace&lt;=#{?}(rec::T)]@/m/iot/space/mqttspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- pattern=&gt;uri::T,
- {?}q=&gt;[qproc{?}::T],
- {?}route=&gt;[uri{?}::T=&gt;uri::T],
- {?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/ide/serializer::T[][ctor?obj_ide_java&lt;=#{?}(#{*}::T)]@/m/ide/serializer/obj_ide_java</code></pre></div>
     
+    
+</div><div class="card mb-3" id="__m__ide__project">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">project::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/ide/project</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+  root=&gt;uri::T,
+  {?}name=&gt;str::T,
+  {?}desc=&gt;str::T,
+  {?}command=&gt;[uri::T=&gt;result::T],
+  {?}code=&gt;#::T]]@/m/ide/project</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the project descriptor (the pom.xml of a metatron ide) — a project.mtron file at the project root</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cs_project::[name=&gt;metatron,root=&gt;&lt;fs:/foo&gt;,code=&gt;!*&lt;fs:/foo/src&gt;]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__ide__result">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">result::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/ide/result</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+  status=&gt;union(success,error,halted),
+  runtime=&gt;time::T,
+  {?}command=&gt;str::T,
+  {?}project=&gt;project::T,
+  {?}result=&gt;str{*}::T,
+  {?}error=&gt;{?}[fail{?}::T]]]@/m/ide/result</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the standardized build/test/status outcome — rec::T with a union status verdict</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">x&gt;&gt;status
+x&gt;&gt;output.limit(10)
+x&gt;&gt;runtime.normalize()</code></pre>
+</div>
+</div>
+</div><div class="container-xxl mb-4" id="instructions">
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">3</span></h3>
+    <div class="card mb-3" id="__m__ide__inst__command?rng=__m__inst&dom=#{?}">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">command</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__inst" data-bs-toggle="tooltip" title="range" class="code text-success">inst</a></span></span>
+        </span>
+        <small class="text-muted code">/m/ide/inst/command?rng=/m/inst&amp;dom=#{?}</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ide__inst__command?rng=__m__inst&dom=#{?}-doc-0-tab').click();document.getElementById('__m__ide__inst__command?rng=__m__inst&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">command?rng=inst&dom=<span class="code text-info">#{?}</span>(command=>str::T){<j>}</code></pre>
+</div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">wrap a command into an enriched instruction that runs it and returns ide:result::T</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#noobj — cs_command is a factory (the lhs is unused)" class="text-info">noobj — cs_command is a factory (the lhs is unused)</a> <span class="text-light">=&gt;</span> <a href="#an enriched instruction that runs the command and returns ide:result::T" class="text-success">an enriched instruction that runs the command and returns ide:result::T</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#command" class="text-light">command</a> <span class="text-light">=&gt;</span> <a href="#'the shell command to wrap'" class="text-info">&#39;the shell command to wrap&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">ide:command(command=&gt;&#39;mvn compile&#39;)                   [-- an enriched build instruction --]
+ide:command([command=&gt;&#39;mvn -q test&#39;])                 [-- the command as a rec          --]
+my_build -&gt; cs_command(command=&gt;&#39;mvn clean install&#39;)  [-- name it anything, curate a palette --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__ide__inst__find?rng=__m__uri{*}&dom=__m__uri">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">find</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__uri" data-bs-toggle="tooltip" title="domain" class="code text-info">uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__uri{*}" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">uri{*}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/ide/inst/find?rng=/m/uri{*}&amp;dom=/m/uri</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ide__inst__find?rng=__m__uri{*}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__ide__inst__find?rng=__m__uri{*}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">find?rng=uri{*}&dom=uri(class=>uri::T,member=>str{?}::T,text=>str{?}::T){<j>}</code></pre>
+</div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">finds project resources that contain provided uri fragment</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a project" class="text-info">a project</a> <span class="text-light">=&gt;</span> <a href="#the location of found resources" class="text-success">the location of found resources</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#uri::T" class="text-light">uri::T</a> <span class="text-light">=&gt;</span> <a href="#'a uri fragment to match'" class="text-info">&#39;a uri fragment to match&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*m_proj.find(&#39;Rec.java&#39;)</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__ide__inst__search?rng=__m__uri{*}&dom=__m__uri">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">search</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__uri" data-bs-toggle="tooltip" title="domain" class="code text-info">uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__uri{*}" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">uri{*}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/ide/inst/search?rng=/m/uri{*}&amp;dom=/m/uri</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ide__inst__search?rng=__m__uri{*}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__ide__inst__search?rng=__m__uri{*}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">search?rng=uri{*}&dom=uri(str::T){<j>}</code></pre>
+</div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">searches project resources whose contents match provided regex</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a project" class="text-info">a project</a> <span class="text-light">=&gt;</span> <a href="#the location of found resources" class="text-success">the location of found resources</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#str::T" class="text-light">str::T</a> <span class="text-light">=&gt;</span> <a href="#'a regex string to match in resource contents'" class="text-info">&#39;a regex string to match in resource contents&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*m_proj.search(&#39;rec()&#39;)</code></pre>
+</div>
 </div>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">

@@ -30,8 +30,8 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATETIME_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -61,11 +61,11 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
 
     @ParameterizedTest(name = "[{index}] {1}")
     @CsvSource(value = {
-        "{\"v\":\"N/A\"}             % N/A",
-        "{\"v\":\"none\"}            % none (lowercase)",
-        "{\"v\":\"None\"}            % None (mixed case)",
-        "{\"v\":\"\"}                % empty string",
-        "{\"v\":\"n/a\"}             % n/a (lowercase)",
+            "{\"v\":\"N/A\"}             % N/A",
+            "{\"v\":\"none\"}            % none (lowercase)",
+            "{\"v\":\"None\"}            % None (mixed case)",
+            "{\"v\":\"\"}                % empty string",
+            "{\"v\":\"n/a\"}             % n/a (lowercase)",
     }, delimiter = '%')
     void testSentinels(final String json, final String description) {
         assertEquals(noobj(), field(json, "v"), description);
@@ -77,12 +77,12 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
 
     @ParameterizedTest(name = "[{index}] {4}")
     @CsvSource(value = {
-        "{\"v\":\"227MB\"}     % /m/math/data/mB % 227.0   % MB → mB",
-        "{\"v\":\"4.61GB\"}    % /m/math/data/gB % 4.61    % GB → gB",
-        "{\"v\":\"1kB\"}       % /m/math/data/kB % 1.0     % kB → kB",
-        "{\"v\":\"4096B\"}     % /m/math/data/bB % 4096.0  % plain bytes",
-        "{\"v\":\"0.5TB\"}     % /m/math/data/tB % 0.5     % TB → tB",
-        "{\"v\":\"0B\"}        % /m/math/data/bB % 0.0     % zero bytes",
+            "{\"v\":\"227MB\"}     % /m/math/data/mB % 227.0   % MB → mB",
+            "{\"v\":\"4.61GB\"}    % /m/math/data/gB % 4.61    % GB → gB",
+            "{\"v\":\"1kB\"}       % /m/math/data/kB % 1.0     % kB → kB",
+            "{\"v\":\"4096B\"}     % /m/math/data/bB % 4096.0  % plain bytes",
+            "{\"v\":\"0.5TB\"}     % /m/math/data/tB % 0.5     % TB → tB",
+            "{\"v\":\"0B\"}        % /m/math/data/bB % 0.0     % zero bytes",
     }, delimiter = '%')
     void testSizes(final String json, final String expectedVid,
                    final double expectedValue, final String description) {
@@ -98,10 +98,10 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
 
     @ParameterizedTest(name = "[{index}] {3}")
     @CsvSource(value = {
-        "{\"v\":\"0\"}         % 0     % zero",
-        "{\"v\":\"1\"}         % 1     % one",
-        "{\"v\":\"42\"}        % 42    % positive",
-        "{\"v\":\"-5\"}        % -5    % negative",
+            "{\"v\":\"0\"}         % 0     % zero",
+            "{\"v\":\"1\"}         % 1     % one",
+            "{\"v\":\"42\"}        % 42    % positive",
+            "{\"v\":\"-5\"}        % -5    % negative",
     }, delimiter = '%')
     void testIntegers(final String json, final long expected, final String description) {
         final Obj v = field(json, "v");
@@ -115,10 +115,10 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
 
     @ParameterizedTest(name = "[{index}] {1}")
     @CsvSource(value = {
-        "{\"v\":\"2026-08-01T23:37:33-06:00\"}  % ISO with colon offset",
-        "{\"v\":\"2024-12-25T09:00:00Z\"}       % UTC / Zulu",
-        "{\"v\":\"2026-08-01 23:37:33 -0600\"}  % Docker space-separated",
-        "{\"v\":\"2024-12-25\"}                  % date-only",
+            "{\"v\":\"2026-08-01T23:37:33-06:00\"}  % ISO with colon offset",
+            "{\"v\":\"2024-12-25T09:00:00Z\"}       % UTC / Zulu",
+            "{\"v\":\"2026-08-01 23:37:33 -0600\"}  % Docker space-separated",
+            "{\"v\":\"<2024-12-25>\"}                  % date-only",
     }, delimiter = '%')
     void testDatetimes(final String json, final String description) {
         final Obj v = field(json, "v");
@@ -132,11 +132,11 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
 
     @ParameterizedTest(name = "[{index}] {3}")
     @CsvSource(value = {
-        "{\"CreatedAt\":\"x\"}       % created_at       % simple CamelCase",
-        "{\"SharedSize\":\"x\"}      % shared_size      % two words",
-        "{\"ID\":\"x\"}              % id               % all-caps acronym",
-        "{\"Repository\":\"x\"}      % repository       % single word unchanged",
-        "{\"LocalVolumes\":\"x\"}    % local_volumes    % mid-word camel",
+            "{\"CreatedAt\":\"x\"}       % created_at       % simple CamelCase",
+            "{\"SharedSize\":\"x\"}      % shared_size      % two words",
+            "{\"ID\":\"x\"}              % id               % all-caps acronym",
+            "{\"Repository\":\"x\"}      % repository       % single word unchanged",
+            "{\"LocalVolumes\":\"x\"}    % local_volumes    % mid-word camel",
     }, delimiter = '%')
     void testSnakeCaseKeys(final String json, final String expectedKey,
                            final String description) {

@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 
@@ -79,16 +78,6 @@ public interface Call extends Obj, Ring<Call> {
             return new MCode(List.of(this.as()), CODE_TID, null);
     }
 
-    default boolean isAuto() {
-        if (this.isNoObj())
-            return false;
-        final List<Inst> insts = this.insts();
-        if (insts.isEmpty())
-            return false;
-        final fURI first = insts.getFirst().tid().basePath();
-        return first.equals(AUTO_FROM_INST_TID) || first.equals(AUTO_INST_TID);
-    }
-
     default List<Inst> insts() {
         if (this.isCode()) {
             return new ArrayList<>(this.codeValue());
@@ -98,9 +87,9 @@ public interface Call extends Obj, Ring<Call> {
             return List.of();
         }
     }
-    
+
     default boolean isPredicate(final Obj lhs) {
-        return  !this.isNoObj() &&  this.resolve(lhs).insts().getLast().rng().c().equals(cInt.MAYBE());
+        return !this.isNoObj() && this.resolve(lhs).insts().getLast().rng().c().equals(cInt.MAYBE());
     }
 
     @Override

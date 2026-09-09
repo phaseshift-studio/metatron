@@ -155,4 +155,6 @@ jar cf "$STAGE/$ROOTDIR/lib/metatron-docs-plugin.jar" -C "$BUILD/classes" studio
 echo "[plugin] built  →  $(cd "$BUILD" && pwd)/metatron-docs-plugin.zip"
 echo ""
 echo "  install:  Settings → Plugins → ⚙ → 'Install Plugin from Disk' → pick that zip → restart IDEA"
-echo "  requires: metatron already built once (./mvnw install -DskipTests) so target/*.jar exists"
+echo "  requires: the metatron repo open in the IDE — the action itself rebuilds the uber-jar"
+echo "            (./mvnw install -DskipTests) whenever sources changed, so the first run just"
+echo "            takes longer; no need to pre-build target/*.jar"

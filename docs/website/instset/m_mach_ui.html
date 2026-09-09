@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>tble - metatron Instruction Set</title>
+    <title>ui - metatron Instruction Set</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -381,7 +381,7 @@
 <div class="container-xxl py-4">
     <div class="text-center mb-2">
         <h1 class="text-primary glow-text mb-1">
-            <span class="text-light">/m/</span>tble
+            <span class="text-light">/m/mach/</span>ui
         </h1>
         <p style="margin-top:0;margin-bottom:0;" class="subtitle text-light">instruction set reference</p>
     </div>
@@ -393,43 +393,42 @@
                     <button class="accordion-button collapsed" type="button"
                         data-bs-toggle="collapse" data-bs-target="#flush-collapseOne"
                         aria-expanded="false" aria-controls="flush-collapseOne">
-                        <i class="bi bi-code-slash me-2"></i>/m/tble instset obj
+                        <i class="bi bi-code-slash me-2"></i>/m/mach/ui instset obj
                     </button>
                 </h2>
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[
- pattern=&gt;/m/tble/#,
+ pattern=&gt;/m/mach/ui/#,
  q=&gt;[docq::[
  pattern=&gt;docq,
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;!*/m],
- const=&gt;[[llm_chat_schema=&gt;inst?#{*}&lt;=#{*}()]@helper],
- type=&gt;[tblespace::T],
- inst=&gt;[sql?rec{*}&lt;=tblespace(str::T)],
- rewrite=&gt;[
-  /m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_offset?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_offset_limit?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where_order?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where_order_offset?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where_limit?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where_offset?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where_offset_limit?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_select?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_order?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_distinct?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/kv_count?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/kv_limit?code{?}&lt;=code()]]@/m/tble</code></pre>
+ space=&gt;[super=&gt;!*/m/mach],
+ inst=&gt;[
+  as?str&lt;=widget(str::T),
+  display?noobj{0}&lt;=widget(),
+  nano?#{?}&lt;=#{?}(),
+  less?noobj{0}&lt;=str(isa(int::T).else(10))],
+ type=&gt;[
+  console::T,
+  anchor::T,
+  style::T,
+  widget::T,
+  accordion_widget::T,
+  progress_table_widget::T,
+  table_widget::T,
+  tree_widget::T,
+  selector_widget::T,
+  panel_widget::T,
+  label_line_widget::T,
+  menu_bar_widget::T,
+  tree_select_widget::T,
+  swipe_panel_widget::T,
+  modal_widget::T]]@/m/mach/ui</code></pre>
                     </div>
                 </div>
             </div>
@@ -437,415 +436,409 @@
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">1</span></a><button class="btn btn-outline-secondary" disabled>types <span class="pill-label badge bg-dark">0</span></button><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">1</span></a><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">18</span></a>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">15</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
         <div class="card-header"><h5 class="mb-0 text-primary">index</h5></div>
         <div class="card-body"><div class="mb-3">
-    <h6 class="text-primary mb-2">constants</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__tble__helper" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">helper</span>
-    <span class="pill-label badge bg-secondary ms-2">C</span>
-</a></div>
-</div><div class="mb-3">
-    <h6 class="text-primary mb-2">spaces</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__tble__space__tblespace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">tblespace</span>
-    <span class="pill-label badge bg-info text-dark ms-2">S</span>
-</a></div>
+    <h6 class="text-primary mb-2">types</h6>
+    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">ui</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__ui__accordion_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">accordion_widget</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__ui__anchor" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">anchor</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__ui__console" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">console</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__ui__progress_table_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">progress_table_widget</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__ui__style" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">style</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__ui__widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">widget</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">widget</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__ui__widget__label_line_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">label_line_widget</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__ui__widget__menu_bar_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">menu_bar_widget</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__ui__widget__modal_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">modal_widget</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__ui__widget__panel_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">panel_widget</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__ui__widget__selector_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">selector_widget</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__ui__widget__swipe_panel_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">swipe_panel_widget</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__ui__widget__table_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">table_widget</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__ui__widget__tree_select_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">tree_select_widget</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__ui__widget__tree_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">tree_widget</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">insts</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__tble__inst__sql?rng=__m__rec{*}&dom=__m__tble__space__tblespace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql</span>
+    <div class="d-flex flex-wrap"><a href="#__m__mach__ui__inst__display?rng=noobj{0}&dom=__m__mach__ui__widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">display</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a></div>
-</div><div class="mb-3">
-    <h6 class="text-primary mb-2">rewrites</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__tble__inst__rewrite__kv_count?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">kv_count</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__kv_limit?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">kv_limit</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_count?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_count</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_distinct?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_distinct</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_limit?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_limit</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_mean?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_mean</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_offset?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_offset</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_offset_limit?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_offset_limit</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_order?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_order</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_select?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_select</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_sum?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_sum</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_where?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_where</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_where_count?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_where_count</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_where_limit?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_where_limit</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_where_offset?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_where_offset</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_where_offset_limit?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_where_offset_limit</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_where_order?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_where_order</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__tble__inst__rewrite__sql_where_order_offset?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">sql_where_order_offset</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__mach__ui__inst__less?rng=noobj{0}&dom=__m__str" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">less</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__mach__ui__inst__nano?rng=#{?}&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">nano</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
 </a></div>
 </div></div>
     </div>
-</div><div class="container-xxl mb-4" id="consts">
-    <h3 class="text-primary mb-3">constants <span class="pill-label badge bg-secondary">1</span></h3>
-    <div class="card mb-3" id="__m__tble__helper">
+</div><div class="container-xxl mb-4" id="types">
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">15</span></h3>
+    <div class="card mb-3" id="__m__mach__ui__accordion_widget">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span class="code text-secondary fw-bold">helper</span>
-        <small class="text-muted code">/m/tble/helper</small>
+        <span>
+            <span class="code text-primary fw-bold">accordion_widget::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__ui__widget" class="instset-doc-small-code text-info code">/m/mach/ui/widget::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/accordion_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">[llm_chat_schema=&gt;inst?#{*}&lt;=#{*}()]@helper</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?accordion_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/accordion_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;style::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a collection of tble related utilities</p>
+    <p class="mb-0 text-light">an expandable/collapsible accordion widget</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#an accordion obj" class="text-success">an accordion obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}title" class="text-light">{?}title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the accordion'" class="text-info">&#39;the title of the accordion&#39;</a>
+  <a href="#{?}body" class="text-light">{?}body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the accordion'" class="text-info">&#39;the body content of the accordion&#39;</a>
+</pre>
 </div>
-</div>
-</div><div class="container-xxl mb-4" id="spaces">
-    <h3 class="text-primary mb-3">spaces <span class="pill-label badge bg-info">1</span></h3>
-    <div class="card mb-3" id="__m__tble__space__tblespace">
+</div><div class="card mb-3" id="__m__mach__ui__anchor">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <a href="m_tble_space_tblespace.html" class="code text-primary fw-bold text-decoration-none">tblespace</a>
-        <small class="text-muted code">/m/tble/space/tblespace</small>
+        <span>
+            <span class="code text-primary fw-bold">anchor::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__uri" class="instset-doc-small-code text-info code">/m/uri::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/anchor</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=#{?}(rec::T)]@/m/tble/space/tblespace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- pattern=&gt;uri::T,
- {?}q=&gt;[qproc{?}::T],
- {?}route=&gt;[uri{?}::T=&gt;uri::T],
- {?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@/m/mach/ui/anchor</code></pre></div>
+    
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a metatron realization of a relational database</p>
+    <p class="mb-0 text-light">a float anchor position</p>
+</div>
+</div><div class="card mb-3" id="__m__mach__ui__console">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">console::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/console</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[][ctor?console&lt;=#{?}(#{*}::T)]@/m/mach/ui/console</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a terminal user interface</p>
+</div>
+</div><div class="card mb-3" id="__m__mach__ui__widget__label_line_widget">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">label_line_widget::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__ui__widget" class="instset-doc-small-code text-info code">/m/mach/ui/widget::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/widget/label_line_widget</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}body=&gt;str::T,{?}key=&gt;uri::T,{?}on_key=&gt;#::T]][ctor?label_line_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/label_line_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;style::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a single-line text label widget</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a label line widget" class="text-success">a label line widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the text body displayed on the label'" class="text-info">&#39;the text body displayed on the label&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__ui__widget__menu_bar_widget">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">menu_bar_widget::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__ui__widget" class="instset-doc-small-code text-info code">/m/mach/ui/widget::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/widget/menu_bar_widget</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}height=&gt;int::T,{?}lines=&gt;lst::T]][ctor?menu_bar_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/menu_bar_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;style::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a menu bar pinned to the top of the terminal</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a menu bar widget" class="text-success">a menu bar widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#lines" class="text-light">lines</a> <span class="text-light">=&gt;</span> <a href="#'a lst of line widgets laid out across the bar'" class="text-info">&#39;a lst of line widgets laid out across the bar&#39;</a>
+  <a href="#height" class="text-light">height</a> <span class="text-light">=&gt;</span> <a href="#'the interior height of the menu bar in rows'" class="text-info">&#39;the interior height of the menu bar in rows&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__ui__widget__modal_widget">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">modal_widget::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__ui__widget" class="instset-doc-small-code text-info code">/m/mach/ui/widget::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/widget/modal_widget</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?modal_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/modal_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;style::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a modal popup panel: space/enter/ctrl-d dismisses</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#rec" class="text-info">rec</a> <span class="text-light">=&gt;</span> <a href="#modal" class="text-success">modal</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the modal'" class="text-info">&#39;the title of the modal&#39;</a>
+  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the modal'" class="text-info">&#39;the body content of the modal&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__ui__widget__panel_widget">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">panel_widget::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__ui__widget" class="instset-doc-small-code text-info code">/m/mach/ui/widget::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/widget/panel_widget</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?panel_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/panel_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;style::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a simple bordered UI panel widget</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#rec" class="text-info">rec</a> <span class="text-light">=&gt;</span> <a href="#panel" class="text-success">panel</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the panel'" class="text-info">&#39;the title of the panel&#39;</a>
+  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the panel'" class="text-info">&#39;the body content of the panel&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__ui__progress_table_widget">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">progress_table_widget::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__ui__widget" class="instset-doc-small-code text-info code">/m/mach/ui/widget::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/progress_table_widget</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst::T]][ctor?progress_table_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/progress_table_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;style::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a table of progress bars</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*.metatron/skill/mtron/references/tble_space.md</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">progress_table::[rows=&gt;[[text=&gt;&#39;layer1&#39;,percent=&gt;58.0],[text=&gt;&#39;layer2&#39;,percent=&gt;23.0]]].run()</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__ui__widget__selector_widget">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">selector_widget::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__ui__widget" class="instset-doc-small-code text-info code">/m/mach/ui/widget::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/widget/selector_widget</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[=&gt;]][ctor?selector_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/selector_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;style::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">an interactive item selector widget</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a selector widget" class="text-success">a selector widget</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__ui__style">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">style::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/style</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;anchor::T,{?}width=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@/m/mach/ui/style</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a widget style specification</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a style obj" class="text-success">a style obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}border" class="text-light">{?}border</a> <span class="text-light">=&gt;</span> <a href="#'the border style of the widget (e.g. border::none, border::simple, etc.)'" class="text-info">&#39;the border style of the widget (e.g. border::none, border::simple, etc.)&#39;</a>
+  <a href="#{?}background" class="text-light">{?}background</a> <span class="text-light">=&gt;</span> <a href="#'the background color of the widget'" class="text-info">&#39;the background color of the widget&#39;</a>
+  <a href="#{?}foreground" class="text-light">{?}foreground</a> <span class="text-light">=&gt;</span> <a href="#'the foreground color of the widget'" class="text-info">&#39;the foreground color of the widget&#39;</a>
+  <a href="#{?}divider" class="text-light">{?}divider</a> <span class="text-light">=&gt;</span> <a href="#'the divider character used in the widget'" class="text-info">&#39;the divider character used in the widget&#39;</a>
+  <a href="#{?}headerDivider" class="text-light">{?}headerDivider</a> <span class="text-light">=&gt;</span> <a href="#'the header divider character used in the widget'" class="text-info">&#39;the header divider character used in the widget&#39;</a>
+  <a href="#{?}pointer" class="text-light">{?}pointer</a> <span class="text-light">=&gt;</span> <a href="#'the pointer character used in the widget'" class="text-info">&#39;the pointer character used in the widget&#39;</a>
+  <a href="#{?}leftMargin" class="text-light">{?}leftMargin</a> <span class="text-light">=&gt;</span> <a href="#'the left margin of the widget'" class="text-info">&#39;the left margin of the widget&#39;</a>
+  <a href="#{?}rightMargin" class="text-light">{?}rightMargin</a> <span class="text-light">=&gt;</span> <a href="#'the right margin of the widget'" class="text-info">&#39;the right margin of the widget&#39;</a>
+  <a href="#{?}topMargin" class="text-light">{?}topMargin</a> <span class="text-light">=&gt;</span> <a href="#'the top margin of the widget'" class="text-info">&#39;the top margin of the widget&#39;</a>
+  <a href="#{?}bottomMargin" class="text-light">{?}bottomMargin</a> <span class="text-light">=&gt;</span> <a href="#'the bottom margin of the widget'" class="text-info">&#39;the bottom margin of the widget&#39;</a>
+  <a href="#{?}anchor" class="text-light">{?}anchor</a> <span class="text-light">=&gt;</span> <a href="#'float anchor: top_left, top_middle, top_right, middle, bottom_left, bottom_middle, bottom_right'" class="text-info">&#39;float anchor: top_left, top_middle, top_right, middle, bottom_left, bottom_middle, bottom_right&#39;</a>
+  <a href="#{?}width" class="text-light">{?}width</a> <span class="text-light">=&gt;</span> <a href="#'display width override in columns (0 = natural)'" class="text-info">&#39;display width override in columns (0 = natural)&#39;</a>
+  <a href="#{?}top" class="text-light">{?}top</a> <span class="text-light">=&gt;</span> <a href="#'row offset from anchor edge (CSS top)'" class="text-info">&#39;row offset from anchor edge (CSS top)&#39;</a>
+  <a href="#{?}left" class="text-light">{?}left</a> <span class="text-light">=&gt;</span> <a href="#'col offset from anchor edge (CSS left)'" class="text-info">&#39;col offset from anchor edge (CSS left)&#39;</a>
+  <a href="#{?}zIndex" class="text-light">{?}zIndex</a> <span class="text-light">=&gt;</span> <a href="#'render order among floating widgets: higher = drawn later (on top); default 0'" class="text-info">&#39;render order among floating widgets: higher = drawn later (on top); default 0&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__ui__widget__swipe_panel_widget">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">swipe_panel_widget::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__ui__widget" class="instset-doc-small-code text-info code">/m/mach/ui/widget::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/widget/swipe_panel_widget</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}obj=&gt;lst::T]][ctor?swipe_panel_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/swipe_panel_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;style::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a left-right swipe panel: arrow keys navigate, pgup/pgdn jump ±5, ctrl-d quits; displays each obj in a PanelWidget with docq+Highlighter formatting</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#lst of objs" class="text-info">lst of objs</a> <span class="text-light">=&gt;</span> <a href="#a swipe panel widget tool" class="text-success">a swipe panel widget tool</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the list of objs to swipe through'" class="text-info">&#39;the list of objs to swipe through&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__ui__widget__table_widget">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">table_widget::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__ui__widget" class="instset-doc-small-code text-info code">/m/mach/ui/widget::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/widget/table_widget</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst{*}::T]][ctor?table_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/table_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;style::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a tabular data widget</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a table widget" class="text-success">a table widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}row" class="text-light">{?}row</a> <span class="text-light">=&gt;</span> <a href="#'a lst of poly table rows'" class="text-info">&#39;a lst of poly table rows&#39;</a>
+  <a href="#{?}header" class="text-light">{?}header</a> <span class="text-light">=&gt;</span> <a href="#'a lst of obj table headers'" class="text-info">&#39;a lst of obj table headers&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__ui__widget__tree_select_widget">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">tree_select_widget::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__ui__widget" class="instset-doc-small-code text-info code">/m/mach/ui/widget::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/widget/tree_select_widget</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[
+  root=&gt;uri::T,
+  max=&gt;int::T,
+  {?}on_select=&gt;#::T,
+  {?}label=&gt;#::T]][ctor?tree_select_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/tree_select_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;style::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">an interactive tree browser: arrow keys navigate, Enter fires on_select on selected node, right/left expand/contract, label suffixes each node</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a tree select tool" class="text-success">a tree select tool</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}label" class="text-light">{?}label</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on each tree node's obj to produce a suffix label (default: identity)"" class="text-info">&quot;instruction called on each tree node&#39;s obj to produce a suffix label (default: identity)&quot;</a>
+  <a href="#{?}on_select" class="text-light">{?}on_select</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on Enter with the selected node's rel::T (default: identity)"" class="text-info">&quot;instruction called on Enter with the selected node&#39;s rel::T (default: identity)&quot;</a>
+  <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
+  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__ui__widget__tree_widget">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">tree_widget::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__ui__widget" class="instset-doc-small-code text-info code">/m/mach/ui/widget::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/widget/tree_widget</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[root=&gt;uri::T,max=&gt;int::T,{?}code=&gt;#::T]][ctor?tree_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/tree_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;style::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the root uri space is traversed to specified depth generating a tree data structure</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a tree widget" class="text-success">a tree widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
+  <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
+  <a href="#{?}code" class="text-light">{?}code</a> <span class="text-light">=&gt;</span> <a href="#'transform obj prior to insertion into tree (default _)'" class="text-info">&#39;transform obj prior to insertion into tree (default _)&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__ui__widget">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">widget::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/widget</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}style=&gt;style::T]]@/m/mach/ui/widget</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the base widget type</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}style" class="text-light">{?}style</a> <span class="text-light">=&gt;</span> <a href="#'the style specification for the widget'" class="text-info">&#39;the style specification for the widget&#39;</a>
+</pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">1</span></h3>
-    <div class="card mb-3" id="__m__tble__inst__sql?rng=__m__rec{*}&dom=__m__tble__space__tblespace">
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">3</span></h3>
+    <div class="card mb-3" id="__m__mach__ui__inst__display?rng=noobj{0}&dom=__m__mach__ui__widget">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
-            <span class="code text-primary fw-bold">sql</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__tble__space__tblespace" data-bs-toggle="tooltip" title="domain" class="code text-info">tblespace</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec{*}" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">rec{*}</a></span></span>
+            <span class="code text-primary fw-bold">display</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__mach__ui__widget" data-bs-toggle="tooltip" title="domain" class="code text-info">widget</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">noobj{0}</span></span></span>
         </span>
-        <small class="text-muted code">/m/tble/inst/sql?rng=/m/rec{*}&amp;dom=/m/tble/space/tblespace</small>
+        <small class="text-muted code">/m/mach/ui/inst/display?rng=noobj{0}&amp;dom=/m/mach/ui/widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__tble__inst__sql?rng=__m__rec{*}&dom=__m__tble__space__tblespace-doc-0-tab').click();document.getElementById('__m__tble__inst__sql?rng=__m__rec{*}&dom=__m__tble__space__tblespace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sql?rng=rec{*}&dom=tblespace(str::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__ui__inst__display?rng=noobj{0}&dom=__m__mach__ui__widget-doc-0-tab').click();document.getElementById('__m__mach__ui__inst__display?rng=noobj{0}&dom=__m__mach__ui__widget-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">display?rng=<span class="code text-success">noobj{0}</span>&dom=widget(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">query a relational database in native sql and yield an mtron mapped result set</p>
+    <p class="mb-0 text-light">[terminal] run the widget (display-only render once; interactive enter modal loop; floats if the style has a float anchor set)
+renders objs to nothing; range coefficient is zero</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__mach__ui__widget" class="text-info">widget</a> <span class="text-light">=&gt;</span> <a href="#noobj{0}" class="text-success">noobj{0}</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__ui__inst__less?rng=noobj{0}&dom=__m__str">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">less</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__str" data-bs-toggle="tooltip" title="domain" class="code text-info">str</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">noobj{0}</span></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/inst/less?rng=noobj{0}&amp;dom=/m/str</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__ui__inst__less?rng=noobj{0}&dom=__m__str-doc-0-tab').click();document.getElementById('__m__mach__ui__inst__less?rng=noobj{0}&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">less?rng=<span class="code text-success">noobj{0}</span>&dom=str(isa(int::T).else(10)){<j>}</code></pre>
+</div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[terminal] a \[ f(\tt{x}) \rightarrow \emptyset \] terminal page through the lines of an str
+renders objs to nothing; range coefficient is zero</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a table space typically backed by an sql-compliant relational database" class="text-info">a table space typically backed by an sql-compliant relational database</a> <span class="text-light">=&gt;</span> <a href="#a result set as a stream of rows in mtron" class="text-success">a result set as a stream of rows in mtron</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'an sql query'" class="text-info">&#39;an sql query&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an str to page" class="text-info">an str to page</a> <span class="text-light">=&gt;</span> <a href="#noobj terminal" class="text-success">noobj terminal</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'number of lines per page'" class="text-info">&#39;number of lines per page&#39;</a>
 </pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*/sys/space/netflix.sql(&#39;SELECT * FROM movie WHERE runtime &lt; ${*next_event} - time(now)&#39;) [-- str templates are useful --]</code></pre>
 </div>
-</div>
-</div><div class="container-xxl mb-4" id="rewrites">
-    <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">18</span></h3>
-    <div class="card mb-3" id="__m__tble__inst__rewrite__kv_count?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
+</div><div class="card mb-3" id="__m__mach__ui__inst__nano?rng=#{?}&dom=#{?}">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
-            <span class="code text-warning fw-bold">kv_count</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+            <span class="code text-primary fw-bold">nano</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">#{?}</span></span></span>
         </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/kv_count?rng=/m/code{?}&amp;dom=/m/code</small>
+        <small class="text-muted code">/m/mach/ui/inst/nano?rng=#{?}&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/kv_count?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages native SELECT COUNT(*) FROM kv_store with LIKE-based pattern matching
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">*</span> <span class="text-light">=&gt;</span> <a href="#kv_count(kv_store, WHERE furi LIKE ...)" class="text-success">kv_count(kv_store, WHERE furi LIKE ...)</a></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__ui__inst__nano?rng=#{?}&dom=#{?}-doc-0-tab').click();document.getElementById('__m__mach__ui__inst__nano?rng=#{?}&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">nano?rng=<span class="code text-info"><span class="code text-success">#{?}</span></span>&dom=<span class="code text-info"><span class="code text-success">#{?}</span></span>(){<j>}</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__kv_limit?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">kv_limit</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/kv_limit?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/kv_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages native SELECT ... FROM kv_store ... LIMIT n to avoid loading all KV entries
-conditionally passes or drops objs (range coefficient is maybe)</p>
+    <p class="mb-0 text-light">open a nano-like editor for the obj</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__col__+.take(5)" class="text-info">+.take(5)</a> <span class="text-light">=&gt;</span> <a href="#kv_limit(kv_store, WHERE furi LIKE ..., LIMIT n)" class="text-success">kv_limit(kv_store, WHERE furi LIKE ..., LIMIT n)</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_count?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_count</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_count?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_count?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages native SELECT COUNT(*) to count rows in a table
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_distinct?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_distinct</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_distinct?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_distinct?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages native SELECT DISTINCT to deduplicate rows in the database
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#*table__+.dedup(select(name))" class="text-info">+.dedup(select(name))</a> <span class="text-light">=&gt;</span> <a href="#sql_distinct(table, [name])" class="text-success">sql_distinct(table, [name])</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_limit?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_limit</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_limit?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages native SELECT ... LIMIT to take first n rows from a table
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_mean?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_mean</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_mean?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_mean?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages native SELECT AVG(column) to average entries in a table column
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_offset?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_offset</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_offset?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_offset?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages native SELECT ... OFFSET to skip first n rows from a table
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#*table__+.skip(800)" class="text-info">+.skip(800)</a> <span class="text-light">=&gt;</span> <a href="#sql_offset(table, 800)" class="text-success">sql_offset(table, 800)</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_offset_limit?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_offset_limit</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_offset_limit?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_offset_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] fuses offset and limit into a single native SELECT ... LIMIT n OFFSET m
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#sql_offset(table,800).take(10)" class="text-info">sql_offset(table,800).take(10)</a> <span class="text-light">=&gt;</span> <a href="#sql_offset_limit(table, 800, 10)" class="text-success">sql_offset_limit(table, 800, 10)</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_order?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_order</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_order?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_order?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages native SELECT ... ORDER BY to sort rows in the database
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#*table__+.order(select(name))" class="text-info">+.order(select(name))</a> <span class="text-light">=&gt;</span> <a href="#sql_order(table, [name])" class="text-success">sql_order(table, [name])</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_select?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_select</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_select?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_select?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages native SELECT col1, col2 FROM table for projections
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#*table__+>>{name,age}" class="text-info">+&gt;&gt;{name,age}</a> <span class="text-light">=&gt;</span> <a href="#sql_select(table, [name,age])" class="text-success">sql_select(table, [name,age])</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_sum?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_sum</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_sum?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_sum?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages native SELECT SUM(column) to sum entries in a table column
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_where?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_where</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_where?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages native SELECT ... WHERE to filter rows in a table
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_where_count?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_where_count</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_where_count?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_count?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages native SELECT COUNT(*) ... WHERE to count filtered rows
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_where_limit?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_where_limit</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_where_limit?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages native SELECT ... WHERE ... LIMIT to filter and limit rows in a table
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_where_offset?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_where_offset</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_where_offset?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_offset?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] fuses where and offset into a single native SELECT ... WHERE ... OFFSET n
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#sql_where(table,cond).skip(800)" class="text-info">sql_where(table,cond).skip(800)</a> <span class="text-light">=&gt;</span> <a href="#sql_where_offset(table, cond, 800)" class="text-success">sql_where_offset(table, cond, 800)</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_where_offset_limit?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_where_offset_limit</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_where_offset_limit?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_offset_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] fuses where, offset, and limit into a single native SELECT ... WHERE ... LIMIT n OFFSET m
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#sql_where_offset(table,cond,800).take(10)" class="text-info">sql_where_offset(table,cond,800).take(10)</a> <span class="text-light">=&gt;</span> <a href="#sql_where_offset_limit(table, cond, 800, 10)" class="text-success">sql_where_offset_limit(table, cond, 800, 10)</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_where_order?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_where_order</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_where_order?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_order?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] fuses where and order into a single native SELECT ... WHERE ... ORDER BY
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#sql_where(table,cond).order(select(name))" class="text-info">sql_where(table,cond).order(select(name))</a> <span class="text-light">=&gt;</span> <a href="#sql_where_order(table, cond, [name])" class="text-success">sql_where_order(table, cond, [name])</a></pre>
-</div>
-</div><div class="card mb-3" id="__m__tble__inst__rewrite__sql_where_order_offset?rng=__m__code{?}&dom=__m__code">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_where_order_offset</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_where_order_offset?rng=/m/code{?}&amp;dom=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_order_offset?rng=code{?}&dom=code(){<j>}</code></pre></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] fuses where, order, and offset into a single native SELECT ... WHERE ... ORDER BY ... OFFSET n
-conditionally passes or drops objs (range coefficient is maybe)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#sql_where_order(table,cond,[col]).skip(800)" class="text-info">sql_where_order(table,cond,[col]).skip(800)</a> <span class="text-light">=&gt;</span> <a href="#sql_where_order_offset(table, cond, [col], 800)" class="text-success">sql_where_order_offset(table, cond, [col], 800)</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <span class="text-success">#{?}</span></pre>
 </div>
 </div>
 </div><div class="container-xxl py-3 text-center">

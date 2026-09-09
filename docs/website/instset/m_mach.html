@@ -189,6 +189,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_mach.html"><img
                             src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
                             alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_mach_ui.html"><img
+                            src="../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                            alt="ui"/>/m/mach/ui</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math.html"><img
                             src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
@@ -203,6 +206,9 @@
                             alt="vec"/>/m/vec</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_web.html"><img
                             src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_ide.html"><img
+                            src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                 </ul>
             </li>
@@ -402,8 +408,36 @@
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- type=&gt;[router::T,space::T,fsspace::T,serial::T,file::T,image::T,factory::T,mfactory::T,machine::T,swarm::T,...(5 more)],
- inst=&gt;[lift(#{?}::T),rewrite?rec[short=&gt;uri,long=&gt;uri]&lt;=#{?}(uri::T),close?noobj&lt;=router(),as?image&lt;=bytes(image::T,else(1.0000)),as?bytes&lt;=file(bytes::T),zero?A&lt;=A(),one?A&lt;=A(),which(uri::T),inject(int::T,#::T),/m/inst/thread?thread&lt;=#{?}(#::T),...(3 more)]]@/m/mach</code></pre>
+ type=&gt;[
+  router::T,
+  space::T,
+  fsspace::T,
+  serial::T,
+  file::T,
+  image::T,
+  factory::T,
+  mfactory::T,
+  machine::T,
+  swarm::T,
+  thread_executor::T,
+  thread::T,
+  core::T,
+  virtual::T,
+  clstrspace::T],
+ inst=&gt;[
+  lift(#{?}::T),
+  rewrite?rec[short=&gt;uri,long=&gt;uri]&lt;=#{?}(uri::T),
+  close?noobj&lt;=router(),
+  as?image&lt;=bytes(image::T,else(1.0000)),
+  as?bytes&lt;=file(bytes::T),
+  zero?A&lt;=A(),
+  one?A&lt;=A(),
+  which(uri::T),
+  inject(int::T,#::T),
+  /m/inst/thread?thread&lt;=#{?}(#::T),
+  stop?thread&lt;=thread(),
+  pause?thread&lt;=thread(),
+  resume?thread&lt;=thread()]]@/m/mach</code></pre>
                     </div>
                 </div>
             </div>

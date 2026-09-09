@@ -648,6 +648,7 @@
                                 <argument>/m/mach/ui</argument>
                                 <argument>/m/web</argument>
                                 <argument>/m/iot</argument>
+                                <argument>/m/dckr</argument>
                                 <argument>/m/llm</argument>
                                 <argument>/m/tble</argument>
                                 <argument>/m/dcmnt</argument>
