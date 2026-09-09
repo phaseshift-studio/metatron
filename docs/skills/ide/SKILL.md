@@ -11,13 +11,16 @@ mcp server tool `eval` (`m_inst_eval_mtron`).
 An agent edits a project's source by **pulling** a file into the code space, **editing** the rec-encoded member's, and
 letting a **subscription** on `code/#` write back to disk and **log** a `saved` event.
 
-## setup: build the infrastructure
+## building project infrastructure
 
 First, load necessary instruction sets. Second, open three spaces:
 
 1. a location to store metatron encoding the source code (`memspace`).
 2. access to the file system where source code is stored (`fsspace`).
 3. an optional space for storing mutation event logs (`tblespace`).
+
+**NOTE**: these steps are only necessary if the `project::T` doesn't already exist. As an agent, typically, the project
+uri will be provided to you and thus, this section can be skipped.
 
 ```mtron_pre
 [MAXOUTPUT 5] import(/m/ide,ide)
@@ -38,17 +41,17 @@ First, load necessary instruction sets. Second, open three spaces:
             route      => [/log/scratch/ => <>]]@</sys/space/log/scratch>
 ```
 
-## encodings
+## understanding source embeddings
 
-A loaded Java file has two encodings:
+A loaded Java file has two embeddings:
 
-- **rec encoding** — each member is a rec: `kind`, `name`, `signature`,
+- **rec embedding** — each member is a rec: `kind`, `name`, `signature`,
   `header` (up to `{`), `body` (`{...}`), `footer`, and `text` = **derived** (header + body + footer).
 - **uri-graph (`idx`) encoding** — navigate the source with path syntax:
   `*/dev/metatron/idx/memSpace/method/close`.
 
 The pull (`src/.../${class}()`) returns the class's **rec encoding** (the
-`ide:java::T` value) and stores it in the `code` list beside the project root.
+`ide:java::T` value) and stores it in the `code` list under the project root.
 `ide:index(root)` re-projects that code list into `root/idx`:
 `class => kind => name => !@.../code/N/classes/cls/0/members/i/name` — *anchors* pointing into the code space. That
 anchor is the write surface, and it also resolves back through the space to the stored member (the round trip is
@@ -62,7 +65,7 @@ asserted in the acceptance test).
 | `footer`    | trailing bits                       |
 | `text`      | **derived** -- do not hand-edit     |
 
-## writing code in mtron
+## embedding a project
 
 An example Java/Maven3 project is provided with metatron. This project is used for the following examples.
 
@@ -106,6 +109,8 @@ The Java source files have a `str::T > web:java::T` encoding accessible via `src
 */dev/scratch/src/+/ 
 ```
 
+## writing code
+
 The file name serves as the key and a lambda `inst` serves as a lazy constructor of an `ide:java::T`. Calling the file
 name pulls the raw `src` into both `code` and `idx`.
 
@@ -113,7 +118,7 @@ name pulls the raw `src` into both `code` and `idx`.
 /dev/scratch/src/Echo() 
 [MAXOUTPUT 25] */dev/scratch/code/0
 */dev/scratch/idx/Echo
-tree_widget::[root=>/dev/scratch, max=>3, xref=>[=>]].as?str<=widget(str::T)
+tree_widget::[root=>/dev/scratch, max=>4, xref=>[=>]].as?str<=widget(str::T)
 ```
 
 `idx` offers a human-readable path scheme that projects to the `code` uri subgraph. Due to the `!@`-nature of the `idx`
@@ -136,22 +141,21 @@ Zooming in on the `idx` branch.
 
 ```mtron_pre
 tree_widget::[root=>/dev/scratch/idx, max=>5,xref=>[=>]].as?str<=widget(str::T)
+*/dev/scratch/idx/Echo/method/speak
 ```
 
-**edit, then save — two steps** (verified against a live VM, 2026-09-04): the `>>=` edit lands in the `code` space
-immediately, but the **disk write-back fires on the class-level save** (`code/N.to(...)`) — the subscription
-serializes the class rec (header + body + footer of each member) and writes the file. An edit that is never saved is
-space-only.
+To edit the existing `Echo::speak` method source code, update the component using an anchored uri. The `>>=` edit lands
+in `code` (due to `idx` redirection) and then the `auto_save` subscription fires and serializes the code `rec::T` to a
+`ide:java::T` before writing to disk.
 
 ```mtron_pre
-*/dev/scratch/idx/Echo/method/speak
-*/dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T)
-*/dev/scratch/idx/Echo/method/speak/body.-<'\n'.as(rec::T) >>= [1 => "return who;"]
-@/dev/scratch/idx/Echo/method/speak >>= [body=> '{ return "marko"; }'] 
+@/dev/scratch/idx/Echo/method/speak >>= [body=> """{ return "marko"; }"""]
+[HIDDEN] sleep(millis::2000.0)
 ```
 
-Finally, to determine if the registered `sub::T` wrote the updated `Echo::speak` to disk, dereference the
-respective `fsspace::T` pointer.
+A "saved" messages is displayed via `stdout`. However, to be certain the registered `sub::T` wrote the updated
+`Echo::speak` to disk, dereference the respective `fsspace::T` pointer. That is, pull the Java source code (as an
+`str::T`) back into metatron.
 
 ```mtron_pre
 *<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java>
@@ -183,8 +187,8 @@ itemized in the subsequent table.
 ```mtron_pre
 @/dev/scratch/idx/Echo/method/speak >>= [body => /
   -<'\n'.as(rec::T)>>=(                          /   
-  [?>2.?<4 => 'return "marko";']>>.              /
-      >-?str<=str{*}('\n'))].explain()   
+  [?>2.?<4 => 'return "marko";'])>>.             /
+  >-?str<=str{*}('\n')].explain()   
 ```
 
 **NOTE**: when working in the `console::T`, the the interactive `explain_tool::T` provides a much richer analysis of an
@@ -211,10 +215,11 @@ Different subscriptions can be defined to provide any number of useful reactions
 4. record stats (points to sections of the code).
 5. ...
 
-The current `sub::T` is:
+The dwe `sub::T` is:
 
 ```mtron_pre
 */dev/scratch/code/#?subq
+*/dev/scratch/code/#?subq>>0>>code
 ```
 
 ## gotchas (learned the hard way)

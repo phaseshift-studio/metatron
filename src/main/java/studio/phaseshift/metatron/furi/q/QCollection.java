@@ -668,7 +668,7 @@ public final class QCollection {
                 .obj(f(OBJ), subscriptions)
                 .preRead(vid -> {
                     subscriptions.logger().debug("reading: %s", vid.basePath());
-                    return lst(subscriptions.elements().filter(e -> vid.basePath().test(e.asRec().at(TARGET).uriValue())));
+                    return lst(subscriptions.elements().filter(e -> vid.basePath().bimatches(e.asRec().at(TARGET).uriValue())));
                 })
                 .preWrite((vid, obj) -> {
                     final Obj subscription;
@@ -699,10 +699,10 @@ public final class QCollection {
                     // subscriptions.logger().info("qless write to %s", vid.basePath());
                     if (vid.hasQ(SUBQ))
                         return noobj();
-                    subscriptions.elements().filter(e -> vid.basePath().test(e.asRec().at(TARGET).uriValue()))
+                    subscriptions.elements().filter(e -> vid.basePath().bimatches(e.asRec().at(TARGET).uriValue()))
                             .forEach(s -> {
                                 subscriptions.logger().debug("spawning virtual thread for subscription code: %s", s);
-                                virtual(s.asRec().jvm().getOrDefault(uri(CODE), noobj())).applyAsync(lst(List.of(vid.basePath().toUri(), obj), SUBQ_PUB_TID, null));
+                                virtual(s.asRec().at(uri(CODE))).applyAsync(lst(List.of(vid.basePath().toUri(), obj), SUBQ_PUB_TID, null));
                             });
                     return noobj();
                 }).create();

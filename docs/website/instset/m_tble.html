@@ -189,6 +189,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_mach.html"><img
                             src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
                             alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_mach_ui.html"><img
+                            src="../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                            alt="ui"/>/m/mach/ui</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math.html"><img
                             src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
@@ -203,6 +206,9 @@
                             alt="vec"/>/m/vec</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_web.html"><img
                             src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_ide.html"><img
+                            src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                 </ul>
             </li>
@@ -405,7 +411,25 @@
  const=&gt;[[llm_chat_schema=&gt;inst?#{*}&lt;=#{*}()]@helper],
  type=&gt;[tblespace::T],
  inst=&gt;[sql?rec{*}&lt;=tblespace(str::T)],
- rewrite=&gt;[/m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_offset?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_offset_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_order?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_order_offset?code{?}&lt;=code(),...(8 more)]]@/m/tble</code></pre>
+ rewrite=&gt;[
+  /m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_offset?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_offset_limit?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_where_order?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_where_order_offset?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_where_limit?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_where_offset?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_where_offset_limit?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_select?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_order?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_distinct?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/kv_count?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/kv_limit?code{?}&lt;=code()]]@/m/tble</code></pre>
                     </div>
                 </div>
             </div>

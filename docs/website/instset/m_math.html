@@ -189,6 +189,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_mach.html"><img
                             src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
                             alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_mach_ui.html"><img
+                            src="../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                            alt="ui"/>/m/mach/ui</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math.html"><img
                             src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
@@ -203,6 +206,9 @@
                             alt="vec"/>/m/vec</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_web.html"><img
                             src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_ide.html"><img
+                            src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                 </ul>
             </li>
@@ -402,8 +408,50 @@
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- type=&gt;[nat::T,data::T,bB::T,kB::T,mB::T,gB::T,tB::T,pB::T,currency::T,usd::T,...(8 more)],
- inst=&gt;[datetime_now?datetime&lt;=#{?}(),as?time&lt;=time(time::T),plus?datetime&lt;=datetime(time::T),minus?datetime&lt;=datetime(time::T),minus?time&lt;=datetime(datetime::T),as?datetime&lt;=uri(uri::T),as?int&lt;=datetime(int::T),as?str&lt;=datetime(str::T),as?datetime&lt;=str(datetime::T),normalize?time&lt;=time(),...(14 more)],
+ type=&gt;[
+  nat::T,
+  data::T,
+  bB::T,
+  kB::T,
+  mB::T,
+  gB::T,
+  tB::T,
+  pB::T,
+  currency::T,
+  usd::T,
+  euro::T,
+  time::T,
+  millis::T,
+  second::T,
+  minute::T,
+  hour::T,
+  day::T,
+  datetime::T],
+ inst=&gt;[
+  datetime_now?datetime&lt;=#{?}(),
+  as?time&lt;=time(time::T),
+  plus?datetime&lt;=datetime(time::T),
+  minus?datetime&lt;=datetime(time::T),
+  minus?time&lt;=datetime(datetime::T),
+  as?datetime&lt;=uri(uri::T),
+  as?int&lt;=datetime(int::T),
+  as?str&lt;=datetime(str::T),
+  as?datetime&lt;=str(datetime::T),
+  normalize?time&lt;=time(),
+  normalize?data&lt;=data(),
+  cos?real&lt;=#{?}(as(real::T)),
+  sin?real&lt;=#{?}(real::T),
+  tan?real&lt;=#{?}(real::T),
+  sqrt?real&lt;=#{?}(real::T),
+  atan?real&lt;=#{?}(real::T),
+  atan2?real&lt;=#{?}(real{2}::T),
+  log?real&lt;=#{?}(real::T),
+  log10?real&lt;=#{?}(real::T),
+  exp?real&lt;=#{?}(real::T),
+  abs?real&lt;=#{?}(real::T),
+  ceil?real&lt;=#{?}(real::T),
+  floor?real&lt;=#{?}(real::T),
+  round?int&lt;=#{?}(real::T)],
  const=&gt;[
   2.7183@/m/math/e?constq,
   3.1416@/m/math/pi?constq]]@/m/math</code></pre>

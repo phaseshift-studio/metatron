@@ -83,7 +83,7 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
                                                     [1,{"_tid":"/m/str", "_value":"a/b"},{a:1,b:2}]   | [1,"a/b",[a=>1,b=>2]]
                                                     {a:1,b:2,c:3} | [a=>1,b=>2,c=>3]
                                                     {a:1,b:[1,2,[3,4]],c:3} | [a=>1,b=>[1,2,[3,4]],c=>3]
-                                                    {a:1,b:[1,"2",[3.02,4]],c:3} | [a=>1,b=>[1,<2>,[3.02,4]],c=>3]
+                                                    {a:1,b:[1,"2",[3.02,4]],c:3} | [a=>1,b=>[1,2,[3.02,4]],c=>3]
                                                     {a:1,b:[1,2,[3.02,4]],c:3} | [a=>1,b=>[1,2,[3.02,4]],c=>3]
                                                     {"_bid":"/m/inst", "_value":"plus(mult(2))"}     | plus(mult(2))
                                                     {"_bid":"/m/inst", "_tid":"plus?int<=int", "_value":"plus(mult(2))"}     | plus(mult(2))

@@ -430,11 +430,25 @@ public class MarkdownRunner {
     /**
      * A markdown file belongs to a skill doc set when it is a {@code SKILL.md}
      * or lives under a {@code references/} directory at any depth.
+     *
+     * <p>Null-safe against the filesystem root: the parent climb stops when a
+     * parent has no file name ({@code Path.getFileName()} is null at {@code /}).
+     * A stray {@code .md} inside the walked container that is neither a
+     * {@code SKILL.md} nor under {@code references/} (e.g. an
+     * {@code assets/README.md}) must be skipped — not crash the site-html pass.
      */
     private static boolean isSkillDoc(final Path file) {
-        if (file.getFileName().toString().equals("SKILL.md")) return true;
+        final Path fileName = file.getFileName();
+        if (fileName != null && "SKILL.md".equals(fileName.toString())) {
+            return true;
+        }
         for (Path parent = file.getParent(); parent != null; parent = parent.getParent()) {
-            if ("references".equals(parent.getFileName().toString())) return true;
+            if (parent.getFileName() == null) {
+                return false; // climbed past the filesystem root: not a skill doc
+            }
+            if ("references".equals(parent.getFileName().toString())) {
+                return true;
+            }
         }
         return false;
     }

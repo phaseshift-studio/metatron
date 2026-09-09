@@ -41,6 +41,65 @@ Example: If `fs` space has `pattern=>local:#` and `route=>[local:=>~/]`:
 
 ```mtron
 mtron> */sys/space/+/+/                         [-- List all spaces --]
+==>/sys/space/dev/metatron=>memspace::[
+    pattern=>/dev/scratch/#,
+    q=>[
+     mintq::[
+      pattern=>mintq,
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T)],
+     docq::[
+      pattern=>docq,
+      pre_read=>inst?#{*}<=#{?}(uri::T),
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
+      obj=>memspace::[pattern=><#>],
+      inst=>instset::[pattern=><#>]],
+     subq::[
+      pattern=>subq,
+      pre_read=>inst?#{*}<=#{?}(uri::T),
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
+      qless_write=>inst?#{*}<=#{?}(uri::T,#::T),
+      obj=>[
+       sub::[
+        target=>/dev/scratch/code/#,
+        code=>!*/dev/scratch/sub/auto_save/code],
+       sub::[
+        target=>/dev/scratch/code/#,
+        code=>!*/dev/scratch/sub/auto_save/code]]],
+     mimeq::[
+      pattern=>mimeq,
+      post_read=>inst?#{*}<=#{?}(uri::T,#::T)],
+     lineq::[
+      pattern=>lineq,
+      post_read=>inst?#{*}<=#{?}(uri::T,#::T),
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T)],
+     lockq::[
+      pattern=>lockq,
+      pre_read=>inst?#{*}<=#{?}(uri::T),
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
+      qless_write=>inst?#{*}<=#{?}(uri::T,#::T),
+      obj=>[,]],
+     incrq::[
+      pattern=>incrq,
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T)]]]@/sys/space/dev/metatron
+==>/sys/space/log/scratch=>tblespace::[
+    pattern=>/log/scratch/#,
+    host=><sqlite:target/log_scratch.sqlite>,
+    driver=><org.sqlite.JDBC>,
+    table=>[,],
+    q=>[
+     incrq::[
+      pattern=>incrq,
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T)],
+     subq::[
+      pattern=>subq,
+      pre_read=>inst?#{*}<=#{?}(uri::T),
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
+      qless_write=>inst?#{*}<=#{?}(uri::T,#::T),
+      obj=>[,]],
+     mimeq::[
+      pattern=>mimeq,
+      post_read=>inst?#{*}<=#{?}(uri::T,#::T)]],
+    route=>[/log/scratch/=><>]]@/sys/space/log/scratch
 mtron> */sys/space/${space}                     [-- View space config --]
 mtron> !*<uri>                                  [-- Create reference (lazy) --]
 ==>uri::T

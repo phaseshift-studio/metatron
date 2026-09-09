@@ -344,6 +344,7 @@ public class uiInstSet extends AbstractInstSet {
                             return noobj();
                         }), "an str to page", "noobj terminal", Map.of(jnt(0), "number of lines per page"), "a \\[ f(\\tt{x}) \\rightarrow \\emptyset \\] terminal page through the lines of an str"))
         )));
+        docWrap(this, "terminal widgets to spruce up the metatron");
         super.setup();
     }
 }

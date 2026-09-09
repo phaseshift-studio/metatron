@@ -25,7 +25,6 @@ import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
@@ -36,7 +35,6 @@ import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Str.Helper.cleanString;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -171,44 +169,34 @@ public class mcpServer extends MRec {
      * Looks up the named tool and applies it with the supplied arguments.
      */
     protected Obj handleToolsCall(final Obj id, final Rec params) {
-        final String toolName = params.at(uri(NAME)).isNoObj() ? "" : params.at(uri(NAME)).toCleanString();
-        final Rec arguments = params.at(uri("arguments")).isNoObj() ? rec() : params.at(uri("arguments")).asRec();
-        // ── wire-key alias: "arguments" → "args" for metatron convention ──
-        if (!arguments.jvm().containsKey(uri(ARGS)) && arguments.jvm().containsKey(uri("arguments")))
-            arguments.jvm().put(uri(ARGS), arguments.jvm().get(uri("arguments")));
-        final Obj toolEntry = this.at(TOOL).orElse(rec0()).at(uri(toolName));
-        if (toolEntry.isNoObj()) {
-            return mcpError(id, jnt(-32601), str("tool not found: " + toolName));
-        } else {
-            // parse raw JSON args into typed mtron objs (mirrors the LLM mTool executor)
-            final Inst toolInst = toolEntry.asInst();
-            final Map<Obj, Obj> argMap = arguments.jvm();
-            final Poly<?, ?> args = toolInst.args().isNoObj() ? lst() : (toolInst.args().isLst() ?
-                    lst(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).map(e -> normArg(e.getValue())).collect(Collectors.toList())) :
-                    rec(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).collect(Collectors.toMap(e -> uri(e.getKey().toString()), e -> normArg(e.getValue())))));
-            final Obj toolLhs = argMap.containsKey(uri(LHS)) && argMap.get(uri(LHS)) != null ? normArg(argMap.get(uri(LHS))) : noobj();
-            final Obj toolResult = toolInst.args(args).apply(toolLhs);
-            if (toolResult.isFail())
-                return mcpError(id, jnt(-32603), str(toolResult.asFail().message()));
-            return mcpResponse(id, rec(uri(CONTENT), lst(rec(
-                    uri(TYPE), str(TEXT),
-                    uri(TEXT), str(Str.Helper.stripQuotes(toolResult.toString()))))));
-        }
-    }
-
-    private static Obj normArg(final Obj arg) {
-        if (arg.isUri() || arg.isStr()) {
-            try {
-                final Obj reparsed = ObjmtronSerializer.singleNoClip().inputBytes(cleanString(arg));
-                // Only replace if mtron found a better type — URI→URI means the
-                // original was correct and re-parsing would double-resolve paths.
-                if (!reparsed.isFail() && !reparsed.isUri())
-                    return reparsed;
-            } catch (final Exception ignored) {
-                // plain text that isn't mtron — keep original
+        try {
+            final String toolName = params.at(uri(NAME)).isNoObj() ? "" : params.at(uri(NAME)).toCleanString();
+            final Rec arguments = params.at(uri("arguments")).isNoObj() ? rec() : params.at(uri("arguments")).asRec();
+            // ── wire-key alias: "arguments" → "args" for metatron convention ──
+            if (!arguments.jvm().containsKey(uri(ARGS)) && arguments.jvm().containsKey(uri("arguments")))
+                arguments.jvm().put(uri(ARGS), arguments.jvm().get(uri("arguments")));
+            final Obj toolEntry = this.at(TOOL).orElse(rec0()).at(uri(toolName));
+            if (toolEntry.isNoObj()) {
+                return mcpError(id, jnt(-32601), str("tool not found: " + toolName));
+            } else {
+                final Inst toolInst = toolEntry.asInst();
+                final Map<Obj, Obj> argMap = arguments.jvm();
+                final Poly<?, ?> args = toolInst.args().isNoObj() ? lst() : (toolInst.args().isLst() ?
+                        lst(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).map(Map.Entry::getValue).collect(Collectors.toList())) :
+                        rec(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).collect(Collectors.toMap(e -> uri(e.getKey().toString()), Map.Entry::getValue))));
+                final Obj toolLhs = argMap.containsKey(uri(LHS)) && argMap.get(uri(LHS)) != null ? argMap.get(uri(LHS)) : noobj();
+                final Obj toolResult = toolInst.args(args).apply(toolLhs);
+                if (toolResult.isFail()) {
+                    //LOG.error("lhs: %s\nargs: %s\nresult: %s", toolLhs, args, toolResult);
+                    return mcpError(id, jnt(-32603), str(toolResult.asFail().message()));
+                }
+                return mcpResponse(id, rec(uri(CONTENT), lst(rec(
+                        uri(TYPE), str(TEXT),
+                        uri(TEXT), str(Str.Helper.stripQuotes(toolResult.toString()))))));
             }
+        } catch (final Exception e) {
+            return mcpError(id, jnt(-32603), str("error: %s".formatted(e)));
         }
-        return arg;
     }
 
     /**
@@ -340,9 +328,9 @@ public class mcpServer extends MRec {
         return mcpError(id, jnt(-32601), str("method not found: " + method));
     }
 
-    // ========================================
-    // JSON-RPC Helpers
-    // ========================================
+// ========================================
+// JSON-RPC Helpers
+// ========================================
 
     protected static Obj mcpResponse(final Obj id, final Rec result) {
         final Rec response = rec(
@@ -366,9 +354,9 @@ public class mcpServer extends MRec {
         return response;
     }
 
-    // ========================================
-    // JSON Schema helper
-    // ========================================
+// ========================================
+// JSON Schema helper
+// ========================================
 
     /**
      * Serialize a LangChain4j {@link JsonSchemaElement} to the MCP wire format
@@ -409,9 +397,9 @@ public class mcpServer extends MRec {
         return base;
     }
 
-    // ========================================
-    // Public API for transport wrappers
-    // ========================================
+// ========================================
+// Public API for transport wrappers
+// ========================================
 
     /**
      * Returns the serialization IO config for MCP (JSON in/out).

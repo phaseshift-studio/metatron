@@ -8,7 +8,7 @@ import studio.phaseshift.metatron.isa.llm.mToolProvider;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
-import studio.phaseshift.metatron.isa.llm.type.mcpClient;
+import studio.phaseshift.metatron.isa.llm.type.mcp.mcpClient;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;

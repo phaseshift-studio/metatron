@@ -237,7 +237,7 @@ mtron> */path/to/obj              [-- read obj at uri (detached) --]
    	  \_pred │ []
    	[inst]   │ */path/to/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException<137>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/236
+   	 \_args  │ [/path/to/obj][MTronException<137>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/1988
 mtron> @/path/to/obj              [-- real obj at uri (attached) --]
 ==>fail::[apply failure:
    	[lhs]    │ noobj
@@ -245,7 +245,7 @@ mtron> @/path/to/obj              [-- real obj at uri (attached) --]
    	  \_pred │ []
    	[inst]   │ at?rng=B{*}&dom=A{?}(/path/to/obj){<j>}@<0>
    	 \_dom   │ A{?}::T
-   	 \_args  │ [/path/to/obj][MTronException<137>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/240
+   	 \_args  │ [/path/to/obj][MTronException<137>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/1992
 mtron> *local:software/           [-- read with trailing
        *</path/to/obj>            [-- angle-bracket handles special chars --]
 ==>fail::[apply failure:
@@ -254,7 +254,7 @@ mtron> *local:software/           [-- read with trailing
    	  \_pred │ []
    	[inst]   │ */path/to/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException<137>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/244
+   	 \_args  │ [/path/to/obj][MTronException<137>:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/1996
 ```
 Wildcards:
 ```mtron
@@ -265,7 +265,7 @@ mtron> */path/+/obj               [-- + matches one segment --]
    	  \_pred │ []
    	[inst]   │ */path/+/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/obj][MTronException<137>:no active space supports pattern /path/+/obj]][no active space supports pattern /path/+/obj]@/sys/fail/248
+   	 \_args  │ [/path/+/obj][MTronException<137>:no active space supports pattern /path/+/obj]][no active space supports pattern /path/+/obj]@/sys/fail/2000
 mtron> */path/+/+                 [-- ++, children at depth 2 --]
 ==>fail::[apply failure:
    	[lhs]    │ noobj
@@ -273,7 +273,7 @@ mtron> */path/+/+                 [-- ++, children at depth 2 --]
    	  \_pred │ []
    	[inst]   │ */path/+/+
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/+][MTronException<137>:no active space supports pattern /path/+/+]][no active space supports pattern /path/+/+]@/sys/fail/252
+   	 \_args  │ [/path/+/+][MTronException<137>:no active space supports pattern /path/+/+]][no active space supports pattern /path/+/+]@/sys/fail/2004
 mtron> */path/#                   [-- [-- matches all remaining segments (recursive) --] --]
 ==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at '--]'
 ```
@@ -286,7 +286,7 @@ mtron> http://abc:123/a/b/c.>>scheme        [-- http --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&dom=uri(scheme){<j>}@<1>
    	 \_dom   │ uri::T
-   	 \_args  │ [scheme][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/scheme]][no active space supports pattern http://abc:123/a/b/c/scheme]@/sys/fail/282
+   	 \_args  │ [scheme][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/scheme]][no active space supports pattern http://abc:123/a/b/c/scheme]@/sys/fail/2034
 mtron> http://abc:123/a/b/c.>>host          [-- abc --]
 ==>fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -294,7 +294,7 @@ mtron> http://abc:123/a/b/c.>>host          [-- abc --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&dom=uri(host){<j>}@<1>
    	 \_dom   │ uri::T
-   	 \_args  │ [host][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/host]][no active space supports pattern http://abc:123/a/b/c/host]@/sys/fail/310
+   	 \_args  │ [host][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/host]][no active space supports pattern http://abc:123/a/b/c/host]@/sys/fail/2062
 mtron> http://abc:123/a/b/c.>>port          [-- 123 (noobj if no port) --]
 ==>fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -302,7 +302,7 @@ mtron> http://abc:123/a/b/c.>>port          [-- 123 (noobj if no port) --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&dom=uri(port){<j>}@<1>
    	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/port]][no active space supports pattern http://abc:123/a/b/c/port]@/sys/fail/338
+   	 \_args  │ [port][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/port]][no active space supports pattern http://abc:123/a/b/c/port]@/sys/fail/2090
 mtron> http://abc:123/a/b/c.>>authority     [-- abc:123 --]
 ==>fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -310,7 +310,7 @@ mtron> http://abc:123/a/b/c.>>authority     [-- abc:123 --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&dom=uri(authority){<j>}@<1>
    	 \_dom   │ uri::T
-   	 \_args  │ [authority][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/authority]][no active space supports pattern http://abc:123/a/b/c/authority]@/sys/fail/366
+   	 \_args  │ [authority][MTronException<137>:no active space supports pattern http://abc:123/a/b/c/authority]][no active space supports pattern http://abc:123/a/b/c/authority]@/sys/fail/2118
 mtron> http://abc:123/a/b/c.>>{schema,path} [-- {http,/a/b/c} --]
 mtron> /a/b/c>>0                            [-- a --]
 ==>/a/b/c
@@ -542,6 +542,9 @@ mtron> [1,2]@a >>= [_,+4]                      [-- [1,6]@a  (second element +4) 
 mtron> [a=>1,b=>2] >>= [b=>none]               [-- [a=>1]  (remove field b) --]
 ==>[a=>1]
 mtron> @<people/+>.>>= [name=>"Micky Mouse"]   [-- wildcard update --]
+==>[name=>'Micky Mouse',role=>architect]
+==>[name=>'Micky Mouse',role=>developer]
+==>[name=>'Micky Mouse',role=>oracle]
 ```
 `@` means "anchor the write-back to the VID" (persist).  `*` means "anonymous copy" (no write-back):
 ```mtron

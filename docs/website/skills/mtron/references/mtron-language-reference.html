@@ -188,6 +188,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach.html"><img
                             src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
                             alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach_ui.html"><img
+                            src="../../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                            alt="ui"/>/m/mach/ui</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math.html"><img
                             src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
@@ -202,6 +205,9 @@
                             alt="vec"/>/m/vec</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_web.html"><img
                             src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_ide.html"><img
+                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                 </ul>
             </li>
@@ -574,7 +580,7 @@ mtron&gt; 'ab3cd'.regex('\d{2}')        [-- [,]  (no match — empty pair) --]
    	  \_pred │ []
    	[inst]   │ */path/to/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/236
+   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/1988
 mtron&gt; @/path/to/obj              [-- real obj at uri (attached) --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
@@ -582,7 +588,7 @@ mtron&gt; @/path/to/obj              [-- real obj at uri (attached) --]
    	  \_pred │ []
    	[inst]   │ at?rng=B{*}&amp;dom=A{?}(/path/to/obj){&lt;j&gt;}@&lt;0&gt;
    	 \_dom   │ A{?}::T
-   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/240
+   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/1992
 mtron&gt; *local:software/           [-- read with trailing
        *&lt;/path/to/obj&gt;            [-- angle-bracket handles special chars --]
 ==&gt;fail::[apply failure:
@@ -591,7 +597,7 @@ mtron&gt; *local:software/           [-- read with trailing
    	  \_pred │ []
    	[inst]   │ */path/to/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/244
+   	 \_args  │ [/path/to/obj][MTronException&lt;137&gt;:no active space supports pattern /path/to/obj]][no active space supports pattern /path/to/obj]@/sys/fail/1996
 </code></pre>
 <p>Wildcards:</p>
 <pre><code class="language-mtron">mtron&gt; */path/+/obj               [-- + matches one segment --]
@@ -601,7 +607,7 @@ mtron&gt; *local:software/           [-- read with trailing
    	  \_pred │ []
    	[inst]   │ */path/+/obj
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/obj][MTronException&lt;137&gt;:no active space supports pattern /path/+/obj]][no active space supports pattern /path/+/obj]@/sys/fail/248
+   	 \_args  │ [/path/+/obj][MTronException&lt;137&gt;:no active space supports pattern /path/+/obj]][no active space supports pattern /path/+/obj]@/sys/fail/2000
 mtron&gt; */path/+/+                 [-- ++, children at depth 2 --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ noobj
@@ -609,7 +615,7 @@ mtron&gt; */path/+/+                 [-- ++, children at depth 2 --]
    	  \_pred │ []
    	[inst]   │ */path/+/+
    	 \_dom   │ #{?}::T
-   	 \_args  │ [/path/+/+][MTronException&lt;137&gt;:no active space supports pattern /path/+/+]][no active space supports pattern /path/+/+]@/sys/fail/252
+   	 \_args  │ [/path/+/+][MTronException&lt;137&gt;:no active space supports pattern /path/+/+]][no active space supports pattern /path/+/+]@/sys/fail/2004
 mtron&gt; */path/#                   [-- [-- matches all remaining segments (recursive) --] --]
 ==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '--]'
 </code></pre>
@@ -621,7 +627,7 @@ mtron&gt; */path/#                   [-- [-- matches all remaining segments (rec
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(scheme){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [scheme][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/scheme]][no active space supports pattern http://abc:123/a/b/c/scheme]@/sys/fail/282
+   	 \_args  │ [scheme][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/scheme]][no active space supports pattern http://abc:123/a/b/c/scheme]@/sys/fail/2034
 mtron&gt; http://abc:123/a/b/c.&gt;&gt;host          [-- abc --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -629,7 +635,7 @@ mtron&gt; http://abc:123/a/b/c.&gt;&gt;host          [-- abc --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(host){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [host][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/host]][no active space supports pattern http://abc:123/a/b/c/host]@/sys/fail/310
+   	 \_args  │ [host][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/host]][no active space supports pattern http://abc:123/a/b/c/host]@/sys/fail/2062
 mtron&gt; http://abc:123/a/b/c.&gt;&gt;port          [-- 123 (noobj if no port) --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -637,7 +643,7 @@ mtron&gt; http://abc:123/a/b/c.&gt;&gt;port          [-- 123 (noobj if no port) 
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(port){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [port][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/port]][no active space supports pattern http://abc:123/a/b/c/port]@/sys/fail/338
+   	 \_args  │ [port][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/port]][no active space supports pattern http://abc:123/a/b/c/port]@/sys/fail/2090
 mtron&gt; http://abc:123/a/b/c.&gt;&gt;authority     [-- abc:123 --]
 ==&gt;fail::[apply failure:
    	[lhs]    │ http://abc:123/a/b/c
@@ -645,7 +651,7 @@ mtron&gt; http://abc:123/a/b/c.&gt;&gt;authority     [-- abc:123 --]
    	  \_pred │ []
    	[inst]   │ rshift?rng=#{*}&amp;dom=uri(authority){&lt;j&gt;}@&lt;1&gt;
    	 \_dom   │ uri::T
-   	 \_args  │ [authority][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/authority]][no active space supports pattern http://abc:123/a/b/c/authority]@/sys/fail/366
+   	 \_args  │ [authority][MTronException&lt;137&gt;:no active space supports pattern http://abc:123/a/b/c/authority]][no active space supports pattern http://abc:123/a/b/c/authority]@/sys/fail/2118
 mtron&gt; http://abc:123/a/b/c.&gt;&gt;{schema,path} [-- {http,/a/b/c} --]
 mtron&gt; /a/b/c&gt;&gt;0                            [-- a --]
 ==&gt;/a/b/c
@@ -840,6 +846,9 @@ mtron&gt; [1,2]@a &gt;&gt;= [_,+4]                      [-- [1,6]@a  (second ele
 mtron&gt; [a=&gt;1,b=&gt;2] &gt;&gt;= [b=&gt;none]               [-- [a=&gt;1]  (remove field b) --]
 ==&gt;[a=&gt;1]
 mtron&gt; @&lt;people/+&gt;.&gt;&gt;= [name=&gt;&quot;Micky Mouse&quot;]   [-- wildcard update --]
+==&gt;[name=&gt;'Micky Mouse',role=&gt;architect]
+==&gt;[name=&gt;'Micky Mouse',role=&gt;developer]
+==&gt;[name=&gt;'Micky Mouse',role=&gt;oracle]
 </code></pre>
 <p><code>@</code> means &quot;anchor the write-back to the VID&quot; (persist).  <code>*</code> means &quot;anonymous copy&quot; (no write-back):</p>
 <pre><code class="language-mtron">mtron&gt; @a/b/c&gt;&gt;= +10      [-- modifies *a/b/c and writes back --]

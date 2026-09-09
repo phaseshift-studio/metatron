@@ -188,6 +188,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="./instset/m_mach.html"><img
                             src="./images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
                             alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="./instset/m_mach_ui.html"><img
+                            src="./images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                            alt="ui"/>/m/mach/ui</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="./instset/m_math.html"><img
                             src="./images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
@@ -1074,11 +1077,11 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }     ​1​
-mtron&gt;  10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }     ​2​
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }     ​1​
+mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }     ​2​
 ==&gt;10
-mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }     ​3​
-mtron&gt;  10.(){ is(and(gte(*min),lte(*max))) }     ​4​
+mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }     ​3​
+mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }     ​4​
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))     ​5​
 ==&gt;10</code></pre>
 </div>
@@ -1158,9 +1161,9 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)     ​1​</code></pre>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by=&gt;is(neq(0)).else(print('error').map(1))) { mod(*by).eq(0) }
 ==&gt;is_divisble?rng=bool&amp;dom=int(by=&gt;is(neq(0)).else(print('error').map(1))){mod(*by).eq(0)}
-mtron&gt;  10.is_divisible(2)
+mtron&gt; 10.is_divisible(2)
 ==&gt;true
-mtron&gt;  10.is_divisible('abc')
+mtron&gt; 10.is_divisible('abc')
 ==&gt;fail::[apply failure:
    	[lhs]    │ 10
    	 \_type  │ /m/int
@@ -1221,7 +1224,7 @@ This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​1​
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​1​
 ==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]]@/sys/fail/448
 mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​2​
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
@@ -1562,11 +1565,11 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  import(/m/web)
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/web)
 ...
-mtron&gt;  import(/m/llm)
+mtron&gt; import(/m/llm)
 ...
-mtron&gt;  import(/m/math)
+mtron&gt; import(/m/math)
 ...
 mtron&gt; httpspace::[host     =&gt; http://localhost:8777,
                    q        =&gt; [mimeq::[=&gt;]],
@@ -1935,70 +1938,70 @@ Over the remainder of this documentation, each of the components of Dr.Stynx&#82
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">agent::[
-  name     =&gt; 'dr.stynx',
-  desc     =&gt; 'the agent dr.stynx is here to be of use in the metatron',
-  root     =&gt; !*boot/args/internal/agent_home,
-  feature  =&gt; [
-    message_feature::::[on_agent_ctor =&gt; inst(a=&gt;agent::T){ *&lt;/usr/dr/session/1&gt;.else(
-                                           session::[agent     =&gt; !*boot/args/internal/agent_home,
-                                                     user      =&gt; !*boot/args/internal/user_home,
-                                                     name      =&gt; 'general chat',
-                                                     algorithm =&gt; [name=&gt;&lt;message_window&gt;, max=&gt;20]]
-                                                           ==[_=&gt;_].to(/usr/dr/session/1)) },
-                        session       =&gt; /usr/dr/session/1],
-    chat_feature:::::::[model         =&gt; !(*&lt;/usr/dr/model&gt;.else(model::[provider     =&gt; ollama,
-                                                                         protocol     =&gt; ollama,
-                                                                         host         =&gt; &lt;http://ginger.local:11434&gt;,
-                                                                         llm          =&gt; &lt;qwen3.8:27b&gt;])),
-                        response      =&gt; [complete =&gt; -&lt;modal::[title =&gt; '{{r}}agent response{{b}}',
-                                                                body  =&gt; "{{y}}${&gt;&gt;chat}",
-                                                                style =&gt; style::[border    =&gt;continuous,
-                                                                                 background=&gt;"{{[k]}}",
-                                                                                 foreground=&gt;"{{b}}",
-                                                                                 zIndex    =&gt; 100]].display()],
-                        root          =&gt; /usr/dr/chat_result],
-    think_feature::::::[on_agent_ctor =&gt; inst(a=&gt;agent::T){
-                                            accordion::[title =&gt; "thoughts", 
-                                                        body  =&gt; "",
-                                                        style =&gt; style::[anchor=&gt;top_left,left=&gt;1,top=&gt;3,height=&gt;10,width=&gt;80]]@&lt;think_widget&gt; },
-                       on_before_chat =&gt; inst(){ @&lt;think_widget&gt; &gt;&gt;= [body=&gt;""] },
-                       root           =&gt; /usr/dr/message,
-                       think          =&gt; [to =&gt; inst(a=&gt;str::T){ @&lt;think_widget&gt;&gt;&gt;=[body=&gt;+*a].display() }]],
-    compaction_feature::[model        =&gt; !*/usr/dr/model,
-                         threshold    =&gt; 0.8],
-    loop_feature:::::::[max_loop      =&gt; 100,
-                        root          =&gt; /usr/dr/loop],
-    comment_feature::::[              =&gt; ],
-    skill_feature::::::[skill         =&gt; [ &lt;mfs:.metatron/skills/metatron&gt;, 
-                                           &lt;mfs:.metatron/skills/mtron&gt;,
-                                           &lt;mfs:.metatron/skills/ide&gt;]],
-    concept_feature::::[root          =&gt; /usr/dr/concept,
-                        extractor     =&gt; lucene],
-    audit_feature::::::[on_agent_ctor =&gt; inst(a=&gt;agent::T) {   
-                                           accordion::[title  =&gt; "audit",
-                                                       body   =&gt; "",
-                                                       style  =&gt; style::[anchor=&gt;bottom_right,width=&gt;65,height=&gt;30,
-                                                                         left=&gt;-2,top=&gt;8,foreground =&gt;"{{y}}"]]@&lt;audit_widget&gt; },
-                        to            =&gt; inst(a=&gt;str::T){ @&lt;audit_widget&gt;&gt;&gt;=[body=&gt;+*a].display() },
-                        root          =&gt; /usr/dr/audit],
-    bash_feature:::::::[reject        =&gt; ["\brm\b"]],
-    summarize_feature::[root          =&gt; /usr/dr],
-    embed_feature::::::[root          =&gt; embed:chat_result,
-                        model         =&gt; model::[provider     =&gt; ollama,
-                                                 protocol     =&gt; ollama,
-                                                 host         =&gt; &lt;http://ginger.local:11434&gt;,
-                                                 llm          =&gt; &lt;qwen3-embedding:4b&gt;]],
-    system_feature:::::[              =&gt; ],
-    tool_feature:::::::[tool          =&gt; [!*gremlin,
-                                          !*sql,
-                                          !*codegraph,
-                                          mcp_client::[host=&gt;&lt;http://localhost:8777/mcp&gt;],
-                                          forget?noobj{0}&lt;=noobj{0}(){ /usr/dr/message/+ -&gt; noobj }]],
-    cost_feature:::::::[root          =&gt; /usr/dr/cost,
-                        to            =&gt; inst(in_cost=&gt;real::T,out_cost=&gt;real::T,total_cost=&gt;real::T){ 
-                                           /usr/marko/console/status("cost total: ${*2} [in: ${*0} out: ${*1}]") },
-                        rate          =&gt; [in  =&gt; usd_currency::0.435,
-                                          out =&gt; usd_currency::0.870]]]]@&lt;dr&gt;; </code></pre>
+ name     =&gt; 'dr.stynx',
+ desc     =&gt; 'the agent dr.stynx is here to be of use in the metatron',
+ root     =&gt; !*boot/args/internal/agent_home,
+ feature  =&gt; [
+  message_feature::::[on_agent_ctor =&gt; inst(a=&gt;agent::T){ *&lt;/usr/dr/session/1&gt;.else(
+                                         session::[agent     =&gt; !*boot/args/internal/agent_home,
+                                                   user      =&gt; !*boot/args/internal/user_home,
+                                                   name      =&gt; 'general chat',
+                                                   algorithm =&gt; [name=&gt;&lt;message_window&gt;, max=&gt;20]]
+                                                         ==[_=&gt;_].to(/usr/dr/session/1)) },
+                      session       =&gt; /usr/dr/session/1],
+  chat_feature:::::::[model         =&gt; !(*&lt;/usr/dr/model&gt;.else(model::[provider     =&gt; ollama,
+                                                                       protocol     =&gt; ollama,
+                                                                       host         =&gt; &lt;http://ginger.local:11434&gt;,
+                                                                       llm          =&gt; &lt;qwen3.8:27b&gt;])),
+                      response      =&gt; [complete =&gt; print(-&lt;modal_widget::[title =&gt; '{{r}}agent response{{b}}',
+                                                                     body  =&gt; "{{y}}${&gt;&gt;chat}",
+                                                                     style =&gt; style::[border    =&gt;continuous,
+                                                                                      background=&gt;"{{[k]}}",
+                                                                                      foreground=&gt;"{{b}}",
+                                                                                      zIndex    =&gt; 100]].as?str&lt;=widget(str::T))],
+                      root          =&gt; /usr/dr/chat_result],
+  think_feature::::::[on_agent_ctor =&gt; inst(a=&gt;agent::T){
+                                          accordion_widget::[title =&gt; "thoughts", 
+                                                             body  =&gt; "",
+                                                             style =&gt; style::[anchor=&gt;top_right,right=&gt;10,top=&gt;3,height=&gt;10,width=&gt;80]]@&lt;think_widget&gt; },
+                     on_before_chat =&gt; inst(){ @&lt;think_widget&gt; &gt;&gt;= [body=&gt;""] },
+                     root           =&gt; /usr/dr/message,
+                     think          =&gt; [to =&gt; inst(a=&gt;str::T){ @&lt;think_widget&gt;&gt;&gt;=[body=&gt;+*a].display() }]],
+  compaction_feature::[model        =&gt; !*/usr/dr/model,
+                       threshold    =&gt; 0.8],
+  loop_feature:::::::[max_loop      =&gt; 100,
+                      root          =&gt; /usr/dr/loop],
+  comment_feature::::[              =&gt; ],
+  skill_feature::::::[skill         =&gt; [ &lt;mfs:.metatron/skills/metatron&gt;, 
+                                         &lt;mfs:.metatron/skills/mtron&gt;,
+                                         &lt;mfs:.metatron/skills/ide&gt;]],
+  concept_feature::::[root          =&gt; /usr/dr/concept,
+                      extractor     =&gt; lucene],
+  audit_feature::::::[on_agent_ctor =&gt; inst(a=&gt;agent::T) {   
+                                         accordion_widget::[title  =&gt; "audit",
+                                                            body   =&gt; "",
+                                                            style  =&gt; style::[anchor=&gt;bottom_right,width=&gt;65,height=&gt;30,
+                                                                              left=&gt;-2,top=&gt;8,foreground =&gt;"{{y}}"]]@&lt;audit_widget&gt; },
+                      to            =&gt; inst(a=&gt;str::T){ @&lt;audit_widget&gt;&gt;&gt;=[body=&gt;+*a].display() },
+                      root          =&gt; /usr/dr/audit],
+  bash_feature:::::::[reject        =&gt; ["\brm\b"]],
+  summarize_feature::[root          =&gt; /usr/dr],
+  embed_feature::::::[root          =&gt; embed:chat_result,
+                      model         =&gt; model::[provider     =&gt; ollama,
+                                               protocol     =&gt; ollama,
+                                               host         =&gt; &lt;http://ginger.local:11434&gt;,
+                                               llm          =&gt; &lt;qwen3-embedding:4b&gt;]],
+  system_feature:::::[              =&gt; ],
+  tool_feature:::::::[tool          =&gt; [!*gremlin,
+                                        !*sql,
+                                        !*codegraph,
+                                        mcp_client::[host=&gt;&lt;http://localhost:8777/mcp&gt;],
+                                        forget?noobj{0}&lt;=noobj{0}(){ /usr/dr/message/+ -&gt; noobj }]],
+  cost_feature:::::::[root          =&gt; /usr/dr/cost,
+                      to            =&gt; inst(in_cost=&gt;real::T,out_cost=&gt;real::T,total_cost=&gt;real::T){ 
+                                         /usr/marko/console/status("cost total: ${*2} [in: ${*0} out: ${*1}]") },
+                      rate          =&gt; [in  =&gt; usd_currency::0.435,
+                                        out =&gt; usd_currency::0.870]]]]@&lt;dr&gt;; </code></pre>
 </div>
 </div>
 <h4 id="sec-features" class="discrete">Features</h4>
@@ -2116,7 +2119,7 @@ And since, metatron is able to map common data formats to `obj`, its possible to
 
 [source,mtron]
 ----
-mtron>  *<fs:skills/mtron/SKILL.md>
+mtron> *<fs:skills/mtron/SKILL.md>
 ==>markdown::"""---
    name: mtron
    description: understanding the language used to control the metatron
@@ -2522,7 +2525,7 @@ Note the use of the tools provided to the agent.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  1.plus(b)     ​1​
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1.plus(b)     ​1​
 ==&gt;fail::[apply failure:
    	[lhs]    │ 1
    	 \_type  │ /m/int
@@ -2719,13 +2722,13 @@ mtron&gt; nat::4     ​2​
 ==&gt;nat::4
 mtron&gt; int::-4     ​3​
 ==&gt;-4
-mtron&gt;  nat::-4     ​4​
+mtron&gt; nat::-4     ​4​
 ==&gt;ERROR: -4 is not a int::T[is(gt(0))]@/m/math/nat
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;int::T]]@chicken     ​5​
 ==&gt;animal::T[?[name=&gt;str::T,age=&gt;int::T]]@chicken
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​6​
 ==&gt;chicken::[name=&gt;'snowbutt',age=&gt;7]
-mtron&gt;  chicken::[name=&gt;'punky',age=&gt;'four']     ​7​
+mtron&gt; chicken::[name=&gt;'punky',age=&gt;'four']     ​7​
 ==&gt;ERROR: obj does not match chicken::T
   [name=&gt;'punky',age=&gt;'four']
       X=&gt;
@@ -2797,7 +2800,7 @@ mtron&gt; nat::T[?&lt;120]@age     ​2​
 ==&gt;nat::T[is(lt(120))]@age
 mtron&gt; 21.as(int::T).as(nat::T).as(age::T)     ​3​
 ==&gt;age::21
-mtron&gt;  -21.as(int::T).as(nat::T).as(age::T)     ​4​
+mtron&gt; -21.as(int::T).as(nat::T).as(age::T)     ​4​
 ==&gt;fail::[apply failure:
    	[lhs]    │ -21
    	 \_type  │ /m/int
@@ -2805,7 +2808,7 @@ mtron&gt;  -21.as(int::T).as(nat::T).as(age::T)     ​4​
    	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
    	 \_dom   │ int::T
    	 \_args  │ [nat::T][MTronException&lt;137&gt;:-21 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-21 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/1402
-mtron&gt;  121.as(int::T).as(nat::T).as(age::T)     ​5​
+mtron&gt; 121.as(int::T).as(nat::T).as(age::T)     ​5​
 ==&gt;fail::[apply failure:
    	[lhs]    │ nat::121
    	 \_type  │ /m/math/nat
@@ -2819,7 +2822,7 @@ mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;age::T]]@chicken     ​6​
      age=&gt;age::T]]@chicken
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​7​
 ==&gt;chicken::[name=&gt;'snowbutt',age=&gt;7]
-mtron&gt;  chicken::[name=&gt;'punky',age=&gt;444]     ​8​
+mtron&gt; chicken::[name=&gt;'punky',age=&gt;444]     ​8​
 ==&gt;ERROR: obj does not match chicken::T
   [name=&gt;'punky',age=&gt;444]
       X=&gt;
@@ -2951,9 +2954,9 @@ mtron&gt; being::T@chicken     ​3​
 ==&gt;animal::T[?[
      name=&gt;str::T,
      age=&gt;age::T]]@chicken
-mtron&gt;  human::[name=&gt;'marko',age=&gt;29].as(chicken::T)     ​4​
+mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T)     ​4​
 ==&gt;chicken::[name=&gt;'marko',age=&gt;29]
-mtron&gt;  chicken::[name=&gt;'snowbutt',age=&gt;7].as(human::T)     ​5​
+mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7].as(human::T)     ​5​
 ==&gt;fail::[apply failure:
    	[lhs]    │ chicken::[name=&gt;'snowbutt',age=&gt;7]
    	 \_type  │ chicken
@@ -3085,7 +3088,7 @@ mtron&gt; nat::-2     ​4​
 ==&gt;ERROR: -2 is not a int::T[is(gt(0))]@/m/math/nat
 mtron&gt; 2.as(nat::T)     ​5​
 ==&gt;nat::2
-mtron&gt;  -2.as(nat::T)     ​6​
+mtron&gt; -2.as(nat::T)     ​6​
 ==&gt;fail::[apply failure:
    	[lhs]    │ -2
    	 \_type  │ /m/int
@@ -3093,7 +3096,7 @@ mtron&gt;  -2.as(nat::T)     ​6​
    	[inst]   │ as?rng=nat&amp;dom=int(nat::T){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
    	 \_dom   │ int::T
    	 \_args  │ [nat::T][MTronException&lt;137&gt;:-2 is not a int::T[is(gt(0))]@/m/math/nat [structural]]][-2 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/1422
-mtron&gt;  nat::2 * -1     ​7​
+mtron&gt; nat::2 * -1     ​7​
 ==&gt;fail::[apply failure:
    	[lhs]    │ nat::2
    	 \_type  │ /m/math/nat
@@ -3127,7 +3130,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{b}}M{{r}}E{{r}}T{{b}}A{{g}}T{{c}}r{{y}}o{{g}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{c}}m{{c}}E{{b}}T{{c}}a{{g}}T{{g}}r{{b}}o{{r}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3775,9 +3778,9 @@ This constraint is a refinement of <code>int</code> (a well defined subset).</p>
 ==&gt;int::T[is(gt(0))]@/m/math/nat
 mtron&gt; nat::10
 ==&gt;nat::10
-mtron&gt;  nat::-10
+mtron&gt; nat::-10
 ==&gt;ERROR: -10 is not a int::T[is(gt(0))]@/m/math/nat
-mtron&gt;  int::-10.as(nat::T)
+mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[apply failure:
    	[lhs]    │ -10
    	 \_type  │ /m/int
@@ -3882,9 +3885,9 @@ In order to constrain an <code>int</code> to this definition, a <strong>refineme
 ==&gt;int::T[is(gt(0))]@/m/math/nat
 mtron&gt; nat::10
 ==&gt;nat::10
-mtron&gt;  nat::-10
+mtron&gt; nat::-10
 ==&gt;ERROR: -10 is not a int::T[is(gt(0))]@/m/math/nat
-mtron&gt;  int::-10.as(nat::T)
+mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[apply failure:
    	[lhs]    │ -10
    	 \_type  │ /m/int
@@ -3918,9 +3921,9 @@ mtron&gt; int::T
 ==&gt;ERROR: 125 is not a int::T[is(lt(120))]@/m/math/nat
 mtron&gt; age::125
 ==&gt;ERROR: 125 is not a int::T[is(lt(120))]@/m/math/nat
-mtron&gt;  nat::125.as(age::T)
+mtron&gt; nat::125.as(age::T)
 ==&gt;ERROR: 125 is not a int::T[is(lt(120))]@/m/math/nat
-mtron&gt;  125.as(nat::T).as(age::T)
+mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[apply failure:
    	[lhs]    │ 125
    	 \_type  │ /m/int
@@ -7073,23 +7076,22 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355856       6828   6349028   1% /run'
+==&gt;'tmpfs                    6355856       6680   6349176   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2         959786032  511357424 399600400  57% /'
-==&gt;'tmpfs                   31779268     138192  31641076   1% /dev/shm'
+==&gt;'/dev/nvme1n1p2         959786032  512238616 398719208  57% /'
+==&gt;'tmpfs                   31779268     181896  31597372   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779268          0  31779268   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        248   6355604   1% /run/user/1000'
+==&gt;'tmpfs                    6355852        256   6355596   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1411879148 509329396  74% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1412299784 508908760  74% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
 ==&gt;boot
 ==&gt;conf
 ==&gt;'CONTRIBUTING.md'
-==&gt;dev
 ==&gt;dist
 ==&gt;docs
 ==&gt;dsh-plugins
@@ -7107,7 +7109,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;591</code></pre>
+==&gt;580</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7319,7 +7321,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.09:6/23/05/43/504?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.09:8/18/22/10/008?tz=-0600&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -9312,7 +9314,7 @@ mtron&gt; */sys/thread/b.stop()
      code=&gt;at(ab).plus('B'),
      loop=&gt;second::1.0000,
      state=&gt;pause]@/sys/thread/b,
-    result=&gt;'BBAABBAABBAABAABAABAABABBABABAB'@ab]@/sys/thread/b
+    result=&gt;'BBAABBAABBAABBAABBABABBABBABBABAB'@ab]@/sys/thread/b
 mtron&gt; */sys/thread/a.stop()
 ==&gt;virtual::[
     code=&gt;at(ab).plus('A'),
@@ -9324,9 +9326,9 @@ mtron&gt; */sys/thread/a.stop()
      loop=&gt;second::1.0000,
      yield=&gt;!*/sys/thread/b]@/sys/thread/a,
     state=&gt;stop,
-    result=&gt;'BBAABBAABBAABAABAABAABABBABABABA'@ab]@/sys/thread/a
+    result=&gt;'BBAABBAABBAABBAABBABABBABBABBABABA'@ab]@/sys/thread/a
 mtron&gt; *ab
-==&gt;'BBAABBAABBAABAABAABAABABBABABABABAB'</code></pre>
+==&gt;'BBAABBAABBAABBAABBABABBABBABBABABABAB'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9450,9 +9452,9 @@ mtron&gt; */sys/thread/main?docq
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  import(/m/web)
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/web)
 ...
-mtron&gt;  import(/m/llm)
+mtron&gt; import(/m/llm)
 ...
 mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
                  pattern      =&gt; &lt;lmstudio:#&gt;,
@@ -9685,7 +9687,6 @@ mtron&gt; *&lt;http://localhost:11434/api/tags&gt;.as(rec::T)     ​4​
     size=&gt;3389983735,
     digest=&gt;&lt;2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd&gt;,
     details=&gt;[
-     parent_model=&gt;&lt;&gt;,
      format=&gt;gguf,
      family=&gt;qwen35,
      families=&gt;[qwen35],
@@ -9730,7 +9731,6 @@ mtron&gt; *&lt;http://localhost:11434/api/tags&gt;.as(rec::T)     ​4​
     size=&gt;19851349898,
     digest=&gt;b92d6a0bd47ee79114298de0177bf920c05a706d12633950b3936778492bef41,
     details=&gt;[
-     parent_model=&gt;&lt;&gt;,
      format=&gt;gguf,
      family=&gt;qwen2,
      families=&gt;[qwen2],
@@ -9745,7 +9745,6 @@ mtron&gt; *&lt;http://localhost:11434/api/tags&gt;.as(rec::T)     ​4​
     size=&gt;8988112209,
     digest=&gt;c333b7232bdb521236694ffbb5f5a6b11cc45d98e9142c73123b670fca400b09,
     details=&gt;[
-     parent_model=&gt;&lt;&gt;,
      format=&gt;gguf,
      family=&gt;qwen2,
      families=&gt;[qwen2],
@@ -9760,7 +9759,6 @@ mtron&gt; *&lt;http://localhost:11434/api/tags&gt;.as(rec::T)     ​4​
     size=&gt;4683087561,
     digest=&gt;dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364,
     details=&gt;[
-     parent_model=&gt;&lt;&gt;,
      format=&gt;gguf,
      family=&gt;qwen2,
      families=&gt;[qwen2],
@@ -9778,6 +9776,10 @@ mtron&gt; *&lt;http://localhost:11434/api/tags&gt;.as(rec::T)     ​4​
      parent_model=&gt;&lt;/Users/ollama/.ollama/models/blobs/sha256-3fcd3febec8b3fd64435204db75bf0dd73b91e8d0661e0331acfe7e7c3120b85&gt;,
      format=&gt;gguf,
      family=&gt;qwen3,
+     families=&gt;[qwen3],
+     parameter_size=&gt;&lt;7.6B&gt;,
+     quantization_level=&gt;Q4_K_M,
+     context_length=&gt;40960,
    ...</code></pre>
 </div>
 </div>
@@ -10203,7 +10205,7 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schem
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  farm:animals/1 -&gt; 'a chicken named trill'     ​1​
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; farm:animals/1 -&gt; 'a chicken named trill'     ​1​
 ==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T]@/sys/fail/58
 mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​2​
 ==&gt;chicken::[name=&gt;'trill',age=&gt;7]
@@ -10470,11 +10472,9 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
 mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
 ==&gt;'grant'
-==&gt;'alex'
 ==&gt;'marko'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
-==&gt;3
 ==&gt;2</code></pre>
 </div>
 </div>
@@ -10724,11 +10724,7 @@ whose values happen to match <code>person.name</code> — the link is purely alg
     route=&gt;[lite:=&gt;&lt;&gt;],
     schema=&gt;instset::[
      pattern=&gt;/sys/space/lite/instset/#,
-     type=&gt;[
-      award::T,
-      person::T,
-      score::T,
-      venue::T],
+     type=&gt;[,],
      q=&gt;[docq::[
     pattern=&gt;docq,
     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
@@ -10786,11 +10782,7 @@ Unlike a matching column value, the pointer encodes the full address of the link
     route=&gt;[lite:=&gt;&lt;&gt;],
     schema=&gt;instset::[
      pattern=&gt;/sys/space/lite/instset/#,
-     type=&gt;[
-      award::T,
-      person::T,
-      score::T,
-      venue::T],
+     type=&gt;[person::T],
      q=&gt;[docq::[
     pattern=&gt;docq,
     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
@@ -10861,10 +10853,8 @@ mtron&gt; @/sys/space/lite &gt;&gt;= [table=&gt;[person,score,award,venue]];    
     schema=&gt;instset::[
      pattern=&gt;/sys/space/lite/instset/#,
      type=&gt;[
-      award::T,
       person::T,
-      score::T,
-      venue::T],
+      score::T],
      q=&gt;[docq::[
     pattern=&gt;docq,
     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),

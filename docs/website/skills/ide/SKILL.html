@@ -188,6 +188,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_mach.html"><img
                             src="../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
                             alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_mach_ui.html"><img
+                            src="../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                            alt="ui"/>/m/mach/ui</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_math.html"><img
                             src="../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
@@ -202,6 +205,9 @@
                             alt="vec"/>/m/vec</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_web.html"><img
                             src="../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_ide.html"><img
+                            src="../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                 </ul>
             </li>
@@ -381,30 +387,37 @@
 mcp server tool <code>eval</code> (<code>m_inst_eval_mtron</code>).</p>
 <p>An agent edits a project's source by <strong>pulling</strong> a file into the code space, <strong>editing</strong> the rec-encoded member's, and
 letting a <strong>subscription</strong> on <code>code/#</code> write back to disk and <strong>log</strong> a <code>saved</code> event.</p>
-<h3>setup: build the infrastructure</h3>
+<h3>building project infrastructure</h3>
 <p>First, load necessary instruction sets. Second, open three spaces:</p>
 <ol>
 <li>a location to store metatron encoding the source code (<code>memspace</code>).</li>
 <li>access to the file system where source code is stored (<code>fsspace</code>).</li>
 <li>an optional space for storing mutation event logs (<code>tblespace</code>).</li>
 </ol>
-<pre><code class="language-mtron">mtron&gt;  import(/m/ide,ide)
+<p><strong>NOTE</strong>: these steps are only necessary if the <code>project::T</code> doesn't already exist. As an agent, typically, the project
+uri will be provided to you and thus, this section can be skipped.</p>
+<pre><code class="language-mtron">mtron&gt; import(/m/ide,ide)
 ==&gt;instset::[
     pattern=&gt;/m/ide/#,
     q=&gt;[docq::[
     pattern=&gt;docq,
     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
    ...
-mtron&gt;  import(/m/web,web)
+mtron&gt; import(/m/web,web)
 ==&gt;instset::[
     pattern=&gt;/m/web/#,
     q=&gt;[docq::[
     pattern=&gt;docq,
     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
    ...
-mtron&gt;  import(/m/math,math)
-...
-mtron&gt;  memspace::[
+mtron&gt; import(/m/math,math)
+==&gt;instset::[
+    pattern=&gt;/m/math/#,
+    q=&gt;[docq::[
+    pattern=&gt;docq,
+    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+   ...
+mtron&gt; memspace::[
          pattern =&gt; &lt;/dev/scratch/#&gt;,
                q =&gt; [mintq::[=&gt;],docq::[=&gt;],subq::[=&gt;],
                      mimeq::[=&gt;], lineq::[=&gt;],lockq::[=&gt;],
@@ -414,39 +427,11 @@ mtron&gt;  memspace::[
     q=&gt;[
      mintq::[
       pattern=&gt;mintq,
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
-     docq::[
-      pattern=&gt;docq,
-      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
-     subq::[
-      pattern=&gt;subq,
-      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      obj=&gt;[,]],
-     mimeq::[
-      pattern=&gt;mimeq,
-      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
-     lineq::[
-      pattern=&gt;lineq,
-      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
-     lockq::[
-      pattern=&gt;lockq,
-      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      obj=&gt;[,]],
-     incrq::[
-      pattern=&gt;incrq,
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]]]@/sys/space/dev/metatron
-mtron&gt;  fsspace::[pattern      =&gt; mfs:#,
+   ...
+mtron&gt; fsspace::[pattern      =&gt; mfs:#,
                   route       =&gt; [mfs:=&gt;&lt;.&gt;]]@/sys/space/fs/mfs
 ==&gt;fsspace::[pattern=&gt;mfs:#,route=&gt;[mfs:=&gt;&lt;&gt;]]@/sys/space/fs/mfs
-mtron&gt;  tblespace::[pattern    =&gt; &lt;/log/scratch/#&gt;,
+mtron&gt; tblespace::[pattern    =&gt; &lt;/log/scratch/#&gt;,
                    host       =&gt; &lt;sqlite:target/log_scratch.sqlite&gt;,
                    driver     =&gt; &lt;org.sqlite.JDBC&gt;,
                    table      =&gt; [,],
@@ -457,31 +442,18 @@ mtron&gt;  tblespace::[pattern    =&gt; &lt;/log/scratch/#&gt;,
     host=&gt;&lt;sqlite:target/log_scratch.sqlite&gt;,
     driver=&gt;&lt;org.sqlite.JDBC&gt;,
     table=&gt;[,],
-    q=&gt;[
-     incrq::[
-      pattern=&gt;incrq,
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
-     subq::[
-      pattern=&gt;subq,
-      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      obj=&gt;[,]],
-     mimeq::[
-      pattern=&gt;mimeq,
-      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
-    route=&gt;[/log/scratch/=&gt;&lt;&gt;]]@/sys/space/log/scratch
+   ...
 </code></pre>
-<h3>encodings</h3>
-<p>A loaded Java file has two encodings:</p>
+<h3>understanding source embeddings</h3>
+<p>A loaded Java file has two embeddings:</p>
 <ul>
-<li><strong>rec encoding</strong> — each member is a rec: <code>kind</code>, <code>name</code>, <code>signature</code>,
+<li><strong>rec embedding</strong> — each member is a rec: <code>kind</code>, <code>name</code>, <code>signature</code>,
 <code>header</code> (up to <code>{</code>), <code>body</code> (<code>{...}</code>), <code>footer</code>, and <code>text</code> = <strong>derived</strong> (header + body + footer).</li>
 <li><strong>uri-graph (<code>idx</code>) encoding</strong> — navigate the source with path syntax:
 <code>*/dev/metatron/idx/memSpace/method/close</code>.</li>
 </ul>
 <p>The pull (<code>src/.../${class}()</code>) returns the class's <strong>rec encoding</strong> (the
-<code>ide:java::T</code> value) and stores it in the <code>code</code> list beside the project root.
+<code>ide:java::T</code> value) and stores it in the <code>code</code> list under the project root.
 <code>ide:index(root)</code> re-projects that code list into <code>root/idx</code>:
 <code>class =&gt; kind =&gt; name =&gt; !@.../code/N/classes/cls/0/members/i/name</code> — <em>anchors</em> pointing into the code space. That
 anchor is the write surface, and it also resolves back through the space to the stored member (the round trip is
@@ -498,7 +470,7 @@ asserted in the acceptance test).</p>
 <tr><td><code>text</code></td><td><strong>derived</strong> -- do not hand-edit</td></tr>
 </tbody>
 </table>
-<h3>writing code in mtron</h3>
+<h3>embedding a project</h3>
 <p>An example Java/Maven3 project is provided with metatron. This project is used for the following examples.</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:src/test/resources/scratch/pom.xml&gt;.
          as(rec::T).
@@ -522,7 +494,7 @@ maven build commands are attached to the <code>project::T</code> for each of acc
     idx=&gt;[=&gt;],
     sub=&gt;[auto_save=&gt;sub::[
     target=&gt;/dev/scratch/code/#,
-    code=&gt;rshift(0).as(rec::T).rshift(path).select([id(),id(),id(),id(),id(),id()]).to(temp).as?rng=uri&amp;dom=lst(uri::T).to(x).*id().update([location=&gt;none]).as(java::T).to(**x.rshift(location).side(split([
+    code=&gt;print('saving...').rshift(0).as(rec::T).rshift(path).select([id(),id(),id(),id(),id(),id()]).to(temp).as?rng=uri&amp;dom=lst(uri::T).to(x).*id().update([location=&gt;none]).as(java::T).to(**x.rshift(location).side(split([
      location=&gt;id(),
      status=&gt;saved,
      time=&gt;!math:datetime_now()]).print('saved ',id(),'\n'))).map(map(/dev/scratch/src).mult(*temp.reverse().merge().take(1)))]]]@/dev/scratch
@@ -542,7 +514,7 @@ maven build commands are attached to the <code>project::T</code> for each of acc
     idx=&gt;[=&gt;],
     sub=&gt;[auto_save=&gt;sub::[
     target=&gt;/dev/scratch/code/#,
-    code=&gt;rshift(0).as(rec::T).rshift(path).select([id(),id(),id(),id(),id(),id()]).to(temp).as?rng=uri&amp;dom=lst(uri::T).to(x).*id().update([location=&gt;none]).as(java::T).to(**x.rshift(location).side(split([
+    code=&gt;print('saving...').rshift(0).as(rec::T).rshift(path).select([id(),id(),id(),id(),id(),id()]).to(temp).as?rng=uri&amp;dom=lst(uri::T).to(x).*id().update([location=&gt;none]).as(java::T).to(**x.rshift(location).side(split([
      location=&gt;id(),
      status=&gt;saved,
      time=&gt;!math:datetime_now()]).print('saved ',id(),'\n'))).map(map(/dev/scratch/src).mult(*temp.reverse().merge().take(1)))]],
@@ -553,9 +525,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result{4}::[
     status=&gt;success,
-    runtime=&gt;millis::772.0000,
+    runtime=&gt;millis::845.0000,
     command=&gt;'mvn -f src/test/resources/scratch clean',
-    output=&gt;!*/sys/tmp/f259a2c0]
+    output=&gt;!*/sys/tmp/9d0d8ae7]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 ==&gt;{4}'WARNING: A terminally deprecated method in sun.misc.Unsafe has been called'
 ==&gt;{4}'WARNING: sun.misc.Unsafe::staticFieldBase has been called by com.google.inject.internal.aop.HiddenClassDefiner (file:/home/killswitch/.sdkman/candidates/maven/current/lib/guice-5.1.0-classes.jar)'
@@ -573,8 +545,8 @@ mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 ==&gt;{4}'[INFO] Nothing to compile - all classes are up to date.'
 ==&gt;{12}'[INFO] ------------------------------------------------------------------------'
 ==&gt;{4}'[INFO] BUILD SUCCESS'
-==&gt;{4}'[INFO] Total time:  0.258 s'
-==&gt;{4}'[INFO] Finished at: 2026-09-07T19:36:40-06:00'
+==&gt;{4}'[INFO] Total time:  0.250 s'
+==&gt;{4}'[INFO] Finished at: 2026-09-08T18:36:47-06:00'
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
 <pre><code class="language-mtron">mtron&gt; tree_widget::[root=&gt;/dev/scratch, max=&gt;3, xref=&gt;[=&gt;]].as?str&lt;=widget(str::T)
@@ -603,6 +575,7 @@ subscription registered with the query processor maintains an auto_from pointer 
 In this way, edits to the subscription code entries will automatically take hold without requiring resubscription.</p>
 <p>The Java source files have a <code>str::T &gt; web:java::T</code> encoding accessible via <code>src</code>.</p>
 <pre><code class="language-mtron"></code></pre>
+<h3>writing code</h3>
 <p>The file name serves as the key and a lambda <code>inst</code> serves as a lazy constructor of an <code>ide:java::T</code>. Calling the file
 name pulls the raw <code>src</code> into both <code>code</code> and <code>idx</code>.</p>
 <pre><code class="language-mtron">mtron&gt; /dev/scratch/src/Echo()
@@ -615,7 +588,7 @@ name pulls the raw <code>src</code> into both <code>code</code> and <code>idx</c
     method=&gt;[
      speak=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/4/speak,
      name=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/6/name]]]
-mtron&gt;  */dev/scratch/code/0
+mtron&gt; */dev/scratch/code/0
 ==&gt;java::[
     package=&gt;'package com.example.scratch;',
     preamble=&gt;&quot;&quot;&quot;package com.example.scratch;
@@ -652,18 +625,20 @@ mtron&gt; */dev/scratch/idx/Echo
     method=&gt;[
      speak=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/4/speak,
      name=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/6/name]]
-mtron&gt; tree_widget::[root=&gt;/dev/scratch, max=&gt;3, xref=&gt;[=&gt;]].as?str&lt;=widget(str::T)
+mtron&gt; tree_widget::[root=&gt;/dev/scratch, max=&gt;4, xref=&gt;[=&gt;]].as?str&lt;=widget(str::T)
 ==&gt;&quot;&quot;&quot;
    scratch
    ├─ code
    │   ├─ 0
    │   │   ├─ classes
+   │   │   │   └─ Echo
    │   │   ├─ location
    │   │   ├─ package
    │   │   ├─ postscript
    │   │   └─ preamble
    │   └─ 1
    │       ├─ classes
+   │       │   └─ Echo
    │       ├─ location
    │       ├─ package
    │       ├─ postscript
@@ -676,8 +651,13 @@ mtron&gt; tree_widget::[root=&gt;/dev/scratch, max=&gt;3, xref=&gt;[=&gt;]].as?s
    │   └─ Echo
    │       ├─ comment
    │       ├─ constructor
-   │       ├─ field
-   │       └─ method
+   │       │   └─ Echo  »Echo
+   │       ├─ field  ──(2)──&gt; members
+   │       │   ├─ PREFIX
+   │       │   └─ name
+   │       └─ method  ──(2)──&gt; members
+   │           ├─ name
+   │           └─ speak
    ├─ root
    ├─ src
    │   ├─ Calculator
@@ -718,12 +698,7 @@ representation of the project's source code.</p>
            ├─ name
            └─ speak
    &quot;&quot;&quot;
-</code></pre>
-<p><strong>edit, then save — two steps</strong> (verified against a live VM, 2026-09-04): the <code>&gt;&gt;=</code> edit lands in the <code>code</code> space
-immediately, but the <strong>disk write-back fires on the class-level save</strong> (<code>code/N.to(...)</code>) — the subscription
-serializes the class rec (header + body + footer of each member) and writes the file. An edit that is never saved is
-space-only.</p>
-<pre><code class="language-mtron">mtron&gt; */dev/scratch/idx/Echo/method/speak
+mtron&gt; */dev/scratch/idx/Echo/method/speak
 ==&gt;[
     kind=&gt;method,
     name=&gt;'speak',
@@ -738,14 +713,11 @@ space-only.</p>
        public String speak(String who) {
            return who;
    ...&quot;&quot;&quot;]
-mtron&gt; */dev/scratch/idx/Echo/method/speak/body.-&lt;'\n'.as(rec::T)
-==&gt;[
-    0=&gt;'{',
-    1=&gt;'        return who;',
-    2=&gt;'    }']
-mtron&gt; */dev/scratch/idx/Echo/method/speak/body.-&lt;'\n'.as(rec::T) &gt;&gt;= [1 =&gt; &quot;return who;&quot;]
-==&gt;[0=&gt;'{',1=&gt;'return who;',2=&gt;'    }']
-mtron&gt; @/dev/scratch/idx/Echo/method/speak &gt;&gt;= [body=&gt; '{ return &quot;marko&quot;; }']
+</code></pre>
+<p>To edit the existing <code>Echo::speak</code> method source code, update the component using an anchored uri. The <code>&gt;&gt;=</code> edit lands
+in <code>code</code> (due to <code>idx</code> redirection) and then the <code>auto_save</code> subscription fires and serializes the code <code>rec::T</code> to a
+<code>ide:java::T</code> before writing to disk.</p>
+<pre><code class="language-mtron">mtron&gt; @/dev/scratch/idx/Echo/method/speak &gt;&gt;= [body=&gt; &quot;&quot;&quot;{ return &quot;marko&quot;; }&quot;&quot;&quot;]
 ==&gt;[
     body=&gt;'{ return &quot;marko&quot;; }',
     kind=&gt;method,
@@ -759,8 +731,9 @@ mtron&gt; @/dev/scratch/idx/Echo/method/speak &gt;&gt;= [body=&gt; '{ return &qu
            return who;
    ...&quot;&quot;&quot;]
 </code></pre>
-<p>Finally, to determine if the registered <code>sub::T</code> wrote the updated <code>Echo::speak</code> to disk, dereference the
-respective <code>fsspace::T</code> pointer.</p>
+<p>A &quot;saved&quot; messages is displayed via <code>stdout</code>. However, to be certain the registered <code>sub::T</code> wrote the updated
+<code>Echo::speak</code> to disk, dereference the respective <code>fsspace::T</code> pointer. That is, pull the Java source code (as an
+<code>str::T</code>) back into metatron.</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java&gt;
 ==&gt;java::&quot;&quot;&quot;package com.example.scratch;
    
@@ -821,14 +794,13 @@ with it, then save (<code>code/N.to</code>).</p>
 </code></pre>
 <pre><code class="language-mtron">mtron&gt; @/dev/scratch/idx/Echo/method/speak &gt;&gt;= [body =&gt;
          -&lt;'\n'.as(rec::T)&gt;&gt;=(
-         [?&gt;2.?&lt;4 =&gt; 'return &quot;marko&quot;;']&gt;&gt;.
-             &gt;-?str&lt;=str{*}('\n'))].explain()
-==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '= [body =&gt;
-         -&lt;'
-'.as(rec::T)&gt;&gt;=(
-         [?&gt;2.?&lt;4 =&gt; 'return &quot;marko&quot;;']&gt;&gt;.
-             &gt;-?str&lt;=str{*}('
-'))].explain()'
+         [?&gt;2.?&lt;4 =&gt; 'return &quot;marko&quot;;'])&gt;&gt;.
+         &gt;-?str&lt;=str{*}('\n')].explain()
+==&gt;&quot;&quot;&quot;
+    op      dom      rng        args                                                                                                                     f    desc      c_dom  c_rng 
+    at      A{?}::T  rec{*}::T  /dev/scratch/idx/Echo/method/speak                                                                                       &lt;j&gt;  standard  {?}    {*}   
+    update  A::T     B{*}::T    [body=&gt;split('\n').as(rec::T).update([is(gt(2)).is(lt(4))=&gt;'return &quot;marko&quot;;']).rshift().merge?rng=str&amp;dom=str{*}('\n')]  &lt;j&gt;  standard  {1}    {*}   
+   &quot;&quot;&quot;
 </code></pre>
 <p><strong>NOTE</strong>: when working in the <code>console::T</code>, the the interactive <code>explain_tool::T</code> provides a much richer analysis of an
 expression with pre- and post- compilation switching, drill down into nested code structures, and access reified
@@ -856,15 +828,16 @@ Different subscriptions can be defined to provide any number of useful reactions
 <li>record stats (points to sections of the code).</li>
 <li>...</li>
 </ol>
-<p>The current <code>sub::T</code> is:</p>
+<p>The dwe <code>sub::T</code> is:</p>
 <pre><code class="language-mtron">mtron&gt; */dev/scratch/code/#?subq
 ==&gt;[
     sub::[
      target=&gt;/dev/scratch/code/#,
-     code=&gt;[code=&gt;!*/dev/scratch/sub/auto_save/code.apply(id())]],
+     code=&gt;!*/dev/scratch/sub/auto_save/code],
     sub::[
      target=&gt;/dev/scratch/code/#,
-     code=&gt;[code=&gt;!*/dev/scratch/sub/auto_save/code.apply(id())]]]
+     code=&gt;!*/dev/scratch/sub/auto_save/code]]
+mtron&gt; */dev/scratch/code/#?subq&gt;&gt;0&gt;&gt;code
 </code></pre>
 <h3>gotchas (learned the hard way)</h3>
 <ul>

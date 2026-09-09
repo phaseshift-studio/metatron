@@ -58,11 +58,11 @@ mtron> datetime_now()-<task::[done=>false,desc=>"review metatron docs",start=>_]
     task::[
      done=>false,
      desc=>'review metatron docs',
-     start=>datetime::<//2026.09:6/23/18/43/199?tz=-0600>],
+     start=>datetime::<//2026.09:8/18/34/27/822?tz=-0600>],
     task::[
      done=>false,
      desc=>'review metatron docs',
-     start=>datetime::<//2026.09:6/23/18/42/636?tz=-0600>]]@/usr/agent/todo
+     start=>datetime::<//2026.09:8/18/34/27/303?tz=-0600>]]@/usr/agent/todo
 ```
 The current time is split across the defined task. Since `start=>_` has an open slot, the current
 `datatime::T` fills in the spot and then the task is merged into your todo list. To get a structured understanding of
@@ -78,7 +78,7 @@ mtron> @/usr/agent/todo/0 >>= [done=>true]
 ==>task::[
     done=>true,
     desc=>'review metatron docs',
-    start=>datetime::<//2026.09:6/23/18/43/199?tz=-0600>]
+    start=>datetime::<//2026.09:8/18/34/27/822?tz=-0600>]
 ```
 As you learn about metatron and the mtron language, you'll come up with clever ways to manipulate your `/usr/agent`
 space.

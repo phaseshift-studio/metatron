@@ -189,6 +189,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_mach.html"><img
                             src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
                             alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_mach_ui.html"><img
+                            src="../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                            alt="ui"/>/m/mach/ui</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math.html"><img
                             src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
@@ -203,6 +206,9 @@
                             alt="vec"/>/m/vec</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_web.html"><img
                             src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_ide.html"><img
+                            src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                 </ul>
             </li>
@@ -409,7 +415,20 @@
   edge::T,
   grphspace::T,
   modern::T],
- inst=&gt;[gremlin?#{*}&lt;=grphspace(str::T),label?uri&lt;=rec(),values?#{*}&lt;=rec(uri{*}::T),inV?vrtx&lt;=edge(),outV?vrtx&lt;=edge(),bothV?vrtx{2}&lt;=edge(),out?vrtx{*}&lt;=vrtx(uri{*}::T),in?vrtx{*}&lt;=vrtx(uri{*}::T),both?vrtx{*}&lt;=vrtx(uri{*}::T),outE?edge{*}&lt;=vrtx(uri{*}::T),...(3 more)],
+ inst=&gt;[
+  gremlin?#{*}&lt;=grphspace(str::T),
+  label?uri&lt;=rec(),
+  values?#{*}&lt;=rec(uri{*}::T),
+  inV?vrtx&lt;=edge(),
+  outV?vrtx&lt;=edge(),
+  bothV?vrtx{2}&lt;=edge(),
+  out?vrtx{*}&lt;=vrtx(uri{*}::T),
+  in?vrtx{*}&lt;=vrtx(uri{*}::T),
+  both?vrtx{*}&lt;=vrtx(uri{*}::T),
+  outE?edge{*}&lt;=vrtx(uri{*}::T),
+  inE?edge{*}&lt;=vrtx(uri{*}::T),
+  bothE?edge{*}&lt;=vrtx(uri{*}::T),
+  addE?edge&lt;=vrtx(uri::T,rec{+}::T,rec{?}::T)],
  rewrite=&gt;[
   /m/grph/inst/rewrite/gremlin_count?code{?}&lt;=code(),
   /m/grph/inst/rewrite/gremlin_limit?code{?}&lt;=code(),

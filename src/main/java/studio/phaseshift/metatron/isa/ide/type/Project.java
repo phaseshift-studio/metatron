@@ -36,9 +36,9 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.ide.ideInstSet.IDE_PROJECT_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_at_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -71,17 +71,17 @@ public class Project extends MRec {
         project.addSubscription(f("auto_save"),
                 ObjmtronSerializer.parse("""
                                          sub::[target=> <%s/code/#>,
-                                               code  => |(>>0.as(rec::T)>>path==[_,_,_,_,_,_].to(temp).
+                                               code  => print('saving...').>>0.as(rec::T)>>path==[_,_,_,_,_,_].to(temp).
                                                           as?uri<=lst(uri::T).to(x).*(_).>>=[location=>none].as(web:java::T).
                                                           to(*(*x.>>location).side(-<[location=>_,status=>saved,time=>!math:datetime_now()].print("saved ", _, "\\n"))).
-                                                          map(<%s/src>.mult(*temp.reverse().>-.take(1))))]
+                                                          map(<%s/src>.mult(*temp.reverse().>-.take(1)))]
                                          """.formatted(project.vid(), project.vid())));
-        return project(project.selfTID(IDE_PROJECT_TID).asRec());
+        return project(project.selfTID(projectType.vid()).asRec());
     }
 
     public Project addSubscription(final fURI name, final Rec subscription) {
         this.at(SUB, this.at(SUB).orElse(rec()).at(name, subscription, MUTABLE), MUTABLE);
-        Router.writeToSpace(this.vid().extend("code/#").addQ(SUBQ), rec(CODE, auto_from_(this.vid().extend("sub/auto_save/code")).apply_(id_()).tryToInst()));
+        Router.writeToSpace(this.vid().extend("code/#").addQ(SUBQ), auto_from_(this.vid().extend("sub/auto_save/code")).tryToInst());
         return this;
     }
 
@@ -94,11 +94,10 @@ public class Project extends MRec {
     }
 
     public void refreshSrc(final fURI branch) {
-        try (final CommonUtil.Spinner spinner = CommonUtil.spinner("loading project", true);
-             final Stream<Path> walk = Files.find(
-                     Path.of(branch.scheme(null).toString()),
-                     100,
-                     (a, b) -> (b.isDirectory() && !a.toFile().isHidden()))) {
+        try (final Stream<Path> walk = Files.find(
+                Path.of(branch.scheme(null).toString()),
+                100,
+                (a, b) -> (b.isDirectory() && !a.toFile().isHidden()))) {
             final String scheme = branch.scheme();
             this.at(SRC, walk
                     .filter(d -> d.toFile().isDirectory())
@@ -112,7 +111,6 @@ public class Project extends MRec {
                         final Lst codeLst = Router.readFromSpace(this.vid().extend(CODE)).orElse(lst());
                         final int c = (int) codeLst.count();
                         final fURI codeID = this.vid().extend(CODE).extend(c);
-                        spinner.setMessage("\rloading project: %s", e.name());
                         Router.writeToSpace(this.vid().extend(CODE), codeLst.add(ideJava, MUTABLE));
                         //////////////////////////////////////////////////////////////////////////
                         final Rec idx = Router.readFromSpace(this.vid().extend("idx")).orElse(rec());

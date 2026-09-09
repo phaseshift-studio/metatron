@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.llm.type;
+package studio.phaseshift.metatron.isa.llm.type.mcp;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;

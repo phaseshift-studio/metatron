@@ -178,18 +178,21 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
                     obj = ObjmtronSerializer.parse(jpstr);
                 } else {
                     try {
-                        if ((jpstr.startsWith("<") && jpstr.endsWith(">")) || jpstr.startsWith("http:") || jpstr.startsWith("https:") || jpstr.startsWith("uri::")) {
+                        if ((jpstr.startsWith("\"") || jpstr.startsWith("'") && jpstr.endsWith("\"") || jpstr.endsWith("'"))) {
+                            return str(Str.Helper.stripQuotes(jpstr));
+                        } else if ((jpstr.startsWith("<") && jpstr.endsWith(">")) || jpstr.startsWith("http:") || jpstr.startsWith("https:") || jpstr.startsWith("uri::")) {
                             String clean = (jpstr.startsWith("<") && jpstr.endsWith(">")) ? jpstr.substring(1, jpstr.length() - 1) :
                                     (jpstr.startsWith("uri::") ? jpstr.substring(5) : jpstr);
                             obj = uri(f(clean), tid, null);
-                        } else if (biasTowardsUri() && !jpstr.contains(" ")) {
-                            try {
-                                obj = uri(f(jpstr), tid, null);
-                            } catch (Exception e2) {
-                                obj = ObjmtronSerializer.parse(jpstr).apply();
-                            }
                         } else {
-                            obj = ObjmtronSerializer.parse(jpstr).apply();
+                            try {
+                                obj = ObjmtronSerializer.parse(jpstr).apply();
+                            } catch (final Exception e) {
+                                if (biasTowardsUri() && !jpstr.contains(" "))
+                                    obj = uri(jpstr);
+                                else
+                                    obj = str(jpstr, tid, null);
+                            }
                         }
                     } catch (Exception e) {
                         obj = str(jpstr, tid, null);
