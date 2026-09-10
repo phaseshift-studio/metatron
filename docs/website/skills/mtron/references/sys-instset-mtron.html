@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>math-instset · PhaseShift Studio</title>
+    <title>sys instruction set · PhaseShift Studio</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -267,17 +267,17 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/answer-questions.html">answer-questions</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference_mtron.html">language-reference_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys_instset_mtron.html">sys_instset_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math_instset_mtron.html">math_instset_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/connecting-datasources.html">connecting-datasources</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace.html">dckrspace</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/http-page-fetching.html">http-page-fetching</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math_instset.html">math_instset</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mtron-fsspace.html">mtron-fsspace</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mtron-language-reference.html">mtron-language-reference</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
@@ -378,174 +378,256 @@
 </script>
 <main class="container my-4 flex-grow-1">
     <div class="skill-doc mb-4">
-        <h1 class="skill-title mb-1">math-instset: The /m/math instruction set — numeric constants, unit-of-measurement types (millis, kB, datetime), and the type registry.</h1>
-        <a href="math_instset.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>math_instset.md</a>
+        <h1 class="skill-title mb-1">sys instruction set: file system, bash, sleep, process i/o</h1>
+        <a href="sys-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>sys-instset-mtron.md</a>
     </div>
     <div class="markdown-body">
-<h2>Math Instruction Set (<code>/m/math</code>)</h2>
-<p>The math instset provides numeric constants, unit-of-measurement types, and datetime handling. All types are registered under <code>/m/math/...</code> and available via the standard type resolution system.</p>
-<h3>Type Registry</h3>
+<h2>system instruction set (<code>/m/sys</code>)</h2>
+<p><code>/sys</code> is a required system space — created at boot, it holds the system objs (router, typer,
+rewriter, env, thread). The sys instset (<code>/m/sys</code>) is its instruction companion: a guarded <code>bash</code> shell and
+the <code>sleep</code>/<code>stdout</code>/<code>stdin</code> I/O primitives. Instructions live under <code>/m/sys/inst/...</code>; read any of them with
+<code>?docq</code> before use.</p>
+<h3>instructions</h3>
 <table>
 <thead>
-<tr><th>Type</th><th>Base</th><th>VID</th><th>Description</th></tr>
+<tr><th>inst</th><th>dom → rng</th><th>arg</th><th>description</th></tr>
 </thead>
 <tbody>
-<tr><td><code>millis::T</code></td><td><code>real::T</code></td><td><code>/m/math/time/millis</code></td><td>Millisecond unit</td></tr>
-<tr><td><code>second::T</code></td><td><code>real::T</code></td><td><code>/m/math/time/second</code></td><td>Second unit (1000 millis)</td></tr>
-<tr><td><code>minute::T</code></td><td><code>real::T</code></td><td><code>/m/math/time/minute</code></td><td>Minute unit (60 seconds)</td></tr>
-<tr><td><code>hour::T</code></td><td><code>real::T</code></td><td><code>/m/math/time/hour</code></td><td>Hour unit (60 minutes)</td></tr>
-<tr><td><code>bB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/bB</code></td><td>Byte unit</td></tr>
-<tr><td><code>kB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/kB</code></td><td>Kilobyte (1024 bytes)</td></tr>
-<tr><td><code>mB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/mB</code></td><td>Megabyte (1024 kB)</td></tr>
-<tr><td><code>gB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/gB</code></td><td>Gigabyte (1024 mB)</td></tr>
-<tr><td><code>tB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/tB</code></td><td>Terabyte (1024 gB)</td></tr>
-<tr><td><code>pB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/pB</code></td><td>Petabyte (1024 tB)</td></tr>
-<tr><td><code>datetime::T</code></td><td><code>uri::T</code></td><td><code>/m/math/datetime</code></td><td>Calendar datetime URI</td></tr>
+<tr><td><code>bash</code></td><td><code>#{?} → lst[str]</code></td><td><code>cmd</code>, <code>timeout?</code></td><td>guarded shell (<code>bash -c</code>), stdout split to lst</td></tr>
+<tr><td><code>sleep</code></td><td><code>A{?} → A{?}</code></td><td><code>time</code></td><td>pause the current thread, pass lhs through</td></tr>
+<tr><td><code>stdout</code></td><td><code>A{?} → A{?}</code></td><td><code>#{?}</code></td><td>print the arg's jvm obj, pass lhs through</td></tr>
+<tr><td><code>stdin</code></td><td><code>A{?} → str</code></td><td>—</td><td>read one line from the terminal</td></tr>
 </tbody>
 </table>
-<h3>Unit Conversions</h3>
-<p>All unit types (time, data) support bidirectional conversion via <code>.as()</code>:</p>
-<pre><code class="language-mtron">mtron&gt; millis::60000.0.as(minute::T)
-==&gt;minute::1.0000
-mtron&gt; hour::1.5.as(minute::T)
-==&gt;minute::90.0000
-mtron&gt; kB::1024.0.as(mB::T)
-==&gt;mB::1.0000
-mtron&gt; gB::2.0.as(mB::T)
-==&gt;mB::2048.0000
+<h3>bash (<code>/m/sys/inst/bash</code>)</h3>
+<p>The shell instruction — the function-call primitive: reach into the shell with <code>bash</code>, shape the result with
+metatron's data structures. <code>cmd</code> is the terminal command, evaluated with <code>bash -c</code>. <code>timeout</code> is an optional
+<code>time::T</code> (<code>millis::1000.0</code>, <code>second::1.0</code>, ...) with a 30-second default. The result is a <code>lst[str::T]</code>, one
+entry per stdout line; a non-zero exit is a <code>fail::T</code>.</p>
+<pre><code class="language-mtron">bash('ls')
+bash(cmd=&gt;'whoami', timeout=&gt;second::5.0)
 </code></pre>
-<p>Equality comparisons auto-convert:</p>
-<pre><code class="language-mtron">mtron&gt; millis::1000.0.eq(second::1.0)
-==&gt;true
-mtron&gt; second::60.0.gt(millis::500.0)
-==&gt;true
+<p>Batch over a rec (indexed) or a lst (flat):</p>
+<pre><code class="language-mtron">{&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;}.-&lt;[_ =&gt; _]==[_ =&gt; bash(_)]   [-- rec of cmds =&gt; rec of result lsts --]
+[&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;].mapp(-&lt;[_ =&gt; bash(_)]).sum() [-- flatten to one lst --]
 </code></pre>
-<h3>DateTime (<code>/m/math/datetime</code>)</h3>
-<h4>Structure</h4>
-<p><code>datetime::T</code> is a <code>uri::T</code> refinement with this layout:</p>
-<pre><code>//yyyy.MM:dd/HH/mm/ss/SSS?tz=±HHmm
+<p>Pipe a follow-up command over each result — <code>&gt;&gt;</code> drains the list, <code>${_}</code> binds the current element; <code>.mapp</code>
+maps explicitly (and, with a lambda, indexes by the current element):</p>
+<pre><code class="language-mtron">bash('ls').&gt;&gt;.bash(&quot;stat -c '%U' ${_}&quot;)            [-- drain: owners coalesce to a multiset --]
+bash('ls').mapp(bash(&quot;stat -c '%U' ${_}&quot;))         [-- map: one result lst per file --]
+bash('ls').mapp(-&lt;[_=&gt;bash(&quot;stat -c '%U' ${_}&quot;)])  [-- indexed map: file =&gt; owner --]
 </code></pre>
+<h4>security modulators (q-params)</h4>
+<p><code>bash</code> is hardened at the <em>instruction</em> level, not the call site. <code>allow</code>/<code>reject</code>/<code>env</code>/<code>dir</code> attach as query
+parameters on the tid, so a tool registration bakes the policy in once — <code>!*bash?reject=['\brm\b']</code> — rather
+than trusting the caller.</p>
 <table>
 <thead>
-<tr><th>Component</th><th>URI field</th><th>Range</th><th>Description</th></tr>
+<tr><th>q-param</th><th>type</th><th>semantics</th></tr>
 </thead>
 <tbody>
-<tr><td>year</td><td>host (pre-<code>.</code>)</td><td>0000+</td><td>Calendar year</td></tr>
-<tr><td>month</td><td>host (post-<code>.</code>)</td><td>01–12</td><td>Month</td></tr>
-<tr><td>day</td><td>port</td><td>01–31</td><td>Day of month</td></tr>
-<tr><td>hour</td><td>path[-4]</td><td>00–23</td><td>Hour</td></tr>
-<tr><td>minute</td><td>path[-3]</td><td>00–59</td><td>Minute</td></tr>
-<tr><td>second</td><td>path[-2]</td><td>00–59</td><td>Second</td></tr>
-<tr><td>millis</td><td>path[-1]</td><td>000–999</td><td>Millisecond</td></tr>
-<tr><td>tz</td><td>q <code>tz</code></td><td>±HHMM</td><td>Timezone offset</td></tr>
+<tr><td><code>allow</code></td><td><code>lst[str::T]</code></td><td>whitelist regexes, matched whole-command (<code>matches()</code>)</td></tr>
+<tr><td><code>reject</code></td><td><code>lst[str::T]</code></td><td>blacklist regexes, matched anywhere (<code>find()</code>)</td></tr>
+<tr><td><code>env</code></td><td><code>rec[uri=&gt;str]</code></td><td>environment vars injected into the process</td></tr>
+<tr><td><code>dir</code></td><td><code>str</code></td><td>working directory of the process</td></tr>
 </tbody>
 </table>
-<h4>Construction</h4>
-<pre><code class="language-mtron">mtron&gt; [-- Current system time --]
-mtron&gt; datetime_now()
-==&gt;datetime::&lt;//2026.09:9/03/18/46/508?tz=-0600&gt;
-mtron&gt; [-- From record (goes through .as(uri::T) first) --]
-mtron&gt; [host=&gt;&lt;2024.12&gt;,port=&gt;25,path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
-        c=&gt;[min=&gt;1,max=&gt;1],q=&gt;[tz=&gt;'-0500']].as(uri::T).as(datetime::T)
-==&gt;datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
-mtron&gt; [-- From string-encoded URI --]
-mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(datetime::T)
-==&gt;datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
+<p><code>allow</code>, when non-empty, requires the command to match at least one pattern; <code>reject</code> fails when any pattern
+matches anywhere. Both apply before the process spawns.</p>
+<pre><code class="language-mtron">!*bash?reject=['\brm\b']      [-- a bash that refuses rm --]
+!*bash?env=[USER=&gt;'metatron'] [-- a bash with a fixed env --]
 </code></pre>
-<h4>Typed vs Bare URIs</h4>
-<p>Bare URIs like <code>&lt;//2024.12:25/...&gt;</code> work with standard URI operations (<code>&gt;&gt;host</code>, <code>&gt;&gt;port</code>, <code>&gt;&gt;path</code>). The datetime vocabulary (<code>year</code>, <code>month</code>, <code>day</code>, etc.) only works on explicitly typed datetimes:</p>
-<pre><code class="language-mtron">mtron&gt; [-- Standard URI projections work on bare URIs --]
-mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;host
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]@/sys/fail/1086
-mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;port
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/1114
-mtron&gt; [-- Vocabulary projections require datetime:: prefix --]
-mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year
-==&gt;2024
-mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;month
-==&gt;12
-mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;day
-==&gt;25
-mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;tz
-==&gt;'-0500'
+<h4>worked example — bash + the graph</h4>
+<p>The split in one line: <code>bash</code> supplies the function (<code>ls</code>, <code>stat</code>), metatron the shape — find the <code>Size</code> line,
+regex out its byte count, type it <code>bB::T</code>, and keep the files over 30 kB. The unit types auto-convert, so <code>bB</code>
+compares against <code>kB</code> directly (no <code>awk</code>, no <code>grep</code>, no <code>du</code>).</p>
+<pre><code class="language-mtron">bash('ls').mapp(-&lt;[_=&gt;bash(&quot;stat ${_}&quot;)]).&gt;&gt;.==[_=&gt; &gt;&gt;.has(&quot;Size&quot;).regex('\s*(\d+)')&gt;&gt;&lt;0/0&gt;.as?int&lt;=str(int::T).as(bB::T)]==[_=&gt;?&gt;kB::30.0]
 </code></pre>
-<h4>Vocabulary Keys</h4>
-<p>Named <code>&gt;&gt;</code> projections for typed datetimes:</p>
-<table>
-<thead>
-<tr><th>Key</th><th>Returns</th><th>Source</th></tr>
-</thead>
-<tbody>
-<tr><td><code>year</code></td><td><code>int</code></td><td>host.split(&quot;.&quot;)[0]</td></tr>
-<tr><td><code>month</code></td><td><code>int</code></td><td>host.split(&quot;.&quot;)[1]</td></tr>
-<tr><td><code>day</code></td><td><code>int</code></td><td>port</td></tr>
-<tr><td><code>hour</code></td><td><code>int</code></td><td>path[-4]</td></tr>
-<tr><td><code>minute</code></td><td><code>int</code></td><td>path[-3]</td></tr>
-<tr><td><code>second</code></td><td><code>int</code></td><td>path[-2]</td></tr>
-<tr><td><code>millis</code></td><td><code>int</code></td><td>path[-1]</td></tr>
-<tr><td><code>tz</code></td><td><code>str</code></td><td>q(&quot;tz&quot;)</td></tr>
-</tbody>
-</table>
-<p>Non-vocabulary keys fall through to standard URI projections.</p>
-<pre><code class="language-mtron">mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;{year,month,day}
-==&gt;2024
-==&gt;12
-==&gt;25
-mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;host
+<h3>sleep / stdout / stdin</h3>
+<pre><code class="language-mtron">sleep(second::1.0)   [-- pause, pass lhs through --]
+stdout('hello')      [-- print to the terminal, pass lhs through --]
+stdin()              [-- block for one line, emit it as a str --]
 </code></pre>
-<h4>Predicate Validation</h4>
-<p>The Java predicate validates:</p>
+<h3>mounted state</h3>
+<p>Two recs are mounted under <code>/sys</code> at boot — not instructions, but read like any other space:</p>
 <ul>
-<li>No scheme (or empty)</li>
-<li>Host matches <code>\d{4}\.\d{2}</code> with month 01–12</li>
-<li>Port in 1–31</li>
-<li>Path has ≥4 integer segments with valid hour (0–23), minute (0–59), second (0–59)</li>
-<li>Query contains <code>tz</code> key</li>
+<li><strong><code>/sys/env</code></strong> — the process environment, one <code>KEY =&gt; str</code> per variable.</li>
+<li><strong><code>/sys/thread</code></strong> — the thread registry, one <code>id =&gt; thread</code> per thread, each documented via <code>?docq</code>.</li>
 </ul>
-<pre><code class="language-mtron">mtron&gt; &lt;//2024.13:25/09/00/00/000?tz=-0500&gt;.matches(datetime::T) [-- month 13 --]
-==&gt;false
-mtron&gt; &lt;//2024.12:25/09/60/00/000?tz=-0500&gt;.matches(datetime::T) [-- second 60 --]
-==&gt;false
-mtron&gt; &lt;//2024.12:25/09/00/00&gt;.matches(datetime::T) [-- missing tz --]
-==&gt;false
+<pre><code class="language-mtron">*/sys/env              [-- the environment as a rec --]
+*/sys/env/HOME         [-- one variable --]
+*/sys/thread/+?docq    [-- every thread's description --]
 </code></pre>
-<h4>Mutation &amp; Filtering</h4>
-<p>All standard URI operations apply: <code>==</code> (select), <code>=?=</code> (where), plus <code>&gt;&gt;=</code> (rec update) after <code>.as(rec::T)</code>.</p>
-<pre><code class="language-mtron">mtron&gt; [-- Select mutation: change day --]
-mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;==[port=&gt;31]&gt;&gt;port
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:31/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/1286
-mtron&gt; [-- Where filter: match day 25 --]
-mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;=?=[port=&gt;25]
-==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
-mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;=?=[port=&gt;26]
-mtron&gt; [-- Rec update: change timezone --]
-mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)&gt;&gt;=[q=&gt;[tz=&gt;'+0000']]&gt;&gt;q&gt;&gt;tz
-==&gt;'+0000'
+<h2>FileSystem Space (fsSpace)</h2>
+<p>An <code>fsspace</code> mounts a subset of a file system into the metatron graph. Files are addressed via the space's
+scheme (e.g., <code>local:</code>) and path prefix.</p>
+<p><strong>IMPORTANT</strong>: Every uri can be wrapped in angle brackets <code>&lt; &gt;</code>, but it is only required for those uris that have <code>.</code>
+(periods), <code></code> (spaces), and/or special characters such as <code>~</code> (tildes) in them. For instance, <code>/a/b/c</code> can be written
+as is, but
+<code>&lt;/a/b/c.txt&gt;</code> requires angle brackets.</p>
+<h3>Configuration</h3>
+<p>A typical <code>fsspace</code> definition:</p>
+<pre><code class="language-mtron">mtron&gt; fsspace::[
+         pattern =&gt; &lt;local:#&gt;,
+         q       =&gt; [mimeq::[=&gt;], lineq::[=&gt;]],
+         route   =&gt; [local: =&gt; &lt;~/my-project&gt;]]@/sys/space/fs/local
+==&gt;fsspace::[
+    pattern=&gt;local:#,
+    q=&gt;[
+     mimeq::[
+      pattern=&gt;mimeq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     lineq::[
+      pattern=&gt;lineq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
+    route=&gt;[local:=&gt;/home/killswitch/my-project]]@/sys/space/fs/local
 </code></pre>
-<h3>Instructions</h3>
+<ul>
+<li><strong><code>pattern</code></strong> — the URI pattern this space handles (<code>local:#</code> matches <code>&lt;local:file.txt&gt;</code>, <code>&lt;local:sub/dir/file.md&gt;</code>,
+etc.)</li>
+<li><strong><code>route</code></strong> — maps the pattern prefix (<code>local:</code>) to a filesystem path (<code>&lt;~/my-project&gt;</code>)</li>
+<li><strong><code>q</code></strong> — query processors: <code>mimeq</code> for MIME type tagging/conversion, <code>lineq</code> for line-level reads/writes</li>
+</ul>
+<h3>MIME Type Handling</h3>
+<p>fsSpace detects a file's MIME type from its extension (and optionally the OS content probe) and returns a <strong>typed
+string</strong> — a refined <code>str::T</code> such as <code>html::T</code>, <code>json::T</code>, <code>markdown::T</code>, etc.</p>
+<pre><code>file.html  →  html::&quot;&lt;html&gt;...&lt;/html&gt;&quot;     (predicate-validated HTML string)
+file.json  →  json::&quot;{\&quot;key\&quot;:\&quot;value\&quot;}&quot;  (predicate-validated JSON string)
+file.txt   →  str::&quot;plain text&quot;            (bare string, no special type)
+file.md    →  markdown::&quot;# Title&quot;          (predicate-validated markdown string)
+</code></pre>
+<p>The MIME type acts as a <strong>predicate</strong> on the string content. For example, <code>html::T</code>'s predicate validates that the
+string is valid HTML. The structural representation (<code>rec::T</code> DOM tree) is opt-in via <code>?mimeq=application/x-mtron</code> or
+<code>.as(rec::T)</code>.</p>
+<h4>MIME-to-TID Mapping</h4>
+<p><code>MIME.MIMEType.toTid()</code> maps file extensions to type TIDs:</p>
 <table>
 <thead>
-<tr><th>Instruction</th><th>Signature</th><th>Description</th></tr>
+<tr><th>Extension</th><th>MIME Type</th><th>TID</th></tr>
 </thead>
 <tbody>
-<tr><td><code>datetime_now()</code></td><td><code># → datetime::T</code></td><td>Current system datetime</td></tr>
-<tr><td><code>normalize</code> (time)</td><td><code>time::T → time::T</code></td><td>Auto-scale time unit</td></tr>
-<tr><td><code>normalize</code> (data)</td><td><code>data::T → data::T</code></td><td>Auto-scale data unit</td></tr>
-<tr><td><code>cos</code>, <code>sin</code>, <code>tan</code></td><td><code>real → real</code></td><td>Trig functions</td></tr>
-<tr><td><code>sqrt</code>, <code>pow</code>, <code>log</code></td><td><code>real → real</code></td><td>Math functions</td></tr>
-<tr><td><code>abs</code>, <code>ceil</code>, <code>floor</code></td><td><code>real → real</code></td><td>Rounding functions</td></tr>
+<tr><td><code>.html</code>, <code>.htm</code></td><td><code>text/html</code></td><td><code>/m/web/mime/html</code></td></tr>
+<tr><td><code>.json</code></td><td><code>application/json</code></td><td><code>/m/web/mime/json</code></td></tr>
+<tr><td><code>.xml</code></td><td><code>application/xml</code></td><td><code>/m/web/mime/xml</code></td></tr>
+<tr><td><code>.md</code></td><td><code>text/markdown</code></td><td><code>/m/web/mime/markdown</code></td></tr>
+<tr><td><code>.css</code></td><td><code>text/css</code></td><td><code>/m/web/mime/css</code></td></tr>
+<tr><td><code>.java</code></td><td><code>text/x-java</code></td><td><code>/m/web/mime/java</code></td></tr>
+<tr><td><code>.yaml</code>, <code>.yml</code></td><td><code>application/yaml</code></td><td><code>/m/web/mime/yaml</code></td></tr>
+<tr><td><code>.mtron</code></td><td><code>application/x-mtron</code></td><td><code>/m/rec</code></td></tr>
+<tr><td><code>.txt</code></td><td><code>text/plain</code></td><td><code>/m/str</code></td></tr>
+<tr><td><em>other</em></td><td><code>text/plain</code> / probe</td><td><code>/m/str</code></td></tr>
 </tbody>
 </table>
-<h3>Constants</h3>
-<table>
-<thead>
-<tr><th>Constant</th><th>Value</th></tr>
-</thead>
-<tbody>
-<tr><td><code>pi</code></td><td>3.141592653589793</td></tr>
-<tr><td><code>e</code></td><td>2.718281828459045</td></tr>
-</tbody>
-</table>
+<h4>The <code>mimeq</code> Query Processor</h4>
+<p>The <code>?mimeq=</code> query parameter on a file URI controls what the space returns:</p>
+<pre><code class="language-mtron">mtron&gt; [-- Default: typed string (predicate-validated) --]
+mtron&gt; *&lt;local:index.html&gt;
+mtron&gt; [-- Explicit type tag (same as default for .html files) --]
+mtron&gt; *&lt;local:index.html?mimeq=text/html&gt;
+mtron&gt; [-- Structural parse via application/x-mtron --]
+mtron&gt; *&lt;local:index.html?mimeq=application/x-mtron&gt;
+</code></pre>
+<p><code>mimeq</code> is implemented in <code>QCollection.mimeQ()</code> as a space-level <code>postRead</code> query processor. It:</p>
+<ol>
+<li><strong>Probes</strong> the content type from the object's existing TID (or falls back to URI/file extension if the TID is bare
+<code>STR_TID</code>)</li>
+<li><strong>Tags</strong> the string with the correct MIME TID — this triggers predicate validation (e.g., <code>html::T</code> validates the
+string is valid HTML)</li>
+<li><strong>Structural parse</strong> — if <code>?mimeq=application/x-mtron</code>, runs the content-type-specific serializer
+(<code>ObjHTMLSerializer</code> for HTML, <code>ObjJSONSerializer</code> for JSON, etc.) to produce the <code>rec::T</code> DOM tree</li>
+</ol>
+<h3>Reading and Writing Files</h3>
+<h4>Basic Read/Write</h4>
+<pre><code class="language-mtron">mtron&gt; [-- Read a file (returns typed string by default) --]
+mtron&gt; *&lt;local:test.md&gt;
+==&gt;markdown::'## new content'
+mtron&gt; [-- Write a string to a file --]
+mtron&gt; &lt;local:test.md&gt; -&gt; &quot;## new content&quot;
+==&gt;'## new content'
+</code></pre>
+<h4>Reading with Structural Parse</h4>
+<pre><code class="language-mtron">mtron&gt; [-- Read markdown as a rec::T structure --]
+mtron&gt; *&lt;local:test.md?mimeq=application/x-mtron&gt;
+==&gt;[
+    type=&gt;doc,
+    out=&gt;[[
+    type=&gt;head,
+    level=&gt;2,
+    text=&gt;'new content',
+    out=&gt;[[type=&gt;text,content=&gt;'new content']]]]]
+mtron&gt; [-- Read JSON, then walk into rec fields --]
+mtron&gt; *&lt;local:config.json?mimeq=application/x-mtron&gt;/database/host
+==&gt;/database/host
+</code></pre>
+<h4>Binary Files</h4>
+<p>Files without a recognized text MIME type are read as <code>bytes::T</code>. Executable files (with shebangs)
+are treated as <code>inst::T</code> and can be invoked directly:</p>
+<pre><code class="language-mtron">mtron&gt; *&lt;local:script.sh&gt;        [-- bytes::T if binary, str::T if text                    --]
+mtron&gt; &lt;local:script.sh&gt;()       [-- execute (shell scripts, via application/x-mtron exec) --]
+==&gt;fail::[unable to locate inst-f of local:script.sh()@&lt;0&gt;]@/sys/fail/136
+</code></pre>
+<h3>Pattern-Based Access</h3>
+<p>fsSpace supports wildcard patterns in reads:</p>
+<pre><code class="language-mtron">mtron&gt; [-- List all files in a directory --]
+mtron&gt; *&lt;local:+/&gt;
+==&gt;&lt;local:/test.md&gt;=&gt;markdown::'## new content'
+mtron&gt; [-- Read all .txt files --]
+mtron&gt; *&lt;local:+/+&gt;.where([name =&gt; -&lt;'.'&gt;&gt;1.is('txt')])
+==&gt;markdown::'## new content'
+</code></pre>
+<h3>Line-Level Editing with <code>lineq</code></h3>
+<p>The <code>lineq</code> query processor enables reading and editing specific line ranges within text files, useful for targeted
+edits without loading the entire file:</p>
+<pre><code class="language-mtron">mtron&gt; [-- Read lines 10-20 of a file --]
+mtron&gt; *&lt;local:src/main.java?lineq=10..20&gt;
+==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;10..20&quot;]@/sys/fail/160
+mtron&gt; [-- Replace lines 5-10 with new content --]
+mtron&gt; &lt;local:src/main.java?lineq=5..10&gt; -&gt; &quot;&quot;&quot;
+         public void newMethod() {
+           // new implementation
+         }
+       &quot;&quot;&quot;
+==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;5..10&quot;]@/sys/fail/172
+</code></pre>
+<h4>Boot Configuration Example</h4>
+<pre><code class="language-mtron">mtron&gt; fsspace::[
+         pattern =&gt; &lt;local:#&gt;,
+         q       =&gt; [mimeq::[=&gt;], lineq::[=&gt;]],
+         route   =&gt; [local: =&gt; ~/src]]@/sys/space/fs/src
+==&gt;fsspace::[
+    pattern=&gt;local:#,
+    q=&gt;[
+     mimeq::[
+      pattern=&gt;mimeq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     lineq::[
+      pattern=&gt;lineq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
+    route=&gt;[local:=&gt;/m/inst/thread(/src)]]@/sys/space/fs/src
+mtron&gt; [-- Then use in expressions: --]
+mtron&gt; *&lt;local:Main.java?lineq=1..50&gt;
+==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;1..50&quot;]@/sys/fail/186
+mtron&gt; &lt;local:index.html?mimeq=application/x-mtron&gt;/html/head/title
+==&gt;ERROR: monad obj coefficient is greater than inst dom coefficient:
+	&lt;local:index.html?mimeq=application/x-mtron&gt; [{1} X=&gt; {0}] start?rng=A{**}&amp;dom=noobj{0}(/html/head/title){&lt;j&gt;}@&lt;1&gt;
+</code></pre>
+<h3>Type Round-Trip</h3>
+<p>The full read-modify-write cycle preserves types:</p>
+<pre><code class="language-mtron">mtron&gt; [-- Read HTML, cast to rec, modify, cast back to html string, write --]
+mtron&gt; &lt;local:page.html&gt; -&gt; *&lt;local:page.html?mimeq=application/x-mtron&gt;
+         .at(html/head/title -&gt; 'New Title')
+         .as(html::T)
+==&gt;fail::[inst apply failure: 'New Title' [str::T] unable to convert uri::T]@/sys/fail/238
+mtron&gt; [-- Read JSON config, modify a value, write back --]
+mtron&gt; &lt;local:config.json&gt; -&gt; *&lt;local:config.json?mimeq=application/x-mtron&gt;
+         .at(database/host -&gt; 'new-host')
+         .as(json::T)
+==&gt;fail::[inst apply failure: 'new-host' [str::T] unable to convert uri::T]@/sys/fail/286
+</code></pre>
+<p>The <code>.as(html::T)</code> / <code>.as(json::T)</code> serialization passes through <code>ObjHTMLSerializer.write()</code> /
+<code>ObjJSONSerializer.write()</code> which handle both <code>str::T</code> (pass-through) and <code>rec::T</code> (structural render).</p>
 
     </div>
 </main>

@@ -246,7 +246,7 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 
 **Spaces & data sources**
 
-* [fsSpace](references/fsspace_mtron.md) -- file system as space; MIME, `?mimeq`, file I/O.
+* [fsSpace](references/sys_instset_mtron.md) -- file system as space; MIME, `?mimeq`, file I/O.
 * [Connecting Data Sources](references/connecting-datasources.md) -- the pattern + route model for external sources;
   `!*` references.
 * [dckrSpace](references/dckrspace_mtron.md) -- Docker: containers, images, volumes, compose as a space.

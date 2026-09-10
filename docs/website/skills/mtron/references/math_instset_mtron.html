@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>math-instset · PhaseShift Studio</title>
+    <title>math instruction set · PhaseShift Studio</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -267,17 +267,17 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/answer-questions.html">answer-questions</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference_mtron.html">language-reference_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys_instset_mtron.html">sys_instset_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math_instset_mtron.html">math_instset_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/connecting-datasources.html">connecting-datasources</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace.html">dckrspace</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/http-page-fetching.html">http-page-fetching</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math_instset.html">math_instset</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mtron-fsspace.html">mtron-fsspace</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mtron-language-reference.html">mtron-language-reference</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
@@ -378,73 +378,66 @@
 </script>
 <main class="container my-4 flex-grow-1">
     <div class="skill-doc mb-4">
-        <h1 class="skill-title mb-1">math-instset: The /m/math instruction set — numeric constants, unit-of-measurement types (millis, kB, datetime), and the type registry.</h1>
+        <h1 class="skill-title mb-1">math instruction set: numeric constants, dates, time, space, and currency.</h1>
         <a href="math_instset_mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>math_instset_mtron.md</a>
     </div>
     <div class="markdown-body">
-<h2>Math Instruction Set (<code>/m/math</code>)</h2>
+<h2>math instruction set (<code>/m/math</code>)</h2>
 <p>The math instset provides numeric constants, unit-of-measurement types, and datetime handling. All types are registered
 under <code>/m/math/+</code> and available via the standard type resolution system.</p>
-<h3>Type Registry</h3>
+<hr />
+<h3>types</h3>
 <table>
 <thead>
-<tr><th>Type</th><th>Base</th><th>VID</th><th>Description</th></tr>
+<tr><th>vid</th><th>tid</th><th>description</th></tr>
 </thead>
 <tbody>
-<tr><td><code>millis::T</code></td><td><code>real::T</code></td><td><code>/m/math/time/millis</code></td><td>Millisecond unit</td></tr>
-<tr><td><code>second::T</code></td><td><code>real::T</code></td><td><code>/m/math/time/second</code></td><td>Second unit (1000 millis)</td></tr>
-<tr><td><code>minute::T</code></td><td><code>real::T</code></td><td><code>/m/math/time/minute</code></td><td>Minute unit (60 seconds)</td></tr>
-<tr><td><code>hour::T</code></td><td><code>real::T</code></td><td><code>/m/math/time/hour</code></td><td>Hour unit (60 minutes)</td></tr>
-<tr><td><code>bB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/bB</code></td><td>Byte unit</td></tr>
-<tr><td><code>kB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/kB</code></td><td>Kilobyte (1024 bytes)</td></tr>
-<tr><td><code>mB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/mB</code></td><td>Megabyte (1024 kB)</td></tr>
-<tr><td><code>gB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/gB</code></td><td>Gigabyte (1024 mB)</td></tr>
-<tr><td><code>tB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/tB</code></td><td>Terabyte (1024 gB)</td></tr>
-<tr><td><code>pB::T</code></td><td><code>real::T</code></td><td><code>/m/math/data/pB</code></td><td>Petabyte (1024 tB)</td></tr>
-<tr><td><code>datetime::T</code></td><td><code>uri::T</code></td><td><code>/m/math/datetime</code></td><td>Calendar datetime URI</td></tr>
+<tr><td><code>datetime::T</code></td><td><code>uri::T</code></td><td>calendar datetime URI</td></tr>
+<tr><td>***************</td><td>***************</td><td>***************************</td></tr>
+<tr><td><code>time::T</code></td><td><code>real::T</code></td><td>time unit base</td></tr>
+<tr><td><code>millis::T</code></td><td><code>time::T</code></td><td>millisecond unit</td></tr>
+<tr><td><code>second::T</code></td><td><code>time::T</code></td><td>second unit (1000 millis)</td></tr>
+<tr><td><code>minute::T</code></td><td><code>time::T</code></td><td>minute unit (60 seconds)</td></tr>
+<tr><td><code>hour::T</code></td><td><code>time::T</code></td><td>hour unit (60 minutes)</td></tr>
+<tr><td><code>day::T</code></td><td><code>time::T</code></td><td>day unit (24 hours)</td></tr>
+<tr><td>***************</td><td>***************</td><td>***************************</td></tr>
+<tr><td><code>datasize::T</code></td><td><code>real::T</code></td><td>data size base</td></tr>
+<tr><td><code>bB::T</code></td><td><code>datasize::T</code></td><td>byte unit</td></tr>
+<tr><td><code>kB::T</code></td><td><code>datasize::T</code></td><td>kilobyte (1024 bytes)</td></tr>
+<tr><td><code>mB::T</code></td><td><code>datasize::T</code></td><td>megabyte (1024 kB)</td></tr>
+<tr><td><code>gB::T</code></td><td><code>datasize::T</code></td><td>gigabyte (1024 mB)</td></tr>
+<tr><td><code>tB::T</code></td><td><code>datasize::T</code></td><td>terabyte (1024 gB)</td></tr>
+<tr><td><code>pB::T</code></td><td><code>datasize::T</code></td><td>petabyte (1024 tB)</td></tr>
+<tr><td>***************</td><td>***************</td><td>***************************</td></tr>
+<tr><td><code>currency::T</code></td><td><code>real::T</code></td><td>currency base</td></tr>
+<tr><td><code>usd::T</code></td><td><code>currency::T</code></td><td>united states currency</td></tr>
+<tr><td><code>euro::T</code></td><td><code>currency::T</code></td><td>european union currency</td></tr>
 </tbody>
 </table>
-<h3>Unit Conversions</h3>
-<p>All unit types (time, data) support bidirectional conversion via <code>.as()</code>:</p>
-<pre><code class="language-mtron">mtron&gt; millis::60000.0.as(minute::T)
-==&gt;minute::1.0000
-mtron&gt; hour::1.5.as(minute::T)
-==&gt;minute::90.0000
-mtron&gt; kB::1024.0.as(mB::T)
-==&gt;mB::1.0000
-mtron&gt; gB::2.0.as(mB::T)
-==&gt;mB::2048.0000
-</code></pre>
-<p>Equality comparisons auto-convert:</p>
-<pre><code class="language-mtron">mtron&gt; millis::1000.0.eq(second::1.0)
-==&gt;true
-mtron&gt; second::60.0.gt(millis::500.0)
-==&gt;true
-</code></pre>
-<h3>DateTime (<code>/m/math/datetime</code>)</h3>
-<h4>Structure</h4>
+<h4>dateTime (<code>/m/math/datetime</code>)</h4>
+<h5>structure</h5>
 <p><code>datetime::T</code> is a <code>uri::T</code> refinement with this layout:</p>
-<pre><code>//yyyy.MM:dd/HH/mm/ss/SSS?tz=±HHmm
+<pre><code class="language-mtron">//yyyy.MM:dd/HH/mm/ss/SSS?tz=±HHmm
 </code></pre>
 <table>
 <thead>
-<tr><th>Component</th><th>URI field</th><th>Range</th><th>Description</th></tr>
+<tr><th>component</th><th>uri field</th><th>range</th><th>description</th></tr>
 </thead>
 <tbody>
-<tr><td>year</td><td>host (pre-<code>.</code>)</td><td>0000+</td><td>Calendar year</td></tr>
-<tr><td>month</td><td>host (post-<code>.</code>)</td><td>01–12</td><td>Month</td></tr>
-<tr><td>day</td><td>port</td><td>01–31</td><td>Day of month</td></tr>
-<tr><td>hour</td><td>path[-4]</td><td>00–23</td><td>Hour</td></tr>
-<tr><td>minute</td><td>path[-3]</td><td>00–59</td><td>Minute</td></tr>
-<tr><td>second</td><td>path[-2]</td><td>00–59</td><td>Second</td></tr>
-<tr><td>millis</td><td>path[-1]</td><td>000–999</td><td>Millisecond</td></tr>
-<tr><td>tz</td><td>q <code>tz</code></td><td>±HHMM</td><td>Timezone offset</td></tr>
+<tr><td>year</td><td>host (pre-<code>.</code>)</td><td>0000+</td><td>calendar year</td></tr>
+<tr><td>month</td><td>host (post-<code>.</code>)</td><td>01–12</td><td>month</td></tr>
+<tr><td>day</td><td>port</td><td>01–31</td><td>day of month</td></tr>
+<tr><td>hour</td><td>path[-4]</td><td>00–23</td><td>hour</td></tr>
+<tr><td>minute</td><td>path[-3]</td><td>00–59</td><td>minute</td></tr>
+<tr><td>second</td><td>path[-2]</td><td>00–59</td><td>second</td></tr>
+<tr><td>millis</td><td>path[-1]</td><td>000–999</td><td>millisecond</td></tr>
+<tr><td>tz</td><td>q <code>tz</code></td><td>±HHMM</td><td>timezone offset</td></tr>
 </tbody>
 </table>
-<h4>Construction</h4>
+<h5>construction</h5>
 <pre><code class="language-mtron">mtron&gt; [-- current system time --]
 mtron&gt; datetime_now()
-==&gt;datetime::&lt;//2026.09:10/05/40/38/584?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.09:10/16/23/41/036?tz=-0600&gt;
 mtron&gt; [-- from record (goes through .as(uri::T) first) --]
 mtron&gt; [host=&gt;&lt;2024.12&gt;,port=&gt;25,path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
         c=&gt;[min=&gt;1,max=&gt;1],q=&gt;[tz=&gt;'-0500']].as(uri::T).as(datetime::T)
@@ -453,7 +446,7 @@ mtron&gt; [-- from string-encoded URI --]
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(datetime::T)
 ==&gt;datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 </code></pre>
-<h4>Typed vs Bare URIs</h4>
+<h5>typed vs bare uris</h5>
 <p>Bare URIs like <code>&lt;//2024.12:25/...&gt;</code> work with standard URI operations (<code>&gt;&gt;host</code>, <code>&gt;&gt;port</code>, <code>&gt;&gt;path</code>). The datetime
 vocabulary (<code>year</code>, <code>month</code>, <code>day</code>, etc.) only works on explicitly typed datetimes:</p>
 <pre><code class="language-mtron">mtron&gt; [-- rec projections of uri components --]
@@ -471,21 +464,21 @@ mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;day
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;tz
 ==&gt;'-0500'
 </code></pre>
-<h4>Vocabulary Keys</h4>
+<h5>vocabulary keys</h5>
 <p>Named <code>&gt;&gt;</code> projections for typed datetimes:</p>
 <table>
 <thead>
-<tr><th>Key</th><th>Returns</th><th>Source</th></tr>
+<tr><th>key</th><th>value type</th><th>source</th></tr>
 </thead>
 <tbody>
-<tr><td><code>year</code></td><td><code>int</code></td><td>host.split(&quot;.&quot;)[0]</td></tr>
-<tr><td><code>month</code></td><td><code>int</code></td><td>host.split(&quot;.&quot;)[1]</td></tr>
-<tr><td><code>day</code></td><td><code>int</code></td><td>port</td></tr>
-<tr><td><code>hour</code></td><td><code>int</code></td><td>path[-4]</td></tr>
-<tr><td><code>minute</code></td><td><code>int</code></td><td>path[-3]</td></tr>
-<tr><td><code>second</code></td><td><code>int</code></td><td>path[-2]</td></tr>
-<tr><td><code>millis</code></td><td><code>int</code></td><td>path[-1]</td></tr>
-<tr><td><code>tz</code></td><td><code>str</code></td><td>q(&quot;tz&quot;)</td></tr>
+<tr><td><code>year</code></td><td><code>int::T</code></td><td>host.split(&quot;.&quot;)[0]</td></tr>
+<tr><td><code>month</code></td><td><code>int::T</code></td><td>host.split(&quot;.&quot;)[1]</td></tr>
+<tr><td><code>day</code></td><td><code>int::T</code></td><td>port</td></tr>
+<tr><td><code>hour</code></td><td><code>int::T</code></td><td>path[-4]</td></tr>
+<tr><td><code>minute</code></td><td><code>int::T</code></td><td>path[-3]</td></tr>
+<tr><td><code>second</code></td><td><code>int::T</code></td><td>path[-2]</td></tr>
+<tr><td><code>millis</code></td><td><code>int::T</code></td><td>path[-1]</td></tr>
+<tr><td><code>tz</code></td><td><code>str::T</code></td><td>q(&quot;tz&quot;)</td></tr>
 </tbody>
 </table>
 <p>Non-vocabulary keys fall through to standard URI projections.</p>
@@ -496,25 +489,25 @@ mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;tz
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)&gt;&gt;host
 ==&gt;&lt;2024.12&gt;
 </code></pre>
-<h4>Predicate Validation</h4>
-<p>The Java predicate validates:</p>
+<h5>predicate validation</h5>
+<p>The <code>datetime::T</code> predicate ensures base uri has:</p>
 <ul>
-<li>No scheme (or empty)</li>
-<li>Host matches <code>\d{4}\.\d{2}</code> with month 01–12</li>
-<li>Port in 1–31</li>
-<li>Path has ≥4 integer segments with valid hour (0–23), minute (0–59), second (0–59)</li>
-<li>Query contains <code>tz</code> key</li>
+<li>no scheme (or empty)</li>
+<li>host matches <code>\d{4}\.\d{2}</code> with month 01–12</li>
+<li>port in 1–31</li>
+<li>path has ≥4 integer segments with valid hour (0–23), minute (0–59), second (0–59)</li>
+<li>query contains <code>tz</code> key</li>
 </ul>
 <pre><code class="language-mtron">mtron&gt; &lt;//2024.13:25/09/00/00/000?tz=-0500&gt;.?datetime::T [-- month 13 (bad)   --]
 mtron&gt; &lt;//2024.12:25/09/60/00/000?tz=-0500&gt;.?datetime::T [-- second 60 (bad)  --]
 mtron&gt; &lt;//2024.12:25/09/00/00&gt;.?datetime::T              [-- missing tz (bad) --]
 </code></pre>
-<h4>Mutation &amp; Filtering</h4>
-<p>All standard URI operations apply: <code>==</code> (select), <code>=?=</code> (where), plus <code>&gt;&gt;=</code> (rec update) after <code>.as(rec::T)</code>.</p>
-<pre><code class="language-mtron">mtron&gt; [-- Select mutation: change day --]
+<h5>mutating and filtering</h5>
+<p>All standard uri operations apply: <code>==</code> (select), <code>=?=</code> (where), plus <code>&gt;&gt;=</code> (rec update) after <code>.as(rec::T)</code>.</p>
+<pre><code class="language-mtron">mtron&gt; [-- select mutation: change day --]
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)==[port=&gt;31]&gt;&gt;port
 ==&gt;31
-mtron&gt; [-- Where filter: match day 25 --]
+mtron&gt; [-- where filter: match day 25 --]
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)=?=[port=&gt;25]
 ==&gt;[
     host=&gt;&lt;2024.12&gt;,
@@ -524,28 +517,213 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)=?=[port=&gt;25]
     c=&gt;[min=&gt;1,max=&gt;1],
     q=&gt;[tz=&gt;'-0500']]
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)=?=[port=&gt;26]
-mtron&gt; [-- Rec update: change timezone --]
+mtron&gt; [-- rec update: change timezone --]
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)&gt;&gt;=[q=&gt;[tz=&gt;'+0000']]&gt;&gt;q&gt;&gt;tz
 ==&gt;'+0000'
 </code></pre>
-<h3>Instructions</h3>
+<h4>time (<code>/m/math/time</code>)</h4>
+<p><code>time::T</code> is a <code>real::T</code> refinement. The time unit types (<code>millis::T</code> … <code>day::T</code>) convert to each other via <code>.as()</code>; a
+conversion preserves the total millis, changing only the unit label.</p>
+<h5>conversion</h5>
+<pre><code class="language-mtron">mtron&gt; [-- upward: value shrinks, unit grows --]
+mtron&gt; millis::1000.0.as(second::T)
+==&gt;second::1.0000
+mtron&gt; second::60.0.as(minute::T)
+==&gt;minute::1.0000
+mtron&gt; minute::60.0.as(hour::T)
+==&gt;hour::1.0000
+mtron&gt; hour::24.0.as(day::T)
+==&gt;day::1.0000
+mtron&gt; [-- downward: value grows, unit shrinks --]
+mtron&gt; second::1.0.as(millis::T)
+==&gt;millis::1000.0000
+mtron&gt; minute::1.0.as(second::T)
+==&gt;second::60.0000
+mtron&gt; hour::1.0.as(minute::T)
+==&gt;minute::60.0000
+mtron&gt; day::1.0.as(hour::T)
+==&gt;hour::24.0000
+mtron&gt; [-- multi-step: levels can be skipped --]
+mtron&gt; millis::3600000.0.as(hour::T)
+==&gt;hour::1.0000
+mtron&gt; millis::86400000.0.as(day::T)
+==&gt;day::1.0000
+mtron&gt; [-- fractional values are preserved --]
+mtron&gt; hour::36.0.as(day::T)
+==&gt;day::1.5000
+mtron&gt; second::90.0.as(minute::T)
+==&gt;minute::1.5000
+mtron&gt; day::1.5.as(hour::T)
+==&gt;hour::36.0000
+mtron&gt; [-- bare real: re-label only, no conversion --]
+mtron&gt; 30000.0.as(minute::T)
+==&gt;minute::30000.0000
+</code></pre>
+<p>A converted value tests as its target unit:</p>
+<pre><code class="language-mtron">mtron&gt; millis::1000.0.as(second::T).matches(second::T)
+==&gt;true
+</code></pre>
+<p>Time units require a real-backed value — an int-backed time is a type violation:</p>
+<pre><code class="language-mtron">mtron&gt; day::2.as(millis::T)         [-- int-backed time (bad) --]
+==&gt;ERROR: 2 is not a time::T[][ctor?day&lt;=#{?}(#{*}::T)]@/m/math/time/day
+mtron&gt; hour::2.as(minute::T)        [-- int-backed time (bad) --]
+==&gt;ERROR: 2 is not a time::T[][ctor?hour&lt;=#{?}(#{*}::T)]@/m/math/time/hour
+</code></pre>
+<h5>relational operators</h5>
+<p><code>eq</code>, <code>neq</code>, <code>lt</code>, <code>gt</code>, <code>lte</code>, and <code>gte</code> auto-convert across units before comparing:</p>
+<pre><code class="language-mtron">mtron&gt; [-- equality across units --]
+mtron&gt; millis::1000.0.eq(second::1.0)
+==&gt;true
+mtron&gt; second::60.0.eq(minute::1.0)
+==&gt;true
+mtron&gt; minute::60.0.eq(hour::1.0)
+==&gt;true
+mtron&gt; day::1.0.eq(hour::24.0)
+==&gt;true
+mtron&gt; [-- ordering across units --]
+mtron&gt; second::60.0.gt(millis::500.0)
+==&gt;true
+mtron&gt; hour::12.0.lt(day::1.0)
+==&gt;true
+mtron&gt; minute::60.0.lte(hour::1.0)
+==&gt;true
+mtron&gt; minute::60.0.gte(hour::1.0)
+==&gt;true
+</code></pre>
+<h5>normalize</h5>
+<p><code>normalize()</code> cascades upward while the value reaches ~2× the next larger unit, until stable:</p>
 <table>
 <thead>
-<tr><th>Instruction</th><th>Signature</th><th>Description</th></tr>
+<tr><th>from</th><th>threshold</th><th>to</th></tr>
 </thead>
 <tbody>
-<tr><td><code>datetime_now()</code></td><td><code># → datetime::T</code></td><td>Current system datetime</td></tr>
-<tr><td><code>normalize</code> (time)</td><td><code>time::T → time::T</code></td><td>Auto-scale time unit</td></tr>
-<tr><td><code>normalize</code> (data)</td><td><code>data::T → data::T</code></td><td>Auto-scale data unit</td></tr>
-<tr><td><code>cos</code>, <code>sin</code>, <code>tan</code></td><td><code>real → real</code></td><td>Trig functions</td></tr>
-<tr><td><code>sqrt</code>, <code>pow</code>, <code>log</code></td><td><code>real → real</code></td><td>Math functions</td></tr>
-<tr><td><code>abs</code>, <code>ceil</code>, <code>floor</code></td><td><code>real → real</code></td><td>Rounding functions</td></tr>
+<tr><td>millis</td><td>≥ 2000</td><td>second</td></tr>
+<tr><td>second</td><td>≥ 120</td><td>minute</td></tr>
+<tr><td>minute</td><td>≥ 120</td><td>hour</td></tr>
+<tr><td>hour</td><td>≥ 48</td><td>day</td></tr>
 </tbody>
 </table>
-<h3>Constants</h3>
+<pre><code class="language-mtron">mtron&gt; [-- below threshold: unchanged --]
+mtron&gt; millis::1500.0.normalize()
+==&gt;millis::1500.0000
+mtron&gt; [-- cascade until stable --]
+mtron&gt; millis::9000.0.normalize()
+==&gt;second::9.0000
+mtron&gt; minute::150.0.normalize()
+==&gt;hour::2.5000
+mtron&gt; hour::72.0.normalize()
+==&gt;day::3.0000
+</code></pre>
+<h4>datasize (<code>/m/math/datasize</code>)</h4>
+<p><code>datasize::T</code> is a <code>real::T</code> refinement. The data size unit types (<code>bB::T</code> … <code>pB::T</code>) convert to each other via <code>.as()</code>
+at a 1024 (binary) base; a conversion preserves the total bytes, changing only the unit label.</p>
+<h5>conversion</h5>
+<pre><code class="language-mtron">mtron&gt; [-- upward: value shrinks, unit grows --]
+mtron&gt; bB::1024.0.as(kB::T)
+==&gt;kB::1.0000
+mtron&gt; kB::1024.0.as(mB::T)
+==&gt;mB::1.0000
+mtron&gt; mB::1024.0.as(gB::T)
+==&gt;gB::1.0000
+mtron&gt; gB::1024.0.as(tB::T)
+==&gt;tB::1.0000
+mtron&gt; tB::1024.0.as(pB::T)
+==&gt;pB::1.0000
+mtron&gt; [-- downward: value grows, unit shrinks --]
+mtron&gt; kB::1.0.as(bB::T)
+==&gt;bB::1024.0000
+mtron&gt; mB::1.0.as(kB::T)
+==&gt;kB::1024.0000
+mtron&gt; gB::1.0.as(mB::T)
+==&gt;mB::1024.0000
+mtron&gt; tB::1.0.as(gB::T)
+==&gt;gB::1024.0000
+mtron&gt; pB::1.0.as(tB::T)
+==&gt;tB::1024.0000
+mtron&gt; [-- multi-step: levels can be skipped --]
+mtron&gt; bB::1073741824.0.as(gB::T)
+==&gt;gB::1.0000
+mtron&gt; bB::1125899906842624.0.as(pB::T)
+==&gt;pB::1.0000
+mtron&gt; kB::1099511627776.0.as(pB::T)
+==&gt;pB::1.0000
+mtron&gt; [-- larger values, both directions --]
+mtron&gt; kB::2048.0.as(mB::T)
+==&gt;mB::2.0000
+mtron&gt; mB::2.0.as(kB::T)
+==&gt;kB::2048.0000
+mtron&gt; [-- bare real: re-label only, no conversion --]
+mtron&gt; 1024.0.as(kB::T)
+==&gt;kB::1024.0000
+</code></pre>
+<p>A converted value tests as its target unit:</p>
+<pre><code class="language-mtron">mtron&gt; bB::1024.0.as(kB::T).matches(kB::T)
+==&gt;true
+</code></pre>
+<h5>relational operators</h5>
+<pre><code class="language-mtron">mtron&gt; [-- equality across units --]
+mtron&gt; bB::1024.0.eq(kB::1.0)
+==&gt;true
+mtron&gt; bB::1048576.0.eq(mB::1.0)
+==&gt;true
+mtron&gt; gB::1024.0.eq(tB::1.0)
+==&gt;true
+mtron&gt; tB::1024.0.eq(pB::1.0)
+==&gt;true
+mtron&gt; [-- ordering of equal values --]
+mtron&gt; kB::1024.0.lte(mB::1.0)
+==&gt;true
+mtron&gt; kB::1024.0.gte(mB::1.0)
+==&gt;true
+</code></pre>
+<p>note: relational operators on non-exact unit conversions are a known bug (see the TODOs in <code>mathInstSetTest</code>).</p>
+<h5>normalize</h5>
+<p><code>normalize()</code> cascades upward while the value reaches ~2× the next larger unit, until stable:</p>
 <table>
 <thead>
-<tr><th>Constant</th><th>Value</th></tr>
+<tr><th>from</th><th>threshold</th><th>to</th></tr>
+</thead>
+<tbody>
+<tr><td>bB</td><td>≥ 2048</td><td>kB</td></tr>
+<tr><td>kB</td><td>≥ 2048</td><td>mB</td></tr>
+<tr><td>mB</td><td>≥ 2048</td><td>gB</td></tr>
+<tr><td>gB</td><td>≥ 2048</td><td>tB</td></tr>
+<tr><td>tB</td><td>≥ 2048</td><td>pB</td></tr>
+</tbody>
+</table>
+<pre><code class="language-mtron">mtron&gt; [-- below threshold: unchanged --]
+mtron&gt; bB::1500.0.normalize()
+==&gt;bB::1500.0000
+mtron&gt; kB::1000.0.normalize()
+==&gt;kB::1000.0000
+mtron&gt; [-- cascade until stable --]
+mtron&gt; bB::1048576.0.normalize()
+==&gt;kB::1024.0000
+mtron&gt; kB::2048.0.normalize()
+==&gt;mB::2.0000
+mtron&gt; tB::2048.0.normalize()
+==&gt;pB::2.0000
+</code></pre>
+<hr />
+<h3>instructions</h3>
+<table>
+<thead>
+<tr><th>instruction</th><th>signature</th><th>description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>datetime_now()</code></td><td><code># → datetime::T</code></td><td>current system datetime</td></tr>
+<tr><td><code>normalize</code> (time)</td><td><code>time::T → time::T</code></td><td>auto-scale time unit</td></tr>
+<tr><td><code>normalize</code> (data)</td><td><code>datasize::T → datasize::T</code></td><td>auto-scale data unit</td></tr>
+<tr><td><code>cos</code>, <code>sin</code>, <code>tan</code></td><td><code>real::T → real::T</code></td><td>trig functions</td></tr>
+<tr><td><code>sqrt</code>, <code>pow</code>, <code>log</code></td><td><code>real::T → real::T</code></td><td>math functions</td></tr>
+<tr><td><code>abs</code>, <code>ceil</code>, <code>floor</code></td><td><code>real::T → real::T</code></td><td>rounding functions</td></tr>
+</tbody>
+</table>
+<hr />
+<h3>constants</h3>
+<table>
+<thead>
+<tr><th>constant</th><th>value</th></tr>
 </thead>
 <tbody>
 <tr><td><code>pi</code></td><td>3.141592653589793</td></tr>

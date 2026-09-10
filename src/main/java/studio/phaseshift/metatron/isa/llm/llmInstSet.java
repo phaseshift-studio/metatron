@@ -222,11 +222,11 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(PROTOCOL), URI_TYPE,
                                                 uri(LLM), URI_TYPE,
                                                 uri(API_KEY).maybe(), STR_TYPE,
-                                                uri(TIMEOUT).maybe(), TIME_TYPE,
-                                                uri(SIZE).maybe(), DATA_SIZE_TYPE,
+                                                uri(TIMEOUT).maybe(), auto_from_(MATH_TIME_TID).tryToInst(),
+                                                uri(SIZE).maybe(), auto_from_(MATH_DATASIZE_TID).tryToInst(),
                                                 uri(QUANT).maybe(), INT_TYPE,
                                                 uri(CONTEXT).maybe(), INT_TYPE,
-                                                uri(COST).maybe(), rec(uri(IN), MATH_CURRENCY_TYPE, uri(OUT), MATH_CURRENCY_TYPE).maybe()))
+                                                uri(COST).maybe(), rec(uri(IN), auto_from_(MATH_CURRENCY_TID).tryToInst(), uri(OUT), auto_from_(MATH_CURRENCY_TID).tryToInst()).maybe()))
                                         .constructor(arg -> LLMFactory.createModel(arg.asRec()))
                                         .create(),
                                 null, null,
@@ -279,7 +279,7 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(PREV).maybe(), URI_TYPE,
                                                 uri(NEXT).maybe(), URI_TYPE,
                                                 uri(MESSAGE).maybe(), LST_TYPE,
-                                                uri(TIME), STR_TYPE))
+                                                uri(TIME), auto_from_(MATH_TIME_TID).tryToInst()))
                                         .create(),
                                 null, null, mutableMap(
                                         uri(SESSION), "the parent session",
@@ -364,7 +364,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .vid(LLM_CHAT_RESULT_TID)
                                         .isaPredicate(rec(
                                                 uri(CHAT).maybe().asUri(), ALL_TYPE,
-                                                uri(TIME).maybe(), TIME_TYPE,
+                                                uri(TIME).maybe(), auto_from_(MATH_TIME_TID).tryToInst(),
                                                 uri(ERROR).maybe(), FAIL_TYPE))
                                         .create(),
                                 null, null, mutableMap(
@@ -613,8 +613,8 @@ public class llmInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri(ROOT), URI_TYPE,
                                                 uri(RATE), rec(
-                                                        uri(IN), MATH_CURRENCY_TYPE,
-                                                        uri(OUT), MATH_CURRENCY_TYPE)))
+                                                        uri(IN), auto_from_(MATH_CURRENCY_TID).tryToInst(),
+                                                        uri(OUT), auto_from_(MATH_CURRENCY_TID).tryToInst())))
                                         .constructor(arg -> createStageLambdas(new CostFeature(arg.asRec().jvm(), LLM_COST_FEATURE_TID, arg.vid())))
                                         .create(),
                                 null, null, mutableMap(

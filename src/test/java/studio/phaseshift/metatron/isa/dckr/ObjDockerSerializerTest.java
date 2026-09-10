@@ -59,7 +59,7 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
     // Sentinel → noobj
     // ===================================================================
 
-    @ParameterizedTest(name = "[{index}] {1}")
+    @ParameterizedTest
     @CsvSource(value = {
             "{\"v\":\"N/A\"}             % N/A",
             "{\"v\":\"none\"}            % none (lowercase)",
@@ -75,14 +75,14 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
     // Size → data::T (real with math TID)
     // ===================================================================
 
-    @ParameterizedTest(name = "[{index}] {4}")
+    @ParameterizedTest
     @CsvSource(value = {
-            "{\"v\":\"227MB\"}     % /m/math/data/mB % 227.0   % MB → mB",
-            "{\"v\":\"4.61GB\"}    % /m/math/data/gB % 4.61    % GB → gB",
-            "{\"v\":\"1kB\"}       % /m/math/data/kB % 1.0     % kB → kB",
-            "{\"v\":\"4096B\"}     % /m/math/data/bB % 4096.0  % plain bytes",
-            "{\"v\":\"0.5TB\"}     % /m/math/data/tB % 0.5     % TB → tB",
-            "{\"v\":\"0B\"}        % /m/math/data/bB % 0.0     % zero bytes",
+            "{\"v\":\"227MB\"}     % /m/math/datasize/mB % 227.0   % MB → mB",
+            "{\"v\":\"4.61GB\"}    % /m/math/datasize/gB % 4.61    % GB → gB",
+            "{\"v\":\"1kB\"}       % /m/math/datasize/kB % 1.0     % kB → kB",
+            "{\"v\":\"4096B\"}     % /m/math/datasize/bB % 4096.0  % plain bytes",
+            "{\"v\":\"0.5TB\"}     % /m/math/datasize/tB % 0.5     % TB → tB",
+            "{\"v\":\"0B\"}        % /m/math/datasize/bB % 0.0     % zero bytes",
     }, delimiter = '%')
     void testSizes(final String json, final String expectedVid,
                    final double expectedValue, final String description) {
@@ -96,7 +96,7 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
     // Integer detection
     // ===================================================================
 
-    @ParameterizedTest(name = "[{index}] {3}")
+    @ParameterizedTest
     @CsvSource(value = {
             "{\"v\":\"0\"}         % 0     % zero",
             "{\"v\":\"1\"}         % 1     % one",
@@ -113,7 +113,7 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
     // Datetime
     // ===================================================================
 
-    @ParameterizedTest(name = "[{index}] {1}")
+    @ParameterizedTest
     @CsvSource(value = {
             "{\"v\":\"2026-08-01T23:37:33-06:00\"}  % ISO with colon offset",
             "{\"v\":\"2024-12-25T09:00:00Z\"}       % UTC / Zulu",
@@ -130,7 +130,7 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
     // CamelCase → snake_case keys
     // ===================================================================
 
-    @ParameterizedTest(name = "[{index}] {3}")
+    @ParameterizedTest
     @CsvSource(value = {
             "{\"CreatedAt\":\"x\"}       % created_at       % simple CamelCase",
             "{\"SharedSize\":\"x\"}      % shared_size      % two words",

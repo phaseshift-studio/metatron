@@ -29,7 +29,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.dckr.dckrSpace.DCKR_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATA_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATASIZE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -114,7 +114,7 @@ public class dckrInstSet extends AbstractInstSet {
                                         .vid(DOCKER_IMAGE_TID)
                                         .isaPredicate(rec(
                                                 uri("repo_tags").maybe().asUri(), lst(URI_TYPE),
-                                                uri(SIZE).maybe(), T(MATH_DATA_TID),
+                                                uri(SIZE).maybe(), T(MATH_DATASIZE_TID),
                                                 uri("container").maybe(), ALL_TYPE))
                                         .create(),
                                 "a docker image — refines docker_resource::T",

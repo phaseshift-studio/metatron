@@ -831,13 +831,15 @@ public final class QCollection {
     }
 
     public static <OBJ extends Obj> OBJ docWrap(final OBJ obj, final String description, final String... examples) {
+        if (obj.isType())
+            return (OBJ) docWrap(obj.asType(), null, null, Map.of(), description, examples);
         internalDocWrap(obj, null, null, null, description, examples);
         return obj;
     }
 
     public static Type docWrap(final Type type, final String predicate, final String constructor,
                                final Map<Obj, String> predicateDescription, final String description, final String... examples) {
-        internalDocWrap(type, predicate, constructor, predicateDescription, description, examples);
+        internalDocWrap(type, predicate, constructor, predicateDescription, type.isNominal() ? "[nominal] " : "[structural] " + description, examples);
         return type;
     }
 

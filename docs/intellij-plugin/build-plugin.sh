@@ -105,9 +105,10 @@ if [ -z "${IDEA_HOME:-}" ]; then
     echo "ERROR: could not find IntelliJ IDEA, so there is nothing to compile against." >&2
     echo "" >&2
     echo "       Pass the directory that CONTAINS lib/ (the one with lib/*.jar), e.g.:" >&2
-    echo "         mac:     $0 '/Applications/IntelliJ IDEA.app/Contents'" >&2
+    echo "         mac:    $0 '/Applications/IntelliJ IDEA.app/Contents'" >&2
     echo "                 $0 '/Applications/IntelliJ IDEA.app'            (app dir also works)" >&2
-    echo "         linux:   $0 /snap/intellij-idea-ultimate/123" >&2
+    echo "         linux:  $0 /snap/intellij-idea-ultimate/123" >&2
+    echo "                 $0 ~/.local/share/JetBrains/idea-IU-252.27397.103/" >&2
     echo "                 $0 ~/.local/share/JetBrains/Toolbox/apps/IDEA-U/ch-xxx/IntelliJ\ IDEA" >&2
     exit 1
 fi
