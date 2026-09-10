@@ -25,6 +25,9 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -113,6 +116,40 @@ public class FloatingSurface {
      *  it, so stale copies don't rise up the screen. */
     private final java.util.concurrent.atomic.AtomicInteger scrollAccum =
             new java.util.concurrent.atomic.AtomicInteger(0);
+
+    // ── Focus + resize ─────────────────────────────────────────────
+    // Widgets are re-hydrated into FRESH instances on every .display()
+    // update, so the surface — not the widget instance — must own the
+    // state that has to survive a re-float: the per-slot geometry
+    // (targetWidth, heightCap — carried across replacements in add())
+    // and the presentation focus hint below.
+
+    /** The stable key ({@link #widgetKey}) of the focused widget, or null
+     *  when nothing is focused.  The Console owns the focus registry
+     *  (analogous to {@code activePane}) and pushes its choice here so
+     *  {@link #renderWidget} knows which slot to mark. */
+    private volatile String focusKey = null;
+
+    /**
+     * Widget-key lineage across re-floats: oldKey-&gt;newKey recorded by
+     * {@link #add} for each anchored slot replacement — a fresh instance
+     * can arrive without the outgoing one's vid, so a key resolved earlier
+     * keeps identifying the widget (focus, cycling, resize).
+     */
+    private final java.util.Map<String, String> keyLineage = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** Cell of the focus marker drawn in the previous render pass (row 0
+     *  = none).  Blanked at the top of every pass so a stale marker can
+     *  never linger after focus moves, a widget relocates, or is removed. */
+    private int markerRow = 0;
+    private int markerCol = 0;
+
+    /** The focus marker character shown next to the focused widget. */
+    private static final String FOCUS_MARKER = "▶";
+
+    /** Lower bounds for {@link #nudge} — resize can never demolish a widget. */
+    private static final int MIN_WIDTH = 10;
+    private static final int MIN_HEIGHT = 3;
 
     {
         renderThread = new Thread(() -> {
@@ -255,15 +292,34 @@ public class FloatingSurface {
         // constructs a fresh widget instance — without this, stale copies stack
         // up and render over each other, doubling borders and never refreshing.
         Slot replaced = null;
-        for (final Slot s : this.slots.values()) {
+        Widget<?> replacedWidget = null;
+        for (final Map.Entry<Widget<?>, Slot> e : this.slots.entrySet()) {
+            final Slot s = e.getValue();
             if (s.isAnchored() && s.anchor == anchor && s.offsetRow == top && s.offsetCol == left) {
                 replaced = s;
+                replacedWidget = e.getKey();
                 break;
             }
         }
-        if (replaced != null)
+        if (replaced != null) {
             this.slots.values().remove(replaced);
-        final Slot slot = Slot.anchored(anchor, width, top, left);
+            // Key lineage: the fresh instance may not carry the same vid the
+            // outgoing one did (store re-hydration, vid-less construction).
+            // Remember old→new so a key resolved one line earlier still
+            // identifies this widget later (focus, cycling, resize).
+            if (replacedWidget != widget) {
+                final String oldKey = widgetKey(replacedWidget);
+                final String newKey = widgetKey(widget);
+                if (!oldKey.equals(newKey) && this.keyLineage.size() < 512)
+                    this.keyLineage.put(oldKey, newKey);
+            }
+        }
+        // The slot — not the incoming args — is the source of truth for
+        // width once a widget has lived on this surface: a re-float
+        // (every .display() update builds a fresh widget instance) must not
+        // reset geometry the user nudged.
+        final Slot slot = Slot.anchored(anchor,
+                null != replaced ? replaced.targetWidth : width, top, left);
         if (replaced != null) {
             // Carry the previous render region so the first redraw erases the
             // old content (a fresh slot with prevHeight 0 would leave it behind).
@@ -271,6 +327,26 @@ public class FloatingSurface {
             slot.prevWidth = replaced.prevWidth;
             slot.lastRow = replaced.lastRow;
             slot.lastCol = replaced.lastCol;
+            slot.heightCap = replaced.heightCap;
+            // Re-apply the resized width to the fresh instance's style so
+            // content shaping (e.g. AccordionWidget body wrap) survives too.
+            try {
+                final var style = widget.getStyle();
+                if (null != style && style.width() <= 0)
+                    style.width(slot.targetWidth);
+            } catch (final Exception ignored) {
+                // a headless or mid-rehydration widget may not accept it;
+                // the slot still governs placement and clipping
+            }
+        } else {
+            // First float: seed the slot's height cap from the widget's own
+            // style height (0 = unset → keep -1 so natural height applies).
+            try {
+                final int h = widget.getStyle().height();
+                if (h > 0) slot.heightCap = h;
+            } catch (final Exception ignored) {
+                // no style height — natural height
+            }
         }
         this.slots.put(widget, slot);
     }
@@ -326,6 +402,16 @@ public class FloatingSurface {
         // (e.g. the status line's trailing bg) — otherwise they show up as a
         // stray colored blank line above floating widgets.
         sb.append("\033[m");
+
+        // Blank the focus marker cell drawn in the previous pass, if any —
+        // focus may have moved, the widget relocated, or the widget been
+        // removed since.  Done before any draw in the same atomic buffer so
+        // there is never a frame with two markers.
+        if (this.markerRow > 0) {
+            sb.append("\033[").append(this.markerRow).append(";").append(this.markerCol).append("H");
+            sb.append(" ");
+            this.markerRow = 0;
+        }
 
         // Draw lower z-index widgets first so higher z-index widgets (e.g.
         // menu bars) render on top when their regions overlap.  Stable sort:
@@ -387,6 +473,146 @@ public class FloatingSurface {
     }
 
     /**
+     * @return the slot holding the given pinned widget (null if not pinned).
+     *         Package-visible so in-package tests can inspect resize geometry.
+     */
+    Slot slotOf(final Widget<?> widget) {
+        return this.slots.get(widget);
+    }
+
+    // -----------------------------------------------------------------
+    // Public API — focus + resize (the console-pane capabilities for widgets)
+    // -----------------------------------------------------------------
+
+    /**
+     * The stable focus/resize key of a widget: its vid when it has one
+     * (e.g. {@code think_widget}), else an identity-based fallback.  The
+     * key survives the widget being re-hydrated into a fresh instance by a
+     * {@code .display()} update — which is what makes focus and resize
+     * durable across re-floats.
+     */
+    public static String widgetKey(final Widget<?> widget) {
+        if (widget instanceof Obj obj && null != obj.vid())
+            return obj.vid().toString();
+        return "oid#" + System.identityHashCode(widget);
+    }
+
+    /**
+     * Resolve a (possibly stale) widget key through the re-float lineage —
+     * {@code add()} records oldKey-&gt;newKey for each anchored slot
+     * replacement, so focus and resize survive a widget re-hydrating into
+     * a fresh instance that does not carry the old vid.  Idempotent: a
+     * key that is already current resolves to itself.
+     */
+    public String resolveKey(final String key) {
+        if (null == key) return null;
+        String current = key;
+        String mapped;
+        for (int hops = 0; hops < 16 && null != (mapped = this.keyLineage.get(current)); hops++)
+            current = mapped;
+        return current;
+    }
+
+    /**
+     * @return the focused widget's stable key (the presentation hint
+     *         consumed by {@link #renderWidget}), or null when nothing is focused
+     */
+    public String focusKey() {
+        return this.focusKey;
+    }
+
+    /**
+     * Set the presentation focus hint.  The Console owns the focus registry
+     * (analogous to {@code activePane}); it pushes its choice here so the
+     * render pass knows which slot to mark.  Pass null to clear the focus.
+     */
+    public void setFocusKey(final String key) {
+        this.focusKey = key;
+    }
+
+    /**
+     * A deterministic snapshot of the pinned widgets in focus-cycling order:
+     * z-index (lowest first), then anchor reading order (top row → bottom
+     * row, left → right), then the top/left offsets, then target width
+     * (widest first).  The order depends only on slot geometry — stable
+     * across re-floats — so cycling never jumps around.
+     */
+    public List<Widget<?>> widgets() {
+        final List<Map.Entry<Widget<?>, Slot>> ordered = new ArrayList<>(this.slots.entrySet());
+        ordered.sort(Comparator.comparingInt((Map.Entry<Widget<?>, Slot> e) -> {
+                    final var s = e.getKey().getStyle();
+                    return null == s ? 0 : s.zIndex();
+                })
+                .thenComparingInt(e -> e.getValue().isAnchored() ? e.getValue().anchor.ordinal() : Integer.MAX_VALUE)
+                .thenComparingInt(e -> e.getValue().offsetRow)
+                .thenComparingInt(e -> e.getValue().offsetCol)
+                .thenComparingInt(e -> -e.getValue().targetWidth));
+        final List<Widget<?>> result = new ArrayList<>(ordered.size());
+        for (final Map.Entry<Widget<?>, Slot> e : ordered)
+            result.add(e.getKey());
+        return result;
+    }
+
+    /**
+     * Nudge the geometry of a pinned widget.  A width delta adjusts the
+     * slot's target width (placement, clipping, and — for widgets that shape
+     * content by it, e.g. the {@code AccordionWidget} body wrap — the
+     * rendered box).  A height delta adjusts the effective height cap.
+     * Both are clamped to sane minima and, for width, the terminal width.
+     *
+     * <p>Which edge actually moves is decided by the slot's anchor at render
+     * time — a bottom-anchored widget's top edge is what rises when its
+     * height grows, a right-anchored widget's left edge is what pulls in
+     * when its width shrinks, and so on (the anchor pins one edge; the free
+     * edge does the moving).
+     *
+     * <p>The slot — not the widget instance — carries the new geometry, so a
+     * later re-float keeps it.  Triggers a re-render.
+     *
+     * @param widget       the pinned widget to resize
+     * @param widthDelta   column delta to apply to the slot's target width (0 = leave)
+     * @param heightDelta  row delta to apply to the effective height cap (0 = leave)
+     * @return true if the widget is pinned and was nudged
+     */
+    public boolean nudge(final Widget<?> widget, final int widthDelta, final int heightDelta) {
+        final Slot slot = this.slots.get(widget);
+        if (null == slot) return false;
+        if (widthDelta != 0) {
+            final int termWidth = this.terminal.getWidth();
+            int w = slot.targetWidth + widthDelta;
+            // Clamp to the terminal width only when it is a sane value — a
+            // 0/1 (unconfigured) width must not collapse every resize to
+            // the lower bound.
+            if (termWidth > 1)
+                w = Math.min(w, termWidth);
+            slot.targetWidth = Math.max(MIN_WIDTH, w);
+            // Widgets that shape content by style width pick up the new
+            // width immediately; content-driven widgets ignore it, in which
+            // case the slot still governs placement and clipping.
+            try {
+                final var style = widget.getStyle();
+                if (null != style)
+                    style.width(slot.targetWidth);
+            } catch (final Exception ignored) {
+                // a headless or mid-rehydration widget may not accept it
+            }
+        }
+        if (heightDelta != 0) {
+            int natural = 0;
+            try {
+                natural = widget.height();
+            } catch (final Exception ignored) {
+                // headless widget — fall back to MIN_HEIGHT below
+            }
+            final int current = slot.heightCap > 0 ? slot.heightCap
+                    : (natural > 0 ? natural : MIN_HEIGHT);
+            slot.heightCap = Math.max(MIN_HEIGHT, current + heightDelta);
+        }
+        render();
+        return true;
+    }
+
+    /**
      * Remove all widgets and clear their rendered areas.
      */
     public void clear() {
@@ -439,8 +665,11 @@ public class FloatingSurface {
         final String formatted = widget.format();
         String[] lines = formatted.split("\n", -1);
 
-        // Apply height cap — keep header lines + last N body lines (scroll-up)
-        final int heightCap = widget.getStyle().height();
+        // Apply height cap — keep header lines + last N body lines (scroll-up).
+        // The slot carries the surface-owned cap (seeded from the widget's
+        // style height at first float, then user-resizable and carried across
+        // re-floats); the widget's own style height is the fallback.
+        final int heightCap = slot.heightCap > 0 ? slot.heightCap : widget.getStyle().height();
         final int effectiveHeight;
         if (heightCap > 0 && lines.length > heightCap) {
             final int header = widget.chromeLines();
@@ -481,11 +710,17 @@ public class FloatingSurface {
         if (scroll > 0 && oldPrevHeight > 0) {
             final int staleRow = oldLastRow - scroll;
             final int staleHeight = Math.min(oldPrevHeight, scroll);
-            if (staleRow >= 1) {
-                for (int r = 0; r < staleHeight; r++) {
-                    sb.append("\033[").append(staleRow + r).append(";").append(oldLastCol).append("H");
-                    sb.append(" ".repeat(Math.max(0, oldPrevWidth)));
-                }
+            // Wrap-tolerant band: a console line that wraps at the terminal
+            // width adds visual rows without extra newlines, so the true
+            // scroll can exceed scrollAccum by a few lines — the stale
+            // copy then sits a little ABOVE the computed position.  Blank a
+            // 4-row margin above and 1 below (scoped to the widget's own
+            // columns) so a stale copy cannot survive whichever way the
+            // count drifted.
+            final int top = Math.max(1, staleRow - 4);
+            for (int row = top; row < staleRow + staleHeight + 1; row++) {
+                sb.append("\033[").append(row).append(";").append(oldLastCol).append("H");
+                sb.append(" ".repeat(Math.max(0, oldPrevWidth)));
             }
         }
 
@@ -530,8 +765,30 @@ public class FloatingSurface {
             }
         }
 
+        // Focus marker: FOCUS_MARKER in the widget's own top-left corner
+        // cell — INSIDE the box.  Because the cell sits inside this
+        // widget's erase/redraw region, no other pass can leave a stale
+        // marker behind: whichever widget owns the cell next draw paints
+        // over it, and the top-of-pass blank covers the one pass in which
+        // the focused widget is gone or moved.
+        if (isFocused(widget)) {
+            this.markerRow = slot.lastRow;
+            this.markerCol = slot.lastCol;
+            sb.append("\033[").append(slot.lastRow).append(";").append(slot.lastCol).append("H");
+            sb.append("{{y}}").append(FOCUS_MARKER).append("{{X}}");
+        }
+
         slot.prevHeight = effectiveHeight;
         slot.prevWidth = newWidth;
+    }
+
+    /**
+     * True when the given widget is the focused one — the render-time
+     * counterpart of the Console's active-widget registry.
+     */
+    private boolean isFocused(final Widget<?> widget) {
+        final String key = this.resolveKey(this.focusKey);
+        return null != key && key.equals(widgetKey(widget));
     }
 
     /**
@@ -592,9 +849,17 @@ public class FloatingSurface {
 
         // ---- anchored mode ----
         final Anchor anchor;
-        final int targetWidth;
+        // Mutable: nudge() resizes it, and add() carries it across
+        // re-floats.  The slot — not the widget instance — is the source of
+        // truth for the width (widgets are re-hydrated as fresh instances).
+        volatile int targetWidth;
         final int offsetRow;
         final int offsetCol;
+
+        // Effective height cap — -1 = fall back to the widget's own style
+        // height (i.e. natural height).  Mutable: nudge() resizes it and
+        // add() carries it across re-floats.
+        volatile int heightCap = -1;
 
         // ---- computed each render ----
         int lastRow;

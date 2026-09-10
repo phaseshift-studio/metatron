@@ -39,9 +39,6 @@ jobs:
           VER=$(mvn -q help:evaluate -Dexpression=project.version -DforceStdout -DskipTests)
           echo "version=${VER}" >> "$GITHUB_OUTPUT"
 
-      - name: Stage the jar for the image build
-        run: cp "target/metatron-${{ steps.version.outputs.version }}-jar-with-dependencies.jar" metatron.jar
-
       - name: Set up QEMU (multi-arch)
         uses: docker/setup-qemu-action@v3
 

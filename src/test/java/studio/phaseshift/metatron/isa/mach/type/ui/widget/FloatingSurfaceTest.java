@@ -24,8 +24,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -376,5 +378,294 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
     public void shouldRemoveNonexistentWidgetGracefully() {
         final AccordionWidget w = new AccordionWidget("Ghost");
         assertDoesNotThrow(() -> surface.remove(w));
+    }
+
+    // ── widgetKey / focus state ────────────────────────────────────
+
+    @Test
+    public void shouldDeriveKeyFromVidWhenPresent() {
+        final AccordionWidget w = new AccordionWidget(new java.util.HashMap<>(),
+                studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_ACCORDION_TID,
+                studio.phaseshift.metatron.furi.fURI.Singleton.f("my_think_accordion"));
+        assertEquals("my_think_accordion", FloatingSurface.widgetKey(w));
+    }
+
+    @Test
+    public void shouldFallBackToIdentityKeyWithoutVid() {
+        final AccordionWidget w = new AccordionWidget("no-vid");
+        final String key = FloatingSurface.widgetKey(w);
+        assertTrue(key.startsWith("oid#"), "vid-less widget should get an identity key: " + key);
+    }
+
+    @Test
+    public void shouldRoundTripFocusKey() {
+        assertNull(surface.focusKey());
+        surface.setFocusKey("think_widget");
+        assertEquals("think_widget", surface.focusKey());
+        surface.setFocusKey(null);
+        assertNull(surface.focusKey());
+    }
+
+    // ── widgets() deterministic focus order ─────────────────────────
+
+    @Test
+    public void shouldOrderWidgetsByAnchorThenOffsetsThenWidth() {
+        final AccordionWidget topLeft = new AccordionWidget("top-left");
+        final AccordionWidget topRightNear = new AccordionWidget("top-right-near");
+        final AccordionWidget topRightFar = new AccordionWidget("top-right-far");
+        final AccordionWidget bottomRight = new AccordionWidget("bottom-right");
+        surface.add(topLeft, FloatingSurface.Anchor.TOP_LEFT, 30, 0, 0);
+        surface.add(topRightNear, FloatingSurface.Anchor.TOP_RIGHT, 40, 0, 0);
+        surface.add(topRightFar, FloatingSurface.Anchor.TOP_RIGHT, 20, 5, 0);
+        surface.add(bottomRight, FloatingSurface.Anchor.BOTTOM_RIGHT, 50, 0, 0);
+
+        final List<Widget<?>> ordered = surface.widgets();
+        assertEquals(4, ordered.size(), "snapshot should hold every pinned widget");
+        assertSame(topLeft, ordered.get(0), "top row before bottom row (anchor reading order)");
+        assertSame(topRightNear, ordered.get(1), "smaller top offset first within the same anchor");
+        assertSame(topRightFar, ordered.get(2), "larger top offset after within the same anchor");
+        assertSame(bottomRight, ordered.get(3), "bottom row last");
+    }
+
+    @Test
+    public void shouldOrderWidgetsByZIndexFirst() {
+        final AccordionWidget high = new AccordionWidget("high");
+        final AccordionWidget low = new AccordionWidget("low");
+        final AccordionWidget middle = new AccordionWidget("middle");
+        surface.add(high, FloatingSurface.Anchor.TOP_LEFT, 30, 0, 0);
+        surface.add(low, FloatingSurface.Anchor.BOTTOM_RIGHT, 50, 0, 0);
+        assertEquals(List.of(high, low), surface.widgets(),
+                "equal z-index keeps anchor reading order (TOP_LEFT before BOTTOM_RIGHT)");
+        // Raise the TOP_LEFT widget's z-index: it should jump to the end of
+        // the cycle (highest z draws on top) — the other two keep anchor order.
+        high.style().zIndex(Integer.MAX_VALUE).applyStyle();
+        surface.add(middle, FloatingSurface.Anchor.TOP_RIGHT, 30, 0, 0);
+        assertEquals(List.of(middle, low, high), surface.widgets(),
+                "higher z-index sorts last; within equal z, anchor reading order (TOP_RIGHT before BOTTOM_RIGHT)");
+    }
+
+    // ── nudge (resize) ─────────────────────────────────────────────
+
+    @Test
+    public void shouldNudgeWidthAndClampToLowerBound() {
+        final AccordionWidget w = new AccordionWidget("sizing");
+        surface.add(w, FloatingSurface.Anchor.TOP_RIGHT, 40, 0, 0);
+        assertTrue(surface.nudge(w, 8, 0), "nudging a pinned widget should report success");
+        assertEquals(48, surface.slotOf(w).targetWidth);
+        assertEquals(48, w.getStyle().width(),
+                "the style width should be updated for content-shaping widgets");
+        surface.nudge(w, -999, 0);
+        assertEquals(10, surface.slotOf(w).targetWidth,
+                "width shrinks to the 10-column floor, never below");
+    }
+
+    @Test
+    public void shouldNudgeHeightCapFromNaturalAndClampToLowerBound() {
+        final AccordionWidget w = new AccordionWidget("rows", "line one\nline two\nline three");
+        w.expand();
+        surface.add(w, FloatingSurface.Anchor.BOTTOM_LEFT, 40, 0, 0);
+        assertEquals(5, w.height(), "three body lines + title + bottom border = 5");
+        assertTrue(surface.nudge(w, 0, 2));
+        assertEquals(5 + 2, surface.slotOf(w).heightCap);
+        surface.nudge(w, 0, -999);
+        assertEquals(3, surface.slotOf(w).heightCap, "height clamp floor is 3 rows");
+    }
+
+    @Test
+    public void shouldRefuseToNudgeUnpinnedWidget() {
+        final AccordionWidget ghost = new AccordionWidget("ghost");
+        assertFalse(surface.nudge(ghost, 4, 4));
+    }
+
+    // ── durable geometry across re-float (.display() re-hydration) ──
+
+    @Test
+    public void shouldKeepResizedGeometryWhenWidgetReFloats() {
+        final AccordionWidget original = new AccordionWidget("thoughts", "body content");
+        original.expand();
+        assertEquals(3, original.height(), "1 body line + title bar + bottom border = 3 rows");
+        surface.add(original, FloatingSurface.Anchor.BOTTOM_LEFT, 40, 0, 0);
+        surface.nudge(original, 8, 0);   // 40 → 48
+        surface.nudge(original, 0, 3);   // natural height (3) + 3 = 6
+
+        // A .display() update re-hydrates the widget as a FRESH instance and
+        // re-floats it at its stored (un-resized) style — the surface must
+        // keep the geometry it already owns.
+        final AccordionWidget rehydrated = new AccordionWidget("thoughts", "body content");
+        rehydrated.expand();
+        surface.add(rehydrated, FloatingSurface.Anchor.BOTTOM_LEFT, 40, 0, 0);
+
+        assertFalse(surface.contains(original), "the stale instance should be replaced");
+        final FloatingSurface.Slot slot = surface.slotOf(rehydrated);
+        assertNotNull(slot);
+        assertEquals(48, slot.targetWidth, "resized width must survive the re-float");
+        assertEquals(3 + 3, slot.heightCap, "resized height cap must survive the re-float");
+    }
+
+    // ── focus marker render ────────────────────────────────────────
+
+    @Test
+    public void shouldRenderFocusMarkerOnlyForFocusedWidget() throws Exception {
+        final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        final Terminal term = TerminalBuilder.builder().dumb(true)
+                .size(new org.jline.terminal.Size(40, 120))
+                .streams(new java.io.ByteArrayInputStream(new byte[0]), out).build();
+        final FloatingSurface diag = new FloatingSurface(term);
+        final AccordionWidget left = new AccordionWidget("left");
+        final AccordionWidget right = new AccordionWidget("right");
+        diag.add(left, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        diag.add(right, FloatingSurface.Anchor.TOP_RIGHT, 40, 0, 0);
+
+        diag.setFocusKey(FloatingSurface.widgetKey(left));
+        diag.render();
+        Thread.sleep(300);
+        final String focusedPass = out.toString(java.nio.charset.StandardCharsets.UTF_8);
+        assertTrue(focusedPass.contains("▶"),
+                "the pass with a focused widget must draw the focus marker: "
+                        + focusedPass.replace("\033", "<ESC>"));
+
+        diag.setFocusKey(null);
+        diag.render();
+        Thread.sleep(300);
+        final String total = out.toString(java.nio.charset.StandardCharsets.UTF_8);
+        final String defocusedPass = total.substring(focusedPass.length());
+        assertFalse(defocusedPass.contains("▶"),
+                "the pass after defocus must blank the stale marker cell: "
+                        + defocusedPass.replace("\033", "<ESC>"));
+        term.close();
+    }
+
+    // ── focus durability across re-float (vid-less fresh instances) ──
+
+    @Test
+    public void shouldCarryFocusAcrossRefloatIntoFreshInstance() throws Exception {
+        final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        final Terminal term = TerminalBuilder.builder().dumb(true)
+                .size(new org.jline.terminal.Size(40, 120))
+                .streams(new java.io.ByteArrayInputStream(new byte[0]), out).build();
+        final FloatingSurface diag = new FloatingSurface(term);
+
+        // first float — fresh AccordionWidget instance (no vid, like a
+        // store re-hydration of a vid-less widget)
+        final AccordionWidget first = new AccordionWidget("audit");
+        diag.add(first, FloatingSurface.Anchor.BOTTOM_RIGHT, 65, 8, -2);
+        final String firstKey = FloatingSurface.widgetKey(first);
+        diag.setFocusKey(firstKey);
+        diag.render();
+        Thread.sleep(300);
+        final String focusPass = out.toString(java.nio.charset.StandardCharsets.UTF_8);
+        assertEquals(1, countOccurrences(focusPass, "▶"),
+                "marker present while the original instance is focused: "
+                        + focusPass.replace("\033", "<ESC>"));
+
+        // re-float — every .display() update builds a FRESH instance; the
+        // old key must keep resolving to the newcomer (the live bug: focus
+        // and resize died after the first update because the fresh
+        // instance carried no vid and the lookup fell through)
+        final AccordionWidget fresh = new AccordionWidget("audit");
+        diag.add(fresh, FloatingSurface.Anchor.BOTTOM_RIGHT, 65, 8, -2);
+        final String freshKey = FloatingSurface.widgetKey(fresh);
+        assertNotEquals(firstKey, freshKey,
+                "the fresh re-floated instance must have a different identity key");
+        assertEquals(freshKey, diag.resolveKey(firstKey),
+                "the old focus key must resolve through the re-float lineage to the fresh instance");
+
+        diag.render();
+        Thread.sleep(300);
+        final String refloatedPass = out.toString(java.nio.charset.StandardCharsets.UTF_8)
+                .substring(focusPass.length());
+        assertEquals(1, countOccurrences(refloatedPass, "▶"),
+                "focus must survive the re-float — the fresh instance is the focused one: "
+                        + refloatedPass.replace("\033", "<ESC>"));
+        // overpainting at the SAME cell is harmless (two coalesced passes);
+        // the real stacking is a box landing on a DIFFERENT row
+        final java.util.Set<String> boxPositions = new java.util.LinkedHashSet<>();
+        final java.util.regex.Matcher box = java.util.regex.Pattern
+                .compile("\\033\\[(\\d+);(\\d+)H(?:\\033\\[m)*┌")
+                .matcher(refloatedPass);
+        while (box.find())
+            boxPositions.add(box.group(1) + ";" + box.group(2));
+        assertEquals(1, boxPositions.size(),
+                "the re-float must replace, not stack — every box copy lands on the same cell: "
+                        + refloatedPass.replace("\033", "<ESC>"));
+        term.close();
+    }
+
+    @Test
+    public void shouldKeepEveryPinnedWidgetKeyResolvableAcrossRepeatedRefloats() throws Exception {
+        final Terminal term = TerminalBuilder.builder().dumb(true)
+                .size(new org.jline.terminal.Size(40, 120))
+                .streams(new java.io.ByteArrayInputStream(new byte[0]), new java.io.ByteArrayOutputStream())
+                .build();
+        final FloatingSurface diag = new FloatingSurface(term);
+        final AccordionWidget audit = new AccordionWidget("audit");
+        final AccordionWidget notes = new AccordionWidget("notes");
+        diag.add(audit, FloatingSurface.Anchor.BOTTOM_RIGHT, 65, 8, -2);
+        diag.add(notes, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        final String auditKey = FloatingSurface.widgetKey(audit);
+        final String notesKey = FloatingSurface.widgetKey(notes);
+
+        // two update generations of the same slot (the update pattern that
+        // killed focus: @<xxx>>>=[body=>...].display() on every change)
+        diag.add(new AccordionWidget("audit"), FloatingSurface.Anchor.BOTTOM_RIGHT, 65, 8, -2);
+        diag.add(new AccordionWidget("audit"), FloatingSurface.Anchor.BOTTOM_RIGHT, 65, 8, -2);
+
+        final List<Widget<?>> live = diag.widgets();
+        assertEquals(2, live.size(), "two pinned widgets, no zombie copies: " + live);
+        assertTrue(live.stream().anyMatch(w -> FloatingSurface.widgetKey(w).equals(notesKey)),
+                "the untouched widget must keep its key: " + live);
+        final String resolved = diag.resolveKey(auditKey);
+        assertTrue(live.stream().anyMatch(w -> FloatingSurface.widgetKey(w).equals(resolved)),
+                "the oldest audit key must resolve to a live widget key — got "
+                        + resolved + " vs " + live);
+        assertEquals(1, live.stream().filter(w -> FloatingSurface.widgetKey(w).equals(resolved)).count(),
+                "exactly one live widget may carry the resolved key (no duplicates): " + live);
+        term.close();
+    }
+
+    // ── focus marker ghosting (exactly one marker on screen, ever) ──
+
+    @Test
+    public void shouldKeepExactlyOneFocusMarkerWhenFocusMoves() throws Exception {
+        final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        final Terminal term = TerminalBuilder.builder().dumb(true)
+                .size(new org.jline.terminal.Size(40, 120))
+                .streams(new java.io.ByteArrayInputStream(new byte[0]), out).build();
+        final FloatingSurface diag = new FloatingSurface(term);
+        final AccordionWidget left = new AccordionWidget("left");
+        final AccordionWidget right = new AccordionWidget("right");
+        diag.add(left, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        diag.add(right, FloatingSurface.Anchor.TOP_RIGHT, 40, 0, 0);
+
+        diag.setFocusKey(FloatingSurface.widgetKey(left));
+        diag.render();
+        Thread.sleep(300);
+        final String focusedPass = out.toString(java.nio.charset.StandardCharsets.UTF_8);
+        assertEquals(1, countOccurrences(focusedPass, "▶"),
+                "exactly one marker while a widget is focused: "
+                        + focusedPass.replace("\033", "<ESC>"));
+
+        // move the focus — the old marker lived inside the old widget's box
+        // (repainted clean this pass); the new corner marker is the only one
+        diag.setFocusKey(FloatingSurface.widgetKey(right));
+        diag.render();
+        Thread.sleep(300);
+        final String movedPass = out.toString(java.nio.charset.StandardCharsets.UTF_8)
+                .substring(focusedPass.length());
+        assertEquals(1, countOccurrences(movedPass, "▶"),
+                "exactly one marker after focus moves — the previous pass's "
+                        + "marker cell must be repainted clean, no ghost: "
+                        + movedPass.replace("\033", "<ESC>"));
+        term.close();
+    }
+
+    static int countOccurrences(final String haystack, final String needle) {
+        int count = 0;
+        int index = 0;
+        while ((index = haystack.indexOf(needle, index)) >= 0) {
+            count++;
+            index += needle.length();
+        }
+        return count;
     }
 }

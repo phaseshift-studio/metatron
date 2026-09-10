@@ -97,7 +97,7 @@ public interface WebSocketObj extends Rec, Closeable {
                 this.getWebSocket().close();
             }
         } catch (final Exception e) {
-            this.logger().error("error closing websocket: %s", this.vidOrTid(), e);
+            this.logger().error("error closing websocket: %s", e);
         }
     }
 

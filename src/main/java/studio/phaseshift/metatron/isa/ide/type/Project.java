@@ -37,11 +37,15 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_at_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -68,6 +72,16 @@ public class Project extends MRec {
         ////////////////////////////////////////////////////////////////
         project.at(CODE, lst(), MUTABLE);
         project.at("idx", rec(), MUTABLE);
+        project.at(COMMAND, rec(
+                uri("read_file"), instC(
+                        root.vid().extend(COMMAND).extend("read_file"),
+                        rec(
+                                uri(FILE), URI_TYPE,
+                                uri(MIN), isa_(INT_TYPE).else_(jnt(0)).tryToInst(),
+                                uri(MAX), isa_(INT_TYPE).else_(jnt(Long.MAX_VALUE)).tryToInst()),
+                        from_(uri(FILE)).split_(str("\n")).as_(REC_TYPE)
+                                .select_(rec(is_(gte_(from_(uri(MIN)))), id_()))
+                                .select_(rec(is_(lt_(from_(uri(MAX)))), id_())).tryToInst())));
         project.addSubscription(f("auto_save"),
                 ObjmtronSerializer.parse("""
                                          sub::[target=> <%s/code/#>,

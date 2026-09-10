@@ -96,6 +96,10 @@ public interface Feature extends Rec {
     default void onToolExecuted(final Agent agent, final Obj result) {
     }
 
+    default void onToolResult(final Agent agent, final Inst tool, final Obj result) {
+        //TODO finish
+    }
+
     // ── Completion ───────────────────────────────────────────────
 
     /**

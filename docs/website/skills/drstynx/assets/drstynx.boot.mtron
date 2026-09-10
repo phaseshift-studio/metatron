@@ -255,13 +255,13 @@ scratch
         [======================]
 [== if the llm session already exists, continue, else create it ==]    
 [== <drdb:llm_session>.mult(print('\n what session number?: ').stdin().as(uri::T)).to(session_vid) ==]
-[== model::[
+model::[
   provider => deepseek,
   protocol => openai,
   host     => <https://api.deepseek.com>,
   api_key  => !*</sys/env/DEEPSEEK_API_KEY>,
   llm      => <deepseek-v4-pro> 
-]@/usr/dr/model; ==]
+]@/usr/dr/model;
 human -> model::[llm=>'human:latest'];
 model::[provider     => ollama,
         protocol     => ollama,
@@ -288,7 +288,7 @@ agent::[
                       response      => [complete => print(-<modal_widget::[title => '{{r}}agent response{{b}}',
                                                                      body  => "{{y}}${>>chat}",
                                                                      style => style::[border    =>continuous,
-                                                                                      width     =>200,
+                                                                                      width     =>150,
                                                                                       background=>"{{[k]}}",
                                                                                       foreground=>"{{b}}",
                                                                                       zIndex    => 100]].as?str<=widget(str::T))],
@@ -296,7 +296,12 @@ agent::[
   think_feature::::::[on_agent_ctor => inst(a=>agent::T){
                                           accordion_widget::[title => "thoughts", 
                                                              body  => "",
-                                                             style => style::[anchor=>top_middle,right=>10,top=>3,height=>10,width=>80]]@<think_widget> },
+                                                             style => style::[
+                                                               anchor=>top_middle,
+                                                               right=>10,
+                                                               top=>2,
+                                                               height=>40,
+                                                               width=>125]]@<think_widget> },
                      on_before_chat => inst(){ @<think_widget> >>= [body=>""] },
                      root           => /usr/dr/message,
                      think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
@@ -313,8 +318,13 @@ agent::[
   audit_feature::::::[on_agent_ctor => inst(a=>agent::T) {   
                                          accordion_widget::[title  => "audit",
                                                             body   => "",
-                                                            style  => style::[anchor=>bottom_right,width=>65,height=>30,
-                                                                              left=>-2,top=>8,foreground =>"{{y}}"]]@<audit_widget> },
+                                                            style  => style::[
+                                                              anchor=>bottom_right,
+                                                              width =>65,
+                                                              height=>45,
+                                                              left  =>-2,
+                                                              top   =>5,
+                                                              foreground =>"{{y}}"]]@<audit_widget> },
                       to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() },
                       root          => /usr/dr/audit],
   [== bash_feature:::::::[reject        => ["\brm\b"]], ==]
@@ -328,6 +338,8 @@ agent::[
   tool_feature:::::::[tool          => [!*gremlin,
                                         !*sql,
                                         !*codegraph,
+                                        !*read_file,
+                                        !*edit_file,
                                         !*bash?reject=['\brm\b'],
                                         mcp_client::[host=><http://localhost:8777/mcp>],
                                         forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
@@ -339,12 +351,12 @@ agent::[
 [-- end::asciidoc_tag[] --]
 [== user console ==] 
 console::[header=>!*boot/args/header]@/usr/marko/console;
-label_line_widget::[body   =>"[{{r}}m{{b}}]enu bar",
+[==label_line_widget::[body   =>"[{{r}}m{{b}}]enu bar",
                     key    =>alt_m,
                     on_key =>@dr.chat("are you there?"),
                     style  =>style::[foreground=>"{{b}}"]]@ll;
 menu_bar_widget::::[lines  =>[!*ll],
-             style  =>[background=>"{{[k]}}"]]@menu.display();
+             style  =>[background=>"{{[k]}}"]]@menu.display();==]
 [==!(*<mfs:skills/agent/SKILL.md>.-<'/usr/agent'>-.
                                             plus(*<boot/args/internal/agent_home>.as(str::T)).
                                             sum?str<=str{*}().

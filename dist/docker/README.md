@@ -23,10 +23,19 @@ Self-contained metatron server image: runs the uber-jar headless against a boot 
 ## Build
 
 ```bash
-# from the repo root, after `mvn package`:
-cp target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar metatron.jar
+# one command — packages the uber-jar inside metatron-build:24 (docker is the only host
+# requirement) and builds this image:
+bin/metatron-docker image
+
+# by hand: package first, then build.  The Dockerfile COPYs the packaged jar out of target/.
+mvn -DskipTests package
 docker build -f dist/docker/Dockerfile -t metatron:0.1-SNAPSHOT .
 ```
+
+There is no staging copy of the jar: `dist/docker/Dockerfile` COPYs
+`target/metatron-*-jar-with-dependencies.jar`, and `.dockerignore` whitelists exactly that file (plus
+`boot/`, `conf/`, `dist/docker/`, the two skills trees and `bin/wsplus`) into the build context — so the
+context stays small even though the repo is huge, and a plain `docker build` works right after `mvn package`.
 
 The build context is whitelisted by `.dockerignore` (jar + `boot/` + `conf/`), so the context stays small even though
 the repo is huge.

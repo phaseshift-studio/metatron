@@ -1923,6 +1923,7 @@ Over the remainder of this documentation, each of the components of Dr.Stynx&#82
                       response      =&gt; [complete =&gt; print(-&lt;modal_widget::[title =&gt; '{{r}}agent response{{b}}',
                                                                      body  =&gt; "{{y}}${&gt;&gt;chat}",
                                                                      style =&gt; style::[border    =&gt;continuous,
+                                                                                      width     =&gt;200,
                                                                                       background=&gt;"{{[k]}}",
                                                                                       foreground=&gt;"{{b}}",
                                                                                       zIndex    =&gt; 100]].as?str&lt;=widget(str::T))],
@@ -1951,7 +1952,7 @@ Over the remainder of this documentation, each of the components of Dr.Stynx&#82
                                                                               left=&gt;-2,top=&gt;8,foreground =&gt;"{{y}}"]]@&lt;audit_widget&gt; },
                       to            =&gt; inst(a=&gt;str::T){ @&lt;audit_widget&gt;&gt;&gt;=[body=&gt;+*a].display() },
                       root          =&gt; /usr/dr/audit],
-  bash_feature:::::::[reject        =&gt; ["\brm\b"]],
+  [== bash_feature:::::::[reject        =&gt; ["\brm\b"]], ==]
   summarize_feature::[root          =&gt; /usr/dr],
   embed_feature::::::[root          =&gt; embed:chat_result,
                       model         =&gt; model::[provider     =&gt; ollama,
@@ -1962,6 +1963,7 @@ Over the remainder of this documentation, each of the components of Dr.Stynx&#82
   tool_feature:::::::[tool          =&gt; [!*gremlin,
                                         !*sql,
                                         !*codegraph,
+                                        !*bash?reject=['\brm\b'],
                                         mcp_client::[host=&gt;&lt;http://localhost:8777/mcp&gt;],
                                         forget?noobj{0}&lt;=noobj{0}(){ /usr/dr/message/+ -&gt; noobj }]],
   cost_feature:::::::[root          =&gt; /usr/dr/cost,
@@ -3046,7 +3048,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}M{{b}}E{{b}}t{{r}}A{{m}}t{{b}}r{{g}}O{{y}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{g}}m{{c}}E{{m}}T{{b}}A{{g}}t{{y}}R{{m}}O{{m}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -6958,14 +6960,14 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
 ==&gt;'tmpfs                    6355856       6716   6349140   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2         959786032  512249664 398708160  57% /'
-==&gt;'tmpfs                   31779268     187576  31591692   1% /dev/shm'
+==&gt;'/dev/nvme1n1p2         959786032  512432940 398524884  57% /'
+==&gt;'tmpfs                   31779268     229340  31549928   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779268          0  31779268   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        256   6355596   1% /run/user/1000'
+==&gt;'tmpfs                    6355852        264   6355588   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1412342980 508865564  74% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1412524628 508683916  74% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
@@ -7201,7 +7203,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.09:9/02/59/25/936?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.09:9/16/09/57/217?tz=-0600&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -9090,7 +9092,7 @@ mtron&gt; */sys/thread/b.stop()
      code=&gt;at(ab).plus('B'),
      loop=&gt;second::1.0000,
      state=&gt;pause]@/sys/thread/b,
-    result=&gt;'BBAABBAABBAABBABBAABABABBABABBAAB'@ab]@/sys/thread/b
+    result=&gt;'BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAAB'@ab]@/sys/thread/b
 mtron&gt; */sys/thread/a.stop()
 ==&gt;virtual::[
     code=&gt;at(ab).plus('A'),
@@ -9102,9 +9104,9 @@ mtron&gt; */sys/thread/a.stop()
      loop=&gt;second::1.0000,
      yield=&gt;!*/sys/thread/b]@/sys/thread/a,
     state=&gt;stop,
-    result=&gt;'BBAABBAABBAABBABBAABABABBABABBAABA'@ab]@/sys/thread/a
+    result=&gt;'BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABA'@ab]@/sys/thread/a
 mtron&gt; *ab
-==&gt;'BBAABBAABBAABBABBAABABABBABABBAABABAB'</code></pre>
+==&gt;'BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABAABAB'</code></pre>
 </div>
 </div>
 <div class="colist arabic">

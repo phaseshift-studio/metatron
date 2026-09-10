@@ -39,6 +39,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Editor;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Hotkeys;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -47,6 +48,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitLayout;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.ExplainTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.InstSelectorTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.fURISelectorTool;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.PanelWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.SubsWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
@@ -125,6 +127,8 @@ public final class CommandPalette extends MRec {
                     .addRow(List.of(cc(":postfix [text]"), "postfix input with text"))
                     .addRow(List.of(kc("<alt>+f") + "  " + cc(":format"), "pretty-print current buffer"))
                     .addRow(List.of(kc("<alt>+e") + "  " + cc(":editor"), "full screen nano editor with current buffer"))
+                    .addRow(List.of(kc("<alt>+b") + "  " + cc(":bg"), "background the job holding the console — keys return"))
+                    .addRow(List.of(cc(":bg [stop]"), "list (or stop) jobs backgrounded with " + kc("<alt>+b")))
                     //.addRow(List.of(kc("<ctrl>+d") + "  " + cc(":stop-agents"), "stop all agent threads"))
                     .addRow(List.of(kc("<alt>+l") + "  " + cc(":line"), "add a new chat overlay line (\\_)"))
                     .addRow(List.of(cc(":lang [mtron|gremlin|sql]"), "switch console language"))
@@ -142,6 +146,13 @@ public final class CommandPalette extends MRec {
                     .addRow(List.of(cc(":focus [id]"), "focus pane by id (no arg shows current)"))
                     .addRow(List.of(cc(":panes"), "list all panes"))
                     .addRow(List.of(cc(":close"), "close active pane"))
+                    /// ///////////////////////////////////////////////////////////////////////////////////////
+                    .addRow(List.of("{{[g]&w}}floating widgets", "{{[g]&w}}"))
+                    .addRow(List.of(kc("<alt>+w"), "cycle focus between floating widgets"))
+                    .addRow(List.of(kc("<alt>+^") + "  /  " + kc("<alt>+v"), "grow / shrink focused widget height"))
+                    .addRow(List.of(kc("<alt>+>") + "  /  " + kc("<alt>+<"), "grow / shrink focused widget width (pane resize when no widget focused)"))
+                    .addRow(List.of(cc(":widgets") + "  " + cc(":focus-widget [off]"), "list floating widgets / clear (or set) the focus"))
+                    .addRow(List.of(cc(":keymap"), "who currently owns the builtin shortcut keys (builtin vs shadowed)"))
                     /// ///////////////////////////////////////////////////////////////////////////////////////
                     .addRow(List.of("{{[g]&w}}completion", "{{[g]&w}}"))
                     .addRow(List.of(kc("<tab>") + " at / or :", "fURI path auto-complete"))
@@ -247,6 +258,22 @@ public final class CommandPalette extends MRec {
                 Commands.less(Console.getTerminal(), Console.getTerminal().input(), new PrintStream(Console.getTerminal().output()), System.err, Paths.get(""), new String[0]);
             } catch (final Exception e) {
                 throw new RuntimeException(e);
+            }
+            return noobj();
+        }), MUTABLE);
+
+        // ===== bg — jobs detached with <alt>+b =====
+        this.at("bg", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+            final String arg = lhs.isStr() ? lhs.strValue().trim() : "";
+            if (arg.startsWith("stop")) {
+                final int stopped = console.stopBackgroundJobs();
+                LOG.info("stopped {{y}}%d{{X}} detached job%s", stopped, 1 == stopped ? "" : "s");
+            } else if (console.backgroundJobVids().isEmpty()) {
+                LOG.info("no detached jobs — {{y}}<" + Hotkeys.DETACH_COMBO + ">{{X}} backgrounds whatever holds the console");
+            } else {
+                console.backgroundJobVids().forEach(vid ->
+                        LOG.info("{{y}}%s{{X}} {{k}}running{{X}}", vid));
+                LOG.info("{{m}}:bg stop{{X}} stops them all");
             }
             return noobj();
         }), MUTABLE);
@@ -437,6 +464,72 @@ public final class CommandPalette extends MRec {
             return noobj();
         }), MUTABLE);
 
+        // ===== next-widget =====
+        this.at("next-widget", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+            console.nextWidget();
+            return noobj();
+        }), MUTABLE);
+
+        // ===== prev-widget =====
+        this.at("prev-widget", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+            console.prevWidget();
+            return noobj();
+        }), MUTABLE);
+
+        // ===== focus-widget [name | off] =====
+        this.at("focus-widget", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+            final String arg = lhs.isStr() ? lhs.strValue().trim() : "";
+            if (arg.isEmpty() || arg.equalsIgnoreCase("off") || arg.equalsIgnoreCase("none")) {
+                console.focusWidget(null);
+                return noobj();
+            }
+            studio.phaseshift.metatron.isa.mach.type.ui.Widget<?> match = null;
+            for (final studio.phaseshift.metatron.isa.mach.type.ui.Widget<?> w : console.getFloatingWidgets()) {
+                if (arg.equalsIgnoreCase(FloatingSurface.widgetKey(w))) {
+                    match = w;
+                    break;
+                }
+            }
+            if (null == match)
+                LOG.error("no floating widget named {{r}}%s{{X}}", arg);
+            else
+                console.focusWidget(match);
+            return noobj();
+        }), MUTABLE);
+
+        // ===== widgets (list floating widgets, marked like :panes) =====
+        this.at("widgets", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+            final List<studio.phaseshift.metatron.isa.mach.type.ui.Widget<?>> widgets = console.getFloatingWidgets();
+            final studio.phaseshift.metatron.isa.mach.type.ui.Widget<?> active = console.getActiveWidget();
+            final String activeKey = null == active ? null : FloatingSurface.widgetKey(active);
+            LOG.info("{{y}}%d{{X}} floating widget(s):", widgets.size());
+            for (final studio.phaseshift.metatron.isa.mach.type.ui.Widget<?> w : widgets) {
+                final String key = FloatingSurface.widgetKey(w);
+                final String activeMark = key.equals(activeKey) ? " {{g}}[active]{{X}}" : "";
+                LOG.info("  [%s] %s%s", key, w.getClass().getSimpleName(), activeMark);
+            }
+            if (widgets.isEmpty())
+                LOG.info("  (none)");
+            return noobj();
+        }), MUTABLE);
+
+        // ===== keymap (who currently owns the builtin shortcut keys) =====
+        this.at("keymap", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+            final org.jline.keymap.KeyMap<?> keyMap = console.getWidgets().getKeyMap();
+            final long escCount = keyMap.getBoundKeys().entrySet().stream()
+                    .filter(e -> e.getKey().startsWith("\033")).count();
+            LOG.info("{{y}}%d{{X}} escape-sequence bindings in the active keymap", escCount);
+            LOG.info("built-in shortcut keys ({{g}}builtin{{X}} = held by the console, reasserted each prompt):");
+            for (final String sequence : console.builtinKeySequences()) {
+                final Object bound = console.boundKeyHandler(sequence);
+                final Object ours = console.builtinKeyHandler(sequence);
+                final boolean oursActive = (null != ours) && (ours == bound);
+                final String label = this.builtinKeyLabels.getOrDefault(sequence, org.jline.keymap.KeyMap.display(sequence));
+                LOG.info("  %-8s -> %s %s", label, (null == bound) ? "(unbound)" : (oursActive ? "{{g}}builtin{{X}}" : "{{r}}shadowed{{X}}"), (oursActive || null == bound) ? "" : "; owner: " + bound);
+            }
+            return noobj();
+        }), MUTABLE);
+
         // ===== shrink (Alt+<) =====
         this.at("shrink", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             if (console.isSplitMode()) {
@@ -514,6 +607,21 @@ public final class CommandPalette extends MRec {
         this.simpleKeys.add(Map.entry(command, keySequence));
     }
 
+    /**
+     * Bind a built-in shortcut and register it with the console so the
+     * console reasserts it before every prompt — a later binder (menu line
+     * key, tool) can shadow it for its own turn, but never across prompts.
+     */
+    private void bindBuiltin(final Widgets widgets, final String sequence,
+                             final String label, final Widget handler) {
+        widgets.getKeyMap().bind(handler, sequence);
+        this.console.registerBuiltinKey(sequence, handler);
+        this.builtinKeyLabels.put(sequence, label);
+    }
+
+    /** sequence -&gt; human label for the builtin shortcuts (e.g. "\033<" -&gt; "alt+<") */
+    private final java.util.Map<String, String> builtinKeyLabels = new java.util.LinkedHashMap<>();
+
     // ========== Keyboard Shortcuts ==========
 
     /**
@@ -557,20 +665,64 @@ public final class CommandPalette extends MRec {
             }
             return true;
         }, alt('p'));
-        widgets.getKeyMap().bind((Widget) () -> {
-            if (console.isSplitMode()) {
-                this.at("shrink").apply(noobj());
-                console.redrawBuffer();
-            }
-            return true;
-        }, "\033<");
-        widgets.getKeyMap().bind((Widget) () -> {
-            if (console.isSplitMode()) {
-                this.at("grow").apply(noobj());
-                console.redrawBuffer();
-            }
-            return true;
-        }, "\033>");
+        // -------------------------------------------------------
+        // Floating widgets — a focused widget takes the resize keys;
+        // panes keep their existing grow/shrink when nothing is focused.
+        // (alt+> grows / alt+< shrinks, in both worlds — one muscle memory.)
+        //
+        // These five are REASSERTED builtins: the console reclaims them
+        // before every prompt, so no later binder (menu line key, tool,
+        // anything) can shadow a shortcut across turns.
+        //
+        // NOTE: the jline fork pre-binds \e< and \e> to
+        // beginning-of-history / end-of-history — silent, no output.  That
+        // is why an unshadowed-by-us alt+< / alt+> "does nothing" (it is
+        // quietly jumping the prompt history).
+        {
+            final Widget shrinkWidth = () -> {
+                if (console.getActiveWidget() != null) {
+                    console.shrinkActiveWidgetWidth();
+                } else if (console.isSplitMode()) {
+                    this.at("shrink").apply(noobj());
+                    console.redrawBuffer();
+                }
+                return true;
+            };
+            bindBuiltin(widgets, "\033<", "alt+<", shrinkWidth);
+            final Widget growWidth = () -> {
+                if (console.getActiveWidget() != null) {
+                    console.growActiveWidgetWidth();
+                } else if (console.isSplitMode()) {
+                    this.at("grow").apply(noobj());
+                    console.redrawBuffer();
+                }
+                return true;
+            };
+            bindBuiltin(widgets, "\033>", "alt+>", growWidth);
+            final Widget nextFocus = () -> {
+                if (console.hasFloatingWidgets()) {
+                    console.nextWidget();
+                }
+                return true;
+            };
+            bindBuiltin(widgets, alt('w'), "alt+w", nextFocus);
+            final Widget shrinkHeight = () -> {
+                if (console.getActiveWidget() != null) {
+                    // v = down = shrink height (free edge moves per anchor)
+                    console.shrinkActiveWidgetHeight();
+                }
+                return true;
+            };
+            bindBuiltin(widgets, alt('v'), "alt+v", shrinkHeight);
+            final Widget growHeight = () -> {
+                if (console.getActiveWidget() != null) {
+                    // ^ = up = grow height (free edge moves per anchor)
+                    console.growActiveWidgetHeight();
+                }
+                return true;
+            };
+            bindBuiltin(widgets, "\033^", "alt+^", growHeight);
+        }
         widgets.getKeyMap().bind((Widget) () -> {
             this.at("split").apply(str("v"));
             console.redrawBuffer();

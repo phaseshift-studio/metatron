@@ -22,11 +22,14 @@ import org.jline.builtins.ConfigurationPath;
 import org.jline.console.SystemRegistry;
 import org.jline.console.impl.Builtins;
 import org.jline.console.impl.SystemRegistryImpl;
+import org.jline.keymap.KeyMap;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
+import org.jline.terminal.Attributes;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
+import org.jline.utils.NonBlockingReader;
 import org.jline.widget.Widgets;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
@@ -43,7 +46,9 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
+import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
+import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.Pane;
@@ -123,6 +128,13 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     private static Terminal terminal;
     private final LineReader reader;
     private final Widgets widgets;
+    /**
+     * Built-in key bindings (sequence -&gt; handler object as bound) that must
+     * keep working across prompts.  A later binder on the same sequence (a
+     * menu line key, a tool, anything) shadows a builtin until the next
+     * prompt, when {@link #reassertBuiltinKeys} reclaims it.
+     */
+    private final java.util.Map<String, Object> builtinBindings = new java.util.LinkedHashMap<>();
     private final StatusLine status;
     private final static ConfigurationPath configurations = new ConfigurationPath(
             Paths.get("conf"),                                     // application-wide settings
@@ -136,6 +148,89 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     public static volatile fURI CONSOLE_THREAD_VID = null;
     public Machine machine = null;
     public static AtomicBoolean userMode = new AtomicBoolean(false);
+
+    /**
+     * Keystrokes typed while a foreground job runs.  The repl polls the job's
+     * future instead of blocking on it, so {@code <alt>+b} can detach the job
+     * and give the keyboard back; the classifier turns those keystrokes into a
+     * detach, a cancel, or text for the next prompt.
+     */
+    private final Hotkeys hotkeys = new Hotkeys();
+
+    /**
+     * True while a foreground job holds the console — the window in which the
+     * repl thread is not inside {@code readLine()} and the {@link #watchTerminal}
+     * thread owns the terminal's keystrokes.
+     */
+    private volatile boolean watching = false;
+
+    /**
+     * set by the watcher when {@code <alt>+b} is pressed while a job runs
+     */
+    private final AtomicBoolean detachRequested = new AtomicBoolean(false);
+
+    /**
+     * set by the watcher when ctrl-c arrives as a byte — sigint is a no-op off the prompt
+     */
+    private final AtomicBoolean interruptRequested = new AtomicBoolean(false);
+
+    /**
+     * set by the watcher when the cancel key answers an armed cancel offer
+     */
+    private final AtomicBoolean cancelRequested = new AtomicBoolean(false);
+
+    /**
+     * stops the watcher when the console closes
+     */
+    private volatile boolean watcherClosed = false;
+
+    /**
+     * Orders the terminal handoff between the watcher's read and the prompt:
+     * {@code watching} and {@code watchingRead} are only touched under it.
+     */
+    private final Object watchGate = new Object();
+
+    /**
+     * true while the watcher sits inside a terminal read
+     */
+    private boolean watchingRead = false;
+
+    /**
+     * Jobs detached with {@code <alt>+b} that are still running.  A detached
+     * job is untouched — its own thread keeps updating widgets — this list only
+     * tracks it so its result can be printed when it halts.
+     */
+    private final List<Machine> backgroundJobs = java.util.Collections.synchronizedList(new ArrayList<>());
+
+    /**
+     * cadence of the foreground poll — small enough that {@code <alt>+b} feels instant
+     */
+    private static final long FOREGROUND_POLL_MS = 120;
+    /**
+     * how long a job may hold the console before it offers to be cancelled
+     */
+    private static final long CANCEL_OFFER_MS = 10_000;
+    /**
+     * how often the idle watcher re-checks whether a job took the console
+     */
+    private static final long WATCHER_IDLE_MS = 25;
+    /**
+     * how long the prompt waits for the watcher to leave its read before taking the terminal back
+     */
+    private static final long WATCH_HANDOFF_MS = 400;
+    /**
+     * how long one watcher read waits for a keystroke.  It must be finite: with
+     * timeout 0 a raw-mode read never expires, so the watcher would still be
+     * parked inside a read when the job ends, the handoff would time out, and
+     * restoring the cooked attributes would turn that read into a blocking one
+     * that swallows the user's next keystroke — the half-eaten arrow key, where
+     * the escape goes to the watcher and the rest lands in the line as text.
+     */
+    private static final long WATCH_READ_MS = 100;
+    /**
+     * how much of the console line a detached-job banner echoes
+     */
+    private static final int DETACH_PREVIEW_CHARS = 48;
 
     // ========== Split Pane Support ==========
     // Pane tree: root can be a single Pane or a SplitContainer with nested panes
@@ -301,6 +396,14 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 Console.this.status.run();
                 return jnt(0);
             })), "console statusline").apply();
+            // The hotkey watcher reads the terminal whenever a foreground job
+            // holds the console (see awaitForeground).  It is a platform thread
+            // on purpose: it parks inside a blocking terminal read, which is
+            // exactly the work the repl thread must not be doing.
+            docWrap(CoreThread.core(instLambda((lhs, inst2) -> {
+                Console.this.watchTerminal();
+                return noobj();
+            })), "console hotkey watcher").applyAsync();
             this.history = auto_(instC(f("history").dom(ALL).rng(REC_TID.maybeSome()), lst(T(ALL)),
                     (lhs, inst) -> objs(IteratorUtil.list(this.reader.getHistory().reverseIterator())
                             .stream()
@@ -319,6 +422,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     @Override
     public void close() {
         try {
+            this.watcherClosed = true;
+            this.watching = false;
             this.reader.getBuffer().clear();
             // Disable extended key reporting before exit so we don't leave the
             // terminal in a state that confuses subsequent applications.
@@ -378,6 +483,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * Always re-renders panes to ensure correct layout before input.
      */
     private void prepareForInput() {
+        // Built-in shortcut keys are reasserted before every read, so a
+        // shadow binding (menu line key, tool) can never outlive this turn.
+        this.reassertBuiltinKeys();
         if (this.splitMode && this.activePane != null) {
             // Disable AUTO_FRESH_LINE in split mode - it interferes with cursor positioning
             // by outputting a ~ marker when cursor isn't at column 1
@@ -662,6 +770,213 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         this.requestRedraw();
     }
 
+    // ========== Floating Widget Focus (mirrors the pane focus above) ==========
+
+    /**
+     * Per-keystroke resize step for floating widgets (the pane analog
+     * resizes by ±0.05 ratio per keystroke).
+     */
+    private static final int WIDGET_WIDTH_STEP = 4;
+    private static final int WIDGET_HEIGHT_STEP = 1;
+
+    /**
+     * The stable key of the focused floating widget
+     * ({@link FloatingSurface#widgetKey} — its vid when it has one).  A
+     * floating widget is re-hydrated into a fresh instance on every
+     * {@code .display()} update, so the key — not the instance — is tracked,
+     * and the current instance is resolved lazily.  null = no focus.
+     */
+    private volatile String activeWidgetKey = null;
+
+    /**
+     * @return true when the console's floating surface has at least one pinned widget
+     */
+    public boolean hasFloatingWidgets() {
+        return !getFloatingSurface().widgets().isEmpty();
+    }
+
+    /**
+     * Register a built-in key binding (handler identity remembered) so that
+     * {@link #reassertBuiltinKeys} can reclaim the sequence if a later binder
+     * shadows it (a menu line key, a tool, anything bound after startup).
+     */
+    public void registerBuiltinKey(final String sequence, final Object handler) {
+        this.builtinBindings.put(sequence, handler);
+    }
+
+    /**
+     * Reclaim built-in key bindings that a later binder has overridden on the
+     * shared "main" keymap.  Called before every prompt, so a builtin key can
+     * never stay shadowed beyond a single session turn — the shadow only
+     * lasts until the next read.
+     */
+    public void reassertBuiltinKeys() {
+        if (this.builtinBindings.isEmpty())
+            return;
+        reassertBuiltin(this.widgets.getKeyMap(), this.builtinBindings);
+    }
+
+    /**
+     * Reclaim each registered sequence for the handler it was bound with,
+     * when a later binder (menu line key, tool, anything) has overwritten it
+     * on the shared "main" keymap.  Identity comparison of the handler
+     * objects — no reflection, no logging, O(sequence count).  Idempotent:
+     * a pass that finds every builtin intact changes nothing.
+     */
+    static void reassertBuiltin(final KeyMap<Binding> keyMap, final java.util.Map<String, Object> registered) {
+        for (final java.util.Map.Entry<String, Object> entry : registered.entrySet()) {
+            if (keyMap.getBound(entry.getKey()) != entry.getValue()) {
+                keyMap.bind((Binding) entry.getValue(), entry.getKey());
+            }
+        }
+    }
+
+    /**
+     * @return the currently bound handler for the given key sequence (may be null)
+     */
+    public Object boundKeyHandler(final String sequence) {
+        return this.widgets.getKeyMap().getBound(sequence);
+    }
+
+    /**
+     * @return the handler the console registered for the builtin (may be null)
+     */
+    public Object builtinKeyHandler(final String sequence) {
+        return this.builtinBindings.get(sequence);
+    }
+
+    /**
+     * @return the sequences the console keeps as reasserted builtins
+     */
+    public java.util.Set<String> builtinKeySequences() {
+        return this.builtinBindings.keySet();
+    }
+
+    /**
+     * @return the pinned floating widgets in deterministic focus-cycling order
+     * (see {@link FloatingSurface#widgets()})
+     */
+    public List<Widget<?>> getFloatingWidgets() {
+        return getFloatingSurface().widgets();
+    }
+
+    /**
+     * @return the currently focused floating widget, or null when nothing
+     * is focused (or the focused widget was removed / re-floated into
+     * an unknown key since)
+     */
+    public Widget<?> getActiveWidget() {
+        final String key = getFloatingSurface().resolveKey(this.activeWidgetKey);
+        if (null == key) return null;
+        for (final Widget<?> w : getFloatingWidgets()) {
+            if (key.equals(FloatingSurface.widgetKey(w)))
+                return w;
+        }
+        return null;
+    }
+
+    /**
+     * Focus the given floating widget (pass null to clear the focus).
+     * Triggers a re-render so the focus marker lands immediately.
+     */
+    public void focusWidget(final Widget<?> widget) {
+        if (null == widget) {
+            this.activeWidgetKey = null;
+            getFloatingSurface().setFocusKey(null);
+            LOG.info("cleared floating widget focus");
+        } else {
+            this.activeWidgetKey = FloatingSurface.widgetKey(widget);
+            getFloatingSurface().setFocusKey(this.activeWidgetKey);
+            LOG.info("focused floating widget {{y}}%s{{X}}", this.activeWidgetKey);
+        }
+        getFloatingSurface().render();
+    }
+
+    /**
+     * Cycle the focus to the next floating widget (wrapping).  A no-op when
+     * no widgets are pinned.
+     */
+    public void nextWidget() {
+        cycleWidgetFocus(1);
+    }
+
+    /**
+     * Cycle the focus back to the previous floating widget (wrapping).
+     */
+    public void prevWidget() {
+        cycleWidgetFocus(-1);
+    }
+
+    private void cycleWidgetFocus(final int direction) {
+        final List<Widget<?>> widgets = getFloatingWidgets();
+        if (widgets.isEmpty()) {
+            LOG.warn("no floating widgets to focus");
+            return;
+        }
+        final String activeKey = getFloatingSurface().resolveKey(this.activeWidgetKey);
+        int index = -1;
+        for (int i = 0; i < widgets.size(); i++) {
+            if (null != activeKey && activeKey.equals(FloatingSurface.widgetKey(widgets.get(i)))) {
+                index = i;
+                break;
+            }
+        }
+        if (index < 0 && widgets.size() > 1) {
+            // lost the position — say so, so a live session can see it
+            // (single-widget cycling back to the same widget is normal)
+            LOG.warn("focus key {{y}}%s{{X}} not found among {{y}}%d{{X}} floating widgets; cycling restarts at the first — see {{m}}:widgets{{X}}",
+                    this.activeWidgetKey, widgets.size());
+        }
+        final Widget<?> next = widgets.get(((index + 1 + direction) % widgets.size() + widgets.size()) % widgets.size());
+        focusWidget(next);
+    }
+
+    /**
+     * Grow the focused floating widget's width by one step
+     * ({@value WIDGET_WIDTH_STEP} columns).  Which edge moves is decided by
+     * the widget's anchor: a left-anchored widget extends its right edge,
+     * a right-anchored widget pulls in its left edge.
+     */
+    public void growActiveWidgetWidth() {
+        nudgeActiveWidget(WIDGET_WIDTH_STEP, 0);
+    }
+
+    /**
+     * Shrink the focused floating widget's width by one step.
+     */
+    public void shrinkActiveWidgetWidth() {
+        nudgeActiveWidget(-WIDGET_WIDTH_STEP, 0);
+    }
+
+    /**
+     * Grow the focused floating widget's height by one step
+     * ({@value WIDGET_HEIGHT_STEP} rows).  Which edge moves is decided by
+     * the widget's anchor: a bottom-anchored widget pushes its top edge
+     * up, a top-anchored widget pushes its bottom edge down.
+     */
+    public void growActiveWidgetHeight() {
+        nudgeActiveWidget(0, WIDGET_HEIGHT_STEP);
+    }
+
+    /**
+     * Shrink the focused floating widget's height by one step.
+     */
+    public void shrinkActiveWidgetHeight() {
+        nudgeActiveWidget(0, -WIDGET_HEIGHT_STEP);
+    }
+
+    private void nudgeActiveWidget(final int widthDelta, final int heightDelta) {
+        final Widget<?> active = getActiveWidget();
+        if (null == active) {
+            LOG.warn("no floating widget in focus");
+            return;
+        }
+        if (getFloatingSurface().nudge(active, widthDelta, heightDelta)) {
+            LOG.info("resized floating widget {{y}}%s{{X}} (width %+d, height %+d)",
+                    this.activeWidgetKey, widthDelta, heightDelta);
+        }
+    }
+
     /**
      * Position the cursor at the active pane's prompt location.
      * Called after operations that move the cursor (like status refresh).
@@ -885,11 +1200,13 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         if (this.splitMode && this.activePane != null) {
             this.activePane.appendResult(result);
         } else {
-            result.stream().forEach(o -> {
-                this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
-                this.write(this.serializer.write(o));
-                this.write("\n");
-            });
+            result.stream().takeWhile(o -> !this.interruptRequested.get())
+                    .forEach(o -> {
+                        this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
+                        this.write(this.serializer.write(o));
+                        this.write("\n");
+                    });
+            terminal.flush();
         }
     }
 
@@ -1036,6 +1353,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         if (segments.isEmpty()) return;
 
         // 3. Execute each segment with its own SwarmMachine, chaining running state
+        boolean backgrounded = false;
         for (final Code segment : segments) {
             try {
                 final Level startLevel = this.status.getState();
@@ -1044,7 +1362,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         throw MTronException.of("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(Obj::tid).toList());
                     } else {
                         this.status.setState(Level.WARN);
-                        segment.logger().warn("{{y}}dynamic resolution{{X}}: %s", unresolved.stream().map(i -> "{{b}}" + i.tid() + "{{y}}@" + i.vid() + "{{X}}").reduce("", (a, b) -> a + "," + b).substring(1));
+                        segment.logger().status(DEBUG, "{{y}}dynamic resolution{{X}}: %s", unresolved.stream().map(i -> "{{b}}" + i.tid() + "{{y}}@" + i.vid() + "{{X}}").reduce("", (a, b) -> a + "," + b).substring(1));
                     }
                 });
                 final AtomicReference<Obj> computeResult = new AtomicReference<>(noobj());
@@ -1061,21 +1379,13 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         this.activePane.machine(mach);
                     }
                     final FutureObj<Obj> future = mach.applyAsync();
-                    while (!future.isDone()) {
-                        try {
-                            future.get(10000);
-                        } catch (final Exception e) {
-                            // do nothing
-                        }
-                        if (!future.isDone() && !userMode.get()) {
-                            terminal.writer().write(Highlighter.format("{{k}}\ncancel stream with [q] {{X}}"));
-                            if (terminal.reader().read() == 'q') {
-                                this.write(Graphitty.string("{{-X-&|0}}"));
-                                future.cancel(true);
-                            }
-                        }
+                    if (this.awaitForeground(mach, future, line)) {
+                        // <alt>+b — the machine keeps its own thread and keeps
+                        // running (widgets stay live); this turn is over.
+                        backgrounded = true;
+                    } else {
+                        computeResult.set(future.get());
                     }
-                    computeResult.set(future.get());
                 } else {
                     computeResult.set(this.input.apply(resolvedResult));
                 }
@@ -1093,7 +1403,347 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     this.activePane.clearMachine();
 
             }
+            // a detached job took the rest of this input to the background
+            if (backgrounded) break;
         }
+    }
+
+    /**
+     * Poll a foreground job's future until it completes, watching the terminal
+     * while we wait.  The repl thread holds the reader here — jline is not
+     * reading — so keystrokes typed during the job belong to the console:
+     * {@code <alt>+b} detaches the job, {@code [q]} cancels it once the cancel
+     * offer has been printed, and anything else is kept for the next prompt.
+     *
+     * @param mach   the machine running the foreground job
+     * @param future the job's future
+     * @param line   the console line that started the job
+     * @return true when the job was detached with {@code <alt>+b} (it is still
+     * running — the console returns to the prompt)
+     */
+    private boolean awaitForeground(final Machine mach, final FutureObj<Obj> future, final String line) {
+        long offerAtMs = System.currentTimeMillis() + CANCEL_OFFER_MS;
+        this.detachRequested.set(false);
+        this.cancelRequested.set(false);
+        this.interruptRequested.set(false);
+        // jline restores the terminal's cooked attributes when readLine()
+        // returns, so outside the prompt keystrokes are line-buffered: alt+b
+        // would not arrive until Enter.  Raw mode for the life of the job makes
+        // every keypress a byte the watcher can classify.  jline saves and
+        // restores its own attributes around each readLine, so handing the
+        // cooked attributes back before returning is exactly what it expects.
+        final Attributes cooked = terminal.enterRawMode();
+        // the watcher owns the terminal from here until this job is over: the
+        // repl thread is parked on the future below, so jline is not reading
+        synchronized (this.watchGate) {
+            this.watching = true;
+            this.watchGate.notifyAll();
+        }
+        try {
+            while (!future.isDone()) {
+                try {
+                    future.get(FOREGROUND_POLL_MS);
+                } catch (final Exception e) {
+                    // a poll window ending is the normal path — the job is still running
+                }
+                if (future.isDone())
+                    break;
+                final boolean detach = this.detachRequested.getAndSet(false);
+                final boolean interrupt = this.interruptRequested.getAndSet(false);
+                final boolean cancel = this.cancelRequested.getAndSet(false);
+                switch (foregroundStep(detach, interrupt, cancel, userMode.get(),
+                        System.currentTimeMillis(), offerAtMs)) {
+                    case DETACH -> {
+                        this.detachForegroundJob(mach, future, line);
+                        return true;
+                    }
+                    case INTERRUPT -> mach.stop();
+                    case CANCEL -> {
+                        this.hotkeys.disarmCancel();
+                        this.write(Graphitty.string("{{-X-&|0}}"));
+                        future.cancel(true);
+                    }
+                    case OFFER_CANCEL -> {
+                        this.hotkeys.armCancel();
+                        offerAtMs = System.currentTimeMillis() + CANCEL_OFFER_MS;
+                        terminal.writer().write(Highlighter.format(
+                                "{{k}}\ncancel stream with [q] or background with <" + Hotkeys.DETACH_COMBO + "> {{X}}\n"));
+                        terminal.writer().flush();
+                    }
+                    case WAIT -> {
+                    }
+                }
+            }
+            return false;
+        } finally {
+            this.releaseTerminal(cooked);
+        }
+    }
+
+    /**
+     * Read the terminal while a foreground job holds the console, one keystroke
+     * at a time, and classify each one through {@link Hotkeys}.  This is the
+     * only reader in that window — jline is parked outside {@code readLine()} —
+     * and a bounded read is exactly right here: the reading happens on this
+     * thread, never on the repl thread, so the console's poll loop stays live
+     * and the read can still be released when the job ends.
+     *
+     * <p>A terminal read cannot be interrupted, so a read that started while the
+     * job ran may complete after it ended.  A keystroke taken that way is handed
+     * back to the line being typed ({@link #injectTypedText()}) — the prompt is
+     * live by then and jline never saw it.
+     */
+    private void watchTerminal() {
+        while (!this.watcherClosed) {
+            if (!this.beginWatch()) {
+                CommonUtil.sleepThread(WATCHER_IDLE_MS);  // the prompt owns the terminal
+                continue;
+            }
+            try {
+                final int c = terminal.reader().read(WATCH_READ_MS);
+                if (NonBlockingReader.READ_EXPIRED == c) {
+                    // nothing typed: a half-seen escape sequence ends here, so a
+                    // stale escape can never swallow the next keystroke
+                    this.hotkeys.reset();
+                    continue;
+                }
+                if (c < 0)
+                    continue;  // eof — nothing to classify
+                final boolean onWatch = this.watching;
+                switch (this.hotkeys.accept(c)) {
+                    case DETACH -> this.detachRequested.set(true);
+                    case INTERRUPT -> this.interruptRequested.set(true);
+                    case CANCEL -> this.cancelRequested.set(true);
+                    case TEXT -> {
+                        if (onWatch)
+                            this.echoTypedChar(c);
+                        else
+                            this.injectTypedText();
+                    }
+                    case NONE -> {
+                    }
+                }
+            } catch (final Exception e) {
+                // a failed read must never kill the watcher — the repl still works
+                CommonUtil.sleepThread(WATCHER_IDLE_MS);
+            } finally {
+                this.endWatch();
+            }
+        }
+    }
+
+    /**
+     * Take the terminal for one read.  False when no job holds the console —
+     * the prompt owns the keystrokes then, and the watcher must not be a second
+     * reader racing jline for them.
+     */
+    private boolean beginWatch() {
+        synchronized (this.watchGate) {
+            if (!this.watching && !this.hotkeys.inSequence())
+                return false;
+            this.watchingRead = true;
+            return true;
+        }
+    }
+
+    /**
+     * give the terminal back, waking anyone waiting on the handoff
+     */
+    private void endWatch() {
+        synchronized (this.watchGate) {
+            this.watchingRead = false;
+            this.watchGate.notifyAll();
+        }
+    }
+
+    /**
+     * Hand the terminal back to the prompt.  The order matters: restoring the
+     * cooked attributes while a raw-mode read is still pending turns that read
+     * into a blocking one, which then swallows the user's next keystroke.  So
+     * the watcher is told to stop first and given a moment to leave its read —
+     * in raw mode a read with no input expires in about 100ms — and only then do
+     * the cooked attributes go back.
+     */
+    private void releaseTerminal(final Attributes cooked) {
+        synchronized (this.watchGate) {
+            this.watching = false;
+            this.watchGate.notifyAll();
+            final long end = System.currentTimeMillis() + WATCH_HANDOFF_MS;
+            while (this.watchingRead && System.currentTimeMillis() < end) {
+                try {
+                    this.watchGate.wait(WATCH_HANDOFF_MS);
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }
+        terminal.setAttributes(cooked);
+    }
+
+    /**
+     * Echo a keystroke the watcher took while the job ran.  Raw mode is on for
+     * the life of the job, so the terminal does not echo for us — without this,
+     * typing ahead of a long job would be invisible.
+     */
+    private void echoTypedChar(final int c) {
+        try {
+            terminal.writer().print((char) c);
+            terminal.writer().flush();
+        } catch (final Exception e) {
+            // echo is a courtesy — never let it break the repl
+        }
+    }
+
+    /**
+     * Hand a keystroke the watcher took as the foreground job ended back to the
+     * line the user is typing (or to the next prompt when it missed that window).
+     */
+    private void injectTypedText() {
+        final String text = this.hotkeys.takePendingText();
+        if (text.isEmpty())
+            return;
+        if (this.inReadLine) {
+            try {
+                // the prompt is live: the keystroke belongs on the line being
+                // typed.  jline redraws the line for us so the display keeps its
+                // own bookkeeping (a raw terminal write could confound it).
+                this.reader.getBuffer().write(text);
+                this.reader.callWidget(LineReader.REDRAW_LINE);
+                return;
+            } catch (final Exception e) {
+                // the text stays in the buffer — the next keystroke draws it
+                return;
+            }
+        }
+        this.seedBuffer = null == this.seedBuffer ? text : this.seedBuffer + text;
+    }
+
+    /**
+     * what the foreground poll loop does with the keys it just read
+     */
+    enum ForegroundStep {WAIT, DETACH, INTERRUPT, CANCEL, OFFER_CANCEL}
+
+    /**
+     * Decide the next step of the foreground poll loop from the keys typed
+     * while the job runs.  Kept static and terminal-free so the decision table
+     * — detach beats cancel, ctrl-c still stops the job, a widget on screen
+     * suppresses the cancel offer, the offer waits out its interval — is
+     * testable on its own.
+     *
+     * @param detach    {@code <alt>+b} was pressed
+     * @param interrupt ctrl-c arrived as a byte (raw mode keeps sigint alive, so
+     *                  this is the fallback when the terminal disables it)
+     * @param cancel    {@code [q]} was pressed while the cancel offer stood
+     * @param userMode  a widget owns the console (no cancel offer, as before)
+     * @param nowMs     the current time
+     * @param offerAtMs when the next cancel offer is due
+     */
+    static ForegroundStep foregroundStep(final boolean detach, final boolean interrupt, final boolean cancel,
+                                         final boolean userMode, final long nowMs, final long offerAtMs) {
+        if (detach) return ForegroundStep.DETACH;
+        if (interrupt) return ForegroundStep.INTERRUPT;
+        if (cancel) return ForegroundStep.CANCEL;
+        if (!userMode && nowMs >= offerAtMs) return ForegroundStep.OFFER_CANCEL;
+        return ForegroundStep.WAIT;
+    }
+
+    /**
+     * Hand a running foreground job to the background — {@code <alt>+b}.  The
+     * job is not touched: it keeps its own thread, keeps updating widgets, and
+     * stays addressable at {@code /sys/thread/<vid>}.  The console only stops
+     * waiting on it and stops treating it as foreground work, so ctrl-c at the
+     * returning prompt cannot kill it.  A collector thread prints its result
+     * when it halts.
+     */
+    private void detachForegroundJob(final Machine mach, final FutureObj<Obj> future, final String line) {
+        final fURI vid = vidOf(mach);
+        this.backgroundJobs.add(mach);
+        // the turn no longer owns this machine: clear both places the interrupt
+        // paths read (the ctrl-c signal handler and UserInterrupt handling)
+        this.machine = null;
+        if (this.activePane != null)
+            this.activePane.clearMachine();
+        docWrap(virtual(instLambda((lhs, inst) -> {
+            this.printBackgroundResult(mach, future);
+            return noobj();
+        })), "background result collector").applyAsync();
+        LOG.none("{{-X-&|0}}");
+        LOG.info("<%s> => background %s (:bg to list)", Hotkeys.DETACH_COMBO, preview(line));
+        terminal.flush();
+    }
+
+    /**
+     * Print the result of a detached job, once its future resolves.  Runs on
+     * the job's collector thread.
+     */
+    private void printBackgroundResult(final Machine mach, final FutureObj<Obj> future) {
+        this.backgroundJobs.remove(mach);
+        final Obj result;
+        try {
+            result = future.get();
+        } catch (final Exception e) {
+            LOG.none("{{-X-&|0}}");
+            this.printResult(fail(e));
+            return;
+        }
+        LOG.none("{{-X-&|0}}\r[{{g}}result start{{/g}}:%s]\n", null == vidOf(mach) ? "?" : vidOf(mach).toString());
+        this.printResult(result);
+        LOG.none("[{{g}}result end{{/g}}:%s]\n", null == vidOf(mach) ? "?" : vidOf(mach).toString());
+    }
+
+    /**
+     * a machine's thread vid, when it has one — every machine is a rec at run-time
+     */
+    private static fURI vidOf(final Machine mach) {
+        return (mach instanceof Obj obj) ? obj.vid() : null;
+    }
+
+    /**
+     * @return the jobs detached with {@code <alt>+b} that have not yet halted,
+     * in detach order
+     */
+    public List<Machine> backgroundJobs() {
+        synchronized (this.backgroundJobs) {
+            return List.copyOf(this.backgroundJobs);
+        }
+    }
+
+    /**
+     * @return the thread vids of the jobs detached with {@code <alt>+b} — each
+     * one is addressable at {@code /sys/thread/<vid>}
+     */
+    public List<fURI> backgroundJobVids() {
+        final List<fURI> vids = new ArrayList<>();
+        synchronized (this.backgroundJobs) {
+            for (final Machine job : this.backgroundJobs) {
+                final fURI vid = vidOf(job);
+                if (null != vid)
+                    vids.add(vid);
+            }
+        }
+        return vids;
+    }
+
+    /**
+     * Stop every detached job.  Returns the number of jobs stopped.
+     */
+    public int stopBackgroundJobs() {
+        final List<Machine> jobs = this.backgroundJobs();
+        jobs.forEach(Machine::stop);
+        this.backgroundJobs.clear();
+        return jobs.size();
+    }
+
+    /**
+     * @return a single-line, clipped echo of the console line that started a job
+     */
+    static String preview(final String line) {
+        if (null == line) return "";
+        final String flat = line.replace('\n', ' ').trim();
+        return flat.length() <= DETACH_PREVIEW_CHARS
+                ? flat
+                : flat.substring(0, DETACH_PREVIEW_CHARS - 3) + "...";
     }
 
     protected void executeGremlin(final String line) {
@@ -1140,6 +1790,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 this.inReadLine = true;
                 this.lastKeyActivityMs = System.currentTimeMillis();
                 this.lastBufferLength = 0; // fresh buffer for new readLine
+                // keys typed while a foreground job held the console seed this
+                // prompt, so typing ahead of a long job is never lost
+                final String typedAhead = this.hotkeys.takePendingText();
+                if (!typedAhead.isEmpty())
+                    this.seedBuffer = null == this.seedBuffer ? typedAhead : this.seedBuffer + typedAhead;
                 final String line = (null != this.seedBuffer
                         ? this.reader.readLine(this.prompt(), null, (MaskingCallback) null, this.seedBuffer)
                         : this.reader.readLine(this.prompt())).trim();

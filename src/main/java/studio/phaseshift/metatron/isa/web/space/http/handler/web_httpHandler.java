@@ -231,7 +231,7 @@ public class web_httpHandler extends HttpRec {
                 this.send(lhs);
                 return noobj();
             } catch (final Exception e) {
-                LOG.error("error processing error: %s", lhs, e);
+                LOG.error("error processing %s: %s", lhs, e);
                 return noobj();
             }
         }));
@@ -253,7 +253,9 @@ public class web_httpHandler extends HttpRec {
     // Shared write-verb plumbing
     // ──────────────────────────────────────────────
 
-    /** PUT / POST — replace the address with the request body. 201. */
+    /**
+     * PUT / POST — replace the address with the request body. 201.
+     */
     private Obj writeValue(final Obj lhs) {
         Obj value = lhs.isRec() ? lhs.asRec().at(uri(BODY)) : noobj();
         if (readOnlyGate()) {
@@ -321,7 +323,7 @@ public class web_httpHandler extends HttpRec {
      * PUT / POST / PATCH: the mtron {@code >>=} update algebra applied to the
      * existing object at the address (body = delta).  A plain value delta
      * replaces the address wholesale; a structured delta merges recursively.
-     *  200.
+     * 200.
      */
     private Obj updateValue(final Obj lhs) {
         Obj delta = lhs.isRec() ? lhs.asRec().at(uri(BODY)) : noobj();
@@ -364,7 +366,9 @@ public class web_httpHandler extends HttpRec {
         return noobj();
     }
 
-    /** DELETE — unlink the address (metatron's clear idiom: write noobj).  204. */
+    /**
+     * DELETE — unlink the address (metatron's clear idiom: write noobj).  204.
+     */
     private Obj deleteValue() {
         if (readOnlyGate()) {
             return noobj();
@@ -384,7 +388,9 @@ public class web_httpHandler extends HttpRec {
         return noobj();
     }
 
-    /** The read_only gate — send 403 when set.  Returns true when handled. */
+    /**
+     * The read_only gate — send 403 when set.  Returns true when handled.
+     */
     private boolean readOnlyGate() {
         if (!Boolean.TRUE.equals(this.at(uri(READ_ONLY)).orElse(bool(false)).jvm())) {
             return false;
@@ -393,7 +399,9 @@ public class web_httpHandler extends HttpRec {
         return true;
     }
 
-    /** Mount-relative request path → space URI under web_root. */
+    /**
+     * Mount-relative request path → space URI under web_root.
+     */
     private fURI resolveFileURI(final HttpExchange exchange) {
         final fURI webRoot = this.at(uri(WEB_ROOT)).uriValue();
         final String mountPath = exchange.getHttpContext().getPath();
