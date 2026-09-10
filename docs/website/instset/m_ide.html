@@ -512,7 +512,7 @@
     <p class="mb-0 text-light">the project descriptor (the pom.xml of a metatron ide) — a project.mtron file at the project root</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cs_project::[name=&gt;metatron,root=&gt;&lt;fs:/foo&gt;,code=&gt;!*&lt;fs:/foo/src&gt;]</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">project::[name=&gt;metatron,root=&gt;&lt;fs:/foo&gt;,code=&gt;!*&lt;fs:/foo/src&gt;]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__ide__result">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -555,14 +555,14 @@ x&gt;&gt;runtime.normalize()</code></pre>
     <p class="mb-0 text-light">wrap a command into an enriched instruction that runs it and returns ide:result::T</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#noobj — cs_command is a factory (the lhs is unused)" class="text-info">noobj — cs_command is a factory (the lhs is unused)</a> <span class="text-light">=&gt;</span> <a href="#an enriched instruction that runs the command and returns ide:result::T" class="text-success">an enriched instruction that runs the command and returns ide:result::T</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#noobj — ide_command is a factory (the lhs is unused)" class="text-info">noobj — ide_command is a factory (the lhs is unused)</a> <span class="text-light">=&gt;</span> <a href="#an enriched instruction that runs the command and returns ide:result::T" class="text-success">an enriched instruction that runs the command and returns ide:result::T</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#command" class="text-light">command</a> <span class="text-light">=&gt;</span> <a href="#'the shell command to wrap'" class="text-info">&#39;the shell command to wrap&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">ide:command(command=&gt;&#39;mvn compile&#39;)                   [-- an enriched build instruction --]
 ide:command([command=&gt;&#39;mvn -q test&#39;])                 [-- the command as a rec          --]
-my_build -&gt; cs_command(command=&gt;&#39;mvn clean install&#39;)  [-- name it anything, curate a palette --]</code></pre>
+my_build -&gt; ide_command(command=&gt;&#39;mvn clean install&#39;)  [-- name it anything, curate a palette --]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__ide__inst__find?rng=__m__uri{*}&dom=__m__uri">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">

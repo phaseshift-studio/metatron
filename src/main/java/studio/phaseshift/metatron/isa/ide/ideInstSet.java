@@ -55,18 +55,18 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * <p>Two types — the standard structure humans and agents work with:</p>
  * <ul>
- *   <li>{@code cs_result::T} — the standardized build/test/status outcome: a rec with a union
+ *   <li>{@code ide_result::T} — the standardized build/test/status outcome: a rec with a union
  *       {@code status} verdict, {@code runtime} ({@code time::T}), and the {@code output}
  *       {@code str{*}} line-stream.</li>
- *   <li>{@code cs_project::T} — the project descriptor (the "pom.xml" of a metatron ide): the
+ *   <li>{@code ide_project::T} — the project descriptor (the "pom.xml" of a metatron ide): the
  *       project {@code root}, plus command palettes ({@code build}, {@code test}, …) mapping
  *       command-name uris to command insts.</li>
  * </ul>
  *
- * <p>One wrapper instruction — {@code cs_command}: given a command, produces the enriched
+ * <p>One wrapper instruction — {@code ide_command}: given a command, produces the enriched
  * instruction that runs it through {@link CommandRunner}, applies the user's {@code to} conduit per
- * output line, and returns a {@code cs_result::T}.  The user names the produced inst anything
- * and curates their own palette (e.g. {@code clean -> cs_command(command=>'mvn clean')}).</p>
+ * output line, and returns a {@code ide_result::T}.  The user names the produced inst anything
+ * and curates their own palette (e.g. {@code clean -> ide_command(command=>'mvn clean')}).</p>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -83,7 +83,7 @@ public class ideInstSet extends AbstractInstSet {
 
     public static final fURI IDE_JAVA_TID = IDE_ISA_TID.extend("java");
     private static final fURI OBJ_SERIALIZER_TID = IDE_ISA_TID.extend("serializer");
-    // the coarse-schema (cs) serializer family — /m/web/serializer/cs/{lang}
+    // the coarse-schema (ide) serializer family — /m/web/serializer/ide/{lang}
     public static final fURI OBJ_IDE_JAVA_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_ide_java");
     public static Type OBJ_IDE_JAVA_SERIALIZER_TYPE;
 
@@ -148,7 +148,7 @@ public class ideInstSet extends AbstractInstSet {
                                 "x>>runtime.normalize()"),
                         docWrap(IDE_PROJECT_TYPE,
                                 "the project descriptor (the pom.xml of a metatron ide) — a project.mtron file at the project root",
-                                "cs_project::[name=>metatron,root=><fs:/foo>,code=>!*<fs:/foo/src>]")),
+                                "project::[name=>metatron,root=><fs:/foo>,code=>!*<fs:/foo/src>]")),
                 uri(INST), lst(
                         docWrap(instC(AS_INST_TID.dom(URI_TID).rng(IDE_PROJECT_TID), lst(IDE_PROJECT_TYPE), (lhs, inst) -> Project.of(lhs.asUri(), inst.arg(0).asType())),
                                 "a project source root",
@@ -235,14 +235,14 @@ public class ideInstSet extends AbstractInstSet {
                                 Map.of(STR_TYPE, "a regex string to match in resource contents"),
                                 "searches project resources whose contents match provided regex",
                                 "*m_proj.search('rec()')"),
-                        docWrap(cs_command(),
-                                "noobj — cs_command is a factory (the lhs is unused)",
+                        docWrap(ide_command(),
+                                "noobj — ide_command is a factory (the lhs is unused)",
                                 "an enriched instruction that runs the command and returns ide:result::T",
                                 Map.of(uri("command"), "the shell command to wrap"),
                                 "wrap a command into an enriched instruction that runs it and returns ide:result::T",
                                 "ide:command(command=>'mvn compile')                   [-- an enriched build instruction --]",
                                 "ide:command([command=>'mvn -q test'])                 [-- the command as a rec          --]",
-                                "my_build -> cs_command(command=>'mvn clean install')  [-- name it anything, curate a palette --]"))));
+                                "my_build -> ide_command(command=>'mvn clean install')  [-- name it anything, curate a palette --]"))));
         docWrap(this, "the agent ide — project::T definition, build result::T and the links between them.",
                 "ide:command(command=>'mvn compile')");
         super.setup();
@@ -252,15 +252,15 @@ public class ideInstSet extends AbstractInstSet {
 
     /**
      * The {@code to} argument type — the user's output conduit (the drstynx convention): a code
-     * applied to each output line as it's produced.  Absent → no streaming; the {@code cs_result}
+     * applied to each output line as it's produced.  Absent → no streaming; the {@code ide_result}
      * rec is still returned.
      */
     private static final Type TO_CODE_TYPE = T(ALL.dom(STR_TID));
 
     /**
-     * The wrapper: {@code cs_command(command=>str::T)} → the enriched command inst.
+     * The wrapper: {@code ide_command(command=>str::T)} → the enriched command inst.
      */
-    private static Inst cs_command() {
+    private static Inst ide_command() {
         return instC(IDE_COMMAND_TID.dom(ALL.maybe()).rng(M_ISA_INST_TID), rec(uri(COMMAND), STR_TYPE),
                 (lhs, inst) -> {
                     final Obj arg = inst.arg(0).isNoObj() ? inst.args() : inst.arg(0);
@@ -272,7 +272,7 @@ public class ideInstSet extends AbstractInstSet {
     /**
      * The enriched instruction: a Java inst closing over the command that, on apply, runs it
      * through {@link CommandRunner} — accepting the call-time {@code to} conduit and returning
-     * {@code cs_result::T}.
+     * {@code ide_result::T}.
      */
     private static Inst enrich(final String command) {
         return instC(IDE_COMMAND_TID.extend("runner").dom(ALL.maybe()).rng(IDE_RESULT_TID),

@@ -28,18 +28,24 @@ under `/m/math/+` and available via the standard type resolution system.
 
 All unit types (time, data) support bidirectional conversion via `.as()`:
 
-```mtron_pre
-millis::60000.0.as(minute::T)
-hour::1.5.as(minute::T)
-kB::1024.0.as(mB::T)
-gB::2.0.as(mB::T)
+```mtron
+mtron> millis::60000.0.as(minute::T)
+==>minute::1.0000
+mtron> hour::1.5.as(minute::T)
+==>minute::90.0000
+mtron> kB::1024.0.as(mB::T)
+==>mB::1.0000
+mtron> gB::2.0.as(mB::T)
+==>mB::2048.0000
 ```
 
 Equality comparisons auto-convert:
 
-```mtron_pre
-millis::1000.0.eq(second::1.0)
-second::60.0.gt(millis::500.0)
+```mtron
+mtron> millis::1000.0.eq(second::1.0)
+==>true
+mtron> second::60.0.gt(millis::500.0)
+==>true
 ```
 
 ## DateTime (`/m/math/datetime`)
@@ -65,16 +71,17 @@ second::60.0.gt(millis::500.0)
 
 ### Construction
 
-```mtron_pre
-[-- current system time --]
-datetime_now()
-
-[-- from record (goes through .as(uri::T) first) --]
-[host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],/
- c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T)
-
-[-- from string-encoded URI --]
-<//2024.12:25/09/00/00/000?tz=-0500>.as(datetime::T)
+```mtron
+mtron> [-- current system time --]
+mtron> datetime_now()
+==>datetime::<//2026.09:10/05/40/38/584?tz=-0600>
+mtron> [-- from record (goes through .as(uri::T) first) --]
+mtron> [host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],
+        c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T)
+==>datetime::<//2024.12:25/09/00/00/000?tz=-0500>
+mtron> [-- from string-encoded URI --]
+mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(datetime::T)
+==>datetime::<//2024.12:25/09/00/00/000?tz=-0500>
 ```
 
 ### Typed vs Bare URIs
@@ -82,16 +89,21 @@ datetime_now()
 Bare URIs like `<//2024.12:25/...>` work with standard URI operations (`>>host`, `>>port`, `>>path`). The datetime
 vocabulary (`year`, `month`, `day`, etc.) only works on explicitly typed datetimes:
 
-```mtron_pre
-[-- rec projections of uri components --]
-<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>host
-<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>port
-
-[-- vocabulary projections require datetime::T typing --]
-datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>year
-datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>month
-datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>day
-datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>tz
+```mtron
+mtron> [-- rec projections of uri components --]
+mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>host
+==><2024.12>
+mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>port
+==>25
+mtron> [-- vocabulary projections require datetime::T typing --]
+mtron> datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>year
+==>2024
+mtron> datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>month
+==>12
+mtron> datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>day
+==>25
+mtron> datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>tz
+==>'-0500'
 ```
 
 ### Vocabulary Keys
@@ -111,9 +123,13 @@ Named `>>` projections for typed datetimes:
 
 Non-vocabulary keys fall through to standard URI projections.
 
-```mtron_pre
-datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>{year,month,day}
-datetime::<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>host
+```mtron
+mtron> datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>{year,month,day}
+==>2024
+==>12
+==>25
+mtron> datetime::<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>host
+==><2024.12>
 ```
 
 ### Predicate Validation
@@ -126,26 +142,33 @@ The Java predicate validates:
 - Path has ≥4 integer segments with valid hour (0–23), minute (0–59), second (0–59)
 - Query contains `tz` key
 
-```mtron_pre
-<//2024.13:25/09/00/00/000?tz=-0500>.?datetime::T [-- month 13 (bad)   --]
-<//2024.12:25/09/60/00/000?tz=-0500>.?datetime::T [-- second 60 (bad)  --]
-<//2024.12:25/09/00/00>.?datetime::T              [-- missing tz (bad) --]
+```mtron
+mtron> <//2024.13:25/09/00/00/000?tz=-0500>.?datetime::T [-- month 13 (bad)   --]
+mtron> <//2024.12:25/09/60/00/000?tz=-0500>.?datetime::T [-- second 60 (bad)  --]
+mtron> <//2024.12:25/09/00/00>.?datetime::T              [-- missing tz (bad) --]
 ```
 
 ### Mutation & Filtering
 
 All standard URI operations apply: `==` (select), `=?=` (where), plus `>>=` (rec update) after `.as(rec::T)`.
 
-```mtron_pre
-[-- select mutation: change day --]
-<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)==[port=>31]>>port
-
-[-- where filter: match day 25 --]
-<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)=?=[port=>25]
-<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)=?=[port=>26]
-
-[-- rec update: change timezone --]
-<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q=>[tz=>'+0000']]>>q>>tz
+```mtron
+mtron> [-- select mutation: change day --]
+mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)==[port=>31]>>port
+==>31
+mtron> [-- where filter: match day 25 --]
+mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)=?=[port=>25]
+==>[
+    host=><2024.12>,
+    port=>25,
+    authority=><2024.12:25>,
+    path=>[<>,<09>,<00>,<00>,<000>],
+    c=>[min=>1,max=>1],
+    q=>[tz=>'-0500']]
+mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)=?=[port=>26]
+mtron> [-- rec update: change timezone --]
+mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q=>[tz=>'+0000']]>>q>>tz
+==>'+0000'
 ```
 
 ## Instructions
