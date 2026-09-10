@@ -570,19 +570,14 @@
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  code=&gt;#::T,
  {?}source=&gt;uri::T,
+ {?}time=&gt;datetime::T,
+ {?}runtime=&gt;time::T,
  {?}yield=&gt;thread::T,
  {?}loop=&gt;time::T,
  {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
  {?}result=&gt;#{*}::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">run a concurrent core thread</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
-  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
-  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code the thread will execute'" class="text-info">&#39;the code the thread will execute&#39;</a>
-  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
-</pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">core::[code=&gt;ping(&lt;phaseshift.studio:80&gt;),loop=&gt;second::1.0]@/sys/thread/ping</code></pre>
@@ -632,6 +627,8 @@
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  code=&gt;#::T,
  {?}source=&gt;uri::T,
+ {?}time=&gt;datetime::T,
+ {?}runtime=&gt;time::T,
  {?}yield=&gt;thread::T,
  {?}loop=&gt;time::T,
  {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
@@ -671,6 +668,8 @@
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  code=&gt;#::T,
  {?}source=&gt;uri::T,
+ {?}time=&gt;datetime::T,
+ {?}runtime=&gt;time::T,
  {?}yield=&gt;thread::T,
  {?}loop=&gt;time::T,
  {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
@@ -696,12 +695,25 @@ the objs referenced by the monads that halt are the result of the machine execut
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
   code=&gt;#::T,
   {?}source=&gt;uri::T,
+  {?}time=&gt;datetime::T,
+  {?}runtime=&gt;time::T,
   {?}yield=&gt;thread::T,
   {?}loop=&gt;time::T,
   {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
   {?}result=&gt;#{*}::T]]@/m/mach/thread</code></pre></div>
     
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the thread base type</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
+  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
+  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
+  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
+  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
+</pre>
+</div>
 </div><div class="card mb-3" id="__m__mach__thread_executor">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -727,19 +739,14 @@ the objs referenced by the monads that halt are the result of the machine execut
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  code=&gt;#::T,
  {?}source=&gt;uri::T,
+ {?}time=&gt;datetime::T,
+ {?}runtime=&gt;time::T,
  {?}yield=&gt;thread::T,
  {?}loop=&gt;time::T,
  {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
  {?}result=&gt;#{*}::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">run a concurrent virtual thread</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
-  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
-  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code the thread will execute'" class="text-info">&#39;the code the thread will execute&#39;</a>
-  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
-</pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">virtual::[code=&gt;ping(&lt;phaseshift.studio:80&gt;),loop=&gt;second::1.5]@/sys/thread/ping</code></pre>

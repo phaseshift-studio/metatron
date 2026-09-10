@@ -406,9 +406,10 @@ isa.mach.type.ui.console
   Console.java              ← REPL, terminal, pane tree, FloatingSurface integration
   StatusLine.java           ← terminal status bar
   Highlighter.java          ← syntax highlighting + visualLength/unformat
-  ColonMenu.java            ← : commands including :float demo
+  Hotkeys.java              ← keystrokes typed while a job holds the console (alt+b, [q], type-ahead)
+  CommandPalette.java       ← see isa.mach.type.ui.console.menu
 isa.mach.type.ui.console.menu
-  ColonMenu.java            ← see above
+  CommandPalette.java       ← : commands, builtin shortcut keys
 isa.mach.type.ui.graphitty
   Graphitty.java            ← {{macro}} DSL → ANSI escapes
 isa.mach.type.ui.tmux
@@ -579,6 +580,8 @@ being overwritten.</li>
 <tr><td><code>bottomMargin</code></td><td>int</td><td>Bottom margin</td></tr>
 <tr><td><code>height</code></td><td>int</td><td>Display height cap in rows; 0 = unbounded. Content exceeding this cap keeps header/chrome lines and discards top body lines (scroll-up behavior)</td></tr>
 <tr><td><code>zIndex</code></td><td>int</td><td>Render order among floating widgets: higher = drawn later (on top). Default 0. Menu bars use <code>Integer.MAX_VALUE</code>.</td></tr>
+<tr><td><code>focus</code></td><td>str</td><td>Focus highlight color (Graphitty code, e.g. <code>{{r}}</code>) applied to the focus marker of the active widget</td></tr>
+<tr><td><code>focus_token</code></td><td>str</td><td>Marker char drawn at the focused widget's top-left corner (default <code>▶</code>)</td></tr>
 </tbody>
 </table>
 <p>Float-related:</p>
@@ -603,6 +606,15 @@ unfloat()                           // clear floating config
 style.
 
 zIndex(n)                           // render order: higher z = drawn on top of lower (default 0)
+style.
+
+focus(color) / focus()             // focus highlight color (Graphitty code)
+style.
+
+focusToken(token) / focusToken()  // focus marker char (default ▶)
+style.
+
+focused(bool) / focused()         // transient keyboard-focus flag
 </code></pre>
 <p>Text utility:</p>
 <pre><code class="language-java">Style.wrapLines(List&lt;String&gt; lines, int maxWidth) →List&lt;String&gt;
@@ -657,6 +669,138 @@ position</em> (<code>oldLastRow − scroll</code>), width-scoped. Without this, 
 their current order). Higher z paints on top when regions overlap. <code>MenuBarWidget.run()</code> sets
 <code>zIndex(Integer.MAX_VALUE)</code> so the bar is never overlapped.</li>
 </ul>
+<h4>Backgrounding a busy console (<code>&lt;alt&gt;+b</code>)</h4>
+<p>A console line runs its <code>SwarmMachine</code> <strong>on the repl thread</strong>: <code>executeMtron</code> starts the machine
+with <code>applyAsync()</code> and then waits on its future. Forgetting to thread a long agent prompt therefore
+parks the repl — the keyboard looks dead even though the machine is already on its own thread.</p>
+<p><code>Console.awaitForeground(mach, future, line)</code> replaces that wait. It polls the future every
+<code>FOREGROUND_POLL_MS</code> (120 ms) while a <strong>watcher thread</strong> (<code>Console.watchTerminal</code>, a platform
+<code>CoreThread</code>) reads the terminal and classifies each keystroke through <code>Hotkeys</code>:</p>
+<table>
+<thead>
+<tr><th>Key</th><th>Effect</th></tr>
+</thead>
+<tbody>
+<tr><td><code>alt+b</code></td><td><strong>detach</strong> — hand the running job to the background and return to the prompt</td></tr>
+<tr><td><code>ctrl+c</code></td><td>stop the job (raw mode can disable sigint on some terminals — this is the fallback)</td></tr>
+<tr><td><code>[q]</code></td><td>cancel the stream — only honored once the cancel offer has been printed</td></tr>
+<tr><td>any text</td><td>kept as the next prompt's seed buffer, so typing ahead of a long job is never lost</td></tr>
+</tbody>
+</table>
+<p><strong>Why a watcher thread and not a poll loop.</strong> Two terminal facts force the shape:</p>
+<ul>
+<li>Outside <code>readLine()</code> jline has restored the tty's <strong>cooked</strong> attributes, so keystrokes are
+line-buffered and a lone <code>alt+b</code> never arrives — <code>awaitForeground</code> therefore holds
+<code>terminal.enterRawMode()</code> for the life of the job (jline saves/restores its own attributes around
+each <code>readLine</code>, so handing the cooked attributes back afterwards is what it expects).</li>
+<li><code>NonBlockingReader.read(timeout)</code>/<code>peek(timeout)</code> cannot be used for polling: with <code>timeout == 0</code>
+(<code>read()</code>) a raw-mode read never expires at all, and in cooked mode even <code>peek(1)</code> blocks in the
+pty's native read. So the blocking read lives on the watcher thread — never on the repl thread —
+and uses a <strong>bounded</strong> <code>read(WATCH_READ_MS = 100)</code>.</li>
+</ul>
+<p><strong>The handoff is ordered</strong> (<code>beginWatch</code>/<code>endWatch</code>/<code>releaseTerminal</code>, all under <code>watchGate</code>).
+A read that is still pending when the cooked attributes go back becomes a <em>blocking cooked</em> read
+that eats the user's next keystroke — in practice the escape byte of an arrow key, leaving its tail
+in the line as literal text (the classic <code>OA</code> in the prompt). So the watcher is told to stop, the
+prompt waits (bounded by <code>WATCH_HANDOFF_MS</code>) for it to leave its read, and only then are the cooked
+attributes restored.</p>
+<p><strong>Escape sequences are swallowed whole.</strong> <code>Hotkeys</code> is a pure, terminal-free state machine
+(<code>NORMAL → ESC → CSI</code>): the detach combo is <code>\e b</code>, arrows/function keys/unknown alt-combos are
+consumed and dropped, <code>DEL</code>/backspace edit the kept text, and a keystroke is only ever <em>taken</em> when
+the watcher owns the terminal. A read that expires (<code>READ_EXPIRED</code>) drops a half-seen sequence, and
+a sequence already in flight is finished even after the job ended (<code>Hotkeys.inSequence()</code> keeps
+<code>beginWatch</code> true) — either way no fragment can reach the next line as text. <code>alt+b</code> is deliberately
+<strong>not a keymap binding</strong>: jline's emacs map owns <code>\eb</code> (backward-word) while the prompt is live.</p>
+<p>Detaching does not touch the job — it keeps its thread, keeps updating widgets, and stays
+addressable at its own vid (machines live under <code>/sys/machine/&lt;n&gt;</code>, spawned threads under
+<code>/sys/thread/&lt;uuid&gt;</code>; the banner echoes it). What changes is the console's <em>attention</em>:
+<code>detachForegroundJob</code> clears both interrupt handles (<code>Console.machine</code> and <code>activePane.machine()</code>)
+so ctrl-c at the returning prompt cannot kill it, and starts a &quot;background result collector&quot; thread
+that prints the job's result when it halts. The rest of the current input (later <code>;</code>-separated
+segments) is abandoned with the backgrounded turn.</p>
+<pre><code class="language-java">console.backgroundJobs()       // detached jobs still running, in detach order
+console.backgroundJobVids()    // their vids (each addressable, e.g. /sys/machine/2)
+console.stopBackgroundJobs()   // stop them all — returns the count
+</code></pre>
+<p><strong>Testing it.</strong>  <code>bin/metatron-console</code> boots a console-only VM in a pty and plays a step script at
+it (<code>bin/metatron-docker build console --steps bin/test/console-smoke.steps</code>), which is the only way to
+exercise the raw-mode path — see AGENTS.md → &quot;Driving the console in a pty&quot;.</p>
+<p><code>:bg</code> lists them, <code>:bg stop</code> stops them.  The decision table lives in the terminal-free
+<code>Console.foregroundStep(detach, interrupt, cancel, userMode, nowMs, offerAtMs)</code> → <code>{WAIT, DETACH, INTERRUPT, CANCEL, OFFER_CANCEL}</code>: detach beats everything, ctrl+c beats cancel, and a widget on
+screen (<code>userMode</code>) suppresses the cancel offer, as before.</p>
+<h4>Widget focus &amp; keyboard resize</h4>
+<p>Floating widgets can be cycled and resized from the keyboard, mirroring the console pane
+system (<code>activePane</code> ↔ <code>activeWidget</code>).</p>
+<p><strong>Keys</strong> (bound in <code>CommandPalette.bindKeys()</code>):</p>
+<table>
+<thead>
+<tr><th>Keys</th><th>Action</th></tr>
+</thead>
+<tbody>
+<tr><td><code>alt+w</code></td><td>cycle focus to the next floating widget (wraps)</td></tr>
+<tr><td><code>alt+^</code> / <code>alt+v</code></td><td>grow / shrink focused widget height (±1 row)</td></tr>
+<tr><td><code>alt+&gt;</code> / <code>alt+&lt;</code></td><td>grow / shrink focused widget width (±4 cols); falls back to pane resize when no widget is focused</td></tr>
+</tbody>
+</table>
+<p>Colon commands: <code>:next-widget</code>, <code>:prev-widget</code>, <code>:focus-widget [name\|off]</code>, <code>:widgets</code>
+(lists floating widgets, active one marked — same pattern as <code>:panes</code>), and <code>:keymap</code>
+(which builtin shortcut key is currently held by the console vs shadowed by a later binder).</p>
+<p><strong>Key durability (reassertion)</strong> — the five shortcut sequences above are <em>reasserted
+builtins</em>: <code>CommandPalette.bindBuiltin</code> registers handler identity with the console
+(<code>console.registerBuiltinKey(seq, handler)</code>), and <code>Console.prepareForInput</code> calls
+<code>reassertBuiltinKeys()</code> <strong>before every prompt</strong> — restoring any sequence a later binder
+(a menu line key, a tool) shadowed, by identity comparison on the shared <code>&quot;main&quot;</code> keymap
+(<code>Console.reassertBuiltin(keyMap, registered)</code>).  A shadow can therefore only last until
+the next read — never across turns.  This matters because the jline fork
+<strong>pre-binds <code>\e&lt;</code> = beginning-of-history and <code>\e&gt;</code> = end-of-history on its emacs map —
+both silent</strong>: an unowned <code>alt+&lt;</code> / <code>alt+&gt;</code> does nothing visible (it quietly jumps the
+prompt history), which is exactly what &quot;the key is dead&quot; looks like.  <code>:keymap</code> shows the
+current owner of each builtin sequence and the total escape-sequence binding count.</p>
+<p><strong>Which edge moves is decided by the slot's anchor</strong> — the anchor pins one edge, the free
+edge does the moving: a bottom-anchored widget's <strong>top</strong> edge lifts on <code>alt+^</code> (grow height);
+a left-anchored widget's <strong>right</strong> edge extends on <code>alt+&gt;</code> (grow width), while a
+right-anchored one pulls in its <strong>left</strong> edge; top-anchored widgets are the mirror image
+(their bottom/right edges are the free ones).</p>
+<p><strong>Focus registry</strong> lives on the <code>Console</code> (analogous to <code>activePane</code>):</p>
+<pre><code class="language-java">console.hasFloatingWidgets()
+console.getFloatingWidgets()           // deterministic order (FloatingSurface.widgets())
+console.getActiveWidget()              // the focused floating widget (null = none)
+console.focusWidget(w)                 // set focus (null clears)
+console.nextWidget() / prevWidget()    // cycle focus (wraps)
+console.growActiveWidgetWidth() / shrinkActiveWidgetWidth()   // ±4 cols (WIDGET_WIDTH_STEP)
+console.growActiveWidgetHeight() / shrinkActiveWidgetHeight() // ±1 row (WIDGET_HEIGHT_STEP)
+</code></pre>
+<p>Focus is tracked by a <strong>stable key</strong> — <code>FloatingSurface.widgetKey(w)</code> (the widget's <code>vid</code>,
+e.g. <code>think_widget</code>, with an identity fallback for vid-less widgets) — rather than the
+instance: a floating widget is re-hydrated into a fresh instance on every <code>.display()</code>
+update, and the key is what keeps focus and resize durable across re-floats.
+<code>FloatingSurface.setFocusKey(key)</code> is the presentation hint the render pass consumes.</p>
+<p><strong>Geometry durability</strong> — the slot (not the widget instance) owns the live geometry:</p>
+<ul>
+<li><code>FloatingSurface.nudge(w, widthΔ, heightΔ)</code> mutates <code>slot.targetWidth</code> (clamped to
+<code>[10, terminalWidth]</code>) and the slot's effective height cap (clamped to ≥3 rows), also
+refreshes the live <code>style.width()</code> for content-shaping widgets (e.g. <code>AccordionWidget</code>
+body wrap), and re-renders.</li>
+<li>On re-float, <code>add(widget, anchor, width, top, left)</code> carries the replaced slot's
+<code>targetWidth</code> and <code>heightCap</code> into the new slot — the rehydrated instance's
+(un-resized) <code>style.width()</code>/<code>style.height()</code> must not reset user geometry — and
+back-fills the resized width into the fresh instance's style when its own was unset.</li>
+<li>Rendering resolves the height cap as <code>slot.heightCap &gt; 0 ? slot.heightCap : style.height()</code>.</li>
+</ul>
+<p><strong>Focus marker</strong> — <code>FloatingSurface.renderWidget</code> draws <code>▶</code> in the focused widget's own
+<strong>top-left corner cell — inside the box</strong>.  Placing the marker inside the widget's erase
+region makes ghost markers impossible: whatever owns that cell on the next pass paints over
+it, so a marker can never outlive its widget's next draw (a left-of-box marker used to sit
+<em>outside</em> every erase region and survived re-floats as a ghost).  The top-of-pass blank
+(<code>markerRow</code>/<code>markerCol</code>) remains as a belt-and-braces sweep.  Related scroll hygiene: the
+scroll-compensation erase blanks a <strong>wrap-tolerant band</strong> (4 rows above + 1 below the
+computed stale position, scoped to the widget's own columns) — wrapped console lines add
+visual rows without newlines, so the true scroll can exceed <code>scrollAccum</code> and leave a stale
+box copy otherwise.</p>
+<p><strong>Deterministic focus order</strong> — <code>surface.widgets()</code> sorts slots by z-index (lowest first) →
+anchor reading order (top row→bottom row, left→right) → top/left offsets → target width
+(widest first). Only slot geometry — stable across re-floats — feeds the order, so cycling
+never jumps around.</p>
 <h3>5. Instruction registration (<code>uiInstSet.java</code>)</h3>
 <p>Widgets are mtron-constructable via <code>uiInstSet</code>.</p>
 <h4>Type registration</h4>

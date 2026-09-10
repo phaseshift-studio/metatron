@@ -409,7 +409,9 @@
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
  inst=&gt;[
-  bash?lst[str]&lt;=#{?}(cmd=&gt;str::T,{?}timeout=&gt;time::T),
+  read_file?lst&lt;=A{?}(file=&gt;uri::T,{?}min=&gt;int::T,{?}max=&gt;int::T),
+  edit_file?rec&lt;=A{?}(file=&gt;uri::T,text=&gt;str::T,min=&gt;int::T,{?}max=&gt;int::T),
+  bash?lst[str]&lt;=#{?}(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)),
   sleep?A{?}&lt;=A{?}(time::T),
   stdout?#{?}&lt;=#{?}(#{?}::T),
   stdin?str&lt;=#{?}()],
@@ -421,7 +423,7 @@
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>types <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">4</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>types <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">6</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -430,6 +432,12 @@
     <h6 class="text-primary mb-2">insts</h6>
     <div class="d-flex flex-wrap"><a href="#__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">bash</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__sys__inst__edit_file?rng=__m__rec&dom=A{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">edit_file</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__sys__inst__read_file?rng=__m__lst&dom=A{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">read_file</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__sys__inst__sleep?rng=A{?}&dom=A{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sleep</span>
@@ -444,7 +452,7 @@
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">4</span></h3>
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">6</span></h3>
     <div class="card mb-3" id="__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -453,7 +461,7 @@
         </span>
         <small class="text-muted code">/m/sys/inst/bash?rng=/m/lst[/m/str]&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bash?rng=lst[str]&dom=<span class="code text-info">#{?}</span>(cmd=>str::T,{?}timeout=>time::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bash?rng=lst[str]&dom=<span class="code text-info">#{?}</span>(cmd=>str::T,{?}timeout=>union(time::T,int::T)){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">evaluate bash command. *important* the timeout argument takes a real not an int -- e.g. millis::1000.0 or second::1.0.
@@ -462,10 +470,10 @@ note that this field is optional, so when in doubt, just don&#39;t fill it out
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a lst[str] of results" class="text-success">a lst[str] of results</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}timeout" class="text-light">{?}timeout</a> <span class="text-light">=&gt;</span> <a href="#"""a real number denoting timeout of the process (default: second::30.0000).
-"""" class="text-info">&quot;&quot;&quot;a real number denoting timeout of the process (default: second::30.0000).
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#cmd" class="text-light">cmd</a> <span class="text-light">=&gt;</span> <a href="#"the terminal command to evaluate (uses bash('-c',${cmd}) behind the scenes)"" class="text-info">&quot;the terminal command to evaluate (uses bash(&#39;-c&#39;,${cmd}) behind the scenes)&quot;</a>
+  <a href="#{?}timeout" class="text-light">{?}timeout</a> <span class="text-light">=&gt;</span> <a href="#"""a real number denoting timeout of the process (default: second::20.0000).
+"""" class="text-info">&quot;&quot;&quot;a real number denoting timeout of the process (default: second::20.0000).
 &quot;&quot;&quot;</a>
-  <a href="#cmd" class="text-light">cmd</a> <span class="text-light">=&gt;</span> <a href="#"the terminal command to evaluate (uses bash('-c',${cmd}) behind the scenes)"" class="text-info">&quot;the terminal command to evaluate (uses bash(&#39;-c&#39;,${cmd}) behind the scenes)&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -473,6 +481,53 @@ note that this field is optional, so when in doubt, just don&#39;t fill it out
 {&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;}.-&lt;[_ =&gt; _]==[_ =&gt; bash(_)]   [-- batch bash results indexed by cmd             --]
 [&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;].mapp(-&lt;[_ =&gt; bash(_)]).sum() [-- same as above but with lst of cmds            --]
 </code></pre>
+</div>
+</div><div class="card mb-3" id="__m__sys__inst__edit_file?rng=__m__rec&dom=A{?}">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">edit_file</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
+        </span>
+        <small class="text-muted code">/m/sys/inst/edit_file?rng=/m/rec&amp;dom=A{?}</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__edit_file?rng=__m__rec&dom=A{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__edit_file?rng=__m__rec&dom=A{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">edit_file?rng=rec&dom=<span class="code text-info">A{?}</span>(file=>uri::T,text=>str::T,min=>int::T,{?}max=>int::T){<j>}</code></pre>
+</div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">write text to a file in fsspace::T. the min and max values represent the range to write.
+if no max is provided, then the text is inserted at the line number (shifting existing text down).
+if both min and max are provided, then those lines are removed and the text is inserted at the min line.
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] maybe an obj (optional)" class="text-info">[generic] maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a status report on the write" class="text-success">a status report on the write</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
+  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
+  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
+  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the text to add to the file'" class="text-info">&#39;the text to add to the file&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__sys__inst__read_file?rng=__m__lst&dom=A{?}">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">read_file</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__lst" data-bs-toggle="tooltip" title="range" class="code text-success">lst</a></span></span>
+        </span>
+        <small class="text-muted code">/m/sys/inst/read_file?rng=/m/lst&amp;dom=A{?}</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__read_file?rng=__m__lst&dom=A{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__read_file?rng=__m__lst&dom=A{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">read_file?rng=lst&dom=<span class="code text-info">A{?}</span>(file=>uri::T,{?}min=>int::T,{?}max=>int::T){<j>}</code></pre>
+</div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">read a file from an fsspace::T. the min and max values represent the range to read.
+if no min, nor max is provided, then the entire file is read.
+if only a min is provided, then the file is read from that line till the end.
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] maybe an obj (optional)" class="text-info">[generic] maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#read file indexed lines" class="text-success">read file indexed lines</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}min" class="text-light">{?}min</a> <span class="text-light">=&gt;</span> <a href="#'the start line to read'" class="text-info">&#39;the start line to read&#39;</a>
+  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
+  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
+</pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__sleep?rng=A{?}&dom=A{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
