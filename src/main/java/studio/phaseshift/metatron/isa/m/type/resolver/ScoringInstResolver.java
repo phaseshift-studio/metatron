@@ -176,14 +176,14 @@ public class ScoringInstResolver implements InstResolver {
 
         // Multiple candidates: score by specificity and select best
         return viable.stream()
-                /* .filter(apiInst ->
-                         apiInst.dom().isGeneric() ||
-                                 !userInst.hasDom() ||
-                                 userInst.dom().test(apiInst.dom()))*/
-                //.filter(apiInst -> apiInst.rng().isGeneric() || !userInst.hasRng() || userInst.rng().test(apiInst.rng()))
+                .filter(apiInst -> apiInst.dom().isGeneric() || !apiInst.dom().isNominal() || Obj.Helper.specificType(lhs).test(apiInst.dom()))
+                //.filter(apiInst -> apiInst.rng().isGeneric() || !userInst.hasRng() || userInst.rng().equals(apiInst.rng()))
+                //.peek(apiInst -> LOG.error("\nlhs: %s\napi: %s\nusr: %s", lhs, apiInst, userInst))
+                // .filter(apiInst -> Obj.Helper.specificType(lhs).isRefinementOf(apiInst.dom()))
                 .map(apiInst -> {
                     final int score = scoreSpecificity(lhs, userInst, apiInst);
-                    Inst transformed = userInst.hasDom() ? apiInst.dom(userInst.dom()) : apiInst;
+                    // Inst transformed = userInst.hasDom() ? apiInst.dom(userInst.dom()) : apiInst;
+                    Inst transformed = userInst.hasDom() ? apiInst.dom(apiInst.dom().c(userInst.dom().c()).as()) : apiInst;
                     transformed = userInst.hasRng() ? transformed.rng(userInst.rng()) : transformed;
                     transformed = userInst.tid().basePath().equals(AS_INST_TID) ? transformed.rng(userInst.arg(0).isNoObj() ? NOOBJ_TYPE : Obj.Helper.specificType(userInst.arg(0))) : transformed;
                     transformed = lhs.isInst() ? transformed : Inst.Helper.bindGenerics(lhs, transformed, userInst);
@@ -203,6 +203,7 @@ public class ScoringInstResolver implements InstResolver {
                     result = result.c(userInst.c());
                     return new ScoredCandidate(sc.original, result, sc.score);
                 })
+                //.peek(sc -> LOG.warn("\nlhs: %s\nusr: %s\napi: %s\nfinal: %s", lhs, userInst, sc.original, sc.transformed))
                 .max(Comparator.comparingInt(ScoredCandidate::score))
                 .map(ScoredCandidate::transformed)
                 .orElse(null);

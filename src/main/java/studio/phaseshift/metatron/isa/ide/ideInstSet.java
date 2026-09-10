@@ -32,7 +32,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_TIME_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
@@ -94,7 +94,7 @@ public class ideInstSet extends AbstractInstSet {
             .vid(IDE_RESULT_TID)
             .isaPredicate(rec(
                     uri(STATUS), union_(uri(SUCCESS), uri(ERROR), uri(HALTED)).tryToInst(),
-                    uri(RUNTIME), TIME_TYPE,
+                    uri(RUNTIME), auto_from_(MATH_TIME_TID).tryToInst(),
                     uri(COMMAND).maybe(), STR_TYPE,
                     uri(PROJECT).maybe(), T(IDE_PROJECT_TID),
                     uri(RESULT).maybe(), T(STR_TID.maybeSome()), // str{*} — an auto_from !* ref type-matches true

@@ -267,17 +267,17 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/answer-questions.html">answer-questions</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/language-reference_mtron.html">language-reference_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/sys_instset_mtron.html">sys_instset_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/math_instset_mtron.html">math_instset_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/connecting-datasources.html">connecting-datasources</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dckrspace.html">dckrspace</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/http-page-fetching.html">http-page-fetching</a>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/math_instset.html">math_instset</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/mtron-fsspace.html">mtron-fsspace</a>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/mtron-language-reference.html">mtron-language-reference</a>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
@@ -525,9 +525,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result{4}::[
     status=&gt;success,
-    runtime=&gt;millis::724.0000,
+    runtime=&gt;millis::739.0000,
     command=&gt;'mvn -f src/test/resources/scratch clean',
-    output=&gt;!*/sys/tmp/ad32b09a]
+    output=&gt;!*/sys/tmp/93f5aadf]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 ==&gt;{4}'WARNING: A terminally deprecated method in sun.misc.Unsafe has been called'
 ==&gt;{4}'WARNING: sun.misc.Unsafe::staticFieldBase has been called by com.google.inject.internal.aop.HiddenClassDefiner (file:/home/killswitch/.sdkman/candidates/maven/current/lib/guice-5.1.0-classes.jar)'
@@ -545,8 +545,8 @@ mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 ==&gt;{4}'[INFO] Nothing to compile - all classes are up to date.'
 ==&gt;{12}'[INFO] ------------------------------------------------------------------------'
 ==&gt;{4}'[INFO] BUILD SUCCESS'
-==&gt;{4}'[INFO] Total time:  0.260 s'
-==&gt;{4}'[INFO] Finished at: 2026-09-09T03:14:31-06:00'
+==&gt;{4}'[INFO] Total time:  0.243 s'
+==&gt;{4}'[INFO] Finished at: 2026-09-10T05:45:52-06:00'
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
 <pre><code class="language-mtron">mtron&gt; tree_widget::[root=&gt;/dev/scratch, max=&gt;3, xref=&gt;[=&gt;]].as?str&lt;=widget(str::T)

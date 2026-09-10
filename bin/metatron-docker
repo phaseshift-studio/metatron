@@ -24,7 +24,7 @@
 #
 #   bin/metatron-docker build                         # isolated: mvn package -DskipTests
 #   bin/metatron-docker build test -Dtest=HotkeysTest # isolated: mvn test
-#   bin/metatron-docker build docs [dir|file.md]      # isolated: MarkdownRunner --html
+#   bin/metatron-docker build docs [dir|file.md]      # isolated: MarkdownRunner --html (jar rebuilt when stale)
 #   bin/metatron-docker build console [args]          # isolated: pty console harness
 #   bin/metatron-docker build shell '<cmd>'           # isolated: raw shell (alias: run)
 #   bin/metatron-docker build image                   # rebuild the build image
@@ -46,6 +46,9 @@
 #   METATRON_BUILD_IMAGE   build image tag      (default: metatron-build:24)
 #   METATRON_BUILD_NAME    build container name (default: metatron-build; a unique suffix is added)
 #   MAVEN_REPO             maven repo inside the build container (default: .build/m2/repository)
+#   METATRON_BUILD_TARGET  build output dir for build/test/docs (default: .docker-target;
+#                          it shadows target/ inside the container, so docker builds never
+#                          touch the fs build's target/; image/dev copy the jar back)
 #   NO_PORTS=1             run: publish no ports         DRY_RUN=1  print, do not execute
 set -eu
 
@@ -56,6 +59,10 @@ APP_IMAGE="${METATRON_IMAGE:-metatron:dev}"
 BUILD_IMAGE="${METATRON_BUILD_IMAGE:-metatron-build:24}"
 BUILD_NAME="${METATRON_BUILD_NAME:-metatron-build}-$(date +%s)-$$"
 MAVEN_REPO="${MAVEN_REPO:-.build/m2/repository}"
+# docker builds write here (bound at /work/target), never into the repo's
+# target/ — so docker-side mvn can't trample a host (fs) build's artifacts.
+# repo-root dot dir: killswitch-owned and swallowed by .gitignore's `.*`
+BUILD_TARGET="${METATRON_BUILD_TARGET:-.docker-target}"
 MVN_OPTS="-B -Dmaven.repo.local=/work/$MAVEN_REPO"
 JAR="target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar"
 DOCS_RUNNER="studio.phaseshift.metatron.docs.MarkdownRunner"
@@ -77,12 +84,17 @@ D() {
 # ---------- shared plumbing ----------
 
 # the isolated build/test/docs container: repo at /work, host user, NO ports.
+# /work/target is bound to $BUILD_TARGET (NOT the repo's target/), so docker
+# maven jobs never write artifacts the fs build owns; handoff jobs
+# (package_jar) copy the uber jar back to target/ afterwards.
 # trailing args are the container command.
 build_run() {
+    mkdir -p "$REPO/$BUILD_TARGET"
     D docker run --rm --name "$BUILD_NAME" \
         --user "$(id -u):$(id -g)" \
         -e HOME=/work \
         -v "$REPO":/work -w /work \
+        -v "$REPO/$BUILD_TARGET":/work/target \
         "$BUILD_IMAGE" "$@"
 }
 
@@ -143,13 +155,20 @@ metatron-docker: $BOOT_FILE
 
 # mvn package (skip tests) INSIDE the build container.  Building in the container
 # (rather than with a host ./mvnw) means `image`/`dev` need docker and nothing else,
-# and the jar is assembled by the same JDK24 image the test loop uses.  The container
-# runs as the host user, so target/ stays host-owned.  No staging copy: the Dockerfile
-# COPYs target/metatron-*-jar-with-dependencies.jar straight into the image.
+# and the jar is assembled by the same JDK24 image the test loop uses.  maven writes
+# to the isolated $BUILD_TARGET dir (see build_run); we then copy the uber jar back
+# into the repo's target/ — no staging copy elsewhere, the Dockerfile COPYs
+# target/metatron-*-jar-with-dependencies.jar straight into the image.
 package_jar() {
     ensure_build_image
     echo "==> mvn package (skip tests) in $BUILD_IMAGE"
     build_run sh -c "mvn $MVN_OPTS -DskipTests package"
+    JAR_PATH=$(ls -1 "$REPO/$BUILD_TARGET"/metatron-*-jar-with-dependencies.jar 2>/dev/null | head -1)
+    if [ -n "${JAR_PATH:-}" ] && [ "${DRY:-0}" != "1" ]; then
+        mkdir -p "$REPO/target"
+        cp "$JAR_PATH" "$REPO/target/"
+        echo "==> uber jar copied back to target/ ($(basename "$JAR_PATH"))"
+    fi
 }
 
 cmd_image() {
@@ -198,8 +217,7 @@ cmd_build() {
 
     case "$verb" in
         "" | package | build)
-            ensure_build_image
-            build_run sh -c "mvn $MVN_OPTS -DskipTests package"
+            package_jar
             ;;
         test)
             ensure_build_image
@@ -232,9 +250,12 @@ cmd_build() {
             # MarkdownRunner --html: markdown pass + site-html render in one VM run.
             # The jar name carries the pom version, so it is resolved by glob inside
             # the container (a version bump must not leave us pointing at a missing jar).
+            # The jar is rebuilt when missing or STALE: any src/ file or the pom newer
+            # than the jar means the runner would evaluate against old code.
             cmd="set -eu
                 JAR=\$(ls -1 target/metatron-*-jar-with-dependencies.jar 2>/dev/null | head -1)
-                if [ -z \"\$JAR\" ]; then
+                if [ -z \"\$JAR\" ] || [ -n \"\$(find src pom.xml -type f -newer \"\$JAR\" 2>/dev/null | head -n 1)\" ]; then
+                    echo \"==> jar stale or missing — mvn package (skip tests)\"
                     mvn $MVN_OPTS -DskipTests package
                     JAR=\$(ls -1 target/metatron-*-jar-with-dependencies.jar | head -1)
                 fi

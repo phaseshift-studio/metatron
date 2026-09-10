@@ -268,16 +268,16 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/answer-questions.html">answer-questions</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/connecting-datasources.html">connecting-datasources</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace.html">dckrspace</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/http-page-fetching.html">http-page-fetching</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/math_instset.html">math_instset</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference_mtron.html">language-reference_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/math_instset_mtron.html">math_instset_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mtron-fsspace.html">mtron-fsspace</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mtron-language-reference.html">mtron-language-reference</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
@@ -553,7 +553,7 @@
   IN=&gt;[uri::T=&gt;vrtx::T]]]@/m/grph/edge</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a directed key/value attributed binary edge</p>
+    <p class="mb-0 text-light">[structural] a directed key/value attributed binary edge</p>
 </div>
 </div><div class="card mb-3" id="__m__grph__elmt">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -566,7 +566,7 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/grph/elmt</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a key/value attributed element that is refined by vrtx::T and edge::T</p>
+    <p class="mb-0 text-light">[nominal] </p>
 </div>
 </div><div class="card mb-3" id="__m__grph__schema__modern">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -579,7 +579,7 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">modern::T</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a schema for the modern graph dataset</p>
+    <p class="mb-0 text-light">[nominal] </p>
 </div>
 </div><div class="card mb-3" id="__m__grph__vrtx">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -592,7 +592,7 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a key/value attributed vertex</p>
+    <p class="mb-0 text-light">[structural] a key/value attributed vertex</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="spaces">
@@ -609,7 +609,7 @@
  {?}route=&gt;[uri{?}::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a space for graph traversal</p>
+    <p class="mb-0 text-light">[structural] a space for graph traversal</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">

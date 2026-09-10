@@ -267,17 +267,17 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/answer-questions.html">answer-questions</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference_mtron.html">language-reference_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys_instset_mtron.html">sys_instset_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math_instset_mtron.html">math_instset_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/connecting-datasources.html">connecting-datasources</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace.html">dckrspace</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/http-page-fetching.html">http-page-fetching</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math_instset.html">math_instset</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mtron-fsspace.html">mtron-fsspace</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mtron-language-reference.html">mtron-language-reference</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
@@ -379,7 +379,7 @@
 <main class="container my-4 flex-grow-1">
     <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">mtron-language-reference: Complete mtron language reference — mono, poly, and call types, operators, expression chaining, and syntax.</h1>
-        <a href="mtron-language-reference.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>mtron-language-reference.md</a>
+        <a href="language-reference_mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>language-reference_mtron.md</a>
     </div>
     <div class="markdown-body">
 <h2>mtron Language Reference</h2>
@@ -778,9 +778,6 @@ mtron&gt; [1,2]@a &gt;&gt;= [_,+4]                      [-- [1,6]@a  (second ele
 mtron&gt; [a=&gt;1,b=&gt;2] &gt;&gt;= [b=&gt;none]               [-- [a=&gt;1]  (remove field b) --]
 ==&gt;[a=&gt;1]
 mtron&gt; @&lt;people/+&gt;.&gt;&gt;= [name=&gt;&quot;Micky Mouse&quot;]   [-- wildcard update --]
-==&gt;[name=&gt;'Micky Mouse',role=&gt;architect]
-==&gt;[name=&gt;'Micky Mouse',role=&gt;developer]
-==&gt;[name=&gt;'Micky Mouse',role=&gt;oracle]
 </code></pre>
 <p><code>@</code> means &quot;anchor the write-back to the VID&quot; (persist).  <code>*</code> means &quot;anonymous copy&quot; (no write-back):</p>
 <pre><code class="language-mtron">mtron&gt; @a/b/c&gt;&gt;= +10      [-- modifies *a/b/c and writes back --]

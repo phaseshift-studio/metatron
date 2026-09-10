@@ -77,19 +77,19 @@ public class mathInstSet extends AbstractInstSet {
     public static final fURI MATH_FLOOR_INST_TID = MATH_INST_TID.extend("floor");
     public static final fURI MATH_ROUND_INST_TID = MATH_INST_TID.extend("round");
     public static final fURI NAT_TID = MATH_ISA_TID.extend("nat");
-    public static final fURI MATH_DATA_TID = MATH_ISA_TID.extend("data");
-    public static final fURI MATH_BYTE_TID = MATH_DATA_TID.extend("bB");
-    public static final fURI MATH_KBYTE_TID = MATH_DATA_TID.extend("kB");
-    public static final fURI MATH_MBYTE_TID = MATH_DATA_TID.extend("mB");
-    public static final fURI MATH_GBYTE_TID = MATH_DATA_TID.extend("gB");
-    public static final fURI MATH_TBYTE_TID = MATH_DATA_TID.extend("tB");
-    public static final fURI MATH_PBYTE_TID = MATH_DATA_TID.extend("pB");
-    public static final String MATH_BYTE_STRING = "/m/math/data/bB";
-    public static final String MATH_KBYTE_STRING = "/m/math/data/kB";
-    public static final String MATH_MBYTE_STRING = "/m/math/data/mB";
-    public static final String MATH_GBYTE_STRING = "/m/math/data/gB";
-    public static final String MATH_TBYTE_STRING = "/m/math/data/tB";
-    public static final String MATH_PBYTE_STRING = "/m/math/data/pB";
+    public static final fURI MATH_DATASIZE_TID = MATH_ISA_TID.extend("datasize");
+    public static final fURI MATH_BYTE_TID = MATH_DATASIZE_TID.extend("bB");
+    public static final fURI MATH_KBYTE_TID = MATH_DATASIZE_TID.extend("kB");
+    public static final fURI MATH_MBYTE_TID = MATH_DATASIZE_TID.extend("mB");
+    public static final fURI MATH_GBYTE_TID = MATH_DATASIZE_TID.extend("gB");
+    public static final fURI MATH_TBYTE_TID = MATH_DATASIZE_TID.extend("tB");
+    public static final fURI MATH_PBYTE_TID = MATH_DATASIZE_TID.extend("pB");
+    public static final String MATH_BYTE_STRING = "/m/math/datasize/bB";
+    public static final String MATH_KBYTE_STRING = "/m/math/datasize/kB";
+    public static final String MATH_MBYTE_STRING = "/m/math/datasize/mB";
+    public static final String MATH_GBYTE_STRING = "/m/math/datasize/gB";
+    public static final String MATH_TBYTE_STRING = "/m/math/datasize/tB";
+    public static final String MATH_PBYTE_STRING = "/m/math/datasize/pB";
     /// ///////////////////////
     public static final fURI MATH_TIME_TID = MATH_ISA_TID.extend("time");
     public static final fURI MATH_MILLIS_TID = MATH_TIME_TID.extend("millis");
@@ -104,7 +104,6 @@ public class mathInstSet extends AbstractInstSet {
     public static final String MATH_DAY_STRING = "/m/math/time/day";
     /// ///////////////////////
     public static final fURI MATH_DATETIME_TID = MATH_ISA_TID.extend("datetime");
-    public static final fURI MATH_DATETIME_NOW_INST_TID = MATH_INST_TID.extend("datetime_now");
     /// ///////////////////////
     public static final fURI MATH_CURRENCY_TID = f("/m/math/currency");
     public static final fURI MATH_USD_TID = MATH_CURRENCY_TID.extend("usd");
@@ -112,7 +111,6 @@ public class mathInstSet extends AbstractInstSet {
     public static final Type MATH_CURRENCY_TYPE = Type.Builder.build()
             .tid(REAL_TID)
             .vid(MATH_CURRENCY_TID)
-            .isaPredicate(REAL_TYPE) // TODO: fix
             .create();
 
     static {
@@ -137,7 +135,6 @@ public class mathInstSet extends AbstractInstSet {
     public static final Type TIME_TYPE = Type.Builder.build()
             .tid(REAL_TID)
             .vid(MATH_TIME_TID)
-            .isaPredicate(REAL_TYPE) // without it -- nominal type exceptions with subtypes (thats wrong - fix) TODO
             .create();
 
     public static final Type MILLIS_TYPE = Type.Builder.build()
@@ -428,16 +425,14 @@ public class mathInstSet extends AbstractInstSet {
      * Recurses until the value stabilizes in the appropriate unit.
      */
     public static Real normalizeTime(final Real time) {
-        final String tid = time.tid().toString();
         final double value = time.realValue();
-
-        if (tid.equals(MATH_MILLIS_STRING) && value >= 2000.0d)
+        if (time.tid().test(MATH_MILLIS_TID) && value >= 2000.0d)
             return normalizeTime(time.as(SECOND_TYPE).asReal());
-        if (tid.equals(MATH_SECOND_STRING) && value >= 120.0d)
+        if (time.tid().test(MATH_SECOND_TID) && value >= 120.0d)
             return normalizeTime(time.as(MINUTE_TYPE).asReal());
-        if (tid.equals(MATH_MINUTE_STRING) && value >= 120.0d)
+        if (time.tid().test(MATH_MINUTE_TID) && value >= 120.0d)
             return normalizeTime(time.as(HOUR_TYPE).asReal());
-        if (tid.equals(MATH_HOUR_STRING) && value >= 48.0d)
+        if (time.tid().test(MATH_HOUR_TID) && value >= 48.0d)
             return normalizeTime(time.as(DAY_TYPE).asReal());
 
         return time;
@@ -478,8 +473,7 @@ public class mathInstSet extends AbstractInstSet {
 
     public static final Type DATA_SIZE_TYPE = Type.Builder.build()
             .tid(REAL_TID)
-            .vid(MATH_DATA_TID)
-            .predicate(id_().tryToInst())
+            .vid(MATH_DATASIZE_TID)
             .create();
 
     public static final Type NAT_TYPE = Type.Builder.build()
@@ -489,7 +483,7 @@ public class mathInstSet extends AbstractInstSet {
             .create();
 
     public static final Type BYTE_TYPE = Type.Builder.build()
-            .tid(MATH_DATA_TID)
+            .tid(MATH_DATASIZE_TID)
             .vid(MATH_BYTE_TID)
             .constructor(arg -> {
                 final String tid = arg.tid().toString();
@@ -505,7 +499,7 @@ public class mathInstSet extends AbstractInstSet {
             }).create();
 
     public static final Type KBYTE_TYPE = Type.Builder.build()
-            .tid(MATH_DATA_TID)
+            .tid(MATH_DATASIZE_TID)
             .vid(MATH_KBYTE_TID)
             .constructor(arg -> {
                 final String tid = arg.tid().toString();
@@ -520,7 +514,7 @@ public class mathInstSet extends AbstractInstSet {
             }).create();
 
     public static final Type MBYTE_TYPE = Type.Builder.build()
-            .tid(MATH_DATA_TID)
+            .tid(MATH_DATASIZE_TID)
             .vid(MATH_MBYTE_TID)
             .constructor(arg -> {
                 final String tid = arg.tid().toString();
@@ -535,7 +529,7 @@ public class mathInstSet extends AbstractInstSet {
             }).create();
 
     public static final Type GBYTE_TYPE = Type.Builder.build()
-            .tid(MATH_DATA_TID)
+            .tid(MATH_DATASIZE_TID)
             .vid(MATH_GBYTE_TID)
             .constructor(arg -> {
                 final String tid = arg.tid().toString();
@@ -550,7 +544,7 @@ public class mathInstSet extends AbstractInstSet {
             }).create();
 
     public static final Type TBYTE_TYPE = Type.Builder.build()
-            .tid(MATH_DATA_TID)
+            .tid(MATH_DATASIZE_TID)
             .vid(MATH_TBYTE_TID)
             .constructor(arg -> {
                 final String tid = arg.tid().toString();
@@ -565,7 +559,7 @@ public class mathInstSet extends AbstractInstSet {
             }).create();
 
     public static final Type PBYTE_TYPE = Type.Builder.build()
-            .tid(MATH_DATA_TID)
+            .tid(MATH_DATASIZE_TID)
             .vid(MATH_PBYTE_TID)
             .constructor(arg -> {
                 final String tid = arg.tid().toString();
@@ -595,7 +589,7 @@ public class mathInstSet extends AbstractInstSet {
                         docWrap(MATH_CURRENCY_TYPE, "a currency amount"),
                         docWrap(Type.Builder.build().tid(MATH_CURRENCY_TID).vid(MATH_USD_TID).create(), "united states currency"),
                         docWrap(Type.Builder.build().tid(MATH_CURRENCY_TID).vid(MATH_EURO_TID).create(), "european union currency"),
-                        TIME_TYPE,
+                        docWrap(TIME_TYPE, "the nominal base type of time"),
                         docWrap(MILLIS_TYPE, "a millisecond of time"),
                         docWrap(SECOND_TYPE, "a second of time (1000 millis)"),
                         docWrap(MINUTE_TYPE, "a minute of time (60 seconds)"),
@@ -603,14 +597,14 @@ public class mathInstSet extends AbstractInstSet {
                         docWrap(DAY_TYPE, "a day of time (24 hours)"),
                         docWrap(DATETIME_TYPE, "a datetime as uri: <//yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm>")),
                 uri(INST), lst(
-                        instC(MATH_DATETIME_NOW_INST_TID.dom(ALL.maybe()).rng(MATH_DATETIME_TID), lst(), (lhs, inst) -> nowDatetime()),
+                        instC(MATH_INST_TID.extend("datetime_now").dom(ALL.maybe()).rng(MATH_DATETIME_TID), lst(), (lhs, inst) -> nowDatetime()),
                         // datetime arithmetic: datetime + time -> datetime, datetime - time -> datetime,
                         // datetime - datetime -> millis::T
-                       /* instC(PLUS_INST_TID.dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(TIME_TYPE), (lhs, inst) -> {
+                        instC(PLUS_INST_TID.dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(TIME_TYPE), (lhs, inst) -> {
                             final fURI normalizedTID = inst.arg(0).tid().basePath().equals(REAL_TID) ? lhs.tid().basePath() : MATH_MILLIS_TID;
                             return real(lhs.tid(normalizedTID).realValue() +
                                     inst.arg(0).tid(normalizedTID).realValue(), normalizedTID, lhs.vid()).tid(lhs.tid());
-                        }),*/
+                        }),
                         instC(AS_INST_TID.dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(TIME_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vid())),
                         instC(PLUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_DATETIME_TID), lst(TIME_TYPE), (lhs, inst) ->
                                 buildDatetimeUri(ZonedDateTime.ofInstant(Instant.ofEpochMilli(datetimeToMillis(lhs.asUri()) + (long) timeToMillis(inst.arg(0))), ZoneOffset.UTC))),
@@ -631,8 +625,8 @@ public class mathInstSet extends AbstractInstSet {
                             formatter.setTimeZone(TimeZone.getTimeZone(ZoneId.systemDefault()));
                             return str(formatter.format(date));
                         }),*/
-                        instC(MATH_TIME_TID.extend(INST).extend("normalize").dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(), (lhs, inst) -> normalizeTime(lhs.asReal())),
-                        instC(MATH_DATA_TID.extend(INST).extend("normalize").dom(MATH_DATA_TID).rng(MATH_DATA_TID), lst(), (lhs, inst) -> normalizeData(lhs.asReal())),
+                        instC(MATH_INST_TID.extend("normalize").dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(), (lhs, inst) -> normalizeTime(lhs.asReal())),
+                        instC(MATH_INST_TID.extend("normalize").dom(MATH_DATASIZE_TID).rng(MATH_DATASIZE_TID), lst(), (lhs, inst) -> normalizeData(lhs.asReal())),
                         instC(MATH_COS_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(as_(REAL_TYPE).tryToInst()), (lhs, inst) -> real(Math.cos(inst.arg(0).realValue()))),
                         instC(MATH_SIN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.sin(inst.arg(0).realValue()))),
                         instC(MATH_TAN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.tan(inst.arg(0).realValue()))),

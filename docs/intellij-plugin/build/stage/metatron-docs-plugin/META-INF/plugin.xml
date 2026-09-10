@@ -11,7 +11,7 @@
             <li><code>docs/skills/**/*.md</code> -> MarkdownRunner (single-file, <code>--html</code>) -> processed markdown opened in the editor <b>and</b> the rendered sibling <code>.html</code> opened in the browser.</li>
             <li><code>docs/website/adoc/*.adoc</code> -> AsciiDocRunner (the adoc tree is one book; --single-boot) -> opens <code>docs/website/tractatus.html</code> in the browser.</li>
         </ul>
-        Shells out to the metatron uber-jar (same runners as <code>bin/metatron-build-docker docs</code>).
+        Shells out to the metatron uber-jar (same runners as <code>bin/metatron-docker build docs</code>).
         Build output streams to <code>target/docs-build.log</code>.
         <p>Like <code>bin/metatron</code>, it rebuilds the uber-jar automatically (<code>./mvnw install -DskipTests</code>)
         whenever sources changed since the last build, then runs the doc compiler.</p>

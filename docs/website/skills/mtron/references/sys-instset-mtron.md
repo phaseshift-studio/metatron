@@ -113,13 +113,23 @@ as is, but
 
 A typical `fsspace` definition:
 
-```mtron_pre
-fsspace::[/
-  pattern => <local:#>,/
-  q       => [mimeq::[=>], lineq::[=>]],/
-  route   => [local: => <~/my-project>]]@/sys/space/fs/local
+```mtron
+mtron> fsspace::[
+         pattern => <local:#>,
+         q       => [mimeq::[=>], lineq::[=>]],
+         route   => [local: => <~/my-project>]]@/sys/space/fs/local
+==>fsspace::[
+    pattern=>local:#,
+    q=>[
+     mimeq::[
+      pattern=>mimeq,
+      post_read=>inst?#{*}<=#{?}(uri::T,#::T)],
+     lineq::[
+      pattern=>lineq,
+      post_read=>inst?#{*}<=#{?}(uri::T,#::T),
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T)]],
+    route=>[local:=>/home/killswitch/my-project]]@/sys/space/fs/local
 ```
-
 - **`pattern`** — the URI pattern this space handles (`local:#` matches `<local:file.txt>`, `<local:sub/dir/file.md>`,
   etc.)
 - **`route`** — maps the pattern prefix (`local:`) to a filesystem path (`<~/my-project>`)
@@ -162,17 +172,14 @@ string is valid HTML. The structural representation (`rec::T` DOM tree) is opt-i
 
 The `?mimeq=` query parameter on a file URI controls what the space returns:
 
-```mtron_pre
-[-- Default: typed string (predicate-validated) --]
-*<local:index.html>
-
-[-- Explicit type tag (same as default for .html files) --]
-*<local:index.html?mimeq=text/html>
-
-[-- Structural parse via application/x-mtron --]
-*<local:index.html?mimeq=application/x-mtron>
+```mtron
+mtron> [-- Default: typed string (predicate-validated) --]
+mtron> *<local:index.html>
+mtron> [-- Explicit type tag (same as default for .html files) --]
+mtron> *<local:index.html?mimeq=text/html>
+mtron> [-- Structural parse via application/x-mtron --]
+mtron> *<local:index.html?mimeq=application/x-mtron>
 ```
-
 `mimeq` is implemented in `QCollection.mimeQ()` as a space-level `postRead` query processor. It:
 
 1. **Probes** the content type from the object's existing TID (or falls back to URI/file extension if the TID is bare
@@ -186,91 +193,109 @@ The `?mimeq=` query parameter on a file URI controls what the space returns:
 
 ### Basic Read/Write
 
-```mtron_pre
-[-- Read a file (returns typed string by default) --]
-*<local:test.md>
-
-[-- Write a string to a file --]
-<local:test.md> -> "## new content"
+```mtron
+mtron> [-- Read a file (returns typed string by default) --]
+mtron> *<local:test.md>
+==>markdown::'## new content'
+mtron> [-- Write a string to a file --]
+mtron> <local:test.md> -> "## new content"
+==>'## new content'
 ```
-
 ### Reading with Structural Parse
 
-```mtron_pre
-[-- Read markdown as a rec::T structure --]
-*<local:test.md?mimeq=application/x-mtron>
-
-[-- Read JSON, then walk into rec fields --]
-*<local:config.json?mimeq=application/x-mtron>/database/host
+```mtron
+mtron> [-- Read markdown as a rec::T structure --]
+mtron> *<local:test.md?mimeq=application/x-mtron>
+==>[
+    type=>doc,
+    out=>[[
+    type=>head,
+    level=>2,
+    text=>'new content',
+    out=>[[type=>text,content=>'new content']]]]]
+mtron> [-- Read JSON, then walk into rec fields --]
+mtron> *<local:config.json?mimeq=application/x-mtron>/database/host
+==>/database/host
 ```
-
 ### Binary Files
 
 Files without a recognized text MIME type are read as `bytes::T`. Executable files (with shebangs)
 are treated as `inst::T` and can be invoked directly:
 
-```mtron_pre
-*<local:script.sh>        [-- bytes::T if binary, str::T if text                    --]
-<local:script.sh>()       [-- execute (shell scripts, via application/x-mtron exec) --]
+```mtron
+mtron> *<local:script.sh>        [-- bytes::T if binary, str::T if text                    --]
+mtron> <local:script.sh>()       [-- execute (shell scripts, via application/x-mtron exec) --]
+==>fail::[unable to locate inst-f of local:script.sh()@<0>]@/sys/fail/136
 ```
-
 ## Pattern-Based Access
 
 fsSpace supports wildcard patterns in reads:
 
-```mtron_pre
-[-- List all files in a directory --]
-*<local:+/>
-
-[-- Read all .txt files --]
-*<local:+/+>.where([name => -<'.'>>1.is('txt')])
+```mtron
+mtron> [-- List all files in a directory --]
+mtron> *<local:+/>
+==><local:/test.md>=>markdown::'## new content'
+mtron> [-- Read all .txt files --]
+mtron> *<local:+/+>.where([name => -<'.'>>1.is('txt')])
+==>markdown::'## new content'
 ```
-
 ## Line-Level Editing with `lineq`
 
 The `lineq` query processor enables reading and editing specific line ranges within text files, useful for targeted
 edits without loading the entire file:
 
-```mtron_pre
-[-- Read lines 10-20 of a file --]
-*<local:src/main.java?lineq=10..20>
-
-[-- Replace lines 5-10 with new content --]
-<local:src/main.java?lineq=5..10> -> """/
-  public void newMethod() {/
-    // new implementation/
-  }/
-"""
+```mtron
+mtron> [-- Read lines 10-20 of a file --]
+mtron> *<local:src/main.java?lineq=10..20>
+==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "10..20"]@/sys/fail/160
+mtron> [-- Replace lines 5-10 with new content --]
+mtron> <local:src/main.java?lineq=5..10> -> """
+         public void newMethod() {
+           // new implementation
+         }
+       """
+==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "5..10"]@/sys/fail/172
 ```
-
 ### Boot Configuration Example
 
-```mtron_pre
-fsspace::[/
-  pattern => <local:#>,/
-  q       => [mimeq::[=>], lineq::[=>]],/
-  route   => [local: => ~/src]]@/sys/space/fs/src
-
-[-- Then use in expressions: --]
-*<local:Main.java?lineq=1..50>
-<local:index.html?mimeq=application/x-mtron>/html/head/title
+```mtron
+mtron> fsspace::[
+         pattern => <local:#>,
+         q       => [mimeq::[=>], lineq::[=>]],
+         route   => [local: => ~/src]]@/sys/space/fs/src
+==>fsspace::[
+    pattern=>local:#,
+    q=>[
+     mimeq::[
+      pattern=>mimeq,
+      post_read=>inst?#{*}<=#{?}(uri::T,#::T)],
+     lineq::[
+      pattern=>lineq,
+      post_read=>inst?#{*}<=#{?}(uri::T,#::T),
+      pre_write=>inst?#{*}<=#{?}(uri::T,#::T)]],
+    route=>[local:=>/m/inst/thread(/src)]]@/sys/space/fs/src
+mtron> [-- Then use in expressions: --]
+mtron> *<local:Main.java?lineq=1..50>
+==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "1..50"]@/sys/fail/186
+mtron> <local:index.html?mimeq=application/x-mtron>/html/head/title
+==>ERROR: monad obj coefficient is greater than inst dom coefficient:
+	<local:index.html?mimeq=application/x-mtron> [{1} X=> {0}] start?rng=A{**}&dom=noobj{0}(/html/head/title){<j>}@<1>
 ```
-
 ## Type Round-Trip
 
 The full read-modify-write cycle preserves types:
 
-```mtron_pre
-[-- Read HTML, cast to rec, modify, cast back to html string, write --]
-<local:page.html> -> *<local:page.html?mimeq=application/x-mtron>/
-  .at(html/head/title -> 'New Title')/
-  .as(html::T)
-
-[-- Read JSON config, modify a value, write back --]
-<local:config.json> -> *<local:config.json?mimeq=application/x-mtron>/
-  .at(database/host -> 'new-host')/
-  .as(json::T)
+```mtron
+mtron> [-- Read HTML, cast to rec, modify, cast back to html string, write --]
+mtron> <local:page.html> -> *<local:page.html?mimeq=application/x-mtron>
+         .at(html/head/title -> 'New Title')
+         .as(html::T)
+==>fail::[inst apply failure: 'New Title' [str::T] unable to convert uri::T]@/sys/fail/238
+mtron> [-- Read JSON config, modify a value, write back --]
+mtron> <local:config.json> -> *<local:config.json?mimeq=application/x-mtron>
+         .at(database/host -> 'new-host')
+         .as(json::T)
+==>fail::[inst apply failure: 'new-host' [str::T] unable to convert uri::T]@/sys/fail/286
 ```
-
 The `.as(html::T)` / `.as(json::T)` serialization passes through `ObjHTMLSerializer.write()` /
 `ObjJSONSerializer.write()` which handle both `str::T` (pass-through) and `rec::T` (structural render).

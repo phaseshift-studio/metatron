@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.isa.dckr.dckrInstSet.DCKR_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATA_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATASIZE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -133,7 +133,7 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
         if (m.matches()) {
             final double val = Double.parseDouble(m.group(1));
             final String raw = m.group(2).toLowerCase();
-            return real(val, MATH_DATA_TID.extend(raw.charAt(0) + "B"), null);
+            return real(val, MATH_DATASIZE_TID.extend(raw.charAt(0) + "B"), null);
         }
         // Integer count: "0" → 0
         if (CommonUtil.isInt(s))

@@ -79,19 +79,20 @@ bin/metatron-docker                                 # run a boot file in a dispo
 bin/metatron-docker dev [--no-build]                # dev loop: package in docker -> app image -> run
 ```
 
-- Every docker entry point is one script, `bin/metatron-docker`; the job is its subcommand.  The three
+- Every docker entry point is one script, `bin/metatron-docker`; the job is its subcommand. The three
   jobs were formerly `bin/metatron-docker` / `bin/metatron-dev-docker` / `bin/metatron-build-docker`; the
-  latter two are **retired** — `bin/metatron-docker dev` and `bin/metatron-docker build …` replace them
-  (a note that still names them is stale).
+  latter two are **retired** — `bin/metatron-docker dev` and `bin/metatron-docker build …` replace them (a note that
+  still names them is stale).
 - **`build …` is the agent-safe set**: no published ports, throwaway containers.
 - `image` and `dev` package the uber-jar **inside** `metatron-build:24` and then build `metatron:dev`, whose
   Dockerfile COPYs `target/metatron-*-jar-with-dependencies.jar` directly — there is no staging copy in the repo root,
-  and `.dockerignore` whitelists exactly that one file (plus `boot/`, `conf/`, the skills docs and `bin/wsplus`) into the
-  build context.  So docker is the only host requirement — no host maven/JDK — and the jar comes from the same JDK24
-  image the test loop uses.  Order matters for the low-level path: package first (`mvn -DskipTests package`), then
+  and `.dockerignore` whitelists exactly that one file (plus `boot/`, `conf/`, the skills docs and `bin/wsplus`) into
+  the
+  build context. So docker is the only host requirement — no host maven/JDK — and the jar comes from the same JDK24
+  image the test loop uses. Order matters for the low-level path: package first (`mvn -DskipTests package`), then
   `docker build`.
 - `run` and `dev` publish 8555/8777 (they collide with a live server by design); `NO_PORTS=1` makes `run`
-  publish nothing.  **`dev` removes and recreates the container named `$METATRON_CONTAINER`
+  publish nothing. **`dev` removes and recreates the container named `$METATRON_CONTAINER`
   (default `metatron`)** — never run it while that container is the server under test.
 - `DRY_RUN=1 bin/metatron-docker <anything>` prints the docker/mvn commands instead of running them.
 - Image `metatron-build:24` auto-builds on first use from `dist/docker/Dockerfile.build`
@@ -102,6 +103,11 @@ bin/metatron-docker dev [--no-build]                # dev loop: package in docke
   only in the container's netns, never on the host.
 - Maven cache is shared with `.build/m2/repository`; every run gets a unique container name — never hardcode a docker
   `--name` around these (a stale container from a killed run collides).
+- Docker builds **never touch the repo's `target/`**: the container's `/work/target` is bound to `.docker-target/` at
+  the repo root (auto-ignored by .gitignore's `.*`; override with `METATRON_BUILD_TARGET`). Fs (host) builds and
+  docker builds can therefore run without clobbering each other's artifacts. Jobs that hand an artifact off (`build`'s
+  package verb, `image`, `dev`) copy the uber jar back into `target/` afterwards — the Dockerfile COPY
+  keeps working. Docker test reports land in `.docker-target/surefire-reports/`.
 - Docs pipeline (`docs` subcommand): `MarkdownRunner` evaluates the ` ```mtron_pre ` blocks of
   `docs/skills/*` and writes the single processed copy via `.metatron/skills`, which is a **symlink to
   `docs/website/skills`**; `MarkdownRunner --html` renders the site HTML (body conversion via
@@ -133,15 +139,15 @@ bin/metatron-console --list-keys      # KEY names: alt+b, ctrl+c, up, tab, shift
 
 **What it gives you**
 
-| Capability | Detail |
-|------------|--------|
-| boot | default profile `boot/console.boot.mtron` — console-only, **no ports bound**, ~3s boot, safe beside the live server (`--boot` for any other profile) |
-| safety | the harness *refuses* a boot file that mentions 8555/8777 unless `--allow-ports`; the VM runs in a throwaway temp cwd (`--cwd repo` to override) so the user's `.metatron.history` and other repo state are never touched |
-| versions | `--from jar` (default, the uber jar from `bin/metatron-docker build`) or `--from classes` (target/classes + `.mtron-classpath` → no jar build needed for a dev loop) |
-| keys | `KEY alt+b`, `KEY ctrl+c`, `KEY up`, `TYPE` (no Enter), `SEND` (with Enter), `RAW b"\x1bb"` escape hatch |
-| assertions | `WAIT_CONSOLE`, `WAIT <text> [s]`, `WAIT_SINCE <mark> <text> [s]`, `SINCE <mark> <text>`, `SILENT <mark> <text> [s]`, `MARK`, `SLEEP`, `ECHO`, `NOTE`, `ELAPSED` |
-| matching | case- **and** ANSI-insensitive, so `WAIT background` matches a colourised banner; failures print the transcript since the nearest mark |
-| output | timestamped transcript, `--transcript FILE` (ANSI-stripped), `--raw FILE`, `--quiet`, `--cols/--rows`, `--timeout`; **exit code is non-zero if any check failed** |
+| Capability | Detail                                                                                                                                                                                                                    |
+|------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| boot       | default profile `boot/console.boot.mtron` — console-only, **no ports bound**, ~3s boot, safe beside the live server (`--boot` for any other profile)                                                                      |
+| safety     | the harness *refuses* a boot file that mentions 8555/8777 unless `--allow-ports`; the VM runs in a throwaway temp cwd (`--cwd repo` to override) so the user's `.metatron.history` and other repo state are never touched |
+| versions   | `--from jar` (default, the uber jar from `bin/metatron-docker build`) or `--from classes` (target/classes + `.mtron-classpath` → no jar build needed for a dev loop)                                                      |
+| keys       | `KEY alt+b`, `KEY ctrl+c`, `KEY up`, `TYPE` (no Enter), `SEND` (with Enter), `RAW b"\x1bb"` escape hatch                                                                                                                  |
+| assertions | `WAIT_CONSOLE`, `WAIT <text> [s]`, `WAIT_SINCE <mark> <text> [s]`, `SINCE <mark> <text>`, `SILENT <mark> <text> [s]`, `MARK`, `SLEEP`, `ECHO`, `NOTE`, `ELAPSED`                                                          |
+| matching   | case- **and** ANSI-insensitive, so `WAIT background` matches a colourised banner; failures print the transcript since the nearest mark                                                                                    |
+| output     | timestamped transcript, `--transcript FILE` (ANSI-stripped), `--raw FILE`, `--quiet`, `--cols/--rows`, `--timeout`; **exit code is non-zero if any check failed**                                                         |
 
 `bin/test/console-smoke.steps` is the worked example and the console regression suite — evaluation,
 history recall via `KEY up`, type-ahead kept while a job runs, `alt+b` backgrounding (asserting the
@@ -185,6 +191,7 @@ starting point for your own scenario (`--steps my.steps`).
 - **Use `@ParameterizedTest` + `@CsvSource`** as the default pattern for new tests. Each CSV row is a self-contained
   scenario using mtron string expressions. This keeps tests data-extensible — corner cases are one CSV line, not new
   Java methods.
+- Don't name your `@ParameterizedTest` -- i.e. don't do `(name = "[{index}] {1}")`
 - Use standalone `@Test` methods only for multistep orchestration (e.g., concurrency tests, complex setup/teardown) or
   non-tabular scenarios.
 - The `%` delimiter avoids collision with mtron syntax which use commas, pipes, semicolons.

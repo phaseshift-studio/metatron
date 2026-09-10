@@ -268,16 +268,16 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/answer-questions.html">answer-questions</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/connecting-datasources.html">connecting-datasources</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace.html">dckrspace</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/http-page-fetching.html">http-page-fetching</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/math_instset.html">math_instset</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference_mtron.html">language-reference_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/math_instset_mtron.html">math_instset_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mtron-fsspace.html">mtron-fsspace</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mtron-language-reference.html">mtron-language-reference</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
@@ -410,7 +410,7 @@
  space=&gt;[super=&gt;!*/m],
  type=&gt;[
   nat::T,
-  data::T,
+  datasize::T,
   bB::T,
   kB::T,
   mB::T,
@@ -429,6 +429,7 @@
   datetime::T],
  inst=&gt;[
   datetime_now?datetime&lt;=#{?}(),
+  plus?time&lt;=time(time::T),
   as?time&lt;=time(time::T),
   plus?datetime&lt;=datetime(time::T),
   minus?datetime&lt;=datetime(time::T),
@@ -438,7 +439,7 @@
   as?str&lt;=datetime(str::T),
   as?datetime&lt;=str(datetime::T),
   normalize?time&lt;=time(),
-  normalize?data&lt;=data(),
+  normalize?datasize&lt;=datasize(),
   cos?real&lt;=#{?}(as(real::T)),
   sin?real&lt;=#{?}(real::T),
   tan?real&lt;=#{?}(real::T),
@@ -481,8 +482,8 @@
     <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">math</small></div><div class="d-flex flex-wrap"><a href="#__m__math__currency" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">currency</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__math__data" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">data</span>
+</a><a href="#__m__math__datasize" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">datasize</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__math__datetime" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">datetime</span>
@@ -499,22 +500,22 @@
 </a><a href="#__m__math__currency__usd" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">usd</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">data</small></div><div class="d-flex flex-wrap"><a href="#__m__math__data__bB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">datasize</small></div><div class="d-flex flex-wrap"><a href="#__m__math__datasize__bB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">bB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__math__data__gB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__datasize__gB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">gB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__math__data__kB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__datasize__kB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">kB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__math__data__mB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__datasize__mB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__math__data__pB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__datasize__pB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">pB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__math__data__tB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__datasize__tB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">tB</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">time</small></div><div class="d-flex flex-wrap"><a href="#__m__math__time__day" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -565,7 +566,7 @@
 </a><a href="#__m__math__inst__log10?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">log10</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">normalize</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__math__inst__round?rng=__m__int&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -602,18 +603,18 @@
 </div>
 </div><div class="container-xxl mb-4" id="types">
     <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">18</span></h3>
-    <div class="card mb-3" id="__m__math__data__bB">
+    <div class="card mb-3" id="__m__math__datasize__bB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">bB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__data" class="instset-doc-small-code text-info code">/m/math/data::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__datasize" class="instset-doc-small-code text-info code">/m/math/datasize::T</a></span>
         </span>
-        <small class="text-muted code">/m/math/data/bB</small>
+        <small class="text-muted code">/m/math/datasize/bB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?bB&lt;=#{?}(#{*}::T)]@/m/math/data/bB</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__data" class="code inherited-link">data::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">id()</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?bB&lt;=#{?}(#{*}::T)]@/m/math/datasize/bB</code></pre></div>
+    
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a byte of data</p>
+    <p class="mb-0 text-light">[structural] a byte of data</p>
 </div>
 </div><div class="card mb-3" id="__m__math__currency">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -623,20 +624,20 @@
         </span>
         <small class="text-muted code">/m/math/currency</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T[?real::T]@/m/math/currency</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T@/m/math/currency</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a currency amount</p>
+    <p class="mb-0 text-light">[nominal] </p>
 </div>
-</div><div class="card mb-3" id="__m__math__data">
+</div><div class="card mb-3" id="__m__math__datasize">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
-            <span class="code text-primary fw-bold">data::T</span>
+            <span class="code text-primary fw-bold">datasize::T</span>
             <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__real" class="instset-doc-small-code text-info code">/m/real::T</a></span>
         </span>
-        <small class="text-muted code">/m/math/data</small>
+        <small class="text-muted code">/m/math/datasize</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T[id()]@/m/math/data</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T@/m/math/datasize</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__math__datetime">
@@ -650,7 +651,7 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datetime</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a datetime as uri: &lt;//yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm&gt;</p>
+    <p class="mb-0 text-light">[structural] a datetime as uri: &lt;//yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm&gt;</p>
 </div>
 </div><div class="card mb-3" id="__m__math__time__day">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -661,9 +662,9 @@
         <small class="text-muted code">/m/math/time/day</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?day&lt;=#{?}(#{*}::T)]@/m/math/time/day</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__time" class="code inherited-link">time::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?real::T</code></div></div>
+    
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a day of time (24 hours)</p>
+    <p class="mb-0 text-light">[structural] a day of time (24 hours)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__currency__euro">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -674,22 +675,22 @@
         <small class="text-muted code">/m/math/currency/euro</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">currency::T@/m/math/currency/euro</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__currency" class="code inherited-link">currency::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?real::T</code></div></div>
+    
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">european union currency</p>
+    <p class="mb-0 text-light">[nominal] </p>
 </div>
-</div><div class="card mb-3" id="__m__math__data__gB">
+</div><div class="card mb-3" id="__m__math__datasize__gB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">gB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__data" class="instset-doc-small-code text-info code">/m/math/data::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__datasize" class="instset-doc-small-code text-info code">/m/math/datasize::T</a></span>
         </span>
-        <small class="text-muted code">/m/math/data/gB</small>
+        <small class="text-muted code">/m/math/datasize/gB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?gB&lt;=#{?}(#{*}::T)]@/m/math/data/gB</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__data" class="code inherited-link">data::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">id()</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?gB&lt;=#{?}(#{*}::T)]@/m/math/datasize/gB</code></pre></div>
+    
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a gigabyte (1024 megabytes) of data</p>
+    <p class="mb-0 text-light">[structural] a gigabyte (1024 megabytes) of data</p>
 </div>
 </div><div class="card mb-3" id="__m__math__time__hour">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -700,35 +701,35 @@
         <small class="text-muted code">/m/math/time/hour</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?hour&lt;=#{?}(#{*}::T)]@/m/math/time/hour</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__time" class="code inherited-link">time::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?real::T</code></div></div>
+    
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">an hour of time (60 minutes)</p>
+    <p class="mb-0 text-light">[structural] an hour of time (60 minutes)</p>
 </div>
-</div><div class="card mb-3" id="__m__math__data__kB">
+</div><div class="card mb-3" id="__m__math__datasize__kB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">kB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__data" class="instset-doc-small-code text-info code">/m/math/data::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__datasize" class="instset-doc-small-code text-info code">/m/math/datasize::T</a></span>
         </span>
-        <small class="text-muted code">/m/math/data/kB</small>
+        <small class="text-muted code">/m/math/datasize/kB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?kB&lt;=#{?}(#{*}::T)]@/m/math/data/kB</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__data" class="code inherited-link">data::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">id()</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?kB&lt;=#{?}(#{*}::T)]@/m/math/datasize/kB</code></pre></div>
+    
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a kilobyte (1024 bytes) of data</p>
+    <p class="mb-0 text-light">[structural] a kilobyte (1024 bytes) of data</p>
 </div>
-</div><div class="card mb-3" id="__m__math__data__mB">
+</div><div class="card mb-3" id="__m__math__datasize__mB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__data" class="instset-doc-small-code text-info code">/m/math/data::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__datasize" class="instset-doc-small-code text-info code">/m/math/datasize::T</a></span>
         </span>
-        <small class="text-muted code">/m/math/data/mB</small>
+        <small class="text-muted code">/m/math/datasize/mB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?mB&lt;=#{?}(#{*}::T)]@/m/math/data/mB</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__data" class="code inherited-link">data::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">id()</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?mB&lt;=#{?}(#{*}::T)]@/m/math/datasize/mB</code></pre></div>
+    
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a megabyte (1024 kilobytes) of data</p>
+    <p class="mb-0 text-light">[structural] a megabyte (1024 kilobytes) of data</p>
 </div>
 </div><div class="card mb-3" id="__m__math__time__millis">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -739,9 +740,9 @@
         <small class="text-muted code">/m/math/time/millis</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?millis&lt;=#{?}(#{*}::T)]@/m/math/time/millis</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__time" class="code inherited-link">time::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?real::T</code></div></div>
+    
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a millisecond of time</p>
+    <p class="mb-0 text-light">[structural] a millisecond of time</p>
 </div>
 </div><div class="card mb-3" id="__m__math__time__minute">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -752,9 +753,9 @@
         <small class="text-muted code">/m/math/time/minute</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?minute&lt;=#{?}(#{*}::T)]@/m/math/time/minute</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__time" class="code inherited-link">time::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?real::T</code></div></div>
+    
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a minute of time (60 seconds)</p>
+    <p class="mb-0 text-light">[structural] a minute of time (60 seconds)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__nat">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -767,20 +768,20 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[is(gt(0))]@/m/math/nat</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a positive integer</p>
+    <p class="mb-0 text-light">[structural] a positive integer</p>
 </div>
-</div><div class="card mb-3" id="__m__math__data__pB">
+</div><div class="card mb-3" id="__m__math__datasize__pB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">pB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__data" class="instset-doc-small-code text-info code">/m/math/data::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__datasize" class="instset-doc-small-code text-info code">/m/math/datasize::T</a></span>
         </span>
-        <small class="text-muted code">/m/math/data/pB</small>
+        <small class="text-muted code">/m/math/datasize/pB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?pB&lt;=#{?}(#{*}::T)]@/m/math/data/pB</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__data" class="code inherited-link">data::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">id()</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?pB&lt;=#{?}(#{*}::T)]@/m/math/datasize/pB</code></pre></div>
+    
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a petabyte (1024 terabytes) of data</p>
+    <p class="mb-0 text-light">[structural] a petabyte (1024 terabytes) of data</p>
 </div>
 </div><div class="card mb-3" id="__m__math__time__second">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -791,22 +792,22 @@
         <small class="text-muted code">/m/math/time/second</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?second&lt;=#{?}(#{*}::T)]@/m/math/time/second</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__time" class="code inherited-link">time::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?real::T</code></div></div>
+    
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a second of time (1000 millis)</p>
+    <p class="mb-0 text-light">[structural] a second of time (1000 millis)</p>
 </div>
-</div><div class="card mb-3" id="__m__math__data__tB">
+</div><div class="card mb-3" id="__m__math__datasize__tB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">tB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__data" class="instset-doc-small-code text-info code">/m/math/data::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__datasize" class="instset-doc-small-code text-info code">/m/math/datasize::T</a></span>
         </span>
-        <small class="text-muted code">/m/math/data/tB</small>
+        <small class="text-muted code">/m/math/datasize/tB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data::T[][ctor?tB&lt;=#{?}(#{*}::T)]@/m/math/data/tB</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__data" class="code inherited-link">data::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">id()</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?tB&lt;=#{?}(#{*}::T)]@/m/math/datasize/tB</code></pre></div>
+    
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">a terabyte (1024 gigabytes) of data</p>
+    <p class="mb-0 text-light">[structural] a terabyte (1024 gigabytes) of data</p>
 </div>
 </div><div class="card mb-3" id="__m__math__time">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -816,9 +817,11 @@
         </span>
         <small class="text-muted code">/m/math/time</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T[?real::T]@/m/math/time</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T@/m/math/time</code></pre></div>
     
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[nominal] </p>
+</div>
 </div><div class="card mb-3" id="__m__math__currency__usd">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -828,9 +831,9 @@
         <small class="text-muted code">/m/math/currency/usd</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">currency::T@/m/math/currency/usd</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__currency" class="code inherited-link">currency::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?real::T</code></div></div>
+    
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">united states currency</p>
+    <p class="mb-0 text-light">[nominal] </p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
@@ -945,16 +948,16 @@
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__log10?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__log10?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">log10?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data">
+</div><div class="card mb-3" id="__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">normalize</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__data" data-bs-toggle="tooltip" title="domain" class="code text-info">data</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__math__data" data-bs-toggle="tooltip" title="range" class="code text-success">data</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__time" data-bs-toggle="tooltip" title="domain" class="code text-info">time</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__math__time" data-bs-toggle="tooltip" title="range" class="code text-success">time</a></span></span>
         </span>
-        <small class="text-muted code">/m/math/data/inst/normalize?rng=/m/math/data&amp;dom=/m/math/data</small>
+        <small class="text-muted code">/m/math/inst/normalize?rng=/m/math/time&amp;dom=/m/math/time</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data-doc-0-tab').click();document.getElementById('__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=data&dom=data(){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data-doc-0-tab').click();document.getElementById('__m__math__data__inst__normalize?rng=__m__math__data&dom=__m__math__data-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=time&dom=time(){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=time&dom=time(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=datasize&dom=datasize(){<j>}</code></pre>
 </div>
     
 </div><div class="card mb-3" id="__m__math__inst__round?rng=__m__int&dom=#{?}">

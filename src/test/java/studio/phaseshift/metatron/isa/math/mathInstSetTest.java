@@ -35,11 +35,12 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -122,6 +123,12 @@ public class mathInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Test
+    public void testNominalTyping() {
+        assertTrue(real(43.0, MATH_MILLIS_TID, null).testNominally(MILLIS_TYPE));
+        assertTrue(real(43.0, MATH_MILLIS_TID, null).testNominally(TIME_TYPE));
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             // eq() - Equality tests with exact conversions (smaller to larger unit)
@@ -177,6 +184,22 @@ public class mathInstSetTest extends AbstractInstSetTest {
         Obj expected = ObjmtronSerializer.parse(expectedType);
         LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
         assertEquals(shouldMatch, result.test(expected));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // below threshold — stays put
+            "bB::1500.0.normalize()    % bB::1500.0",
+            "kB::1000.0.normalize()    % kB::1000.0",
+
+            // cascade upward until stable
+            "bB::1048576.0.normalize() % kB::1024.0",
+            "kB::2048.0.normalize()    % mB::2.0",
+            "gB::4096.0.normalize()    % tB::4.0",
+            "tB::2048.0.normalize()    % pB::2.0",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testNormalize(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -339,6 +362,20 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "day::1.0.plus(0.5)                                                                 % day::1.5",
     }, delimiter = '%', quoteCharacter = '~')
     public void testTimeAddition(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // below threshold — stays put
+            "millis::1500.0.normalize() % millis::1500.0",
+
+            // cascade upward until stable
+            "millis::9000.0.normalize()  % second::9.0",
+            "minute::150.0.normalize()   % hour::2.5",
+            "hour::72.0.normalize()      % day::3.0",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTimeNormalize(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
