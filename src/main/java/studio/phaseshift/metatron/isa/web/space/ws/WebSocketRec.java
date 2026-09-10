@@ -102,7 +102,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
             else
                 this.at(uri(ON_OPEN)).apply(uri(((ServerHandshake) handshake).getHttpStatusMessage()));
         } catch (final Exception e) {
-            LOG.error("error processing handshake: %s", handshake, e);
+            LOG.error("error processing handshake %s: %e", handshake, e);
         }
     }
 
@@ -113,7 +113,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
             this.at(uri(ON_CLOSE)).apply(rec(uri(CODE), jnt(code), uri(REASON), str(reason)));
             this.close();
         } catch (final Exception e) {
-            LOG.error("error processing close: %s", this.vid(), e);
+            LOG.error("error processing close: %s", e);
         }
     }
 
@@ -122,7 +122,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
         try {
             this.at(uri(ON_MESSAGE)).apply(message);
         } catch (final Exception e) {
-            LOG.error("error processing message: %s", this.vid(), e);
+            LOG.error("error processing message: %s", e);
         }
     }
 
@@ -132,7 +132,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
             LOG.error("{{y}}%s {{g}}<=> {{y}}%s{{X}} errored: %s", this.vid(), this.getOtherVID() == null ? "{{r}}noobj" : this.getOtherVID(), ex);
             this.at(uri(ON_ERROR)).apply(fail(ex));
         } catch (final Exception e) {
-            LOG.error("error processing error: %s", this.vid(), e);
+            LOG.error("error processing error: %s", e);
         }
     }
 

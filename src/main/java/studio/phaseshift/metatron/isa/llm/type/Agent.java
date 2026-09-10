@@ -61,6 +61,7 @@ import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -77,6 +78,7 @@ public class Agent extends MRec {
     private final AtomicReference<Tuple.Pair<fURI, fURI>> currentHook = new AtomicReference<>(null);
     final AtomicBoolean interrupt = new AtomicBoolean(false);
     final AtomicBoolean first = new AtomicBoolean(true);
+    private static final int MAX_TOOL_CALLS = 250;
 
     /**
      * The current user message — single source of truth, mutable by features.
@@ -112,7 +114,12 @@ public class Agent extends MRec {
 
     public Agent(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(new ConcurrentHashMap<>(jvm), tid, vid);
+        this.at(INTERRUPT, instLambda((lhs, inst) -> {
+            this.interrupt.set(true);
+            return noobj();
+        }));
         this.validateFeatures();
+
     }
 
     /**
@@ -391,7 +398,7 @@ public class Agent extends MRec {
                 // ── Phase 2: Build LC4j service from Agent's own JVM state ──
                 final AiServices<AgentServices> service = AiServices.builder(AgentServices.class)
                         //.executeToolsConcurrently(ThreadExecutor.instance())
-                        //.maxToolCallingRoundTrips(10)
+                        .maxToolCallingRoundTrips(MAX_TOOL_CALLS)
                         .storeRetrievedContentInChatMemory(true)
                         /*.registerListener(new AiServiceListener<AiServiceEvent>() {
                             // TODO: supports developer defined events 

@@ -1,0 +1,59 @@
+# Console smoke test — boots the console-only profile and checks the console's
+# contract: evaluation, history, type-ahead during a job, alt+b backgrounding,
+# the ctrl-c stop and the [q] cancel offer.
+#
+#   bin/metatron-console --steps bin/test/console-smoke.steps
+#
+# Copy this file as the starting point for your own scenario.  Steps are
+# `;`-separated, `#` comments, and matching is case- and ansi-insensitive.
+
+WAIT_CONSOLE
+
+# --- an expression evaluates and prints its result ---
+MARK eval
+SEND 1
+WAIT ==>1
+
+# --- history: up recalls the last line, enter re-runs it ---
+MARK history
+KEY up
+KEY enter
+SINCE history ==>1
+
+# --- typing ahead of a job is kept for the next prompt ---
+MARK typeahead
+SEND 1.sleep(second::3.0)
+SLEEP 0.5
+TYPE 2
+SLEEP 3.5
+KEY enter
+SLEEP 1
+KEY enter
+SINCE typeahead ==>2
+
+# --- alt+b: hand a running job to the background, keep the console ---
+MARK bg
+SEND 1.sleep(second::8.0)
+SLEEP 2
+KEY alt+b
+SLEEP 1
+SEND 2
+WAIT ==>2 6
+SILENT bg ==>1 0
+WAIT_SINCE bg ==>1 20
+
+# --- ctrl-c still stops a foreground job ---
+MARK stop
+SEND 1.sleep(second::30.0)
+SLEEP 2
+KEY ctrl+c
+WAIT interrupted 10
+ELAPSED ctrl-c
+
+# --- the cancel offer appears for a long job and [q] cancels it ---
+MARK cancel
+SEND 1.sleep(second::30.0)
+WAIT cancel stream 15
+KEY q
+WAIT canceled 10
+ELAPSED cancel-key

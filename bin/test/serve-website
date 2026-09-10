@@ -1,5 +1,5 @@
 #!/bin/bash
-# bin/serve-website — serve the docs website locally with the Cloudflare Pages
+# bin/test/serve-website — serve the docs website locally with the Cloudflare Pages
 # dev runtime.
 #
 # Why not a plain static server: docs/website/_headers sets .mtron → text/plain,
@@ -7,12 +7,12 @@
 # would force a download for .mtron instead of rendering it as text.
 #
 # Usage:
-#   bin/serve-website                 # serve on http://localhost:8788
+#   bin/test/serve-website            # serve on http://localhost:8788
 # -------------------------------------------------------------------
 set -euo pipefail
 
-# ── resolve project root ───────────────────────────────────────────
-cd "$(dirname "$(readlink -f "$0")")/.."
+# ── resolve project root (this script lives two levels down) ──────
+cd "$(dirname "$(readlink -f "$0")")/../.."
 
 # ── wrangler runs via npx; fail early with a clear message ─────────
 if ! command -v npx >/dev/null 2>&1; then

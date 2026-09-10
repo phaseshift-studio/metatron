@@ -17,11 +17,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# bin/utility.sh — ANSI colors, branding, and reusable shell functions.
+# bin/lib/utility.sh — ANSI colors, branding, and reusable shell functions.
 # Source this file; do not execute directly.
 #
 # Usage:
-#   . "$(dirname "$(readlink -f "$0")")/utility.sh"
+#   . "$(dirname "$(readlink -f "$0")")/lib/utility.sh"
 #
 # Color variables and PHASESHIFT are POSIX-compatible.
 # spinner() requires bash (uses ${var:offset:length} substring expansion).

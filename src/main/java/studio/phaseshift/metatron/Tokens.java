@@ -157,6 +157,8 @@ public final class Tokens {
     public static final String CODE = "code";
     public static final String LANG = "lang";
     public static final String START = "start";
+    public static final String END = "end";
+    public static final String INTERRUPT = "interrupt";
     public static final String METHOD = "method";
     public static final String MESSAGE = "message";
     public static final String RUN = "run";

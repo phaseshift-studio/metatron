@@ -163,7 +163,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             LOG.info("starting web server at %s", this.at(HOST).uriValue().scheme(HTTP).toUri());
             server.setExecutor(ThreadExecutor.instance());
             Runtime.getRuntime().addShutdownHook(new Thread(this::close));
-            LOG.info("available routes: %s", this.at(ROUTE));
+            LOG.debug("available routes: %s", this.at(ROUTE));
             server.start();
         } catch (final Exception e) {
             LOG.error(MTronException.of(e));
@@ -220,7 +220,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                 if (handler instanceof HttpRec hr) {
                     hr.handle(exchange);
                 } else {
-                    LOG.error("handler at %s is not an HttpRec: %s", sessionVid, handler.getClass().getName());
+                    LOG.error("handler at %s is not an httprec::T: %s", sessionVid, handler.getClass().getName());
                     exchange.sendResponseHeaders(500, 0);
                     exchange.close();
                 }

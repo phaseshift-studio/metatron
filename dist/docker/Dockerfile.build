@@ -2,7 +2,9 @@
 #   patchelf is required — the uber-jar ships a musl-built tree-sitter .so,
 #   and ObjJavaSerializer patches it against glibc at load (see the server
 #   Dockerfile).  Images without patchelf die with UnsatisfiedLinkError.
+#   python3 drives bin/metatron-console, which boots the console in a pty so
+#   raw-mode keystrokes (alt+b, ctrl-c, arrows) can be scripted and asserted.
 FROM maven:3.9.9-eclipse-temurin-24
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends patchelf \
+    && apt-get install -y --no-install-recommends patchelf python3 \
     && rm -rf /var/lib/apt/lists/*

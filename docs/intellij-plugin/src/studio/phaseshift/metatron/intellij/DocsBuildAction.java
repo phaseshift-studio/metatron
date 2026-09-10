@@ -50,7 +50,7 @@ import java.util.Locale;
  * </ul>
  *
  * <p>All relative paths are resolved against the project base dir, exactly like
- * {@code bin/metatron-build-docker docs}. Build output is teed to {@code target/docs-build.log};
+ * {@code bin/metatron-docker build docs}. Build output is teed to {@code target/docs-build.log};
  * on failure that log is opened in the editor.
  *
  * <p>Like {@code bin/metatron}, the action first applies a "compile if src changed" check to the
@@ -79,7 +79,7 @@ public class DocsBuildAction extends AnAction {
     /// The kind of doc build this action is performing.
     private enum BuildKind { MD, ADOC, INSTSET }
 
-    // Mirrors bin/metatron-build-docker JVM_FLAGS.
+    // Mirrors bin/metatron-docker build JVM_FLAGS.
     private static final String[] JVM_FLAGS = {
             "--enable-native-access=ALL-UNNAMED",
             "--add-modules", "jdk.incubator.vector",
@@ -285,7 +285,7 @@ public class DocsBuildAction extends AnAction {
         return command;
     }
 
-    /// outDir for a single skills .md — mirrors bin/metatron-build-docker .metatron/skills/<sub>.
+    /// outDir for a single skills .md — mirrors bin/metatron-docker build .metatron/skills/<sub>.
     private static String markdownOutDir(final String srcRel) {
         final int slash = srcRel.lastIndexOf('/');
         final String prefix = SKILLS_DIR + "/";

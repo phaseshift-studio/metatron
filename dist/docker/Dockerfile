@@ -8,8 +8,10 @@
 # infra (sqlite, postgres, janusgraph, ...) through the HOST docker socket,
 # mounted at runtime.
 #
-# Build context must contain `metatron.jar` (the assembled uber-jar); CI copies
-# target/metatron-<version>-jar-with-dependencies.jar -> metatron.jar first.
+# Build context must contain the assembled uber-jar, `target/metatron-*-jar-with-
+# dependencies.jar` — the output of `mvn package`.  No staging copy is needed:
+# `bin/metatron-docker image` packages it (inside metatron-build:24) and builds this
+# image in one command, and CI runs `mvn package` before `docker build`.
 
 ARG METATRON_VERSION="0.1-SNAPSHOT"
 
@@ -55,7 +57,7 @@ RUN groupadd --gid 10001 metatron \
     && useradd --uid 10001 --gid 10001 --create-home --home-dir /home/metatron metatron
 
 WORKDIR /app
-COPY --chown=metatron:metatron metatron.jar /app/metatron.jar
+COPY --chown=metatron:metatron target/metatron-*-jar-with-dependencies.jar /app/metatron.jar
 COPY --chown=metatron:metatron boot/ /app/boot/
 COPY --chown=metatron:metatron conf/ /app/conf/
 # wsplus console client — talk to the headless server's /mtron endpoint:

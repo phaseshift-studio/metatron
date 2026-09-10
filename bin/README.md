@@ -4,6 +4,21 @@ A running metatron (a container, a remote host, or another instance) serves a We
 `ws://<host>:8555/mtron` — a live mtron REPL where each message is evaluated and the result returned. This file catalogs
 the ways to connect to that endpoint, from the minimal REPL to the full console UI.
 
+## Layout
+
+| Path | Role |
+|------|------|
+| `bin/*` | commands you type — flat, on PATH, each with a usage header; `bin/metatron` is the launcher, `bin/metatron-docker` every docker job (`run` / `dev` / `build <verb>`) |
+| `bin/lib/` | host/OS setup helpers, not part of the command surface (`serial-permissions.sh` grants serial-device group access) |
+| `bin/test/` | dev & test utilities — `serve-website` (docs-site preview through the Cloudflare Pages runtime, so `docs/website/_headers` is honored) and console harness scenarios |
+
+Rule of thumb: if you *type* it, it belongs in `bin/`; if a command consumes it, it belongs in
+`bin/test/`; if it is only sourced or is host setup, it belongs in `bin/lib/`.
+
+`bin/test/console-smoke.steps` is the console harness's worked example and the console regression
+suite.  `bin/lib/utility.sh` is sourced by `bin/metatron` — keep the rule above in mind when adding
+the next script.
+
 ## The endpoints
 
 | Endpoint                 | What it serves                                                      |
@@ -71,6 +86,25 @@ lsof -ti:8999 | xargs kill
 ttyd --credential metatron:nortatem --writable --port 8111 bin/metatron "$@"
 ```
 
+### 5. `metatron-console` — a scripted console in a pty (testing / CI)
+
+Not a way to connect to a server, but a way to *drive* the console: `bin/metatron-console` boots a
+metatron VM with a console in a pty (python `pty.fork` — no `docker -t` needed), plays a step script
+at it, asserts on what came back, and prints a timestamped transcript. It is how raw-mode behaviour —
+`alt+b` backgrounding, ctrl-c, arrows, history, type-ahead, widgets — can be tested at all.
+
+```bash
+# isolated: the same container the build/test loop uses, no ports published
+bin/metatron-docker build console --steps bin/test/console-smoke.steps
+
+# on the host (needs python3); --help has the full step reference
+bin/metatron-console --run 'WAIT_CONSOLE; SEND 1; WAIT ==>1'
+```
+
+Default boot profile is `boot/console.boot.mtron` (console only, **no ports**, ~3s), so it can run
+beside a live server; the VM runs in a throwaway cwd so the repo's `.metatron.history` is untouched.
+See AGENTS.md → "Driving the console in a pty" for the step language and cautions.
+
 ---
 
 ## Summary
@@ -81,3 +115,4 @@ ttyd --credential metatron:nortatem --writable --port 8111 bin/metatron "$@"
 | `remote_console.mtron` | full Console UI, remote-driven | headless `/mtron` endpoint             |
 | `console::`            | full Console UI, local         | boots with a console (not headless)    |
 | ttyd / web             | browser terminal               | historical — removed; future model TBD |
+| `metatron-console`     | scripted steps in a pty        | boots its own console-only VM (no ports) |

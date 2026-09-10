@@ -23,7 +23,7 @@ cd "$(dirname "$(readlink -f "$0")")/.."
 if [ -x "./.build/jdk/bin/java" ]; then JAVA_BIN="./.build/jdk/bin/java"; else JAVA_BIN="java"; fi
 
 # Source utility functions (spinner, etc.)
-. "$(dirname "$(readlink -f "$0")")/utility.sh"
+. "$(dirname "$(readlink -f "$0")")/lib/utility.sh"
 
 # ── run mode ────────────────────────────────────────────────────────
 # Installed deployments (install.sh) ship lib/metatron.jar and launch it

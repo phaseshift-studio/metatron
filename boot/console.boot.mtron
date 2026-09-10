@@ -1,0 +1,19 @@
+[== console-only boot: a full interactive console, nothing else ==]
+[== no ports are bound (no web/ws spaces) and no external service is ==]
+[== contacted, so this profile is safe to boot beside a live server. ==]
+[space  => /sys/space,
+ log    => info,
+ typer/stages => [code_resolve => false]]
+[===============]
+print("{{y}}console boot{{X}} {{k}}— no ports bound, no external services{{X}}\n");
+[== mount instruction sets ==]
+import(/m/mach/io);
+import(/m/mach/ui,ui);
+import(/m/sys);
+import(/m/math);
+[== spaces ==]
+memspace::[pattern => /usr/#,
+              q => [subq::[=>],docq::[=>]]]@/sys/space/usr;
+[== the console ==]
+console::[header=>'console']@/usr/ui/console;
+print("{{g}}console created{{X}} {{k}}— import(/m/llm) or any other inst set from the repl as needed{{X}}\n");

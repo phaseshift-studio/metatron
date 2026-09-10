@@ -28,8 +28,10 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Real;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.File;
@@ -42,7 +44,11 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.JREService;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -96,7 +102,7 @@ public class sysInstSet extends AbstractInstSet {
             .tid(FILE_TID)
             .vid(IMAGE_TID).create();*/
 
-    private static final Real DEFAULT_TIMEOUT = real(30.0, MATH_SECOND_TID, null);
+    private static final Real DEFAULT_TIMEOUT = real(20.0, MATH_SECOND_TID, null);
 
     public sysInstSet() {
         super(mutableMap(Map.of(uri(PATTERN), uri(SYS_ISA_TID.extend("#")))), INSTSET_TID, SYS_ISA_TID);
@@ -119,11 +125,73 @@ public class sysInstSet extends AbstractInstSet {
         this.jvm().putAll(Map.of(
                 uri(CONST), lst(ThreadExecutor.instance()),
                 uri(INST), lst(
+                        docWrap(instC(SYS_INST_TID.extend("read_file").dom(A.maybe()).rng(LST_TID), rec(
+                                        uri(FILE), URI_TYPE,
+                                        uri(MIN).maybe(), INT_TYPE,
+                                        uri(MAX).maybe(), INT_TYPE), (lhs, inst) -> {
+                                    final fURI file = inst.arg(0).uriValue();
+                                    final int min = inst.arg(1).orElse(jnt(-1)).intValue().intValue();
+                                    final int max = inst.arg(2).orElse(jnt(-1)).intValue().intValue();
+                                    final Obj fileObj = Router.readFromSpace(file);
+                                    if (fileObj.isStr()) {
+                                        final List<String> startLines = new ArrayList<>(Arrays.asList(fileObj.strValue().split("\n")));
+                                        return min != -1 ? lst(IteratorUtil.indexedStream(startLines.subList(min, -1 == max ? startLines.size() : max).iterator()).map(pair -> lst(jnt(pair.get0() + min), str(pair.get1())))) :
+                                                lst(IteratorUtil.indexedStream(startLines.iterator()).map(pair -> lst(jnt(pair.get0()), str(pair.get1()))));
+
+                                    } else {
+                                        throw MTronException.of("none str-based obj referenced: %s", file);
+                                    }
+                                }), "maybe an obj (optional)", "read file indexed lines",
+                                Map.of(uri(FILE), "a reference to a fsspace file",
+                                        uri(MIN).maybe(), "the start line to read",
+                                        uri(MAX).maybe(), "the end line to read"),
+                                """
+                                read a file from an fsspace::T. the min and max values represent the range to read.
+                                if no min, nor max is provided, then the entire file is read.
+                                if only a min is provided, then the file is read from that line till the end.
+                                """),
+                        docWrap(instC(SYS_INST_TID.extend("edit_file").dom(A.maybe()).rng(REC_TID), rec(FILE, URI_TYPE, TEXT, STR_TYPE, MIN, INT_TYPE, uri(MAX).maybe(), INT_TYPE), (lhs, inst) -> {
+                                    final fURI file = inst.arg(0).uriValue();
+                                    final String text = inst.arg(1).strValue();
+                                    final int min = inst.arg(2).intValue().intValue();
+                                    final int max = inst.arg(3).orElse(jnt(-1)).intValue().intValue();
+                                    final Obj fileObj = Router.readFromSpace(file);
+                                    if (fileObj.isStr()) {
+                                        final List<String> startLines = new ArrayList<>(Arrays.asList(fileObj.strValue().split("\n")));
+
+                                        if (max != -1) {
+                                            for (int i = min; i < max; i++) {
+                                                startLines.set(i, "<DELETE>");
+                                            }
+                                        }
+                                        startLines.add(min, text);
+                                        final List<String> endLines = startLines.stream().filter(l -> !l.equals("<DELETE>")).toList();
+                                        Router.writeToSpace(file, str(String.join("\n", endLines)));
+                                        return rec(STATUS, uri(SUCCESS),
+                                                OBJ, auto_from_(file).tryToInst(),
+                                                "start_line_count", jnt(startLines.size()),
+                                                "inserted_line_count", jnt(CommonUtil.countLines(text)),
+                                                "end_line_count", jnt(endLines.size()));
+                                    } else {
+                                        return rec(
+                                                STATUS, uri(ERROR),
+                                                OBJ, auto_from_(file).tryToInst(),
+                                                DESC, str("file reference did not yield a text-based obj (no changes)"));
+                                    }
+                                }), "maybe an obj (optional)", "a status report on the write",
+                                Map.of(uri(FILE), "a reference to a fsspace file",
+                                        uri(TEXT), "the text to add to the file",
+                                        uri(MIN), "the location to insert (or start to overwrite)",
+                                        uri(MAX).maybe(), "the location to stop overwriting"),
+                                """
+                                write text to a file in fsspace::T. the min and max values represent the range to write.
+                                if no max is provided, then the text is inserted at the line number (shifting existing text down).
+                                if both min and max are provided, then those lines are removed and the text is inserted at the min line.
+                                """),
                         docWrap(instC(SYS_BASH_INST_TID.dom(ALL.maybe()).rng(LST_TID.poly(STR_TID)), rec(
                                                 uri(CMD), STR_TYPE,
-                                                uri(TIMEOUT).maybe(), TIME_TYPE),
+                                                uri(TIMEOUT).maybe(), union_(TIME_TYPE, INT_TYPE).tryToInst()),
                                         (lhs, inst) -> {
-                                            LOG.status(TRACE, "bash: %s", inst);
                                             //final StringBuilder errors = new StringBuilder();
                                             //final StringBuilder outputs = new StringBuilder();
                                             final String command = inst.arg(CMD, 0).strValue();
@@ -132,23 +200,26 @@ public class sysInstSet extends AbstractInstSet {
                                             final String workingDirectory = Optional.ofNullable(inst.tid().qValue(DIR, String.class)).orElse(System.getProperty("user.dir"));
                                             if (!allow.isEmpty()) {
                                                 if (allow.elements().map(Obj::strValue).noneMatch(a -> Pattern.compile(a).matcher(command).matches()))
-                                                    throw MTronException.of("allowed patterns do not match command: %s %s", command, allow);
+                                                    throw MTronException.of("allowed patterns do not match command: %s {{r}}not in{{/r}} %s", command, allow);
                                             }
                                             if (!reject.isEmpty()) {
                                                 final Optional<String> p = reject.elements().map(Obj::strValue).filter(a -> Pattern.compile(a).matcher(command).find()).findFirst();
                                                 if (p.isPresent())
-                                                    throw MTronException.of("reject patterns match command: %s %s", command, p.get());
+                                                    throw MTronException.of("reject patterns match command: %s {{r}}in{{/r}} %s", command, p.get());
                                             }
                                             final Map<String, String> envVars = new HashMap<>();
                                             final Rec env = inst.tid().qValue(ENV, Rec.class);
                                             if (null != env)
                                                 env.elements().forEach(rel -> envVars.put(rel.first().toCleanString(), rel.second().toCleanString()));
+                                            Obj timeout = inst.arg(TIMEOUT, 1).orElse(DEFAULT_TIMEOUT);
+                                            if (timeout.isInt())
+                                                timeout = real(timeout.intValue().doubleValue(), MATH_SECOND_TID, null);
                                             final ProcResult result = new ProcBuilder("bash")
                                                     .withArg("-c")
                                                     .withArg(command)
                                                     .withWorkingDirectory(new File(workingDirectory))
                                                     .withVars(envVars)
-                                                    .withTimeoutMillis(inst.arg(TIMEOUT, 1).orElse(DEFAULT_TIMEOUT).tid(MATH_MILLIS_TID).realValue().longValue())
+                                                    .withTimeoutMillis(timeout.tid(MATH_MILLIS_TID).realValue().longValue())
                                                     .run();
                                             if (0 != result.getExitValue())
                                                 throw MTronException.of("bash exited %d after %s: [stderr] %s [stdout] %s",

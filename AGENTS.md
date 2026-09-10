@@ -53,6 +53,10 @@ The root filesystem is read-only (`HOME=/root`, `/usr` not writable), so the too
   `.build/jdk/bin/java`).
 - `.build/jdk21` exists for reference, but **tests must run on the default JDK 24**: the pom's surefire `argLine`
   includes `--sun-misc-unsafe-memory-access=allow`, a JDK 23+ flag that JDK 21 rejects (this is why CI uses JDK 24).
+- **`bin/` layout** — commands you *type* stay flat in `bin/` (`bin/metatron` is the launcher — the old
+  `bin/metatron-dev` is retired — plus `bin/metatron-docker` for every docker job and `bin/metatron-console` for the
+  pty console harness); sourced shell helpers live in `bin/lib/`; assets a command consumes live in `bin/test/`
+  (e.g. `bin/test/console-smoke.steps`).
 
 ### Docker Build Loop (the agent standard)
 
@@ -62,12 +66,34 @@ so host-side VM boots collide with it. The loop is isolated — no published por
 artifacts land back host-owned.
 
 ```bash
-bin/metatron-build-docker build                     # mvn package (skip tests)
-bin/metatron-build-docker test -Dtest=memSpaceTest  # test run in the container
-bin/metatron-build-docker docs [dir|file.md]        # MarkdownRunner --html (site html via HTMLMarkdownSerializer)
-bin/metatron-build-docker run '<cmd>'               # raw shell in the container
+bin/metatron-docker build                     # mvn package (skip tests)
+bin/metatron-docker build test -Dtest=memSpaceTest  # test run in the container
+bin/metatron-docker build docs [dir|file.md]        # MarkdownRunner --html (site html via HTMLMarkdownSerializer)
+bin/metatron-docker build console --steps f.steps   # drive a real console in a pty (see below)
+bin/metatron-docker build shell '<cmd>'               # raw shell in the container
+bin/metatron-docker build image                     # rebuild the build image
+bin/metatron-docker help                            # the full reference
+
+# the other two jobs — neither is isolated, know what you are touching
+bin/metatron-docker                                 # run a boot file in a disposable container (ports published)
+bin/metatron-docker dev [--no-build]                # dev loop: package in docker -> app image -> run
 ```
 
+- Every docker entry point is one script, `bin/metatron-docker`; the job is its subcommand.  The three
+  jobs were formerly `bin/metatron-docker` / `bin/metatron-dev-docker` / `bin/metatron-build-docker`; the
+  latter two are **retired** — `bin/metatron-docker dev` and `bin/metatron-docker build …` replace them
+  (a note that still names them is stale).
+- **`build …` is the agent-safe set**: no published ports, throwaway containers.
+- `image` and `dev` package the uber-jar **inside** `metatron-build:24` and then build `metatron:dev`, whose
+  Dockerfile COPYs `target/metatron-*-jar-with-dependencies.jar` directly — there is no staging copy in the repo root,
+  and `.dockerignore` whitelists exactly that one file (plus `boot/`, `conf/`, the skills docs and `bin/wsplus`) into the
+  build context.  So docker is the only host requirement — no host maven/JDK — and the jar comes from the same JDK24
+  image the test loop uses.  Order matters for the low-level path: package first (`mvn -DskipTests package`), then
+  `docker build`.
+- `run` and `dev` publish 8555/8777 (they collide with a live server by design); `NO_PORTS=1` makes `run`
+  publish nothing.  **`dev` removes and recreates the container named `$METATRON_CONTAINER`
+  (default `metatron`)** — never run it while that container is the server under test.
+- `DRY_RUN=1 bin/metatron-docker <anything>` prints the docker/mvn commands instead of running them.
 - Image `metatron-build:24` auto-builds on first use from `dist/docker/Dockerfile.build`
   (maven + Temurin 24 + **patchelf** — patchelf is mandatory: the uber-jar ships a musl-built tree-sitter `.so` that
   `ObjJavaSerializer` re-points at glibc on load; without it the VM dies with `UnsatisfiedLinkError` and parks forever
@@ -85,6 +111,54 @@ bin/metatron-build-docker run '<cmd>'               # raw shell in the container
   a skill doc must be verified through this pipeline before shipping —
   `fail::` lines in the processed output are broken examples.
 - Never kill the live server's java process or the `metatron` dev container.
+
+### Driving the console in a pty (`bin/metatron-console`)
+
+Some behaviour only exists on a terminal: raw-mode keystrokes (`alt+b`, `ctrl-c`, arrows), the jline
+keymap, history, type-ahead, prompts, widgets, and the console's input handoff. A pty is the only way
+to exercise it, so `bin/metatron-console` boots a metatron VM with a console **in a pty** (python
+`pty.fork` — no `docker -t` needed), plays a step script at it, asserts on what came back, and prints
+a timestamped transcript.
+
+```bash
+# isolated — the agent standard, same container as the build/test loop (no ports)
+bin/metatron-docker build console --steps bin/test/console-smoke.steps
+bin/metatron-docker build console --run 'WAIT_CONSOLE; SEND 1; WAIT ==>1'
+
+# on the host (needs python3)
+bin/metatron-console --steps bin/test/console-smoke.steps
+bin/metatron-console --help           # every flag + the full step reference
+bin/metatron-console --list-keys      # KEY names: alt+b, ctrl+c, up, tab, shift+tab, ...
+```
+
+**What it gives you**
+
+| Capability | Detail |
+|------------|--------|
+| boot | default profile `boot/console.boot.mtron` — console-only, **no ports bound**, ~3s boot, safe beside the live server (`--boot` for any other profile) |
+| safety | the harness *refuses* a boot file that mentions 8555/8777 unless `--allow-ports`; the VM runs in a throwaway temp cwd (`--cwd repo` to override) so the user's `.metatron.history` and other repo state are never touched |
+| versions | `--from jar` (default, the uber jar from `bin/metatron-docker build`) or `--from classes` (target/classes + `.mtron-classpath` → no jar build needed for a dev loop) |
+| keys | `KEY alt+b`, `KEY ctrl+c`, `KEY up`, `TYPE` (no Enter), `SEND` (with Enter), `RAW b"\x1bb"` escape hatch |
+| assertions | `WAIT_CONSOLE`, `WAIT <text> [s]`, `WAIT_SINCE <mark> <text> [s]`, `SINCE <mark> <text>`, `SILENT <mark> <text> [s]`, `MARK`, `SLEEP`, `ECHO`, `NOTE`, `ELAPSED` |
+| matching | case- **and** ANSI-insensitive, so `WAIT background` matches a colourised banner; failures print the transcript since the nearest mark |
+| output | timestamped transcript, `--transcript FILE` (ANSI-stripped), `--raw FILE`, `--quiet`, `--cols/--rows`, `--timeout`; **exit code is non-zero if any check failed** |
+
+`bin/test/console-smoke.steps` is the worked example and the console regression suite — evaluation,
+history recall via `KEY up`, type-ahead kept while a job runs, `alt+b` backgrounding (asserting the
+prompt returns *before* the job finishes and the job's result still lands afterwards), ctrl-c
+stopping a job, and the `[q]` cancel offer. Run it after any console/UI change, and copy it as the
+starting point for your own scenario (`--steps my.steps`).
+
+**Cautions**
+
+- An image built before python3 was added cannot drive a console — the wrapper says so; rebuild with
+  `bin/metatron-docker build image`.
+- `--from classes` needs `target/classes`, `src/main/resources` and `.mtron-classpath` (run
+  `bin/metatron` once, or `./mvnw compile` + `./mvnw dependency:build-classpath -Dmdep.outputFile=.mtron-classpath`).
+- Assert on text, never on cursor position or colours (the pty is 110x40 by default; the console
+  renders differently at other sizes).
+- The harness never publishes ports and boots a portless profile by default — keep it that way, and
+  never point `--boot` at a profile that binds the live server's ports.
 
 ### Code Style
 
@@ -212,7 +286,9 @@ Every test class must extend `AbstractMetatronTest`. In `@BeforeAll`:
 bin/metatron "[boot=><boot/boot.mtron>,log=>info]"
 ```
 
-The `bin/metatron` script wraps the jar with JVM flags. Do not run the jar directly without these flags.
+`bin/metatron` supplies the required JVM flags and picks the launch mode: a dev checkout runs `BootLoader` from
+`target/classes` plus the cached dependency classpath, an installed deployment (`lib/metatron.jar`) runs the uber-jar.
+Both loop on `EXIT_RESET`, so `:reset` reboots the VM in place. Do not run the jar directly without these flags.
 
 ### Required JVM Flags
 

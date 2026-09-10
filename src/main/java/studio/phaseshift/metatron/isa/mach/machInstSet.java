@@ -58,6 +58,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -144,6 +145,8 @@ public class machInstSet extends AbstractInstSet {
             .isaPredicate(
                     rec(uri(CODE), T(ALL),
                             uri(SOURCE).maybe(), URI_TYPE,
+                            uri(TIME).maybe(), DATETIME_TYPE,
+                            uri(RUNTIME).maybe(), TIME_TYPE,
                             uri(YIELD).maybe(), T(MACH_THREAD_TID),
                             uri(LOOP).maybe(), TIME_TYPE,
                             uri(STATE).maybe().asUri(), is_(or_(eq_(uri(STOP)), eq_(uri(RUN)), eq_(uri(PAUSE)))),
@@ -195,16 +198,19 @@ public class machInstSet extends AbstractInstSet {
                                         .vid(THREAD_EXECUTOR_TID)
                                         .isaPredicate(rec(uri(RUN), lst(), uri(STOP), lst())).create(),
                                 "the gateway interface for all threads in metatron"),
-                        MACH_THREAD_TYPE,
+                        docWrap(MACH_THREAD_TYPE, null, null,
+                                Map.of(
+                                        uri(CODE), "the thread's executing code",
+                                        uri(TIME).maybe(), "the datetime::T when the thread was started",
+                                        uri(RUNTIME).maybe(), "computes the thread's current running time::T",
+                                        uri(LOOP).maybe(), "delay to repeat code evaluation (default is evaluate once)",
+                                        uri(STATE).maybe(), "current state of the thread",
+                                        uri(RESULT).maybe(), "the last result produced by the thread"), "the thread base type"),
                         MACH_CORE_THREAD_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_THREAD_TID)
                                         .vid(MACH_CORE_THREAD_TID)
                                         .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MACH_CORE_THREAD_TID), lst(T(REC_TID)), (lhs, inst) -> new CoreThread(inst.arg(0).jvm(), MACH_CORE_THREAD_TID, inst.arg(0).vid()).apply(lhs)))
-                                        .create(), null, null, Map.of(
-                                        uri(CODE), "the code the thread will execute",
-                                        uri(LOOP).maybe(), "delay to repeat code evaluation (default is evaluate once)",
-                                        uri(STATE).maybe(), "current state of the thread",
-                                        uri(RESULT).maybe(), "the last result produced by the thread"),
+                                        .create(), null, null, Map.of(),
                                 "run a concurrent core thread",
                                 "core::[code=>ping(<phaseshift.studio:80>),loop=>second::1.0]@/sys/thread/ping"),
                         MACH_VIRTUAL_THREAD_TYPE = docWrap(Type.Builder.build()
@@ -215,11 +221,7 @@ public class machInstSet extends AbstractInstSet {
                                             vt.applyAsync(lhs);
                                             return vt;
                                         }))
-                                        .create(), null, null, Map.of(
-                                        uri(CODE), "the code the thread will execute",
-                                        uri(LOOP).maybe(), "delay to repeat code evaluation (default is evaluate once)",
-                                        uri(STATE).maybe(), "current state of the thread",
-                                        uri(RESULT).maybe(), "the last result produced by the thread"),
+                                        .create(), null, null, Map.of(),
                                 "run a concurrent virtual thread",
                                 "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@/sys/thread/ping"),
                         docWrap(CLSTR_SPACE_TYPE = Type.Builder.build()

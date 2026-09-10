@@ -1,66 +1,289 @@
 #!/bin/sh
-# bin/metatron-docker — run any metatron boot file in a disposable container.
+# bin/metatron-docker — every docker entry point for metatron, in one command.
 #
-# The docker counterpart to the bin/<app> shells — one script, not one per
-# app:
-#   bin/agent-ide                            # the ide app, local environment
-#   bin/metatron-docker agent-ide.boot.mtron # the same boot file, in docker
+# Three jobs used to live in three scripts; they are subcommands now:
 #
-# Interactive ephemeral container (--rm): published console 8555 / mcp 8777,
-# repo mounted at /work as the host user (so mfs writes land in the tree),
-# docker socket mounted so dckrspace boots can pull their infra.
+#   run    (was bin/metatron-docker)       run any boot file in a disposable container
+#   dev    (was bin/metatron-dev-docker)   the container dev loop: jar -> image -> (re)start
+#          (the jar is built in metatron-build:24, so docker is the only host requirement)
+#   build  (was bin/metatron-build-docker) the isolated build/test/docs/console loop
+#
+# Two images, and which command builds each:
+#   metatron:dev        the app image (dist/docker/Dockerfile; COPYs the packaged
+#                       uber-jar from target/) -> `metatron-docker image`, or step 2 of `dev`
+#   metatron-build:24   the build/test image (dist/docker/Dockerfile.build: maven + JDK24
+#                       + patchelf + python3)   ->  `metatron-docker build image`
 #
 # Usage:
-#   bin/metatron-docker                              # boot/docker.boot.mtron (default)
-#   bin/metatron-docker agent-ide.boot.mtron         # boot/agent-ide.boot.mtron
-#   bin/metatron-docker .metatron/skills/drstynx/assets/drstynx.boot.mtron
-#   bin/metatron-docker agent-ide.boot.mtron "[log=>debug]"   # full boot args
-#   NO_PORTS=1 bin/metatron-docker ...    # headless: skip publishing 8555/8777 (live-server safe)
+#   bin/metatron-docker                               # run boot/docker.boot.mtron (disposable)
+#   bin/metatron-docker run agent-ide.boot.mtron "[log=>debug]"
+#   NO_PORTS=1 bin/metatron-docker run ...            # publish nothing (live-server safe)
+#
+#   bin/metatron-docker dev [--no-build]              # package (in docker) -> app image -> run
+#   bin/metatron-docker image                         # app image only (no container)
+#
+#   bin/metatron-docker build                         # isolated: mvn package -DskipTests
+#   bin/metatron-docker build test -Dtest=HotkeysTest # isolated: mvn test
+#   bin/metatron-docker build docs [dir|file.md]      # isolated: MarkdownRunner --html
+#   bin/metatron-docker build console [args]          # isolated: pty console harness
+#   bin/metatron-docker build shell '<cmd>'           # isolated: raw shell (alias: run)
+#   bin/metatron-docker build image                   # rebuild the build image
+#
+#   DRY_RUN=1 bin/metatron-docker <anything>          # print the docker/mvn commands, run nothing
+#
+# `run` is interactive and ephemeral (--rm): it publishes console 8555 / mcp 8777, mounts the
+# repo at /work as the host user (so mfs writes land in the tree) and the docker socket (so
+# dckrspace boots can pull their infra).
+#
+# `dev` OWNS the container named $METATRON_CONTAINER (default: metatron) — it removes and
+# recreates it, so never point it at a live server you care about.  For work that must not
+# touch a running server, use the isolated `build` verbs: no ports, throwaway containers.
 #
 # Env:
-#   METATRON_IMAGE  image tag (default: metatron:dev — build it from this
-#                   tree with bin/metatron-dev-docker if missing or stale)
+#   METATRON_IMAGE         app image tag        (default: metatron:dev)
+#   METATRON_USER          metatron user name   (default: $USER)
+#   METATRON_CONTAINER     dev container name   (default: metatron)
+#   METATRON_BUILD_IMAGE   build image tag      (default: metatron-build:24)
+#   METATRON_BUILD_NAME    build container name (default: metatron-build; a unique suffix is added)
+#   MAVEN_REPO             maven repo inside the build container (default: .build/m2/repository)
+#   NO_PORTS=1             run: publish no ports         DRY_RUN=1  print, do not execute
 set -eu
 
 cd "$(dirname "$(readlink -f "$0")")/.."
 REPO="$(pwd)"
 
-BOOT_FILE="${1:-docker.boot.mtron}"
-case "$BOOT_FILE" in */*) ;; *) BOOT_FILE="boot/$BOOT_FILE" ;; esac
-if [ ! -f "$BOOT_FILE" ]; then
-    echo "no such boot file: $BOOT_FILE" >&2
-    exit 2
-fi
-ARGS="${2:-[boot=><$BOOT_FILE>,log=>info]}"
+APP_IMAGE="${METATRON_IMAGE:-metatron:dev}"
+BUILD_IMAGE="${METATRON_BUILD_IMAGE:-metatron-build:24}"
+BUILD_NAME="${METATRON_BUILD_NAME:-metatron-build}-$(date +%s)-$$"
+MAVEN_REPO="${MAVEN_REPO:-.build/m2/repository}"
+MVN_OPTS="-B -Dmaven.repo.local=/work/$MAVEN_REPO"
+JAR="target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar"
+DOCS_RUNNER="studio.phaseshift.metatron.docs.MarkdownRunner"
+JVM_FLAGS="--enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector \
+--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED \
+--add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED \
+--add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED \
+--add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED \
+--add-opens java.base/sun.nio.cs=ALL-UNNAMED"
+DRY="${DRY_RUN:-0}"
 
-IMAGE="${METATRON_IMAGE:-metatron:dev}"
-if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
-    echo "image $IMAGE not found — build it first: bin/metatron-dev-docker" >&2
-    exit 3
-fi
+command -v docker >/dev/null 2>&1 || { echo "error: docker not found on PATH" >&2; exit 1; }
 
-echo "
+# print the command instead of running it when DRY_RUN=1
+D() {
+    if [ "$DRY" = "1" ]; then printf '+ %s\n' "$*"; else "$@"; fi
+}
+
+# ---------- shared plumbing ----------
+
+# the isolated build/test/docs container: repo at /work, host user, NO ports.
+# trailing args are the container command.
+build_run() {
+    D docker run --rm --name "$BUILD_NAME" \
+        --user "$(id -u):$(id -g)" \
+        -e HOME=/work \
+        -v "$REPO":/work -w /work \
+        "$BUILD_IMAGE" "$@"
+}
+
+# the build image auto-builds on first use (maven + JDK24 + patchelf + python3)
+ensure_build_image() {
+    if ! docker image inspect "$BUILD_IMAGE" >/dev/null 2>&1; then
+        echo "==> building $BUILD_IMAGE (maven + JDK24 + patchelf + python3)"
+        D docker build -q -f dist/docker/Dockerfile.build -t "$BUILD_IMAGE" .
+    fi
+}
+
+# ---------- run: a disposable container for one boot file ----------
+
+cmd_run() {
+    BOOT_FILE="${1:-docker.boot.mtron}"
+    case "$BOOT_FILE" in */*) ;; *) BOOT_FILE="boot/$BOOT_FILE" ;; esac
+    if [ ! -f "$BOOT_FILE" ]; then
+        echo "no such boot file: $BOOT_FILE" >&2
+        exit 2
+    fi
+    ARGS="${2:-[boot=><$BOOT_FILE>,log=>info]}"
+
+    if ! docker image inspect "$APP_IMAGE" >/dev/null 2>&1; then
+        echo "image $APP_IMAGE not found — build it first: bin/metatron-docker image" >&2
+        exit 3
+    fi
+
+    echo "
   metatron w/
     ░█▀▄░█▀█░█▀▀░█░█░█▀▀░█▀▄
     ░█░█░█░█░█░░░█▀▄░█▀▀░█▀▄
     ░▀▀░░▀▀▀░▀▀▀░▀░▀░▀▀▀░▀░▀
 metatron-docker: $BOOT_FILE
-  image: $IMAGE"
+  image: $APP_IMAGE"
 
-# -t only when attached to a real terminal (agents/background jobs have none)
-[ -t 0 ] && TTY="-it" || TTY="-i"
+    # -t only when attached to a real terminal (agents/background jobs have none)
+    TTY=""
+    [ -t 0 ] && TTY="-it" || TTY="-i"
 
-# publish the browser ports unless the caller opted out (NO_PORTS=1, e.g. headless probes)
-PORT_FLAGS=""
-[ "${NO_PORTS:-0}" = "1" ] || PORT_FLAGS="-p 8555:8555 -p 8777:8777"
+    # publish the browser ports unless the caller opted out (NO_PORTS=1, e.g. headless probes)
+    PORT_FLAGS=""
+    [ "${NO_PORTS:-0}" = "1" ] || PORT_FLAGS="-p 8555:8555 -p 8777:8777"
 
-# shellcheck disable=SC2086
-exec docker run --rm $TTY $PORT_FLAGS \
-  --user "$(id -u):$(id -g)" \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  --group-add "$(stat -c '%g' /var/run/docker.sock)" \
-  -v "$REPO":/work \
-  -v "$REPO/boot":/app/boot:ro \
-  -v "$REPO/conf":/app/conf:ro \
-  -w /work \
-  "$IMAGE" "$ARGS"
+    # shellcheck disable=SC2086
+    set -- docker run --rm $TTY $PORT_FLAGS \
+        --user "$(id -u):$(id -g)" \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        --group-add "$(stat -c '%g' /var/run/docker.sock)" \
+        -v "$REPO":/work \
+        -v "$REPO/boot":/app/boot:ro \
+        -v "$REPO/conf":/app/conf:ro \
+        -w /work \
+        "$APP_IMAGE" "$ARGS"
+    if [ "$DRY" = "1" ]; then printf '+ %s\n' "$*"; else exec "$@"; fi
+}
+
+# ---------- image / dev: the app image and the container dev loop ----------
+
+# mvn package (skip tests) INSIDE the build container.  Building in the container
+# (rather than with a host ./mvnw) means `image`/`dev` need docker and nothing else,
+# and the jar is assembled by the same JDK24 image the test loop uses.  The container
+# runs as the host user, so target/ stays host-owned.  No staging copy: the Dockerfile
+# COPYs target/metatron-*-jar-with-dependencies.jar straight into the image.
+package_jar() {
+    ensure_build_image
+    echo "==> mvn package (skip tests) in $BUILD_IMAGE"
+    build_run sh -c "mvn $MVN_OPTS -DskipTests package"
+}
+
+cmd_image() {
+    package_jar
+    echo "==> docker build -t $APP_IMAGE"
+    D docker build -f dist/docker/Dockerfile -t "$APP_IMAGE" .
+}
+
+cmd_dev() {
+    NAME="${METATRON_CONTAINER:-metatron}"
+    USER_NAME="${METATRON_USER:-${USER:-metatron}}"
+
+    if [ "${1-}" = "--no-build" ]; then
+        echo "==> skipping build (--no-build)"
+    else
+        cmd_image
+    fi
+
+    echo "==> removing old container '$NAME'"
+    if [ "$DRY" = "1" ]; then
+        printf '+ docker rm -f %s\n' "$NAME"
+    else
+        docker rm -f "$NAME" >/dev/null 2>&1 || true
+    fi
+
+    echo "==> running $APP_IMAGE as '$NAME'"
+    set -- docker run --name "$NAME" \
+        -p 8555:8555 -p 8777:8777 \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        --group-add "$(stat -c '%g' /var/run/docker.sock)" \
+        -v "$REPO/boot:/app/boot:ro" \
+        -v "$REPO/conf:/app/conf:ro" \
+        "$APP_IMAGE" \
+        "[boot=><boot/docker.boot.mtron>,user=><$USER_NAME>,web=>[http=><http://0.0.0.0:8777>,ws=><ws://0.0.0.0:8555>],log=>info]"
+    if [ "$DRY" = "1" ]; then printf '+ %s\n' "$*"; else "$@"; fi
+
+    echo "==> up.  console: docker exec -it $NAME wsplus ws://localhost:8555/mtron"
+    echo "==> stop:  docker stop $NAME    (or docker rm -f $NAME to kill+recreate)"
+}
+
+# ---------- build: the isolated build / test / docs / console loop ----------
+
+cmd_build() {
+    verb="${1-}"
+    [ $# -gt 0 ] && shift
+
+    case "$verb" in
+        "" | package | build)
+            ensure_build_image
+            build_run sh -c "mvn $MVN_OPTS -DskipTests package"
+            ;;
+        test)
+            ensure_build_image
+            # shellcheck disable=SC2086
+            build_run sh -c "mvn $MVN_OPTS test $* || exit 1"
+            ;;
+        docs)
+            target="${1:-docs/skills/mtron}"
+            case "$target" in
+                *.md)
+                    case "$target" in
+                        docs/skills/*.md)
+                            rel="${target#docs/skills/}"
+                            case "$rel" in
+                                */*) sub="${rel%/*}";;
+                                *)   sub="";;
+                            esac
+                            out_dir=".metatron/skills${sub:+/$sub}"
+                            ;;
+                        *)
+                            out_dir="_probe"
+                            ;;
+                    esac
+                    ;;
+                *)
+                    out_dir=".metatron/skills/$(basename "$target")"
+                    ;;
+            esac
+            ensure_build_image
+            # MarkdownRunner --html: markdown pass + site-html render in one VM run.
+            # The jar name carries the pom version, so it is resolved by glob inside
+            # the container (a version bump must not leave us pointing at a missing jar).
+            cmd="set -eu
+                JAR=\$(ls -1 target/metatron-*-jar-with-dependencies.jar 2>/dev/null | head -1)
+                if [ -z \"\$JAR\" ]; then
+                    mvn $MVN_OPTS -DskipTests package
+                    JAR=\$(ls -1 target/metatron-*-jar-with-dependencies.jar | head -1)
+                fi
+                java $JVM_FLAGS -cp \"\$JAR\" $DOCS_RUNNER $target -o $out_dir --html"
+            build_run sh -c "$cmd"
+            ;;
+        console)
+            ensure_build_image
+            # the harness allocates its own pty (python pty.fork), so no docker -t is
+            # needed.  An image built before python3 was added cannot do it — say so
+            # instead of failing with "python3: not found".
+            if ! build_run python3 -c '' >/dev/null 2>&1; then
+                echo "error: $BUILD_IMAGE has no python3 — rebuild it: bin/metatron-docker build image" >&2
+                exit 1
+            fi
+            # the image's JDK, not the host's (a later --java from the caller still wins)
+            build_run python3 bin/metatron-console --java java "$@"
+            ;;
+        shell | run)
+            ensure_build_image
+            build_run sh -c "$*"
+            ;;
+        image)
+            echo "==> rebuilding $BUILD_IMAGE (maven + JDK24 + patchelf + python3)"
+            D docker build -f dist/docker/Dockerfile.build -t "$BUILD_IMAGE" .
+            ;;
+        *)
+            echo "unknown build verb: $verb" >&2
+            usage >&2
+            exit 2
+            ;;
+    esac
+}
+
+# ---------- dispatch ----------
+
+usage() {
+    awk 'NR>1 && /^set -eu/ {exit} NR>1 {sub(/^# ?/, ""); print}' "$0"
+}
+
+case "${1-}" in
+    "" | run)   [ $# -gt 0 ] && shift; cmd_run "$@" ;;
+    image)      shift; cmd_image ;;
+    dev)        shift; cmd_dev "$@" ;;
+    build)      shift; cmd_build "$@" ;;
+    help | -h | --help) usage ;;
+    *)
+        echo "unknown command: $1" >&2
+        usage >&2
+        exit 2
+        ;;
+esac

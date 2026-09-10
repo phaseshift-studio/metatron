@@ -1,0 +1,470 @@
+#!/usr/bin/env python3
+"""metatron-console — drive a real metatron console from a script, in a pty.
+
+Why this exists
+---------------
+Some behaviour only exists on a terminal: raw-mode keystrokes ('alt+b'), the
+rest of the jline keymap, history, prompts, widgets and the console's input
+handoff.  A pty is the only way to test it, and a pty needs a driver that can
+type keys and read what comes back.  This script is that driver: it boots a
+metatron VM with a console in a pty, plays a step script at it, asserts on what
+came back, and prints a timestamped transcript.
+
+Quick start
+-----------
+    # isolated (the agent standard — same container as the build/test loop)
+    bin/metatron-docker build console --steps bin/test/console-smoke.steps
+
+    # on the host
+    bin/metatron-console --run 'WAIT_CONSOLE; SEND 1; WAIT ==>1'
+    bin/metatron-console --steps my.steps
+
+Step language: one step per line, '#' starts a comment, ';' separates steps on one
+line.  The full reference is --help-steps; key names are --list-keys.
+
+Safety
+------
+The default boot profile ('boot/console.boot.mtron') binds **no ports**, so
+this can run beside the live server; the harness refuses to start against a
+boot file that mentions the metatron ports (8555/8777) unless '--allow-ports'
+is given.  It also runs the VM in a throwaway directory by default, so the
+session's '.metatron.history' and other relative state never touch the repo.
+
+Author: metatron agents.  See AGENTS.md ("Driving the console in a pty").
+"""
+
+import argparse
+import fcntl
+import os
+import pty
+import struct
+import termios
+import re
+import select
+import shutil
+import signal
+import sys
+import tempfile
+import time
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+JAR = os.path.join(REPO, "target", "metatron-0.1-SNAPSHOT-jar-with-dependencies.jar")
+CONSOLE_BOOT = "boot/console.boot.mtron"
+
+# the console prints this once, right before it starts reading (Console.outputHeader)
+CONSOLE_READY = "for console features"
+# a live console must never fight the running server for these
+LIVE_PORTS = ("8555", "8777")
+
+JVM_FLAGS = [
+    "--enable-native-access=ALL-UNNAMED",
+    "--add-modules", "jdk.incubator.vector",
+    "--sun-misc-unsafe-memory-access=allow",
+    "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+    "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
+    "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED",
+    "--add-opens", "java.base/java.util=ALL-UNNAMED",
+    "--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED",
+    "--add-opens", "java.base/java.io=ALL-UNNAMED",
+    "--add-opens", "java.base/java.nio=ALL-UNNAMED",
+    "--add-opens", "java.base/java.net=ALL-UNNAMED",
+    "--add-opens", "java.base/sun.nio.cs=ALL-UNNAMED",
+]
+
+# key / combo names -> the bytes a terminal in jline's modes actually sends.
+# arrows are ss3 (\eO A) because jline puts the tty in application cursor key
+# mode; `RAW b"\x1b[A"` sends the csi form if a test needs that instead.
+KEYS = {
+    "enter": b"\r", "return": b"\r", "tab": b"\t", "shift+tab": b"\x1b[Z",
+    "esc": b"\x1b", "escape": b"\x1b", "space": b" ", "backspace": b"\x7f",
+    "delete": b"\x1b[3~", "home": b"\x1b[1~", "end": b"\x1b[4~",
+    "pageup": b"\x1b[5~", "pagedown": b"\x1b[6~",
+    "up": b"\x1bOA", "down": b"\x1bOB", "right": b"\x1bOC", "left": b"\x1bOD",
+    "alt+up": b"\x1b[1;3A", "alt+down": b"\x1b[1;3B",
+    "alt+right": b"\x1b[1;3C", "alt+left": b"\x1b[1;3D",
+    "alt+b": b"\x1bb", "alt+f": b"\x1bf", "alt+e": b"\x1be", "alt+l": b"\x1bl",
+    "alt+n": b"\x1bn", "alt+p": b"\x1bp", "alt+w": b"\x1bw", "alt+v": b"\x1bv",
+    "alt+t": b"\x1bt", "alt+k": b"\x1bk", "alt+<": b"\x1b<", "alt+>": b"\x1b>",
+    "alt+^": b"\x1b^",
+    "ctrl+c": b"\x03", "ctrl+d": b"\x04", "ctrl+q": b"\x11", "ctrl+l": b"\x0c",
+    "ctrl+a": b"\x01", "ctrl+e": b"\x05", "ctrl+u": b"\x15", "ctrl+k": b"\x0b",
+    "ctrl+w": b"\x17", "ctrl+r": b"\x12", "ctrl+z": b"\x1a",
+}
+
+ANSI = re.compile(rb"\x1b\[[0-9;?]*[A-Za-z]|\x1b\][^\x07]*\x07|\x1b[=>()][0-9A-Za-z]?|\x1b\[[0-9;?]*[hl]")
+
+
+class Session:
+    """a metatron console running in a pty, with a scriptable keyboard"""
+
+    def __init__(self, argv, cwd, term, timeout, cols, rows):
+        self.argv = argv
+        self.cwd = cwd
+        self.timeout = timeout
+        self.log = bytearray()
+        self.marks = {}
+        self.results = []
+        self.start = time.time()
+        self.dead = False
+        env = dict(os.environ)
+        env["TERM"] = term
+        env["COLUMNS"] = env.get("COLUMNS", "110")
+        env["LINES"] = env.get("LINES", "40")
+        env["HOME"] = env.get("HOME", cwd)
+        self.pid, self.fd = pty.fork()
+        if 0 == self.pid:                                    # child: the VM
+            try:
+                os.chdir(cwd)
+                os.execvpe(argv[0], argv, env)
+            except BaseException as e:                       # pragma: no cover
+                os.write(2, ("console harness: exec failed: %s\n" % e).encode())
+                os._exit(127)
+        # the console sizes its panes from the tty, and a container has no tty
+        # to inherit one from — so the size is fixed and reported
+        try:
+            fcntl.ioctl(self.fd, termios.TIOCSWINSZ, struct.pack("HHHH", rows, cols, 0, 0))
+        except OSError:
+            pass
+
+    # ---------------- plumbing ----------------
+
+    def pump(self, seconds):
+        """read whatever the console has to say for up to ``seconds``"""
+        end = time.time() + seconds
+        while time.time() < end:
+            if self.expired():
+                return
+            r, _, _ = select.select([self.fd], [], [], 0.05)
+            if not r:
+                continue
+            try:
+                chunk = os.read(self.fd, 65536)
+            except OSError:
+                self.dead = True
+                return
+            if not chunk:
+                self.dead = True
+                return
+            self.log.extend(chunk)
+
+    def expired(self):
+        if time.time() - self.start > self.timeout:
+            if not self.dead:
+                self.dead = True
+                print("\n!! harness timeout (%ss) — killing the vm" % self.timeout, flush=True)
+            return True
+        return False
+
+    def text(self):
+        """the transcript as a human (and a matcher) sees it: no ansi, lowercase"""
+        return ANSI.sub(b"", bytes(self.log)).decode("utf-8", "replace").lower()
+
+    def since(self, mark):
+        return ANSI.sub(b"", bytes(self.log[self.marks.get(mark, 0):])).decode("utf-8", "replace").lower()
+
+    def write(self, data):
+        try:
+            os.write(self.fd, data)
+        except OSError:
+            self.dead = True
+
+    def wait_for(self, needle, seconds):
+        needle = needle.lower().encode()
+        end = time.time() + seconds
+        while time.time() < end:
+            if needle in self.text().encode():
+                return True
+            self.pump(0.1)
+            if self.dead:
+                return needle in self.text().encode()
+        return needle in self.text().encode()
+
+    def kill(self):
+        try:
+            os.write(self.fd, b"\x03")
+        except OSError:
+            pass
+        try:
+            os.close(self.fd)
+        except OSError:
+            pass
+        try:
+            os.kill(self.pid, signal.SIGKILL)
+            os.waitpid(self.pid, 0)
+        except OSError:
+            pass
+
+    # ---------------- reporting ----------------
+
+    def check(self, name, ok, detail=""):
+        self.results.append((name, ok, detail))
+        print("  %6.2f  %s  %s%s" % (time.time() - self.start, "PASS" if ok else "FAIL",
+                                     name, ("  " + detail) if detail else ""), flush=True)
+
+    def tail(self, mark=None):
+        body = self.since(mark) if mark else self.text()
+        lines = [l for l in body.splitlines() if l.strip()]
+        return "\n".join("      | " + l for l in lines[-25:])
+
+
+# ---------------- the step language ----------------
+
+def parse_steps(text):
+    """steps, `;`-separated, `#` comments, blank lines skipped"""
+    steps = []
+    for raw in text.splitlines():
+        line = raw.split("#", 1)[0].strip() if not raw.lstrip().startswith("#") else ""
+        for part in line.split(";"):
+            part = part.strip()
+            if part:
+                steps.append(part)
+    return steps
+
+
+def decode_key(name):
+    key = name.strip().lower()
+    if key in KEYS:
+        return KEYS[key]
+    if 1 == len(key):
+        return key.encode()
+    if key.startswith("ctrl+") and 1 == len(key[5:]):
+        return bytes([ord(key[5:]) & 0x1F])
+    if key.startswith("alt+") and 1 == len(key[4:]):
+        return b"\x1b" + key[4:].encode()
+    raise SystemExit("unknown key %r — see --list-keys" % name)
+
+
+def run_steps(session, steps, echo):
+    """play the script; returns the number of failed checks"""
+    for step in steps:
+        op, _, arg = step.partition(" ")
+        op = op.upper()
+        arg = arg.strip()
+        if op in ("WAIT", "WAIT_CONSOLE"):
+            default = 60.0 if op == "WAIT_CONSOLE" else 30.0
+            needle, secs = (CONSOLE_READY, default) if op == "WAIT_CONSOLE" else split_needle(arg, default)
+            label = "wait_console" if op == "WAIT_CONSOLE" else "wait"
+            ok = session.wait_for(needle, secs)
+            session.check("%s:%s" % (label, needle), ok, "" if ok else "not seen in %ss" % secs)
+            if not ok:
+                print(session.tail(), flush=True)
+        elif op == "SEND":
+            session.write(arg.encode() + b"\r")
+        elif op == "TYPE":
+            session.write(arg.encode())
+        elif op == "KEY":
+            session.write(decode_key(arg))
+        elif op == "RAW":
+            session.write(eval(arg, {"__builtins__": {}}, {}))
+        elif op == "MARK":
+            session.marks[arg] = len(session.log)
+        elif op in ("SINCE", "EXPECT"):
+            mark, _, needle = arg.partition(" ")
+            session.pump(0.4)
+            ok = needle.lower() in session.since(mark)
+            session.check("since:%s:%s" % (mark, needle), ok)
+            if not ok:
+                print(session.tail(mark), flush=True)
+        elif op == "WAIT_SINCE":
+            mark, _, rest = arg.partition(" ")
+            needle, secs = split_needle(rest, 30.0)
+            ok = False
+            end = time.time() + secs
+            while time.time() < end:
+                if needle.lower() in session.since(mark):
+                    ok = True
+                    break
+                session.pump(0.15)
+                if session.dead:
+                    break
+            ok = ok or needle.lower() in session.since(mark)
+            session.check("wait_since:%s:%s" % (mark, needle), ok,
+                          "" if ok else "not seen in %ss" % secs)
+            if not ok:
+                print(session.tail(mark), flush=True)
+        elif op == "SILENT":
+            mark, _, rest = arg.partition(" ")
+            needle, secs = split_needle(rest, 0.0)
+            session.pump(secs)
+            count = session.since(mark).count(needle.lower())
+            session.check("silent:%s:%s" % (mark, needle), 0 == count, "seen %d time(s)" % count)
+        elif op == "SLEEP":
+            session.pump(float(arg or 1))
+        elif op == "ELAPSED":
+            session.check("elapsed:" + (arg or "t0"), True, "%.2fs" % (time.time() - session.start))
+        elif op == "ECHO":
+            label = arg or "start"
+            print("      --- transcript since %r ---" % label, flush=True)
+            print(session.tail(None if arg in ("", "start") else arg), flush=True)
+        elif op == "NOTE":
+            print("      note: " + arg, flush=True)
+        else:
+            raise SystemExit("unknown step %r — see --help-steps" % step)
+        if session.dead and op not in ("ECHO", "NOTE"):
+            print("      !! the vm exited early", flush=True)
+            break
+    return len([r for r in session.results if not r[1]])
+
+
+def split_needle(arg, default_secs):
+    """'<text> [seconds]' -> (text, seconds); text may contain spaces"""
+    parts = arg.rsplit(None, 1)
+    if 2 == len(parts):
+        try:
+            return parts[0], float(parts[1])
+        except ValueError:
+            pass
+    return arg, default_secs
+
+
+# ---------------- wiring ----------------
+
+def build_argv(args):
+    boot = os.path.abspath(args.boot)
+    if not os.path.isfile(boot):
+        raise SystemExit("no such boot file: %s" % args.boot)
+    body = open(boot, encoding="utf-8", errors="replace").read()
+    if not args.allow_ports:
+        for port in LIVE_PORTS:
+            if port in body:
+                raise SystemExit(
+                    "refusing to boot %s: it mentions port %s and the live metatron server owns that\n"
+                    "port (8555/8777).  Use the default console profile (no ports), or pass\n"
+                    "--allow-ports if no server is running." % (args.boot, port))
+    if "jar" == args.from_where:
+        if not os.path.isfile(args.jar):
+            raise SystemExit("no uber jar at %s\n  build one:  bin/metatron-docker build" % args.jar)
+        return ["java", *JVM_FLAGS, "-jar", args.jar, "-b", boot, "[log=>%s]" % args.log]
+    classes = os.path.join(REPO, "target", "classes")
+    cp_file = os.path.join(REPO, ".mtron-classpath")
+    if not os.path.isdir(classes) or not os.path.isfile(cp_file):
+        raise SystemExit("classes mode needs target/classes and .mtron-classpath\n"
+                         "  generate both:  bin/metatron --help   (or ./mvnw compile and\n"
+                         "  ./mvnw dependency:build-classpath -Dmdep.outputFile=.mtron-classpath)")
+    # mirror bin/metatron: compiled classes, main resources, then the dependency cache
+    resources = os.path.join(REPO, "src", "main", "resources")
+    cp = os.pathsep.join([classes, resources, open(cp_file).read().strip()])
+    return ["java", *JVM_FLAGS, "-cp", cp, "studio.phaseshift.metatron.BootLoader",
+            "-b", boot, "[log=>%s]" % args.log]
+
+
+def java_binary():
+    """the repo's JDK when present (the container has no system JDK), else PATH"""
+    local = os.path.join(REPO, ".build", "jdk", "bin", "java")
+    return local if os.path.isfile(local) else (shutil.which("java") or "java")
+
+
+STEP_HELP = """steps (one per line, '#' starts a comment, ';' separates steps on one line):
+
+    WAIT_CONSOLE [s]              wait for the console prompt (default 60s)
+    WAIT <text> [s]               wait for text to appear (default 30s)
+    SEND <text>                   type text and press Enter
+    TYPE <text>                   type text without Enter
+    KEY <name>                    press a key/combo: alt+b, ctrl+c, up, tab, ...
+    RAW <python bytes>            send raw bytes, e.g. RAW b"\\x1bb"
+    MARK <name>                   remember the transcript position
+    SINCE <mark> <text>           assert text appeared since the mark
+    WAIT_SINCE <mark> <text> [s]  wait for text to appear since the mark
+    SILENT <mark> <text> [s]      assert text did NOT appear since the mark
+    SLEEP <s>                     just wait
+    ELAPSED <label>               report the wall time since the session started
+    ECHO [mark]                   print the transcript since the mark
+    NOTE <text>                   print a note into the report
+
+Matching is case- and ANSI-insensitive, so WAIT background matches a colourised
+banner.  A failed check prints the transcript since the nearest preceding mark,
+and the harness exits non-zero if any check failed.
+
+Examples:
+    bin/metatron-console --run 'WAIT_CONSOLE; SEND 1; WAIT ==>1'
+    bin/metatron-console --steps bin/test/console-smoke.steps
+    bin/metatron-console --run 'WAIT_CONSOLE; SEND 1.sleep(second::8.0); SLEEP 2; KEY alt+b; SLEEP 1; SEND 2; WAIT ==>2; WAIT_SINCE 2 ==>1 20'
+"""
+
+
+def main():
+    p = argparse.ArgumentParser(
+        prog="metatron-console", add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="drive a metatron console in a pty (see --help-steps)",
+        epilog=STEP_HELP)
+    p.add_argument("-h", "--help", action="help", help="show this help and the step reference")
+    p.add_argument("--help-steps", action="help", help="show the step language reference")
+    p.add_argument("--steps", metavar="FILE", help="a step script to play")
+    p.add_argument("--run", metavar="STEPS", help="steps inline, ';'-separated")
+    p.add_argument("--boot", default=os.path.join(REPO, CONSOLE_BOOT),
+                   help="boot profile (default: %s — no ports)" % CONSOLE_BOOT)
+    p.add_argument("--from", dest="from_where", choices=("jar", "classes"), default="jar",
+                   help="run the uber jar (default) or target/classes + .mtron-classpath")
+    p.add_argument("--jar", default=JAR, help="uber jar path (default: %s)" % os.path.relpath(JAR, REPO))
+    p.add_argument("--cwd", default=None,
+                   help="vm working directory (default: a throwaway temp dir, so the repo's\n"
+                        ".metatron.history and other relative state are never touched)")
+    p.add_argument("--term", default="xterm-256color", help="TERM for the pty")
+    p.add_argument("--cols", type=int, default=110, help="pty width in columns (default: 110)")
+    p.add_argument("--rows", type=int, default=40, help="pty height in rows (default: 40)")
+    p.add_argument("--java", default=None, help="java binary (default: .build/jdk if present, else PATH)")
+    p.add_argument("--log", default="info", help="metatron log level (default: info)")
+    p.add_argument("--timeout", type=float, default=300.0, help="kill the vm after this many seconds")
+    p.add_argument("--transcript", metavar="FILE", help="write the ansi-stripped transcript here")
+    p.add_argument("--raw", metavar="FILE", help="write the raw transcript (with escapes) here")
+    p.add_argument("--quiet", action="store_true", help="do not print the final transcript")
+    p.add_argument("--allow-ports", action="store_true",
+                   help="permit a boot profile that mentions 8555/8777 (only when no server runs)")
+    p.add_argument("--list-keys", action="store_true", help="list the KEY names and exit")
+    args = p.parse_args()
+
+    if args.list_keys:
+        for name in sorted(KEYS):
+            print("%-12s %s" % (name, KEYS[name]))
+        return 0
+
+    steps_text = ""
+    if args.steps:
+        steps_text += open(args.steps, encoding="utf-8").read() + "\n"
+    if args.run:
+        steps_text += args.run
+    if not steps_text.strip():
+        raise SystemExit("nothing to do: pass --steps FILE or --run 'STEPS' (see --help)")
+
+    argv = build_argv(args)
+    argv[0] = args.java or (java_binary() if "java" == argv[0] else argv[0])
+    cwd = args.cwd or tempfile.mkdtemp(prefix="metatron-console-")
+    if "repo" == cwd:
+        cwd = REPO
+    os.makedirs(cwd, exist_ok=True)
+    for key, path in (("logback.configurationFile", os.path.join(REPO, "conf", "logback.xml")),
+                      ("java.util.logging.config.file", os.path.join(REPO, "conf", "logging.properties"))):
+        if os.path.isfile(path):
+            argv.insert(2, "-D%s=%s" % (key, path))
+
+    print("metatron-console: %s" % " ".join(argv[:1] + ["..."] + argv[-3:]))
+    print("      boot: %s\n      cwd:  %s\n      tty:  %dx%d\n"
+          % (args.boot, cwd, args.cols, args.rows), flush=True)
+    session = Session(argv, cwd, args.term, args.timeout, args.cols, args.rows)
+    try:
+        failed = run_steps(session, parse_steps(steps_text), not args.quiet)
+        session.pump(0.3)
+    finally:
+        session.kill()
+
+    if args.raw:
+        open(args.raw, "wb").write(bytes(session.log))
+    if args.transcript:
+        open(args.transcript, "w", encoding="utf-8").write(session.text())
+    if not args.quiet:
+        print("\n===== transcript (ansi-stripped, timestamped by arrival) =====", flush=True)
+        print(session.tail(), flush=True)
+    print("\n===== %d checks, %d failed =====" % (len(session.results), failed), flush=True)
+    for name, ok, detail in session.results:
+        if not ok:
+            print("  FAILED %s %s" % (name, detail), flush=True)
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        print("\ninterrupted", flush=True)
+        sys.exit(130)

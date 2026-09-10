@@ -861,7 +861,7 @@ public class llmInstSet extends AbstractInstSet {
         // 3. the model — from the agent home (matches <agent>/model)
         final mModel model = modelArg.isNoObj() ? mModel.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec()) : mModel.model(modelArg.asRec());
         // 4. distill via a mini-task
-        final ChatResult result = Agent.Helper.miniChat("session_summarizer", model(model.at(TIMEOUT, real(5.0, MATH_MINUTE_TID, null))), SUMMARIZE_PROMPT.formatted(digest));
+        final ChatResult result = Agent.Helper.miniChat("session_summarizer", model(model.at(TIMEOUT, real(10.0, MATH_MINUTE_TID, null))), SUMMARIZE_PROMPT.formatted(digest));
         // 5. parse the <<json:claim>> and <<json:loose_end>> blocks into vids
         final List<Obj> claimVids = new ArrayList<>();
         final List<Obj> looseEndVids = new ArrayList<>();

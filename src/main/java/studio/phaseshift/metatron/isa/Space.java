@@ -159,6 +159,22 @@ public interface Space extends Rec, Closeable {
             return IteratorUtil.map(iterator, kv -> kv.obj().vid() != null ? kv : new IdObj(kv.furi(), kv.obj().selfVID(kv.furi())));
         }
 
+        public static void recursivelyStripVID(final Obj obj, final boolean root) {
+            if (obj.isLst()) {
+                obj.lstValue().forEach(e -> recursivelyStripVID(e, false));
+            } else if (obj.isRec()) {
+                obj.recValue().forEach((key, value) -> {
+                    recursivelyStripVID(key, false);
+                    recursivelyStripVID(value, false);
+                });
+            } else if (obj.isRel()) {
+                recursivelyStripVID(obj.relValue().get0(), false);
+                recursivelyStripVID(obj.relValue().get1(), false);
+            }
+            if (!root)
+                obj.selfVID(null);
+        }
+
         public static void spaceCloseLog(final Obj source, final Space space) {
             if (space instanceof InstSet)
                 source.logger().info("closed inst set {{b}}%s", space.vid());

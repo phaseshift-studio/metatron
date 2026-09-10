@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.sys.type;
 import org.jspecify.annotations.NonNull;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
@@ -34,6 +35,8 @@ import java.util.function.Supplier;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -184,6 +187,11 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
                 .anyMatch(t -> Objects.equals(t.get(), thread.vid())))
             return;
         thread.jvm().put(uri(STATE), uri(RUN));
+        thread.jvm().put(uri(TIME), mathInstSet.nowDatetime());
+        thread.jvm().put(uri(RUNTIME),
+                auto_(instLambda((lhs, inst) -> mathInstSet.normalizeTime(
+                        real((double) System.currentTimeMillis() - mathInstSet.datetimeToMillis(this.at(TIME)), MATH_MILLIS_TID, null)))).tryToInst());
+        /// TODO: auto_(from_(uri(this.vid().extend(TIME))).minus_(instB(MATH_DATETIME_NOW_INST_TID, lst()))));
         final Inst pointer = auto_from_(thread.vid()).tryToInst().as();
         run.lstValue().add(pointer);
         final Runnable task = thread.createTask();

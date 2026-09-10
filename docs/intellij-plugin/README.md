@@ -15,13 +15,13 @@ for writing website docs. Lives in the repo (next to the docs it builds), **outs
   only file processed. `--html` then runs `MarkdownRunner`'s site-html pass (body conversion via
   `HTMLMarkdownSerializer`) in the same VM run, so the final markdown
   (`docs/skills/**` → `.metatron/skills/**`) *and* the rendered website HTML (sibling `.html`, same page chrome
-  as `bin/metatron-build-docker docs`) both come out of one right-click.
+  as `bin/metatron-docker build docs`) both come out of one right-click.
 - **adoc** is a *book*: `tractatus.adoc` `include::`s the chapters, and the one viewable artifact is the
   single mega-page `tractatus.html`. So an adoc build rebuilds the bundle (with `--single-boot` to amortize the
   per-file VM boot) and opens that page. That is how the site is actually rendered — there is no standalone
   per-chapter HTML in the pipeline.
 
-It uses the exact runners and JVM flags as `bin/metatron-build-docker docs`, just scoped to one file for md and
+It uses the exact runners and JVM flags as `bin/metatron-docker build docs`, just scoped to one file for md and
 run locally (no docker). Build output streams to `target/docs-build.log` (a "Open log" action appears on the
 result notification).
 

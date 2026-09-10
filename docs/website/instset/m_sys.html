@@ -408,12 +408,12 @@
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- const=&gt;[thread_executor::[stop=&gt;[,],run=&gt;[!*/sys/thread/main]]@/sys/thread/executor],
  inst=&gt;[
-  native?B{*}&lt;=A{?}(str::T),
+  bash?lst[str]&lt;=#{?}(cmd=&gt;str::T,{?}timeout=&gt;time::T),
   sleep?A{?}&lt;=A{?}(time::T),
   stdout?#{?}&lt;=#{?}(#{?}::T),
-  stdin?str&lt;=#{?}()]]@/m/sys</code></pre>
+  stdin?str&lt;=#{?}()],
+ const=&gt;[thread_executor::[stop=&gt;[,],run=&gt;[!*/sys/thread/main]]@/sys/thread/executor]]@/m/sys</code></pre>
                     </div>
                 </div>
             </div>
@@ -428,8 +428,8 @@
         <div class="card-header"><h5 class="mb-0 text-primary">index</h5></div>
         <div class="card-body"><div class="mb-3">
     <h6 class="text-primary mb-2">insts</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__sys__inst__native?rng=B{*}&dom=A{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">native</span>
+    <div class="d-flex flex-wrap"><a href="#__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">bash</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__sys__inst__sleep?rng=A{?}&dom=A{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sleep</span>
@@ -445,17 +445,35 @@
     </div>
 </div><div class="container-xxl mb-4" id="instructions">
     <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">4</span></h3>
-    <div class="card mb-3" id="__m__sys__inst__native?rng=B{*}&dom=A{?}">
+    <div class="card mb-3" id="__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
-            <span class="code text-primary fw-bold">native</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">B{*}</span></span></span>
+            <span class="code text-primary fw-bold">bash</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__lst[__m__str]" data-bs-toggle="tooltip" title="range" class="code text-success">str]</a></span></span>
         </span>
-        <small class="text-muted code">/m/sys/inst/native?rng=B{*}&amp;dom=A{?}</small>
+        <small class="text-muted code">/m/sys/inst/bash?rng=/m/lst[/m/str]&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__native?rng=B{*}&dom=A{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__native?rng=B{*}&dom=A{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">native?rng=<span class="code text-success">B{*}</span>&dom=<span class="code text-info">A{?}</span>(str::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bash?rng=lst[str]&dom=<span class="code text-info">#{?}</span>(cmd=>str::T,{?}timeout=>time::T){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">evaluate bash command. *important* the timeout argument takes a real not an int -- e.g. millis::1000.0 or second::1.0.
+note that this field is optional, so when in doubt, just don&#39;t fill it out
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a lst[str] of results" class="text-success">a lst[str] of results</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}timeout" class="text-light">{?}timeout</a> <span class="text-light">=&gt;</span> <a href="#"""a real number denoting timeout of the process (default: second::30.0000).
+"""" class="text-info">&quot;&quot;&quot;a real number denoting timeout of the process (default: second::30.0000).
+&quot;&quot;&quot;</a>
+  <a href="#cmd" class="text-light">cmd</a> <span class="text-light">=&gt;</span> <a href="#"the terminal command to evaluate (uses bash('-c',${cmd}) behind the scenes)"" class="text-info">&quot;the terminal command to evaluate (uses bash(&#39;-c&#39;,${cmd}) behind the scenes)&quot;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">bash(&#39;ls&#39;)                                           [-- return lst containing each file/dir as str::T --]
+{&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;}.-&lt;[_ =&gt; _]==[_ =&gt; bash(_)]   [-- batch bash results indexed by cmd             --]
+[&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;].mapp(-&lt;[_ =&gt; bash(_)]).sum() [-- same as above but with lst of cmds            --]
+</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__sys__inst__sleep?rng=A{?}&dom=A{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>

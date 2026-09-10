@@ -29,10 +29,12 @@ import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 
 import java.util.HashMap;
+import java.util.IllegalFormatException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -212,14 +214,44 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     }
 
     private String makeMessage(final boolean metadata, final Object f, final Object... args) {
+        // arguments are values, not format strings — an argument holding "%s" or
+        // "%d" is payload text and must reach the line verbatim
         final Object[] args2 = args.length == 0 ? new Object[0] :
                 Stream.of(args)
                         .map(x -> isLambda(x) ? ((Supplier<?>) x).get() : x)
                         .map(x -> x instanceof Obj || x instanceof String ? Highlighter.format(x) : x)
                         .toArray();
+        final String message = safeFormat(toStringOrNull(f), args2);
         return metadata ?
-                Graphitty.string("[{{b}}%s{{/b}}] %s".formatted(toSourceString(), args.length == 0 ? toStringOrNull(f) : toStringOrNull(f).formatted(args2))) :
-                Graphitty.string(args.length == 0 ? toStringOrNull(f) : toStringOrNull(f).formatted(args2));
+                Graphitty.string("[{{b}}%s{{/b}}] %s".formatted(toSourceString(), message)) :
+                Graphitty.string(message);
+    }
+
+    /**
+     * Format a log line against its arguments — never throwing.
+     * <p>
+     * A message acts as a {@code %}-template only while arguments accompany it. With
+     * no arguments it is literal text that may legitimately contain a percent sign
+     * (an MCP payload, an exception message, markdown), and formatting such text
+     * raises {@link IllegalFormatException} — for instance
+     * {@code MissingFormatArgumentException: Format specifier '%s'} for a payload
+     * containing a percent token, or {@code UnknownFormatConversionException} when
+     * the percent is followed by a character that is not a conversion. An escaping
+     * formatter exception is reported by the transport as a bogus protocol error
+     * rather than as the logging bug it is.
+     * <p>
+     * A malformed template — a literal percent sitting next to a specifier, or an
+     * argument-count mismatch — falls back to the unformatted text with the
+     * arguments appended: logging must never break its caller.
+     */
+    private static String safeFormat(final String template, final Object... args) {
+        if (args.length == 0)
+            return template;
+        try {
+            return template.formatted(args);
+        } catch (final IllegalFormatException e) {
+            return template + " " + Stream.of(args).map(String::valueOf).collect(Collectors.joining(" "));
+        }
     }
 
     protected GraphittyLogger logLevel(final Level level, final Object f, final Object... args) {
@@ -268,7 +300,9 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     }
 
     public GraphittyLogger log(final String level, final Object f, final Object... args) {
-        final String message = f.toString().formatted(args);
+        // the message may already be fully formatted (status() routes through here
+        // with no args) — re-formatting it treats its percent signs as specifiers
+        final String message = safeFormat(f.toString(), args);
         return switch (level) {
             case TRACE -> this.trace(message);
             case DEBUG -> this.debug(message);
@@ -280,7 +314,7 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     }
 
     public GraphittyLogger status(final String level, final Object f, final Object... args) {
-        final String message = f.toString().formatted(args);
+        final String message = safeFormat(f.toString(), args);
         try {
             StatusLine.message(str(message));
         } catch (final Exception e) {
