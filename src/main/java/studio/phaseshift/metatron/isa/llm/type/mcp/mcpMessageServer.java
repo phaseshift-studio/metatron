@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
+import studio.phaseshift.metatron.isa.llm.space.ToolPairGate;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -172,6 +173,27 @@ public class mcpMessageServer {
     // Tool implementations
     // ========================================
 
+    /**
+     * Append one message to a ledger.
+     *
+     * <p>A tool group (an {@code ai} message carrying {@code tool_requests} and
+     * the {@code tool_result}s that answer it) goes through
+     * {@link ToolPairGate} — the same pairing gate the native loop writes
+     * through — so a ledger filled over the bus is exactly as valid as a native
+     * one: the ai message lands only when every request has its result, with the
+     * results immediately after it in request order, and a tool result never
+     * lands without the ai message that asked for it.  Which means a write can
+     * be <em>held</em> (the client's next write completes the group) rather than
+     * written; the returned receipt carries the verdict in {@code status} —
+     * {@code published}, {@code parked} or {@code unpaired}.</p>
+     *
+     * <p>A group the client leaves unanswered is closed by the next turn
+     * boundary: a {@code user} message of a later {@code chat_id} (or of an
+     * unknown one) or a {@code compaction} sentinel.  The ai message is then
+     * written with a {@code lost_tool_result} per unanswered request, so the
+     * turn survives; a stray result that never found its ai message is dropped
+     * (writing it would orphan a tool message).</p>
+     */
     private static Obj addMessage(final Inst inst) {
         final Uri messageKind = uri(Str.Helper.cleanString(inst.arg(KIND, 1), true)); // union — deferred (#9)
         final String text = inst.arg(TEXT, 2).strValue();
@@ -226,9 +248,68 @@ public class mcpMessageServer {
         if (!attributes.isNoObj())
             attributes.asRec().jvm().forEach((k, v) -> builder.put(k.toString(), v));
 
+        // the ledger this message belongs to — the pairing gate's scope, and the
+        // path every ledger entry of it is appended at
+        final fURI rootF = inst.arg(ROOT, 0).uriValue();
+        final SpaceChatSessionStore ledger = storeAt(rootF, rootF);
+        final Rec message = builder.create();
+
+        // ── the tool group: held until it is complete, never written in halves ──
+        if (messageKind.equals(uri(AI)) && !toolRequests.isNoObj())
+            return receipt(message, ToolPairGate.offer(ledger, message, Map.of()));
+        if (messageKind.equals(uri("tool_result")))
+            return receipt(message, ToolPairGate.stage(ledger,
+                    contents.isNoObj() ? null : contents.toCleanString(), message));
+
+        // ── a turn boundary closes whatever tool group the client left unanswered ──
+        final String boundaryChatId = chatId.isNoObj() || !chatId.isInt()
+                ? null
+                : String.valueOf(chatId.intValue().intValue());
+        if (messageKind.equals(uri("compaction")))
+            ToolPairGate.close(ledger, callId -> lostToolResult(message, callId));
+        else if (messageKind.equals(uri(USER)))
+            ToolPairGate.closeStale(ledger, boundaryChatId, callId -> lostToolResult(message, callId));
+
         // write to <root>/message/_?incrq and return the written rec (vid assigned by the space)
-        final Rec written = builder.create(inst.arg(ROOT, 0).uriValue().extend(MESSAGE).extend("_").addQ(INCRQ));
+        final Rec written = Router.writeToSpace(ledger.ledgerWritePath(), message).as();
         return withIdentity(written);
+    }
+
+    /**
+     * The result that stands in for a request nothing answered: {@code name}
+     * marks the loss, {@code contents} stays the tool call id (the join key the
+     * window rules read), and the envelope follows the boundary message that
+     * ended the turn.
+     */
+    private static Rec lostToolResult(final Rec boundary, final String toolCallId) {
+        final Rec lost = MessageBuilder.buildToolResultMessage()
+                .put(NAME, uri("lost_tool_result"))
+                .text("noobj")
+                .contents(toolCallId)
+                .depth(1)
+                .chatId(null == boundary.at(uri(CHAT_ID)) || boundary.at(uri(CHAT_ID)).isNoObj()
+                        ? 0 : boundary.at(uri(CHAT_ID)).intValue().intValue())
+                .time()
+                .create();
+        final Obj session = boundary.at(uri(SESSION));
+        if (!session.isNoObj())
+            lost.recValue().put(uri(SESSION), session);
+        return lost;
+    }
+
+    /**
+     * The bus's receipt for a gated write: the message itself, where it landed
+     * when it did, and the gate's verdict — a client that wrote the ai side of a
+     * tool group sees {@code status => parked} and knows its results are still
+     * owed.
+     */
+    private static Rec receipt(final Rec message, final ToolPairGate.Verdict verdict) {
+        final Rec receipt = rec(new LinkedHashMap<>(message.jvm()), message.tid(), message.vid());
+        receipt.recValue().put(uri(KIND), uri(message.tid().name()));
+        if (null != message.vid())
+            receipt.recValue().put(uri(LOCATION), uri(message.vid()));
+        receipt.recValue().put(uri(STATUS), uri(verdict.status().name().toLowerCase(Locale.ROOT)));
+        return receipt;
     }
 
     private static Lst buildToolRequests(final Obj toolRequests) {

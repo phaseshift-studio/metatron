@@ -24,6 +24,7 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
+import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 
 import java.util.LinkedHashMap;
@@ -38,6 +39,7 @@ public class mToolProvider implements ToolProvider {
 
     private final Set<mTool> toolSet = new LinkedHashSet<>();
     private final Set<ToolProvider> providers = new LinkedHashSet<>();
+    private Agent agent = null;
 
     public void addToolProvider(final ToolProvider provider) {
         this.providers.add(provider);
@@ -52,12 +54,17 @@ public class mToolProvider implements ToolProvider {
         return this.toolSet;
     }
 
+    public mToolProvider agent(final Agent agent) {
+        this.agent = agent;
+        return this;
+    }
+
     @Override
     public ToolProviderResult provideTools(final ToolProviderRequest request) {
         final Map<ToolSpecification, ToolExecutor> map = new LinkedHashMap<>();
         this.providers.forEach(p -> map.putAll(p.provideTools(request).tools()));
         this.toolSet.forEach(t -> {
-            map.put(t.toolSpecification().get0(), t.toolSpecification().get1());
+            map.put(t.toolSpecification().get0(), ((mToolExecutor) t.toolSpecification().get1()).agent(this.agent));
         });
         return new ToolProviderResult(map);
     }

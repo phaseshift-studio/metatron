@@ -51,6 +51,8 @@ public final class Tokens {
     public static final String DATA = "data";
     public static final String TO = "to";
     public static final String CONCEPT = "concept";
+    public static final String MESSAGE_STACK = "message_stack";
+    public static final String PENDING_MESSAGES = "pending_messages";
     public static final String CLIP = "clip";
     public static final String JUSTIFY = "justify";
     public static final String JSONRPC = "jsonrpc";
@@ -272,6 +274,7 @@ public final class Tokens {
     public static final String CONTENT = "content";
     public static final String EXAMPLE = "example";
     public static final String MODEL = "model";
+    public static final String STAGE = "stage";
     public static final String DOC = "doc";
     public static final String LHS = "lhs";
     public static final String AGENT = "agent";

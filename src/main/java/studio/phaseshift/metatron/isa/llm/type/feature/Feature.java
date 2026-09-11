@@ -53,6 +53,17 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
  */
 public interface Feature extends Rec {
 
+    public static enum Stage {
+        on_agent_ctor,
+        on_before_chat,
+        on_partial_response,
+        on_partial_thinking,
+        on_partial_tool_call,
+        on_tool_executed,
+        on_complete_response,
+        on_error
+    }
+
     /**
      * Whether this feature is active.  Defaults to checking the
      * {@code active} field on the backing Rec, falling back to {@code true}.

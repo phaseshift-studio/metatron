@@ -5,6 +5,8 @@ import dev.langchain4j.service.tool.ToolProvider;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.mToolProvider;
+import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
+import studio.phaseshift.metatron.isa.llm.space.ToolPairGate;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
@@ -96,6 +98,7 @@ public class ToolFeature extends AbstractFeature {
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
+        this.toolProvider.agent(agent);
         this.addTool(mTool.tool(docWrapDocs(instC(f("list_tools").dom(NOOBJ.zero()).rng(LST_TID), lst(),
                         (lhs, inst) -> lst(agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().tools())),
                 "no domain",
@@ -134,38 +137,93 @@ public class ToolFeature extends AbstractFeature {
         return noobj();
     }
 
+    /**
+     * The ledger this agent's conversation lives in — the session store that
+     * serves it, and with it the pairing gate's scope.  Null when the agent
+     * has no session (nothing of its is persisted, so nothing pairs either).
+     */
+    private static SpaceChatSessionStore ledger(final Agent agent) {
+        if (!agent.hasFeature(LLM_MESSAGE_FEATURE_TID))
+            return null;
+        return agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as().store();
+    }
+
+    /**
+     * Close the tool channel for a chat.  Every call id the loop never
+     * produced a result for is a lost result, and every parked ai message is
+     * then published as a complete group — with a synthetic
+     * {@code lost_tool_result} for each request nothing answered.  Called from
+     * {@code Agent.chat()}'s finally, so an interrupted turn is recorded
+     * consistently (ai message + a result that says the result was lost)
+     * rather than as an ai message whose requests have no results at all.
+     *
+     * @param agent   the agent whose chat is closing
+     * @param callIds the tool call ids the loop abandoned
+     */
+    public void handleOrphanToolRequests(final Agent agent, final Set<String> callIds) {
+        final SpaceChatSessionStore ledger = ledger(agent);
+        if (null == ledger)
+            return;
+        if (!callIds.isEmpty())
+            this.logger().debug("closing tool channel with %d unanswered requests: %s", callIds.size(), callIds);
+        ToolPairGate.close(ledger, callId -> this.lostToolResult(agent, callId));
+    }
+
+    /**
+     * The synthetic result for a request nothing answered — the result that
+     * lets its ai message still be published as a pair.  Its {@code contents}
+     * is the tool call id (the pair's join key, which the window rules read);
+     * {@code lost_tool_result} rides the tool name, where the ledger keeps the
+     * name of whatever answered the request.
+     */
+    private Rec lostToolResult(final Agent agent, final String toolCallId) {
+        return MessageBuilder.buildToolResultMessage()
+                .put(NAME, uri("lost_tool_result"))
+                .text("noobj")
+                .contents(toolCallId)
+                .chatId(agent.chatId())
+                .depth(agent.chatDepth())
+                .time()
+                .create();
+    }
+
     @Override
     public void onToolExecuted(final Agent agent, final Obj result) {
         if (result.isRec()) {
             final Rec r = result.asRec();
-            this.logger().info("tool executed: %s(%s) => %s",
+            this.logger().debug("tool executed: %s(%s) => %s",
                     Str.Helper.cleanString(r.at(uri(NAME))),
                     Str.Helper.cleanString(r.at(uri(TOOL_ARGUMENTS))),
                     CommonUtil.clipString(Str.Helper.cleanString(r.at(uri(RESULT))), 50, true));
 
-            // Write ToolResult to the message ledger
-            if (agent.hasFeature(LLM_MESSAGE_FEATURE_TID)) {
+            // stage the result for the ai message parked on it — the pairing gate
+            // is what writes the ledger (never this hook), so a result whose ai
+            // side already published (an interrupted turn closed with a lost
+            // result) is dropped rather than written orphaned
+            final SpaceChatSessionStore ledger = ledger(agent);
+            if (null != ledger) {
                 try {
+                    final String toolCallId = Str.Helper.cleanString(r.at(uri(CONTENTS)));
+                    if (!ToolPairGate.isParked(ledger, toolCallId)) {
+                        this.logger().debug("tool result for an unpublished request (ignored): %s", toolCallId);
+                        return;
+                    }
                     final String resultText = Str.Helper.cleanString(r.at(uri(RESULT)));
                     final MessageBuilder builder = MessageBuilder.build(TOOL_RESULT_MESSAGE_TID)
                             .put(NAME, uri(Str.Helper.cleanString(r.at(uri(NAME)))))
                             .text(resultText)
-                            .contents(Str.Helper.cleanString(r.at(uri(CONTENTS))))
+                            .contents(toolCallId)
                             .time()
                             .session(agent.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION).uriValue())
                             .depth(agent.chatDepth())
                             .chatId(agent.chatId());
-
                     // Retrieve the raw Obj stashed by mTool before LC4j forced it to a string
-                    final String toolCallId = Str.Helper.cleanString(r.at(uri(CONTENTS)));
                     final Obj stashed = mTool.resultStash.containsKey(toolCallId) ? mTool.resultStash.remove(toolCallId) : null;
                     if (stashed != null && (stashed.isRec() || stashed.isInst()))
                         builder.put(CHAT, stashed);
-
-                    builder.create(agent.at(ROOT).uriValue().extend(MESSAGE)
-                            .extend("_").addQ(INCRQ));
+                    ToolPairGate.stage(ledger, toolCallId, builder.create());
                 } catch (final Exception e) {
-                    this.logger().warn("tool result write failed (non-blocking): %s", e.getMessage());
+                    this.logger().warn("tool result staging failed (non-blocking): %s", e.getMessage());
                 }
             }
         } else {

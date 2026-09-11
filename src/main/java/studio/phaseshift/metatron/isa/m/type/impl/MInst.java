@@ -35,6 +35,8 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 public class MInst extends MObj implements Inst {
     public MInst(final Triplet<Poly, Inst.f, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, null == tid ? M_ISA_INST_TID : tid, vid);
+        //if (this.tid().name().equals("inst"))
+        //    this.selfTID(this.tid().dom(ALL.maybe()).rng(ALL.maybeSome()));
     }
 
 

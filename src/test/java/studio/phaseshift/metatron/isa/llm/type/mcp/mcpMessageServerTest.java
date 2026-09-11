@@ -25,6 +25,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -32,11 +33,15 @@ import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.space.AbstractMcpHandlerTest;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
 
+import java.util.List;
+import java.util.stream.IntStream;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
+import static studio.phaseshift.metatron.furi.q.QCollection.incrQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -112,6 +117,39 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
         return ObjJSONSerializer.simple().readString(text).toString();
     }
 
+    /** The uri of one of this server's ledger tools, as exposed on the wire. */
+    private String ledgerTool(final String tool) {
+        return mcp.at(TOOL).asRec().keys()
+                .filter(r -> r.uriValue().name().contains(tool))
+                .findFirst().get().uriValue().toString();
+    }
+
+    /** Append one message and return the receipt (the mtron rendering). */
+    private String addMessage(final Rec arguments) {
+        return callText(ledgerTool("add_message"), arguments);
+    }
+
+    /** Read a session's ledger back, newest first (the bus's own reading order). */
+    private String ledger(final String root, final String session) {
+        return callText(ledgerTool("get_messages"), rec(
+                uri(ROOT), str(root),
+                uri(SESSION), uri(session)));
+    }
+
+    /**
+     * An absolute ledger root of this test's own — the pairing gate is keyed by
+     * the ledger, so a scenario that holds a tool group open must not share a
+     * root with the next scenario.  The space serving ledger messages must be
+     * registered with {@code addQ(incrQ())} (in Java) — ledger writes are
+     * appended at {@code <root>/message/_?incrq}, and a relative root falls
+     * through to the ephemeral stack space.
+     */
+    private static String ledgerRoot(final String scenario) {
+        final fURI root = f("/busmsg/" + scenario);
+        memSpace.of(root.extend("#"), f("/sys/space/busmsg/" + scenario)).addQ(incrQ());
+        return root.toString();
+    }
+
     // ========================================
     // tools/list
     // ========================================
@@ -154,20 +192,27 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
 
     @Test
     public void addMessageAiCarriesToolRequests() {
-        final String written = callText(mcp.at(TOOL).asRec().keys().filter(r -> r.uriValue().name().contains("add_message")).findFirst().get().uriValue().toString(), rec(
-                uri(ROOT), str(LEDGER),
+        final String root = ledgerRoot("ai-carries-requests");
+        final String session = root + "/session/dsh-carries";
+        final String written = addMessage(rec(
+                uri(ROOT), str(root),
                 uri(KIND), str("ai"),
                 uri(TEXT), str("let me count the spare bulbs"),
                 uri(TOOL_REQUESTS), lst(rec(
                         uri(NAME), str("m_tble_inst_sql"),
                         uri(ARGS), str("{\"0\":\"select count(*) from bulbs\"}"),
                         uri(CONTENTS), str("call_lighthouse_1"))),
-                uri(SESSION), str(DSH_SESSION)));
+                uri(SESSION), str(session)));
         assertTrue(written.contains("tool_requests"), "ai message should carry tool_requests: " + written);
         assertTrue(written.contains("call_lighthouse_1"), "tool_request should carry its call id: " + written);
         assertTrue(written.contains("{\"0\":\"select count(*) from bulbs\"}"), "tool_request should carry its args: " + written);
         assertTrue(written.contains("m_tble_inst_sql({\"0\":\"select count(*) from bulbs\"})"),
                 "tool_request text should be the name(args) summary: " + written);
+        // the pairing gate holds a tool-calling turn until its results arrive —
+        // the receipt says so rather than the ledger getting half a group
+        assertTrue(written.contains("status=>parked"), "an unanswered tool group is held: " + written);
+        assertFalse(ledger(root, session).contains("spare bulbs"),
+                "a held ai message must not reach the ledger: " + ledger(root, session));
     }
 
     // json wire arguments — an mcp client may deliver tool_requests as a json
@@ -179,30 +224,49 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
             "a paired call % [{\"name\":\"m_tble_inst_sql\",\"contents\":\"call_tide_2\"},{\"name\":\"m_probe_buoy\",\"contents\":\"call_tide_3\"}] % call_tide_3",
     }, delimiter = '%', quoteCharacter = '\'')
     public void addMessageDecodesJsonToolRequests(final String desc, final String json, final String marker) {
-        final String written = callText(mcp.at(TOOL).asRec().keys().filter(r -> r.uriValue().name().contains("add_message")).findFirst().get().uriValue().toString(), rec(
-                uri(ROOT), str(LEDGER),
+        final String root = ledgerRoot("json-" + marker);
+        final String written = addMessage(rec(
+                uri(ROOT), str(root),
                 uri(KIND), str("ai"),
                 uri(TEXT), str("let the tide ledger keep the tally"),
                 uri(TOOL_REQUESTS), str(json),
-                uri(SESSION), str(DSH_SESSION)));
+                uri(SESSION), str(root + "/session/dsh-json")));
         assertTrue(written.contains("tool_requests"), "ai message should carry tool_requests: " + written);
         assertTrue(written.contains(marker), "the json argument should decode to a typed tool_request: " + written);
         assertTrue(written.contains("m_tble_inst_sql"), "the decoded tool_request should keep the tool name: " + written);
+        assertTrue(written.contains("status=>parked"), "an unanswered tool group is held: " + written);
     }
 
     @Test
     public void addMessageToolResultCarriesNameAndCallId() {
-        final String written = callText(mcp.at(TOOL).asRec().keys().filter(r -> r.uriValue().name().contains("add_message")).findFirst().get().uriValue().toString(), rec(
-                uri(ROOT), str(LEDGER),
+        final String root = ledgerRoot("tool-result-shape");
+        final String session = root + "/session/dsh-shape";
+        // a tool result belongs to the ai message that asked for it — the bus
+        // holds it until that ai message arrives (and writes both together)
+        addMessage(rec(
+                uri(ROOT), str(root), uri(KIND), str("ai"),
+                uri(TEXT), str("let me count the spare bulbs"),
+                uri(TOOL_REQUESTS), lst(rec(
+                        uri(NAME), str("m_tble_inst_sql"),
+                        uri(ARGS), str("{\"0\":\"select count(*) from bulbs\"}"),
+                        uri(CONTENTS), str("call_lighthouse_1"))),
+                uri(SESSION), str(session)));
+        final String written = addMessage(rec(
+                uri(ROOT), str(root),
                 uri(KIND), str("tool_result"),
                 uri(TEXT), str("lighthouse log: two bulbs, one spare on the shelf"),
                 uri(NAME), str("m_tble_inst_sql"),
                 uri(CONTENTS), str("call_lighthouse_1"),
-                uri(SESSION), str(DSH_SESSION)));
+                uri(SESSION), str(session)));
         assertTrue(written.contains("lighthouse log: two bulbs"), "tool_result should carry its text: " + written);
         assertTrue(written.contains("m_tble_inst_sql"), "tool_result should carry the executed tool name: " + written);
         assertTrue(written.contains("call_lighthouse_1"), "tool_result should carry its call id: " + written);
         assertTrue(written.contains("depth=>1"), "envelope should carry depth 1: " + written);
+        assertTrue(written.contains("status=>published"), "the result completes its group: " + written);
+        final String ledger = ledger(root, session);
+        assertTrue(ledger.contains("lighthouse log: two bulbs"), "the complete group reached the ledger: " + ledger);
+        assertTrue(ledger.indexOf("lighthouse log") < ledger.indexOf("spare bulbs"),
+                "newest first: the result reads before the ai message it answers: " + ledger);
     }
 
     @ParameterizedTest(name = "add_message rejects kind={0}")
@@ -214,6 +278,154 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
         final boolean signaled = res.isFail()
                 || (res.isRec() && !res.asRec().at(uri("error")).isNoObj());
         assertTrue(signaled, "unknown kind should produce an error: " + res);
+    }
+
+    // ========================================
+    // tool group pairing — the ledger's validity invariant
+    // ========================================
+
+    private static final String AI_TEXT = "let me count the spare bulbs";
+
+    /** An ai message calling one tool per call id — the shape a harness mirrors. */
+    private static Rec aiWithCalls(final String root, final String session, final List<String> callIds) {
+        final List<Obj> requests = callIds.stream()
+                .map(callId -> (Obj) rec(
+                        uri(NAME), str("m_probe_buoy"),
+                        uri(ARGS), str("{\"0\":\"count the bulbs in the store shed\"}"),
+                        uri(CONTENTS), str(callId)))
+                .toList();
+        return rec(
+                uri(ROOT), str(root),
+                uri(KIND), str("ai"),
+                uri(TEXT), str(AI_TEXT),
+                uri(TOOL_REQUESTS), lst(requests),
+                uri(SESSION), str(session),
+                uri(CHAT_ID), jnt(7));
+    }
+
+    /** One tool result of a group, joined by its call id. */
+    private static Rec toolResult(final String root, final String session, final String callId, final String text) {
+        return rec(
+                uri(ROOT), str(root),
+                uri(KIND), str("tool_result"),
+                uri(TEXT), str(text),
+                uri(NAME), str("m_probe_buoy"),
+                uri(CONTENTS), str(callId),
+                uri(SESSION), str(session),
+                uri(CHAT_ID), jnt(7));
+    }
+
+    /**
+     * The bus writes tool groups through the same gate the native loop writes
+     * through: the ai message is held until every request has its result, then
+     * the ai message and its results land together, in request order — a
+     * mirrored ledger is exactly as valid as a native one.
+     */
+    @ParameterizedTest(name = "a tool group of {0} call(s) lands whole")
+    @CsvSource(value = {
+            "1 % tide",
+            "2 % buoy",
+            "3 % fog",
+    }, delimiter = '%')
+    public void addMessageHoldsAToolGroupUntilItsResultsArrive(final int calls, final String scenario) {
+        final String root = ledgerRoot(scenario);
+        final String session = root + "/session/dsh-" + scenario;
+        final List<String> callIds = IntStream.range(0, calls)
+                .mapToObj(i -> "call_%s_%d".formatted(scenario, i)).toList();
+
+        // 1. the ai side is held — never half a group in the ledger
+        final String aiReceipt = addMessage(aiWithCalls(root, session, callIds));
+        assertTrue(aiReceipt.contains("status=>parked"), "an unanswered tool group is held: " + aiReceipt);
+        assertFalse(ledger(root, session).contains(AI_TEXT),
+                "a held ai message must not reach the ledger: " + ledger(root, session));
+
+        // 2. each result is held too, until the last one completes the group
+        for (int i = 0; i < calls; i++) {
+            final String resultReceipt = addMessage(toolResult(root, session, callIds.get(i), "bulb tally " + i));
+            if (i < calls - 1) {
+                assertTrue(resultReceipt.contains("status=>parked"), "a partial group stays out of the ledger: " + resultReceipt);
+                assertFalse(ledger(root, session).contains("bulb tally " + i),
+                        "no half group in the ledger: " + ledger(root, session));
+            } else {
+                assertTrue(resultReceipt.contains("status=>published"), "the last result completes the group: " + resultReceipt);
+            }
+        }
+
+        // 3. the whole group, in request order (the bus reads newest first)
+        final String ledger = ledger(root, session);
+        assertTrue(ledger.contains(AI_TEXT), "the ai message reached the ledger with its results: " + ledger);
+        for (int i = 0; i < calls; i++) {
+            assertTrue(ledger.contains("bulb tally " + i), "result %d is in the ledger: %s".formatted(i, ledger));
+            assertTrue(ledger.indexOf("bulb tally " + i) < ledger.indexOf(AI_TEXT),
+                    "the ai message precedes its results: " + ledger);
+        }
+        if (calls > 1)
+            assertTrue(ledger.indexOf("bulb tally " + (calls - 1)) < ledger.indexOf("bulb tally 0"),
+                    "results keep their request order: " + ledger);
+    }
+
+    /**
+     * The bus's turn end: a user message of a later chat id closes whatever
+     * tool group the previous turn left unanswered (a user message of the
+     * <em>same</em> chat id does not — the results may still arrive).
+     */
+    @Test
+    public void addMessageClosesAnUnansweredGroupAtTheNextTurn() {
+        final String root = ledgerRoot("next-turn");
+        final String session = root + "/session/dsh-next-turn";
+        addMessage(aiWithCalls(root, session, List.of("call_next_turn")));
+
+        addMessage(rec(
+                uri(ROOT), str(root), uri(KIND), str("user"),
+                uri(TEXT), str("hold the lamp steady"),
+                uri(SESSION), str(session), uri(CHAT_ID), jnt(7)));
+        assertFalse(ledger(root, session).contains("lost_tool_result"),
+                "the same chat id is not a turn boundary: " + ledger(root, session));
+        assertFalse(ledger(root, session).contains(AI_TEXT),
+                "the group is still parked within its own turn: " + ledger(root, session));
+
+        addMessage(rec(
+                uri(ROOT), str(root), uri(KIND), str("user"),
+                uri(TEXT), str("the fog rolled in before the tally"),
+                uri(SESSION), str(session), uri(CHAT_ID), jnt(8)));
+
+        final String ledger = ledger(root, session);
+        assertTrue(ledger.contains(AI_TEXT), "the abandoned turn still reaches the ledger: " + ledger);
+        assertTrue(ledger.contains("lost_tool_result"), "closed with a lost result: " + ledger);
+        assertTrue(ledger.contains("call_next_turn"), "the lost result keeps the call id as its join key: " + ledger);
+    }
+
+    /** A client that posts the result first is tolerated — the group still pairs. */
+    @Test
+    public void addMessagePairsAResultThatArrivesBeforeItsRequest() {
+        final String root = ledgerRoot("out-of-order");
+        final String session = root + "/session/dsh-out-of-order";
+
+        final String held = addMessage(toolResult(root, session, "call_early_tide", "the tide came in early"));
+        assertTrue(held.contains("status=>parked"), "a result with no ai message yet is held: " + held);
+        assertFalse(ledger(root, session).contains("the tide came in early"),
+                "nothing half-written in the ledger: " + ledger(root, session));
+
+        final String published = addMessage(aiWithCalls(root, session, List.of("call_early_tide")));
+        assertTrue(published.contains("status=>published"), "the arriving ai message completes the group: " + published);
+        final String ledger = ledger(root, session);
+        assertTrue(ledger.contains("the tide came in early"), "the held result landed with its ai message: " + ledger);
+        assertTrue(ledger.contains(AI_TEXT), "the ai message landed with its result: " + ledger);
+    }
+
+    /** A tool result with no call id can never be paired — it is refused, not orphaned. */
+    @Test
+    public void addMessageRefusesAToolResultWithoutAJoinKey() {
+        final String root = ledgerRoot("no-join-key");
+        final String session = root + "/session/dsh-no-join-key";
+        final String receipt = addMessage(rec(
+                uri(ROOT), str(root), uri(KIND), str("tool_result"),
+                uri(TEXT), str("a tally with no call id"),
+                uri(NAME), str("m_probe_buoy"),
+                uri(SESSION), str(session)));
+        assertTrue(receipt.contains("status=>unpaired"), "an unjoinable result is refused: " + receipt);
+        assertFalse(ledger(root, session).contains("a tally with no call id"),
+                "an unjoinable result must not reach the ledger: " + ledger(root, session));
     }
 
     // ========================================

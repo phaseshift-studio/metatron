@@ -40,6 +40,7 @@ import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.JREService;
@@ -81,6 +82,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 @JREService(vid = "/m/sys")
 public class sysInstSet extends AbstractInstSet {
+    public static final fURI SYS = f("/sys");
     public static final fURI SYS_ISA_TID = M_ISA_TID.extend("sys");
     public static final fURI SYS_INST_TID = SYS_ISA_TID.extend("inst");
     public static final fURI SYS_BASH_INST_TID = SYS_INST_TID.extend("bash");
@@ -129,9 +131,9 @@ public class sysInstSet extends AbstractInstSet {
                                         uri(FILE), URI_TYPE,
                                         uri(MIN).maybe(), INT_TYPE,
                                         uri(MAX).maybe(), INT_TYPE), (lhs, inst) -> {
-                                    final fURI file = inst.arg(0).uriValue();
-                                    final int min = inst.arg(1).orElse(jnt(-1)).intValue().intValue();
-                                    final int max = inst.arg(2).orElse(jnt(-1)).intValue().intValue();
+                                    final fURI file = inst.arg(FILE, 0).uriValue();
+                                    final int min = inst.arg(MIN, 1).orElse(jnt(-1)).intValue().intValue();
+                                    final int max = inst.arg(MAX, 2).orElse(jnt(-1)).intValue().intValue();
                                     final Obj fileObj = Router.readFromSpace(file);
                                     if (fileObj.isStr()) {
                                         final List<String> startLines = new ArrayList<>(Arrays.asList(fileObj.strValue().split("\n")));
@@ -151,10 +153,10 @@ public class sysInstSet extends AbstractInstSet {
                                 if only a min is provided, then the file is read from that line till the end.
                                 """),
                         docWrap(instC(SYS_INST_TID.extend("edit_file").dom(A.maybe()).rng(REC_TID), rec(FILE, URI_TYPE, TEXT, STR_TYPE, MIN, INT_TYPE, uri(MAX).maybe(), INT_TYPE), (lhs, inst) -> {
-                                    final fURI file = inst.arg(0).uriValue();
-                                    final String text = inst.arg(1).strValue();
-                                    final int min = inst.arg(2).intValue().intValue();
-                                    final int max = inst.arg(3).orElse(jnt(-1)).intValue().intValue();
+                                    final fURI file = inst.arg(FILE, 0).uriValue();
+                                    final String text = inst.arg(TEXT, 1).strValue();
+                                    final int min = inst.arg(MIN, 2).intValue().intValue();
+                                    final int max = inst.arg(MAX, 3).orElse(jnt(-1)).intValue().intValue();
                                     final Obj fileObj = Router.readFromSpace(file);
                                     if (fileObj.isStr()) {
                                         final List<String> startLines = new ArrayList<>(Arrays.asList(fileObj.strValue().split("\n")));

@@ -97,6 +97,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_CONSOLE_TID;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
 import static studio.phaseshift.metatron.util.CommonUtil.HEADER_FILE;
 
 public class Console extends JRec<Console> implements Closeable, Runnable {
@@ -395,7 +396,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             docWrap(virtual(instLambda((lhs, inst2) -> {
                 Console.this.status.run();
                 return jnt(0);
-            })), "console statusline").apply();
+            }), SYS.extend("thread/console_statusline")), "console statusline").apply();
             // The hotkey watcher reads the terminal whenever a foreground job
             // holds the console (see awaitForeground).  It is a platform thread
             // on purpose: it parks inside a blocking terminal read, which is
@@ -403,7 +404,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             docWrap(CoreThread.core(instLambda((lhs, inst2) -> {
                 Console.this.watchTerminal();
                 return noobj();
-            })), "console hotkey watcher").applyAsync();
+            }), SYS.extend("thread/console_hotkey")), "console hotkey watcher").applyAsync();
             this.history = auto_(instC(f("history").dom(ALL).rng(REC_TID.maybeSome()), lst(T(ALL)),
                     (lhs, inst) -> objs(IteratorUtil.list(this.reader.getHistory().reverseIterator())
                             .stream()
@@ -1667,7 +1668,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         docWrap(virtual(instLambda((lhs, inst) -> {
             this.printBackgroundResult(mach, future);
             return noobj();
-        })), "background result collector").applyAsync();
+        }), SYS.extend("thread/console_background")), "background result collector").applyAsync();
         LOG.none("{{-X-&|0}}");
         LOG.info("<%s> => background %s (:bg to list)", Hotkeys.DETACH_COMBO, preview(line));
         terminal.flush();

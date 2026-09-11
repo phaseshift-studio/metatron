@@ -245,9 +245,7 @@ public final class mcpMetatronBuilder {
         }
 
         // ── resources ──────────────────────────────────────────────────────────
-        if (!jvm.containsKey(
-
-                uri(RESOURCE))) {
+        if (!jvm.containsKey(uri(RESOURCE))) {
             final Rec resources = rec(mutableMap());
             final Path skillDir = Path.of(".metatron/skills/mtron");
             mSkill.of(skillDir.toFile()).toSkill().resources().stream()

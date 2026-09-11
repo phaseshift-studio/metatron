@@ -27,7 +27,6 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_RESULT_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -79,7 +78,7 @@ public class ChatResult extends MRec {
 
     /**
      * Ref a persisted obj by its vid when it has one (recs/lsts written to
-     * space); embed the value inline otherwise (monos carry no vid).
+     * space); embed the value inline otherwise.
      */
     public ChatResult putRef(final String key, final Obj obj) {
         if (obj.isNoObj())

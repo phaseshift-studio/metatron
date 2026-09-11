@@ -122,6 +122,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI PLUS_INST_TID = M_ISA_INST_TID.extend("plus");
     public static final fURI MPLUS_INST_TID = M_ISA_INST_TID.extend("mplus");
     public static final fURI MINUS_INST_TID = M_ISA_INST_TID.extend("minus");
+    public static final fURI NAME_INST_TID = M_ISA_INST_TID.extend("name");
     public static final fURI MAP_INST_TID = M_ISA_INST_TID.extend("map");
     public static final fURI MAPP_INST_TID = M_ISA_INST_TID.extend("mapp");
     public static final fURI PARENT_INST_TID = M_ISA_INST_TID.extend("parent");

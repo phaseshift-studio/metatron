@@ -101,10 +101,18 @@ public class MessageBuilder {
      * Set the {@code text} field.
      */
     public MessageBuilder text(final String text) {
-        if (text != null && !text.isBlank())
+        if (text != null)
             this.map.put(uri(TEXT), str(text));
         return this;
     }
+
+
+    public MessageBuilder name(final String name) {
+        if (name != null && !name.isBlank())
+            this.map.put(uri(NAME), str(name));
+        return this;
+    }
+
 
     public MessageBuilder copy(final Map<Obj, Obj> kvs) {
         this.map.putAll(kvs);

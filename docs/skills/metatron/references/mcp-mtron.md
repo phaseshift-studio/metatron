@@ -110,9 +110,20 @@ Unlike an external server, metatron's message ledger (`mcpMessageServer`) needs 
 | `m_llm_mcp_mcp_message_get_messages` | `root`, `session`, `max?` | read the tail of a ledger |
 | `m_llm_mcp_mcp_message_search_messages` | `root`, `pattern`, `session`, `max?` | search ledger text |
 
+`add_message` returns a **receipt**: the message it built, plus `kind`, `location`
+(the appended vid — absent when nothing was written) and `status` —
+`published` (in the ledger now), `parked` (held: its tool group is incomplete) or
+`unpaired` (refused: nothing can ever pair with it).
+
 ### Ledger layout
 
-- **root** — any owned space; DSH harness conversations are mirrored under `/usr/dsh` by the `dsh-plugins/metatron-mirror` plugin
+- **root** — any owned space, *absolute*, and one that serves `incrq`: ledger
+  records are appended at `<root>/message/_?incrq`, so a space that receives
+  ledger messages must be registered with `addQ(incrq())` in Java (a routed
+  prefix such as `myspaceprefix:` is fine too — the route rewrites it to the
+  absolute space). A *relative* root falls through to the ephemeral stack space
+  and the write fails with `no incrq query processor attached`. DSH harness
+  conversations are mirrored under `/usr/dsh` by the `dsh-plugins/metatron-mirror` plugin
 - **session** — envelope uri `<root>/session/<sessionId>` (one uri-safe segment); records are scoped by it
 - **records** — appended at `<root>/message/_?incrq`; the `vid` carries the increment; the ledger is append-only
 - **kinds** — `system` | `user` | `ai` | `thinking` | `tool_result` | `compaction`
@@ -139,6 +150,30 @@ ai::[
 - `tool_result` — `name` is the tool (uri), `contents` the tool call id, `text` the tool output
 - `compaction` — the compaction **sentinel** (the `message/compaction` record): `text` is the resume summary; optional `in`/`out`/`compression` statistics ride the `attributes` argument. It bounds the live window — a reader takes the suffix after the newest sentinel (`SpaceChatSessionStore` `stopAt`) — and native `compactSession` writes exactly this shape (summary sentinel + pair-safe tail)
 - **join rule** — pair a `tool_result` to its request by `ai.tool_requests[i].contents == tool_result.contents`; the request's `name`/`args` complete the picture
+
+### Tool group pairing — the ledger is never half a turn
+
+A `tool_requests` ai message and its `tool_result`s form one **group**, and the
+ledger only ever holds complete groups. Both writers — the native loop
+(`SpaceChatSessionStore.updateMessages` / `ToolFeature.onToolExecuted`) and this
+bus — write through the same gate (`ToolPairGate`):
+
+- an `ai` with `tool_requests` is **held** until *every* request has a
+  `tool_result`; the group then lands ai-first, its results immediately after, in
+  request order. Until then the receipt says `status => parked`, so a client that
+  wrote the ai side knows its results are still owed;
+- a `tool_result` is held until its `ai` arrives — an out-of-order client is
+  tolerated, not corrupt — and a `tool_result` with no `contents` can never pair
+  and is refused (`status => unpaired`) rather than written orphaned;
+- a group the client leaves unanswered is closed by the next **turn boundary**: a
+  `user` message of a later (or unknown) `chat_id`, or a `compaction` sentinel.
+  The ai message is then written with `name => lost_tool_result` and the call id
+  as `contents` for each unanswered request, and a held result that never found
+  its ai message is dropped. A `user` message of the *same* `chat_id` is not a
+  boundary — its group's results may still be arriving.
+
+So a reader never meets an assistant message with `tool_calls` whose tool messages
+are missing, and never meets an orphan tool message.
 
 ### Recipe: reading a dsh harness conversation
 

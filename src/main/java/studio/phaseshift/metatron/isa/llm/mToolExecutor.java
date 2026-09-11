@@ -21,12 +21,21 @@ package studio.phaseshift.metatron.isa.llm;
 import com.google.gson.JsonElement;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.service.tool.ToolExecutor;
+import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
+import studio.phaseshift.metatron.util.CommonUtil;
 
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -34,18 +43,39 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 public class mToolExecutor implements ToolExecutor {
 
     private final Inst inst;
+    private Agent agent = null;
 
     public mToolExecutor(final Inst inst) {
         this.inst = inst;
     }
 
+    public mToolExecutor agent(final Agent agent) {
+        this.agent = agent;
+        return this;
+    }
+
     @Override
     public String execute(final ToolExecutionRequest request, final Object memoryId) {
+        if (null != this.agent && this.agent.isInterrupted()) {
+            return "user interruption -- shutting down";
+        }
         final Obj result = this.apply(request.arguments());
-        // stash the raw Obj so ToolFeature can recover nested rec/inst structure
         mTool.resultStash.put(request.id(), result);
-        final JsonElement json = ObjJSONSerializer.simple().write(result);
-        this.inst.logger().info("%s => %s", this.inst, json);
+        final Obj appendResult;
+        if (null != this.agent) {
+            final Lst midChatMessages = this.agent.popMidChatMessages();
+            if (!midChatMessages.isEmpty()) {
+                appendResult = rec(RESULT, result, PENDING_MESSAGES, lst(midChatMessages.elements().map(r -> r.asRec().elements().map(x -> rel(x.first(), x.second())).collect(new CommonUtil.RecCollector()))));
+                StatusLine.message(str(CommonUtil.clipString("\uD83D\uDCE2 %s".formatted(midChatMessages), 100, true)));
+            } else {
+                appendResult = result;
+            }
+        } else {
+            appendResult = result;
+        }
+        // stash the raw Obj so ToolFeature can recover nested rec/inst structure
+        final JsonElement json = ObjJSONSerializer.simple().write(appendResult);
+        this.inst.logger().status(DEBUG, "%s => %s", this.inst, json);
         return json.toString();
     }
 
