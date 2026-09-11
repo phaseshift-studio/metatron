@@ -365,6 +365,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                                 }
                             }))),*/
                     //  instC(LSHIFT_INST_TID.dom(URI_TID).rng(URI_TID), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> lhs.jvm(lhs.uriValue().pretract(inst.arg(0).intValue().intValue()))),
+                    instC(NAME_INST_TID.dom(URI_TID).rng(URI_TID), lst(), (lhs, inst) -> uri(lhs.uriValue().name())),
                     instC(MINUS_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().toString().replace(inst.arg(0).uriValue().toString(), ""))),
                     instC(PLUS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.jvm(lhs.uriValue().plus(inst.arg(0).uriValue()))),
                     instC(MULT_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.jvm(lhs.uriValue().mult(inst.arg(0).uriValue()))),

@@ -33,14 +33,13 @@ import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
-import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -58,6 +57,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.nowDatetime;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -78,7 +79,7 @@ public class Agent extends MRec {
     private final AtomicReference<Tuple.Pair<fURI, fURI>> currentHook = new AtomicReference<>(null);
     final AtomicBoolean interrupt = new AtomicBoolean(false);
     final AtomicBoolean first = new AtomicBoolean(true);
-    private static final int MAX_TOOL_CALLS = 250;
+    private static final int MAX_TOOL_CALLS = -1;
 
     /**
      * The current user message — single source of truth, mutable by features.
@@ -175,7 +176,7 @@ public class Agent extends MRec {
     /**
      * Resolve the session VID from this agent's {@code session_feature} config.
      */
-    private fURI resolveSessionVID() {
+    public fURI sessionVID() {
         if (this.hasFeature(LLM_MESSAGE_FEATURE_TID)) {
             final Obj sessionFeature = this.feature(LLM_MESSAGE_FEATURE_TID);
             if (!sessionFeature.isNoObj() && sessionFeature.isRec()) {
@@ -333,7 +334,7 @@ public class Agent extends MRec {
             if (hookKey.equals(ON_AGENT_CTOR) || feature.at(ACTIVE).orElse(BOOL_TRUE).boolValue()) {
                 if (!hookKey.equals(ON_ERROR))
                     this.currentHook.set(Tuple.Pair.with(feature.tid(), f(hookKey)));
-                StatusLine.message(str("current llm stage: [%s][%s]".formatted(feature.tid(), hookKey)));
+                //StatusLine.message(str("current llm stage: [%s][%s]".formatted(feature.tid(), hookKey)));
                 final Obj hook = feature.at(uri(hookKey));
                 (hook.isInst() ? hook.asInst().args(lst(args)) : hook).apply(this);
             } else {
@@ -350,6 +351,21 @@ public class Agent extends MRec {
         this.interrupt.set(true);
     }
 
+    public boolean isInterrupted() {
+        return this.interrupt.get();
+    }
+
+    public void pushMidChatMessage(final Rec message) {
+        this.at(MESSAGE_STACK, this.at(MESSAGE_STACK).orElse(lst()).add(message.at(TIME, ObjmtronSerializer.parse("!math:datetime_now().minus(%s).normalize()".formatted(mathInstSet.nowDatetime()))), MUTABLE), MUTABLE);
+    }
+
+    public Lst popMidChatMessages() {
+        final Lst messages = this.at(MESSAGE_STACK).orElse(lst());
+        this.at(MESSAGE_STACK, lst(), MUTABLE);
+        return messages;
+    }
+
+
     // ── Chat ───────────────────────────────────────────────────────
 
     public ChatResult chat(final String message) {
@@ -357,21 +373,24 @@ public class Agent extends MRec {
     }
 
     public ChatResult chat(final String message, final Rec responseFormat) {
-        this.interrupt.set(false);
-        final fURI sessionVID = resolveSessionVID();
-        final String depthKey = sessionVID != null ? sessionVID.toString() : this.tid().toString();
+        if (this.at(ACTIVE).booleanCheck()) {
+            this.pushMidChatMessage(rec(MESSAGE, str(message), METADATA, responseFormat));
+            return ChatResult.chatResult()
+                    .put(CHAT, str("added to message stack"))
+                    .put("current_stack", this.at(MESSAGE_STACK));
+        }
+        final fURI sessionVid = sessionVID();
+        final String depthKey = sessionVid != null ? sessionVid.toString() : this.tid().toString();
         final AtomicInteger counter = depthMap.computeIfAbsent(depthKey, k -> new AtomicInteger(0));
+        final AtomicReference<Set<String>> orphanToolRequests = new AtomicReference<>(new HashSet<>());
         this.currentDepth = counter.incrementAndGet();
-        final CommonUtil.Spinner waiting =
-                Console.isConsoleOwned() && !this.feature(LLM_CHAT_FEATURE_TID).<ChatFeature>as().at(MODEL).asRec().at(LLM).toCleanString().equals("human:latest") ?
-                        CommonUtil.spinner("initializing agent...", true) :
-                        null;
         try {
+            this.at(ACTIVE, BOOL_TRUE, MUTABLE);
+            this.interrupt.set(false);
             if (this.first.getAndSet(false))
                 this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
             Router.global().stats().ioStats().incrBytesSent(message.getBytes().length);
             final CountDownLatch latch = new CountDownLatch(1);
-            final AtomicBoolean isTooling = new AtomicBoolean(false);
             final AtomicReference<MTronException> isError = new AtomicReference<>();
             final long startNanos = System.nanoTime();
             try {
@@ -397,21 +416,8 @@ public class Agent extends MRec {
                 this.feature(LLM_CHAT_FEATURE_TID).ifPresent(chat -> chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE));
                 // ── Phase 2: Build LC4j service from Agent's own JVM state ──
                 final AiServices<AgentServices> service = AiServices.builder(AgentServices.class)
-                        //.executeToolsConcurrently(ThreadExecutor.instance())
                         .maxToolCallingRoundTrips(MAX_TOOL_CALLS)
                         .storeRetrievedContentInChatMemory(true)
-                        /*.registerListener(new AiServiceListener<AiServiceEvent>() {
-                            // TODO: supports developer defined events 
-                            @Override
-                            public Class<AiServiceEvent> getEventClass() {
-                                return null;
-                            }
-
-                            @Override
-                            public void onEvent(AiServiceEvent event) {
-
-                            }
-                        })*/
                         .toolProvider(this.hasFeature(LLM_TOOL_FEATURE_TID) ? this.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().getToolProvider() : new mToolProvider())
                         .toolExecutionErrorHandler((error, context) -> {
                             if (this.has(TOOL) && this.feature(LLM_TOOL_FEATURE_TID).asRec().has(ON_ERROR)) {
@@ -429,8 +435,6 @@ public class Agent extends MRec {
                                 """
                                 %s tool does not exist. use list_tools() to see available tools.
                                 """.formatted(toolExecutionRequest.name())));
-                //.storeRetrievedContentInChatMemory(true);
-                // AgentUtility.buildService(this, service);
                 //////////////////////////////////////////////////////////////////////////////////
                 // ADD ANOTHER FEATURE HOOK -- onSetup
                 final Obj chatFeature = this.feature(LLM_CHAT_FEATURE_TID);
@@ -439,11 +443,6 @@ public class Agent extends MRec {
                 final Rec chat = chatFeature.asRec();
                 if (this.hasFeature(LLM_MESSAGE_FEATURE_TID))
                     MessageFeature.buildSession(this, service);
-                //if (this.hasFeature(SKILL))
-                //    SkillFeature.buildSkills(this, service);
-                //if (this.hasFeature(TOOL))
-                //    ToolFeature.buildTools(this, service);
-                // this.at(feat(CONCEPT)).ifPresent(c -> ((ConceptFeature) c).build(this, service));
                 //////////////////////////////////////////////////////////////////////////////////
                 // The single system-message channel: SystemFeature owns the contributions
                 // (features add via agent.feature(SYSTEM).<SystemFeature>as().addSystemMessage
@@ -462,12 +461,11 @@ public class Agent extends MRec {
                                 chat.at(uri(FORMAT)))).build();
                 // ── Phase 3: Stream — write events to result blackboard, dispatch hooks ──
                 LOG.debug("processed message: %s %s", this.userMessage, this.feature(LLM_CHAT_FEATURE_TID).asRec().at(FORMAT).orElse(rec(uri(FORMAT), uri("none"))));
-                spinnerMessage(waiting, "waiting for agent response...");
                 agent.chat(Str.Helper.stripString(str(this.userMessage)))
                         .onToolExecuted(tool -> {
-                            StatusLine.message(str("current llm stage: on_tool_execute"));
+                            StatusLine.message(str("\uD83D\uDD28 on_tool_execute: %s(%s)".formatted(tool.request().name(), tool.request().arguments())));
+                            orphanToolRequests.get().remove(tool.request().id());
                             if (this.interrupt.get()) latch.countDown();
-                            isTooling.set(false);
                             final Rec toolRec = rec(
                                     uri(NAME), str(tool.request().name()),
                                     uri(TOOL_ARGUMENTS), str(tool.request().arguments()),
@@ -476,21 +474,16 @@ public class Agent extends MRec {
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_TOOL_EXECUTED, toolRec));
                         })
                         .onPartialToolCall(partialToolCall -> {
-                            StatusLine.message(str("current llm stage: on_partial_tool_call"));
+                            StatusLine.message(str("\uD83E\uDDF0 on_partial_tool_call"));
+                            orphanToolRequests.get().add(partialToolCall.id());
                             if (this.interrupt.get()) {
                                 latch.countDown();
                                 return;
                             }
-                            if (!isTooling.getAndSet(true)) {
-                                this.logger().none(Graphitty.sillyPrint("tooling...\n", true, true));
-                                this.logger().none("\t{{y}}partial{{X}}: {{b}}%s{{g}}({{b}}%s{{g}}){{X}}\n",
-                                        partialToolCall.name(), partialToolCall.partialArguments());
-                            }
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_TOOL_CALL));
                         })
                         .onPartialResponse(s -> {
-                            StatusLine.message(str("current llm stage: on_partial_response"));
-                            closeSpinner(waiting);
+                            StatusLine.message(str("\uD83D\uDCAC on_partial_response"));
                             if (this.interrupt.get()) {
                                 latch.countDown();
                                 return;
@@ -500,8 +493,7 @@ public class Agent extends MRec {
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_RESPONSE, str(s)));
                         })
                         .onPartialThinking(t -> {
-                            StatusLine.message(str("current llm stage: on_partial_thinking"));
-                            closeSpinner(waiting);
+                            StatusLine.message(str("\uD83D\uDCAD on_partial_thinking"));
                             if (this.interrupt.get()) {
                                 latch.countDown();
                                 return;
@@ -510,7 +502,6 @@ public class Agent extends MRec {
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_THINKING, str(t.text())));
                         })
                         .onError(e -> {
-                            closeSpinner(waiting);
                             final fURI currentFeature = this.currentHook.get().get0();
                             final fURI currentStage = this.currentHook.get().get1();
                             final String errorMessage = "[" + currentFeature + "][" + currentStage + "]";
@@ -519,8 +510,7 @@ public class Agent extends MRec {
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_ERROR));
                             latch.countDown();
                         }).onCompleteResponse(c -> {
-                            StatusLine.message(str("current llm stage: on_complete_response"));
-                            closeSpinner(waiting);
+                            StatusLine.message(str("\uD83D\uDCE6 on_complete_response"));
                             if (this.interrupt.get()) {
                                 latch.countDown();
                                 return;
@@ -575,7 +565,6 @@ public class Agent extends MRec {
                             latch.countDown();
                         }).start();
                 latch.await();
-                closeSpinner(waiting);
                 if (this.interrupt.get()) {
                     final fURI currentFeature = this.currentHook.get().get0();
                     final fURI currentStage = this.currentHook.get().get1();
@@ -587,7 +576,12 @@ public class Agent extends MRec {
                     throw isError.get();
             } catch (final InterruptedException e) {
                 Thread.currentThread().interrupt();
-                return ChatResult.chatResult().put(STOP, BOOL_TRUE);
+                if (!orphanToolRequests.get().isEmpty())
+                    this.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().handleOrphanToolRequests(this, orphanToolRequests.get());
+                return ChatResult.chatResult()
+                        .put(STOP, BOOL_TRUE)
+                        .put(TIME, nowDatetime())
+                        .put(ERROR, fail(e).caught());
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }
@@ -604,27 +598,21 @@ public class Agent extends MRec {
             }
             return ChatResult.chatResult();
         } finally {
-            closeSpinner(waiting);
+            // the tool channel closes with the chat: a request the loop never
+            // answered gets a lost result and its parked ai message is
+            // published as a group — the ledger never holds tool_requests
+            // without their tool_results
+            if (this.hasFeature(LLM_TOOL_FEATURE_TID))
+                this.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().handleOrphanToolRequests(this, orphanToolRequests.get());
             // SystemFeature owns the per-chat system-message state — clear it so the
             // next chat re-surfaces its own system context.
             if (this.hasFeature(LLM_SYSTEM_FEATURE_TID))
                 this.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().clearSystemMessages();
             counter.decrementAndGet();
             this.currentDepth = 0;
-
+            this.interrupt.set(false);
+            this.at(ACTIVE, BOOL_FALSE, MUTABLE);
         }
-    }
-
-    // ── Console spinner helpers ─
-
-    private static void closeSpinner(final CommonUtil.Spinner spinner) {
-        if (null != spinner)
-            spinner.close();
-    }
-
-    private static void spinnerMessage(final CommonUtil.Spinner spinner, final String format, final Object... args) {
-        if (null != spinner)
-            spinner.setMessage(format, args);
     }
 
     // ── Embed ──────────────────────────────────────────────────────

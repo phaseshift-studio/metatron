@@ -263,10 +263,10 @@ model::[
   llm      => <deepseek-v4-pro> 
 ]@/usr/dr/model;
 human -> model::[llm=>'human:latest'];
-model::[provider     => ollama,
+[==model::[provider     => ollama,
         protocol     => ollama,
         host         => <http://ginger.local:11434>,
-        llm          => <qwen3.8:27b>]@/usr/dr/model;
+        llm          => <qwen3.8:27b>]@/usr/dr/model;==]
 /usr/dr/agent -> |!*dr;
 [-- tag::asciidoc_tag[] --]
 agent::[
@@ -285,23 +285,23 @@ agent::[
                                                                        protocol     => ollama,
                                                                        host         => <http://ginger.local:11434>,
                                                                        llm          => <qwen3.8:27b>])),
-                      response      => [complete => print(-<modal_widget::[title => '{{r}}agent response{{b}}',
+                      response      => [complete => print("{{y}}{{:horse:}}${>>chat}")][== -<modal_widget::[title => '{{r}}agent response{{b}}',
                                                                      body  => "{{y}}${>>chat}",
                                                                      style => style::[border    =>continuous,
                                                                                       width     =>150,
                                                                                       background=>"{{[k]}}",
                                                                                       foreground=>"{{b}}",
-                                                                                      zIndex    => 100]].as?str<=widget(str::T))],
+                                                                                      zIndex    => 100]].as?str<=widget(str::T))]==],
                       root          => /usr/dr/chat_result],
   think_feature::::::[on_agent_ctor => inst(a=>agent::T){
                                           accordion_widget::[title => "thoughts", 
                                                              body  => "",
                                                              style => style::[
-                                                               anchor=>top_middle,
+                                                               anchor=>top_right,
                                                                right=>10,
                                                                top=>2,
                                                                height=>40,
-                                                               width=>125]]@<think_widget> },
+                                                               width=>95]]@<think_widget> },
                      on_before_chat => inst(){ @<think_widget> >>= [body=>""] },
                      root           => /usr/dr/message,
                      think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
@@ -315,7 +315,7 @@ agent::[
                                          <mfs:.metatron/skills/ide>]],
   concept_feature::::[root          => /usr/dr/concept,
                       extractor     => lucene],
-  audit_feature::::::[on_agent_ctor => inst(a=>agent::T) {   
+  audit_feature::::::[on_agent_ctor     => inst(a=>agent::T) {   
                                          accordion_widget::[title  => "audit",
                                                             body   => "",
                                                             style  => style::[
@@ -327,7 +327,9 @@ agent::[
                                                               foreground =>"{{y}}"]]@<audit_widget> },
                       to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() },
                       root          => /usr/dr/audit],
-  [== bash_feature:::::::[reject        => ["\brm\b"]], ==]
+  lambda_feature:::::[stage         => [on_before_chat       =>  [ inst(a=>agent::T){ *0.tid().print('starting:',_,'...\n') }],
+                                         [==on_complete_response =>  [ inst(_,_){ @<audit_widget>>>=[body=>""].display() } ],==]
+                                         on_tool_executed     =>  [ inst(a=>str::T){ @<audit_widget>>>=[body=>+(*a.else("no tool"))].display() }]]],
   summarize_feature::[root          => /usr/dr],
   embed_feature::::::[root          => embed:chat_result,
                       model         => model::[provider     => ollama,
@@ -340,8 +342,8 @@ agent::[
                                         !*codegraph,
                                         !*read_file,
                                         !*edit_file,
-                                        !*bash?reject=['\brm\b'],
-                                        mcp_client::[host=><http://localhost:8777/mcp>],
+                                        !*bash?reject=['\brm\b','\bgit\b'],
+                                        !*eval,[--mcp_client::[host=><http://localhost:8777/mcp>],--]
                                         forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
   cost_feature:::::::[root          => /usr/dr/cost,
                       to            => inst(in_cost=>real::T,out_cost=>real::T,total_cost=>real::T){ 

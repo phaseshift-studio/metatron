@@ -19,13 +19,11 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
-import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -33,11 +31,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_THINK_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -88,16 +83,16 @@ public class ThinkFeature extends AbstractFeature {
         if (!this.thinkDone.getAndSet(true)) {
             agent.feature(LLM_THINK_FEATURE_TID).asRec().at(f(THINK).extend(TO)).apply(str(Str.Helper.cleanString(str(this.buffer.toString()).apply(agent))));
             final fURI thinkWriteURI = agent.feature(LLM_THINK_FEATURE_TID).asRec().at(ROOT).orElse(agent.at(ROOT).uriValue().extend(THINK).toUri()).uriValue().extend("_").addQ(INCRQ);
-            final Rec thought = rec(mutableMap(uri(TEXT), str(this.full.toString().trim())), THINKING_MESSAGE_TID, null);
-            thought.recValue().put(uri(TIME), mathInstSet.nowDatetime());
-            thought.recValue().put(uri(SESSION), agent.feature(LLM_MESSAGE_FEATURE_TID).orElse(rec()).at(SESSION));
-            thought.recValue().put(uri(DEPTH), jnt(agent.chatDepth()));
-            thought.recValue().put(uri(CHAT_ID), jnt(agent.chatId()));
+            this.lastThink = MessageBuilder.buildThinkingMessage()
+                    .text(this.full.toString().trim())
+                    .time()
+                    .session(agent.sessionVID())
+                    .depth(agent.chatDepth())
+                    .chatId(agent.chatId())
+                    .create(thinkWriteURI);
             this.buffer = new StringBuilder();
             this.full = new StringBuilder();
             this.lastRendered = "";
-            LOG.debug("writing thought to %s", thinkWriteURI);
-            this.lastThink = Router.writeToSpace(thinkWriteURI, thought);
         }
     }
 

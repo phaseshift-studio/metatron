@@ -394,7 +394,7 @@
         }
        }
        &quot;&quot;&quot;.as(json::T).as(mcp_client::T).to(/usr/marko/mcp/intellij)
-==&gt;fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;).]@/sys/fail/790
+==&gt;fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;).]@/sys/fail/84
 </code></pre>
 <p>If the snippet provided has an <code>mcpServer</code> outer wrapping, then do:</p>
 <pre><code class="language-mtron">mtron&gt; &quot;&quot;&quot;
@@ -407,7 +407,7 @@
           }
         }}}
        &quot;&quot;&quot;.as(json::T).as(rec::T)&gt;&gt;mcpServers/intellij.as(json::T).as(mcp_client::T)
-==&gt;fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;).]@/sys/fail/818
+==&gt;fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;).]@/sys/fail/118
 </code></pre>
 <p>Moreover, if the <code>mcpServer</code> snippet has multiple inner servers endpoints defined, to load all of them, do:</p>
 <pre><code class="language-mtron">mtron&gt; {&quot;mcpServers&quot;: {
@@ -431,12 +431,12 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron&gt; mcp_client::[host=&gt;http://localhost:8777/mcp]@a
-==&gt;ERROR: unable to construct mcp_client::T: fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;).]@/sys/fail/830
+==&gt;ERROR: unable to construct mcp_client::T: fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;).]@/sys/fail/136
 mtron&gt; *a&gt;&gt;tool
 mtron&gt; [-- =&gt; [m_inst_eval_mtron=&gt;tool::[inst=&gt;..., name=&gt;m_inst_eval_mtron, desc=&gt;..., arg=&gt;...], ...] --]
 mtron&gt; [-- invoke a tool by applying its inst field --]
 mtron&gt; a/tool/m_inst_eval_mtron/inst(&quot;1+2&quot;)
-==&gt;fail::[unable to locate inst-f of a/tool/m_inst_eval_mtron/inst('1+2')@&lt;0&gt;]@/sys/fail/834
+==&gt;fail::[unable to locate inst-f of a/tool/m_inst_eval_mtron/inst('1+2')@&lt;0&gt;]@/sys/fail/152
 mtron&gt; [-- =&gt; 3 --]
 </code></pre>
 <h4>WebSocket</h4>
@@ -468,9 +468,19 @@ mtron&gt; [-- =&gt; 3 --]
 <tr><td><code>m_llm_mcp_mcp_message_search_messages</code></td><td><code>root</code>, <code>pattern</code>, <code>session</code>, <code>max?</code></td><td>search ledger text</td></tr>
 </tbody>
 </table>
+<p><code>add_message</code> returns a <strong>receipt</strong>: the message it built, plus <code>kind</code>, <code>location</code>
+(the appended vid — absent when nothing was written) and <code>status</code> —
+<code>published</code> (in the ledger now), <code>parked</code> (held: its tool group is incomplete) or
+<code>unpaired</code> (refused: nothing can ever pair with it).</p>
 <h4>Ledger layout</h4>
 <ul>
-<li><strong>root</strong> — any owned space; DSH harness conversations are mirrored under <code>/usr/dsh</code> by the <code>dsh-plugins/metatron-mirror</code> plugin</li>
+<li><strong>root</strong> — any owned space, <em>absolute</em>, and one that serves <code>incrq</code>: ledger
+records are appended at <code>&lt;root&gt;/message/_?incrq</code>, so a space that receives
+ledger messages must be registered with <code>addQ(incrq())</code> in Java (a routed
+prefix such as <code>myspaceprefix:</code> is fine too — the route rewrites it to the
+absolute space). A <em>relative</em> root falls through to the ephemeral stack space
+and the write fails with <code>no incrq query processor attached</code>. DSH harness
+conversations are mirrored under <code>/usr/dsh</code> by the <code>dsh-plugins/metatron-mirror</code> plugin</li>
 <li><strong>session</strong> — envelope uri <code>&lt;root&gt;/session/&lt;sessionId&gt;</code> (one uri-safe segment); records are scoped by it</li>
 <li><strong>records</strong> — appended at <code>&lt;root&gt;/message/_?incrq</code>; the <code>vid</code> carries the increment; the ledger is append-only</li>
 <li><strong>kinds</strong> — <code>system</code> | <code>user</code> | <code>ai</code> | <code>thinking</code> | <code>tool_result</code> | <code>compaction</code></li>
@@ -496,6 +506,28 @@ mtron&gt; [-- =&gt; 3 --]
 <li><code>compaction</code> — the compaction <strong>sentinel</strong> (the <code>message/compaction</code> record): <code>text</code> is the resume summary; optional <code>in</code>/<code>out</code>/<code>compression</code> statistics ride the <code>attributes</code> argument. It bounds the live window — a reader takes the suffix after the newest sentinel (<code>SpaceChatSessionStore</code> <code>stopAt</code>) — and native <code>compactSession</code> writes exactly this shape (summary sentinel + pair-safe tail)</li>
 <li><strong>join rule</strong> — pair a <code>tool_result</code> to its request by <code>ai.tool_requests[i].contents == tool_result.contents</code>; the request's <code>name</code>/<code>args</code> complete the picture</li>
 </ul>
+<h4>Tool group pairing — the ledger is never half a turn</h4>
+<p>A <code>tool_requests</code> ai message and its <code>tool_result</code>s form one <strong>group</strong>, and the
+ledger only ever holds complete groups. Both writers — the native loop
+(<code>SpaceChatSessionStore.updateMessages</code> / <code>ToolFeature.onToolExecuted</code>) and this
+bus — write through the same gate (<code>ToolPairGate</code>):</p>
+<ul>
+<li>an <code>ai</code> with <code>tool_requests</code> is <strong>held</strong> until <em>every</em> request has a
+<code>tool_result</code>; the group then lands ai-first, its results immediately after, in
+request order. Until then the receipt says <code>status =&gt; parked</code>, so a client that
+wrote the ai side knows its results are still owed;</li>
+<li>a <code>tool_result</code> is held until its <code>ai</code> arrives — an out-of-order client is
+tolerated, not corrupt — and a <code>tool_result</code> with no <code>contents</code> can never pair
+and is refused (<code>status =&gt; unpaired</code>) rather than written orphaned;</li>
+<li>a group the client leaves unanswered is closed by the next <strong>turn boundary</strong>: a
+<code>user</code> message of a later (or unknown) <code>chat_id</code>, or a <code>compaction</code> sentinel.
+The ai message is then written with <code>name =&gt; lost_tool_result</code> and the call id
+as <code>contents</code> for each unanswered request, and a held result that never found
+its ai message is dropped. A <code>user</code> message of the <em>same</em> <code>chat_id</code> is not a
+boundary — its group's results may still be arriving.</li>
+</ul>
+<p>So a reader never meets an assistant message with <code>tool_calls</code> whose tool messages
+are missing, and never meets an orphan tool message.</p>
 <h4>Recipe: reading a dsh harness conversation</h4>
 <pre><code>m_llm_mcp_mcp_message_get_messages(root='/usr/dsh', session='/usr/dsh/session/&lt;sessionId&gt;', max=20)
 m_llm_mcp_mcp_message_search_messages(root='/usr/dsh', pattern='probe', session='…same…', max=10)

@@ -18,7 +18,10 @@
 
 package studio.phaseshift.metatron.isa.llm.space;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -32,6 +35,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
@@ -340,10 +344,24 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
      * AiMessages produced during the LangChain4j tool loop (intermediate
      * responses with {@code tool_calls}) never reach
      * {@code TokenStream.onCompleteResponse()} — only the final text
-     * response does.  ToolResults ARE written eagerly by
+     * response does.  ToolResults ARE staged by
      * {@code ToolFeature.onToolExecuted()}, so without this store path
      * the AiMessage is missing and its ToolResults appear orphaned on
      * the next chat.
+     * <p>
+     * An ai message carrying {@code tool_requests} does NOT simply get
+     * written here: LangChain4j adds that message to the memory
+     * <em>before</em> it runs the tools, so at this point in the loop its
+     * results usually do not exist yet.  Such a message is handed to the
+     * pairing gate ({@link ToolPairGate#offer}), which parks it until every
+     * request has a result and then writes the ai message and its results as
+     * one group — the ledger never holds a request without its result (see
+     * {@link ToolPairGate#close} for the interrupted-turn close).  This method
+     * is re-entered by LangChain4j once per result appended to the memory,
+     * which is what makes the group land as soon as its last result arrives.
+     * The bus writes through the same gate (see
+     * {@code mcpMessageServer.addMessage}), so a ledger looks the same
+     * whichever writer filled it.
      * <p>
      * Static: dedup must survive across store instances.  LC4j creates a
      * new store per chat, but calls {@code updateMessages()} with the
@@ -356,30 +374,85 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     public void updateMessages(final Object sessionVID, final List<ChatMessage> messages) {
         if (!(sessionVID instanceof fURI sesVID) || messages == null || messages.isEmpty())
             return;
-
-        final fURI writePath = this.memoryRoot.extend(MESSAGE)
-                .extend("_").addQ(INCRQ);
-
+        final fURI writePath = this.ledgerWritePath();
         for (final ChatMessage msg : messages) {
             try {
                 final Rec msgRec = SERIALIZER.read(msg).asRec();
                 if (!msgRec.tid().equals(AI_MESSAGE_TID))
                     continue;
-
                 // Already persisted — _w was stamped by getMessages(),
                 // rode through LangChain4j's ChatMessage.attributes()
                 if (!msgRec.at(uri(WRITTEN_KEY)).isNoObj())
                     continue;
-
                 msgRec.recValue().put(uri(TIME), mathInstSet.nowDatetime());
                 msgRec.recValue().put(uri(SESSION), uri(sesVID));
                 msgRec.recValue().put(uri(DEPTH), jnt(this.depth));
                 msgRec.recValue().put(uri(CHAT_ID), jnt(this.chatId));
+                if (msg instanceof AiMessage aiMessage && aiMessage.hasToolExecutionRequests()) {
+                    if (null == this.agent || !this.agent.hasFeature(LLM_TOOL_FEATURE_TID)) {
+                        // no tool channel to pair with — the requests can never
+                        // be answered, so record the assistant turn without
+                        // them rather than an ai message nothing can follow
+                        LOG.warn("no tool channel for %d tool requests — dropping them from the ai message",
+                                aiMessage.toolExecutionRequests().size());
+                        msgRec.recValue().remove(uri(TOOL_REQUESTS));
+                        Router.writeToSpace(writePath, msgRec);
+                        continue;
+                    }
+                    // the pairing gate: written only once every request has its
+                    // result, results immediately after, in request order
+                    if (ToolPairGate.Status.PARKED == ToolPairGate
+                            .offer(this, msgRec, toolResultsInMemory(aiMessage, messages, sesVID)).status())
+                        LOG.debug("ai message parked until its tool results arrive: %s",
+                                aiMessage.toolExecutionRequests().stream()
+                                        .map(request -> request.name() + "(" + request.id() + ")").toList());
+                    continue;
+                }
                 Router.writeToSpace(writePath, msgRec);
             } catch (final Exception e) {
-                LOG.warn("error writing AiMessage (non-blocking): %s", e.getMessage());
+                LOG.warn("error writing ai_message (non-blocking): %s", e.getMessage());
             }
         }
+    }
+
+    /**
+     * The tool results the memory list already holds, keyed by tool call id —
+     * the authoritative "langchain4j has the result" signal, and the only
+     * source for a result that never travelled through {@code mToolExecutor}
+     * (a hallucinated tool name, a schema error, a user interrupt): those get
+     * their result message synthesized by LangChain4j itself.  The rec is
+     * enveloped like every other ledger entry — an un-enveloped result would
+     * fall out of {@link #sessionRels} on the way back in.
+     */
+    private Map<String, Rec> toolResultsInMemory(final AiMessage aiMessage,
+                                                 final List<ChatMessage> messages, final fURI sesVID) {
+        final Set<String> wanted = aiMessage.toolExecutionRequests().stream()
+                .map(ToolExecutionRequest::id)
+                .collect(Collectors.toSet());
+        final Map<String, Rec> results = new LinkedHashMap<>();
+        for (final ChatMessage msg : messages) {
+            if (!(msg instanceof ToolExecutionResultMessage result) || !wanted.contains(result.id()))
+                continue;
+            results.computeIfAbsent(result.id(), id -> {
+                final Rec resultRec = SERIALIZER.read(result).asRec();
+                resultRec.recValue().put(uri(TIME), mathInstSet.nowDatetime());
+                resultRec.recValue().put(uri(SESSION), uri(sesVID));
+                resultRec.recValue().put(uri(DEPTH), jnt(this.depth));
+                resultRec.recValue().put(uri(CHAT_ID), jnt(this.chatId));
+                return resultRec;
+            });
+        }
+        return results;
+    }
+
+    /**
+     * The ledger's append path — {@code <memoryRoot>/message/_?incrq}.  The
+     * store owns the ledger layout, so the writers of ledger entries the store
+     * does not write itself (the pairing gate's tool groups) ask for it here
+     * rather than re-deriving the convention.
+     */
+    public fURI ledgerWritePath() {
+        return this.memoryRoot.extend(MESSAGE).extend("_").addQ(INCRQ);
     }
 
     @Override

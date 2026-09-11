@@ -25,8 +25,10 @@ import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.vec.type.MVec;
 
@@ -36,6 +38,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -108,6 +111,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_THINK_FEATURE_TID = LLM_FEATURE_TID.extend("think_feature");
     public static final fURI LLM_CONCEPT_FEATURE_TID = LLM_FEATURE_TID.extend("concept_feature");
     public static final fURI LLM_COMPACTION_FEATURE_TID = LLM_FEATURE_TID.extend("compaction_feature");
+    public static final fURI LLM_LAMBDA_FEATURE_TID = LLM_FEATURE_TID.extend("lambda_feature");
     public static final fURI LLM_COMMENT_FEATURE_TID = LLM_FEATURE_TID.extend("comment_feature");
     public static final fURI LLM_SUMMARIZE_FEATURE_TID = LLM_FEATURE_TID.extend("summarize_feature");
     public static final fURI LLM_COST_FEATURE_TID = LLM_FEATURE_TID.extend("cost_feature");
@@ -626,6 +630,15 @@ public class llmInstSet extends AbstractInstSet {
                                 "cost_feature::[root=>/usr/dr/cost,cost=>[in_cost=>usd_currency::0.065,out_cost=>usd_currency::0.001]]"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
+                                        .vid(LLM_LAMBDA_FEATURE_TID)
+                                        .isaPredicate(rec(
+                                                uri(STAGE).maybe().asUri(), rec(union_(Stream.of(Feature.Stage.values()).map(v -> uri(v.name())).toList().toArray(Obj[]::new)).tryToInst(), LST_TYPE).maybe()))
+                                        .constructor(arg -> createStageLambdas(new LambdaFeature(arg.asRec().jvm(), LLM_LAMBDA_FEATURE_TID, arg.vid())))
+                                        .create(),
+                                null, null, mutableMap(uri(STAGE).maybe(), "lambdas to execute at the different lifecycle stages"),
+                                "supports arbitrary instructions to be run at the different stages of the llm's lifecycle"),
+                        docWrap(Type.Builder.build()
+                                        .tid(LLM_FEATURE_TID)
                                         .vid(LLM_COMPACTION_FEATURE_TID)
                                         .isaPredicate(rec(
                                                 uri(MODEL).maybe().asUri(), LLM_MODEL_TYPE,
@@ -725,8 +738,17 @@ public class llmInstSet extends AbstractInstSet {
                                 "an agent to chat with",  // dom
                                 "chat result rec — monos inline (chat, user, time), feature outputs as !* refs", // rng
                                 mutableMap(jnt(0), "the message to send the agent"), // args
-                                "communicate with an agent that may be enriched with a tool, skill, etc.", // desc
-                                "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts/_?incrq)].chat('what is a database?')"),
+                                "communicate with an agent. if the agent is already executing, the chat message is pushed on their stack at *<agent>/message_stack", // desc
+                                "@agent.chat('what is a database?')"),
+                        docWrap(instC(LLM_INST_TID.extend("push_message").dom(LLM_AGENT_TID).rng(NOOBJ_TID.zero()), lst(T(ALL_STAR)), (lhs, inst) -> {
+                                    agent(lhs.asRec()).pushMidChatMessage(rec(MESSAGE, inst.arg(0), TIME, ObjmtronSerializer.parse("!math:datetime_now().minus(%s).normalize()".formatted(mathInstSet.nowDatetime()))));
+                                    return noobj();
+                                }),
+                                "an agent to message",  // dom
+                                "noobj", // rng
+                                mutableMap(jnt(0), "any mid-chat message(s)"), // args
+                                "communicate with the agent mid-chat by pushing messages onto their message stack", // desc
+                                "@agent.message('check your results before responding') [-- message delivered with tool evaluation result --]"),
                         docWrap(instC(LLM_INST_TID.extend("embed").dom(LLM_MODEL_TID).rng(VEC_TID), lst(ALL_TYPE), (lhs, inst) -> model(lhs.asRec()).embed(inst.arg(0))),
                                 "a model to embed arg into",  // dom
                                 "the obj as a vector embedding", // rng
@@ -844,6 +866,7 @@ public class llmInstSet extends AbstractInstSet {
         final List<Rel> messages = Router.readFromSpace(messagesLocation)
                 .stream()
                 .map(Obj::asRel)
+                .filter(pair -> !pair.second().tid().equals(LLM_TOOL_RESULT_MESSAGE_TYPE.vid()))
                 .filter(pair -> {
                     final Obj sessionUri = pair.second().asRec().at(SESSION);
                     return sessionUri.isUri() && sessionUri.uriValue().equals(sessionVID);
@@ -958,6 +981,7 @@ public class llmInstSet extends AbstractInstSet {
         final List<Rel> messages = Router.readFromSpace(messagesLocation)
                 .stream()
                 .map(Obj::asRel)
+                .filter(pair -> !pair.second().tid().equals(LLM_TOOL_RESULT_MESSAGE_TYPE.vid()))
                 .filter(pair -> {
                     final Obj sessionUri = pair.second().asRec().at(SESSION);
                     return sessionUri.isUri() && sessionUri.uriValue().equals(sessionVID);

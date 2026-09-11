@@ -75,11 +75,25 @@ one session (42,956 events):
 | 32,282 | `reasoning-chunks` | dropped — superseded by the final `assistant/message` reasoning |
 | 4,214 + 3,961 | `assistant/chunk`, `text-chunks` | dropped — streaming deltas of finals that exist |
 | 361 | `tool/call` | → `ai::` with `tool_requests=>[tool_request::]` (name, args, contents=call-id) |
-| 377 | `tool/result` | → `tool_result::` (name, contents=same call-id, text) |
+| 377 | `tool/result` | → `tool_result::` (name, contents=same call-id, text), written together with its `ai::` (see pairing below) |
 | 388+387 | `step/start`, `step/end` | dropped — grouping carried in `chat_id` |
 | 72+71 | `turn/start`, `turn/end` | dropped — `chat_id` = turn |
 | 266 | `agent/inbox/spliced` | dropped — harness message edits, not conversation |
 | 22 | `compaction/*`, `request/*`, `permission/*`, `sandbox/*`, `command/*`, `llm/retry*`, `session/title*` | dropped bookkeeping; **unknown future types are NOT dropped** — they emit as `system::[text=>"[unmapped event] …"]` so nothing is silently lost |
+
+**Pairing at write time.** The mirrored `ai::` carrying `tool_requests` and its
+`tool_result::` rows are one group, and the bus holds them until the group is
+complete: the ai message is appended only once *every* request has its result, the
+results follow it in request order, and a result never lands without the ai
+message that asked for it (an out-of-order `tool/result` is held, not written).
+`add_message` reports the verdict as `status` — `parked` while the group is
+incomplete, `published` when it lands, `unpaired` for a result with no `contents`
+to join on. A group the harness leaves unanswered is closed at the next turn
+boundary (a `user` message of a later `chat_id`, or the `compaction` sentinel):
+the ai message is then written with `name => lost_tool_result` per unanswered
+request. The correlation below is thus enforced by the writer, not merely a
+convention — the same gate (`ToolPairGate`) backs the native loop, so a mirrored
+ledger and a native one are the same shape.
 
 ## The metatron side (the contract, learned from live memory)
 
@@ -116,7 +130,12 @@ Behavior and invariants (the loader is an assertion, printed each run):
 1. **Unwraps** with `zstd -dc` (CLI; falls back to the `zstandard` module).
 2. **Joins** reasoning into finals (chunks are deltas of messages that already exist as events).
 3. **Correlates** `tool/call` → `tool/result` by call-id (`contents`); an unmatched
-   result still loads (id falls back to the harness id).
+   result still loads (id falls back to the harness id). The loader writes a whole
+   transcript in one `.to(...)`, so it bypasses the bus's per-message pairing gate
+   — a source transcript whose `tool/result` is missing for an emitted
+   `tool_requests` lands as an orphan ai message. That is a fidelity property of
+   the source, not of the bus; see `mtron/references/…` / `metatron/references/mcp-mtron.md`
+   for the live writer's guarantee.
 4. **Synthesizes exactly one `system::`** per session: provenance (session id,
    workspace, model(s) from `request/context`, agent preset, mapping note).
 5. **Drops nothing silently** — every unknown event type is preserved as a

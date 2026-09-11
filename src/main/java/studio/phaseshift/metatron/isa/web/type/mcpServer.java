@@ -23,7 +23,9 @@ import dev.langchain4j.model.chat.request.json.*;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -35,7 +37,6 @@ import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -71,7 +72,9 @@ public class mcpServer extends MRec {
     protected final GraphittyLogger LOG = Graphitty.log(this);
     private static final String DESCRIPTION = "description";
 
-    /** The MCP protocol version this server advertises in {@code initialize}. */
+    /**
+     * The MCP protocol version this server advertises in {@code initialize}.
+     */
     public static final String PROTOCOL_VERSION = "2025-03-26";
 
     public mcpServer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -186,7 +189,8 @@ public class mcpServer extends MRec {
         if (params.isNoObj() || !params.isRec()) return this.handleMessage(blind);
         final String toolName = params.asRec().at(uri(NAME)).isNoObj() ? "" : params.asRec().at(uri(NAME)).toCleanString();
         final Obj toolEntry = this.at(TOOL).orElse(rec0()).at(uri(toolName));
-        if (toolEntry.isNoObj() || !toolEntry.isObjInst() || !toolEntry.asInst().args().isRec()) return this.handleMessage(blind);
+        if (toolEntry.isNoObj() || !toolEntry.isObjInst() || !toolEntry.asInst().args().isRec())
+            return this.handleMessage(blind);
         try {
             final Obj schemaAware = new ObjJSONSerializer()
                     .schema(toolEntry.asInst().args().asRec())

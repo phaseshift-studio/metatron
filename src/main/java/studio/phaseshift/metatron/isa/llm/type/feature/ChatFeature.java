@@ -41,25 +41,31 @@ public class ChatFeature extends AbstractFeature {
     @Override
     public Obj onBeforeChat(final Agent agent) {
         final String userMessage = agent.userMessage();
-        if (userMessage == null || userMessage.isBlank())
+        if (null == userMessage || userMessage.isBlank())
             return noobj();
-
-        try {
-            final Space space = Router.global().getSpaceFor(agent.at(ROOT).uriValue().extend(MESSAGE));
-            if (space.hasQ(f(INCRQ))) {
-                if (agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
-                    agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage(
-                            """
-                            your underlying inferencing model is:
-                            %s
-                            you have access to mtron eval tool which allows you to evaluate any mtron expression in metatron.
-                            moreover, the messages you produce may contain str::T templates $\\{ code \\}.
-                              $\\{ 1.-<[+2,_]>-.sum() \\}   =>  5
-                            """.formatted(this.at(MODEL)));
-                }
-                if (agent.hasFeature(LLM_TOOL_FEATURE_TID)) {
-                    // add chat inst
-                }
+        if (agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
+            agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage(
+                    """
+                    your underlying inference model is:
+                    %s
+                    you are an agent in the metatron (http://metatron.phaseshift.studio).
+                    you can control the metatron using the mtron language by either
+                      1. calling an mtron eval tool
+                      2. generating executable mtron code in your thoughts and responses.
+                    any messages you produce containing templates of the form ${ code } will evaluate.
+                    e.g. the text
+                        the result you wanted is ${ 1.-<[+2,_]>-.sum() }
+                    becomes
+                        the result you wanted is 4.
+                    when calling tools, you may find the result wrapped within a larger record containing
+                    a **%s** field, the %s field contains either the system or user communicating with you
+                    mid-iteration. Any directions provided in such messages should take priority over
+                    your prompt instructions and current objectives.
+                    """.formatted(this.at(MODEL), PENDING_MESSAGES, PENDING_MESSAGES));
+        }
+        final Space space = Router.global().getSpaceFor(agent.at(ROOT).uriValue().extend(MESSAGE));
+        if (space.hasQ(f(INCRQ))) {
+            try {
                 this.lastMessage = MessageBuilder.build(USER_MESSAGE_TID)
                         .text(Str.Helper.cleanString(str(userMessage).apply()))
                         .contents(userMessage)
@@ -69,13 +75,12 @@ public class ChatFeature extends AbstractFeature {
                                 : null)
                         .depth(agent.chatDepth())
                         .chatId(agent.chatId())
-                        .create(agent.at(ROOT).uriValue().extend(MESSAGE)
-                                .extend("_").addQ(INCRQ));
-            } else {
-                LOG.warn("user message storage requires an incrq space: %s", space.vidOrTid());
+                        .create(agent.at(ROOT).uriValue().extend(MESSAGE).extend("_").addQ(INCRQ));
+            } catch (final Exception e) {
+                this.logger().warn("user message write failed: %s", e.getMessage());
             }
-        } catch (final Exception e) {
-            this.logger().warn("user message write failed: %s", e.getMessage());
+        } else {
+            LOG.warn("user message storage requires an incrq space: %s", space.vidOrTid());
         }
         return noobj();
     }

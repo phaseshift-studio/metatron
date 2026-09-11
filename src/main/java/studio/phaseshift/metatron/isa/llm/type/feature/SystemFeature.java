@@ -140,7 +140,7 @@ public class SystemFeature extends AbstractFeature {
      * hooks have run.
      */
     public String systemMessage() {
-        final String base = this.at(uri("base")).orElse(str(DEFAULT_SYSTEM_MESSAGE)).strValue().trim();
+        final String base = this.at(uri(BASE)).orElse(str(DEFAULT_SYSTEM_MESSAGE)).strValue().trim();
         final String dynamic = String.join("\n", this.systemMessages);
         if (base.isBlank())
             return dynamic;
