@@ -156,7 +156,7 @@ public class mTool extends MRec {
         final Map<Obj, Obj> argMap = arguments.asRec().jvm();
         final Poly<?, ?> args = inst.args().isNoObj() ? lst() : (inst.args().isLst() ?
                 lst(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).map(Map.Entry::getValue).collect(Collectors.toList())) :
-                rec(argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).collect(Collectors.toMap(e -> uri(e.getKey().toString()), Map.Entry::getValue))));
+                rec((Map<Obj, Obj>) argMap.entrySet().stream().filter(e -> !e.getKey().equals(uri(LHS))).collect(Collectors.toMap(kv -> uri(kv.getKey().toString()), Map.Entry::getValue, (a, b) -> b, LinkedHashMap<Obj, Obj>::new))));
         final Obj lhs = argMap.containsKey(uri(LHS)) && argMap.get(uri(LHS)) != null ? argMap.get(uri(LHS)) : noobj();
         return inst.args(args).apply(lhs);
     }
