@@ -25,10 +25,8 @@ import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
-import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.vec.type.MVec;
 
@@ -740,15 +738,6 @@ public class llmInstSet extends AbstractInstSet {
                                 mutableMap(jnt(0), "the message to send the agent"), // args
                                 "communicate with an agent. if the agent is already executing, the chat message is pushed on their stack at *<agent>/message_stack", // desc
                                 "@agent.chat('what is a database?')"),
-                        docWrap(instC(LLM_INST_TID.extend("push_message").dom(LLM_AGENT_TID).rng(NOOBJ_TID.zero()), lst(T(ALL_STAR)), (lhs, inst) -> {
-                                    agent(lhs.asRec()).pushMidChatMessage(rec(MESSAGE, inst.arg(0), TIME, ObjmtronSerializer.parse("!math:datetime_now().minus(%s).normalize()".formatted(mathInstSet.nowDatetime()))));
-                                    return noobj();
-                                }),
-                                "an agent to message",  // dom
-                                "noobj", // rng
-                                mutableMap(jnt(0), "any mid-chat message(s)"), // args
-                                "communicate with the agent mid-chat by pushing messages onto their message stack", // desc
-                                "@agent.message('check your results before responding') [-- message delivered with tool evaluation result --]"),
                         docWrap(instC(LLM_INST_TID.extend("embed").dom(LLM_MODEL_TID).rng(VEC_TID), lst(ALL_TYPE), (lhs, inst) -> model(lhs.asRec()).embed(inst.arg(0))),
                                 "a model to embed arg into",  // dom
                                 "the obj as a vector embedding", // rng
