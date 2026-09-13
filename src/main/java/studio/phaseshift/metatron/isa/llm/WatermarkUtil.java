@@ -75,11 +75,11 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * {@link studio.phaseshift.metatron.isa.m.type.Fail} on {@link Hit#decoded()},
  * so the failure is diagnosable without being user-visible.
  */
-public final class Watermarks {
+public final class WatermarkUtil {
 
-    private static final GraphittyLogger LOG = Graphitty.log(Watermarks.class);
+    private static final GraphittyLogger LOG = Graphitty.log(WatermarkUtil.class);
 
-    private Watermarks() {
+    private WatermarkUtil() {
         // static gateway
     }
 
@@ -177,9 +177,9 @@ public final class Watermarks {
      * actually about its own watermark.
      */
     private static final String SHARED_INSTRUCTIONS = """
-            **IMPORTANT**: this is about formatting your response, not calling a function.
-            The watermark is stripped from what the user sees — write it for the runtime, not the reader.
-            """;
+                                                      **IMPORTANT**: this is about formatting your response, not calling a function.
+                                                      The watermark is stripped from what the user sees — write it for the runtime, not the reader.
+                                                      """;
 
     /**
      * Compose a feature's skill content: its own prose, then the shared
@@ -242,18 +242,20 @@ public final class Watermarks {
      */
     public record Scan(String visible, List<Hit> hits, String stage) {
 
-        /** True when the text carried no watermarks at all. */
+        /**
+         * True when the text carried no watermarks at all.
+         */
         public boolean isEmpty() {
             return this.hits.isEmpty();
         }
 
         /**
          * The decoded body of the last watermark under {@code key} — see
-         * {@link Watermarks#get(Obj, String)} for what the returned {@code noobj}
+         * {@link WatermarkUtil#get(Obj, String)} for what the returned {@code noobj}
          * does and does not distinguish.
          */
         public Obj get(final String key) {
-            return Watermarks.get(this.list(), key);
+            return WatermarkUtil.get(this.list(), key);
         }
 
         /**
@@ -420,14 +422,18 @@ public final class Watermarks {
         return new Scan(stripTrailing ? stripped.stripTrailing() : stripped, List.copyOf(hits), stage);
     }
 
-    /** The pattern this class scans with — exposed so tests can assert its shape. */
+    /**
+     * The pattern this class scans with — exposed so tests can assert its shape.
+     */
     public static Pattern pattern() {
         return WATERMARK_PATTERN;
     }
 
     // ── streaming: harvesting a watermark as it arrives ────────────
 
-    /** Where a harvested watermark goes — whether to relay it belongs to the caller. */
+    /**
+     * Where a harvested watermark goes — whether to relay it belongs to the caller.
+     */
     @FunctionalInterface
     public interface Sink {
         void accept(Hit hit);
@@ -473,7 +479,7 @@ public final class Watermarks {
      * across two chunks is neither rendered as raw text nor reported twice.
      *
      * @return the text that is now safe to show — everything settled except the
-     *         watermarks themselves
+     * watermarks themselves
      */
     public static String harvest(final StringBuilder hold, final String chunk,
                                  final String stage, final Sink sink) {

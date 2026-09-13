@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.isa.llm.Watermarks;
+import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -86,7 +86,7 @@ public class LoopFeatureTest extends AbstractFeatureTest {
         final Agent agent = agentWith(system, loop);
         final ChatResult result = ChatResult.chatResult()
                 .put(CHAT, str("acknowledged"))
-                .put(WATERMARK, Watermarks.scan("<<mtron:loop>>I am on it<</mtron:loop>>").list());
+                .put(WATERMARK, WatermarkUtil.scan("<<mtron:loop>>I am on it<</mtron:loop>>").list());
         loop.onCompleteResponse(agent, result);
         loop.onBeforeChat(agent);
         assertTrue(system.systemMessage().contains("<<mtron:loop>> was not applied"),

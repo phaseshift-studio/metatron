@@ -162,7 +162,7 @@ public class llmInstSet extends AbstractInstSet {
      * Distill prompt for {@code summarize()}: asks the model to emit one or more
      * {@code <<json:claim>>} watermarks, each containing a single claim rec shaped like
      * {@code [text=>'...', kind=>decision|problem|solution|observation]}.  The watermarks
-     * are scanned by {@link studio.phaseshift.metatron.isa.llm.Watermarks} into the
+     * are scanned by {@link WatermarkUtil} into the
      * ChatResult's {@code watermark} lst and anchored by {@code summarize()} as
      * {@code claim::T} at {@code <agent>/claim/}.
      * The {@code source} (message vids) is stamped by the inst, not the model — the

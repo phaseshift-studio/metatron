@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
-import studio.phaseshift.metatron.isa.llm.Watermarks;
+import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
@@ -115,7 +115,7 @@ public class MidChatFeature extends AbstractFeature {
 
     /**
      * Thought text that may still become a watermark — the streaming carry buffer.
-     * See {@link Watermarks#pendingTail(String)}: a marker split across chunks is
+     * See {@link WatermarkUtil#pendingTail(String)}: a marker split across chunks is
      * held here rather than relayed twice or rendered raw.
      */
     private final StringBuilder hold = new StringBuilder();
@@ -139,8 +139,8 @@ public class MidChatFeature extends AbstractFeature {
         agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(mutableMap(
                 uri(NAME), uri(LLM_MIDCHAT_FEATURE_TID.name()),
                 uri(DESC), str("speak to the user mid-iteration, and hear them back inside your next tool result"),
-                uri(CONTENT), str(Watermarks.instructions(Watermarks.codec(this, WATERMARK_CODEC),
-                        Watermarks.key(this, WATERMARK_KEY), MIDCHAT_INSTRUCTIONS))))));
+                uri(CONTENT), str(WatermarkUtil.instructions(WatermarkUtil.codec(this, WATERMARK_CODEC),
+                        WatermarkUtil.key(this, WATERMARK_KEY), MIDCHAT_INSTRUCTIONS))))));
     }
 
     @Override
@@ -171,15 +171,15 @@ public class MidChatFeature extends AbstractFeature {
             return noobj();
         final String text = this.hold + thought.strValue();
         this.hold.setLength(0);
-        final String tail = Watermarks.pendingTail(text);
+        final String tail = WatermarkUtil.pendingTail(text);
         this.hold.append(tail);
         final String visible = text.substring(0, text.length() - tail.length());
-        final Watermarks.Scan scan = Watermarks.scan(visible, ON_PARTIAL_THINKING, false);
+        final WatermarkUtil.Scan scan = WatermarkUtil.scan(visible, ON_PARTIAL_THINKING, false);
         if (tail.isEmpty() && scan.hits().isEmpty())
             return noobj(); // nothing held, nothing of ours — the thought passes untouched
         final StringBuilder rebuilt = new StringBuilder();
         int cursor = 0;
-        for (final Watermarks.Hit hit : scan.hits()) {
+        for (final WatermarkUtil.Hit hit : scan.hits()) {
             if (!this.isMine(hit))
                 continue; // another feature's tag is another feature's to harvest
             rebuilt.append(visible, cursor, hit.start());
@@ -193,8 +193,8 @@ public class MidChatFeature extends AbstractFeature {
     /**
      * Whether a watermark carries this feature's key — the tag is the address.
      */
-    private boolean isMine(final Watermarks.Hit hit) {
-        return hit.key().equals(Watermarks.key(this, WATERMARK_KEY));
+    private boolean isMine(final WatermarkUtil.Hit hit) {
+        return hit.key().equals(WatermarkUtil.key(this, WATERMARK_KEY));
     }
 
     @Override
@@ -211,10 +211,10 @@ public class MidChatFeature extends AbstractFeature {
      *
      * @return the remark as it goes back into the thought, where its markup stood
      */
-    private String relay(final Agent agent, final Watermarks.Hit hit) {
+    private String relay(final Agent agent, final WatermarkUtil.Hit hit) {
         if (hit.decoded().isFail()) {
             this.rejectWatermark("%s was not applied: %s".formatted(
-                    Watermarks.marker(WATERMARK_CODEC, hit.key()),
+                    WatermarkUtil.marker(WATERMARK_CODEC, hit.key()),
                     Str.Helper.cleanString(hit.decoded())));
             return "";
         }

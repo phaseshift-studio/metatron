@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -70,7 +71,7 @@ public class SummarizeFeatureTest extends AbstractFeatureTest {
 
     /**
      * One published {@code watermark::T} rec, shaped exactly as
-     * {@link studio.phaseshift.metatron.isa.llm.Watermarks.Scan#list()} builds it.
+     * {@link WatermarkUtil.Scan#list()} builds it.
      */
     static Rec watermark(final String key, final Obj body) {
         return rec(mutableMap(

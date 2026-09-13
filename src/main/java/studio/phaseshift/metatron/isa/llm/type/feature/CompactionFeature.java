@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.llm.Watermarks;
+import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
@@ -98,8 +98,8 @@ public class CompactionFeature extends AbstractFeature {
     public void registerSkill(final Agent agent) {
         if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
             return;
-        final String instructions = Watermarks.instructions(WATERMARK_CODEC,
-                Watermarks.key(this, WATERMARK_KEY), COMPACTION_INSTRUCTIONS);
+        final String instructions = WatermarkUtil.instructions(WATERMARK_CODEC,
+                WatermarkUtil.key(this, WATERMARK_KEY), COMPACTION_INSTRUCTIONS);
         agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(mutableMap(
                 uri(NAME), uri(LLM_COMPACTION_FEATURE_TID.name()),
                 uri(DESC), str("compact the conversation history into a resume summary when the context grows large"),
@@ -144,7 +144,7 @@ public class CompactionFeature extends AbstractFeature {
     public void onCompleteResponse(final Agent agent, final ChatResult result) {
         // 1. detect the <<mtron:compaction>> watermark the model emitted
         this.noteWatermarkFailure(result, WATERMARK_CODEC, WATERMARK_KEY);
-        final Obj signal = result.watermark(Watermarks.key(this, WATERMARK_KEY));
+        final Obj signal = result.watermark(WatermarkUtil.key(this, WATERMARK_KEY));
         Rec block = signal.isNoObj() ? null : signal.asRec();
         if (!agent.hasFeature(LLM_MESSAGE_FEATURE_TID)) {
             if (null != block)
