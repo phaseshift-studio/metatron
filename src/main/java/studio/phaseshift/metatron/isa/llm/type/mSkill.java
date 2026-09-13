@@ -211,6 +211,19 @@ public class mSkill extends MRec {
                 resources.add(rec(r));
             }
         }
+        // The agent's own tool set. A skill contributes the tools it carries, but an agent commonly declares its
+        // tools on a feature instead (`tool_feature.tool => [!*bash, !*sql, …]`) — and when the agent has a
+        // non-empty skill registry, skills() returns early, so no feature is ever visited here. The derived skill
+        // then carried no tools at all and the resulting mcp_server answered tools/list with an empty list, while
+        // resources (which do come from those document skills) worked. Tool values are insts, the same shape
+        // `tools()` yields and `mcpServer.of(skill)` keys by name.
+        for (final Obj feature : agent.features().elements().toList()) {
+            if (!feature.isRec())
+                continue;
+            for (final Obj tool : feature.asRec().at(TOOL).orElse(lst()).elements().toList())
+                if (tool.isObjInst())
+                    tools.add(tool);
+        }
         final Map<Obj, Obj> jvm = mutableMap(
                 uri(NAME), uri(nameStr),
                 uri(DESC), desc.isNoObj() ? str("an agent named " + nameStr) : desc);

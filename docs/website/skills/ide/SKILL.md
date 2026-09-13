@@ -113,21 +113,7 @@ maven build commands are attached to the `project::T` for each of access.
 
 ```mtron
 mtron> <mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/scratch)
-==>project::[
-    root=>mfs:src/test/resources/scratch,
-    src=>[
-     Operation=>inst?#{*}<=#{?}(#{*}::T),
-     Echo=>inst?#{*}<=#{?}(#{*}::T),
-     Calculator=>inst?#{*}<=#{?}(#{*}::T),
-     EchoTest=>inst?#{*}<=#{?}(#{*}::T)],
-    code=>[,],
-    idx=>[=>],
-    sub=>[auto_save=>sub::[
-    target=>/dev/scratch/code/#,
-    code=>print('saving...').rshift(0).as(rec::T).rshift(path).select([id(),id(),id(),id(),id(),id()]).to(temp).as?rng=uri&dom=lst(uri::T).to(x).*id().update([location=>none]).as(java::T).to(**x.rshift(location).side(split([
-     location=>id(),
-     status=>saved,
-     time=>!math:datetime_now()]).print('saved ',id(),'\n'))).map(map(/dev/scratch/src).mult(*temp.reverse().merge().take(1)))]]]@/dev/scratch
+==>fail::[inst apply failure: java.lang.ClassCastException: class studio.phaseshift.metatron.isa.m.type.impl.MCode cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MCode and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/674
 ```
 Now that the project is stored in space, build commands can be added and the project can be built.
 
@@ -135,7 +121,7 @@ Now that the project is stored in space, build commands can be added and the pro
 mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/test/resources/scratch compile'),
                                        mvn_clean => !ide:command('mvn -f src/test/resources/scratch clean'),
                                        mvn_exec  => !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
-==>project::[
+==>[
     root=>mfs:src/test/resources/scratch,
     src=>[
      Operation=>inst?#{*}<=#{?}(#{*}::T),
@@ -144,22 +130,17 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
      EchoTest=>inst?#{*}<=#{?}(#{*}::T)],
     code=>[,],
     idx=>[=>],
-    sub=>[auto_save=>sub::[
-    target=>/dev/scratch/code/#,
-    code=>print('saving...').rshift(0).as(rec::T).rshift(path).select([id(),id(),id(),id(),id(),id()]).to(temp).as?rng=uri&dom=lst(uri::T).to(x).*id().update([location=>none]).as(java::T).to(**x.rshift(location).side(split([
-     location=>id(),
-     status=>saved,
-     time=>!math:datetime_now()]).print('saved ',id(),'\n'))).map(map(/dev/scratch/src).mult(*temp.reverse().merge().take(1)))]],
-    command=>{2}[
-     mvn_build=>!ide:command('mvn -f src/test/resources/scratch compile'),
-     mvn_clean=>!ide:command('mvn -f src/test/resources/scratch clean'),
-     mvn_exec=>!ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
+    command=>{[read_file=>/dev/scratch/command/read_file(file=>uri::T,min=>isa(int::T).else(0),max=>isa(int::T).else(9223372036854775807)){*file.split("""
+   """).as(rec::T).select([is(gte(*min))=>id()]).select([is(lt(*max))=>id()])}],{2}[
+    mvn_build=>!ide:command('mvn -f src/test/resources/scratch compile'),
+    mvn_clean=>!ide:command('mvn -f src/test/resources/scratch clean'),
+    mvn_exec=>!ide:command('mvn -f src/test/resources/scratch compile exec:java')]}]
 mtron> */dev/scratch/command/mvn_clean
 ==>result{4}::[
     status=>success,
-    runtime=>millis::739.0000,
+    runtime=>millis::715.0000,
     command=>'mvn -f src/test/resources/scratch clean',
-    output=>!*/sys/tmp/93f5aadf]
+    output=>!*/sys/tmp/3f9ae3de]
 mtron> */dev/scratch/command/mvn_build>>output
 ==>{4}'WARNING: A terminally deprecated method in sun.misc.Unsafe has been called'
 ==>{4}'WARNING: sun.misc.Unsafe::staticFieldBase has been called by com.google.inject.internal.aop.HiddenClassDefiner (file:/home/killswitch/.sdkman/candidates/maven/current/lib/guice-5.1.0-classes.jar)'
@@ -177,8 +158,8 @@ mtron> */dev/scratch/command/mvn_build>>output
 ==>{4}'[INFO] Nothing to compile - all classes are up to date.'
 ==>{12}'[INFO] ------------------------------------------------------------------------'
 ==>{4}'[INFO] BUILD SUCCESS'
-==>{4}'[INFO] Total time:  0.243 s'
-==>{4}'[INFO] Finished at: 2026-09-10T05:45:52-06:00'
+==>{4}'[INFO] Total time:  0.236 s'
+==>{4}'[INFO] Finished at: 2026-09-13T14:48:00-06:00'
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.
 
@@ -188,20 +169,13 @@ mtron> tree_widget::[root=>/dev/scratch, max=>3, xref=>[=>]].as?str<=widget(str:
    scratch
    ├─ code
    ├─ command
-   │   ├─ mvn_build
-   │   ├─ mvn_clean
-   │   └─ mvn_exec
    ├─ idx
    ├─ root
-   ├─ src
-   │   ├─ Calculator
-   │   ├─ Echo
-   │   ├─ EchoTest
-   │   └─ Operation
-   └─ sub
-       └─ auto_save
-           ├─ code
-           └─ target
+   └─ src
+       ├─ Calculator
+       ├─ Echo
+       ├─ EchoTest
+       └─ Operation
    """
 ```
 **NOTE**: The `sub` branch of the project graph maintains pub/sub `?subq` subscriptions (`sub::T`). The actual
@@ -284,9 +258,6 @@ mtron> tree_widget::[root=>/dev/scratch, max=>4, xref=>[=>]].as?str<=widget(str:
    │       ├─ postscript
    │       └─ preamble
    ├─ command
-   │   ├─ mvn_build
-   │   ├─ mvn_clean
-   │   └─ mvn_exec
    ├─ idx
    │   └─ Echo
    │       ├─ comment
@@ -299,15 +270,11 @@ mtron> tree_widget::[root=>/dev/scratch, max=>4, xref=>[=>]].as?str<=widget(str:
    │           ├─ name
    │           └─ speak
    ├─ root
-   ├─ src
-   │   ├─ Calculator
-   │   ├─ Echo
-   │   ├─ EchoTest
-   │   └─ Operation
-   └─ sub
-       └─ auto_save
-           ├─ code
-           └─ target
+   └─ src
+       ├─ Calculator
+       ├─ Echo
+       ├─ EchoTest
+       └─ Operation
    """
 ```
 **IMPORTANT**: pulling `Echo` is a inst call -- no `*` should be prefixed. `()` is the inst equivalent of dereference.
@@ -484,13 +451,7 @@ The dwe `sub::T` is:
 
 ```mtron
 mtron> */dev/scratch/code/#?subq
-==>[
-    sub::[
-     target=>/dev/scratch/code/#,
-     code=>!*/dev/scratch/sub/auto_save/code],
-    sub::[
-     target=>/dev/scratch/code/#,
-     code=>!*/dev/scratch/sub/auto_save/code]]
+==>[,]
 mtron> */dev/scratch/code/#?subq>>0>>code
 ```
 ## gotchas (learned the hard way)

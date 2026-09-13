@@ -225,7 +225,8 @@ public class mcpServer extends MRec {
                                     uri(DESCRIPTION), str(null == spec.description() ? "<no description>" : spec.description()),
                                     uri("inputSchema"), jsonSchemaToRec(spec.parameters()));
                         })
-                        .toList())));
+                        .filter(r -> null != r)
+                .toList())));
     }
 
     /**
@@ -272,10 +273,22 @@ public class mcpServer extends MRec {
                 .stream()
                 .map(r -> {
                     final Map<Obj, Obj> m = r.asRec().jvm();
+                    // A resource rec need not carry the keys this listing reads: `m.get` returns null for an
+                    // absent one. Passing that null into the response left the item without a name field at all
+                    // (which the MCP schema check rejects, dropping the entry), and guarding it by calling
+                    // isNoObj() on the null then threw inside the stream and emptied the entire list. So nothing
+                    // is assumed present, and a rec with no uri is not a resource. When there is no name, the uri
+                    // names it — the convention the tools and prompts listings already use.
+                    final Obj uriObj = m.get(uri(URI));
+                    if (null == uriObj || uriObj.isNoObj())
+                        return (Obj) null;
+                    final Obj name = m.get(uri(NAME));
+                    final Obj description = m.get(uri(DESC));
+                    final String uriText = uriObj.uriValue().toString();
                     final Rec item = rec(
-                            uri(URI), str(m.get(uri(URI)).uriValue().toString()),
-                            uri(NAME), m.get(uri(NAME)),
-                            uri(DESCRIPTION), m.get(uri(DESC)));
+                            uri(URI), str(uriText),
+                            uri(NAME), null == name || name.isNoObj() ? str(uriText) : str(name.toCleanString()),
+                            uri(DESCRIPTION), null == description || description.isNoObj() ? noobj() : str(description.toCleanString()));
                     if (m.containsKey(uri(REFERENCE)))
                         item.at(uri(REFERENCE), m.get(uri(REFERENCE)), MUTABLE);
                     return (Obj) item;

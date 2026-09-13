@@ -20,7 +20,12 @@ import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ITERATION_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_FEATURE_TID;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -193,5 +198,31 @@ public class mSkillTest extends studio.phaseshift.metatron.AbstractMetatronTest 
     public void testAnthropicVocab() {
         assertEquals("description", mSkill.ANTHROPIC_VOCAB.to(LLM_SKILL_TID, DESC), "desc maps to description");
         assertEquals("name", mSkill.ANTHROPIC_VOCAB.to(LLM_SKILL_TID, NAME), "unmapped tokens fall back to identity");
+    }
+
+    /**
+     * An agent's own declared tools reach the skill derived from it, <b>even when that agent also has a non-empty
+     * skill registry</b>. That combination is the one that breaks: {@link mSkill#skills(Agent)} returns the
+     * registry early, so no feature is ever visited, and the derived skill carried no tools at all — the
+     * {@code mcp_server} built from it then answered {@code tools/list} with an empty list while
+     * {@code resources/list} worked (those come from the document skills themselves).
+     * <p>
+     * drstynx is exactly this shape: a {@code skill_feature} over three documentation skills, with its tools
+     * declared on {@code tool_feature}. Green {@code mcp_*Test} suites did not catch it because none of them
+     * pairs a populated skill registry with feature-declared tools.
+     */
+    @Test
+    public void testAgentToSkillKeepsToolsAlongsideASkillRegistry() {
+        final Map<Obj, Obj> gate = new LinkedHashMap<>();
+        gate.put(uri(SKILL), lst(mSkill.of(str(FRONT_MATTER_SKILL))));
+        final Map<Obj, Obj> toolMap = new LinkedHashMap<>();
+        toolMap.put(uri(TOOL), lst(docWrap(instC(f("/m/llm/test/registry_tool"), rec0(), (lhs, inst) -> noobj()),
+                "a tool declared on the agent's own feature")));
+        final Agent a = agent("test-agent", null,
+                new SkillFeature(gate, LLM_SKILL_FEATURE_TID, null),
+                new ToolFeature(toolMap, LLM_TOOL_FEATURE_TID, null));
+        final mSkill skill = mSkill.agentToSkill(a);
+        assertEquals(1, skill.tools().elements().count(),
+                "the agent's declared tools must survive a non-empty skill registry: " + skill.at(uri(TOOL)));
     }
 }

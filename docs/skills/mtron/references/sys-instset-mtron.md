@@ -26,14 +26,14 @@ metatron's data structures. `cmd` is the terminal command, evaluated with `bash 
 `time::T` (`millis::1000.0`, `second::1.0`, ...) with a 30-second default. The result is a `lst[str::T]`, one
 entry per stdout line; a non-zero exit is a `fail::T`.
 
-```mtron
+```mtron_pre
 bash('ls')
 bash(cmd=>'whoami', timeout=>second::5.0)
 ```
 
 Batch over a rec (indexed) or a lst (flat):
 
-```mtron
+```mtron_pre
 {"ls","whoami","df -h"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of result lsts --]
 ["ls","whoami","df -h"].mapp(-<[_ => bash(_)]).sum() [-- flatten to one lst --]
 ```
@@ -41,7 +41,7 @@ Batch over a rec (indexed) or a lst (flat):
 Pipe a follow-up command over each result — `>>` drains the list, `${_}` binds the current element; `.mapp`
 maps explicitly (and, with a lambda, indexes by the current element):
 
-```mtron
+```mtron_pre
 bash('ls').>>.bash("stat -c '%U' ${_}")            [-- drain: owners coalesce to a multiset --]
 bash('ls').mapp(bash("stat -c '%U' ${_}"))         [-- map: one result lst per file --]
 bash('ls').mapp(-<[_=>bash("stat -c '%U' ${_}")])  [-- indexed map: file => owner --]
@@ -96,18 +96,22 @@ Two recs are mounted under `/sys` at boot — not instructions, but read like an
 ```mtron
 */sys/env              [-- the environment as a rec --]
 */sys/env/HOME         [-- one variable --]
-*/sys/thread/+?docq    [-- every thread's description --]
 ```
 
-# FileSystem Space (fsSpace)
+```mtron_pre
+*/sys/thread/+.count()               [-- number of threads        --]
+*/sys/thread/+.=?=[state=>run]       [-- number of active threads --]
+*/sys/thread/+?docq                  [-- thread documentation     --]
+```
 
-An `fsspace` mounts a subset of a file system into the metatron graph. Files are addressed via the space's
-scheme (e.g., `local:`) and path prefix.
+# file system space (fsspace::T)
+
+An `fsspace::T` mounts a subset of a file system into the metatron graph. Files are addressed via the space's
+scheme and path prefix.
 
 **IMPORTANT**: Every uri can be wrapped in angle brackets `< >`, but it is only required for those uris that have `.`
 (periods), ` ` (spaces), and/or special characters such as `~` (tildes) in them. For instance, `/a/b/c` can be written
-as is, but
-`</a/b/c.txt>` requires angle brackets.
+as is, but `</a/b/c.txt>` requires angle brackets.
 
 ## Configuration
 
@@ -115,19 +119,19 @@ A typical `fsspace` definition:
 
 ```mtron_pre
 fsspace::[/
-  pattern => <local:#>,/
+  pattern => <mfs:#>, /
   q       => [mimeq::[=>], lineq::[=>]],/
-  route   => [local: => <~/my-project>]]@/sys/space/fs/local
+  route   => [mfs: => <~/software/metatron>]]@/sys/space/fs/mfs
 ```
 
-- **`pattern`** — the URI pattern this space handles (`local:#` matches `<local:file.txt>`, `<local:sub/dir/file.md>`,
+- **`pattern`** — the URI pattern this space handles (`mfs:#` matches `<mfs:file.txt>`, `<mfs:sub/dir/file.md>`,
   etc.)
-- **`route`** — maps the pattern prefix (`local:`) to a filesystem path (`<~/my-project>`)
+- **`route`** — maps the pattern prefix (`mfs:`) to a filesystem path (`<~/software/metatron>`)
 - **`q`** — query processors: `mimeq` for MIME type tagging/conversion, `lineq` for line-level reads/writes
 
-## MIME Type Handling
+## mime type handling
 
-fsSpace detects a file's MIME type from its extension (and optionally the OS content probe) and returns a **typed
+`fsspace::T` detects a file's MIME type from its extension (and optionally the OS content probe) and returns a **typed
 string** — a refined `str::T` such as `html::T`, `json::T`, `markdown::T`, etc.
 
 ```
@@ -141,9 +145,7 @@ The MIME type acts as a **predicate** on the string content. For example, `html:
 string is valid HTML. The structural representation (`rec::T` DOM tree) is opt-in via `?mimeq=application/x-mtron` or
 `.as(rec::T)`.
 
-### MIME-to-TID Mapping
-
-`MIME.MIMEType.toTid()` maps file extensions to type TIDs:
+### mime-to-tid mapping
 
 | Extension       | MIME Type             | TID                    |
 |-----------------|-----------------------|------------------------|
@@ -158,19 +160,19 @@ string is valid HTML. The structural representation (`rec::T` DOM tree) is opt-i
 | `.txt`          | `text/plain`          | `/m/str`               |
 | _other_         | `text/plain` / probe  | `/m/str`               |
 
-### The `mimeq` Query Processor
+### the `mimeq` query processor
 
 The `?mimeq=` query parameter on a file URI controls what the space returns:
 
 ```mtron_pre
-[-- Default: typed string (predicate-validated) --]
-*<local:index.html>
+[-- default: typed string (predicate-validated) --]
+*<mfs:docs/website/index.html>
 
-[-- Explicit type tag (same as default for .html files) --]
-*<local:index.html?mimeq=text/html>
+[-- explicit type tag (same as default for .html files) --]
+*<mfs:docs/website/index.html?mimeq=text/html>
 
-[-- Structural parse via application/x-mtron --]
-*<local:index.html?mimeq=application/x-mtron>
+[-- structural parse via application/x-mtron --]
+*<mfs:docs/website/index.html?mimeq=application/x-mtron>
 ```
 
 `mimeq` is implemented in `QCollection.mimeQ()` as a space-level `postRead` query processor. It:
@@ -182,48 +184,50 @@ The `?mimeq=` query parameter on a file URI controls what the space returns:
 3. **Structural parse** — if `?mimeq=application/x-mtron`, runs the content-type-specific serializer
    (`ObjHTMLSerializer` for HTML, `ObjJSONSerializer` for JSON, etc.) to produce the `rec::T` DOM tree
 
-## Reading and Writing Files
+## reading and writing files
 
-### Basic Read/Write
+### basic read/write
 
 ```mtron_pre
 [-- Read a file (returns typed string by default) --]
-*<local:test.md>
-
-[-- Write a string to a file --]
-<local:test.md> -> "## new content"
+*<mfs:README.md>
 ```
 
-### Reading with Structural Parse
+```mtron
+[-- Write a string to a file --]
+<mfs:README.md> -> "## new content"
+```
+
+### reading with structural parse
 
 ```mtron_pre
 [-- Read markdown as a rec::T structure --]
-*<local:test.md?mimeq=application/x-mtron>
+*<mfs:README.md?mimeq=application/x-mtron>
 
 [-- Read JSON, then walk into rec fields --]
-*<local:config.json?mimeq=application/x-mtron>/database/host
+*<mfs:config.json?mimeq=application/x-mtron>/database/host
 ```
 
-### Binary Files
+### binary files
 
 Files without a recognized text MIME type are read as `bytes::T`. Executable files (with shebangs)
 are treated as `inst::T` and can be invoked directly:
 
 ```mtron_pre
-*<local:script.sh>        [-- bytes::T if binary, str::T if text                    --]
-<local:script.sh>()       [-- execute (shell scripts, via application/x-mtron exec) --]
+*<mfs:script.sh>        [-- bytes::T if binary, str::T if text                    --]
+<mfs:script.sh>()       [-- execute (shell scripts, via application/x-mtron exec) --]
 ```
 
-## Pattern-Based Access
+## pattern-based access
 
 fsSpace supports wildcard patterns in reads:
 
 ```mtron_pre
 [-- List all files in a directory --]
-*<local:+/>
+*<mfs:+/>
 
 [-- Read all .txt files --]
-*<local:+/+>.where([name => -<'.'>>1.is('txt')])
+*<mfs:+/+>.where([name => -<'.'>>1.is('txt')])
 ```
 
 ## Line-Level Editing with `lineq`
@@ -233,17 +237,17 @@ edits without loading the entire file:
 
 ```mtron_pre
 [-- Read lines 10-20 of a file --]
-*<local:src/main.java?lineq=10..20>
+*<mfs:src/main.java?lineq=10..20>
 
 [-- Replace lines 5-10 with new content --]
-<local:src/main.java?lineq=5..10> -> """/
+<mfs:src/main.java?lineq=5..10> -> """/
   public void newMethod() {/
     // new implementation/
   }/
 """
 ```
 
-### Boot Configuration Example
+### boot configuration example
 
 ```mtron_pre
 fsspace::[/
@@ -256,7 +260,7 @@ fsspace::[/
 <local:index.html?mimeq=application/x-mtron>/html/head/title
 ```
 
-## Type Round-Trip
+## type round-trip
 
 The full read-modify-write cycle preserves types:
 

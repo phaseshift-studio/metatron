@@ -552,17 +552,17 @@ public interface Type extends Obj {
                 /// //////////////////
                 /// OBJ <=> TYPE ///
                 /// //////////////////
-                if (rhs.tid().isGeneric() || rhs.isObjCall())
+                if (rhs.vid().isGeneric() || rhs.isObjCall())
                     return true;
-                if (rhs.tid().hasPoly()) {
+                if (rhs.vid().hasPoly()) {
                     if (!lhs.test(rhs.tid().polyParsed().orElse(null)))
                         return false;
                 }
                 if (lhs.isObjs() && lhs.stream().anyMatch(Obj::isObjCall)) // TODO: a hack (see RecTest requirements vs. TypeTest requirements)
                     return false;
-                if (lhs.isObjs() && lhs.stream().allMatch(o -> o.test(rhs.asType().hasPredicate() ? rhs : rhs.tid(rhs.tid().c(o.c())))))
+                if (lhs.isObjs() && lhs.stream().allMatch(o -> o.test(rhs.asType().hasPredicate() ? rhs : rhs.vid(rhs.vid().c(o.c())))))
                     return true;
-                if (rhs.asType().isBaseType() && !lhs.baseTypeID().test(rhs.tid()))
+                if (rhs.asType().isBaseType() && !lhs.baseTypeID().test(rhs.vid()))
                     return false;
                 return !rhs.asType().hasPredicate() || (!rhs.asType().predicate().apply(lhs.clone().selfTID(lhs.baseTypeID())).isNothing()); // selfTID() prevents infinite recursion on type checking
             } else {

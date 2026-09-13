@@ -236,7 +236,6 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
                             </div>
                         </div>
                     </li>
@@ -267,18 +266,18 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference_mtron.html">language-reference_mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys_instset_mtron.html">sys_instset_mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math_instset_mtron.html">math_instset_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/connecting-datasources.html">connecting-datasources</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace.html">dckrspace</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/http-page-fetching.html">http-page-fetching</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math_instset_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mtron-fsspace.html">mtron-fsspace</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -378,7 +377,8 @@
 </script>
 <main class="container my-4 flex-grow-1">
     <div class="skill-doc mb-4">
-        <h1 class="skill-title mb-1">web instruction set: The `/m/web` vocabulary for exposing mtron objs over http, ws and mcp: protocol surfaces, MIME document</h1>
+        <h1 class="skill-title mb-1">web instruction set</h1>
+        <small>The /m/web vocabulary for exposing mtron objs over http, ws and mcp: protocol surfaces, MIME document</small><br/>
         <a href="web-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>web-instset-mtron.md</a>
     </div>
     <div class="markdown-body">
@@ -424,32 +424,26 @@ mtron&gt; person::[name=&gt;'grant',age=&gt;25]@/data/person/2
 <ul>
 <li><strong>a value</strong> — <code>value?protocol::T</code> works, because <code>protocol::T</code> is a union whose predicate is applied to the
 objs on its lhs (an <code>mcp_server</code> value classifies as a protocol surface).</li>
-<li><strong>a type</strong> — ask the <em>declared</em> parent chain (<code>webHelper.isProtocolSurface</code>): <code>rest::T → http::T → protocol::T</code> is
+<li><strong>a type</strong> — ask the <em>declared</em> parent chain: <code>rest::T → http::T → protocol::T</code> is
 true, while <code>rest::T?protocol::T</code> is <strong>noobj</strong>, because a type is not a protocol value.</li>
 </ul>
 <h3>MIME document types</h3>
 <p>A document is typed by its MIME. Every document type under <code>/m/web/mime/+</code> refines <code>str::T</code> — <code>html</code>, <code>markdown</code>,
-<code>java</code>, <code>yaml</code>, <code>xsv</code>, <code>csv</code>, <code>json</code>, <code>xml</code>, <code>css</code> — and <code>webInstSetTest</code> reads each of those vids to assert it. This is
-a contract, not a coincidence — <code>fsSpace</code> reads a file by typing its
-bytes with the MIME (<code>str(bytes, mimeType.toTid(), null)</code>), so a document type that did not accept a str would throw
-on read. <code>css</code> was declared <code>tid(rec::T)</code> once, and every <code>.css</code> file answered 500
-(<code>[string] is not a rec::T@/m/web/mime/css</code>) while <code>index.html</code>, which links one, looked fine. <code>webInstSetTest</code>
-now asserts the contract for the whole <code>toTid()</code> mapping.</p>
-<p>A MIME type is a <strong>predicate on text</strong>, not a structural transformation: <code>html::&quot;&lt;html&gt;…&quot;</code> is a str that verifies as
-HTML. Structure is a separate step — see <code>?mimeq=</code> below.</p>
+<code>java</code>, <code>yaml</code>, <code>xsv</code>, <code>csv</code>, <code>json</code>, <code>xml</code>, <code>css</code>. This is
+a contract, not a coincidence — <code>fsspace::T</code> reads a file by typing its
+bytes with the MIME, so a document type that did not accept a <code>str::T</code> would throw
+on read. A MIME type is a <strong>predicate on text</strong>, not a structural transformation: <code>html::&quot;&lt;html&gt;…&quot;</code> is a <code>str::T</code> that
+verifies as HTML -- aka &quot;typed strings&quot;.</p>
 <h3>binary documents are bytes</h3>
-<p>A file that is not text is read as <code>bytes::T</code>, never as a String. Decoding binary through UTF-8 and re-encoding it
+<p>A file that is not text is read as <code>bytes::T</code>. Decoding binary through UTF-8 and re-encoding it
 on the way out does not fail, it <em>grows</em>: a 1337-byte favicon was served as 2231 bytes, one replacement character per
 non-ASCII byte, and a browser draws a broken image — which reads as &quot;the image is missing&quot; rather than as a bug. The
 rule has two halves, because either alone leaves a hole:</p>
 <ul>
-<li>the read (<code>fsSpace</code>): not text, or not valid UTF-8 at all (an unlisted extension falls back to <code>text/plain</code>), is
+<li>the read (<code>fsspace::T</code>): not text, or not valid UTF-8 at all (an unlisted extension falls back to <code>text/plain</code>), is
 <code>bytes</code>;</li>
 <li>the write (<code>MIME.MIMEType.toBytes</code>): bytes are written verbatim, whatever serializer the MIME would otherwise use.</li>
 </ul>
-<p>A served document also carries <code>Cache-Control: no-cache</code> — revalidate before reuse. Responses have no validator, so
-a client that cached a bad copy has nothing to check it against and can hold it indefinitely: after the binary read
-was fixed, a page image refreshed while the tab icon, the <em>same file</em>, stayed stale.</p>
 <h3><code>?mimeq=</code> — choosing the rendering</h3>
 <p>The rendering is chosen per request with <code>?mimeq=&lt;media type&gt;</code>:</p>
 <pre><code class="language-mtron">/docker/image?mimeq=application/json     [-- the docker images as JSON --]
@@ -463,7 +457,7 @@ written, which is what a document whose fields are all strings needs: docker rep
 that as a <em>real</em> left the image addressable only as <code>&lt;mariadb:11.2000&gt;</code> — invisibly, because from the JSON face a
 number and a string render alike. <code>simple()</code> and <code>web()</code> keep the content-sniffing behaviour their callers depend on.</p>
 <h3>route tables</h3>
-<p>A <code>route</code> rec maps a request path to a target. Four rules, each learned from a mount that did not serve:</p>
+<p>A <code>route</code> rec maps a request path to a target. Four rules:</p>
 <ul>
 <li><strong>keys are literal prefixes.</strong> The carrier matches a context by literal longest prefix, so <code>/people/#</code> mounts a
 context whose subtree cannot reach it — <code>/people/34</code> is unmounted, silently, and the context is reachable only by
