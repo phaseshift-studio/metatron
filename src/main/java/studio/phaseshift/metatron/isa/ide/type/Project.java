@@ -84,12 +84,10 @@ public class Project extends MRec {
                                 .select_(rec(is_(lt_(from_(uri(MAX)))), id_())).tryToInst())));
         project.addSubscription(f("auto_save"),
                 ObjmtronSerializer.parse("""
-                                         sub::[target=> <%s/code/#>,
-                                               code  => print('saving...').>>0.as(rec::T)>>path==[_,_,_,_,_,_].to(temp).
+                                         sub::[code=> >>0.as(rec::T)>>path==[_,_,_,_,_].
                                                           as?uri<=lst(uri::T).to(x).*(_).>>=[location=>none].as(web:java::T).
-                                                          to(*(*x.>>location).side(-<[location=>_,status=>saved,time=>!math:datetime_now()].print("saved ", _, "\\n"))).
-                                                          map(<%s/src>.mult(*temp.reverse().>-.take(1)))]
-                                         """.formatted(project.vid(), project.vid())));
+                                                          to(*(*x.>>location).side(-<[location=>_,user=>/usr/marko,status=>saved,time=>!math:datetime_now()].print("saved ",_,"\\n")))];
+                                         """));
         return project(project.selfTID(projectType.vid()).asRec());
     }
 

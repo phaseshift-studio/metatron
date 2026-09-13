@@ -352,7 +352,10 @@ public class Agent extends MRec {
     }
 
     public void interrupt() {
-        this.interrupt.set(true);
+        if (this.at(ACTIVE).orElse(BOOL_FALSE).boolValue()) {
+            this.pushMidChatMessage(rec(TEXT, str("agent interrupt: please return from thinking")));
+            this.interrupt.set(true);
+        }
     }
 
     public boolean isInterrupted() {
@@ -435,11 +438,12 @@ public class Agent extends MRec {
     }
 
     public ChatResult chat(final String message, final Rec responseFormat) {
-        if (this.at(ACTIVE).booleanCheck()) {
-            this.pushMidChatMessage(rec(MESSAGE, str(message), METADATA, responseFormat));
+        if (this.at(ACTIVE).booleanCheck() && this.hasFeature(LLM_MIDCHAT_FEATURE_TID)) {
+            final MidChatFeature midchat = this.feature(LLM_MIDCHAT_FEATURE_TID).as();
+            midchat.push(this, rec(MESSAGE, str(message), METADATA, responseFormat));
             return ChatResult.chatResult()
                     .put(CHAT, str("added to message stack"))
-                    .put("current_stack", this.at(MESSAGE_STACK));
+                    .put("current_stack", midchat.pendingMessages(this));
         }
         final fURI sessionVid = sessionVID();
         final String depthKey = sessionVid != null ? sessionVid.toString() : this.tid().toString();
@@ -526,7 +530,6 @@ public class Agent extends MRec {
                 agent.chat(Str.Helper.stripString(str(this.userMessage)))
                         .onToolExecuted(tool -> {
                             StatusLine.message(str("\uD83D\uDD28 on_tool_execute: %s(%s)".formatted(tool.request().name(), tool.request().arguments())));
-                            orphanToolRequests.get().remove(tool.request().id());
                             if (this.interrupt.get()) latch.countDown();
                             final Rec toolRec = rec(
                                     uri(NAME), str(tool.request().name()),
@@ -534,6 +537,7 @@ public class Agent extends MRec {
                                     uri(RESULT), str(tool.result() != null ? tool.result() : ""),
                                     uri(CONTENTS), str(tool.request().id()));
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_TOOL_EXECUTED, toolRec));
+                            orphanToolRequests.get().remove(tool.request().id());
                         })
                         .onPartialToolCall(partialToolCall -> {
                             StatusLine.message(str("\uD83E\uDDF0 on_partial_tool_call"));

@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import studio.phaseshift.metatron.isa.web.webInstSet;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -42,7 +43,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_SERVER_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -80,7 +80,7 @@ public class mcp_wsHandler extends WebSocketRec {
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
     public static final Type WS_MCP_HANDLER_TYPE = Type.Builder.build()
-            .tid(WS_HANDLER_TID)
+            .tid(webInstSet.MCP_TID)
             .vid(WS_MCP_HANDLER_TID)
             .isaPredicate(rec(
                     uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),

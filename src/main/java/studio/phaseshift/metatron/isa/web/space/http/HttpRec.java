@@ -91,6 +91,31 @@ public class HttpRec extends MRec {
         EXCHANGE.set(ex);
     }
 
+    // The address this request is served from, when its mount resolved one outright — thread-local for the
+    // same reason as EXCHANGE, and *only* the address travels this way: a templated mount resolves a different
+    // address per request, so an address can never be baked into a shared handler's config. Null for a mount
+    // that names a prefix root (then the handler still computes root + mount-relative path itself).
+    private final ThreadLocal<fURI> ADDRESS = new ThreadLocal<>();
+
+    /**
+     * The address this request resolves to, or null when the handler must derive it from its own config.
+     */
+    protected fURI address() {
+        return ADDRESS.get();
+    }
+
+    /**
+     * Handle a request whose mount already resolved its address — see {@link #address()}.
+     */
+    public void handle(final HttpExchange exchange, final fURI address) throws IOException {
+        ADDRESS.set(address);
+        try {
+            this.handle(exchange);
+        } finally {
+            ADDRESS.remove();
+        }
+    }
+
     public HttpRec(final Map<Obj, Obj> map, final fURI tid, final fURI vid) {
         super(map, tid, vid);
         // Default SEND — mirror WebSocketRec
@@ -140,6 +165,16 @@ public class HttpRec extends MRec {
             LOG.error("error handling %s %s: %s", exchange.getRequestMethod(), exchange.getRequestURI(),
                     e.getMessage() == null ? e.getClass().getName() : e.getMessage());
             onError(exchange, e);
+        } finally {
+            // Whatever happened, this request must be *completed*. An error path that logs without writing a
+            // response leaves the exchange open and the client waiting for its own timeout — observed as zero
+            // bytes for 8s on a request whose uri failed to parse. Closing is a no-op after a response has been
+            // written (every send closes its body stream) and is the difference between a fast failure and a hang.
+            try {
+                exchange.close();
+            } catch (final Exception e) {
+                LOG.debug("error closing exchange: %s", e.getMessage());
+            }
         }
     }
 
@@ -214,7 +249,10 @@ public class HttpRec extends MRec {
         } else {
             try {
                 sendError(500, e.getMessage() == null ? "Internal Server Error" : e.getMessage());
-            } catch (final IOException ignored) {
+            } catch (final IOException ex) {
+                // never silent again: this is the path that used to leave a client waiting forever, and the only
+                // trace of it was the log line above (handle's finally now closes the exchange either way)
+                LOG.error("unable to send error response for %s: %s", exchange.getRequestURI(), ex.getMessage());
             }
         }
     }
@@ -227,6 +265,11 @@ public class HttpRec extends MRec {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
         map.put(uri(METHOD), str(exchange.getRequestMethod()));
         map.put(uri(URI), uri(exchange.getRequestURI().toString()));
+        // The mount's resolved address, when it resolved one outright (a templated route value): present means
+        // "this is the address, nothing is appended to it" — the mount already consumed the request path.
+        final fURI routed = this.address();
+        if (null != routed)
+            map.put(uri(WEB_ROOT), uri(routed));
         // Headers
         final Map<Obj, Obj> headerMap = new LinkedHashMap<>();
         exchange.getRequestHeaders().forEach((k, v) ->
@@ -335,6 +378,11 @@ public class HttpRec extends MRec {
         try {
             final byte[] bytes = contentType.toBytes(message);
             this.exchange().getResponseHeaders().set(MIME.MIMEType.VALUE, contentType.value);
+            // Revalidate before reuse. Responses carry no validator (no ETag, no Last-Modified), so a client that
+            // cached a bad copy has nothing to check it against and can hold it indefinitely — which is how a
+            // corrupted image stayed in a browser after the read that produced it was fixed. "no-cache" does not
+            // forbid caching, it forbids reuse without asking, so assets stay fast and stale ones self-heal.
+            this.exchange().getResponseHeaders().set("Cache-Control", "no-cache");
             this.exchange().sendResponseHeaders(200, bytes.length);
             try (final OutputStream os = this.exchange().getResponseBody()) {
                 os.write(bytes);

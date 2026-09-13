@@ -41,6 +41,7 @@ import java.time.Duration;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
+import static studio.phaseshift.metatron.isa.web.webHelper.isTemplated;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /**
@@ -195,6 +196,11 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
         final Obj routes = space.at(ROUTE);
         assertFalse(routes.isNoObj(), "httpSpace should have a route table");
         routes.asRec().elements().forEach(r -> {
+            // A templated route value names no address until a request exists — there is nothing for the Router
+            // to resolve here, which is exactly what makes it a per-request mount (docs/design/webspace.md
+            // §8.1.2). Every non-templated value is still held to the invariant.
+            if (isTemplated(r.second()))
+                return;
             final Obj type = Router.global().read(r.second().uriValue());
             assertFalse(type.isNoObj(),
                     "Type should be registered in Router at " + r.second().uriValue());

@@ -64,7 +64,7 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
     public static final fURI OBJ_DOCKER_SERIALIZER_TID = DCKR_ISA_TID.extend("serializer/obj_docker");
 
     private static final ObjDockerSerializer INSTANCE = new ObjDockerSerializer();
-    private static final ObjJSONSerializer JSON = ObjJSONSerializer.simple();
+    private static final ObjJSONSerializer JSON = ObjJSONSerializer.literal();
 
     private static final Pattern SIZE_PATTERN =
             Pattern.compile("^([\\d.]+)\\s*([KMGT]?B)$", Pattern.CASE_INSENSITIVE);
@@ -100,10 +100,19 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
     // ===================================================================
 
     private static Obj clean(final Obj obj) {
+        return clean(obj, null);
+    }
+
+    /**
+     * The field a value came from is the type information this conversion needs: docker reports every field as a
+     * JSON string, so nothing about {@code "16"} says whether it is a count or a tag. Only the fields that are
+     * counts are read as numbers (see {@link #COUNT_FIELDS}); everything else keeps its text.
+     */
+    private static Obj clean(final Obj obj, final String field) {
         if (obj.isStr())
-            return cleanString(Str.Helper.cleanString(obj, true).trim());
+            return cleanString(Str.Helper.cleanString(obj, true).trim(), field);
         if (obj.isUri())
-            return cleanString(obj.uriValue().toString());
+            return cleanString(obj.uriValue().toString(), field);
         if (obj.isInt())
             return obj;  // keep Docker integer values (e.g. container count) as-is
         if (obj.isRec()) {
@@ -111,7 +120,7 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
             obj.asRec().jvm().forEach((k, v) -> {
                 final String rawKey = k.isUri() ? k.uriValue().name() : k.toString();
                 final String key = toSnakeCase(rawKey);
-                Obj value = clean(v);
+                Obj value = clean(v, key);
                 if ("labels".equals(key) && value.isStr())
                     value = parseLabels(Str.Helper.cleanString(value, true));
                 else if ("labels".equals(key) && value.isUri())
@@ -125,7 +134,15 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
         return obj;
     }
 
-    private static Obj cleanString(final String s) {
+    /**
+     * Fields whose value is a name rather than a number, so a numeric-looking one keeps its text: docker reports
+     * {@code "Tag":"16"} for postgres:16, and reading that as the integer 16 loses the tag.
+     */
+    private static final java.util.Set<String> NAME_FIELDS =
+            java.util.Set.of("tag", "repository", "id", "image", "names", "name", "status", "state", "command",
+                    "mounts", "mount", "ports", "networks", "network", "created_since", "digest");
+
+    private static Obj cleanString(final String s, final String field) {
         if (s.isEmpty() || "none".equalsIgnoreCase(s) || "N/A".equalsIgnoreCase(s))
             return noobj();
         // Docker size: "227MB" → mB::227.0
@@ -135,8 +152,12 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
             final String raw = m.group(2).toLowerCase();
             return real(val, MATH_DATASIZE_TID.extend(raw.charAt(0) + "B"), null);
         }
-        // Integer count: "0" → 0
-        if (CommonUtil.isInt(s))
+        // Integer count — for the fields that *are* counts. A tag stays text even when it is numeric: postgres:16
+        // is a name, and reading it as 16 loses that exactly as reading "11.2" as a real did (a number renders
+        // bare, so afterwards the two cannot be told apart).
+        // a value inside a list has no field name of its own
+        final boolean named = null != field && NAME_FIELDS.contains(field);
+        if (!named && CommonUtil.isInt(s))
             return jnt(Long.parseLong(s));
         // Datetime
         try {

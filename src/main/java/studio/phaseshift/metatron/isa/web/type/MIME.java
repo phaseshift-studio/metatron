@@ -263,6 +263,11 @@ public class MIME {
         }
 
         public byte[] toBytes(final Obj obj) {
+            // Bytes are already bytes. The fallback for a type with no serializer is the plain-text one, which
+            // would stringify them — so an image read as bytes (fsSpace) has to be written verbatim here, or the
+            // transport re-corrupts what the read was fixed to preserve.
+            if (obj.isBytes())
+                return obj.asBytes().jvm().array();
             return Optional.ofNullable(this.serializer())
                     .map(s -> s.outputBytes(obj).array())
                     .orElseThrow(() -> MTronException.of("no serializer for %s", this.value));

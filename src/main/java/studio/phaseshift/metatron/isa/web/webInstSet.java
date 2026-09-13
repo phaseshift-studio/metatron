@@ -208,7 +208,7 @@ public class webInstSet extends AbstractInstSet {
             }).create();
 
     public static final Type CSS_TYPE = Type.Builder.build()
-            .tid(REC_TID)
+            .tid(STR_TID)
             .vid(CSS_TID).create();
     public static final Type MARKDOWN_TYPE = Type.Builder.build()
             .tid(STR_TID)
@@ -234,6 +234,28 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI MCP_CLIENT_TID = WEB_ISA_TID.extend("mcp").extend("mcp_client");
     public static Type MCP_CLIENT_TYPE;
     public static Type MCP_SERVER_TYPE;
+
+    // ── protocol surfaces ────────────────────────────────────────────────────
+    // The lattice: protocol::T is the umbrella; http::T / ws::T are the verb vocabularies
+    // ("these methods exist"), rest::T refines http::T with their meaning, and mcp / mtron /
+    // stream are vocabularies of their own. A surface refines a protocol either by being vidded
+    // under it (path) or by declaring it as its tid parent (Obj.testNominally).
+    public static final fURI PROTOCOL_TID = WEB_ISA_TID.extend("protocol");
+    public static final fURI HTTP_TID = WEB_ISA_TID.extend("http");
+    public static final fURI WS_TID = WEB_ISA_TID.extend("ws");
+    public static final fURI MCP_TID = WEB_ISA_TID.extend("mcp");
+    public static final fURI REST_TID = WEB_ISA_TID.extend("http").extend("rest");
+    public static final fURI MTRON_TID = WEB_ISA_TID.extend("mtron");
+    public static final fURI STREAM_TID = WEB_ISA_TID.extend("stream");
+    public static final fURI ROUTE_TID = WEB_ISA_TID.extend("route");
+    public static Type PROTOCOL_TYPE;
+    public static Type HTTP_TYPE;
+    public static Type WS_TYPE;
+    public static Type MCP_TYPE;
+    public static Type REST_TYPE;
+    public static Type MTRON_TYPE;
+    public static Type STREAM_TYPE;
+    public static Type ROUTE_TYPE;
 
 
     public webInstSet() {
@@ -267,9 +289,9 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(YAML_TYPE, "a yaml document"),
                         docWrap(XSV_TYPE, "an xsv verified str encoding of a {comma,tab,etc.}-separated values document"),
                         docWrap(CSV_TYPE, "a csv verified str encoding of a comma-separated values document"),
-                        docWrap(CSS_TYPE, "a rec encoding of a css document"),
-                        docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
-                        docWrap(JAVA_TYPE, "a rec encoding of a java source file"),
+                        docWrap(CSS_TYPE, "a str encoding of a css document"),
+                        docWrap(MARKDOWN_TYPE, "a str encoding of a markdown document"),
+                        docWrap(JAVA_TYPE, "a str encoding of a java source file"),
                         docWrap(OBJ_SERIALIZER_TYPE = Type.Builder.build()
                                         .tid(OBJ_SERIALIZER_TID)
                                         .vid(OBJ_SERIALIZER_TID)
@@ -388,7 +410,7 @@ public class webInstSet extends AbstractInstSet {
                         /// //////////////////////////////
                         docWrap(MCP_MTRON_SERVER_TYPE, "a transport-agnostic mcp server exposing metatron-native tools (eval_mtron, list_space, router_info, find_inst)"),
                         docWrap(MCP_SERVER_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
+                                        .tid(MCP_TID)
                                         .vid(MCP_SERVER_TID)
                                         .isaPredicate(rec(
                                                 uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
@@ -403,6 +425,57 @@ public class webInstSet extends AbstractInstSet {
                                         uri(RESOURCE).maybe(), "a collection of obj references (various obj types handled accordingly)",
                                         uri(PROMPT).maybe(), "a collection of prompts (various obj types handled accordingly"),
                                 "transport-agnostic mcp json-rpc protocol handler"),
+                        docWrap(ROUTE_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(ROUTE_TID)
+                                        .create(),
+                                "a mount table — mount pattern to route value (a uri, a type reference, or an inst?protocol<=uri instruction)",
+                                "[/dr/+ => *dr.as(mcp::T), /docs/# => <mfs:docs/website/#>]@/m/web/route",
+                                "webHelper.routeProblems(rec) reports entries that cannot be mounted"),
+                        docWrap(HTTP_TYPE = Type.Builder.build()
+                                        .tid(PROTOCOL_TID)
+                                        .vid(HTTP_TID)
+                                        .create(),
+                                "the http verb vocabulary — it says only that these methods exist",
+                                "an http surface handles its own on_get / on_put / ..."),
+                        docWrap(WS_TYPE = Type.Builder.build()
+                                        .tid(PROTOCOL_TID)
+                                        .vid(WS_TID)
+                                        .create(),
+                                "the websocket frame vocabulary — on_open / on_message / on_close exist"),
+                        docWrap(MCP_TYPE = Type.Builder.build()
+                                        .tid(PROTOCOL_TID)
+                                        .vid(MCP_TID)
+                                        .create(),
+                                "the mcp surface — a json-rpc protocol over tool / resource / prompt",
+                                "mcp_server::T, mcp_client::T, mcp_http::T, mcp_ws::T are all mcp::T by path"),
+                        docWrap(REST_TYPE = Type.Builder.build()
+                                        .tid(HTTP_TID)
+                                        .vid(REST_TID)
+                                        .create(),
+                                "the rest semantics — what the http methods mean over an addressable resource",
+                                "get reads, put replaces, patch updates, delete unlinks, post creates",
+                                "web_http::T is a rest::T surface"),
+                        docWrap(MTRON_TYPE = Type.Builder.build()
+                                        .tid(PROTOCOL_TID)
+                                        .vid(MTRON_TID)
+                                        .create(),
+                                "the mtron surface — one message is one expression, evaluated",
+                                "mtron_ws::T and mtron_http::T are mtron::T"),
+                        docWrap(STREAM_TYPE = Type.Builder.build()
+                                        .tid(PROTOCOL_TID)
+                                        .vid(STREAM_TID)
+                                        .create(),
+                                "a raw byte / server-sent-event stream surface"),
+                        // declared *after* its members so their Type objects exist when the union is built
+                        docWrap(PROTOCOL_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(PROTOCOL_TID)
+                                        .isaPredicate(union_(HTTP_TYPE, WS_TYPE, MCP_TYPE, REST_TYPE, MTRON_TYPE, STREAM_TYPE).tryToInst())
+                                        .create(),
+                                "the protocol-surface umbrella — the union of the protocol types, so it *classifies* rather than labels",
+                                "a value is protocol::T iff it is an http::T, ws::T, rest::T, mcp::T, mtron::T or stream::T",
+                                "without the union, protocol::T would be purely nominal and could not decide an arbitrary rec"),
                         docWrap(MCP_CLIENT_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(MCP_CLIENT_TID)

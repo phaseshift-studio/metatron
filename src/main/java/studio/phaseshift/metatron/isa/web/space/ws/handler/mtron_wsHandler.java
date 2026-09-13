@@ -44,7 +44,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /*
@@ -56,7 +55,7 @@ public class mtron_wsHandler extends WebSocketRec {
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
     public static final Type WS_MTRON_HANDLER_TYPE = Type.Builder.build()
-            .tid(WS_HANDLER_TID)
+            .tid(webInstSet.MTRON_TID)
             .vid(WS_MTRON_HANDLER_TID)
             .isaPredicate(rec(
                     uri(IN).maybe().asUri(), isa_(webInstSet.MIME_OBJ_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),

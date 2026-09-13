@@ -30,13 +30,13 @@ initiative: naming, re-parenting, deleting and deciding — not building.** The 
 | a projection registry over (obj kind × protocol) | the `/m/inst/as` graph — `?dom<=rng` rows contributed by every type, with a scored single-read lookup | requirement 2 is mostly *writing rows* |
 | an override / derive / degrade ladder | row specificity (`scoreSpecificity`: dom 1000, +500 exact base, +2000 rng match) | no dispatch code; the generic row is the last resort |
 | "become a server" as a new operation | an `as`-call — the boot file already spells it `*dr.as(skill::T).as(mcp_server::T)` | `/drstynx => *dr.as(mcp::T)` |
-| a protocol/carrier dispatch | two re-parentings — `mcp_server::T <: mcp::T`, `httprec::T <: web::T` | `test` then `as` replaces the class-sniffing ladder |
+| a protocol/carrier dispatch | two re-parentings — `mcp_server::T <: mcp::T`, `httprec::T <: rest::T` | `test` then `as` replaces the class-sniffing ladder |
 | a transport binder | the last hop of an `as`-path — `(mcp::T => ws::T).>>` is `ws::T` | a listener pops the head it serves |
 | protocol negotiation logic | "which rngs does the graph emit for this dom" | existing boot files keep working |
 | a `<...>` path search | the as-graph audit — `checkAsGraph`'s six violation classes *are* the unambiguity rules | the audit is the path resolver's proof obligation |
 | a new language feature | repeated hops — `x.as(a => b => c) ≡ x.as(a).as(b).as(c)` | the design ships before the parser does |
 | protocol types | `markdown::T` / `html::T` / `java::T` — "one str, many renderings", MIME-bridged | `java::T → rec::T` is live proof |
-| the handler family | rows — `mcp_httpHandler` = `as?http<=mcp`, `mtron_wsHandler` = three verb rows, `web_httpHandler` = the default `web::T` body | six classes become rows plus two dumb carriers |
+| the handler family | rows — `mcp_httpHandler` = `as?http<=mcp`, `mtron_wsHandler` = three verb rows, `web_httpHandler` = the default `rest::T` body | six classes become rows plus two dumb carriers |
 | two session recs and two IO records | one contract — both are `MRec`s of `on_*` verbs; `WebSocketRec.IO` and `HttpRec.HttpIO` are literally the same record | one `IO`, one session shape |
 | two web spaces | one implementation, N carriers — same config parse, ladder, session cache, MIME pair | `webSpace`; the client half leaves for `http::client::T` |
 
@@ -55,7 +55,7 @@ initiative: naming, re-parenting, deleting and deciding — not building.** The 
 | DELETE semantics | write `noobj` → `writeComplete` closes the value's streams | unlink *is* the resource-release hook |
 | per-request content negotiation | `DataPath.typeOf(ROLE_FIELD)` + `MIME.MIMEType.fromType` | retires the extension-hint loop |
 | "mount a space, get a webserver" | `AbstractDataPathSpace`'s flat/structured duality + migration | arbitrary paths already work; no web policy needed |
-| a collection whose membership is a type predicate | `grphSpace`'s `V` / `E` meta-collections (`isRefinementOf(VRTX_TYPE)`) | exactly the shape of `as?web<=/m/type` |
+| a collection whose membership is a type predicate | `grphSpace`'s `V` / `E` meta-collections (`isRefinementOf(VRTX_TYPE)`) | exactly the shape of `as?rest<=/m/type` |
 
 **Catalog**
 
@@ -250,12 +250,41 @@ graph's audit meaningful for each:
 | family | base | members | nature |
 |---|---|---|---|
 | **encoding** | `str::T` | markdown, html, xml, yaml, java, xsv/csv, css, json | how a `str` is structured; MIME-bridged (`toTid`/`fromType`); round-trippable |
-| **surface** | `rec::T` | `mcp::T` (tool/resource/prompt), `web::T` (`on_get`…`on_put`), `mtron::T` (`on_message` ⇒ eval) | one obj, many faces |
+| **surface** | `rec::T` | `http::T` (the methods exist) with `rest::T <: http::T` (what they mean), `ws::T` (frames), `mcp::T`, `mtron::T`, `stream::T` | one obj, many faces |
 | **carrier** | socket-backed | `http::T` (`HTTP_SOCKET_TYPE`, `/m/web/http/http_socket`), `ws::T` (`WS_WEBSOCKET_TYPE`, `/m/web/ws/web_socket`), `stdio` | how bytes arrive |
 
 Re-parenting is the whole implementation of two of the three: `mcp_server::T <: mcp::T` and
-`httprec::T <: web::T`. After that the transport asks `target.test(mcp::T)` and then `as` — the constructor
+`httprec::T <: rest::T`. After that the transport asks `target.test(mcp::T)` and then `as` — the constructor
 sniffing in both spaces (finding 3) disappears, and `implicitAsGraph()` supplies `as?mcp<=mcp_server` for free.
+
+**Surfaces refine their *vocabulary*, and the vocabulary states which carrier can carry it.** One correction to
+the first draft (the user's suggestion), and a real improvement: the surface family splits into a vocabulary and
+the semantics layered on top of it.
+
+- `http::T` — the **method vocabulary**. It says only *these methods exist*: `on_get`, `on_put`, `on_patch`,
+  `on_delete`, `on_post`, `on_head`, `on_options`, plus the request/response shape. Today's `HTTP_SOCKET_TYPE`
+  is exactly this.
+- `rest::T <: http::T` — adds the **semantics**: what those methods mean over an addressable resource. GET reads
+  it, PUT replaces it, PATCH applies the update algebra, DELETE unlinks it, POST creates/appends, and the status
+  codes follow. Substantially the content of today's `web_httpHandler`, moved out of a handler and into a type.
+- `ws::T` — the **frame** vocabulary (`on_open`, `on_message`, `on_close`).
+- `mcp::T`, `mtron::T`, `stream::T` — protocol surfaces whose vocabulary is *not* HTTP methods (JSON-RPC methods;
+  one message = one expression; a raw byte/SSE stream). Siblings of `http::T`, not refinements of it.
+
+Two things fall out that the first draft's single surface type could not express:
+
+1. **Raw HTTP becomes sayable.** A mount that declares only `http::T` gets the methods and no algebra — "I will
+   handle `on_get` myself". That is a real surface, today disguised as the `HTTP_SOCKET_TYPE` handler.
+2. **Subtyping encodes carrier compatibility.** `rest::T <: http::T` says a REST surface *requires* the HTTP
+   vocabulary, so a ws-only listener correctly refuses it. And because `implicitAsGraph()` manifests
+   `as?http<=rest` for any refinement pair already in the graph, "a REST surface is usable as an HTTP surface"
+   comes for free — no extra row. Protocols whose vocabulary is carrier-independent (`mcp::T` above all) instead
+   need explicit **binding** rows (`as?http<=mcp`, `as?ws<=mcp`) — which is exactly why the code has two thin mcp
+   wrappers today, and why those rows appear in §8.2's table.
+
+`web` therefore retires as a *type* and stays a *namespace* (`/m/web`, `webInstSet`); the type a mount names is
+`rest::T`. `rest` is a new token of the same kind as `mcp` — a protocol name — which is why it earns its place
+(Tokens already carries `mcp` for precisely this reason).
 
 **Hypothesis to verify (do not build on it yet):** the audit's violation classes appear to *classify* these
 families. `COUPLING`/`ISOCHAIN` mean a reverse path exists (candidate isomorphism) — what an *encoding*
@@ -263,6 +292,87 @@ protocol should look like (`html ⇄ markdown` via `HTMLMarkdownSerializer`). `R
 an idempotent — a lossy *view*, which is what a *surface* projection is (`rec ⇒ mcp ⇒ rec` cannot carry keys
 the surface has no slot for). Calibration pairs already in the graph: `html ⇄ markdown`, `rec ⇄ web_json`,
 `mcp_client ⇄ web_json` (`webInstSet.java:482-534`).
+
+---
+
+### 3.2 The base web types — the finite set of projection targets
+
+"Which types must a projection be able to end at?" has no single answer, because **four different things get
+called *a web type*** and only one of them is what an obj is projected *to*:
+
+| level | what it is | in the code | chosen by |
+|---|---|---|---|
+| **addressee** | the URI of the objs | metatron's native addressing — every obj already has one | the mount + the request path |
+| **surface** | the conversation: which verbs exist | `rest::T` (`on_get`/`on_put`/… — REST), `mcp::T` (`tool`/`resource`/`prompt` + JSON-RPC), `mtron::T` (`on_message` ⇒ eval), `stream::T` | the mount (or negotiation) |
+| **carrier** | how the bytes arrive | `http::T` (`HTTP_SOCKET_TYPE`), `ws::T` (`WS_WEBSOCKET_TYPE`), `stdio` | the listener |
+| **media type** | the name of a body encoding | `MIME.MIMEType` — 26 members, typed in mtron as `MIME_OBJ_TYPE` (a union over `uri(<mediaType>)`) | the request (`Accept`, `?mimeq`) |
+| **content type** | the leaf: what the body *is* | the tids `MIME.MIMEType.toTid()` maps to — `html::T`, `markdown::T`, `web_json::T`, `xml::T`, `css::T`, `java::T`, `yaml::T` over `str::T`; the binary family over `bytes::T` (`image::T` ← `as?image<=bytes`) | the request, through the same bridge |
+
+**`mcp`, `html` and `jpg` are not peers.** `mcp::T` is a *surface*; `html::T` and `image::T` are *leaves*. Every
+projection is a **pair**, and the halves are chosen at different times:
+
+- the *surface* is a mount decision — `route => [/dr/+ ⇒ *dr.as(mcp::T)]`;
+- the *leaf* is a per-request decision — `Accept` / `?mimeq` → `MIME.MIMEType.of(...)` → `.toTid()` →
+  `obj.as(<tid>)`.
+
+That last line *is* "anything with a MIME type": **`toTid()` turns content negotiation into an `as` rng**, and
+the rows it lands on already exist (`as?html<=rec` `webInstSet.java:461`, `as?rec<=html` `:453`,
+`as?web_json<=rec` `:450`, `as?xml<=rec` `:452`, `as?markdown<=rec` `:472`, `as?java<=rec` `:474`). MCP mandates
+JSON bodies, so an MCP projection is the pair (`mcp::T`, `application/json`); a REST projection is (`rest::T`,
+whatever the client asked for).
+
+**How do you say "this is REST"?** REST is the *surface* `rest::T` — the verb vocabulary {read, replace, update,
+unlink} presented as {GET, PUT, PATCH, DELETE}, with status codes, per-request representation choice, and
+branch-nested indexes. Three spellings of one thing:
+
+1. explicit — `route => [/person/# ⇒ *person.as(rest::T)]`;
+2. the path form — `*person.as(rest::T => http::T)`, surface then carrier;
+3. the default — a bare space/uri mount, because `rest::T` is the only surface that accepts one (§8.1's
+   registry-driven fallback).
+
+*Raw* HTTP is the other thing: a rec that declares `on_get`/`on_put` itself (today's `HTTP_SOCKET_TYPE`) handles
+its own methods and gets **no** resource algebra. That is HTTP, not REST — and the difference is exactly which
+type is in force: `http::T` alone supplies the methods, `rest::T <: http::T` supplies their meaning (§3.1).
+
+**The leaf inventory as it actually stands** — the diagnostic the row table needs:
+
+| media type | content type | `fromType` | `toTid` | note |
+|---|---|---|---|---|
+| `application/x-mtron` | *none, by design* | — | `null` (deliberate) | the vm's own encoding; the honest default |
+| `text/html` | `html::T` | ✓ | ✓ | round-trips |
+| `text/markdown` | `markdown::T` | ✓ | ✓ | round-trips |
+| `application/json` | `web_json::T` | ✓ | ✓ | `application/ld+json` has no type |
+| `application/xml` | `xml::T` | ✓ | ✓ | `atom+xml`, `xhtml+xml` have no type |
+| `text/css` | `css::T` | ✓ | ✓ | round-trips |
+| `text/x-java` | `java::T` | ✓ | ✓ | round-trips |
+| `application/yaml` | `yaml::T` | **✗ missing** | ✓ | **one-way** — outbound falls through to the default |
+| *(no member)* | `csv::T`, `tsv::T`, `xsv::T` | — | — | types exist in `webInstSet`; no media type at all |
+| `image/png` · `image/jpeg` · `image/gif` · `image/x-icon` | **none** | ✗ | ✗ | typed by extension only; `image::T` (`/m/mach/file/image`, `as?image<=bytes`) exists but nothing bridges it |
+| `image/svg+xml` | none | ✗ | ✗ | it is XML text; unclaimed |
+| `application/bson` · `application/javascript` · `text/javascript` · `text/plain` · `text/x-shellscript` · `text/x-python` · `application/octet-stream` · `media/mpeg` | none | ✗ | ✗ | some have serializers; none has a content type |
+
+Three gaps, all small, all worth closing before the row table is written:
+
+1. **`yaml::T` is one-way.** `toTid()` maps `application/yaml → yaml::T`; `fromType` has no YAML branch, so a
+   `yaml::T` obj negotiates to the default instead of `application/yaml`. Only the outbound half is missing.
+2. **No media type for the separator family.** `csv::T` / `tsv::T` / `xsv::T` are types in `webInstSet` and
+   `ObjXSVSerializer` exists, but `MIME.MIMEType` has no `text/csv` member — so a CSV rendering is one enum
+   member plus two branches away.
+3. **The binary family silently lies.** `serializer()` has no image branch and falls back to
+   `ObjPlainTextSerializer`, which `toBytes` then uses — so a response labeled `Content-Type: image/jpeg` is
+   produced by the plain-text serializer. Either bridge images to `image::T` (a real content type with a bytes
+   path) or drop them from the negotiable set; do not leave the label unbacked. (Relatedly, `toTid()` returning
+   `null` is currently read as "serve an untyped `str`" — `httpSpace.java:326-333` — which is safe for the
+   textual media types and unsafe for the binary ones.)
+
+**Consequence for the registry:** the leaves a projection can end at are the content-type family, closed under
+"has a bridge in both directions" — seven today. That gives the row table a firm rule:
+
+> a leaf row exists iff `fromType` and `toTid` agree on the pair; anything else is a name-only media type (not a
+> projection target) or a defect in the bridge.
+
+And because the leaf is chosen **per request**, the mount names only the *surface* — which is why `rest::T` (REST)
+is the default, and why the mount table enumerates four surfaces rather than 26 media types.
 
 ---
 
@@ -454,7 +564,7 @@ Consequences — each one replaces something the draft proposed to build:
    `vid(pattern)`. `locateBaseObj` + `at(subPath)` is a coarser approximation of the same walk.
 8. **"Collection" can be a type category.** `grphSpace` treats `V` / `E` as meta-collections by filtering schema
    types on `isRefinementOf(VRTX_TYPE | EDGE_TYPE)` — precedent for a collection root whose membership is a
-   *type predicate* rather than a physical container, which is exactly the shape of `as?web<=/m/type`.
+   *type predicate* rather than a physical container, which is exactly the shape of `as?rest<=/m/type`.
 
 **The core data algorithm: `resolveRead` / `unrollPoly` / `resolveWrite`** — read last, and it is the
 capstone: it means **the web layer is not a data layer**. `Space.Helper.resolveRead` takes only
@@ -547,12 +657,490 @@ obj's kind (the set of rngs emitted from its dom in the as-graph), use it. `mcp_
 `mfs:docs/website/` → web only; `*dr` → both, negotiate. That replaces the class-sniffing ladder with a
 principled rule and keeps existing boot files working.
 
+#### 8.1.1 A worked example — the drstynx web section, rewritten
+
+One table, written once, referenced by both carriers. Entries are `pattern ⇒ target`, where the target is a
+**plan** (`<obj>.as(<surface>)`) or a **rewrite** (`<pattern>`):
+
+```
+[== the mount table: one rec, every carrier ==============================================]
+route::[
+  [-- document root: a rewrite mount — pattern ⇒ pattern, wildcards capture --]
+  /docs/#     => <mfs:docs/website/#>,
+
+  [-- the agent as an MCP server  (was: /drstynx => *dr.as(skill::T).as(mcp_server::T)) --]
+  /dr/#       => *dr.as(mcp::T),
+
+  [-- the same agent as REST, at its own mount --]
+  /agent/#    => *dr.as(rest::T),
+
+  [-- a TYPE as a REST collection: GET /person/1, GET /person/#, PUT validated by person::T --]
+  /person/#   => person::T.as(rest::T),
+
+  [-- a SPACE mounted by its own pattern: docker:# + the captured remainder --]
+  /docker/#   => docker:#,
+
+  [-- protocol INFERRED — only mcp accepts an mcp_server, so no protocol key is needed --]
+  /mcp        => mcp_mtron,
+  /message    => mcp_message,
+
+  [-- the eval surface (was: /mtron => mtron_ws) --]
+  /mtron      => *router.as(mtron::T),
+
+  [-- a mount that needs config: the explicit entry form (decision §13.6) --]
+  /public/#   => route::[obj          => <mfs:usr/marko/public/#>,
+                         protocol     => web,
+                         read_only    => true,
+                         default_page => 'index.html'],
+
+  [-- bare-host document root --]
+  /           => <mfs:docs/website/>
+]@/sys/space/web/route;
+
+[== two carriers, one table ==============================================================]
+webspace::[carrier => http, host => <http://localhost:8777>, pattern => <http://#>,
+           q       => [mimeq::[=>]],
+           route   => !*</sys/space/web/route>]@/sys/space/web/http;
+webspace::[carrier => ws,   host => <ws://0.0.0.0:8555>,   pattern => <ws://#>,
+           route   => !*</sys/space/web/route>]@/sys/space/web/ws;
+```
+
+Against today:
+
+| today | new |
+|---|---|
+| two `route` tables, `/mcp` and `/message` duplicated | one rec at `/sys/space/web/route`, referenced by both carriers |
+| `/drstynx => *dr.as(skill::T).as(mcp_server::T)` (ws only) | `/dr/# => *dr.as(mcp::T)` — a surface name, and it rides any carrier |
+| `/docker => docker:` (http only) | `/docker/# => docker:#` — declares the capture explicitly |
+| `/ => mfs:docs/website/` | `/ => <mfs:docs/website/>` and `/docs/# => <mfs:docs/website/#>` (root + a named root) |
+| `/mtron => mtron_ws` (a handler type) | `/mtron => *router.as(mtron::T)` (a surface over an obj) |
+| `/mcp => mcp_mtron` | unchanged — the protocol is inferred |
+| `httpspace` / `wsspace` as two types | one `webspace` with a `carrier` key |
+| no way to say read-only for one mount | `read_only`, `default_page` on the entry |
+
+**The rules the example encodes**
+
+1. **One table.** Carriers name a table and a wire; they never mention a protocol or a handler type.
+2. **`pattern ⇒ pattern` is a rewrite mount** — the RHS's wildcard is `retractPattern()`ed and extended with the
+   captured remainder, which is exactly what `DataPath.vid(spacePattern)` already does. That single rule is the
+   classic webserver — and it is the **degenerate case of stage 2** in the three-stage form (§8.1.3), a template
+   with no `${}`.
+3. **`<obj>.as(<surface>)` is an obj mount** — `rest::T` (REST), `mcp::T`, `mtron::T`, `stream::T`. The mount
+   names the *surface*; the *leaf* (§3.2) never appears, because it is chosen per request.
+4. **The protocol is declared, named by the `as`, or inferred.** An entry with no protocol resolves if exactly
+   one surface accepts the target's kind — `mcp_mtron` → mcp, `docker:#` → web — which is why the existing boot
+   entries keep working untouched.
+5. **Config lives on the entry** (or on the as-row's argument — decision §13.6). The keys are today's
+   `rest::T` config keys: `read_only`, `default_page`, `in`/`out`. No new tokens.
+6. **Types and code are applied per session, not at boot.** Today `Space.Helper.resolveApply` evaluates a route
+   RHS once, during space construction (`Space.java:244-252`); `createHandlerRoute` then constructs a handler
+   *per session* (`httpSpace.java:196-218`). The table above needs the second behaviour for the whole value —
+   which is exactly where a handler type's constructor is already run today, so this is a relocation, not a new
+   concept.
+7. **Resolution is most specific first** — longest literal prefix, then most concrete segments. Today
+   `mWebSocketServer.createServer` takes the first match in map-iteration order
+   (`wsSpace.java:208-212`), so `/` can shadow `/docs/#`. This is a new requirement on the route walker.
+8. **Two spellings of "mount an X":** by *pattern* (`/docker/# => docker:#`) and by *obj*
+   (`/# => *</sys/space/usr/dr>`). The pattern form wins when the target's prefix differs from the mount; the
+   obj form wins when it does not.
+
+**Note the contrast between the two collection entries.** `/person/# => person::T.as(rest::T)` mounts the
+*type* — it needs the `as?rest<=/m/type` row, and it is the answer for instances scattered outside any one
+space. `/docker/# => docker:#` mounts the *space* — and there the type view is already free, because a
+`SchemaSpace` collection deref resolves to its type (`resolveCollectionSchema`, §8.0). Prefer the space form
+where one exists; the type form is the fallback, not the default.
+
+**What the example exposes as still-open**
+
+- the config spelling — entry rec (shown) vs the as-row's argument (§13.6);
+- per-session application of a route value with a session vid as its lhs (rule 6) — the one semantic change;
+- most-specific-match ordering (rule 7) — new, and a latent bug today;
+- for `/mtron`, the eval surface's legitimate target (`*router` here) — today's `mtron_ws` handler type is a
+  placeholder for "the VM itself", which needs a named obj.
+
+#**The template contract is settled (user-verified, 2026-09-13) — this resolves decision §13.21.** `${...}`
+expressions in a uri are evaluated against the **lhs the uri is applied to**, and components are reachable directly
+or structurally:
+
+```
+/people/1.map(</data/person/${name()}>)             ==> /data/person/1
+/people/1.as(rec::T)                               ==> [path=>[<>,people,<1>], c=>[min=>1,max=>1]]
+/people/1.map(/data/person/${as(rec::T)>>path/2})   ==> /data/person/1
+```
+
+So the capture binding is **the lhs uri itself**: option (a)'s q-value injection is unnecessary, `name()` gives the
+tail, and `as(rec::T)` exposes `path` (segments — 0-indexed with an *empty leading element*, so segment *n* is
+`path/(n+1)`) and `c` (the coefficient) for anything `name()` cannot reach. `.map(<template>)` is the application
+that binds a uri as a template's lhs. **No new `Uri.java` capability is required for stage 3**, so stage 3 is
+unblocked: the route value must simply be applied with the matched request uri as its lhs.
+
+**Stage 2 complete, and `route::T` landed (2026-09-13).** Both ladders are named functions —
+`httpSpace.resolveRoute(Obj) → RouteLane` (`HANDLER | WEB | NONE`) and `wsSpace.resolveRoute(Obj) → RouteLane`
+(`MCP | CONSTRUCT | RETAG | NONE`) — with their constructors as drivers, and both boot defects fixed: the route
+log *renders* its value instead of uri-converting it, and each route is mounted in its own `try/catch`, so one bad
+mount is reported and skipped rather than swallowing the space into *"server not started"*.
+
+`route::T` is declared at `/m/web/route`; `webHelper.routeProblems(Rec)` reports table problems (shape and
+signature) and both spaces now log them at boot. Verified: **157 tests, 0 failures, 17 skipped** — the 119-test
+baseline plus `httpRouteLadderTest` (6), `wsRouteLadderTest` (5), `httpRouteResolutionTest` (4),
+`wsRouteResolutionTest` (4), `webRouteTableTest` (7), `webInstSetTest` (12).
+
+Three findings from doing it, all of which bind P2/P4:
+
+1. **There are no implicit conversions in mtron.** Nothing inspects an inst's rng and coerces its result — a route
+   value must *be* what the ladder needs (a uri, an addressable type reference, or an explicit `protocol<=uri`
+   instruction). That is why the boot log's `uriValue()` was fatal rather than merely wrong, and why validation
+   must be eager. Author-level conversion is explicit: `5.as(uri::T)`.
+2. **`protocol::T` is now a union, and a union classifies *objs*** (the user's fix). As first declared it was
+   purely nominal — no predicate, no constructor — so it could only *label*: it matched what was explicitly typed
+   as it or as a derivation of it, and could not decide an arbitrary rec. Two problems followed:
+   `rec::T.test(protocol::T)` came back `true` through `testNominally`'s base-type branch (a re-tag allowance, not
+   membership), and the validator could not use `test` at all. `protocol::T` is now
+   `isaPredicate(union_(http, ws, rest, mcp, mtron, stream).tryToInst())` — declared *after* its members, so their
+   `Type` objects exist when the union is built — which fixes the value question: **an `mcp_server` value tests as
+   `protocol::T`** (`webInstSetTest.testProtocolUnionClassifiesValues`). It does *not* fix the type question: a
+   union's predicate is applied to the objs on its lhs, so `rest::T.test(protocol::T)` is now `false` where the
+   nominal version answered `true`. The two questions therefore have two mechanisms, both pinned:
+   - **classifying a value or a route target** — use the *concrete* nominal surface (`test(rest::T)`,
+     `test(mcp::T)`), which answers for values and types alike;
+   - **classifying a *type* against the umbrella** — walk the **declared** chain
+     (`webHelper.isProtocolSurface`: `rest → http → protocol`).
+   And since none of these types has a constructor, nothing can be *coerced* into a surface — projection stays
+   explicit (`as(mcp::T)` resolving to a row that builds one).
+3. **Only a single instruction has a checkable signature.** A `code` value — a fluent chain such as
+   `5.as(uri::T)`, or the production `*dr.as(skill::T).as(mcp_server::T)` — resolves its rng when it is *applied*,
+   so the validator accepts it unchecked. Such a code that yields a non-surface now reaches the `NONE` lane with a
+   warning, where before these fixes it would have killed the space at boot: the config-level counterpart of
+   `httpRouteResolutionTest`'s `NONE` row.
+
+**Stage 2, http half (2026-09-13).** `httpSpace`'s ladder is now `resolveRoute(Obj) → RouteLane`
+(`HANDLER | WEB | NONE`, carrying handler type, handler config and web root), with the constructor as a driver
+over it. Two defects went with it: the route log now *renders* the value (`toShortString()`) instead of
+uri-converting it, and each route is mounted in its own `try/catch` so one bad mount is reported and skipped
+rather than swallowing the whole space into *"server not started"*. Verified: `httpRouteLadderTest` (6),
+`wsRouteLadderTest` (5), `webInstSetTest` (12), `mtron_httpHandlerTest` (12), `mcp_mtronTest` (34) — 69 tests,
+0 failures.
+
+**The route-value invariant (found by characterization, 2026-09-13).** A route value must be
+**uri-convertible *and* resolvable in the Router**, and the current implementation enforces neither at boot:
+
+- not uri-convertible (a bare instance, or an instance with a null vid) → the constructor's
+  `LOG.info(..., r.second().uriValue(), ...)` throws, the `catch` logs *"server not started"*, and **the whole
+  space comes up with no server** — every request then times out rather than failing;
+- not resolvable (a uri naming nothing) → the server starts, but the invariant encoded in
+  `AbstractHTTPServerIntegrationTest.testHandlerTypeIsRegisteredInRouter` fails (`Router.global().read(value)`
+  must not be noobj). **Resolvability is not a general rule**, though: the integration base asserts it for its own
+  handler mounts, while a web-root mount legitimately names a *prefix* (`docker:`, `mfs:docs/website/`) rather
+  than a leaf. `webHelper.routeProblems` therefore checks uri-convertibility and instruction signature, and
+  deliberately not resolvability.
+
+An instance-valued mount is therefore only expressible by *writing the instance into a space and naming that
+uri*. `route::T`'s value being an instruction (`inst?protocol::T<=uri::T`, §8.1.3) sidesteps the first rule
+entirely, and boot-time validation enforces both — which is what P1 replaces the silent fallthrough with.
+
+### 8.1.2 Templated mounts — the route as a rewrite rule
+
+A route RHS need not be a literal target. **URI templates are already implemented end to end**, so a mount can
+*compute* the data uri from the request:
+
+```
+/people/#   => </data/person/p_${name()}>.as(rest::T)
+```
+
+Resolving `/people/34` expands `name()` against the matched request uri → `/data/person/p_34`, and the resource
+at that address is projected into a `rest::T` surface: an `HttpRec` whose `on_get` / `on_put` / `on_patch` /
+`on_delete` *are* the REST semantics for that resource. The meaning of each verb is specified entirely by the
+`as`-type argument — which is what makes the protocol a type rather than a handler.
+
+| piece | already exists as |
+|---|---|
+| parsing `${...}` inside a uri, as an atomic unit | `mParser.m_furi_template()` (`mParser.java:939-950`), tried before the plain furi characters |
+| remembering which component each template belongs to | `fURI.templates()` → `List<Pair<Component, String>>`; `AbstractfURI` re-emits them when rewriting |
+| parsing each expression once | `MUri.parsedTemplates()` — a memoized `List<Pair<Component, Obj>>` (`MUri.java:40-80`) |
+| evaluating against an lhs | `Uri.apply(lhs)` → `expandTemplate(...)` (`Uri.java:150-155`, `:164-229`): each expression is `apply(lhs)`ed, coerced per component, substituted |
+| expanding a template *argument* during inst resolution | `Inst.Helper`'s argument resolution applies each arg to the lhs and explicitly permits template expansion to change the arg (`Inst.java:641-652`) |
+
+Templates are **per component** — `SCHEME`, `HOST`, `PORT`, `PATH`, `QUERY` — so a mount can compute a host or
+inject a query, not just a path segment.
+
+**The one thing that changes.** Today `Space.Helper.resolveApply` evaluates a route RHS with **no lhs**
+(`Space.java:244-252`), so a template has nothing to bind to. The change is to apply the route value with the
+**matched request uri as its lhs** (§8.1.1 rule 6) — which is what makes `${name()}` mean "the tail of the
+request". Two bindings, kept deliberately distinct:
+
+- **addressing** — the data uri is `routeValue.apply(matchedRequestUri)`; the expressions see the request *uri*,
+  for which the existing vocabulary (`name()`, `tail(n)`, `retract(n)`, `segments()`, `removePrefix(...)`) is
+  sufficient;
+- **verbs** — the surface's `on_*` bodies receive the request *rec* (`buildRequest(exchange)`: method, uri,
+  headers, body, negotiated MIME), exactly as today.
+
+**The address is request data, not handler config — so the cache does *not* change.** The tempting reading of
+"a templated RHS varies per request" is that a surface now belongs to the *resource*, and that the cache must be
+re-keyed by (data uri, surface). That is wrong, and it is worth saying why: keyed by resource it would grow one entry
+per address ever visited, and it would put per-request data into a long-lived object. `createHandlerRoute` caches the
+handler by `sessionVid` (mount × client) and that stays correct, because a handler is a **protocol engine**, not an
+address. What varies per request is the **alignment** — a pure call, `routeValue.apply(matchedRequestUri)`, recomputed
+per request and carried in the request rec. The existing surfaces already work this way (`web_httpHandler` derives its
+address from `exchange.getHttpContext()` per request); the change is to take the aligned data uri from the request rec
+instead, and stop baking `at(WEB_ROOT)` into config at construction. One handler per mount per session, no growth.
+
+Concretely that is a **re-point, not a redesign**: the mount still passes `web_root` as its *default*, but the request
+rec now carries the aligned address and wins when present — reusing the existing `Tokens.WEB_ROOT` token rather than
+minting one (§3.2's leaf inventory; `default_page` is untouched), and `web_httpHandler`'s verbs change only *where*
+they read it (`at(WEB_ROOT)` config → request rec). `rest::T`'s row body (§8.2) inherits that read for free. The
+proof that this is the right shape is already running: an `mcp_server` mount is **address-agnostic today** — its
+messages name their own target — which is exactly why the same handler serves http, ws and mcp with no cache change at
+all. A handler is a protocol engine; a route only decides *which* engine and *where it is pointed*.
+
+**Scope is a decision, not an accident.** A templated RHS can compute any address from the request, so
+`/x/# => <${tail()}>.as(rest::T)` would expose the whole address space. Three controls, in order: the mount's
+pattern prefix defines containment (the RHS is a *prefix plus capture*, not a free expression over the request);
+`read_only` / `constq` / `lockq` still gate the verbs; and a computed uri should be checked against the mount's
+declared prefix before it is read — cheap, and it turns a whole class of mistake into a 403.
+
+**Create comes for free, but the type must be named.** `PUT /people/35` on a missing `p_35` creates it, because
+`resolveWrite` writes directly when nothing exists — that *is* REST upsert. The created value has no type unless
+the mount says so: a schema-backed mount gets it from `resolveCollectionSchema` (§8.0), while a bare uri mount
+needs a `type => person::T` key on the entry (validated by `obj.test(type)`).
+
+#### 8.1.3 The route contract — one instruction, `uri::T ⇒ protocol::T`
+
+The RHS of a route has exactly one requirement, and it is a signature: **it must take the aligned request uri and
+yield a `protocol::T`.** It need not expose any internal structure:
+
+```
+/x/y/#  =>  inst?rest<=uri(){ ...written in java... }
+```
+
+(the `a<=b` spelling is `dom=b&rng=a`, so this reads `?dom=uri&rng=rest`). The three-stage chain below is the
+*idiomatic authoring* of such an instruction using existing insts — not a required shape.
+
+**Is `protocol::T` the general rng?** Yes, with three precisions:
+
+1. **`protocol::T` is the contract; its refinements are the useful rngs.** `rest::T`, `mcp::T`, `mtron::T`,
+   `stream::T` (and `http::T` / `ws::T` as vocabularies) all refine it, so a row declared with `rng(mcp::T)`
+   *satisfies* the general contract by subsumption — the router needs one check (`result.test(protocol::T)`)
+   while the concrete type carries the carrier compatibility (§3.1) and the default verb set.
+   `implicitAsGraph()` manifests `as?protocol<=rest` for free, so widening needs no row.
+2. **The dom is the aligned request *uri*; the request *rec* belongs to the verbs.** The route function sees a uri
+   (which is why `${name()}`, `tail(n)`, `retract(n)` are the capture vocabulary), and the surface's `on_*`
+   bodies then receive the full request rec (`method`, `headers`, `body`, negotiated MIME). A mount that must
+   route on a header would need `dom(rec::T)` and its own `as?uri<=rec` hop — possible, not recommended.
+3. **Plain objs still satisfy the contract**, through the default rows: a bare uri is coerced by
+   `as?rest<=uri` ("read it and project to REST") and a bare `mcp_server` by `as?mcp<=mcp_server`. So
+   `/docs/# => <mfs:docs/website/#>` and `/mcp => mcp_mtron` stay valid — the instruction form is *available*,
+   never mandatory. This is the same generic-fallback mechanism as §8.2.
+
+Two gains follow from having a signature at all:
+
+- **The route table becomes boot-validatable.** With the contract stated, an entry type is expressible —
+  `[uri => <pattern>, obj => inst?protocol::T<=uri::T]` — so a bad entry fails at *boot* with a type error
+  instead of at request time with the current ladder's silent fallthrough ("assume web root", `httpSpace.java`).
+- **Transforms become named, reusable, discoverable rows.** A one-off Java inst can be registered once and
+  referenced by many mounts (`route => [/people/# => !*restspace, /orders/# => !*restspace]`), it is documented by
+  `docWrap`, and it is findable through `find_inst` — so a deployment's routing vocabulary is enumerable by an
+  agent, not buried in per-space lambdas.
+
+**The idiomatic authoring: three stages.** Every route *can* be read as a composition of three transforms after
+the pattern (the user's formalization):
+
+```
+<<uri_pattern>>   ⇒   <<alignment / rewrite>>   .   <<uri → obj generation>>   .   <<obj → protocol>>
+/x/y/#            ⇒   *<x/y/${tail}>            .   *                         .   as(mcp::T)
+                      uri ::T ⇒ uri::T              uri::T ⇒ obj                  obj ⇒ protocol::T
+```
+
+| stage | shape | existing machinery | typed by |
+|---|---|---|---|
+| **pattern** | a `uri::T` pattern — `+`, `#`, and (new) named groups | `fURI.test`, the mount key | the mount |
+| **alignment / rewrite** | `uri::T ⇒ uri::T` | uri templates (`expandTemplate`), `retractPattern().extend(capture)`, `routeToSpace` / `routeFromSpace`, `regex` + named groups | `?dom=uri&rng=uri` |
+| **generation** | `uri::T ⇒ obj` | `*` = `at` / `from`, plus the per-space qprocs | `?dom=uri&rng=#` |
+| **projection** | `obj ⇒ protocol` | the `as` rows | `?dom=#&rng=rest::T` / `mcp::T` / … |
+
+Six consequences:
+
+1. **The chain is already valid mtron.** `*<x/y/${tail}>.as(mcp::T)` is nested fluent insts —
+   `as(at(<template-uri>), mcp::T)` — and `Inst.Helper`'s arg resolution already expands a template argument
+   against the inst's lhs (`Inst.java:641-652`). Nothing new in the language; only the **binding** is new: the
+   whole chain is evaluated with the matched request uri as lhs (§8.1.2).
+2. **Every stage is a `(dom, rng)` row, so the route table becomes checkable.** Alignment rows are
+   `dom(uri) → rng(uri)`, generation rows `dom(uri) → rng(#)`, projection rows `dom(#) → rng(protocol)`. That
+   puts routing under `checkAsGraph`: `DUPLICATE` is "two conflicting rewrites for the same source pattern",
+   `AMBIGUOUS` is "two rewrites that overlap with no most-specific winner". A whole class of routing bug becomes
+   a static check on the same graph that governs `as`.
+3. **Stage 3 is where the query lives, and it is already optimizable.** `*` is `at`/`from` — and those are
+   exactly the insts the database pushdown rewrites match (`RewriteBuilder.forDatabase`, `CommonRewrites`
+   matching `FROM_INST_TID` / `AT_INST_TID` alongside `take` / `skip` / `order` / `count` / `where` / `sum` /
+   `mean` / `prod` / `dedup`). So a templated route into a collection inherits native SQL / Mongo / Gremlin
+   pushdown for free; the middle stage is the query, not a bare dereference.
+4. **`regex` exists and named groups are a small delta.** `REGEX_INST_TID` is `/m/inst/regex`
+   (`mInstSet.java:169`) with `dom(str) → rng(lst)` (`Str.java:408-431`): a pattern with no capture groups
+   yields a flat lst of matches; a pattern with groups yields `[fullMatch, g1, g2, …]` per match — and its own
+   `docWrap` documents both shapes. To get *named* groups: (a) add a `dom(uri::T)` row, which is the same body
+   over `lhs.uriValue().toString()`; (b) when the pattern names its groups, key the result by name —
+   `Pattern.namedGroups()` (JDK 20+) gives name→index and the matcher is then indexed by name. Note the
+   precedent: `regex` **already** varies its output shape on whether the pattern has groups and says so in its
+   docq, so "the pattern's expressiveness decides the rng" is the established style, not a new licence.
+5. **Containment becomes a type property, not a runtime check.** If the alignment row's rng is constrained to
+   the mount's target namespace (e.g. `rng=<data/person/#>`-patterned), then "the mount prefix is a hard
+   boundary" (§8.1.2's scope decision) stops being an `if` in the router and becomes a property the audit can
+   verify — and conflicting alignments fall out of the same `AMBIGUOUS` analysis.
+6. **One alignment, many protocols.** Stages 1–3 are protocol-free; only stage 4 varies. So the alignment is
+   written **once per logical resource**, and the protocols are a set on the entry (or negotiated). That is the
+   precise form of "one line exposes anything": the *projection* is the only per-protocol text in the table.
+
+**Capture is not a mechanism — it is positional access to the request uri.** An earlier draft of this section asked
+where the pattern's matched groups go (q-values on the aligned uri, or a rec lhs) so that the RHS could read them.
+That question was a mistake: it invents a binding step that the language does not need. The dom of the route function
+*is* the request uri, and the template expressions navigate it directly:
+
+| want | write |
+|------|-------|
+| the tail segment — `/people/34` → `34` | `${name()}` |
+| the *n*th path segment | `${as(rec::T).>>path/2}` (0-indexed, empty leading element: segment *n* is `path/(n+1)`) |
+| a mount-relative view | compose first: `retract(k)` / `removePrefix(…)` then the accessor |
+
+So stage 2 has no capture product to carry and no `qLess()` cleanup to remember — there is one lhs type (a uri) across
+all stages, the alignment is a pure `uri ⇒ uri` function, and a route is debuggable by looking at the request uri.
+This also means the route key's pattern is **only a matcher** (does this request reach the entry, and how specific is
+it — §8.1.1 ordering) and never a source of values; nothing a pattern matches can differ from what the expressions
+read off the uri. Decision 21 is therefore withdrawn rather than answered, and the `regex` rows (§8.1.2 above) matter
+only for the *matcher*, not for extraction.
+
+#### 8.1.4 The route table is a type
+
+The contract of §8.1.3 makes the table expressible as a type, anchored so it is itself an inspectable obj:
+
+```
+route::T = rec::T[?[uri::T => inst?protocol<=uri::T]]@/m/web/route
+```
+
+Take the **strict** form, as proposed — every entry is an instruction, no shorthand. The permissive variant
+(`union(inst?protocol<=uri, uri)`) is *not* worth putting in the type, because it gives up the property that
+makes the type worth having: with the union, an entry may be a bare uri whose meaning is supplied later by
+inference, so the table no longer guarantees that *every* mount yields a surface, and boot validation weakens to
+"probably fine". If the union shorthand is ever wanted it should be a **boot-file desugaring**
+(`uri ⇒ *uri.as(<inferred protocol>)`), never a second set of semantics.
+
+**Why `/mtron => *mtron_mcp` still type-checks — and why the inference needs no router rule.** The mapping the
+proposal calls for (`as?mcp_server<=uri(mcp_server::T)`) already exists as a *resolver* behaviour:
+`ScoringInstResolver`'s from/at fast resolution (`:76-88`) — for an inst whose tid is `from`/`at` whose arg is a
+uri — returns
+
+```
+rng(T(<the obj at that uri>.typeId().maybeSome()))
+```
+
+when the uri is **pattern-free** and the obj exists (`Inst.Helper.isFromOrAtInstToUri`, `Inst.java:512-514`). So
+`*mtron_mcp` gets its rng inferred *from the type of the obj it dereferences*: if `mtron_mcp` names an
+`mcp_server::T` obj, the inferred rng is `mcp_server::T.maybeSome()`, which **tests `protocol::T`** — and the
+strict entry type is satisfied with no new row and no router special case.
+
+Three consequences, all of them favourable:
+
+1. **The re-parenting is load-bearing.** `mcp_server::T <: mcp::T <: protocol::T` (§3.1) is exactly what lets the
+   inferred rng test the table's rng. Bare `*X` entries are therefore shorthand-free *because* of the lattice,
+   not because of a shortcut.
+2. **The strict table forces explicitness precisely where inference is unavailable.** The fast path is guarded by
+   `!fromOrAt.get().hasPattern()`, and a wildcard or templated uri yields no concrete obj — so the rng falls back
+   to `ALL.maybeSome()`. That is why `/people/+ => */data/person/${tail}.as(rest::T)` must carry the explicit
+   `as`. The two mechanisms line up: explicit where the resolver cannot know, inferred where it can.
+3. **The row `as?mcp_server<=uri` is still worth having** — for the *explicit* case, `.as(mcp_server::T)` — but it
+   is a trivial one, and the common bare-entry case needs nothing new.
+
+**Two more things the type buys.**
+
+- **Overlapping mounts become a static error.** The table's keys are uri patterns, so two entries that match the
+  same uri is exactly the `AMBIGUOUS` case `checkAsGraph` already defines for same-rng doms (§8.1.3). That kills
+  the current "first match in map-iteration order" behaviour (`wsSpace.java:208-212`), where `/` can shadow
+  `/docs/#`, by making it a boot-time complaint instead of a routing accident.
+- **The deployment describes itself.** `/m/web/route` is an obj like any other, so the mount list is readable
+  *through the protocols it defines* — `*/m/web/route` renders the table, `?mimeq` picks the rendering, `?docq`
+  documents it. An agent can enumerate its own mounts; combined with `find_inst` over the route-typed insts, the
+  routing vocabulary is discoverable rather than implied by lambdas.
+
+**It also settles the config question (§13.6).** With the entry type fixed at `uri => inst`, there is no room for
+a per-entry config rec: `read_only`, `default_page`, `type` ride on the RHS instruction (the `as`-argument). The
+`route::[…]` entry rec shown in §8.1.1 is therefore the *permissive* spelling and should be dropped in favour of
+the argument form.
+
+#### 8.1.5 Stage 3, implemented — addressing is per request
+
+The smallest change that makes a templated mount real, landed on the **existing** handlers (the sequencing choice
+in §13; the `rest::T` rewrite inherits it rather than being a prerequisite for it).
+
+**What varies per request, and what does not.** Only a **templated value** is resolved per request, because only a
+templated value has no boot-time target: its expressions need a request to bind to. Everything else is resolved
+once, exactly as before — deliberately, because a `code` route value which *materializes* its target would
+otherwise re-materialize it on every request. The live boot's `/drstynx => *dr.as(skill::T).as(mcp_server::T)` is
+the case that makes this non-optional.
+
+| piece | role |
+|---|---|
+| `webHelper.isTemplated(Obj)` | `uriValue().hasTemplates()` — the one predicate that decides per-request vs once |
+| `webHelper.align(space, value, requestUri)` | templated → `value.apply(uri(requestUri))`; else → `Space.Helper.resolveApply` (unchanged) |
+| `httpSpace.resolveRoute(value, requestUri)` | align, then classify. `resolveRoute(value)` still exists for the untemplated case, so both paths share one ladder |
+| `RouteLane.address` vs `RouteLane.webRoot` | *exactly one* is set: an aligned value has consumed the request path so its uri **is** the address; a plain uri is a root the mount still extends |
+| `HttpRec.address()` + `handle(exchange, address)` | the address rides a per-request `ThreadLocal`, mirroring `EXCHANGE` and for the same reason (the handler is shared, dispatch is pooled) |
+| `buildRequest` | puts it in the request rec as `web_root`: **present means "this is the address, nothing is appended"** |
+| `httpSpace.handlerVid(mount, sid, lane)` | the cache key — (mount, client, resolved **target**). The address is deliberately absent, for the reason §8.1.2 gives |
+| `web_httpHandler.resolveAddress(exchange)` | the two duplicated address computations (`:90-107`, `:404-413`) collapse into one that prefers the route address |
+
+Two findings from doing it, both worth keeping:
+
+- **`HttpServer.createContext` is literal, and one table is matched by two languages — that is the defect.**
+  The key is written in metatron's pattern language (`#` multi-segment, `+` single) and handed to `createContext`
+  verbatim, which matches a request path by literal longest prefix (`ServerImpl.findContext`:
+  `path.startsWith(ctxt)`, longest wins). So `/people/#` registers a context whose path ends in a literal `#`:
+  `/people/34` — exactly what it looks like it mounts — is **unmounted** (404 from whatever else is mounted, or
+  nothing), while the context *is* reachable by a path containing a literal `#`, which no client ever sends
+  (`#` is the fragment delimiter; `%23` decodes to it, and that is the only way in). Meanwhile
+  `Space.Helper.routeFromSpace` **applies** the key to the vid (`Space.java:230`), so the same table's wildcards
+  behave as wildcards on the `http://` address-space read path. One table, two matchers, nothing in between — and
+  the failure is silent, because `createContext` accepts the key happily. Verified, not inferred:
+  `httpWildcardMountTest` pins all three observations (literal key → 200, wildcard subtree → 404, `%23` → 200).
+  Real matching with longest-prefix ordering is stage 5; until then the working idiom is a literal prefix key,
+  which costs nothing because the value's expressions see the whole request uri, so the pattern never has to carry
+  the capture (this is §8.1.2's "capture is positional access" from the other direction).
+- **That test found a second, latent bug, now fixed.** The only reachable request to a wildcard mount used to
+  500 — `handler at …/#/default/web_http is not an httprec::T: MObjs` — because the session cache key was built
+  from `mount.name()`, so a wildcard key put a `#` **into a vid** and turned the cache *read* into a pattern read.
+  Two failures at once, both now in `httpSpace.segment`: the key uses the whole mount path rather than the last
+  segment (so `/a/docs` and `/b/docs` no longer share a handler), and separators/wildcards are neutralized — the
+  session id included, since it arrives in a client-controlled `Mcp-Session-Id` header and must not be able to
+  escape the key or inject a pattern.
+- **The integration base's invariant does not apply to a templated value.** `testHandlerTypeIsRegisteredInRouter`
+  asserts every route value resolves in the Router; a templated value names no address until a request exists, so
+  the base test now skips templated values (and no other subclass has one, so nothing else changes).
+
+**Evidence** — `httpRouteLadderTest` (9: the discriminator is one mount answering `/name/helper` → 200,
+`/pos/helper` → 200 and `/name/nope` → 404, i.e. a different address *and* a different outcome per request, which a
+value resolved once at boot could not do) and `httpRouteResolutionTest` (7: both spellings —
+`${name()}` and `${as(rec::T).>>path/2}` — expand to the same address, and the untemplated row pins the
+`webRoot`-not-`address` distinction). Both boot on ephemeral ports. Regression net green: `httpSpaceTest` 30 (10
+executed), `mcp_mtronTest` 34, `mcp_wsHandlerTest` 26, `mtron_httpHandlerTest` 12, `mtron_wsHandlerTest` 13,
+`mcpEmulatorTest` 17, both ws ladder tests, `web_httpHandlerTest` 17 (pre-existing skips).
+
+**The ws half is the same treatment, with one difference that turns out to be a simplification.** A websocket has
+no per-request uri, only a handshake, so a ws mount aligns **per connection**: `createServer` passes the handshake
+uri (`WebSocketService`, one line) as the lhs, and `wsSpace.resolveRoute(value, requestUri)` shares the same
+`webHelper.align`. There is no address-carrying problem to solve at all — a `WebSocketRec` is *already* built per
+connection, so the resolved target is naturally per connection and there is no shared handler to keep an address
+out of. `wsSpace` has no web-root lane either: its target *is* the thing to serve (an `mcp_server`, a handler type
+to construct, or one to re-tag), so alignment changes which target, never a separate address. Evidence: two rows of
+*one* template answered for two handshakes land in different lanes (`CONSTRUCT` for `mtron_ws`, `RETAG` for
+`web_socket`) — a value resolved once could only ever produce one of them.
+
+**Still ahead.** Stage 4 (replace the ladders with `target.test(<concrete surface>)` + `as` rows, then delete the
+dead paths) and stage 5 (one shared mount table across carriers, a real matcher with longest-prefix ordering in
+place of `createContext`'s literal prefix, overlap check, capture).
+
 ### 8.2 Projections — structural, with declared overrides
 
 Rows, not code. The ladder becomes row specificity: `dom(instset).rng(mcp::T)` outscores `dom(A).rng(mcp::T)`
 by the 1000-point dom term.
 
-| target kind | `mcp::T` | `web::T` |
+| target kind | `mcp::T` | `rest::T` |
 |---|---|---|
 | rec declaring `tool`/`resource`/`prompt` | used verbatim | declared `on_*` if present, else one document |
 | any rec with inst-valued keys | inst keys ⇒ tools, other keys ⇒ resources | the rec as one document; `?mimeq` picks the rendering |
@@ -570,12 +1158,12 @@ than an error. Rows to add, versus rows that already exist:
 | row | state |
 |---|---|
 | `as?tool<=/m/inst`, `as?tool<=docs`, `as?mcp_server<=skill`, `as?mcp_client<=json`, `as?json<=mcp_client` | exist |
-| `protocol::T` with `web::T` / `mcp::T` / `mtron::T` / `stream::T` | new (types only, no logic) |
-| `mcp_server::T <: mcp::T`, `httprec::T <: web::T` | new (re-parenting) |
+| `protocol::T` with `rest::T` / `mcp::T` / `mtron::T` / `stream::T` | new (types only, no logic) |
+| `mcp_server::T <: mcp::T`, `httprec::T <: rest::T` | new (re-parenting) |
 | `as?mcp<=instset` | new — requirement 2 |
-| `as?web<=/m/type` | new — requirement 2 (REST paths) |
-| `as?web<=space`, `as?mcp<=space` | new — absorbs `web_httpHandler`'s mount policy |
-| `as?mcp<=A`, `as?web<=A` | new — generic last resort |
+| `as?rest<=/m/type` | new — requirement 2 (REST paths) |
+| `as?rest<=space`, `as?mcp<=space` | new — absorbs `web_httpHandler`'s mount policy |
+| `as?mcp<=A`, `as?rest<=A` | new — generic last resort |
 | `as?http<=mcp`, `as?ws<=mcp`, `as?http<=web`, … | new — the carrier bindings (today's `mcp_httpHandler` / `mcp_wsHandler`) |
 
 ### 8.3 InstSet → mcp
@@ -589,7 +1177,7 @@ One row, `as?mcp<=instset()`, whose body walks the catalog with conversions that
 - **consts ⇒ resources** — keyed by vid, **live**: `Router.read` + `?mimeq` for the representation, `?docq`
   for the description, `?subq` for `resources/subscribe` (outbox machinery already written,
   `mcpServer.java:435-465`). Replaces the snapshot approach (finding 8).
-- **types ⇒ collections** — `as?web<=/m/type` (§8.4); in the mcp face, one resource per instance plus the
+- **types ⇒ collections** — `as?rest<=/m/type` (§8.4); in the mcp face, one resource per instance plus the
   type's insts as tools.
 - **rewrites ⇒ internal** — `dom` is `code::T`; excluded by construction, stated so the rule covers all four
   tables.
@@ -611,7 +1199,7 @@ For `person::T`:
   **the type becomes the REST write validator and constructor**, which is the strongest argument for
   type-addressed mounts.
 - `PATCH` → the `>>=` update algebra; `DELETE` → write `noobj`. All three already exist in
-  `web_httpHandler.writeValue/updateValue/deleteValue` (`:259-389`) — **hoist them into `web::T`** so every
+  `web_httpHandler.writeValue/updateValue/deleteValue` (`:259-389`) — **hoist them into `rest::T`** so every
   mount inherits read/replace/update/unlink instead of only the web-root mount, and the `read_only` flag
   becomes the `constq`/`lockq` gate rather than a hand-rolled boolean (`:394-400`).
 - representation via `?mimeq` / extension / `fromType`; docs via `?docq`.
@@ -689,8 +1277,8 @@ Theses: http and ws are two renderings of the same capability layer, not two sub
 - `web_httpHandler`'s ON_GET body — a weaker copy of `Space.Helper.resolveRead`'s three tiers (§8.0)
 - `mcp_wsHandler` / `mcp_httpHandler` as *transport* variants (they become `as?ws<=mcp` / `as?http<=mcp`)
 - `mtron_wsHandler` / `mtron_httpHandler` as classes (three verb definitions survive as rows)
-- `web_httpHandler` as a handler (its write algebra moves into `web::T`; its GET policy becomes the default
-  `web::T` body)
+- `web_httpHandler` as a handler (its write algebra moves into `rest::T`; its GET policy becomes the default
+  `rest::T` body)
 - `WebSocketRec.IO` or `HttpRec.HttpIO` (one survives)
 - the duplicate route tables and the per-space session-key divergence
 - ~six `exchange() == null` type-check guards
@@ -701,15 +1289,169 @@ Theses: http and ws are two renderings of the same capability layer, not two sub
 
 | phase | work | gate |
 |---|---|---|
-| **P0** | one `IO` record; one session shape; move the REST verb algebra + `constq` gate into `web::T`; move the exchange ThreadLocal into the carrier | no behavior change; existing web tests pass |
+| **P0** | one `IO` record; one session shape; move the REST verb algebra + `constq` gate into `rest::T`; move the exchange ThreadLocal into the carrier | no behavior change; existing web tests pass |
 | **P1** | `route::T`-shaped entries; one shared mount table; static-prefix contexts + pattern matching with `+`/`#` capture | `/my/docs/#` serves; `/dr` reachable on both carriers |
 | **P2** | protocol/carrier types + `as` rows (incl. the two re-parentings); delete the ladder and the transport-variant handlers; registry-driven protocol fallback | `/drstynx` keeps working via `as?mcp_server<=skill`; `/mtron` via `as?mtron<=…` |
-| **P3** | `as?mcp<=instset`, `as?web<=/m/type`; live const resources with `mimeq`/`docq`/`subq`; one tool per base path | an inst set and a user type are both served over both protocols from one mount |
+| **P3** | `as?mcp<=instset`, `as?rest<=/m/type`; live const resources with `mimeq`/`docq`/`subq`; one tool per base path | an inst set and a user type are both served over both protocols from one mount |
 | **P4** | protocol negotiation (Accept, JSON-RPC body, ws subprotocol); SSE/`GET` on the mcp-http path (today a 501) | a stock mcp client connects over streamable-http |
 | **P5** | `webSpace` merge (carrier config key) + the client/server split (`http::client::T` / `ws::client::T`) | both carriers on one code path; `*<http://…>` no longer round-trips through the server space |
 
 Path integration (§5.2) is **orthogonal** — it can land at any point and is not a blocker, because paths are
 sugar over hops.
+
+### 11.1 P0.1 — the exact edits, and what is *not* touched
+
+**`HttpRec` and `WebSocketRec` already exist and are not rewritten.** They are already the carrier sessions, they
+already carry the verb table, and `HttpRec` already owns the exchange `ThreadLocal` — which is correct precisely
+because it *is* the carrier. What happens to them is subtractive and comes later (P2): `web_httpHandler`'s REST
+algebra moves into `rest::T`'s row body and `mcp_httpHandler`'s session-id handling moves into the
+`mcp::T ⇒ http::T` binding row.
+
+**The refinement semantics that decide the layout** (verified): `Obj.testNominally` (`Obj.java:292-298`) first
+tests `lhsType.vid().test(rhsType.vid())` — a **path-prefix** test — and only then walks
+`lhsType = lhsType.parentType()`, the **declared** `tid` chain. So something refines X if it is vidded *under* X,
+or if X appears in its declared parent chain. The live layout makes this concrete:
+
+```
+*/m/web/#/.<<
+  /m/web/http/{http_socket, http_handler, http_client, web_http, mtron_http}
+  /m/web/ws/{web_socket, ws_handler, ws_client, mtron_ws}
+  /m/web/mcp/{mcp_server, mcp_client, mcp_http, mcp_ws, mcp_emulator_http, mcp_emulator_ws, mcp_mtron}
+  /m/web/space/{httpspace, wsspace}   /m/web/mime/{html,json,yaml,csv,xsv,css,markdown,java}   /m/web/serializer/*
+```
+
+**Seven declarations to add** (all in `webInstSet`). Because `/m/web/http`, `/m/web/ws` and `/m/web/mcp` are
+*unoccupied* vids whose children are exactly the surfaces, declaring them gives the existing family the
+refinement **by path**, with no edits to those child types at all:
+
+| type | vid | parent | covers, by path |
+|---|---|---|---|
+| `protocol::T` | `/m/web/protocol` | `REC_TID` | the umbrella (nominal only) |
+| `http::T` | `/m/web/http` | `REC_TID` | http_socket, http_handler, http_client, web_http, mtron_http |
+| `ws::T` | `/m/web/ws` | `REC_TID` | web_socket, ws_handler, ws_client, mtron_ws |
+| `mcp::T` | `/m/web/mcp` | `REC_TID` | **all seven** mcp types — `mcp_server` included, so `MCP_SERVER_TYPE` needs no edit |
+| `rest::T` | `/m/web/http/rest` | `/m/web/http` | needs one declared-tid edit (below) |
+| `mtron::T` | `/m/web/mtron` | `REC_TID` | needs two declared-tid edits (below) |
+| `stream::T` | `/m/web/stream` | `REC_TID` | (future SSE / raw stream) |
+
+**Three `.tid(...)` edits** — down from five, because path descent covers the rest:
+
+| type | today | becomes |
+|---|---|---|
+| `WEB_HTTP_HANDLER_TYPE` (`web_httpHandler.java:61-75`) | `tid(HTTP_HANDLER_TID)` | `tid(/m/web/http/rest)` |
+| `WS_MTRON_HANDLER_TYPE` (`mtron_wsHandler.java:58-67`) | `tid(WS_HANDLER_TID)` | `tid(/m/web/mtron)` |
+| `HTTP_MTRON_HANDLER_TYPE` (`mtron_httpHandler.java`) | `tid(HTTP_HANDLER_TID)` | `tid(/m/web/mtron)` |
+
+**No vid moves.** `mcp_server`, `mcp_http`, `mcp_ws`, `mcp_emulator_*`, `http_*`, `ws_*` keep their vids and names,
+so name uniqueness inside the inst set is untouched. `MCP_SERVER_TYPE`, `HTTP_MCP_HANDLER_TYPE` and
+`WS_MCP_HANDLER_TYPE` need no edit: `/m/web/mcp` is already their path ancestor.
+
+**Two non-type edits:**
+
+1. `Space.Helper.resolveApply` (`Space.java:244-252`) — apply the route value with the **matched request uri as
+   lhs** instead of `noobj`, which is what makes templates and per-mount behaviour bind at all.
+2. Delete one of `WebSocketRec.IO` (`WebSocketObj.java:47-53`) / `HttpRec.HttpIO` (`HttpRec.java:376-386`) and
+   point both callers at the survivor.
+
+**Gate:** the baseline suite stays green, plus new `@ParameterizedTest` + `@CsvSource` rows for (a) the
+refinement relations (`mcp_server::T.test(mcp::T)`, `web_http::T.test(rest::T)`, `rest::T.test(http::T)`) and
+(b) a templated route RHS aligning per request.
+
+**Status (2026-09-13) — the lattice is in and verified.** The seven declarations and the six re-parentings
+landed; `webInstSetTest` is green (12 rows, java-side `typeA.test(typeB)`); the 119-test baseline is unchanged, so
+the change is behaviour-neutral to everything that already existed. Two items listed above turned out to belong to
+P1 rather than P0.1:
+
+- **`resolveApply` with a request lhs is not a one-line change.** `httpSpace` resolves route values in its
+  *constructor* — at boot, once per route (`httpSpace.java:131-162`), with no request in scope — so binding a
+  matched request uri requires first moving route-value resolution into the per-session closure
+  (`createHandlerRoute`) where the exchange exists. That is the same move as deleting the ladder, so it travels
+  with P1 instead of preceding it. `wsSpace` already resolves per connection (`wsSpace.java:201-251`) and is the
+  easier of the two.
+- **The duplicate `IO` record is cosmetic, not foundational.** `WebSocketRec.IO` and `HttpRec.HttpIO` are
+  structurally identical, but `WebSocketObj.IO` is part of the carrier *interface* and `mcpServer.getIO()` returns
+  it, so collapsing them touches ~6 files with no behavioural gain. Deferred to the P2 carrier cleanup.
+
+**Membership and subsumption in mtron — verified 2026-09-13.** `x.isa(T)` is the membership test, filter-shaped
+(`lhs.test(arg) ? lhs : noobj()`):
+
+- on a **value**: `1.isa(int::T)` → `1`, `1.isa(str::T)` → nothing;
+- on a **type**: `nat::T.isa(int::T)` → the nat type, `int::T.isa(nat::T)` → nothing.
+
+So **subsumption is expressible in mtron** as of this build (it used to regress; the fix landed 2026-09-13), which
+is what route-entry validation needs — `inst?protocol::T<=uri::T` is a subsumption check. Two lookalikes to avoid:
+`x.is(T)` resolves to `/m/inst/is`, a boolean-*argument* filter (`x.is(true)` → `x`), so a type argument is a
+category error (`1.is(int::T)` → `MInt cannot be cast to Bool`) — the skill doc's `is(...)` rows in "Type checking
+and casting" are a name error, not a gap; and `x.matches(T)` is **slated for deletion** (three references in main:
+`mInstSet.java:165`, its `?~` sugar at `:888`, and the row at `Obj.java:1307`), so nothing in this design may use
+it. Use `isa`. The java twin is `typeA.test(typeB)`, which is what the transport will call and what
+`webInstSetTest` asserts (rows carry vids so the assertion stays exact rather than comparing rendered types).
+
+**Membership and subsumption in mtron — verified 2026-09-13.** `x.isa(T)` is the membership test, filter-shaped
+(`lhs.test(arg) ? lhs : noobj()`):
+
+- on a **value**: `1.isa(int::T)` → `1`, `1.isa(str::T)` → nothing;
+- on a **type**: `nat::T.isa(int::T)` → the nat type, `int::T.isa(nat::T)` → nothing.
+
+So **subsumption is expressible in mtron** as of this build (it used to regress; the fix landed 2026-09-13), which
+is what route-entry validation needs — `inst?protocol::T<=uri::T` is a subsumption check. Two lookalikes to avoid:
+`x.is(T)` resolves to `/m/inst/is`, a boolean-*argument* filter (`x.is(true)` → `x`), so a type argument is a
+category error (`1.is(int::T)` → `MInt cannot be cast to Bool`) — the skill doc's `is(...)` rows in "Type checking
+and casting" are a name error, not a gap; and `x.matches(T)` is **slated for deletion** (three references in main:
+`mInstSet.java:165`, its `?~` sugar at `:888`, and the row at `Obj.java:1307`), so nothing in this design may use
+it. Use `isa`. The java twin is `typeA.test(typeB)`, which is what the transport will call and what
+`webInstSetTest` asserts (rows carry vids so the assertion stays exact rather than comparing rendered types).
+
+**A pre-existing bug the probes surfaced** — not caused by this change, and not claimed to be fixed by it. The
+traversal idiom the mtron skill documents is broken on this sub-tree today:
+
+```
+*/m/web/http/#.dom()  ==>  inst apply failure: unable to convert type to rec::T [MType cannot be cast to Rec]
+*/m/web/mcp/#.dom()   ==>  the same, plus "unable to determine inst function" for mcp_http and
+                           mcp_emulator_http — both of whose declared tid is httprec
+```
+
+Worth re-probing once the declarations land: two of those failures name types whose parent is the odd `httprec`,
+which is what the re-parenting replaces.
+
+### 11.2 Baseline (2026-09-13) and the coverage gap
+
+```
+bin/metatron-docker build test -Dtest='mcp_wsHandlerTest,mtron_wsHandlerTest,web_httpHandlerTest,
+                                       mtron_httpHandlerTest,mcpEmulatorTest,mcp_mtronTest'
+  ==> Tests run: 119, Failures: 0, Errors: 0, Skipped: 17   BUILD SUCCESS   (3:02, isolated container, no ports)
+```
+
+Read the surefire summary, not the pipeline's exit code (`… | tail` returns `tail`'s status). The `WARN` lines
+are the tests' own value logging, including the two `<ERROR>`-expected rows (`map?int<=real`,
+`plus?int{5}<=int{5}`) that correctly return `fail::[inst apply failure…]`.
+
+**The gap that matters:** this net covers the *handler* layer, and the refactor's main target is the **route
+ladder** — `httpSpace`'s constructor dispatch and `wsSpace.createServer` — which is what it exercises least
+(`httpSpaceTest` is excluded by CI as well). So the ladder must be pinned **before** it is deleted, in P1:
+
+| mount | behavior to pin |
+|---|---|
+| `/mcp => mcp_mtron` | the type is materialized and wrapped in the mcp transport |
+| `/ => <mfs:…>` | a uri target becomes a web root |
+| `/marko => /usr/marko` | a uri target that is not a type |
+| `*dr.as(skill::T).as(mcp_server::T)` | an applied code target |
+| an unresolvable target | what *actually* happens today (the silent fallthrough) |
+
+**P1 gate — the http half is achieved (2026-09-13).** `httpRouteLadderTest` (6 tests, green, 7 s, ephemeral port,
+isolated execution) pins the ladder: `/mcp => mcp_mtron` (Type → materialize → wrap → json-rpc handshake) and
+`/content => /m/web/helper` (uri → web root → serves), plus the integration base's three generic tests —
+connection works, POST responds, and every route value resolves in the Router. Because it uses an ephemeral port
+it needs no CI exclusion, so stage 4's replacement can be proven behavior-preserving in the ordinary test run.
+The ws half is also achieved: `wsRouteLadderTest` (5 tests, green, 6.8 s) pins the mcp_server → `mcp_wsHandler`
+handshake and the ws-only handler-Type lane where a connection gets its own constructed handler (`/mtron`, which
+also re-verifies that re-parenting `WS_MTRON_HANDLER_TYPE` onto `mtron::T` left it constructible). Both classes
+run on ephemeral ports in isolated execution, so both are CI-viable and stage 4's replacement of either ladder is
+provable rather than plausible.
+
+One more thing the log shows: `/sys/router … evicting /m/web (same pattern /m/web/#)` — an inst set re-import
+evicts its predecessor (`BasicRouter.addSpace`). The new protocol types travel that path, so a `checkAsGraph()`
+snapshot **after** a re-import is the cheap guard that the rows survive.
 
 ---
 
@@ -730,7 +1472,7 @@ sugar over hops.
    -derived mount-relative paths before relying on it.
 5. **Router pattern vs one webSpace** (§8.6) — merging the *address spaces* may not be desirable; merging the
    *implementation* is. Confirm before P5.
-6. **Enumeration** for `as?web<=/m/type` (§8.4) — solved for `SchemaSpace` spaces via
+6. **Enumeration** for `as?rest<=/m/type` (§8.4) — solved for `SchemaSpace` spaces via
    `resolveCollectionSchema`; still open for non-schema spaces (`memSpace`, `fsSpace`).
 7. **The encoding-vs-surface classification hypothesis** (§3.1) — verify against calibration pairs before
    designing on it.
@@ -752,7 +1494,7 @@ sugar over hops.
 
 ## 13. Decisions needed
 
-1. **Which target should `mcp::T` and `web::T` be?** `webInstSet` (owns the existing mcp/web types) or
+1. **Which target should `mcp::T` and `rest::T` be?** `webInstSet` (owns the existing mcp/web types) or
    `mInstSet` (owns `as`, `type`, `space`)? *Recommendation:* `webInstSet` for `web`/`mcp`/`stream`; argue
    `mtron::T` separately.
 2. **Overloads.** One tool per instruction base path with VM-resolved overloads (recommended, corroborated by
@@ -781,6 +1523,33 @@ sugar over hops.
     metatron-native clients dereference natively)?
 15. **PATCH granularity** — per-leaf `expandStructural` + `resolveWrite` (recommended, §8.0), or the
     whole-document `>>=` merge `web_httpHandler` uses today?
+16. **`rest` vs `web` as the surface name** — adopt `rest::T <: http::T` (recommended: raw HTTP becomes sayable
+    and subtyping encodes carrier compatibility), keeping `web` as the `/m/web` namespace?
+17. ~~**Template binding** — the matched request *uri* as the template lhs and the request *rec* as the verb
+    lhs?~~ **Resolved and implemented** (§8.1.5): the request uri is the lhs, the request rec is the verb lhs.
+18. **Where the address lives** — the aligned data uri in the request rec, handler cached per (mount, session)
+    (recommended, §8.1.2 — a per-resource surface cache is explicitly *not* needed and would grow per address), or
+    today's baked-in `at(WEB_ROOT)` config?
+19. **Scope containment** — is the mount prefix a hard boundary (a computed uri that escapes it is refused), or
+    advisory?
+20. **Create type** — `type => …` on the mount for bare-uri mounts (recommended), or require a schema-backed
+    mount for writes?
+21. ~~**Capture binding** — groups as q-values on the matched uri…~~ **Withdrawn** (§8.1.2): there is no capture
+    product. The dom is the request uri and the expressions navigate it positionally, so nothing is bound and
+    nothing must be cleaned up.
+22. **`regex` rng for named groups** — key the result by name (a rec) when the pattern names its groups, keeping
+    the positional lst otherwise (recommended, following the inst's existing shape-follows-pattern docq); or a
+    separate inst for the named form?
+23. **Protocols per route** — a set/`*` on one entry with negotiation (recommended, since only stage 4 varies),
+    or one entry per protocol?
+24. **The route contract type** — is `protocol::T` the general rng of a route RHS (recommended, §8.1.3), with the
+    refinements carrying carrier compatibility and the default verb set?
+25. **Boot validation of the route table** — check every entry's RHS signature against `uri::T ⇒ protocol::T` at
+    boot (recommended: it replaces the runtime ladder's silent fallthrough), or let a bad entry fail per request?
+26. **Strict vs permissive entry type** — `uri::T => inst?protocol<=uri::T` only (recommended, §8.1.4), with any
+    uri shorthand desugared at boot rather than admitted by the type?
+27. **Overlap checking** — should two entries whose patterns can both match a uri be a boot-time error
+    (recommended, since it is the `AMBIGUOUS` case the audit already defines), or resolved by specificity order?
 
 ---
 
@@ -813,24 +1582,64 @@ rec::T => doc::T => inst::T
   ==> null
 ```
 
+### Appendix A.2 — layout, before-state, and the verified lattice (2026-09-13)
+
+```
+webInstSetTest — java-side subsumption, 12 rows: all green
+  mcp_server · mcp_mtron · mcp_http · mcp_ws · mcp_emulator_http · mcp_emulator_ws   ⊑   /m/web/mcp
+  rest ⊑ /m/web/http        rest ⊑ /m/web/protocol      web_http ⊑ /m/web/http/rest
+  mtron_ws ⊑ /m/web/mtron   mtron_http ⊑ /m/web/mtron   /m/uri ⊄ /m/web/mcp
+  (mcp_mtron, mcp_emulator_* and rest⊑protocol are all two-hop: the declared chain is transitive)
+```
+
+
+```
+*/m/web/mcp.else('FREE')        ==> FREE     (no value at that vid — free for mcp::T)
+*/m/web/protocol.else('FREE')   ==> FREE     (free for protocol::T)
+*/m/web/http.else('FREE')       ==> FREE     (free for http::T)   [implied by the child listing below]
+
+*/m/web/#/.<<  ==> [/m/web/inst/ping, /m/web/inst/format, /m/web/serializer/*, /m/web/space/{httpspace,wsspace},
+                    /m/web/helper, /m/web/http/{http_handler,http_socket,http_client,mtron_http,web_http},
+                    /m/web/ws/{web_socket,ws_handler,ws_client,mtron_ws},
+                    /m/web/mcp/{mcp_ws,mcp_emulator_ws,mcp_http,mcp_emulator_http,mcp_mtron,mcp_server,mcp_client},
+                    /m/web/mime/{xml,html,json,yaml,xsv,csv,css,markdown,java}, /m/web]
+
+*/m/web/http/#.dom()  ==> inst apply failure: unable to convert type to rec::T [MType cannot be cast to Rec]
+*/m/web/mcp/#.dom()   ==> the same, plus "unable to determine inst function" for mcp_http and
+                         mcp_emulator_http                                       [-- both pre-existing --]
+```
+
+Note for the leaf inventory (§3.2): `/m/web/mime/{csv,xsv}` exist as types, and there is still no media type in
+`MIME.MIMEType` for them.
+
 ## Appendix B — evidence index
+
+Line numbers are as of the **stage-3 change** (§8.1.5). Where a row states a *before-state* defect, the citation
+points at the code that has since replaced it (marked).
 
 | claim | evidence |
 |---|---|
 | the mount table is `route` on every space | `AbstractSpace.java:151-153`; `Space.java:79` |
 | two independent route tables | `drstynx.boot.mtron:81-86`, `:152-155` |
-| the route RHS is resolved/applied | `Space.Helper.resolveApply`, `Space.java:244-252` |
-| duplicated three-lane ladder | `httpSpace.java:131-162`; `wsSpace.java:201-251` |
-| `createContext` is literal-prefix | `httpSpace.java:192`; `web_httpHandler.java:100-108`, `:405-415` |
-| `httpSpace` reads its session cache locally | `httpSpace.java:287-298`; cache written at `:196-218` |
-| `httpSpace.directWriter` POSTs remotely | `httpSpace.java:368-399` |
-| `HTTP_CLIENT_TYPE` is a throwing stub | `httpSpace.java:118-124` |
-| sessions: header key vs socket attachment | `httpSpace.java:193-194`; `wsSpace.java:226` |
+| the route RHS is resolved/applied | `Space.Helper.resolveApply`, `Space.java:244-252` (still the untemplated path; `webHelper.align` `:90` is the request-aware one) |
+| ~~duplicated three-lane ladder~~ (before-state; now one named ladder) | `httpSpace.java:351-369` (`classify`), reached by `:324`/`:333`; ws still `wsSpace.java:201-251` |
+| `createContext` is literal-prefix | `httpSpace.java:155`; `web_httpHandler.java:92-97`, `:397-412` |
+| `httpSpace` reads its session cache locally | `httpSpace.java:421-429`; cache read at `:201`, written at `:228` |
+| `httpSpace.directWriter` POSTs remotely | `httpSpace.java:497-529` |
+| `HTTP_CLIENT_TYPE` is a throwing stub | `httpSpace.java:120-126` |
+| sessions: header key vs socket attachment | `httpSpace.java:198`; `wsSpace.java:226` |
 | `mcp_httpHandler` session field / map | `mcp_httpHandler.java:83-84`, `:120-129`, `:186-188`; `doGet` 501 at `:158-162` |
-| one `IO` record declared twice | `WebSocketObj.java:47-53`; `HttpRec.java:376-386` |
+| one `IO` record declared twice | `WebSocketObj.java:47-53`; `HttpRec.java:406-416` |
 | `HttpRec` exchange ThreadLocal + rationale | `HttpRec.java:72-78` |
-| type-check guards in verb bodies | `web_httpHandler.java:86`, `:265-268`, `:333-336`, `:375-377` |
-| web write-verb algebra | `web_httpHandler.java:259-292`, `:303-367`, `:372-389`; gate `:394-400` |
+| per-request address ThreadLocal (stage 3) | `HttpRec.java:94-116` (field `:98`, `handle(exchange, address)` `:110`); injected into the rec at `:251-258` |
+| a templated route value is resolved per request | `webHelper.isTemplated` `:76`, `webHelper.align` `:90`; `httpSpace.java:147` (once vs per request), `:188-190` (`handleRequest`) |
+| the handler cache key excludes the address | `httpSpace.java:257-263` (`handlerVid`); key rationale in the doc §8.1.2 |
+| a cache key must not be a pattern | `httpSpace.java:265-276` (`segment`): mount path not `mount.name()`, wildcards and separators neutralized, client-supplied session id included |
+| a wildcard mount key mounts nothing, and why | `httpWildcardMountTest` (200/404/200); mechanism above; `Space.Helper.routeFromSpace` applies the key at `Space.java:230` |
+| exactly one of address/webRoot is set | `httpSpace.java:293-315` (`RouteLane` + its factories) |
+| a templated ws value is resolved per connection | `wsSpace.java:158-163` (`resolveRoute(value, requestUri)` + `classify`); handshake uri passed at `:278` |
+| type-check guards in verb bodies | `web_httpHandler.java:85`, `:255`, `:324`, `:367` |
+| web write-verb algebra | `web_httpHandler.java:249-292` (`writeValue`), `:294-317` (`doPatch`), `:318-361` (`updateValue`), `:362-383` (`deleteValue`); gate `:384-390` |
 | `mcpServer` is transport-agnostic | `mcpServer.java:70-158`; `handleMessage(String)` `:174-176`, schema-aware `:183-204` |
 | resource snapshots | `mcpMetatronBuilder.java:71`, `:248-272`; read at `mcpServer.java:290-303` |
 | subq → resources/updated outbox | `mcpServer.java:403-465` |
@@ -859,17 +1668,28 @@ rec::T => doc::T => inst::T
 | read/write stream guarantees | `Space.java:101-128` (concrete fURIs; a wildcard write = expand then write each) |
 | the web layer's weaker copy of it | `web_httpHandler.java:83-200` (direct read → `DEFAULT_PAGE` → `locateBaseObj` → 404) |
 | flat / structured duality | `tbleSpace.java:671-698`; `dcmntSpace.java:854-909`; `grphSpace.java:690-786` |
+| uri template parse + per-component storage | `mParser.java:939-950`; `fURI.templates()`; `AbstractfURI.java:746-754` |
+| uri template evaluation against an lhs | `Uri.java:150-155` (`apply`), `:164-229` (`expandTemplate`); cached by `MUri.java:40-80` |
+| template expansion inside inst arguments | `Inst.java:641-652` (`isTemplateExpansion`) |
+| `regex` inst + its two output shapes | `mInstSet.java:169` (`REGEX_INST_TID`), `:220-221` (`str::rx`); body and docq `Str.java:408-431` |
+| `from` / `at` are the pushdown targets | `CommonRewrites.java` matches `FROM_INST_TID` / `AT_INST_TID`; `RewriteBuilder.forDatabase` `:102` |
+| `*X` infers its rng from the obj at X | `ScoringInstResolver.java:76-88`; `Inst.Helper.isFromOrAtInstToUri` `Inst.java:512-514` |
+| `as` rng is rewritten to the requested type | `ScoringInstResolver.java:188`, `:219` |
+| the route RHS is applied with no lhs today | `Space.java:244-252` (`resolveApply`) |
 | relevant tokens | `Tokens.java` — `route` `:173`, `transport` `:233`, `protocol` `:234`, `tool` `:115`, `resource` `:128`, `prompt` `:127`, `web_root` `:312`, `default_page` `:313`, `read_only` `:314`, `on_get`… `:221-227` |
 
 ## Appendix C — next steps when work resumes
 
-1. Answer §13 (15 decisions) — most block the row table.
+0. ~~Stage 3: addressing per request~~ — **done for both carriers** (§8.1.5). Templated http mounts resolve per
+   request and templated ws mounts per connection; the handler cache is unchanged. What follows is stage 4/5.
+1. Answer §13 (the decisions still open — #17 and #21 are now resolved/withdrawn, #18 accepted in the deed: the
+   address rides the request rec and the handler is keyed per (mount, client, target)).
 2. Resolve risk 12.1 (the `Obj` generic-duplicate question) — it fixes the shape of the generic rows.
 3. Write the row table: `dom / rng / arg-type / body` for the protocol and carrier rows, then run
    `Inst.Helper.checkAsGraph()` over the protocol rngs and record the violations before and after.
 4. Write the mount-table shape in `as`-path vocabulary, plus the revised web section of
    `drstynx.boot.mtron` in the same vocabulary.
-5. Decide §12.9 (URL query vocabulary) before writing the `web::T` body — it determines whether the web face
+5. Decide §12.9 (URL query vocabulary) before writing the `rest::T` body — it determines whether the web face
    needs any query parsing at all.
-6. Only then: P0 (one `IO`, one session shape, the REST verbs into `web::T` — built on `Space.Helper.resolveRead` /
+6. Only then: P0 (one `IO`, one session shape, the REST verbs into `rest::T` — built on `Space.Helper.resolveRead` /
    `resolveWrite`, `DataPath` + `expandStructural`, with no new read logic in the web layer).

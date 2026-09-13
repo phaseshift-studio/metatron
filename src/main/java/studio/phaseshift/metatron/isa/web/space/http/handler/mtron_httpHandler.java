@@ -42,7 +42,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /*
@@ -54,7 +53,7 @@ public class mtron_httpHandler extends HttpRec {
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
     public static final Type HTTP_MTRON_HANDLER_TYPE = Type.Builder.build()
-            .tid(HTTP_HANDLER_TID)
+            .tid(webInstSet.MTRON_TID)
             .vid(MTRON_HTTP_TID)
             .isaPredicate(rec(
                     uri(IN).maybe().asUri(), isa_(webInstSet.MIME_OBJ_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),

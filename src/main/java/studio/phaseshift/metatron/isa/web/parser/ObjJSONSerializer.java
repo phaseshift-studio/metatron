@@ -78,6 +78,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
     private static final fURI KEY_DENSITY = fURI.Singleton.f("density");
     private static final fURI KEY_WRAP_URI = fURI.Singleton.f("wrap_uri");
     private static final fURI KEY_BIAS_URI = fURI.Singleton.f("bias_towards_uri");
+    private static final fURI KEY_LITERAL_STR = fURI.Singleton.f("literal_str");
     private static final fURI KEY_BIAS_OBJS = fURI.Singleton.f("bias_towards_objs");
     private static final fURI KEY_SCHEMA = fURI.Singleton.f("schema");
 
@@ -98,6 +99,36 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
         s.at(KEY_BIAS_URI, BOOL_TRUE, Poly.MUTABLE);
         s.at(KEY_BIAS_OBJS, BOOL_FALSE, Poly.MUTABLE);
         return s;
+    }
+
+    /**
+     * A reader that keeps JSON strings <em>as they are written</em>.
+     * <p>
+     * {@link #simple()} and {@link #web()} hand an untyped string to the mtron parser, which retypes it by
+     * content: {@code "11.2"} becomes a real, {@code "24.04"} a real, {@code "1.plus(2)"} an inst. That is
+     * deliberate for the shapes that want it, but it is lossy for a document whose fields are all strings and
+     * whose strings are names — docker reports a tag as {@code "Tag":"11.2"}, and reading it as a real left the
+     * image addressable only as {@code <mariadb:11.2000>}, invisibly, because a number and a string render alike
+     * from the JSON face. Use this reader for such documents; the other instances keep their behaviour.
+     * <p>
+     * The uri bias is kept (JSON has no uri type), so a bare address is still a uri — only the mtron parse is
+     * dropped.
+     */
+    public static ObjJSONSerializer literal() {
+        ObjJSONSerializer s = new ObjJSONSerializer();
+        s.at(KEY_DENSITY, uri("TRANSPARENT"), Poly.MUTABLE);
+        s.at(KEY_BIAS_URI, BOOL_TRUE, Poly.MUTABLE);
+        s.at(KEY_BIAS_OBJS, BOOL_FALSE, Poly.MUTABLE);
+        s.at(KEY_LITERAL_STR, BOOL_TRUE, Poly.MUTABLE);
+        return s;
+    }
+
+    /**
+     * Whether an untyped JSON string is kept as written rather than offered to the mtron parser. Default false:
+     * every existing reader keeps the behaviour its callers depend on.
+     */
+    private boolean literalStr() {
+        return this.at(KEY_LITERAL_STR).orElse(BOOL_FALSE).boolValue();
     }
 
     public static ObjJSONSerializer web() {
@@ -229,6 +260,18 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
                             String clean = (jpstr.startsWith("<") && jpstr.endsWith(">")) ? jpstr.substring(1, jpstr.length() - 1) :
                                     (jpstr.startsWith("uri::") ? jpstr.substring(5) : jpstr);
                             obj = uri(f(clean), tid, null);
+                        } else if (literalStr()) {
+                            // literal(): an untyped string is a string. Only an address is recognised, because
+                            // JSON has no uri type — nothing else in JSON looks like <x> or declares a scheme.
+                            if (biasTowardsUri() && !jpstr.contains(" ")) {
+                                try {
+                                    obj = uri(jpstr);
+                                } catch (final Exception e) {
+                                    // not every bare token is an address ("8080:80" reads as a scheme and fails)
+                                    obj = str(jpstr);
+                                }
+                            } else
+                                obj = str(jpstr);
                         } else {
                             try {
                                 obj = ObjmtronSerializer.parse(jpstr);

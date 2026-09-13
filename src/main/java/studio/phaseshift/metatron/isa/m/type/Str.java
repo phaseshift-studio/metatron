@@ -422,7 +422,10 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                                     }).toList());
                                 }
                             }),
-                            "a str to split by regex", "the regex capture groups (or full matches) of the lhs str", Map.of(jnt(0), "regex"), "split the lhs str by regex matches; if the regex has capture groups, each match is a lst of [fullMatch, group1, group2, ...], otherwise a flat lst of full matches",
+                            "a str to split by regex",
+                            "the regex capture groups (or full matches) of the lhs str",
+                            Map.of(jnt(0), "regex"),
+                            "split the lhs str by regex matches; if the regex has capture groups, each match is a lst of [fullMatch, group1, group2, ...], otherwise a flat lst of full matches",
                             "'abc.cde'.regex('[^.]+') [-- ['abc','cde'] --]",
                             "'abc.cde'.regex('.\\..') [-- ['c.c'] --]",
                             "'241G'.regex('(\\d+)([KMGT])') [-- [['241G','241','G']] --]"),
