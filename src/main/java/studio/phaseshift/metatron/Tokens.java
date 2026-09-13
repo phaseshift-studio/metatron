@@ -123,6 +123,7 @@ public final class Tokens {
     public static final String ON_PARTIAL_TOOL_CALL = "on_partial_tool_call";
     public static final String BEFORE_TOOL_EXECUTION = "before_tool_execution";
     public static final String ON_TOOL_EXECUTED = "on_tool_executed";
+    public static final String ON_TOOL_RESULT = "on_tool_result";
     public static final String ON_COMPLETE_RESPONSE = "on_complete_response";
     public static final String PROMPT = "prompt";
     public static final String RESOURCE = "resource";

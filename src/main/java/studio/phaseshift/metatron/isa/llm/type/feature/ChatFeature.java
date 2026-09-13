@@ -6,10 +6,13 @@ import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.mModel;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
+import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.Map;
 
@@ -18,6 +21,9 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -57,11 +63,7 @@ public class ChatFeature extends AbstractFeature {
                         the result you wanted is ${ 1.-<[+2,_]>-.sum() }
                     becomes
                         the result you wanted is 4.
-                    when calling tools, you may find the result wrapped within a larger record containing
-                    a **%s** field, the %s field contains either the system or user communicating with you
-                    mid-iteration. Any directions provided in such messages should take priority over
-                    your prompt instructions and current objectives.
-                    """.formatted(this.at(MODEL), PENDING_MESSAGES, PENDING_MESSAGES));
+                    """.formatted(this.at(MODEL)));
         }
         final Space space = Router.global().getSpaceFor(agent.at(ROOT).uriValue().extend(MESSAGE));
         if (space.hasQ(f(INCRQ))) {
@@ -113,7 +115,33 @@ public class ChatFeature extends AbstractFeature {
         }
     }
 
-    private static final fURI CHAT_INST_TID = LLM_CHAT_FEATURE_TID.extend(INST).extend("agent_chat");
+    /**
+     * Write the messages a user sent while this turn was in flight into the
+     * ledger, so a conversation conducted mid-iteration is durable instead of
+     * confined to the tool result it rode in on.
+     *
+     * <p>The mid-chat channel belongs to {@code MidChatFeature}, which owns this
+     * write and the subtype that tags it.  Kept here only as the fallback used
+     * when no mid-chat feature is attached, so a queued message is still
+     * persisted rather than stranded.
+     */
+    public void publishMidIterationChat(final Agent agent, final Lst chatMessages) {
+        try {
+            chatMessages.elements().forEach(message -> {
+                MessageBuilder.buildUserMessage()
+                        .sub(USER_MIDCHAT_TID)
+                        .depth(agent.chatDepth())
+                        .chatId(agent.chatId())
+                        .session(agent.sessionVID())
+                        .time(message.asRec().at(TIME).uriValue())
+                        .text(message.asRec().at(TEXT).strValue())
+                        .create(agent.at(ROOT).uriValue().extend(MESSAGE).extend("_").addQ(INCRQ));
+            });
+        } catch (final Exception e) {
+            this.logger().warn("failed to publish mid-iteration chat: %s", e.getMessage());
+        }
+    }
+
 
     // @Override
     // public Set<fURI> requires() {

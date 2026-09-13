@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.llm;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.llm.space.LedgerUtil;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
@@ -29,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.vec.type.MVec;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -48,6 +50,7 @@ import static studio.phaseshift.metatron.isa.llm.type.mcp.mcpMessageServer.MCP_M
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
@@ -78,6 +81,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_AGENT_TID = LLM_ISA_TID.extend(AGENT);
     public static final fURI LLM_INST_TID = LLM_ISA_TID.extend(INST);
     public static final fURI LLM_CHAT_RESULT_TID = LLM_ISA_TID.extend("chat_result");
+    public static final fURI LLM_WATERMARK_TID = LLM_ISA_TID.extend(WATERMARK);
     public static final fURI LLM_FEATURE_TID = LLM_ISA_TID.extend(FEATURE);
     public static final fURI LLM_SPACE_TID = LLM_ISA_TID.extend(SPACE);
     public static final fURI LLM_TOOL_TID = LLM_ISA_TID.extend(TOOL);
@@ -94,6 +98,18 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI TOOL_RESULT_MESSAGE_TID = MESSAGE_TID.extend("tool_result");
     public static final fURI THINKING_MESSAGE_TID = MESSAGE_TID.extend("thinking");
     public static final fURI COMPACTION_MESSAGE_TID = MESSAGE_TID.extend("compaction");
+    /**
+     * The mid-chat subtype: an ordinary {@code user_message} or {@code ai_message}
+     * that belongs to a mid-iteration exchange rather than to a real turn.
+     *
+     * <p>A subtype carried in the {@code sub} field rather than a new message tid,
+     * so LC4j keeps building its memory from the base tid — a conversation
+     * conducted mid-iteration therefore simply <em>becomes</em> history on the next
+     * turn, with no projection to maintain.  What the subtype buys is provenance:
+     * the window can tell a real prompt from a mid-chat remark.
+     */
+    public static final fURI USER_MIDCHAT_TID = USER_MESSAGE_TID.extend("midchat");
+    public static final fURI AI_MIDCHAT_TID = AI_MESSAGE_TID.extend("midchat");
     //public static final fURI MCP_TOOL_TID = LLM_ISA_TID.extend("mcp");
     // public static Obj MTRON_EVAL_TOOL = mModel.Helper.mtronInstToolSpecification(ObjType.insts().stream().filter(i -> i.tid().equals(EVAL_INST_TID)).findFirst().orElse(null));    
     public static final fURI LLM_CHAT_FEATURE_TID = LLM_FEATURE_TID.extend("chat_feature");
@@ -116,6 +132,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_AUDIT_FEATURE_TID = LLM_FEATURE_TID.extend("audit_feature");
     public static final fURI LLM_LOOP_FEATURE_TID = LLM_FEATURE_TID.extend("loop_feature");
     public static final fURI LLM_LEDGER_FEATURE_TID = LLM_FEATURE_TID.extend("ledger_feature");
+    public static final fURI LLM_MIDCHAT_FEATURE_TID = LLM_FEATURE_TID.extend("midchat_feature");
     public static final fURI LLM_ITERATION_FEATURE_TID = LLM_FEATURE_TID.extend("iteration_feature");
     //public static final fURI LLM_SKILL_FEATU
 
@@ -137,15 +154,17 @@ public class llmInstSet extends AbstractInstSet {
     public static Type LLM_NOTES_TYPE;
     public static Type LLM_TOOL_TYPE;
     public static Type LLM_CHAT_RESULT_TYPE;
+    public static Type LLM_WATERMARK_TYPE;
     public static ObjFactory LLM_OBJ_FACTORY = MObjFactory.of().addExtension(MVec.class, x -> lst(x.jvm().stream().toList()));
     public static Type LLM_FEATURE_TYPE;
 
     /**
      * Distill prompt for {@code summarize()}: asks the model to emit one or more
-     * {@code <<mtron:claim>>} blocks, each containing a single claim rec shaped like
-     * {@code [text=>'...', kind=>decision|problem|solution|observation]}.  The blocks
-     * are parsed by {@code Agent.chat()} into the ChatResult's {@code blocks} rec and
-     * anchored by {@code summarize()} as {@code claim::T} at {@code <agent>/claim/}.
+     * {@code <<json:claim>>} watermarks, each containing a single claim rec shaped like
+     * {@code [text=>'...', kind=>decision|problem|solution|observation]}.  The watermarks
+     * are scanned by {@link studio.phaseshift.metatron.isa.llm.Watermarks} into the
+     * ChatResult's {@code watermark} lst and anchored by {@code summarize()} as
+     * {@code claim::T} at {@code <agent>/claim/}.
      * The {@code source} (message vids) is stamped by the inst, not the model — the
      * model never sees message vids, only the digest text.
      */
@@ -361,17 +380,40 @@ public class llmInstSet extends AbstractInstSet {
                                 Map.of(uri(TEXT), "the system message text body"),
                                 //  uri(SIZE), "the data size of the text body"),
                                 "a system message provides behavioral and response-style instructions to the model"),
+                        docWrap(LLM_WATERMARK_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_WATERMARK_TID)
+                                        .isaPredicate(rec(
+                                                uri(TAG), STR_TYPE,
+                                                uri(KEY), STR_TYPE,
+                                                uri(BODY).maybe(), STR_TYPE,
+                                                uri(OBJ).maybe(), ALL_TYPE,
+                                                uri(ERROR).maybe(), FAIL_TYPE,
+                                                uri(INDEX).maybe(), INT_TYPE,
+                                                uri(STAGE).maybe(), URI_TYPE))
+                                        .create(),
+                                null, null, mutableMap(
+                                        uri(TAG), "the body codec the marker named — mtron, json, txt, html, md, xml, bson",
+                                        uri(KEY), "the feature the model addressed — loop, summarize, compaction, embed, midchat, ...",
+                                        uri(BODY).maybe(), "the raw payload text, trimmed of its surrounding whitespace",
+                                        uri(OBJ).maybe(), "the body decoded by tag — the deferred call's argument rec",
+                                        uri(ERROR).maybe(), "why the body did not decode; the marker is still stripped and still recorded",
+                                        uri(INDEX), "ordinal position of the marker in the model's output",
+                                        uri(STAGE), "the lifecycle stage it was harvested at — on_complete_response, on_partial_thinking, ..."),
+                                "one in-band control marker a model wrote into its own output: which feature it addresses, the argument rec of the call it defers, and markup that is removed from the visible text"),
                         docWrap(LLM_CHAT_RESULT_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(LLM_CHAT_RESULT_TID)
                                         .isaPredicate(rec(
                                                 uri(CHAT).maybe().asUri(), ALL_TYPE,
                                                 uri(TIME).maybe(), auto_from_(MATH_TIME_TID).tryToInst(),
+                                                uri(WATERMARK).maybe(), lst(LLM_WATERMARK_TYPE),
                                                 uri(ERROR).maybe(), FAIL_TYPE))
                                         .create(),
                                 null, null, mutableMap(
                                         uri(CHAT), "the chat response — free-text str or structured rec per response format",
                                         uri(TIME), "elapsed time::T from user message to complete response",
+                                        uri(WATERMARK).maybe(), "the in-band markers the model emitted, in order; their markup is stripped from chat",
                                         uri(ERROR).maybe(), "a fail chain if errors occurred"),
                                 "a response message from a chat interaction"),
                         docWrap(LLM_USER_MESSAGE_TYPE = Type.Builder.build()
@@ -500,6 +542,7 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(ON_PARTIAL_TOOL_CALL).maybe(), ALL_TYPE,
                                                 uri(BEFORE_TOOL_EXECUTION).maybe(), ALL_TYPE,
                                                 uri(ON_TOOL_EXECUTED).maybe(), ALL_TYPE,
+                                                uri(ON_TOOL_RESULT).maybe(), ALL_TYPE,
                                                 uri(ON_COMPLETE_RESPONSE).maybe(), ALL_TYPE,
                                                 uri(ON_ERROR).maybe(), ALL_TYPE))
                                         .create(),
@@ -512,6 +555,7 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(ON_PARTIAL_TOOL_CALL).maybe(), "inst?noobj<=agent(request=>call::T)",
                                         uri(BEFORE_TOOL_EXECUTION).maybe(), "inst?noobj<=agent(request=>call::T)",
                                         uri(ON_TOOL_EXECUTED).maybe(), "inst?noobj<=agent(result=>call::T)",
+                                        uri(ON_TOOL_RESULT).maybe(), "inst?#{?}<=agent(result=>#{?},request_id=>str::T){ [-- the payload the model is handed: return it unchanged for a pass-through. the only stage dispatched from mToolExecutor, not the turn --] }",
                                         uri(ON_COMPLETE_RESPONSE).maybe(), "inst?noobj<=agent(result=>chat_result::T)",
                                         uri(ON_ERROR).maybe(), "inst?noobj<=agent(fail=>fail::T)"),
                                 "each concrete feature refines llm_feature::T with its own hook implementations"),
@@ -592,6 +636,15 @@ public class llmInstSet extends AbstractInstSet {
                                 null, null,
                                 mutableMap(),
                                 "think feature captures thinking text during response generation"),
+                        docWrap(Type.Builder.build()
+                                        .tid(LLM_FEATURE_TID)
+                                        .vid(LLM_MIDCHAT_FEATURE_TID)
+                                        .constructor(arg -> createStageLambdas(new MidChatFeature(arg.asRec().jvm(), LLM_MIDCHAT_FEATURE_TID, arg.vid())))
+                                        .create(),
+                                null, null,
+                                mutableMap(
+                                        uri(ROOT).maybe(), "where its messages are written; defaults to the agent's own root"),
+                                "the mid-chat channel: relays what the model says to the user mid-iteration, and carries what the user says back through the tool result of the call it answered"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_CONCEPT_FEATURE_TID)
@@ -748,6 +801,35 @@ public class llmInstSet extends AbstractInstSet {
                             lhs.<Agent>as().interrupt();
                             return noobj();
                         }), "interrupt the agent mid-process"),
+                        // LEDGER FSCK — the repair for what interrupt leaves behind.
+                        // Deliberately manual: a ledger that needs this regularly means
+                        // the write path is broken, which is worth finding out, not
+                        // hiding behind a sweep on every boot.
+                        docWrap(instC(LLM_INST_TID.extend("sweep").dom(LLM_SESSION_TID.maybe()).rng(REC_TID),
+                                        rec(uri(SESSION).maybe().asUri(), T(LLM_SESSION_TID.maybe()),
+                                                uri("repair").maybe().asUri(), BOOL_TYPE,
+                                                uri("prune").maybe().asUri(), BOOL_TYPE),
+                                        (lhs, inst) -> {
+                                            // the session arrives as the lhs — anchored (@/usr/dr/session/1),
+                                            // deref'd (*/usr/dr/session/1) — or handed in as arg 0
+                                            final Obj target = inst.arg(f(SESSION), 0).orElse(lhs);
+                                            final boolean repair = inst.arg(f("repair"), 1).booleanCheck();
+                                            final boolean prune = inst.arg(f("prune"), 2).booleanCheck();
+                                            try {
+                                                return LedgerUtil.sweep(LedgerUtil.rootFor(target), repair, prune);
+                                            } catch (final MTronException e) {
+                                                return fail("%s", e.getMessage());
+                                            }
+                                        }),
+                                "the session whose ledger is swept — a session::T row; defaults to the lhs",
+                                "a rec of call ids per failure mode — every key always present, so it can be counted without inspecting its shape",
+                                mutableMap(jnt(0), "the session to sweep; defaults to the lhs",
+                                        jnt(1), "true to repair — drop the unanswered requests; no row is removed",
+                                        jnt(2), "true to also DELETE what cannot be salvaged — duplicate messages and orphan results — which is the only way to clear those"),
+                                "fsck a chat ledger: [duplicate=>[call ids written twice], orphan=>[requests whose result is nowhere], misplaced=>[requests whose result is not next to them], misscoped=>[requests whose results stand next to them but are stamped into another scope, so the store's projection tears the group apart], orphan_result=>[results no request precedes]]. A provider requires the results of an assistant message's tool_calls to sit immediately after it, as the store projects that turn (one session, one depth, one chat id) — anything else breaks every later chat with insufficient tool messages following tool_calls message. repair restores validity without deleting anything: an unanswered request is dropped, and a misscoped result is moved into the scope of the request it answers; prune is the opt-in to deletion, and is separate because a duplicate's surviving copy may not carry the same text",
+                                "@/usr/dr/session/1.sweep().at('duplicate')                            [-- the groups written twice --]",
+                                "@/usr/dr/session/1.sweep(repair=>true)                                [-- drop the unanswered requests --]",
+                                "@/usr/dr/session/1.sweep(repair=>true,prune=>true).at('duplicate')    [-- and delete the duplicates --]"),
                         /*instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(A.maybe()),
                                 lst(STR_TYPE),
                                 (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),*/
@@ -874,15 +956,13 @@ public class llmInstSet extends AbstractInstSet {
         final mModel model = modelArg.isNoObj() ? mModel.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec()) : mModel.model(modelArg.asRec());
         // 4. distill via a mini-task
         final ChatResult result = Agent.Helper.miniChat("session_summarizer", model(model.at(TIMEOUT, real(10.0, MATH_MINUTE_TID, null))), SUMMARIZE_PROMPT.formatted(digest));
-        // 5. parse the <<json:claim>> and <<json:loose_end>> blocks into vids
+        // 5. parse the <<json:claim>> and <<json:loose_end>> watermarks into vids
         final List<Obj> claimVids = new ArrayList<>();
         final List<Obj> looseEndVids = new ArrayList<>();
-        final Obj blocks = result.at(uri(BLOCK)).orElse(noobj());
-        if (!blocks.isNoObj()) {
-            final Rec blocksRec = blocks.asRec();
-            for (final Rel entry : blocksRec.elements().toList()) {
-                final String keyStr = Str.Helper.cleanString(entry.first());
-                final Obj body = entry.second();
+        // claims first: a loose end refers to the claims distilled in this same pass
+        for (final String keyStr : List.of("claim", "loose_end")) {
+            final Obj body = result.watermark(keyStr);
+            if (!body.isNoObj()) {
                 final Lst bodyLst = body.isLst() ? body.asLst() : lst(body);
                 for (final Obj bodyObj : bodyLst.elements().toList()) {
                     Rec rec = bodyObj.asRec();
@@ -1141,11 +1221,11 @@ public class llmInstSet extends AbstractInstSet {
                         f.onPartialResponse((Agent) agent, i.arg(0).asStr());
                         return noobj();
                     })),
-            new StageDef(ON_PARTIAL_THINKING, "onPartialThinking", new Class<?>[]{Agent.class, Str.class},
-                    f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, i) -> {
-                        f.onPartialThinking((Agent) agent, i.arg(0).asStr());
-                        return noobj();
-                    })),
+            // thinking is the one stage Agent does not dispatch: ThinkFeature owns it,
+            // seeds the thought, and cascades it through the features that have this hook
+            new StageDef(ON_PARTIAL_THINKING, "onPartialThinking", new Class<?>[]{Agent.class, Obj.class},
+                    f -> instLambda(ALL.maybe(), ALL.maybe(), (agent, i) ->
+                            f.onPartialThinking((Agent) agent, i.arg(0)))),
             new StageDef(ON_PARTIAL_TOOL_CALL, "onPartialToolCall", new Class<?>[]{Agent.class, Inst.class},
                     f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, i) -> {
                         f.onPartialToolCall((Agent) agent, (Inst) i.arg(0));
@@ -1161,6 +1241,11 @@ public class llmInstSet extends AbstractInstSet {
                         f.onToolExecuted((Agent) agent, i.arg(0));
                         return noobj();
                     })),
+            // the one stage whose value is consumed: mToolExecutor folds it over the
+            // payload instead of the turn dropping it
+            new StageDef(ON_TOOL_RESULT, "onToolResult", new Class<?>[]{Agent.class, Obj.class, String.class},
+                    f -> instLambda(ALL.maybe(), ALL.maybe(), (agent, i) ->
+                            f.onToolResult((Agent) agent, i.arg(0), Str.Helper.cleanString(i.arg(1))))),
             new StageDef(ON_COMPLETE_RESPONSE, "onCompleteResponse", new Class<?>[]{Agent.class, ChatResult.class},
                     f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, i) -> {
                         f.onCompleteResponse((Agent) agent, (ChatResult) i.arg(0));

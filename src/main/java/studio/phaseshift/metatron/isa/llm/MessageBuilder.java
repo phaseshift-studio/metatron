@@ -173,6 +173,18 @@ public class MessageBuilder {
     }
 
     /**
+     * Set the {@code sub} field — the message's subtype uri, refining the base tid
+     * without replacing it.  A mid-chat message is still a {@code user} or
+     * {@code ai} message as far as LC4j's memory is concerned; the subtype is what
+     * lets a reader tell it from a real turn.
+     */
+    public MessageBuilder sub(final fURI subtype) {
+        if (null != subtype)
+            this.map.put(uri(SUB), uri(subtype));
+        return this;
+    }
+
+    /**
      * Set an arbitrary field.
      */
     public MessageBuilder put(final String key, final Obj value) {

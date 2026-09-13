@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.Watermarks;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
@@ -72,31 +73,43 @@ public class CompactionFeature extends AbstractFeature {
      * whose body is the same argument rec the {@code compact()} instruction
      * takes.
      */
+    /**
+     * This feature's watermark identity.  Declared on the config rec as
+     * {@code watermark => [key=>..., tag=>...]} to override either; these are the
+     * defaults, and the single place the server-side lookup and the skill prose
+     * both take their marker from.
+     */
+    static final String WATERMARK_KEY = "compaction";
+    static final String WATERMARK_CODEC = "mtron";
+
+    private static final String COMPACTION_INSTRUCTIONS = """
+                                                          When the conversation history is getting large, you can append a `<<mtron:compaction>>`
+                                                          watermark to your response — a deferred `compact()` call, where the watermark body is
+                                                          the same argument rec `compact()` takes (all optional). An empty body means "use your
+                                                          defaults":
+                                                          
+                                                              <<mtron:compaction>><</mtron:compaction>>
+                                                          
+                                                          The compaction runs in the background — acknowledge that it is queued and respond
+                                                          normally. On the next chat, the conversation history is replaced with a resume summary
+                                                          plus the most recent messages. Prefer this over continuing with an unwieldy history.
+                                                          """;
+
     public void registerSkill(final Agent agent) {
         if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
             return;
+        final String instructions = Watermarks.instructions(WATERMARK_CODEC,
+                Watermarks.key(this, WATERMARK_KEY), COMPACTION_INSTRUCTIONS);
         agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(mutableMap(
                 uri(NAME), uri(LLM_COMPACTION_FEATURE_TID.name()),
                 uri(DESC), str("compact the conversation history into a resume summary when the context grows large"),
-                uri(CONTENT), str("""
-                                  When the conversation history is getting large, you can append a `<<mtron:compaction>>`
-                                  block to your response — a deferred `compact()` call, where the block rec is the same
-                                  argument rec `compact()` takes (all optional):
-                                  
-                                      <<mtron:compaction>>[=>]<</mtron:compaction>>
-                                  
-                                  The compaction runs in the background — acknowledge that it is queued and respond
-                                  normally. On the next chat, the conversation history is replaced with a resume summary
-                                  plus the most recent messages. Prefer this over continuing with an unwieldy history.
-                                  
-                                  **IMPORTANT**: This skill is about formatting your response, not calling a function. The
-                                  block is stripped from what the user sees.
-                                  """)))));
+                uri(CONTENT), str(instructions)))));
     }
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
         this.registerSkill(agent);
+        this.surfaceWatermarkRejections(agent);
         this.surfaceResumeSummary(agent);
         return noobj();
     }
@@ -130,13 +143,9 @@ public class CompactionFeature extends AbstractFeature {
     @Override
     public void onCompleteResponse(final Agent agent, final ChatResult result) {
         // 1. detect the <<mtron:compaction>> watermark the model emitted
-        Rec block = null;
-        final Obj blocks = result.at(uri(BLOCK)).orElse(noobj());
-        if (!blocks.isNoObj()) {
-            final Obj signal = blocks.asRec().at(uri("compaction"));
-            if (!signal.isNoObj())
-                block = signal.asRec();
-        }
+        this.noteWatermarkFailure(result, WATERMARK_CODEC, WATERMARK_KEY);
+        final Obj signal = result.watermark(Watermarks.key(this, WATERMARK_KEY));
+        Rec block = signal.isNoObj() ? null : signal.asRec();
         if (!agent.hasFeature(LLM_MESSAGE_FEATURE_TID)) {
             if (null != block)
                 LOG.warn("compaction requires the session feature");

@@ -305,6 +305,7 @@ agent::[
                      on_before_chat => inst(){ @<think_widget> >>= [body=>""] },
                      root           => /usr/dr/message,
                      think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
+  midchat_feature::[root           => /usr/dr],
   compaction_feature::[model        => !*/usr/dr/model,
                        threshold    => 0.8],
   loop_feature:::::::[max_loop      => 100,

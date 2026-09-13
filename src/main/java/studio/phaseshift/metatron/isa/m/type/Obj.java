@@ -1132,10 +1132,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             }
             return (O) obj;
         }
-
-        public static void logLockedObj(final Obj obj) {
-            Router.global().logger().warn("obj vid/tid locked: %s", obj);
-        }
     }
 
     final class ObjType {

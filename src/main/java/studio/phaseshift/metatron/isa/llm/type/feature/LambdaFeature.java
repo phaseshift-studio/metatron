@@ -30,11 +30,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static studio.phaseshift.metatron.Tokens.REQUIRED;
-import static studio.phaseshift.metatron.Tokens.STAGE;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -45,26 +46,31 @@ public class LambdaFeature extends AbstractFeature {
         super(jvm, tid, vid);
     }
 
-    private void computeLambda(final fURI stage, final Agent agent, Obj arg) {
-        this.at(STAGE).orElse(rec()).at(stage).orElse(lst()).elements().forEach(lambda -> {
-            final Obj result;
+    /**
+     * Evaluate every lambda registered for a stage, in turn.
+     *
+     * @return the last lambda's result, or {@code noobj()} when the stage has none —
+     * dropped by every stage but {@code on_tool_result}, whose value is the
+     * payload the model is handed
+     */
+    private Obj computeLambda(final fURI stage, final Agent agent, final Obj arg) {
+        Obj last = noobj();
+        for (final Obj lambda : this.at(STAGE).orElse(rec()).at(stage).orElse(lst()).elements().toList()) {
             try {
-                if (lambda.isInst()) {
-                    if (null != arg)
-                        result = lambda.asInst().apply(arg);
-                    else
-                        result = lambda.asInst().apply(agent);
-                } else
-                    result = lambda.apply(null == arg ? agent : arg);
+                final Obj result = lambda.isInst()
+                        ? (null != arg ? lambda.asInst().apply(arg) : lambda.asInst().apply(agent))
+                        : lambda.apply(null == arg ? agent : arg);
                 if (!stage.equals(f("on_error")) && result.isFail()) {
                     throw result.asFail().asException();
                 }
+                last = result;
             } catch (final Exception e) {
                 if (stage.equals(f("on_error")))
                     LOG.error("an error occurred during on_error: %s", e);
                 else throw e;
             }
-        });
+        }
+        return last;
     }
 
     @Override
@@ -91,9 +97,15 @@ public class LambdaFeature extends AbstractFeature {
         this.computeLambda(f("on_partial_response"), agent, text);
     }
 
+    /**
+     * A cascading stage: an {@code on_partial_thinking} lambda is handed the thought as
+     * it stands, and what it returns becomes the thought.  A stage with no lambda
+     * evaluates to noobj, and the thought passes through untouched.
+     */
     @Override
-    public void onPartialThinking(final Agent agent, final Str text) {
-        this.computeLambda(f("on_partial_thinking"), agent, text);
+    public Obj onPartialThinking(final Agent agent, final Obj thought) {
+        final Obj folded = this.computeLambda(f("on_partial_thinking"), agent, thought);
+        return folded.isNoObj() ? noobj() : folded;
     }
 
     @Override
@@ -113,9 +125,17 @@ public class LambdaFeature extends AbstractFeature {
         this.computeLambda(f("on_tool_executed"), agent, result);
     }
 
+    /**
+     * The one stage whose return value is consumed: an {@code on_tool_result} lambda
+     * is handed a {@code [result, id]} rec — the payload as folded so far and the call
+     * id — and what it returns becomes the payload the model sees.  A stage with no
+     * lambda evaluates to noobj, and the payload passes through untouched.
+     */
     @Override
-    public void onToolResult(final Agent agent, final Inst tool, final Obj result) {
-        // this.computeLambda(f("on_tool_result"), agent, tool, result);
+    public Obj onToolResult(final Agent agent, final Obj result, final String requestId) {
+        final Obj folded = this.computeLambda(f(ON_TOOL_RESULT), agent,
+                rec(uri(RESULT), result, uri(ID), str(requestId)));
+        return folded.isNoObj() ? result : folded;
     }
 
     // ── Completion ───────────────────────────────────────────────

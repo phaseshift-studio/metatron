@@ -1,6 +1,7 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.Watermarks;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
@@ -28,7 +29,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /**
  * Enables an agent to self-direct a multi-pass reasoning loop.
  * The LLM signals continuation by appending a block to its response
- * (parsed by {@link Agent#MTRON_BLOCK}):
+ * (parsed by {@link studio.phaseshift.metatron.isa.llm.Watermarks}):
  * <pre>
  *   &lt;&lt;mtron:loop&gt;&gt;
  *   [prompt=&gt;"next instructions",
@@ -40,11 +41,20 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class LoopFeature extends AbstractFeature {
 
+    /**
+     * This feature's watermark identity.  Declared on the config rec as
+     * {@code watermark => [key=>..., tag=>...]} to override either; these are the
+     * defaults, and the single place the server-side lookup and the skill prose
+     * both take their marker from.
+     */
+    static final String WATERMARK_KEY = "loop";
+    static final String WATERMARK_CODEC = "mtron";
+
     protected static final
     String LOOP_FEATURE_INSTRUCTIONS = """
                                        You can operate in a multi-pass reasoning loop.
                                        When a task requires multiple rounds of tool use, verification,
-                                       or information gathering, append the `<<mtron:loop>>` markup block
+                                       or information gathering, append the `<<mtron:loop>>` watermark
                                        to your response. For example:
                                        
                                            <<mtron:loop>>
@@ -58,9 +68,7 @@ public class LoopFeature extends AbstractFeature {
                                        `delay` accepts any time::T (millis, second, minute, hour).
                                        The delay between iterations can be used for polling or rate-limited workflows.
                                        
-                                       When the task is complete, respond normally without the <<mtron:loop>> block.
-                                       
-                                       **IMPORTANT**: This skill is about formatting your response, not calling a function.
+                                       When the task is complete, respond normally without the <<mtron:loop>> watermark.
                                        
                                        You are constrained to %%%1 max loops and %%%2 maximum time.
                                        """;
@@ -100,9 +108,11 @@ public class LoopFeature extends AbstractFeature {
     public void registerSkill(final Agent agent) {
         if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
             return;
-        final String instructions = LOOP_FEATURE_INSTRUCTIONS
-                .replace("%%%1", this.maxLoops > 0 ? this.maxLoops + "" : "<no limit>")
-                .replace("%%%2", this.maxTimeMillis > 0 ? this.maxTimeMillis + "" : "<no limit>");
+        final String instructions = Watermarks.instructions(WATERMARK_CODEC,
+                Watermarks.key(this, WATERMARK_KEY),
+                LOOP_FEATURE_INSTRUCTIONS
+                        .replace("%%%1", this.maxLoops > 0 ? this.maxLoops + "" : "<no limit>")
+                        .replace("%%%2", this.maxTimeMillis > 0 ? this.maxTimeMillis + "" : "<no limit>"));
         agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(
                 uri(NAME), uri(LLM_LOOP_FEATURE_TID.name()),
                 uri(DESC), str("multi-pass reasoning loop with iteration control and polling support"),
@@ -112,6 +122,7 @@ public class LoopFeature extends AbstractFeature {
     @Override
     public Obj onBeforeChat(final Agent agent) {
         this.registerSkill(agent);
+        this.surfaceWatermarkRejections(agent);
         // New user prompt: no continuation → reset counters.  A loop
         // continuation is this feature's own recursive chat call.
         if (!this.isContinuation) {
@@ -133,9 +144,9 @@ public class LoopFeature extends AbstractFeature {
                         uri("time"), result.at(uri(TIME)))));
         persist(agent, result);
 
-        // Read the loop signal from the parsed <<mtron:loop>> block.
-        final Obj blocks = result.at(uri(BLOCK));
-        final Obj loopSignal = blocks.isNoObj() ? noobj() : blocks.asRec().at(uri("loop"));
+        // Read the loop signal from the model's <<mtron:loop>> watermark.
+        this.noteWatermarkFailure(result, WATERMARK_CODEC, WATERMARK_KEY);
+        final Obj loopSignal = result.watermark(Watermarks.key(this, WATERMARK_KEY));
         if (loopSignal.isNoObj()) return;
 
         final Rec signal = loopSignal.asRec();

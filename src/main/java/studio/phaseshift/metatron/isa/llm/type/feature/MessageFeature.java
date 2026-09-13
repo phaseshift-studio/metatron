@@ -80,23 +80,26 @@ public class MessageFeature extends AbstractFeature {
 
     public Rec addMessage(final Agent agent, final Rec message) {
         MessageBuilder.build(message.tid()).copy(message.jvm()).time().create();
-        final SpaceChatSessionStore store = this.createStore(agent);
+        // Adding a message is not a new turn — the session's chat_id counter
+        // is untouched and the store is built for the turn already in flight.
+        final SpaceChatSessionStore store = this.createStore(agent, agent.chatId());
         return store.addMessage(message);
     }
 
-    private SpaceChatSessionStore createStore(final Agent agent) {
+    /**
+     * The session store for one chat turn.  {@code chatId} is passed in rather
+     * than computed here: the counter belongs to the session rec (advanced once
+     * per turn in {@link #onBeforeChat}), and a store is built from more than
+     * one place — computing it in the factory made {@code add_message} look
+     * like a new turn.
+     */
+    private SpaceChatSessionStore createStore(final Agent agent, final int chatId) {
         final fURI sessionID = this.at(SESSION).uriValue();
-        Rec session = Router.readFromSpace(sessionID).orElse(rec());
-        final int chatId = session.at(uri(CHAT_ID)).orElse(jnt(0)).intValue().intValue() + 1;
-        session.at(uri(CHAT_ID), jnt(chatId), MUTABLE);
-        agent.setCurrentChatId(chatId);
-
-        final Space space = Router.global().getSpaceFor(sessionID);
         // the session's home <memoryRoot>/session/<id> is the ledger's root —
         // the store is told which memory system it serves (not derived
         // from the agent's own root)
+        final Space space = Router.global().getSpaceFor(sessionID);
         return new SpaceChatSessionStore(agent, space, agent.chatDepth(), chatId, SpaceChatSessionStore.memoryRootOf(sessionID));
-
     }
 
     @Override
@@ -104,10 +107,6 @@ public class MessageFeature extends AbstractFeature {
         final fURI sessionID = this.at(SESSION).uriValue();
         Rec session = Router.readFromSpace(sessionID).orElse(rec());
         try {
-            // Monotonic execution counter — incremented on every chat() call,
-            // persisted with the session so it survives restarts.  Used by
-            // SpaceChatSessionStore for cross-turn sub-agent isolation.
-            this.store = this.createStore(agent);
             // Ensure session exists in space with required fields
             if (session.at(ALGORITHM).isNoObj()) {
                 if (!this.asRec().at(ALGORITHM).isNoObj()) {
@@ -127,8 +126,21 @@ public class MessageFeature extends AbstractFeature {
                 if (session.at(USER).isNoObj())
                     session.at(USER, str("default"), MUTABLE);
             }
-            if (!session.at(ALGORITHM).isNoObj() && null == session.vid())
+            // The monotonic per-session execution counter — advanced once per
+            // chat() call and written with the session so chat_id is a real
+            // turn boundary: SpaceChatSessionStore scopes cross-turn isolation
+            // by it, ToolPairGate keys its parked groups on it, and
+            // mcpMessageServer uses it to bound mid-chat message reads.  A
+            // counter that never advances silently collapses every one of those
+            // to "one turn".
+            final int chatId = session.at(uri(CHAT_ID)).orElse(jnt(0)).intValue().intValue() + 1;
+            session.at(uri(CHAT_ID), jnt(chatId), MUTABLE);
+            agent.setCurrentChatId(chatId);
+            // one write per turn: creates the session on the first chat and
+            // advances the counter on every one after it
+            if (!session.at(ALGORITHM).isNoObj())
                 Router.writeToSpace(sessionID, session.selfVID(sessionID));
+            this.store = this.createStore(agent, chatId);
             if (session.at(ALGORITHM).isNoObj() || session.at(ALGORITHM).asRec().at(NAME).isNoObj())
                 throw MTronException.of("no session memory algorithm provided: token_window or message_window");
             final int max = session.at(ALGORITHM).asRec().at(MAX).orElse(jnt(50)).intValue().intValue();

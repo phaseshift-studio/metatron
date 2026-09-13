@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.isa.llm.Watermarks;
+import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -27,11 +29,15 @@ import java.util.LinkedHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.CHAT;
+import static studio.phaseshift.metatron.Tokens.WATERMARK;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_LOOP_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -66,5 +72,35 @@ public class LoopFeatureTest extends AbstractFeatureTest {
         final LoopFeature withDelay = new LoopFeature(mutableMap(uri("delay"), real(3.5d)), feat("loop"), null) {
         };
         assertFalse(withDelay.at(uri("delay")).isNoObj(), "delay should be present in JVM");
+    }
+
+    /**
+     * The feedback half of the protocol: a watermark the model got wrong comes
+     * back to it on the next chat, because otherwise it repeats the same
+     * malformed marker forever with no idea why nothing happened.
+     */
+    @Test
+    public void testUndecodableWatermarkIsReportedBackOnTheNextChat() {
+        final LoopFeature loop = feature();
+        final SystemFeature system = new SystemFeature(mutableMap(), LLM_SYSTEM_FEATURE_TID, null);
+        final Agent agent = agentWith(system, loop);
+        final ChatResult result = ChatResult.chatResult()
+                .put(CHAT, str("acknowledged"))
+                .put(WATERMARK, Watermarks.scan("<<mtron:loop>>I am on it<</mtron:loop>>").list());
+        loop.onCompleteResponse(agent, result);
+        loop.onBeforeChat(agent);
+        assertTrue(system.systemMessage().contains("<<mtron:loop>> was not applied"),
+                "the model is told its watermark did not decode, got: " + system.systemMessage());
+    }
+
+    @Test
+    public void testAbsentWatermarkIsNotReported() {
+        final LoopFeature loop = feature();
+        final SystemFeature system = new SystemFeature(mutableMap(), LLM_SYSTEM_FEATURE_TID, null);
+        final Agent agent = agentWith(system, loop);
+        loop.onCompleteResponse(agent, ChatResult.chatResult().put(CHAT, str("no watermark here")));
+        loop.onBeforeChat(agent);
+        assertFalse(system.systemMessage().contains("was not applied"),
+                "a chat with no watermark yields no complaint, got: " + system.systemMessage());
     }
 }

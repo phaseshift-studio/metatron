@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.Watermarks;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
@@ -50,11 +51,20 @@ public class EmbedFeature extends AbstractFeature {
         super(jvm, tid, vid);
     }
 
+    /**
+     * This feature's watermark identity.  Declared on the config rec as
+     * {@code watermark => [key=>..., tag=>...]} to override either; these are the
+     * defaults, and the single place the server-side lookup and the skill prose
+     * both take their marker from.
+     */
+    static final String WATERMARK_KEY = "embed";
+    static final String WATERMARK_CODEC = "mtron";
+
     protected static final
     String EMBED_FEATURE_INSTRUCTIONS = """
                                         You can choose to have the current chat result vectorized using an embedding model
                                         and stored in space (presumably a vector space). To accomplish this, add
-                                        the following watermark block to your response:
+                                        the following watermark to your response:
                                         
                                             <<mtron:embed>>
                                                 [root  => /usr/agent/chat_result,
@@ -68,8 +78,6 @@ public class EmbedFeature extends AbstractFeature {
                                         If no model is provided, then the embedding model associated with the embed_feature::T will be used:
                                         
                                         %s
-                                        
-                                        **IMPORTANT**: This skill is about formatting your response, not calling a function.
                                         """;
 
     @Override
@@ -85,16 +93,35 @@ public class EmbedFeature extends AbstractFeature {
     public void registerSkill(final Agent agent) {
         if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
             return;
-        final String instructions = EMBED_FEATURE_INSTRUCTIONS.formatted(this.at(ROOT), this.at(MODEL));
+        final String instructions = Watermarks.instructions(WATERMARK_CODEC, Watermarks.key(this, WATERMARK_KEY),
+                EMBED_FEATURE_INSTRUCTIONS.formatted(this.at(ROOT), this.at(MODEL)));
         agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(
                 uri(NAME), uri(LLM_EMBED_FEATURE_TID.name()),
                 uri(DESC), str("embed chat results into a vector space for later similarity retrieval"),
                 uri(CONTENT), str(instructions))));
     }
 
+    /**
+     * Registers the skill before the chat — the lifecycle stage that makes this
+     * feature reachable at all.  Without it the skill channel never hears about
+     * {@code <<mtron:embed>>}, so the model cannot know it exists.
+     */
+    @Override
+    public Obj onBeforeChat(final Agent agent) {
+        this.registerSkill(agent);
+        this.surfaceWatermarkRejections(agent);
+        return noobj();
+    }
+
     @Override
     public void onCompleteResponse(final Agent agent, final ChatResult result) {
-        final Rec signal = result.at(BLOCK).orElse(rec()).at(EMBED).orElse(rec0());
+        // A <<mtron:embed>> watermark is a deferred embed() call; with none, the
+        // feature still embeds the result using its own configured defaults.
+        // That is the existing behaviour (the guard below cannot fire, since
+        // rec0() is not noobj) and it is preserved here deliberately.
+        this.noteWatermarkFailure(result, WATERMARK_CODEC, WATERMARK_KEY);
+        final Obj watermark = result.watermark(Watermarks.key(this, WATERMARK_KEY));
+        final Rec signal = watermark.isRec() ? watermark.asRec() : rec0();
         if (signal.isNoObj())
             return;
         final fURI writeLocation = this.at(ROOT).uriValue().extend("_").addQ(INCRQ);

@@ -179,6 +179,10 @@ starting point for your own scenario (`--steps my.steps`).
 - Don't create new terms for rec keys unless you absolutely have to. Instead, review `Tokens.java` as that is our
   running list of terms used across the code base. Best to reuse existing terms instead of creating an ever-growing set
   of synonyms.
+- **Never shape-inspect a read result.** `Objs` — a *Java* notion; in mtron a multiplicity is a tid coefficient, e.g.
+  `int{4}::T` — is a stream, and `stream()` is defined on `Obj` itself, so `obj.stream().forEach(...)` covers one match
+  and many identically with no `isLst()`/`isRec()`/`isRel()`/`instanceof Poly` branching. Sort a read yourself when
+  position matters. See the `stream()` note under Key Concepts.
 
 ### Test Framework
 
@@ -360,6 +364,35 @@ and `<uri> -> <obj>` reference).
 - for a value: `vid` is the value's location in space and `tid` is the type constraining the value.
     - `nat::29@/usr/marko/age`. The `int` is a `nat::T` (tid) and it's located at `/usr/marko/age` (vid).
     - `*/usr/marko/age` returns `nat::29`.
+
+**`stream()` — one or many, the same code, on the Java side**
+
+A wildcard space read that matched several things hands you an `Objs` in Java. It is not a collection to be unwrapped:
+`stream()` is defined on `Obj` itself, and for `Objs` it yields the members while for **every other type it yields the
+obj alone**. So one code path covers "one match" and "many matches" with no shape inspection:
+
+```java
+objs(jnt(1), jnt(2), jnt(3)).stream().forEach(...);   // many
+jnt(1).stream().forEach(...);                         // one — the same code
+```
+
+That uniformity is not luck: `MObjs.objs(...)` collapses an empty collection to `noobj()` and **a single element to that
+element itself**, so a one-member `Objs` is never constructed.
+
+**`objs` is a Java notion, not an mtron one.** There is no `objs` in the mtron vocabulary: a multiplicity there is a
+**coefficient in the tid** — `int{4}::T` is four ints — and *that* is what an `Objs` is in Java (its tid is the sum of
+its members' tids, `tid.big()`). So when reading mtron, look for the coefficient, not a collection type.
+
+Reach for `stream()` whenever you are unsure of the source, rather than branching on `isLst()` / `isRec()` / `isRel()` /
+`instanceof Poly`. Three things that follow, each of which has bitten:
+
+- An `Objs` from a read can **inherit a member's `tid` and `vid`**, so dispatching on `tid` after a read is unsafe —
+  dispatch on the fields the rec actually carries, or let `stream()` do the walking.
+- A `+` read's leaves are **rels** (`vid => obj`), so the ledger read idiom unwraps both layers:
+  `Router.readFromSpace(path.extend("+/")).stream().map(Obj::asRel).map(Rel::second)`
+  (see `SpaceChatSessionStore.sessionRels`, `LedgerUtil.readMessages`).
+- A read does **not** promise order. When position matters — e.g. a tool result must sit immediately after the request
+  it answers — sort by ledger id yourself.
 
 **URI components**:
 
