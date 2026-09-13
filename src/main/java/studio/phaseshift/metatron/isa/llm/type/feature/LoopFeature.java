@@ -1,12 +1,11 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.llm.Watermarks;
+import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Fail;
-import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -29,7 +28,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /**
  * Enables an agent to self-direct a multi-pass reasoning loop.
  * The LLM signals continuation by appending a block to its response
- * (parsed by {@link studio.phaseshift.metatron.isa.llm.Watermarks}):
+ * (parsed by {@link WatermarkUtil}):
  * <pre>
  *   &lt;&lt;mtron:loop&gt;&gt;
  *   [prompt=&gt;"next instructions",
@@ -108,8 +107,8 @@ public class LoopFeature extends AbstractFeature {
     public void registerSkill(final Agent agent) {
         if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
             return;
-        final String instructions = Watermarks.instructions(WATERMARK_CODEC,
-                Watermarks.key(this, WATERMARK_KEY),
+        final String instructions = WatermarkUtil.instructions(WATERMARK_CODEC,
+                WatermarkUtil.key(this, WATERMARK_KEY),
                 LOOP_FEATURE_INSTRUCTIONS
                         .replace("%%%1", this.maxLoops > 0 ? this.maxLoops + "" : "<no limit>")
                         .replace("%%%2", this.maxTimeMillis > 0 ? this.maxTimeMillis + "" : "<no limit>"));
@@ -146,7 +145,7 @@ public class LoopFeature extends AbstractFeature {
 
         // Read the loop signal from the model's <<mtron:loop>> watermark.
         this.noteWatermarkFailure(result, WATERMARK_CODEC, WATERMARK_KEY);
-        final Obj loopSignal = result.watermark(Watermarks.key(this, WATERMARK_KEY));
+        final Obj loopSignal = result.watermark(WatermarkUtil.key(this, WATERMARK_KEY));
         if (loopSignal.isNoObj()) return;
 
         final Rec signal = loopSignal.asRec();

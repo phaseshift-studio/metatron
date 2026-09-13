@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.llm.type;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.llm.Watermarks;
+import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -95,13 +95,13 @@ public class ChatResult extends MRec {
      */
     public Obj watermark(final String key) {
         final Lst watermarks = this.watermarks();
-        if (!Watermarks.has(watermarks, key))
+        if (!WatermarkUtil.has(watermarks, key))
             return noobj();
         // a body that did not decode is reported back to the model separately —
         // there is no argument to act on, so it must not read as a zero-arg call
-        if (Watermarks.failed(watermarks, key).isRec())
+        if (WatermarkUtil.failed(watermarks, key).isRec())
             return noobj();
-        final Obj body = Watermarks.get(watermarks, key);
+        final Obj body = WatermarkUtil.get(watermarks, key);
         return body.isNoObj() ? rec0() : body;
     }
 

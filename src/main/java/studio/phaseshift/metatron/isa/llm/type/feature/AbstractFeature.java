@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.llm.Watermarks;
+import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.m.type.Bool;
@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.ACTIVE;
-import static studio.phaseshift.metatron.Tokens.FEATURE;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
 
 /*
@@ -139,10 +138,10 @@ public abstract class AbstractFeature extends MRec implements Feature {
      * @param defaultKey this feature's watermark key, unless its config declares one
      */
     protected void noteWatermarkFailure(final ChatResult result, final String codec, final String defaultKey) {
-        final String key = Watermarks.key(this, defaultKey);
-        final Obj rejected = Watermarks.failed(result.watermarks(), key);
+        final String key = WatermarkUtil.key(this, defaultKey);
+        final Obj rejected = WatermarkUtil.failed(result.watermarks(), key);
         if (rejected.isRec())
-            this.rejectWatermark(Watermarks.report(codec, key, rejected.asRec()));
+            this.rejectWatermark(WatermarkUtil.report(codec, key, rejected.asRec()));
     }
 
     /**

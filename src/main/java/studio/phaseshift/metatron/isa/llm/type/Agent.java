@@ -27,7 +27,7 @@ import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
-import studio.phaseshift.metatron.isa.llm.Watermarks;
+import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.mToolProvider;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
@@ -308,8 +308,8 @@ public class Agent extends MRec {
      * silent no-op ({@code noobj().args(...).apply(this) → noobj}).
      *
      * @return what the hook evaluated to — dropped by every stage but
-     *         {@code on_tool_result}, which is the one whose value is the point
-     *         (see {@link #dispatchToolResult})
+     * {@code on_tool_result}, which is the one whose value is the point
+     * (see {@link #dispatchToolResult})
      */
     private Obj dispatchHook(final Rec feature, final String hookKey, final Obj... args) {
         try {
@@ -589,7 +589,7 @@ public class Agent extends MRec {
                             final Obj chatObj;
                             // A formatted response is a structured rec end to end — there is
                             // no text channel for a watermark to ride in.
-                            final Watermarks.Scan scan = formatted ? null : Watermarks.scan(fullText);
+                            final WatermarkUtil.Scan scan = formatted ? null : WatermarkUtil.scan(fullText);
                             if (formatted) {
                                 chatObj = ObjJSONSerializer.simple().inputBytes(fullText);
                             } else {
