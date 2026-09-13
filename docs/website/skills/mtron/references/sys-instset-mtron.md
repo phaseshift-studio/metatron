@@ -38,12 +38,12 @@ Batch over a rec (indexed) or a lst (flat):
 mtron> {"ls","whoami","df -h"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of result lsts --]
 ==>['ls'=>['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE',...(10 more)]]
 ==>['whoami'=>['killswitch']]
-==>['df -h'=>['Filesystem             Size  Used Avail Use% Mounted on','tmpfs                  6.1G  6.2M  6.1G   1% /run','efivarfs               128K   42K   82K  34% /sys/firmware/...','/dev/nvme1n1p2         916G  490G  379G  57% /','tmpfs                   31G  296M   31G   1% /dev/shm','tmpfs                  5.0M   20K  5.0M   1% /run/lock','tmpfs                   31G     0   31G   0% /run/qemu','/dev/nvme1n1p1         511M  6.2M  505M   2% /boot/efi','tmpfs                  6.1G  252K  6.1G   1% /run/user/1000','/dev/nvme0n1p2         932G  240G  692G  26% /media/hdd0',...(1 more)]]
+==>['df -h'=>['Filesystem             Size  Used Avail Use% Mounted on','tmpfs                  6.1G  6.2M  6.1G   1% /run','efivarfs               128K   42K   82K  34% /sys/firmware/...','/dev/nvme1n1p2         916G  490G  379G  57% /','tmpfs                   31G  270M   31G   1% /dev/shm','tmpfs                  5.0M   20K  5.0M   1% /run/lock','tmpfs                   31G     0   31G   0% /run/qemu','/dev/nvme1n1p1         511M  6.2M  505M   2% /boot/efi','tmpfs                  6.1G  248K  6.1G   1% /run/user/1000','/dev/nvme0n1p2         932G  240G  692G  26% /media/hdd0',...(1 more)]]
 mtron> ["ls","whoami","df -h"].mapp(-<[_ => bash(_)]).sum() [-- flatten to one lst --]
 ==>[
     ['ls'=>['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE',...(10 more)]],
     ['whoami'=>['killswitch']],
-    ['df -h'=>['Filesystem             Size  Used Avail Use% Mounted on','tmpfs                  6.1G  6.2M  6.1G   1% /run','efivarfs               128K   42K   82K  34% /sys/firmware/...','/dev/nvme1n1p2         916G  490G  379G  57% /','tmpfs                   31G  296M   31G   1% /dev/shm','tmpfs                  5.0M   20K  5.0M   1% /run/lock','tmpfs                   31G     0   31G   0% /run/qemu','/dev/nvme1n1p1         511M  6.2M  505M   2% /boot/efi','tmpfs                  6.1G  252K  6.1G   1% /run/user/1000','/dev/nvme0n1p2         932G  240G  692G  26% /media/hdd0',...(1 more)]]]
+    ['df -h'=>['Filesystem             Size  Used Avail Use% Mounted on','tmpfs                  6.1G  6.2M  6.1G   1% /run','efivarfs               128K   42K   82K  34% /sys/firmware/...','/dev/nvme1n1p2         916G  490G  379G  57% /','tmpfs                   31G  270M   31G   1% /dev/shm','tmpfs                  5.0M   20K  5.0M   1% /run/lock','tmpfs                   31G     0   31G   0% /run/qemu','/dev/nvme1n1p1         511M  6.2M  505M   2% /boot/efi','tmpfs                  6.1G  248K  6.1G   1% /run/user/1000','/dev/nvme0n1p2         932G  240G  692G  26% /media/hdd0',...(1 more)]]]
 ```
 Pipe a follow-up command over each result — `>>` drains the list, `${_}` binds the current element; `.mapp`
 maps explicitly (and, with a lambda, indexes by the current element):
@@ -114,14 +114,14 @@ mtron> */sys/thread/+.=?=[state=>run]       [-- number of active threads --]
 ==>[
     code=>inst?#{*}<=#{?}(#{*}::T),
     state=>run,
-    time=>datetime::<//2026.09:13/15/18/59/988?tz=-0600>,
+    time=>datetime::<//2026.09:13/15/21/08/439?tz=-0600>,
     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/main
 mtron> */sys/thread/+?docq                  [-- thread documentation     --]
 ==>docs::[
     obj=>[
      code=>inst?#{*}<=#{?}(#{*}::T),
      state=>run,
-     time=>datetime::<//2026.09:13/15/18/59/988?tz=-0600>,
+     time=>datetime::<//2026.09:13/15/21/08/439?tz=-0600>,
      runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/main,
     desc=>'this root thread waits till all child threads are complete ...']
 ```
@@ -680,7 +680,7 @@ mtron> *<mfs:+/>
    ...
 mtron> [-- Read all .txt files --]
 mtron> *<mfs:+/+>.where([name => -<'.'>>1.is('txt')])
-==>fail::[inst apply failure: java.io.UncheckedIOException: java.nio.file.AccessDeniedException: /backends]@/sys/fail/1624
+==>fail::[inst apply failure: java.io.UncheckedIOException: java.nio.file.AccessDeniedException: /backends]@/sys/fail/1612
 ```
 ## Line-Level Editing with `lineq`
 
@@ -690,14 +690,14 @@ edits without loading the entire file:
 ```mtron
 mtron> [-- Read lines 10-20 of a file --]
 mtron> *<mfs:src/main.java?lineq=10..20>
-==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "10..20"]@/sys/fail/1634
+==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "10..20"]@/sys/fail/1622
 mtron> [-- Replace lines 5-10 with new content --]
 mtron> <mfs:src/main.java?lineq=5..10> -> """
          public void newMethod() {
            // new implementation
          }
        """
-==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "5..10"]@/sys/fail/1646
+==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "5..10"]@/sys/fail/1634
 ```
 ### boot configuration example
 
@@ -719,7 +719,7 @@ mtron> fsspace::[
     route=>[local:=>/m/inst/thread(/src)]]@/sys/space/fs/src
 mtron> [-- Then use in expressions: --]
 mtron> *<local:Main.java?lineq=1..50>
-==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "1..50"]@/sys/fail/1660
+==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "1..50"]@/sys/fail/1648
 mtron> <local:index.html?mimeq=application/x-mtron>/html/head/title
 ==>ERROR: monad obj coefficient is greater than inst dom coefficient:
 	<local:index.html?mimeq=application/x-mtron> [{1} X=> {0}] start?rng=A{**}&dom=noobj{0}(/html/head/title){<j>}@<1>
@@ -733,12 +733,12 @@ mtron> [-- Read HTML, cast to rec, modify, cast back to html string, write --]
 mtron> <local:page.html> -> *<local:page.html?mimeq=application/x-mtron>
          .at(html/head/title -> 'New Title')
          .as(html::T)
-==>fail::[inst apply failure: 'New Title' [str::T] unable to convert uri::T]@/sys/fail/1712
+==>fail::[inst apply failure: 'New Title' [str::T] unable to convert uri::T]@/sys/fail/1700
 mtron> [-- Read JSON config, modify a value, write back --]
 mtron> <local:config.json> -> *<local:config.json?mimeq=application/x-mtron>
          .at(database/host -> 'new-host')
          .as(json::T)
-==>fail::[inst apply failure: 'new-host' [str::T] unable to convert uri::T]@/sys/fail/1760
+==>fail::[inst apply failure: 'new-host' [str::T] unable to convert uri::T]@/sys/fail/1748
 ```
 The `.as(html::T)` / `.as(json::T)` serialization passes through `ObjHTMLSerializer.write()` /
 `ObjJSONSerializer.write()` which handle both `str::T` (pass-through) and `rec::T` (structural render).
