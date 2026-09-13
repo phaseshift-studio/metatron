@@ -302,10 +302,8 @@ public class MarkdownRunner {
         final StringBuilder page = new StringBuilder();
         page.append(header);
         page.append("    <div class=\"skill-doc mb-4\">\n");
-        if (!fm.description().isBlank()) {
-            final String title = fm.name().isBlank() ? fm.description() : fm.name() + ": " + fm.description();
-            page.append("        <h1 class=\"skill-title mb-1\">").append(title).append("</h1>\n");
-        }
+        page.append("        <h1 class=\"skill-title mb-1\">").append(fm.name()).append("</h1>\n");
+        page.append("        <small>").append(fm.description().replace("`", "")).append("</small><br/>\n");
         page.append("        <a href=\"").append(mdName).append("\" class=\"text-decoration-none text-light small\"><i class=\"bi bi-file-earmark-code me-1\"></i>").append(mdName).append("</a>\n");
         page.append("    </div>\n");
         page.append("    <div class=\"markdown-body\">\n");

@@ -3,9 +3,9 @@ name: type-system-mtron
 description: mtron type system fundamentals — vid/tid, base types, coefficients, isa vs non-isa predicates, nominal vs structural types, type definition syntax, pattern/generic types
 ---
 
-# mtron Type System
+# mtron type system
 
-## Core concepts
+## core concepts
 
 ### vid and tid
 
@@ -27,7 +27,7 @@ person::[name=>'marko',age=>29]@marko
   tid (what it is)               vid (where it is)
 ```
 
-### The `::T` suffix
+### the `::T` suffix
 
 `::T` lifts an object to the **type-of** that object. `int::T` means "the type of integers." `person::T` means "the type
 named person."
@@ -35,7 +35,7 @@ named person."
 Without `::T`, `int` is a value (the integer zero). `int::0` is a typed value (an integer zero). `int::T` is the integer
 type itself.
 
-### Base types (nominal)
+### base types (nominal)
 
 The built-in primitive types. Every type ultimately refines one of these. Base types are **nominal** — their tid equals
 their vid (e.g., `int::T` = `int::T@int`). There is nothing structural distinguishing an `int` from a `str` save the
@@ -58,7 +58,7 @@ name:
 | `fail::T`  | `/m/fail`  | ?           | error/failure              |
 | `noobj::T` | `noobj`    | 0           | nothing / empty            |
 
-## Coefficients (cardinality)
+## coefficients (cardinality)
 
 Every type has a **coefficient** — a `[min,max]` range constraining cardinality. Written with braces:
 `type{min,max}::T`.
@@ -78,7 +78,7 @@ Every type has a **coefficient** — a `[min,max]` range constraining cardinalit
 Coefficients compose through multiplication (`mult`), addition (`plus`), and spanning (`span`). Two types combine their
 coefficients when their values are combined — e.g., appending an `int{2}` to an `int{3}` yields `int{5}`.
 
-## Universal type
+## universal type
 
 `#{*}::T` is the **universal type** — the root of the type hierarchy. `#` matches any type VID (polymorphic wildcard),
 and `{*}` matches any cardinality (0 to ∞). Every value and every type is a `#{*}::T`. It has no predicate and accepts
@@ -86,9 +86,9 @@ everything.
 
 Shorthand: `#::T` is often used when cardinality is known to be `{1}` (the default). `/+/+::T` is an alternate spelling.
 
-## Type definition
+## type definition
 
-### Defining a named type
+### defining a named type
 
 The full type syntax is `tid::T[predicate][constructor]@vid`:
 
@@ -102,7 +102,7 @@ bignat -> nat::T[is(gt(100))]@bignat
 The `->` syntax defines a type in the current space. The right side is the full type definition; the left side is the
 name under which it is stored.
 
-### Instantiation
+### instantiation
 
 ```mtron_pre
 person::[name=>'enoch',age=>365]@enoch
@@ -110,11 +110,11 @@ person::[name=>'enoch',age=>365]@enoch
 int::42@the_answer
 ```
 
-## Predicates
+## predicates
 
 A predicate is a **constraint** that values must satisfy to be members of the type. Two families:
 
-### Isa predicates (structural)
+### isa-predicates (structural)
 
 Created with `?[...]` — defines a required **record structure**:
 
@@ -138,7 +138,7 @@ mortal -> person::T[?<120]  [-- adds a non-isa constraint on top --]
 
 The full predicate stack for `mortal` is: `[?<120, isa([age=>int::T,name=>str::T])]`.
 
-### Non-isa predicates
+### non-isa predicates (nominal)
 
 Freeform functional constraints using instructions:
 
@@ -159,7 +159,7 @@ semantics).
 int::T[-<[?>0,?<120]>-]
 ```
 
-### Predicate vs no predicate
+### predicate vs no predicate
 
 A type **without** a predicate is the most general type at its level — it accepts any value with the correct base type
 and coefficient:
@@ -169,7 +169,7 @@ int::T        [-- accepts any integer --]
 int::T[?>0]   [-- only accepts positive integers --]
 ```
 
-### Type constructors
+### type constructors
 
 A type can also define a **constructor** — an instruction that transforms any value of the base type into a valid value
 of the defined type. The constructor sits alongside the predicate in the type definition:
@@ -188,10 +188,11 @@ The predicate **tests** membership; the constructor **produces** membership:
 nat -> int::T[?>0][-<|[is(lt(0)) => * -1, _ => _]>>]
 
 [-- Predicate test: is it > 0? --]
-2.test(nat::T)        [-- true --]
-[ERROR] -2.test(nat::T)  [-- false --]
+2.isa(nat::T)           [-- true --]
+[ERROR] -2.isa(nat::T)  [-- false --]
 
 [-- Constructor application: coerce to fit --]
+2.as(nat::T)          [-- nat::2 --]
 -2.as(nat::T)         [-- nat::2  (constructor applied: abs) --]
 ```
 
@@ -201,28 +202,29 @@ fails.
 
 A type with no constructor is a pure constraint — values must already satisfy the predicate to be members.
 
-## Nominal vs structural types
+## nominal vs structural types
 
 The distinction depends solely on the existence of a **predicate**:
 
-| Kind                    | Has predicate? | Has vid?         | Example                                           |
-|-------------------------|----------------|------------------|---------------------------------------------------|
-| **Structural**          | yes            | optional         | `int::T[?>0]@nat` — constraint defines membership |
-| **Nominal**             | no             | yes (tid ≠ vid)  | `int::T@age` — label defines membership           |
-| **Base type** (nominal) | no             | yes (tid == vid) | `int::T` (= `int::T@int`) — primitive             |
+| Kind                       | Has predicate? | Has vid?         | Example                                           |
+|----------------------------|----------------|------------------|---------------------------------------------------|
+| **structural**             | yes            | optional         | `int::T[?>0]@nat` — constraint defines membership |
+| **nominal**                | no             | yes (tid ≠ vid)  | `int::T@age` — label defines membership           |
+| **base type** (structural) | no             | yes (tid == vid) | `int::T` (= `int::T@int`) — primitive             |
 
-- **Structural** = any type with a predicate. The predicate specifies the structural requirements a value must satisfy.
+- **structural** = any type with a predicate. The predicate specifies the structural requirements a value must satisfy.
   Isa predicates (`?[...]`) constrain record fields; non-isa predicates (`is(gt(0))`) constrain by computation.
-- **Nominal** (no predicate) = type distinguished purely by name/vid. When `B::T == A::T` structurally (same values) but
+- **nominal** (no predicate) = type distinguished purely by name/vid. When `B::T == A::T` structurally (same values) but
   have different vids, there exists only a nominal difference. A value of `int::T@age` is not the same type as a value
   of `int::T@zipcode`.
-- **Base types** are nominal: `int::T` = `int::T@int`. An `int` is an `int` because it is named `int`.
+- **base types** are structural: `int::T` = `int::T@int`. An `int` is an `int` because of an internal structure outside
+  the purview of the metatron vm.
 
 A type can carry **both** a predicate and a VID: `rec::T[?[age=>int::T]]@person`. This type is structural (has a
 predicate) AND named (has a VID). The predicate determines which values qualify; the vid allows nominal discrimination
 from other structurally-identical types.
 
-### Why nominal types matter
+### why nominal types matter
 
 Structural types alone can over-match. A `rec::T` with name and age could represent both a human and a chicken. Nominal
 types prevent this:
@@ -239,7 +241,7 @@ chicken -> being::T@chicken
 This is the difference between **experiential knowledge** (structural — what can be observed) and **authoritative
 knowledge** (nominal — what has been declared).
 
-## Type hierarchy and refinement
+## type hierarchy and refinement
 
 Types form a tree rooted at `#::T` (ALL). Each type has exactly one parent via `parentType()`:
 
@@ -251,7 +253,7 @@ mortal::T  →  person::T  →  being::T  →  rec::T  →  #{*}::T
 [?<120]        [?[name=>]]   [?[age=>]]   (base)     (root/universal)
 ```
 
-## Pattern and generic types
+## pattern and generic types
 
 URIs with wildcards create **pattern types** that match multiple concrete types:
 
@@ -271,7 +273,7 @@ URIs with wildcards create **pattern types** that match multiple concrete types:
 /m/inst?#{*}<=#{?}(#::T)
 ```
 
-## Type checking and casting
+## type checking and casting
 
 ### `.test()` — predicate membership
 
@@ -279,14 +281,14 @@ Tests whether a value satisfies a type's predicate (and nominal ancestry):
 
 ```mtron_pre
 [-- value vs type --]
-1.is(int::T)           [-- true --]
-'a string'.is(int::T)  [-- false --]
-2.is(nat::T)           [-- true (2 > 0) --]
--1.is(nat::T)          [-- false (-1 is not > 0) --]
+1.isa(int::T)           [-- true --]
+'a string'.isa(int::T)  [-- false --]
+2.isa(nat::T)           [-- true (2 > 0) --]
+-1.isa(nat::T)          [-- false (-1 is not > 0) --]
 
 [-- type vs type (refinement check) --]
-nat::T.is(int::T)      [-- true (nat is-a int) --]
-int::T.is(nat::T)      [-- false (int is not-a nat) --]
+nat::T.isa(int::T)      [-- true (nat is-a int) --]
+int::T.isa(nat::T)      [-- false (int is not-a nat) --]
 ```
 
 ### `.as()` — constructor application
@@ -310,20 +312,17 @@ returned as-is. Otherwise, the constructor transforms it:
 human::[name=>'marko',age=>29].as(chicken::T) [-- ERROR: nominally not a chicken --]
 ```
 
-## LCD (Lowest Common Denominator)
+## lowest common denominator
 
 The most specific type that subsumes a set of types. Two types always have an LCD:
 
 ```mtron_pre
-[-- Mono with non-isa predicates: OR the constraints --]
+[-- mono with non-isa predicates: OR the constraints --]
 int::T[?>0] + int::T[?<120]
 
-[-- Record with isa predicates: merge fields structurally --]
-rec::T[?[age=>int::T,name=>str::T]]@person
-+ rec::T[?[age=>int::T]]@artifact
-
-  [-- name becomes optional (str{?}) since not all inputs require it --]
+[-- rec with isa predicates: merge fields structurally --]
+rec::T[?[age=>int::T,name=>str::T]]@person + rec::T[?[age=>int::T]]@artifact
 
 [-- Disjoint hierarchies: fall back to universal type --]
-int::T + str::T [-- {*}::T --]
+int::T + str::T
 ```

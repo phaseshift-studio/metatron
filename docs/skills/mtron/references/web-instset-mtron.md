@@ -56,30 +56,22 @@ Two ways to ask "is this a protocol surface?", and they are not interchangeable:
 ## MIME document types
 
 A document is typed by its MIME. Every document type under `/m/web/mime/+` refines `str::T` — `html`, `markdown`,
-`java`, `yaml`, `xsv`, `csv`, `json`, `xml`, `css` — and `webInstSetTest` reads each of those vids to assert it. This is
-a contract, not a coincidence — `fsSpace` reads a file by typing its
-bytes with the MIME (`str(bytes, mimeType.toTid(), null)`), so a document type that did not accept a str would throw
-on read. `css` was declared `tid(rec::T)` once, and every `.css` file answered 500
-(`[string] is not a rec::T@/m/web/mime/css`) while `index.html`, which links one, looked fine. `webInstSetTest`
-now asserts the contract for the whole `toTid()` mapping.
-
-A MIME type is a **predicate on text**, not a structural transformation: `html::"<html>…"` is a str that verifies as
-HTML. Structure is a separate step — see `?mimeq=` below.
+`java`, `yaml`, `xsv`, `csv`, `json`, `xml`, `css`. This is
+a contract, not a coincidence — `fsspace::T` reads a file by typing its
+bytes with the MIME, so a document type that did not accept a `str::T` would throw
+on read. A MIME type is a **predicate on text**, not a structural transformation: `html::"<html>…"` is a `str::T` that
+verifies as HTML -- aka "typed strings".
 
 ## binary documents are bytes
 
-A file that is not text is read as `bytes::T`, never as a String. Decoding binary through UTF-8 and re-encoding it
+A file that is not text is read as `bytes::T`. Decoding binary through UTF-8 and re-encoding it
 on the way out does not fail, it *grows*: a 1337-byte favicon was served as 2231 bytes, one replacement character per
 non-ASCII byte, and a browser draws a broken image — which reads as "the image is missing" rather than as a bug. The
 rule has two halves, because either alone leaves a hole:
 
-* the read (`fsSpace`): not text, or not valid UTF-8 at all (an unlisted extension falls back to `text/plain`), is
+* the read (`fsspace::T`): not text, or not valid UTF-8 at all (an unlisted extension falls back to `text/plain`), is
   `bytes`;
 * the write (`MIME.MIMEType.toBytes`): bytes are written verbatim, whatever serializer the MIME would otherwise use.
-
-A served document also carries `Cache-Control: no-cache` — revalidate before reuse. Responses have no validator, so
-a client that cached a bad copy has nothing to check it against and can hold it indefinitely: after the binary read
-was fixed, a page image refreshed while the tab icon, the *same file*, stayed stale.
 
 ## `?mimeq=` — choosing the rendering
 
@@ -101,7 +93,7 @@ number and a string render alike. `simple()` and `web()` keep the content-sniffi
 
 ## route tables
 
-A `route` rec maps a request path to a target. Four rules, each learned from a mount that did not serve:
+A `route` rec maps a request path to a target. Four rules:
 
 * **keys are literal prefixes.** The carrier matches a context by literal longest prefix, so `/people/#` mounts a
   context whose subtree cannot reach it — `/people/34` is unmounted, silently, and the context is reachable only by

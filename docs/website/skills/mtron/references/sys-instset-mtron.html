@@ -236,7 +236,6 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
                             </div>
                         </div>
                     </li>
@@ -267,18 +266,18 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference_mtron.html">language-reference_mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys_instset_mtron.html">sys_instset_mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math_instset_mtron.html">math_instset_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/connecting-datasources.html">connecting-datasources</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace.html">dckrspace</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/http-page-fetching.html">http-page-fetching</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math_instset_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mtron-fsspace.html">mtron-fsspace</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -378,7 +377,8 @@
 </script>
 <main class="container my-4 flex-grow-1">
     <div class="skill-doc mb-4">
-        <h1 class="skill-title mb-1">sys instruction set: file system, bash, sleep, process i/o</h1>
+        <h1 class="skill-title mb-1">sys instruction set</h1>
+        <small>file system, bash, sleep, process i/o</small><br/>
         <a href="sys-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>sys-instset-mtron.md</a>
     </div>
     <div class="markdown-body">
@@ -404,18 +404,30 @@ the <code>sleep</code>/<code>stdout</code>/<code>stdin</code> I/O primitives. In
 metatron's data structures. <code>cmd</code> is the terminal command, evaluated with <code>bash -c</code>. <code>timeout</code> is an optional
 <code>time::T</code> (<code>millis::1000.0</code>, <code>second::1.0</code>, ...) with a 30-second default. The result is a <code>lst[str::T]</code>, one
 entry per stdout line; a non-zero exit is a <code>fail::T</code>.</p>
-<pre><code class="language-mtron">bash('ls')
-bash(cmd=&gt;'whoami', timeout=&gt;second::5.0)
+<pre><code class="language-mtron">mtron&gt; bash('ls')
+==&gt;['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE',...(10 more)]
+mtron&gt; bash(cmd=&gt;'whoami', timeout=&gt;second::5.0)
+==&gt;['killswitch']
 </code></pre>
 <p>Batch over a rec (indexed) or a lst (flat):</p>
-<pre><code class="language-mtron">{&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;}.-&lt;[_ =&gt; _]==[_ =&gt; bash(_)]   [-- rec of cmds =&gt; rec of result lsts --]
-[&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;].mapp(-&lt;[_ =&gt; bash(_)]).sum() [-- flatten to one lst --]
+<pre><code class="language-mtron">mtron&gt; {&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;}.-&lt;[_ =&gt; _]==[_ =&gt; bash(_)]   [-- rec of cmds =&gt; rec of result lsts --]
+==&gt;['ls'=&gt;['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE',...(10 more)]]
+==&gt;['whoami'=&gt;['killswitch']]
+==&gt;['df -h'=&gt;['Filesystem             Size  Used Avail Use% Mounted on','tmpfs                  6.1G  6.2M  6.1G   1% /run','efivarfs               128K   42K   82K  34% /sys/firmware/...','/dev/nvme1n1p2         916G  490G  379G  57% /','tmpfs                   31G  296M   31G   1% /dev/shm','tmpfs                  5.0M   20K  5.0M   1% /run/lock','tmpfs                   31G     0   31G   0% /run/qemu','/dev/nvme1n1p1         511M  6.2M  505M   2% /boot/efi','tmpfs                  6.1G  252K  6.1G   1% /run/user/1000','/dev/nvme0n1p2         932G  240G  692G  26% /media/hdd0',...(1 more)]]
+mtron&gt; [&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;].mapp(-&lt;[_ =&gt; bash(_)]).sum() [-- flatten to one lst --]
+==&gt;[
+    ['ls'=&gt;['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE',...(10 more)]],
+    ['whoami'=&gt;['killswitch']],
+    ['df -h'=&gt;['Filesystem             Size  Used Avail Use% Mounted on','tmpfs                  6.1G  6.2M  6.1G   1% /run','efivarfs               128K   42K   82K  34% /sys/firmware/...','/dev/nvme1n1p2         916G  490G  379G  57% /','tmpfs                   31G  296M   31G   1% /dev/shm','tmpfs                  5.0M   20K  5.0M   1% /run/lock','tmpfs                   31G     0   31G   0% /run/qemu','/dev/nvme1n1p1         511M  6.2M  505M   2% /boot/efi','tmpfs                  6.1G  252K  6.1G   1% /run/user/1000','/dev/nvme0n1p2         932G  240G  692G  26% /media/hdd0',...(1 more)]]]
 </code></pre>
 <p>Pipe a follow-up command over each result — <code>&gt;&gt;</code> drains the list, <code>${_}</code> binds the current element; <code>.mapp</code>
 maps explicitly (and, with a lambda, indexes by the current element):</p>
-<pre><code class="language-mtron">bash('ls').&gt;&gt;.bash(&quot;stat -c '%U' ${_}&quot;)            [-- drain: owners coalesce to a multiset --]
-bash('ls').mapp(bash(&quot;stat -c '%U' ${_}&quot;))         [-- map: one result lst per file --]
-bash('ls').mapp(-&lt;[_=&gt;bash(&quot;stat -c '%U' ${_}&quot;)])  [-- indexed map: file =&gt; owner --]
+<pre><code class="language-mtron">mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat -c 'U' ${_}&quot;)            [-- drain: owners coalesce to a multiset --]
+==&gt;{20}['U']
+mtron&gt; bash('ls').mapp(bash(&quot;stat -c 'U' ${_}&quot;))         [-- map: one result lst per file --]
+==&gt;[['U'],['U'],['U'],['U'],['U'],['U'],['U'],['U'],['U'],['U'],...(10 more)]
+mtron&gt; bash('ls').mapp(-&lt;[_=&gt;bash(&quot;stat -c 'U' ${_}&quot;)])  [-- indexed map: file =&gt; owner --]
+==&gt;[['AGENTS.md'=&gt;['U']],['bin'=&gt;['U']],['boot'=&gt;['U']],['conf'=&gt;['U']],['CONTRIBUTING.md'=&gt;['U']],['dist'=&gt;['U']],['docs'=&gt;['U']],['dsh-plugins'=&gt;['U']],['language.properties'=&gt;['U']],['LICENSE'=&gt;['U']],...(10 more)]
 </code></pre>
 <h4>security modulators (q-params)</h4>
 <p><code>bash</code> is hardened at the <em>instruction</em> level, not the call site. <code>allow</code>/<code>reject</code>/<code>env</code>/<code>dir</code> attach as query
@@ -456,23 +468,38 @@ stdin()              [-- block for one line, emit it as a str --]
 </ul>
 <pre><code class="language-mtron">*/sys/env              [-- the environment as a rec --]
 */sys/env/HOME         [-- one variable --]
-*/sys/thread/+?docq    [-- every thread's description --]
 </code></pre>
-<h2>FileSystem Space (fsSpace)</h2>
-<p>An <code>fsspace</code> mounts a subset of a file system into the metatron graph. Files are addressed via the space's
-scheme (e.g., <code>local:</code>) and path prefix.</p>
+<pre><code class="language-mtron">mtron&gt; */sys/thread/+.count()               [-- number of threads        --]
+==&gt;2
+mtron&gt; */sys/thread/+.=?=[state=&gt;run]       [-- number of active threads --]
+==&gt;[
+    code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
+    state=&gt;run,
+    time=&gt;datetime::&lt;//2026.09:13/15/18/59/988?tz=-0600&gt;,
+    runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T)]@/sys/thread/main
+mtron&gt; */sys/thread/+?docq                  [-- thread documentation     --]
+==&gt;docs::[
+    obj=&gt;[
+     code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
+     state=&gt;run,
+     time=&gt;datetime::&lt;//2026.09:13/15/18/59/988?tz=-0600&gt;,
+     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T)]@/sys/thread/main,
+    desc=&gt;'this root thread waits till all child threads are complete ...']
+</code></pre>
+<h2>file system space (fsspace::T)</h2>
+<p>An <code>fsspace::T</code> mounts a subset of a file system into the metatron graph. Files are addressed via the space's
+scheme and path prefix.</p>
 <p><strong>IMPORTANT</strong>: Every uri can be wrapped in angle brackets <code>&lt; &gt;</code>, but it is only required for those uris that have <code>.</code>
 (periods), <code></code> (spaces), and/or special characters such as <code>~</code> (tildes) in them. For instance, <code>/a/b/c</code> can be written
-as is, but
-<code>&lt;/a/b/c.txt&gt;</code> requires angle brackets.</p>
+as is, but <code>&lt;/a/b/c.txt&gt;</code> requires angle brackets.</p>
 <h3>Configuration</h3>
 <p>A typical <code>fsspace</code> definition:</p>
 <pre><code class="language-mtron">mtron&gt; fsspace::[
-         pattern =&gt; &lt;local:#&gt;,
+         pattern =&gt; &lt;mfs:#&gt;,
          q       =&gt; [mimeq::[=&gt;], lineq::[=&gt;]],
-         route   =&gt; [local: =&gt; &lt;~/my-project&gt;]]@/sys/space/fs/local
+         route   =&gt; [mfs: =&gt; &lt;~/software/metatron&gt;]]@/sys/space/fs/mfs
 ==&gt;fsspace::[
-    pattern=&gt;local:#,
+    pattern=&gt;mfs:#,
     q=&gt;[
      mimeq::[
       pattern=&gt;mimeq,
@@ -481,16 +508,16 @@ as is, but
       pattern=&gt;lineq,
       post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
       pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
-    route=&gt;[local:=&gt;/home/killswitch/my-project]]@/sys/space/fs/local
+    route=&gt;[mfs:=&gt;/home/killswitch/software/metatron]]@/sys/space/fs/mfs
 </code></pre>
 <ul>
-<li><strong><code>pattern</code></strong> — the URI pattern this space handles (<code>local:#</code> matches <code>&lt;local:file.txt&gt;</code>, <code>&lt;local:sub/dir/file.md&gt;</code>,
+<li><strong><code>pattern</code></strong> — the URI pattern this space handles (<code>mfs:#</code> matches <code>&lt;mfs:file.txt&gt;</code>, <code>&lt;mfs:sub/dir/file.md&gt;</code>,
 etc.)</li>
-<li><strong><code>route</code></strong> — maps the pattern prefix (<code>local:</code>) to a filesystem path (<code>&lt;~/my-project&gt;</code>)</li>
+<li><strong><code>route</code></strong> — maps the pattern prefix (<code>mfs:</code>) to a filesystem path (<code>&lt;~/software/metatron&gt;</code>)</li>
 <li><strong><code>q</code></strong> — query processors: <code>mimeq</code> for MIME type tagging/conversion, <code>lineq</code> for line-level reads/writes</li>
 </ul>
-<h3>MIME Type Handling</h3>
-<p>fsSpace detects a file's MIME type from its extension (and optionally the OS content probe) and returns a <strong>typed
+<h3>mime type handling</h3>
+<p><code>fsspace::T</code> detects a file's MIME type from its extension (and optionally the OS content probe) and returns a <strong>typed
 string</strong> — a refined <code>str::T</code> such as <code>html::T</code>, <code>json::T</code>, <code>markdown::T</code>, etc.</p>
 <pre><code>file.html  →  html::&quot;&lt;html&gt;...&lt;/html&gt;&quot;     (predicate-validated HTML string)
 file.json  →  json::&quot;{\&quot;key\&quot;:\&quot;value\&quot;}&quot;  (predicate-validated JSON string)
@@ -500,8 +527,7 @@ file.md    →  markdown::&quot;# Title&quot;          (predicate-validated mark
 <p>The MIME type acts as a <strong>predicate</strong> on the string content. For example, <code>html::T</code>'s predicate validates that the
 string is valid HTML. The structural representation (<code>rec::T</code> DOM tree) is opt-in via <code>?mimeq=application/x-mtron</code> or
 <code>.as(rec::T)</code>.</p>
-<h4>MIME-to-TID Mapping</h4>
-<p><code>MIME.MIMEType.toTid()</code> maps file extensions to type TIDs:</p>
+<h4>mime-to-tid mapping</h4>
 <table>
 <thead>
 <tr><th>Extension</th><th>MIME Type</th><th>TID</th></tr>
@@ -519,14 +545,317 @@ string is valid HTML. The structural representation (<code>rec::T</code> DOM tre
 <tr><td><em>other</em></td><td><code>text/plain</code> / probe</td><td><code>/m/str</code></td></tr>
 </tbody>
 </table>
-<h4>The <code>mimeq</code> Query Processor</h4>
+<h4>the <code>mimeq</code> query processor</h4>
 <p>The <code>?mimeq=</code> query parameter on a file URI controls what the space returns:</p>
-<pre><code class="language-mtron">mtron&gt; [-- Default: typed string (predicate-validated) --]
-mtron&gt; *&lt;local:index.html&gt;
-mtron&gt; [-- Explicit type tag (same as default for .html files) --]
-mtron&gt; *&lt;local:index.html?mimeq=text/html&gt;
-mtron&gt; [-- Structural parse via application/x-mtron --]
-mtron&gt; *&lt;local:index.html?mimeq=application/x-mtron&gt;
+<pre><code class="language-mtron">mtron&gt; [-- default: typed string (predicate-validated) --]
+mtron&gt; *&lt;mfs:docs/website/index.html&gt;
+==&gt;html::&quot;&quot;&quot;&lt;!--
+     ~ Metatron: A Distributed Computing Language and Virtual Machine
+     ~  Copyright (C) 2025- PhaseShift Studio, LLC
+     ~  
+     ~ This program is free software: you can redistribute it and/or modify
+     ~ it under the terms of the GNU Affero General Public License as published by
+     ~ the Free Software Foundation, either version 3 of the License, or
+     ~ (at your option) any later version.
+     ~  
+     ~ This program is distributed in the hope that it will be useful,
+     ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+     ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+     ~ GNU Affero General Public License for more details.
+     ~
+     ~ You should have received a copy of the GNU Affero General Public License
+     ~ along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+     --&gt;
+   
+   &lt;!DOCTYPE html&gt;
+   &lt;html lang=&quot;en&quot;&gt;
+   &lt;head&gt;
+       &lt;title&gt;PhaseShift Studio&lt;/title&gt;
+       &lt;!-- METADATA --&gt;
+       &lt;meta charset=&quot;utf-8&quot;&gt;
+       &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+       &lt;meta name=&quot;keywords&quot; content=&quot;metatron programming data graph database llm&quot;&gt;
+       &lt;meta name=&quot;description&quot; content=&quot;Next Generation Data Technologies&quot;&gt;
+       &lt;meta name=&quot;theme-color&quot; content=&quot;#ffffff&quot;&gt;
+       &lt;!-- FAVICON --&gt;
+       &lt;link rel=&quot;apple-touch-icon&quot; sizes=&quot;114x114&quot; href=&quot;images/apple-touch-icon.png&quot;&gt;
+       &lt;link rel=&quot;icon&quot; type=&quot;image/png&quot; sizes=&quot;32x32&quot; href=&quot;images/favicon-32x32.png&quot;&gt;
+       &lt;link rel=&quot;icon&quot; type=&quot;image/png&quot; sizes=&quot;16x16&quot; href=&quot;images/favicon-16x16.png&quot;&gt;
+       &lt;link rel=&quot;mask-icon&quot; href=&quot;images/safari-pinned-tab.svg&quot; color=&quot;#5bbad5&quot;&gt;
+       &lt;!-- FONTS --&gt;
+       &lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;&gt;
+       &lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin&gt;
+       &lt;link href=&quot;https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&amp;family=Oswald:wght@400;500;600;700&amp;display=swap&quot; rel=&quot;stylesheet&quot;&gt;
+       &lt;!-- CSS PACKAGES --&gt;
+       &lt;link href=&quot;https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css&quot; rel=&quot;stylesheet&quot;/&gt;
+       &lt;link href=&quot;https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css&quot; rel=&quot;stylesheet&quot;&gt;
+       &lt;link href=&quot;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&quot; rel=&quot;stylesheet&quot;&gt;
+       &lt;link href=&quot;css/bootstrap.min.css&quot; rel=&quot;stylesheet&quot;&gt;
+       &lt;link href=&quot;https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css&quot; rel=&quot;stylesheet&quot;&gt;
+       &lt;!-- JAVASCRIPT PACKAGES --&gt;
+       &lt;script src=&quot;https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js&quot;
+               type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script src=&quot;./highlight/highlight.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script src=&quot;https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script src=&quot;./highlight/languages/mtron.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script src=&quot;./highlight/languages/java.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script src=&quot;./highlight/languages/bash.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script src=&quot;./highlight/languages/sql.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script src=&quot;./highlight/languages/json.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script src=&quot;https://code.jquery.com/jquery-3.4.1.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script async src=&quot;https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;!-- &lt;script src=&quot;data/console.txt&quot;&gt;&lt;/script&gt;--&gt;
+       &lt;!-- CUSTOM CSS/JAVASCRIPT --&gt;
+       &lt;link href=&quot;css/metatron.css&quot; rel=&quot;stylesheet&quot;&gt;
+       &lt;style&gt;
+           .hidden {
+               display: none;
+           }
+   
+           .switch {
+               border-width: 1px 1px 0 1px;
+               border-style: solid;
+               border-color: #7a2518;
+               display: inline-block;
+               border-radius: 4px 4px 0 0;
+           }
+   
+           .switch--item {
+               padding: 4px 14px;
+               font-size: 0.85rem;
+               background-color: #ffffff;
+               color: #7a2518;
+               display: inline-block;
+               cursor: pointer;
+           }
+   
+           .switch--item:first-child {
+               border-radius: 3px 0 0 0;
+           }
+   
+           .switch--item:last-child {
+               border-radius: 0 3px 0 0;
+           }
+   
+           .switch--item.selected {
+               background-color: #7a2519;
+               color: #ffffff;
+           }
+   
+           /* click-to-copy download commands: the whole block is the copy target */
+           .terminal-box.click-to-copy {
+               cursor: pointer;
+               -webkit-user-select: none;
+               user-select: none;
+           }
+   
+   ...
+mtron&gt; [-- explicit type tag (same as default for .html files) --]
+mtron&gt; *&lt;mfs:docs/website/index.html?mimeq=text/html&gt;
+==&gt;html::&quot;&quot;&quot;&lt;!--
+     ~ Metatron: A Distributed Computing Language and Virtual Machine
+     ~  Copyright (C) 2025- PhaseShift Studio, LLC
+     ~  
+     ~ This program is free software: you can redistribute it and/or modify
+     ~ it under the terms of the GNU Affero General Public License as published by
+     ~ the Free Software Foundation, either version 3 of the License, or
+     ~ (at your option) any later version.
+     ~  
+     ~ This program is distributed in the hope that it will be useful,
+     ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+     ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+     ~ GNU Affero General Public License for more details.
+     ~
+     ~ You should have received a copy of the GNU Affero General Public License
+     ~ along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+     --&gt;
+   
+   &lt;!DOCTYPE html&gt;
+   &lt;html lang=&quot;en&quot;&gt;
+   &lt;head&gt;
+       &lt;title&gt;PhaseShift Studio&lt;/title&gt;
+       &lt;!-- METADATA --&gt;
+       &lt;meta charset=&quot;utf-8&quot;&gt;
+       &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+       &lt;meta name=&quot;keywords&quot; content=&quot;metatron programming data graph database llm&quot;&gt;
+       &lt;meta name=&quot;description&quot; content=&quot;Next Generation Data Technologies&quot;&gt;
+       &lt;meta name=&quot;theme-color&quot; content=&quot;#ffffff&quot;&gt;
+       &lt;!-- FAVICON --&gt;
+       &lt;link rel=&quot;apple-touch-icon&quot; sizes=&quot;114x114&quot; href=&quot;images/apple-touch-icon.png&quot;&gt;
+       &lt;link rel=&quot;icon&quot; type=&quot;image/png&quot; sizes=&quot;32x32&quot; href=&quot;images/favicon-32x32.png&quot;&gt;
+       &lt;link rel=&quot;icon&quot; type=&quot;image/png&quot; sizes=&quot;16x16&quot; href=&quot;images/favicon-16x16.png&quot;&gt;
+       &lt;link rel=&quot;mask-icon&quot; href=&quot;images/safari-pinned-tab.svg&quot; color=&quot;#5bbad5&quot;&gt;
+       &lt;!-- FONTS --&gt;
+       &lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;&gt;
+       &lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin&gt;
+       &lt;link href=&quot;https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&amp;family=Oswald:wght@400;500;600;700&amp;display=swap&quot; rel=&quot;stylesheet&quot;&gt;
+       &lt;!-- CSS PACKAGES --&gt;
+       &lt;link href=&quot;https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css&quot; rel=&quot;stylesheet&quot;/&gt;
+       &lt;link href=&quot;https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css&quot; rel=&quot;stylesheet&quot;&gt;
+       &lt;link href=&quot;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&quot; rel=&quot;stylesheet&quot;&gt;
+       &lt;link href=&quot;css/bootstrap.min.css&quot; rel=&quot;stylesheet&quot;&gt;
+       &lt;link href=&quot;https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css&quot; rel=&quot;stylesheet&quot;&gt;
+       &lt;!-- JAVASCRIPT PACKAGES --&gt;
+       &lt;script src=&quot;https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js&quot;
+               type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script src=&quot;./highlight/highlight.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script src=&quot;https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script src=&quot;./highlight/languages/mtron.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script src=&quot;./highlight/languages/java.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script src=&quot;./highlight/languages/bash.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script src=&quot;./highlight/languages/sql.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script src=&quot;./highlight/languages/json.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script src=&quot;https://code.jquery.com/jquery-3.4.1.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;script async src=&quot;https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+       &lt;!-- &lt;script src=&quot;data/console.txt&quot;&gt;&lt;/script&gt;--&gt;
+       &lt;!-- CUSTOM CSS/JAVASCRIPT --&gt;
+       &lt;link href=&quot;css/metatron.css&quot; rel=&quot;stylesheet&quot;&gt;
+       &lt;style&gt;
+           .hidden {
+               display: none;
+           }
+   
+           .switch {
+               border-width: 1px 1px 0 1px;
+               border-style: solid;
+               border-color: #7a2518;
+               display: inline-block;
+               border-radius: 4px 4px 0 0;
+           }
+   
+           .switch--item {
+               padding: 4px 14px;
+               font-size: 0.85rem;
+               background-color: #ffffff;
+               color: #7a2518;
+               display: inline-block;
+               cursor: pointer;
+           }
+   
+           .switch--item:first-child {
+               border-radius: 3px 0 0 0;
+           }
+   
+           .switch--item:last-child {
+               border-radius: 0 3px 0 0;
+           }
+   
+           .switch--item.selected {
+               background-color: #7a2519;
+               color: #ffffff;
+           }
+   
+           /* click-to-copy download commands: the whole block is the copy target */
+           .terminal-box.click-to-copy {
+               cursor: pointer;
+               -webkit-user-select: none;
+               user-select: none;
+           }
+   
+   ...
+mtron&gt; [-- structural parse via application/x-mtron --]
+mtron&gt; *&lt;mfs:docs/website/index.html?mimeq=application/x-mtron&gt;
+==&gt;[html=&gt;[
+    head=&gt;[
+     title=&gt;'PhaseShift Studio',
+     out=&gt;[[tag=&gt;meta,charset=&gt;'utf-8'],[
+      tag=&gt;meta,
+      name=&gt;'viewport',
+      content=&gt;'width=device-width, initial-scale=1.0'],[
+      tag=&gt;meta,
+      name=&gt;'keywords',
+      content=&gt;'metatron programming data graph database llm'],[
+      tag=&gt;meta,
+      name=&gt;'description',
+      content=&gt;'Next Generation Data Technologies'],[
+      tag=&gt;meta,
+      name=&gt;'theme-color',
+      content=&gt;'#ffffff'],[
+      tag=&gt;link,
+      rel=&gt;'apple-touch-icon',
+      sizes=&gt;'114x114',
+      href=&gt;&lt;images/apple-touch-icon.png&gt;],[
+      tag=&gt;link,
+      rel=&gt;'icon',
+      type=&gt;'image/png',
+      sizes=&gt;'32x32',
+      href=&gt;&lt;images/favicon-32x32.png&gt;],[
+      tag=&gt;link,
+      rel=&gt;'icon',
+      type=&gt;'image/png',
+      sizes=&gt;'16x16',
+      href=&gt;&lt;images/favicon-16x16.png&gt;],[
+      tag=&gt;link,
+      rel=&gt;'mask-icon',
+      href=&gt;&lt;images/safari-pinned-tab.svg&gt;,
+      color=&gt;'#5bbad5'],[
+      tag=&gt;link,
+      rel=&gt;'preconnect',
+      href=&gt;&lt;https://fonts.googleapis.com&gt;],...(20 more)]],
+    body=&gt;[
+     out=&gt;[
+      [
+       tag=&gt;div,
+       id=&gt;'spinner',
+       class=&gt;'show bg-dark position-fixed translate-middle w-100 vh-100 t...',
+       out=&gt;[[
+    tag=&gt;div,
+    class=&gt;'spinner-grow text-primary',
+    style=&gt;'width: 3rem; height: 3rem;',
+    role=&gt;'status',
+    out=&gt;[[
+    tag=&gt;span,
+    class=&gt;'sr-only',
+    text=&gt;'Loading...']]]]],
+      [
+       tag=&gt;nav,
+       class=&gt;'navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-l...',
+       data-wow-delay=&gt;'0.1s',
+       out=&gt;[
+        [
+         tag=&gt;h2,
+         class=&gt;'mb-0 navbar-brand nav-brand ms-4 ms-lg-0',
+         out=&gt;[
+          [
+           tag=&gt;a,
+           href=&gt;&lt;index.html&gt;,
+           title=&gt;'metatron',
+           out=&gt;[[
+    tag=&gt;img,
+    src=&gt;&lt;images/favicon-32x32.png&gt;,
+    alt=&gt;'PhaseShift Studio']]],
+          [
+           tag=&gt;a,
+           href=&gt;&lt;http://phaseshift.studio&gt;,
+           text=&gt;'PhaseShift Studio']]],
+        [
+         tag=&gt;div,
+         class=&gt;'collapse navbar-collapse',
+         id=&gt;'navbarCollapse',
+         out=&gt;[[
+    tag=&gt;div,
+    class=&gt;'navbar-nav ms-auto p-4 p-lg-0',
+    out=&gt;[
+     [
+      tag=&gt;li,
+      class=&gt;'nav-item dropdown',
+      out=&gt;[
+       [
+        tag=&gt;a,
+        id=&gt;'download_dropdown',
+        class=&gt;'nav-link dropdown-toggle',
+        href=&gt;&lt;#&gt;,
+        role=&gt;'button',
+        data-bs-toggle=&gt;'dropdown',
+        aria-expanded=&gt;'false',
+        text=&gt;'download'],
+       [
+        tag=&gt;ul,
+        class=&gt;'dropdown-menu dropdown-menu-dark',
+        aria-labelledby=&gt;'download_dropdown',
+        out=&gt;[
+         [
+   ...
 </code></pre>
 <p><code>mimeq</code> is implemented in <code>QCollection.mimeQ()</code> as a space-level <code>postRead</code> query processor. It:</p>
 <ol>
@@ -537,60 +866,175 @@ string is valid HTML)</li>
 <li><strong>Structural parse</strong> — if <code>?mimeq=application/x-mtron</code>, runs the content-type-specific serializer
 (<code>ObjHTMLSerializer</code> for HTML, <code>ObjJSONSerializer</code> for JSON, etc.) to produce the <code>rec::T</code> DOM tree</li>
 </ol>
-<h3>Reading and Writing Files</h3>
-<h4>Basic Read/Write</h4>
+<h3>reading and writing files</h3>
+<h4>basic read/write</h4>
 <pre><code class="language-mtron">mtron&gt; [-- Read a file (returns typed string by default) --]
-mtron&gt; *&lt;local:test.md&gt;
-==&gt;markdown::'## new content'
-mtron&gt; [-- Write a string to a file --]
-mtron&gt; &lt;local:test.md&gt; -&gt; &quot;## new content&quot;
-==&gt;'## new content'
+mtron&gt; *&lt;mfs:README.md&gt;
+==&gt;markdown::&quot;&quot;&quot;# metatron
+   
+   &lt;a href=&quot;http://metatron.phaseshift.studio&quot;&gt;&lt;img src=&quot;http://metatron.phaseshift.studio/images/metatron-character.png&quot; width=&quot;200px&quot;&gt;&lt;/a&gt;
+   &quot;&quot;&quot;
 </code></pre>
-<h4>Reading with Structural Parse</h4>
+<pre><code class="language-mtron">[-- Write a string to a file --]
+&lt;mfs:README.md&gt; -&gt; &quot;## new content&quot;
+</code></pre>
+<h4>reading with structural parse</h4>
 <pre><code class="language-mtron">mtron&gt; [-- Read markdown as a rec::T structure --]
-mtron&gt; *&lt;local:test.md?mimeq=application/x-mtron&gt;
+mtron&gt; *&lt;mfs:README.md?mimeq=application/x-mtron&gt;
 ==&gt;[
     type=&gt;doc,
-    out=&gt;[[
-    type=&gt;head,
-    level=&gt;2,
-    text=&gt;'new content',
-    out=&gt;[[type=&gt;text,content=&gt;'new content']]]]]
+    out=&gt;[
+     [
+      type=&gt;head,
+      level=&gt;1,
+      text=&gt;'metatron',
+      out=&gt;[[type=&gt;text,content=&gt;'metatron']]],
+     [
+      type=&gt;p,
+      text=&gt;'&lt;a href=&quot;http://metatron.phaseshift.studio&quot;&gt;&lt;img src=&quot;http:...',
+      out=&gt;[
+       [
+        type=&gt;html_inline,
+        html=&gt;'&lt;a href=&quot;http://metatron.phaseshift.studio&quot;&gt;'],
+       [
+        type=&gt;html_inline,
+        html=&gt;'&lt;img src=&quot;http://metatron.phaseshift.studio/images/metatron...'],
+       [type=&gt;html_inline,html=&gt;'&lt;/a&gt;']]]]]
 mtron&gt; [-- Read JSON, then walk into rec fields --]
-mtron&gt; *&lt;local:config.json?mimeq=application/x-mtron&gt;/database/host
+mtron&gt; *&lt;mfs:config.json?mimeq=application/x-mtron&gt;/database/host
 ==&gt;/database/host
 </code></pre>
-<h4>Binary Files</h4>
+<h4>binary files</h4>
 <p>Files without a recognized text MIME type are read as <code>bytes::T</code>. Executable files (with shebangs)
 are treated as <code>inst::T</code> and can be invoked directly:</p>
-<pre><code class="language-mtron">mtron&gt; *&lt;local:script.sh&gt;        [-- bytes::T if binary, str::T if text                    --]
-mtron&gt; &lt;local:script.sh&gt;()       [-- execute (shell scripts, via application/x-mtron exec) --]
-==&gt;fail::[unable to locate inst-f of local:script.sh()@&lt;0&gt;]@/sys/fail/136
+<pre><code class="language-mtron">mtron&gt; *&lt;mfs:script.sh&gt;        [-- bytes::T if binary, str::T if text                    --]
+mtron&gt; &lt;mfs:script.sh&gt;()       [-- execute (shell scripts, via application/x-mtron exec) --]
+==&gt;fail::[unable to locate inst-f of mfs:script.sh()@&lt;0&gt;]@/sys/fail/232
 </code></pre>
-<h3>Pattern-Based Access</h3>
+<h3>pattern-based access</h3>
 <p>fsSpace supports wildcard patterns in reads:</p>
 <pre><code class="language-mtron">mtron&gt; [-- List all files in a directory --]
-mtron&gt; *&lt;local:+/&gt;
-==&gt;&lt;local:/test.md&gt;=&gt;markdown::'## new content'
+mtron&gt; *&lt;mfs:+/&gt;
+==&gt;mfs:/LICENSE=&gt;fail::[parse error at line 1, col 4:
+     GNU AFFERO GENERAL PUBLIC LICENSE
+            ...
+        ^
+     could not parse at ' ' — unclosed single-quote — missing closing '''?]
+==&gt;mfs:/docs=&gt;mfs:/docs
+==&gt;&lt;mfs:/.agentbridge&gt;=&gt;&lt;mfs:/.agentbridge&gt;
+==&gt;&lt;mfs:/metatron.iml&gt;=&gt;&quot;&quot;&quot;&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+   &lt;module version=&quot;4&quot;&gt;
+     &lt;component name=&quot;AdditionalModuleElements&quot;&gt;
+       &lt;content url=&quot;file://$MODULE_DIR$&quot; dumb=&quot;true&quot;&gt;
+         &lt;sourceFolder url=&quot;file://$MODULE_DIR$/.worktrees/agent/src/main/mpython/py&quot; isTestSource=&quot;false&quot; /&gt;
+         &lt;sourceFolder url=&quot;file://$MODULE_DIR$/src/main/js&quot; isTestSource=&quot;false&quot; /&gt;
+         &lt;sourceFolder url=&quot;file://$MODULE_DIR$/src/main/mpython&quot; isTestSource=&quot;false&quot; /&gt;
+         &lt;sourceFolder url=&quot;file://$MODULE_DIR$/src/main/python&quot; isTestSource=&quot;false&quot; /&gt;
+         &lt;sourceFolder url=&quot;file://$MODULE_DIR$/src/test/python&quot; isTestSource=&quot;true&quot; /&gt;
+         &lt;excludeFolder url=&quot;file://$MODULE_DIR$/.venv&quot; /&gt;
+       &lt;/content&gt;
+     &lt;/component&gt;
+   &lt;/module&gt;&quot;&quot;&quot;
+==&gt;&lt;mfs:/.gitignore&gt;=&gt;&quot;&quot;&quot;.*
+   *.sqlite
+   opencode.json
+   !.metatron/
+   # mvnw reads .mvn/wrapper/maven-wrapper.properties at runtime — it must ship
+   # in clones, but `.*` above swallows the whole .mvn/ dir. Re-include it.
+   !.mvn/
+   !.mvn/wrapper/
+   !.mvn/wrapper/maven-wrapper.properties
+   # `.*` above also swallows the docker build context and new GitHub workflows.
+   !.dockerignore
+   !.github/
+   !.github/workflows/
+   !.github/workflows/docker.yml
+   target/
+   node_modules/
+   .metatron.history
+   *.iml
+   /.venv/
+   __pycache__/
+   *.pyc
+   *.pyo
+   # Compiled class file
+   *.class
+   
+   benchmark/*.json
+   .open*
+   .worktrees
+   
+   # Log file
+   *.log
+   
+   # BlueJ files
+   *.ctxt
+   
+   # Mobile Tools for Java (J2ME)
+   .mtj.tmp/
+   
+   # Package Files #
+   *.jar
+   *.war
+   *.nar
+   *.ear
+   *.zip
+   *.tar.gz
+   *.rar
+   
+   # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+   hs_err_pid*
+   replay_pid*
+   
+   .ai/
+   &quot;&quot;&quot;
+==&gt;&lt;mfs:/.github&gt;=&gt;&lt;mfs:/.github&gt;
+==&gt;&lt;mfs:/.classpath&gt;=&gt;&quot;&quot;&quot;&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+   &lt;classpath&gt;
+   	&lt;classpathentry kind=&quot;src&quot; output=&quot;target/classes&quot; path=&quot;src/main/java&quot;&gt;
+   		&lt;attributes&gt;
+   			&lt;attribute name=&quot;optional&quot; value=&quot;true&quot;/&gt;
+   			&lt;attribute name=&quot;maven.pomderived&quot; value=&quot;true&quot;/&gt;
+   		&lt;/attributes&gt;
+   	&lt;/classpathentry&gt;
+   	&lt;classpathentry excluding=&quot;**&quot; kind=&quot;src&quot; output=&quot;target/classes&quot; path=&quot;src/main/resources&quot;&gt;
+   		&lt;attributes&gt;
+   			&lt;attribute name=&quot;maven.pomderived&quot; value=&quot;true&quot;/&gt;
+   			&lt;attribute name=&quot;optional&quot; value=&quot;true&quot;/&gt;
+   		&lt;/attributes&gt;
+   	&lt;/classpathentry&gt;
+   	&lt;classpathentry kind=&quot;src&quot; output=&quot;target/test-classes&quot; path=&quot;src/test/java&quot;&gt;
+   		&lt;attributes&gt;
+   			&lt;attribute name=&quot;optional&quot; value=&quot;true&quot;/&gt;
+   			&lt;attribute name=&quot;maven.pomderived&quot; value=&quot;true&quot;/&gt;
+   			&lt;attribute name=&quot;test&quot; value=&quot;true&quot;/&gt;
+   		&lt;/attributes&gt;
+   	&lt;/classpathentry&gt;
+   	&lt;classpathentry excluding=&quot;**&quot; kind=&quot;src&quot; output=&quot;target/test-classes&quot; path=&quot;src/test/resources&quot;&gt;
+   		&lt;attributes&gt;
+   			&lt;attribute name=&quot;maven.pomderived&quot; value=&quot;true&quot;/&gt;
+   			&lt;attribute name=&quot;test&quot; value=&quot;true&quot;/&gt;
+   			&lt;attribute name=&quot;optional&quot; value=&quot;true&quot;/&gt;
+   ...
 mtron&gt; [-- Read all .txt files --]
-mtron&gt; *&lt;local:+/+&gt;.where([name =&gt; -&lt;'.'&gt;&gt;1.is('txt')])
-==&gt;markdown::'## new content'
+mtron&gt; *&lt;mfs:+/+&gt;.where([name =&gt; -&lt;'.'&gt;&gt;1.is('txt')])
+==&gt;fail::[inst apply failure: java.io.UncheckedIOException: java.nio.file.AccessDeniedException: /backends]@/sys/fail/1624
 </code></pre>
 <h3>Line-Level Editing with <code>lineq</code></h3>
 <p>The <code>lineq</code> query processor enables reading and editing specific line ranges within text files, useful for targeted
 edits without loading the entire file:</p>
 <pre><code class="language-mtron">mtron&gt; [-- Read lines 10-20 of a file --]
-mtron&gt; *&lt;local:src/main.java?lineq=10..20&gt;
-==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;10..20&quot;]@/sys/fail/160
+mtron&gt; *&lt;mfs:src/main.java?lineq=10..20&gt;
+==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;10..20&quot;]@/sys/fail/1634
 mtron&gt; [-- Replace lines 5-10 with new content --]
-mtron&gt; &lt;local:src/main.java?lineq=5..10&gt; -&gt; &quot;&quot;&quot;
+mtron&gt; &lt;mfs:src/main.java?lineq=5..10&gt; -&gt; &quot;&quot;&quot;
          public void newMethod() {
            // new implementation
          }
        &quot;&quot;&quot;
-==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;5..10&quot;]@/sys/fail/172
+==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;5..10&quot;]@/sys/fail/1646
 </code></pre>
-<h4>Boot Configuration Example</h4>
+<h4>boot configuration example</h4>
 <pre><code class="language-mtron">mtron&gt; fsspace::[
          pattern =&gt; &lt;local:#&gt;,
          q       =&gt; [mimeq::[=&gt;], lineq::[=&gt;]],
@@ -608,23 +1052,23 @@ mtron&gt; &lt;local:src/main.java?lineq=5..10&gt; -&gt; &quot;&quot;&quot;
     route=&gt;[local:=&gt;/m/inst/thread(/src)]]@/sys/space/fs/src
 mtron&gt; [-- Then use in expressions: --]
 mtron&gt; *&lt;local:Main.java?lineq=1..50&gt;
-==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;1..50&quot;]@/sys/fail/186
+==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;1..50&quot;]@/sys/fail/1660
 mtron&gt; &lt;local:index.html?mimeq=application/x-mtron&gt;/html/head/title
 ==&gt;ERROR: monad obj coefficient is greater than inst dom coefficient:
 	&lt;local:index.html?mimeq=application/x-mtron&gt; [{1} X=&gt; {0}] start?rng=A{**}&amp;dom=noobj{0}(/html/head/title){&lt;j&gt;}@&lt;1&gt;
 </code></pre>
-<h3>Type Round-Trip</h3>
+<h3>type round-trip</h3>
 <p>The full read-modify-write cycle preserves types:</p>
 <pre><code class="language-mtron">mtron&gt; [-- Read HTML, cast to rec, modify, cast back to html string, write --]
 mtron&gt; &lt;local:page.html&gt; -&gt; *&lt;local:page.html?mimeq=application/x-mtron&gt;
          .at(html/head/title -&gt; 'New Title')
          .as(html::T)
-==&gt;fail::[inst apply failure: 'New Title' [str::T] unable to convert uri::T]@/sys/fail/238
+==&gt;fail::[inst apply failure: 'New Title' [str::T] unable to convert uri::T]@/sys/fail/1712
 mtron&gt; [-- Read JSON config, modify a value, write back --]
 mtron&gt; &lt;local:config.json&gt; -&gt; *&lt;local:config.json?mimeq=application/x-mtron&gt;
          .at(database/host -&gt; 'new-host')
          .as(json::T)
-==&gt;fail::[inst apply failure: 'new-host' [str::T] unable to convert uri::T]@/sys/fail/286
+==&gt;fail::[inst apply failure: 'new-host' [str::T] unable to convert uri::T]@/sys/fail/1760
 </code></pre>
 <p>The <code>.as(html::T)</code> / <code>.as(json::T)</code> serialization passes through <code>ObjHTMLSerializer.write()</code> /
 <code>ObjJSONSerializer.write()</code> which handle both <code>str::T</code> (pass-through) and <code>rec::T</code> (structural render).</p>

@@ -236,7 +236,6 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
                             </div>
                         </div>
                     </li>
@@ -267,18 +266,18 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference_mtron.html">language-reference_mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys_instset_mtron.html">sys_instset_mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math_instset_mtron.html">math_instset_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/connecting-datasources.html">connecting-datasources</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace.html">dckrspace</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/http-page-fetching.html">http-page-fetching</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math_instset_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mtron-fsspace.html">mtron-fsspace</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -378,7 +377,8 @@
 </script>
 <main class="container my-4 flex-grow-1">
     <div class="skill-doc mb-4">
-        <h1 class="skill-title mb-1">connecting-datasources: Connecting external data sources to metatron spaces — the pattern and route model, creating !* references, and validating connections.</h1>
+        <h1 class="skill-title mb-1">connecting-datasources</h1>
+        <small>Connecting external data sources to metatron spaces — the pattern and route model, creating !* references, and validating connections.</small><br/>
         <a href="connecting-datasources.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>connecting-datasources.md</a>
     </div>
     <div class="markdown-body">
@@ -412,6 +412,59 @@ are represented as space-specific <code>instsets</code> (instruction sets).</p>
 </ul>
 <h3>Universal (all environments)</h3>
 <pre><code class="language-mtron">mtron&gt; */sys/space/+/+/                         [-- List all spaces --]
+==&gt;/sys/space/dev/metatron=&gt;memspace::[
+    pattern=&gt;/dev/scratch/#,
+    q=&gt;[
+     mintq::[
+      pattern=&gt;mintq,
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     docq::[
+      pattern=&gt;docq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+     subq::[
+      pattern=&gt;subq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;[,]],
+     mimeq::[
+      pattern=&gt;mimeq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     lineq::[
+      pattern=&gt;lineq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     lockq::[
+      pattern=&gt;lockq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;[,]],
+     incrq::[
+      pattern=&gt;incrq,
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]]]@/sys/space/dev/metatron
+==&gt;/sys/space/log/scratch=&gt;tblespace::[
+    pattern=&gt;/log/scratch/#,
+    host=&gt;&lt;sqlite:target/log_scratch.sqlite&gt;,
+    driver=&gt;&lt;org.sqlite.JDBC&gt;,
+    table=&gt;[,],
+    q=&gt;[
+     incrq::[
+      pattern=&gt;incrq,
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     subq::[
+      pattern=&gt;subq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;[,]],
+     mimeq::[
+      pattern=&gt;mimeq,
+      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
+    route=&gt;[/log/scratch/=&gt;&lt;&gt;]]@/sys/space/log/scratch
 mtron&gt; */sys/space/${space}                     [-- View space config --]
 mtron&gt; !*&lt;uri&gt;                                  [-- Create reference (lazy) --]
 ==&gt;uri::T

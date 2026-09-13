@@ -236,7 +236,6 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
                             </div>
                         </div>
                     </li>
@@ -267,18 +266,18 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/language-reference_mtron.html">language-reference_mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/sys_instset_mtron.html">sys_instset_mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/math_instset_mtron.html">math_instset_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/connecting-datasources.html">connecting-datasources</a>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dckrspace.html">dckrspace</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dckrspace-mtron.html">dckrspace_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/http-page-fetching.html">http-page-fetching</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/language-reference-mtron.html">language-reference_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/math-instset-mtron.html">math_instset_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/mtron-fsspace.html">mtron-fsspace</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -378,7 +377,8 @@
 </script>
 <main class="container my-4 flex-grow-1">
     <div class="skill-doc mb-4">
-        <h1 class="skill-title mb-1">mtron: understanding the language used to control the metatron</h1>
+        <h1 class="skill-title mb-1">mtron</h1>
+        <small>understanding the language used to control the metatron</small><br/>
         <a href="SKILL.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>SKILL.md</a>
     </div>
     <div class="markdown-body">
@@ -678,10 +678,10 @@ mtron&gt; */a/b?docq
 <code>?docq</code> of the things they cover -- start there before re-reading the prose.</p>
 <p><strong>Language &amp; types</strong></p>
 <ul>
-<li><a href="references/language-reference_mtron.html">Full Language Reference</a> -- types, operators, instruction sets, expression
+<li><a href="references/language-reference-mtron.html">Full Language Reference</a> -- types, operators, instruction sets, expression
 model.</li>
 <li><a href="references/type-system-mtron.html">Type System</a> -- vid/tid, nominal vs structural, pattern types.</li>
-<li><a href="references/math_instset_mtron.html">Math Instruction Set</a> -- <code>/m/math</code> constants, unit types, the <code>mathInstSet</code>.</li>
+<li><a href="references/math-instset-mtron.html">Math Instruction Set</a> -- <code>/m/math</code> constants, unit types, the <code>mathInstSet</code>.</li>
 <li><a href="references/sys-instset-mtron.html">System Instruction Set</a> -- <code>/m/sys</code> <code>bash</code>/<code>native</code>/<code>sleep</code>/<code>stdout</code>/<code>stdin</code>; the
 guarded shell.</li>
 </ul>
@@ -690,7 +690,7 @@ guarded shell.</li>
 <li><a href="references/sys_instset_mtron.html">fsSpace</a> -- file system as space; MIME, <code>?mimeq</code>, file I/O.</li>
 <li><a href="references/connecting-datasources.html">Connecting Data Sources</a> -- the pattern + route model for external sources;
 <code>!*</code> references.</li>
-<li><a href="references/dckrspace_mtron.html">dckrSpace</a> -- Docker: containers, images, volumes, compose as a space.</li>
+<li><a href="references/dckrspace-mtron.html">dckrSpace</a> -- Docker: containers, images, volumes, compose as a space.</li>
 <li><a href="references/web-instset-mtron.html">Web Instruction Set</a> -- <code>/m/web</code> protocol surfaces, MIME document types,
 route tables, and the conventions a mount follows; the server side of the web carriers.</li>
 <li><a href="references/web_instset_mtron.html">httpPage Fetching</a> -- HTTP pages, HTML parse trees, traversal.</li>

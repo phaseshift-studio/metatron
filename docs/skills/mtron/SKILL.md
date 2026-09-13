@@ -237,22 +237,19 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 
 **Language & types**
 
-* [Full Language Reference](references/language-reference_mtron.md) -- types, operators, instruction sets, expression
+* [mtron language reference](references/language-reference-mtron.md) -- types, operators, instruction sets, expression
   model.
-* [Type System](references/type-system-mtron.md) -- vid/tid, nominal vs structural, pattern types.
-* [Math Instruction Set](references/math-instset-mtron.md) -- `/m/math` constants, unit types, the `mathInstSet`.
-* [System Instruction Set](references/sys-instset-mtron.md) -- `/m/sys` `bash`/`native`/`sleep`/`stdout`/`stdin`; the
-  guarded shell.
+* [mtron type system](references/type-system-mtron.md) -- vid/tid, nominal vs structural, pattern types.
 
 **Spaces & data sources**
 
-* [fsSpace](references/sys_instset_mtron.md) -- file system as space; MIME, `?mimeq`, file I/O.
 * [Connecting Data Sources](references/connecting-datasources.md) -- the pattern + route model for external sources;
   `!*` references.
-* [dckrSpace](references/dckrspace_mtron.md) -- Docker: containers, images, volumes, compose as a space.
-* [Web Instruction Set](references/web-instset-mtron.md) -- `/m/web` protocol surfaces, MIME document types,
-  route tables, and the conventions a mount follows; the server side of the web carriers.
-* [httpPage Fetching](references/web_instset_mtron.md) -- HTTP pages, HTML parse trees, traversal.
+* [dckrSpace](references/dckrspace-mtron.md) -- Docker: containers, images, volumes, compose as a space.
+* [sys instruction set](references/sys-instset-mtron.md) -- `/m/sys` bash, sleep process i/o, and file system.
+* [math instruction set](references/math-instset-mtron.md) -- `/m/math` constants, unit types, time, dates.
+* [web instruction set](references/web-instset-mtron.md) -- `/m/web` protocols, MIME document types, route tables, and
+  server side conventions.
 
 **Protocol & services**
 
@@ -264,7 +261,6 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 
 **Practice**
 
-* [Answering Questions](references/answer-questions.md) -- how to answer mtron/metatron questions and troubleshoot.
 * [Unsloth Training](references/unsloth-training-mtron.md) -- fine-tuning an LLM on mtron; the training pipeline;
   `@Training` extraction.
 
