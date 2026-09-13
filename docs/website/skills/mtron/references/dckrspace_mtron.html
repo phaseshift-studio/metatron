@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title> · PhaseShift Studio</title>
+    <title>dckrspace · PhaseShift Studio</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -378,212 +378,338 @@
 </script>
 <main class="container my-4 flex-grow-1">
     <div class="skill-doc mb-4">
-        <a href="dsh-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>dsh-mtron.md</a>
+        <h1 class="skill-title mb-1">dckrspace: manipulating docker's graph of images, containers, volumes, networks</h1>
+        <a href="dckrspace_mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>dckrspace_mtron.md</a>
     </div>
     <div class="markdown-body">
-<h2>dhs→mtron — the harness memory bus, first adapter</h2>
-<p><code>--- name: dhs-mtron description: &gt; Migrate DSH harness session memory into a native metatron agent memory tree. The first adapter on the inter-harness memory bus: a zstd JSONL transcript becomes a lst of typed message recs (user, system, thinking, ai, tool_result) that load into a live VM and are written with a single .to() -- after which the migrated agent's history is addressable, queryable, and assertable in metatron. ---</code></p>
-<h3>What this is</h3>
-<p>AI harnesses each keep agent memory in their own format (DSH: zstd-compressed
-JSONL; others: markdown dirs, API JSON, ...). A harness-bound agent cannot
-query, assert over, or carry its memory in another tool. This adapter is the
-first link on a <strong>memory bus</strong>:</p>
-<pre><code>DSH transcript          mtron text (asset output)        the universal space
-~/.dsh/sessions/        [ user::[=&gt;], thinking::[=&gt;],    /usr/&lt;agent&gt;/message
-  */session.jsonl.zstd   system::[=&gt;], ai::[=&gt;],           (one typed rec per
-  (JSONL, one event      tool_result::[=&gt;] ]              conversation unit)
-    per line)
-      │  assets/dsh_memory_loader.py
-      │  (zstd -dc + JSON → map → emit)
-      ▼
-   *&lt;mfs:...&gt;.parse()   -- the file EVALUATES to the lst in a live VM --
-      ▼
-   .to(/usr/dr/message) -- and the agent is resident in metatron --
+<h2>dckrspace</h2>
+<h3>Architecture</h3>
+<p><code>dckrspace::T</code> bridges a docker daemon into metatron's uri space. Every docker resource (container, image, volume,
+network) is a first-class uri-addressable <code>obj</code>. Writes trigger docker cli operations; reads refresh state from the
+daemon.</p>
+<p>The space maintains a bidirectional graph: containers link to their images, networks, and volumes, and each resource
+links back to its containers.</p>
+<pre><code>┌───────────────────────────────────────────────────────────────┐
+│                         dckrspace::T                          │
+│                                                               │
+│  docker:image/nginx:alpine ──── containers ──► [ref]          │
+│       ▲                                          │            │
+│       │ image                                    │            │
+│       │                                          ▼            │
+│  docker:container/web ──── networks ──► docker:network/bridge │
+│       │                                       ▲               │
+│       │ mounts                                │               │
+│       ▼                                       │               │
+│  docker:volume/data ───── containers ─────► [ref]             │
+│                                                               │
+│  docker:compose/stack ─── docker-compose.yml                  │
+└───────────────────────────────────────────────────────────────┘
 </code></pre>
-<p><strong>Design principle:</strong> the <code>as</code>-map (here, the python asset + <code>parse</code>) is the
-unit of an adapter. N harnesses need N adapters — not N×N bridges — because
-the middle is the metatron message model, a typed contract that lives in the
-space. Anything that can produce the message recs lands; anything that can
-read them consumes.</p>
-<h3>The DSH side (source of truth)</h3>
-<p>DSH stores its memory under <code>DSH_HOME</code> (default <code>~/.dsh</code>):</p>
-<pre><code>~/.dsh/
-├── settings.yaml
-├── storages/workspace.json                [-- workspace → sessions index --]
-├── storages/session_projcache.json        [-- per-session identity/stats  --]
-└── sessions/&lt;workspace-slug&gt;*/session.jsonl.zstd   [-- the memory: one JSON event per line --]
+<h3>Space Configuration</h3>
+<pre><code class="language-mtron">mtron&gt; dckrspace::T
+==&gt;space::T[?[{?}host=&gt;uri::T,{?}progress=&gt;rec::T]][ctor?dckrspace&lt;=#{?}(dckrspace::T)]@/m/dckr/space/dckrspace
+mtron&gt; !*dckrspace?docq
+==&gt;docs::[
+    obj=&gt;dckrspace::T,
+    desc=&gt;'[structural] a docker daemon space',
+    example=&gt;[
+     'docker:compose/my-stack -&gt; [services=&gt;[web=&gt;[image=&gt;&quot;nginx&quot;...',
+     '*docker:container/+',
+     '*docker:image/nginx/&lt;nginx:latest&gt;']]
 </code></pre>
-<p>Key env vars (read them, do not assume): <code>DSH_HOME</code>, <code>DSH_SESSION_ID</code>,
-<code>DSH_SESSION_JSONL</code> (the exact bundle of the running session),
-<code>DSH_SHELL=1</code>.</p>
-<p><code>session.jsonl.zstd</code> is <strong>zstd-compressed JSONL</strong> — every line a JSON object
-with <code>type</code>, <code>seq</code> (monotonic), <code>time</code> (epoch ms), <code>data</code>. A live census of
-one session (42,956 events):</p>
-<blockquote>
-<p><strong>Source formats (as of 2026-08):</strong> the installed DSH persists to this
-zstd-JSONL (verified live — the bundle keeps appending while running), with
-a supplementary TUI layer under <code>~/.dsh-tui/</code> (<code>session-index.json</code> derived
-index over the same session ids, <code>history.jsonl</code>, <code>effect-ledger.jsonl</code>).
-DSH has also been described as moving to a <strong>SQLite</strong> primary backend.
-The bus is unaffected by which reader is canonical: the pinned surface is
-the <em>emitted contract</em> (five TIDs, envelope, <code>contents</code> correlation), and a
-SQLite backend is simply a second reader (<code>sqlite rows → event dict → the same load()</code>) — nothing downstream changes.</p>
-</blockquote>
+<pre><code class="language-mtron">dckrspace::[pattern   =&gt; docker:#,
+            route     =&gt; [docker: =&gt; &lt;&gt;],
+            host      =&gt; &lt;tcp://192.168.1.100:2375&gt;,   [-- optional remote host --]
+            progress  =&gt; progress_table::[=&gt;]]@/sys/space/docker
+</code></pre>
+<pre><code class="language-mtron">mtron&gt; dckrspace::[pattern   =&gt; docker:#,
+                   route     =&gt; [docker: =&gt; &lt;&gt;],
+                   progress  =&gt; progress_table::[=&gt;]]@/sys/space/docker
+==&gt;dckrspace::[
+    pattern=&gt;docker:#,
+    route=&gt;[docker:=&gt;&lt;&gt;],
+    progress=&gt;progress_table::[=&gt;]]@/sys/space/docker
+</code></pre>
 <table>
 <thead>
-<tr><th align="right">events</th><th>type</th><th>migration</th></tr>
+<tr><th>Field</th><th>Required</th><th>Description</th></tr>
 </thead>
 <tbody>
-<tr><td align="right">1</td><td><code>session</code></td><td>folded into the synthesized <code>system::</code> (id, cwd, preset, createdAt)</td></tr>
-<tr><td align="right">109</td><td><code>user/message</code></td><td>→ <code>user::</code> (content[].text joined)</td></tr>
-<tr><td align="right">378</td><td><code>assistant/message</code></td><td>→ <code>thinking::</code> (reasoning blocks) + <code>ai::</code> (text blocks)</td></tr>
-<tr><td align="right">32,282</td><td><code>reasoning-chunks</code></td><td>dropped — superseded by the final <code>assistant/message</code> reasoning</td></tr>
-<tr><td align="right">4,214 + 3,961</td><td><code>assistant/chunk</code>, <code>text-chunks</code></td><td>dropped — streaming deltas of finals that exist</td></tr>
-<tr><td align="right">361</td><td><code>tool/call</code></td><td>→ <code>ai::</code> with <code>tool_requests=&gt;[tool_request::]</code> (name, args, contents=call-id)</td></tr>
-<tr><td align="right">377</td><td><code>tool/result</code></td><td>→ <code>tool_result::</code> (name, contents=same call-id, text), written together with its <code>ai::</code> (see pairing below)</td></tr>
-<tr><td align="right">388+387</td><td><code>step/start</code>, <code>step/end</code></td><td>dropped — grouping carried in <code>chat_id</code></td></tr>
-<tr><td align="right">72+71</td><td><code>turn/start</code>, <code>turn/end</code></td><td>dropped — <code>chat_id</code> = turn</td></tr>
-<tr><td align="right">266</td><td><code>agent/inbox/spliced</code></td><td>dropped — harness message edits, not conversation</td></tr>
-<tr><td align="right">22</td><td><code>compaction/*</code>, <code>request/*</code>, <code>permission/*</code>, <code>sandbox/*</code>, <code>command/*</code>, <code>llm/retry*</code>, <code>session/title*</code></td><td>dropped bookkeeping; <strong>unknown future types are NOT dropped</strong> — they emit as <code>system::[text=&gt;&quot;[unmapped event] …&quot;]</code> so nothing is silently lost</td></tr>
+<tr><td><code>pattern</code></td><td>yes</td><td>URI prefix for this space</td></tr>
+<tr><td><code>route</code></td><td>yes</td><td>Maps pattern prefix into space</td></tr>
+<tr><td><code>host</code></td><td>no</td><td>Remote Docker daemon (<code>tcp://</code>, <code>unix://</code>). Omit for local socket.</td></tr>
+<tr><td><code>progress_table</code></td><td>no</td><td><code>ProgressTableWidget</code> for live pull-progress display</td></tr>
 </tbody>
 </table>
-<p><strong>Pairing at write time.</strong> The mirrored <code>ai::</code> carrying <code>tool_requests</code> and its
-<code>tool_result::</code> rows are one group, and the bus holds them until the group is
-complete: the ai message is appended only once <em>every</em> request has its result, the
-results follow it in request order, and a result never lands without the ai
-message that asked for it (an out-of-order <code>tool/result</code> is held, not written).
-<code>add_message</code> reports the verdict as <code>status</code> — <code>parked</code> while the group is
-incomplete, <code>published</code> when it lands, <code>unpaired</code> for a result with no <code>contents</code>
-to join on. A group the harness leaves unanswered is closed at the next turn
-boundary (a <code>user</code> message of a later <code>chat_id</code>, or the <code>compaction</code> sentinel):
-the ai message is then written with <code>name =&gt; lost_tool_result</code> per unanswered
-request. The correlation below is thus enforced by the writer, not merely a
-convention — the same gate (<code>ToolPairGate</code>) backs the native loop, so a mirrored
-ledger and a native one are the same shape.</p>
-<h3>The metatron side (the contract, learned from live memory)</h3>
-<p>The target shape was <strong>read from the live VM</strong>, not invented — <code>*/usr/dr/message/+</code>
-shows the contract; <code>*/usr/dr/message/+.tid()</code> gives the registry census:</p>
-<pre><code>/m/llm/message/user         × 4
-/m/llm/message/system       × 3
-/m/llm/message/thinking     × 4
-/m/llm/message/ai           × 6
-/m/llm/message/tool_result  × 2
+<h3>URI Address Space</h3>
+<pre><code>docker:image/&lt;repository:tag&gt;        -- image by repo:tag
+docker:image/&lt;hash&gt;                  -- image by Docker hash (if available)
+docker:container/&lt;name&gt;              -- container by name
+docker:volume/&lt;name&gt;                 -- volume by name
+docker:network/&lt;name&gt;                -- network by name
+docker:compose/&lt;stack-name&gt;          -- compose config/stack
 </code></pre>
-<p>Envelope (all variants): <code>text</code> (str, multi-line), <code>time</code>, <code>session</code> (uri, e.g.
-<code>/usr/dr/session/1</code>), <code>depth</code> (int), <code>chat_id</code> (int).
-Variant extras: <code>ai::</code> may carry <code>tool_requests =&gt; [ tool_request::[ name, args, contents, text ] ]</code>; <code>tool_result::</code> carries <code>name</code>, <code>contents</code> — where <strong><code>contents</code>
-is the call-id</strong> that correlates an emitted <code>tool_request</code> with its <code>tool_result</code>.</p>
-<h3>The asset — <code>assets/dsh_memory_loader.py</code></h3>
-<pre><code>python3 assets/dsh_memory_loader.py \
-  [--bundle PATH]...        [-- one or more session.jsonl.zstd (default: all under DSH_HOME/sessions) --]
-  [--out FILE]              [-- default &lt;assets&gt;/dsh_memory.mtron --]
-  [--agent NAME]            [-- target agent; session uri /usr/&lt;agent&gt;/session/N (default dr) --]
-  [--session N]             [-- metatron session number (default 1; bundles load N, N+1, ...) --]
-  [--min-chunks N]          [-- &gt;0: reconstruct thinking from streamed chunks if a final lacks it --]
+<h3>Writing — Containers</h3>
+<h4>Run a container</h4>
+<pre><code class="language-mtron">mtron&gt; docker:container/web -&gt; [
+         image       =&gt; 'nginx:alpine',
+         ports       =&gt; [&lt;8080:80&gt;, &lt;443:443&gt;],
+         environment =&gt; [NGINX_HOST =&gt; localhost],
+         volumes     =&gt; ['myvol:/usr/share/nginx/html'],
+         network     =&gt; mynet]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/96
 </code></pre>
-<p>Behavior and invariants (the loader is an assertion, printed each run):</p>
-<ol>
-<li><strong>Unwraps</strong> with <code>zstd -dc</code> (CLI; falls back to the <code>zstandard</code> module).</li>
-<li><strong>Joins</strong> reasoning into finals (chunks are deltas of messages that already exist as events).</li>
-<li><strong>Correlates</strong> <code>tool/call</code> → <code>tool/result</code> by call-id (<code>contents</code>); an unmatched
-result still loads (id falls back to the harness id). The loader writes a whole
-transcript in one <code>.to(...)</code>, so it bypasses the bus's per-message pairing gate
-— a source transcript whose <code>tool/result</code> is missing for an emitted
-<code>tool_requests</code> lands as an orphan ai message. That is a fidelity property of
-the source, not of the bus; see <code>mtron/references/…</code> / <code>metatron/references/mcp-mtron.md</code>
-for the live writer's guarantee.</li>
-<li><strong>Synthesizes exactly one <code>system::</code></strong> per session: provenance (session id,
-workspace, model(s) from <code>request/context</code>, agent preset, mapping note).</li>
-<li><strong>Drops nothing silently</strong> — every unknown event type is preserved as a
-<code>system::</code> &quot;[unmapped event]&quot; record instead of discarded.</li>
-<li><strong>Audits</strong> — prints per-bundle: events in, messages out, dropped bookkeeping,
-target session uri, last chat_id.</li>
-<li><strong>Time</strong> — epoch-ms becomes an ISO-8601 UTC <code>str</code>. (The live messages carry
-<code>datetime::</code> values; if the message types are ever re-typed to require a
-datetime, switch <code>iso()</code> to emit metatron datetime literals.)</li>
-</ol>
-<p><strong>Contract tests</strong> — <code>assets/tests/test_dsh_memory_loader.py</code> (stdlib unittest,
-no VM needed; needs the <code>zstd</code> CLI) pins the mapping against a synthetic
-bundle: variant census, call-id correlation, unknown-event preservation,
-bare-<code>name</code> emission, and the no-bare-<code>'…'</code>-strings rule.</p>
-<pre><code>python3 .metatron/skills/mtron/assets/tests/test_dsh_memory_loader.py   # 3/3 green
+<p>Image pull happens automatically via <code>docker run</code>. Pull progress streams through the <code>progress_table::T</code> widget if
+configured.</p>
+<table>
+<thead>
+<tr><th>Field</th><th>Type</th><th>Docker flag</th><th>Example</th></tr>
+</thead>
+<tbody>
+<tr><td><code>image</code></td><td>str (required)</td><td>positional</td><td><code>'nginx:alpine'</code></td></tr>
+<tr><td><code>ports</code></td><td>lst of str</td><td><code>-p</code> each</td><td><code>[&lt;8080:80&gt;]</code></td></tr>
+<tr><td><code>environment</code></td><td>rec</td><td><code>-e KEY=VALUE</code></td><td><code>[FOO =&gt; bar]</code></td></tr>
+<tr><td><code>volumes</code></td><td>lst of str</td><td><code>-v</code> each</td><td><code>['data:/data']</code></td></tr>
+<tr><td><code>network</code></td><td>str</td><td><code>--network</code></td><td><code>mynet</code></td></tr>
+</tbody>
+</table>
+<h3>Reading Summary</h3>
+<h4>List all resources</h4>
+<pre><code class="language-mtron">mtron&gt; *docker:image/+.take(5)              [-- first 5 images (keyed by repository:tag) --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/106
+mtron&gt; *docker:container/+                  [-- all containers                           --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/114
+mtron&gt; *docker:volume/+                     [-- all volumes                              --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/122
+mtron&gt; *docker:network/+                    [-- all networks                             --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/130
 </code></pre>
-<p>The emitted file is <strong>mtron source</strong>: a single <code>[ … ]</code> of typed recs
-(<code>user::[…], thinking::[…], system::[…], ai::[…], tool_result::[…], ai::[…, tool_requests=&gt;[…]]</code>). Nothing in the file is data-about-data — the
-file <strong>is</strong> the program that produces the memory list.</p>
-<p><strong>String rule (verified live, do not regress):</strong> mtron <code>'…'</code> strings have <strong>no
-escape mechanism</strong> — both <code>\'</code> and <code>''</code> fail to parse. Every emitted string is
-therefore a triple-quoted literal (three double quotes around the text), which
-provably carries apostrophes, backslashes, newlines, and quotes; in-text
-triple-quote runs are defused to smart quotes. <code>name</code> fields emit as <strong>bare uri
-tokens</strong> (the type is <code>uri::T</code>, never a str), and the nested <code>tool_request</code>
-carries the full <code>message::T</code> envelope (<code>text</code> + <code>session</code> required — it is a
-message refinement, not a bare sub-rec).</p>
-<p><strong><code>to</code> semantics (from <code>Obj.java</code>): <code>to(uri)</code> = <code>Router.writeToSpace(uri, lhs)</code>
-— it writes whatever the LHS evaluated to, with no internal materialization.</strong>
-So <code>*&lt;mfs:file&gt;.to(path)</code> writes the parsed+type-checked lst when the deref
-evaluates (as in the interactive console), and the one documented ambiguity is
-the <code>from</code> TODO (&quot;only resolves when explicit mono args (not code args)&quot;) —
-detect a wrong write immediately after with <code>*/path/+.tid()</code> (a stray <code>str::</code>
-entry means the raw text was written; recover by re-writing).</p>
-<h3>The workflow (the actual run)</h3>
-<pre><code># 1) zstd must be available (CLI or the python module) — one-time
-zstd -V
-
-# 2) emit the memory file (dry run, no VM touched)
-python3 .metatron/skills/mtron/assets/dsh_memory_loader.py \
-       --bundle ~/.dsh/sessions/&lt;slug&gt;*/&lt;session-id&gt;/session.jsonl.zstd \
-       --out target/dsh_memory.mtron
-
-# 3) load in metatron — the file evaluates to the lst
-mtron&gt; *&lt;mfs:target/dsh_memory.mtron&gt;.parse()
-
-# 4) the write — the agent becomes resident (confirm before firing:
-#    append vs overwrite of /usr/&lt;agent&gt;/message is the user's call)
-mtron&gt; *&lt;mfs:target/dsh_memory.mtron&gt;.parse().to(/usr/dr/message)
-
-# 5) verify — the memory should now be queryable like any other space
-mtron&gt; */usr/dr/message/+.tid()                       [-- variant census (expect new user/ai/thinking counts) --]
-mtron&gt; */usr/dr/message/+.(text=&gt;?has(&quot;WidgetCanvas&quot;))  [-- search the migrated history --]
-mtron&gt; *&lt;mfs:target/dsh_memory.mtron&gt;.parse().range(0,1)  [-- spot-check provenance system:: --]
+<h4>Inspect a resource</h4>
+<pre><code class="language-mtron">mtron&gt; *docker:image/nginx:alpine           [-- full image rec --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/138
+mtron&gt; *docker:container/web                [-- full container rec --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/146
+mtron&gt; *docker:image/nginx:alpine/size      [-- specific field --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/154
+mtron&gt; *docker:container/web/state          [-- container state (running, exited, ...) --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/162
 </code></pre>
-<p>Verified mechanics (live, session 2026-08): <code>parse(&quot;5+5&quot;)→10</code>;
-<code>parse('lst::[5,6]').range(0,1).count()→1</code>;
-<code>parse('user::[text=&gt;hi,time=&gt;6]').range(0,1).count()→1</code> (typed literals
-resolve against the live type registry; <code>rec(...)</code> is not a constructor — use
-<code>tid::[…]</code> literals); a 2.5 MB / 1,491-record file parses through the same
-pipe. Parse-failure is observable: the <code>rec(…)</code> control returned count 0.</p>
-<h3>Why this matters (the bus)</h3>
-<p>An agent's memory becomes <strong>addressable data</strong>: <code>session</code>, <code>depth</code>, <code>chat_id</code>
-are traversal keys, <code>text</code> is a regex surface, <code>contents</code> is a join key.
-Consequences that follow without new infrastructure:</p>
-<ul>
-<li><strong>Cross-tool identity</strong> — the migration writes to <code>/usr/&lt;agent&gt;/message</code>;
-the agent's name and history are the same address in metatron as anywhere
-else. A DSH session id becomes a <code>session</code> field, not a home-directory path.</li>
-<li><strong>Self-query</strong> — &quot;what did I say about X?&quot; is a <code>has(...)</code> over the space,
-the same idiom a build system uses over its own logs.</li>
-<li><strong>Assertable migration</strong> — counts in = counts out, printed per run; an
-adapter that cannot be checked is not an adapter, it is a copy.</li>
-<li><strong>N adapters, one contract</strong> — Claude <code>~/.claude/projects/*/memory/*.md</code>,
-OpenAI chat-completions JSONL, the <code>@Training</code> datasets already in
-<code>assets/</code> — each is another thin emitter into the same five TIDs.</li>
-</ul>
-<h3>Caveats / open calls</h3>
-<ul>
-<li><strong>Append vs overwrite</strong> on <code>.to(/usr/dr/message)</code> — confirm before firing; a
-dedicated tree (<code>/usr/dsh/message</code> or <code>/usr/&lt;agent&gt;/session/dsh-&lt;short&gt;</code>) is
-the less invasive default.</li>
-<li><strong><code>time</code> is a str</strong> in the emitted recs (see invariant 7).</li>
-<li><strong>User-message system-reminders</strong> (harness injections spliced into user
-turns) are preserved verbatim — faithful, but noisy for LLM re-consumption;
-a <code>filter</code> pass can strip them at read time without touching the data.</li>
-<li><strong><code>depth</code></strong> — DSH <code>delegationDepth</code> 0 → emitted as 1 (matching the live
-convention) for top-level sessions; multi-deep DSH delegations are not
-exercised yet.</li>
-<li><strong>Live append</strong> — a running DSH session keeps growing; snapshot the bundle
-(copy the <code>.zstd</code>) before migrating if a stable picture is required.</li>
-</ul>
+<h4>Graph navigation</h4>
+<pre><code class="language-mtron">mtron&gt; *docker:container/web/image           [-- uri ref to the container's image             --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/170
+mtron&gt; *docker:image/nginx:alpine/containers [-- list of container refs using this image      --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/178
+mtron&gt; *docker:container/web/networks        [-- uri ref to the container's network           --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/186
+mtron&gt; *docker:network/bridge/containers     [-- list of container refs on this network       --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/194
+mtron&gt; *docker:container/web/mounts          [-- list of volume refs mounted on the container --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/202
+mtron&gt; *docker:volume/data/containers        [-- list of container refs using this volume     --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/210
+</code></pre>
+<p>The <code>image</code>, <code>networks</code>, and <code>mounts</code> fields on containers are <strong>uri refs</strong>. The <code>containers</code>
+field on images/networks/volumes is a <strong>lst of uri refs</strong>. This allows for graph navigation without accessing a single
+node in the graph and pulling the entire uri space into the result. uri auto-refs are lazy links that are resolved to
+their referent upon access.</p>
+<h4>Stop and remove a container</h4>
+<pre><code class="language-mtron">mtron&gt; docker:container/web -&gt; noobj       [-- stops and removes container --]
+</code></pre>
+<h3>Writing — Images</h3>
+<p>Images are read-only from Docker Hub. The space auto-discovers images from
+<code>docker image ls</code> and from containers' image references.</p>
+<pre><code class="language-mtron">mtron&gt; *docker:image/nginx:alpine/id          [-- Docker hash (f7949ff70415) --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/224
+mtron&gt; *docker:image/nginx:alpine/size        [-- mB::142.0 --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/232
+mtron&gt; *docker:image/nginx:alpine/repository  [-- nginx --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/240
+mtron&gt; *docker:image/nginx:alpine/tag         [-- alpine --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/248
+</code></pre>
+<h3>Writing — Volumes</h3>
+<h4>Create a volume</h4>
+<pre><code class="language-mtron">mtron&gt; docker:volume/myvol -&gt; [driver =&gt; local]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/258
+</code></pre>
+<h4>Remove a volume</h4>
+<pre><code class="language-mtron">mtron&gt; docker:volume/myvol -&gt; noobj
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/268
+</code></pre>
+<h3>Writing — Networks</h3>
+<h4>Create a network</h4>
+<pre><code class="language-mtron">mtron&gt; docker:network/mynet -&gt; [driver =&gt; bridge]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/278
+</code></pre>
+<h4>Remove a network</h4>
+<pre><code class="language-mtron">mtron&gt; docker:network/mynet -&gt; noobj
+</code></pre>
+<h3>Docker Compose</h3>
+<h4>Start a stack</h4>
+<pre><code class="language-mtron">mtron&gt; docker:compose/my-stack -&gt; [
+         services =&gt; [
+           web =&gt; [
+             image =&gt; 'nginx:alpine',
+             ports =&gt; [&lt;8080:80&gt;]
+           ],
+           db =&gt; [
+             image =&gt; 'postgres:16',
+             environment =&gt; [POSTGRES_PASSWORD =&gt; secret]
+           ]
+         ]
+       ]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/294
+</code></pre>
+<p>Compose YAML is generated to <code>/tmp/metatron-docker/&lt;name&gt;/docker-compose.yml</code> and
+<code>docker compose up -d</code> is executed. Progress streams through the widget.</p>
+<h4>Stop a stack</h4>
+<pre><code class="language-mtron">mtron&gt; docker:compose/my-stack -&gt; noobj     [-- docker compose down + cleanup --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/304
+</code></pre>
+<h4>Read compose config</h4>
+<pre><code class="language-mtron">mtron&gt; *docker:compose/my-stack/services/web/image    [-- nginx:alpine --]
+==&gt;'nginx:alpine'
+mtron&gt; *docker:compose/my-stack/services              [-- all services --]
+==&gt;[
+    web=&gt;[
+     image=&gt;'nginx:alpine',
+     ports=&gt;[&lt;8080:80&gt;]],
+    db=&gt;[
+     image=&gt;'postgres:16',
+     environment=&gt;[POSTGRES_PASSWORD=&gt;secret]]]
+</code></pre>
+<h3>Remote Docker Hosts</h3>
+<p>Connect to a remote Docker daemon by specifying <code>host</code> in the boot config:</p>
+<pre><code class="language-mtron">dockerspace::[host =&gt; &lt;tcp://192.168.1.100:2375&gt;, ...]@/sys/space/remote
+</code></pre>
+<p>All Docker CLI commands are prefixed with <code>-H &lt;host&gt;</code>. Supports <code>tcp://</code>, <code>unix://</code>, and <code>ssh://</code> schemes.</p>
+<h3>End-to-End: SQLite Container + tbleSpace</h3>
+<p>This example pulls a SQLite Docker image, runs it with a bind-mounted data directory, and exposes the database through
+tbleSpace — all from mtron.</p>
+<pre><code>┌────────────────────────────────────────┐
+│  Host filesystem                       │
+│  /tmp/mtron-dbs/                       │
+│  └── mydb.sqlite ◄── tbleSpace (JDBC)  │
+│       ▲                                │
+│       │ bind mount                     │
+│       │                                │
+│  ┌────┴───────────────┐                │
+│  │  Docker container  │                │
+│  │  keinos/sqlite3    │                │
+│  │  /data/            │                │
+│  │  └── mydb.sqlite   │                │
+│  └────────────────────┘                │
+└────────────────────────────────────────┘
+</code></pre>
+<h4>Step 1: Pull + run the SQLite container</h4>
+<pre><code class="language-mtron">mtron&gt; docker:container/sqlite -&gt; [
+         user    =&gt; root,
+         image   =&gt; 'keinos/sqlite3:latest',
+         command =&gt; ['sh', '-c', 'sqlite3 /data/mydb.sqlite &quot;.databases&quot; &amp;&amp; chmod 777 /data /data/mydb.sqlite'],
+         volumes =&gt; ['/tmp/mtron-dbs:/data']
+       ]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/322
+</code></pre>
+<p>The bind mount <code>'/tmp/mtron-dbs:/data'</code> maps the host directory into the container. The user <code>root</code> is necessary for
+command permissions.</p>
+<h4>Step 2: Mount the database via tbleSpace</h4>
+<pre><code class="language-mtron">mtron&gt; tblespace::[pattern =&gt; mydb:#,
+                   host    =&gt; &lt;sqlite:/tmp/mtron-dbs/mydb.sqlite&gt;,
+                   table   =&gt; [,],
+                   route   =&gt; [mydb: =&gt; &lt;&gt;],
+                   driver  =&gt; &lt;org.sqlite.JDBC&gt;]@/sys/space/mydb
+==&gt;ERROR: unable to construct tblespace::T: fail::[inst apply failure: [SQLITE_CANTOPEN] Unable to open the database file (unable to open database file)[DB&lt;1182&gt;:[SQLITE_CANTOPEN] Unable to open the database file (unable to open database file)]]@/sys/fail/332
+</code></pre>
+<h4>Step 3: Create tables and insert data</h4>
+<pre><code class="language-mtron">mtron&gt; [-- insert tble rows --]
+mtron&gt; mydb:people/1 -&gt; [name=&gt;'marko',role=&gt;architect]
+==&gt;fail::[inst apply failure: no active space supports pattern mydb:people/1]@/sys/fail/342
+mtron&gt; mydb:people/2 -&gt; [name=&gt;'stynx',role=&gt;developer]
+==&gt;fail::[inst apply failure: no active space supports pattern mydb:people/2]@/sys/fail/352
+mtron&gt; mydb:people/3 -&gt; [name=&gt;'metis',role=&gt;oracle]
+==&gt;fail::[inst apply failure: no active space supports pattern mydb:people/3]@/sys/fail/362
+</code></pre>
+<h4>Step 4: Query from mtron</h4>
+<pre><code class="language-mtron">mtron&gt; *mydb:people/+                                           [-- all rows              --]
+==&gt;fail::[inst apply failure: no active space supports pattern mydb:people/+]@/sys/fail/370
+mtron&gt; *mydb:people/+/                                          [-- all rows keyed by uri --]
+==&gt;fail::[inst apply failure: no active space supports pattern mydb:people/+/]@/sys/fail/378
+mtron&gt; *mydb:people/+/name                                      [-- all names             --]
+==&gt;fail::[inst apply failure: no active space supports pattern mydb:people/+/name]@/sys/fail/386
+mtron&gt; *mydb:people/+.=?=[role=&gt;developer]==[name=&gt;_]           [-- all developer names   --]
+==&gt;fail::[inst apply failure: no active space supports pattern mydb:people/+]@/sys/fail/432
+mtron&gt; *mydb:people/+.=?=[role=&gt;developer]==[name=&gt;_].explain() [-- sql rewrite usage     --]
+==&gt;&quot;&quot;&quot;
+    op      dom      rng      args               f    desc      c_dom  c_rng 
+    from    #{?}::T  #{*}::T  mydb:people/+      &lt;j&gt;  standard  {?}    {*}   
+    where   #::T     #::T     [role=&gt;developer]  &lt;?&gt;  mapper    {1}    {1}   
+    select  #::T     #::T     [name=&gt;id()]       &lt;?&gt;  mapper    {1}    {1}   
+   &quot;&quot;&quot;
+mtron&gt; *mydb:people/+.count()                                   [-- number of rows        --]
+==&gt;1
+mtron&gt; *mydb:people/+.count().explain()                         [-- sql rewrite usage     --]
+==&gt;&quot;&quot;&quot;
+    op     dom      rng      args           f    desc      c_dom  c_rng 
+    from   #{?}::T  #{*}::T  mydb:people/+  &lt;j&gt;  standard  {?}    {*}   
+    count  #{*}::T  int::T                  &lt;j&gt;  reducer   {*}    {1}   
+   &quot;&quot;&quot;
+</code></pre>
+<h4>Step 5: The container sees the same data</h4>
+<p>The Docker container has the database mounted at <code>/data/mydb.sqlite</code>. Any process inside the container can read and
+write the same file. mtron-backed writes go through tbleSpace → JDBC → the file → visible inside the container.
+Container writes go to the file → visible to tbleSpace on next read.</p>
+<h4>Step 6: Tear down</h4>
+<pre><code class="language-mtron">mtron&gt; docker:container/sqlite -&gt; noobj     [-- stop + remove container --]
+</code></pre>
+<p>The database file persists at <code>/tmp/mtron-dbs/mydb.sqlite</code>. Re-mount <code>tblespace::T</code> later to pick up where the database
+state was left off.</p>
+<h4>How it works</h4>
+<table>
+<thead>
+<tr><th>Layer</th><th>Technology</th><th>Role</th></tr>
+</thead>
+<tbody>
+<tr><td><code>dckrspace::T</code></td><td>Docker CLI</td><td>Pulls image, runs container, bind-mounts volume</td></tr>
+<tr><td><code>tblespace::T</code></td><td>SQLite JDBC</td><td>Auto-creates <code>.sqlite</code> file, creates tables from record schemas, executes queries</td></tr>
+<tr><td>bind mount</td><td>Linux kernel</td><td>Shares filesystem between host and container</td></tr>
+<tr><td>mtron</td><td>URI graph</td><td>Uniform <code>mydb:people -&gt; [...]</code> write / <code>*mydb:people/+</code> read across both spaces</td></tr>
+</tbody>
+</table>
+<p>The key insight: <strong><code>dckrspace::T</code> manages the container lifecycle; <code>tblespace::T</code> manages the data</strong>. They meet at the
+bind-mounted directory. No <code>docker exec</code>, no separate SQL client, no out-of-band setup — the database is born from a
+mtron write.</p>
+<h3>Quick Reference</h3>
+<table>
+<thead>
+<tr><th>Task</th><th>Expression</th></tr>
+</thead>
+<tbody>
+<tr><td>Mount space</td><td><code>dockerspace::[pattern=&gt;docker:#,route=&gt;[docker:=&gt;...]]@/sys/space/docker</code></td></tr>
+<tr><td>Run container</td><td><code>docker:container/&lt;name&gt; -&gt; [image =&gt; 'img:tag']</code></td></tr>
+<tr><td>Run with ports</td><td><code>docker:container/&lt;name&gt; -&gt; [image =&gt; 'img', ports =&gt; [&lt;8080:80&gt;]]</code></td></tr>
+<tr><td>Run with env</td><td><code>[image =&gt; 'img', environment =&gt; [KEY =&gt; val]]</code></td></tr>
+<tr><td>Run with volume</td><td><code>[image =&gt; 'img', volumes =&gt; ['vol:/path']]</code></td></tr>
+<tr><td>Run with network</td><td><code>[image =&gt; 'img', network =&gt; netname]</code></td></tr>
+<tr><td>Stop container</td><td><code>docker:container/&lt;name&gt; -&gt; {0}id()</code></td></tr>
+<tr><td>List images</td><td><code>*docker:image/+</code></td></tr>
+<tr><td>List containers</td><td><code>*docker:container/+</code></td></tr>
+<tr><td>Inspect image</td><td><code>*docker:image/repo:tag</code></td></tr>
+<tr><td>Inspect container</td><td><code>*docker:container/&lt;name&gt;</code></td></tr>
+<tr><td>Container's image ref</td><td><code>*docker:container/&lt;name&gt;/image</code></td></tr>
+<tr><td>Image's containers</td><td><code>*docker:image/repo:tag/containers</code></td></tr>
+<tr><td>Container's network</td><td><code>*docker:container/&lt;name&gt;/networks</code></td></tr>
+<tr><td>Network's containers</td><td><code>*docker:network/&lt;name&gt;/containers</code></td></tr>
+<tr><td>Container's volumes</td><td><code>*docker:container/&lt;name&gt;/mounts</code></td></tr>
+<tr><td>Volume's containers</td><td><code>*docker:volume/&lt;name&gt;/containers</code></td></tr>
+<tr><td>Create volume</td><td><code>docker:volume/&lt;name&gt; -&gt; [driver =&gt; local]</code></td></tr>
+<tr><td>Remove volume</td><td><code>docker:volume/&lt;name&gt; -&gt; {0}id()</code></td></tr>
+<tr><td>Create network</td><td><code>docker:network/&lt;name&gt; -&gt; [driver =&gt; bridge]</code></td></tr>
+<tr><td>Remove network</td><td><code>docker:network/&lt;name&gt; -&gt; {0}id()</code></td></tr>
+<tr><td>Start compose stack</td><td><code>docker:compose/&lt;name&gt; -&gt; [services =&gt; [...]]</code></td></tr>
+<tr><td>Stop compose stack</td><td><code>docker:compose/&lt;name&gt; -&gt; {0}id()</code></td></tr>
+<tr><td>Remote host</td><td>Add <code>host =&gt; &lt;tcp://host:port&gt;</code> to space config</td></tr>
+</tbody>
+</table>
 
     </div>
 </main>

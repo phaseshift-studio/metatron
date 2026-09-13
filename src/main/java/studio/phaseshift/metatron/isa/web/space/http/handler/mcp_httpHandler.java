@@ -34,6 +34,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import studio.phaseshift.metatron.isa.web.webInstSet;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
@@ -63,7 +64,7 @@ public class mcp_httpHandler extends HttpRec {
     public static final fURI HTTP_MCP_HANDLER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_http");
 
     public static final Type HTTP_MCP_HANDLER_TYPE = Type.Builder.build()
-            .tid(HTTP_REC_TID)
+            .tid(webInstSet.MCP_TID)
             .vid(HTTP_MCP_HANDLER_TID)
             .isaPredicate(rec(
                     uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),

@@ -34,6 +34,10 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.FileSystem;
 import java.util.*;
@@ -49,6 +53,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.MIMEQ_PATTERN;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -131,6 +136,23 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         return noobj();
     }
 
+    /**
+     * Whether these bytes are a well-formed UTF-8 text — the test that decides whether a document can be read as
+     * a String at all. Malformed input is reported rather than replaced, since a replacement character is exactly
+     * the corruption this guards against.
+     */
+    private static boolean isUtf8(final byte[] bytes) {
+        try {
+            StandardCharsets.UTF_8.newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT)
+                    .decode(ByteBuffer.wrap(bytes));
+            return true;
+        } catch (final CharacterCodingException e) {
+            return false;
+        }
+    }
+
     private Obj readFileAsObj(final File file, final Map<String, String> qMap) throws IOException {
         //LOG.info("MIME %s",qMap);
         final MIME.MIMEType mimeType = qMap.containsKey(MIMEQ_PATTERN.toString()) ?
@@ -159,6 +181,16 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         //
         // 4. Other serializable MIME types → use the MIME's serializer.
         final boolean fromMimeq = qMap.containsKey(MIMEQ_PATTERN.toString());
+        // A document that is not text is bytes — never a String. Decoding binary through UTF-8 and re-encoding it
+        // on the way out mangles every non-ASCII byte, so an image reaches the browser as a broken image (a
+        // 1337-byte favicon was served as 2231). Two tests, because either one alone leaves a hole: the declared
+        // type (an image is not text), and the bytes themselves — an unlisted extension falls back to text/plain
+        // (pdf, sqlite, woff2), so the declared type would still feed binary through a String. An explicit
+        // ?mimeq= is the client stating the format, so it is honoured either way.
+        if (null == mimeType)
+            return bytes(fileBytes);
+        if (!mimeType.isText() || (!fromMimeq && !isUtf8(fileBytes)))
+            return bytes(fileBytes);
         if (mimeType == MIME.MIMEType.APPLICATION_MTRON && fromMimeq)
             return str(new String(fileBytes));  // case 2: defer to mimeQ
         final fURI contentTid = mimeType.toTid();

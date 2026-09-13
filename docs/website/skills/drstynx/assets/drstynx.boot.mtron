@@ -60,7 +60,17 @@ memspace::[
               lineq::[=>],
               lockq::[=>],
               refq::[=>],
-              incrq::[=>]]]@</sys/space/usr/marko>;                 
+              incrq::[=>]]]@</sys/space/usr/marko>;    
+memspace::[
+  pattern => </dev/#>,                                 
+        q => [mintq::[=>],
+               docq::[=>],
+               subq::[=>],
+              mimeq::[=>],
+              lineq::[=>],
+              lockq::[=>],
+              refq::[=>],
+              incrq::[=>]]]@</sys/space/dev>;                 
         [=====================]  
         [====== FILE SYS =====]
         [=====================]    
@@ -193,7 +203,19 @@ grphspace::[pattern   => h:#,
         [======================]
         [========= IDE ========]
         [======================]     
-        
+<mfs:src/test/resources/scratch>@</dev/scratch>.
+  as(project::T).
+  to(/dev/scratch);
+  '/home/killswitch/software/metatron/src/test/resources/scratch'.to(temp).
+        -<[mvn_build   => mvn_build -> ide:command('mvn -f ${*temp} compile'),
+           mvn_clean   => mvn_clean -> ide:command('mvn -f ${*temp} clean'),
+           mvn_exec    => mvn_exec  -> ide:command('mvn -f ${*temp} compile exec:java'),
+           git         => git       -> ide:command(cmd=>'git ${>>op.as(str::T)}',op=>uri::T)].
+   to(/dev/scratch/command);
+     /dev/scratch/code/#?subq -> sub::[code=> >>0.as(rec::T)>>path==[_,_,_,_,_].
+                                                    as?uri<=lst(uri::T).to(x).*(_).>>=[location=>none].as(web:java::T).
+                                                    to(*(*x.>>location).side(-<[location=>_,user=>/usr/marko,status=>saved,time=>!math:datetime_now()].print(_)))];
+   
 <mfs:.>@</usr/marko/metatron>.
         as(project::T).
         update(+([name   =>'metatron',

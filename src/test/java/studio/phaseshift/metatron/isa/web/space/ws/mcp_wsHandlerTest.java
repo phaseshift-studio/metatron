@@ -34,6 +34,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_TID;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -75,14 +76,19 @@ public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
     // =========================================================
 
     @Test
-    public void testMCPTypeIsWSServerSubtype() {
-        // WS_MCP_HANDLER_TYPE declares WS_SERVER_TID as its parent (tid).
+    public void testMCPTypeIsAProtocolSurface() {
+        // WS_MCP_HANDLER_TYPE declares MCP_TID as its parent (tid) — a *protocol* surface, not a ws
+        // handler subtype. The protocol is the type's semantic identity because that is what a transport
+        // asks of it ("is this target a protocol surface?"); the carrier is expressed elsewhere — by the
+        // vid (/m/web/mcp/mcp_ws, in the mcp namespace) and by the code path (wsSpace.createServer builds
+        // mcp_wsHandler, httpSpace builds mcp_httpHandler). The carrier relation is a *binding*
+        // (as?ws<=mcp), not a subtyping relation.
         // isRefinementOf() traverses parentType() which resolves via Router;
         // after a Router reset the routing can pick mInstSet (shortest prefix)
         // which has no WEB types, causing parentType() to return null → NPE.
         // Checking the tid() directly tests the same semantics without Router.
-        assertEquals(WS_HANDLER_TID, WS_MCP_HANDLER_TYPE.tid(),
-                "WS_MCP_HANDLER_TYPE should declare WS_SERVER_TID as its parent type");
+        assertEquals(MCP_TID, WS_MCP_HANDLER_TYPE.tid(),
+                "WS_MCP_HANDLER_TYPE should declare mcp as its parent type (it is an mcp surface)");
     }
 
     @Test

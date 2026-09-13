@@ -260,4 +260,40 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
         final Obj v = field("{\"v\":\"0.0.0.0:8080->80/tcp, [::]:8080->80/tcp\"}", "v");
         assertTrue(v.isStr() || v.isUri(), "should be str or uri: " + v.type());
     }
+
+    // ===================================================================
+    // Numeric-looking strings are strings (2026-09-13)
+    // ===================================================================
+
+    /**
+     * Real rows from {@code docker image ls --format json}, where every field is a JSON string — including a tag
+     * that looks numeric. The conversion used to hand each untyped string to the mtron parser, which read
+     * {@code "11.2"} as a <b>real</b>: rendered {@code 11.2000} and keyed {@code <mariadb:11.2000>}, so the image
+     * could not be addressed by the tag docker reports. It was invisible from the JSON face, where a number and a
+     * string both render as a literal.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{\"Tag\":\"11.2\"}  % 11.2  % a version-looking tag is a tag",
+            "{\"Tag\":\"24.04\"} % 24.04 % an ubuntu-style version is not a number either",
+            "{\"Tag\":\"16\"}    % 16    % nor is a numeric tag",
+    }, delimiter = '%')
+    void testNumericLookingTagsStayStrings(final String json, final String expected, final String desc) {
+        final Obj tag = field(json, "tag");
+        LOG.info("tag => %s [%s]", tag, tag.tid());
+        assertFalse(tag.isReal(), desc + ": must not be a real, got " + tag);
+        assertFalse(tag.isInt(), desc + ": must not be an int, got " + tag);
+        assertEquals(expected, tag.isStr() ? tag.strValue() : tag.uriValue().toString(), desc);
+    }
+
+    /**
+     * The same path legitimately types other fields, so keeping tags as tags must not stop a size becoming a
+     * datasize or a count an integer.
+     */
+    @Test
+    void testDeclaredConversionsSurvive() {
+        assertEquals("mB", field("{\"Size\":\"405MB\"}", "size").tid().name());
+        assertEquals("gB", field("{\"Size\":\"1.02GB\"}", "size").tid().name());
+        assertEquals(1, field("{\"Containers\":\"1\"}", "containers").intValue().intValue());
+    }
 }

@@ -48,7 +48,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /*
@@ -59,7 +58,7 @@ public class web_httpHandler extends HttpRec {
     public static final fURI WEB_HTTP_TID = WEB_ISA_TID.extend("http").extend("web_http");
 
     public static final Type WEB_HTTP_HANDLER_TYPE = Type.Builder.build()
-            .tid(HTTP_HANDLER_TID)
+            .tid(webInstSet.REST_TID)
             .vid(WEB_HTTP_TID)
             .isaPredicate(rec(
                     uri(IN).maybe().asUri(), isa_(webInstSet.MIME_OBJ_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
@@ -88,24 +87,15 @@ public class web_httpHandler extends HttpRec {
                     return noobj();
                 }
 
-                // WEB_ROOT — validated lookup (uriValue() throws if the obj isn't a Uri)
+                // The address: a templated mount already resolved it for this request (it consumed the request
+                // path), so only the prefix-mount case needs a configured root.
                 final Obj webRootObj = this.at(uri(WEB_ROOT));
-                if (webRootObj.isNoObj() || !webRootObj.isUri()) {
+                if (null == this.address() && (webRootObj.isNoObj() || !webRootObj.isUri())) {
                     sendError(500, "WEB_ROOT not configured");
                     return noobj();
                 }
-                final fURI webRoot = webRootObj.uriValue();
-
-                // Build the request URI from WEB_ROOT + exchange path (relative to mount point)
-                final String mountPath = exchange.getHttpContext().getPath();
-                final String fullPath = exchange.getRequestURI().getPath();
-                final String relativePath = fullPath.startsWith(mountPath)
-                        ? fullPath.substring(mountPath.length())
-                        : fullPath;
+                fURI requestURI = this.resolveAddress(exchange);
                 final String query = exchange.getRequestURI().getQuery();
-                fURI requestURI = relativePath.isEmpty()
-                        ? webRoot
-                        : webRoot.extend(f(relativePath));
                 if (query != null && !query.isEmpty())
                     requestURI = requestURI.qString(query);
 
@@ -282,7 +272,7 @@ public class web_httpHandler extends HttpRec {
             }
         }
         try {
-            Router.writeToSpace(resolveFileURI(exchange), value);
+            Router.writeToSpace(resolveAddress(exchange), value);
             sendStatus(exchange, 201);
         } catch (final Exception e) {
             LOG.error("error handling write: %s", e.getMessage());
@@ -349,7 +339,7 @@ public class web_httpHandler extends HttpRec {
                 return noobj();
             }
         }
-        final fURI fileURI = resolveFileURI(exchange);
+        final fURI fileURI = resolveAddress(exchange);
         try {
             final Obj base = Router.readFromSpace(fileURI);
             if (base.isNoObj()) {
@@ -379,7 +369,7 @@ public class web_httpHandler extends HttpRec {
             return noobj();
         }
         try {
-            Router.writeToSpace(resolveFileURI(exchange), noobj());
+            Router.writeToSpace(resolveAddress(exchange), noobj());
             sendStatus(exchange, 204);
         } catch (final Exception e) {
             LOG.error("error handling delete: %s", e.getMessage());
@@ -400,9 +390,14 @@ public class web_httpHandler extends HttpRec {
     }
 
     /**
-     * Mount-relative request path → space URI under web_root.
+     * The address this request is served from: the mount's resolved address when a templated route supplied one
+     * (the mount consumed the request path, so nothing is appended to it), otherwise WEB_ROOT plus the
+     * mount-relative path.
      */
-    private fURI resolveFileURI(final HttpExchange exchange) {
+    private fURI resolveAddress(final HttpExchange exchange) {
+        final fURI routed = this.address();
+        if (null != routed)
+            return routed;
         final fURI webRoot = this.at(uri(WEB_ROOT)).uriValue();
         final String mountPath = exchange.getHttpContext().getPath();
         final String fullPath = exchange.getRequestURI().getPath();

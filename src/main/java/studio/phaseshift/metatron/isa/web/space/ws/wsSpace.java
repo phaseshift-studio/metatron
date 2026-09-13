@@ -23,7 +23,6 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -35,6 +34,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
+import studio.phaseshift.metatron.isa.web.webHelper;
 import studio.phaseshift.metatron.isa.web.webInstSet;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -119,9 +119,73 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
 
     private final memSpace cache;
 
+    /**
+     * The lane a ws route value resolves to.
+     */
+    public record RouteLane(Kind kind, Obj target) {
+
+        public enum Kind {MCP, CONSTRUCT, RETAG, NONE}
+
+        static RouteLane of(final Kind kind, final Obj target) {
+            return new RouteLane(kind, target);
+        }
+    }
+
+    /**
+     * Resolve a ws route value to the handler lane it selects — the ladder that used to be inlined in
+     * {@code mWebSocketServer#createServer}, named so it can be characterized directly.
+     * <ol>
+     *   <li>{@code MCP} — an {@code mcp_server} type (materialized into an instance) or an {@code mcpServer}
+     *   instance, wrapped in {@code mcp_wsHandler};</li>
+     *   <li>{@code CONSTRUCT} — a handler {@code Type} with a constructor, built per connection;</li>
+     *   <li>{@code RETAG} — a handler {@code Type} without a constructor, re-tagged with the session vid;</li>
+     *   <li>{@code NONE} — anything else, which the caller reports as {@code "websocket handler type required"}.</li>
+     * </ol>
+     */
+    public RouteLane resolveRoute(final Obj routeValue) {
+        return this.classify(webHelper.align(this, routeValue, null));
+    }
+
+    /**
+     * Resolve a ws route value against the connection it will serve. A websocket has no per-request uri — only a
+     * handshake — so the handshake uri is the lhs: a templated value addresses <b>per connection</b>. That is a
+     * smaller problem than the http half ({@code docs/design/webspace.md} §8.1.5): a {@code WebSocketRec} is
+     * already built per connection, so the resolved target is naturally per connection and there is no shared
+     * handler to keep an address out of. An untemplated value cannot see a request at all, and resolves exactly
+     * as {@link #resolveRoute(Obj)} does.
+     */
+    public RouteLane resolveRoute(final Obj routeValue, final fURI requestUri) {
+        return this.classify(webHelper.align(this, routeValue, requestUri));
+    }
+
+    private RouteLane classify(final Obj resolved) {
+        Obj target = resolved.isUri() ? Router.readFromSpace(resolved.uriValue()) : resolved;
+        // ── mcp_server type: materialize it so the transport wraps it ──
+        if (target.isType() && target.asType().hasConstructor()
+                && Obj.Helper.specificType(target).test(MCP_SERVER_TYPE)) {
+            final Obj mcp = target.asType().constructor().apply(rec(mutableMap())).as();
+            if (!mcp.isFail())
+                target = mcp;
+        }
+        if (target instanceof mcpServer)
+            return RouteLane.of(RouteLane.Kind.MCP, target);
+        if (target.isType() && target.asType().hasConstructor())
+            return RouteLane.of(RouteLane.Kind.CONSTRUCT, target);
+        if (target.isType())
+            return RouteLane.of(RouteLane.Kind.RETAG, target);
+        return RouteLane.of(RouteLane.Kind.NONE, target);
+    }
+
     protected wsSpace(final WebSocketServer server, final Map<Obj, Obj> config, final fURI vid) {
         super(server, config, WS_SPACE_TID, vid);
         this.cache = memSpace.of(rec(uri(PATTERN), config.getOrDefault(uri(PATTERN), noobj())), null);
+        // report route-table problems at boot rather than meeting them per connection
+        final Obj routes = this.at(ROUTE);
+        if (routes.isRec()) {
+            final Obj problems = webHelper.routeProblems(routes.asRec());
+            if (!problems.isNoObj())
+                LOG.warn("%s route table problems: %s", this.vid(), problems);
+        }
     }
 
     public static wsSpace of(final Map<Obj, Obj> config, final fURI vid) {
@@ -210,18 +274,10 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                         .map(Map.Entry::getValue)
                         .findFirst()
                         .orElse(noobj());
-                Obj wsHandlerType = Space.Helper.resolveApply(this.space, routeValue);
-                if (wsHandlerType.isUri())
-                    wsHandlerType = Router.readFromSpace(wsHandlerType.uriValue());
-                // ── mcp_server type: materialize it so the transport wraps it ──
-                if (wsHandlerType.isType() && wsHandlerType.asType().hasConstructor()
-                        && Obj.Helper.specificType(wsHandlerType).test(MCP_SERVER_TYPE)) {
-                    final Obj mcp = wsHandlerType.asType().constructor().apply(rec(mutableMap())).as();
-                    if (!mcp.isFail())
-                        wsHandlerType = mcp;
-                }
-                if (!wsHandlerType.isType() && !(wsHandlerType instanceof mcpServer))
-                    throw MTronException.of("websocket handler type required: %s", wsHandlerType);
+                final RouteLane lane = this.space.resolveRoute(routeValue, routePath);
+                if (RouteLane.Kind.NONE == lane.kind())
+                    throw MTronException.of("websocket handler type required: %s", lane.target());
+                final Obj wsHandlerType = lane.target();
                 LOG.debug("starting session with websocket handler: %s", wsHandlerType);
                 final fURI vid = this.baseURI.extend(routePath.qLess()).extend(this.counter.getAndIncrement() + "");
                 final Rec config = rec(mutableMap(
