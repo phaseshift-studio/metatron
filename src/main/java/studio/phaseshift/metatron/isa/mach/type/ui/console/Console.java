@@ -1468,7 +1468,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         this.hotkeys.armCancel();
                         offerAtMs = System.currentTimeMillis() + CANCEL_OFFER_MS;
                         terminal.writer().write(Highlighter.format(
-                                "{{k}}\ncancel stream with [q] or background with <" + Hotkeys.DETACH_COMBO + "> {{X}}\n"));
+                                "{{-X-}}{{k}}cancel stream with [q] or background with <" + Hotkeys.DETACH_COMBO + "> {{X}}\r"));
                         terminal.writer().flush();
                     }
                     case WAIT -> {

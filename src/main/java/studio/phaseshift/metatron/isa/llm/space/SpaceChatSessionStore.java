@@ -316,6 +316,13 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             if (!message.tid().equals(USER_MESSAGE_TID) && !message.tid().equals(AI_MESSAGE_TID)
                     && !message.tid().equals(TOOL_RESULT_MESSAGE_TID))
                 continue;
+            // A mid-chat remark from THIS turn is the model narrating to itself and
+            // the user's own words coming back — the user has already read the
+            // former and written the latter, so feeding them back every round costs
+            // window budget for nothing.  From an earlier turn they are simply the
+            // conversation, and the whole point of writing them down.
+            if (this.isMidChat(message) && this.chatId == message.at(uri(CHAT_ID)).intValue().intValue())
+                continue;
             final ChatMessage converted = this.toChatMessage(message);
             if (null == converted)
                 continue;
@@ -324,6 +331,19 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             chat.add(converted);
         }
         return chat;
+    }
+
+    /**
+     * Whether a message belongs to a mid-iteration exchange rather than a real
+     * turn — the {@code sub} subtype refines the base tid without replacing it, so
+     * LC4j's memory is unaffected and only this window rule cares.
+     */
+    private boolean isMidChat(final Rec message) {
+        final Obj subtype = message.at(uri(SUB));
+        if (!subtype.isUri())
+            return false;
+        final fURI sub = subtype.uriValue();
+        return sub.equals(USER_MIDCHAT_TID) || sub.equals(AI_MIDCHAT_TID);
     }
 
     /**

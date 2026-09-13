@@ -38,6 +38,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -305,7 +307,7 @@ public final class ToolPairGate {
             PUBLISHED.put(key(ledger, callId), Boolean.TRUE);
             final Held held = HELD.remove(key(ledger, callId));
             if (null != held)
-                Router.writeToSpace(ledger.ledgerWritePath(), held.result());
+                Router.writeToSpace(ledger.ledgerWritePath(), inScope(held.result(), aiMessage));
         }
         LOG.debug("published tool group %s (%d results)", callIds, callIds.size());
         return new Verdict(Status.PUBLISHED, written);
@@ -326,5 +328,38 @@ public final class ToolPairGate {
         if (chatId.isNoObj() || !chatId.isInt())
             return null;
         return String.valueOf(chatId.intValue().intValue());
+    }
+
+    /**
+     * A group is <b>one turn</b>, so it has one scope — the scope of the assistant
+     * message that asked for it.  Every member of the group is stamped with it.
+     *
+     * <p>This is not bookkeeping.  A result is built when its tool <em>returns</em>,
+     * which for a slow tool is not when its turn is running: an interrupted turn
+     * unwinds to the idle depth before the last results are staged, and a result
+     * stamped then lands in a scope its own request is not in.  The store projects
+     * the ledger per {@code session}/{@code depth}, so a group split across scopes
+     * is <em>torn</em> in the model's window — the assistant message keeps its
+     * {@code tool_calls} and loses the tool messages that answer them, and every
+     * subsequent chat is rejected with "insufficient tool messages following
+     * tool_calls message".  Measured on the drstynx ledger, one interrupted turn
+     * (two results staged at depth 0 against a request at depth 1) was enough to
+     * break 1048 rows' worth of otherwise valid history.
+     *
+     * <p>Whatever the agent's mutable depth happens to be at write time is not the
+     * group's scope; the request's is.
+     */
+    private static Rec inScope(final Rec result, final Rec aiMessage) {
+        final Obj session = aiMessage.at(uri(SESSION));
+        final Obj depth = aiMessage.at(uri(DEPTH));
+        final Obj chatId = aiMessage.at(uri(CHAT_ID));
+        Rec scoped = result;
+        if (session.isUri())
+            scoped = scoped.at(uri(SESSION), session, MUTABLE);
+        if (depth.isInt())
+            scoped = scoped.at(uri(DEPTH), jnt(depth.intValue().intValue()), MUTABLE);
+        if (chatId.isInt())
+            scoped = scoped.at(uri(CHAT_ID), chatId, MUTABLE);
+        return scoped;
     }
 }

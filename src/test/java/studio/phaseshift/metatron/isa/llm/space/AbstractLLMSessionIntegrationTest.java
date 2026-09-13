@@ -329,6 +329,18 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
 
 
     /**
+     * The ledger fsck against a real space backend.
+     *
+     * <p>No chat is involved — this is about the store's read path, not the model.
+     * See {@link LedgerSweepAssertions} for what it pins and why it is shared.
+     */
+    @Test
+    public void testLedgerSweepAgainstThisStore() {
+        LedgerSweepAssertions.verify(sessionVID());
+    }
+
+
+    /**
      * Validate that the unified message table contains messages of a given TID.
      * Reads all rows from the table and filters by rec.tid() (populated from _tid column).
      */

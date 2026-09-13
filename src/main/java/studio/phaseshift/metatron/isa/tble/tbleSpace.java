@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractDataPathSpace;
-import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Lst;
@@ -444,7 +443,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
 
         // 2. Execute all but the last as updates
         for (int i = 0; i < valid.size() - 1; i++) {
-            LOG.info("sql update: %s", valid.get(i));
+            LOG.status(DEBUG, "sql update: %s", valid.get(i));
             try (final Statement stmt = this.sjvm().createStatement()) {
                 stmt.executeUpdate(valid.get(i));
             }
@@ -452,7 +451,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
 
         // 3. Execute the final statement and return its result
         final String lastStmt = valid.getLast();
-        LOG.info("sql query: %s", lastStmt);
+        LOG.status(DEBUG, "sql query: %s", lastStmt);
         try (final Statement stmt = this.sjvm().createStatement()) {
             final boolean hasResultSet = stmt.execute(lastStmt);
             if (hasResultSet) {

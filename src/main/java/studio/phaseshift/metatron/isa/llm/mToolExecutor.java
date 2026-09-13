@@ -24,18 +24,11 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
-import studio.phaseshift.metatron.util.CommonUtil;
 
-import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.DEBUG;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -61,22 +54,26 @@ public class mToolExecutor implements ToolExecutor {
         }
         final Obj result = this.apply(request.arguments());
         mTool.resultStash.put(request.id(), result);
-        final Obj appendResult;
-        if (null != this.agent) {
-            final Lst midChatMessages = this.agent.popMidChatMessages();
-            if (!midChatMessages.isEmpty()) {
-                appendResult = rec(RESULT, result, PENDING_MESSAGES, lst(midChatMessages.elements().map(r -> r.asRec().elements().map(x -> rel(x.first(), x.second())).collect(new CommonUtil.RecCollector()))));
-                StatusLine.message(str(CommonUtil.clipString("\uD83D\uDCE2 %s".formatted(midChatMessages), 100, true)));
-            } else {
-                appendResult = result;
-            }
-        } else {
-            appendResult = result;
-        }
-        // stash the raw Obj so ToolFeature can recover nested rec/inst structure
-        final JsonElement json = ObjJSONSerializer.simple().write(appendResult);
+        final JsonElement json = ObjJSONSerializer.simple().write(this.onToolResult(result, request.id()));
         this.inst.logger().status(DEBUG, "%s => %s", this.inst, json);
         return json.toString();
+    }
+
+    /**
+     * Offer the tool-result payload to the agent's {@code on_tool_result} stage and
+     * hand back whatever the features folded it into.
+     *
+     * <p>This is the only place a tool result can still be shaped —
+     * {@code onToolExecuted} is an observational LC4j listener that cannot alter the
+     * payload, and {@code beforeToolExecution} runs before the result exists — so the
+     * stage is dispatched from here rather than from the turn (see
+     * {@link Agent#dispatchToolResult}).  The executor holds no knowledge of what any
+     * feature does with the payload.
+     */
+    private Obj onToolResult(final Obj result, final String requestId) {
+        if (null == this.agent)
+            return result;
+        return this.agent.dispatchToolResult(result, requestId);
     }
 
     /**

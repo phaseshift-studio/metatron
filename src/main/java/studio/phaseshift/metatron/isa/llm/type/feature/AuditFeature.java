@@ -83,8 +83,9 @@ public class AuditFeature extends AbstractFeature {
     }
 
     @Override
-    public void onPartialThinking(final Agent agent, final Str text) {
+    public Obj onPartialThinking(final Agent agent, final Obj thought) {
         this.partialThinkings++;
+        return noobj(); // an audit observes; it has nothing to say about the thought
     }
 
     @Override

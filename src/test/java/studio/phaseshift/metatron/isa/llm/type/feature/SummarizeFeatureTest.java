@@ -37,6 +37,8 @@ import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DAY_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -60,10 +62,25 @@ public class SummarizeFeatureTest extends AbstractFeatureTest {
                 .put(CHAT, str("I've queued a summarization over the last two days."))
                 .put(USER, str("test prompt"))
                 .put(TIME, real(42.0, MATH_MILLIS_TID, null))
-                .put(BLOCK, rec(uri("summarize"), rec(
+                .put(WATERMARK, lst(watermark("summarize", rec(
                         uri(SCOPE), real(2.0, MATH_DAY_TID, null),
                         uri(KIND), lst(uri("decision")),
-                        uri(CONCEPT), lst(str("AgentExtractor")))));
+                        uri(CONCEPT), lst(str("AgentExtractor"))))));
+    }
+
+    /**
+     * One published {@code watermark::T} rec, shaped exactly as
+     * {@link studio.phaseshift.metatron.isa.llm.Watermarks.Scan#list()} builds it.
+     */
+    static Rec watermark(final String key, final Obj body) {
+        return rec(mutableMap(
+                uri(TAG), str("mtron"),
+                uri(KEY), str(key),
+                uri(BODY), str(""),
+                uri(OBJ), body,
+                uri(ERROR), noobj(),
+                uri(INDEX), jnt(0),
+                uri(STAGE), uri(ON_COMPLETE_RESPONSE)), LLM_WATERMARK_TID, null);
     }
 
     @Test

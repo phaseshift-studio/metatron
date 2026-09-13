@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.Watermarks;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
@@ -69,48 +70,57 @@ public class SummarizeFeature extends AbstractFeature {
      * gateway is the owner of the skill channel; this feature is a
      * contributor.
      */
+    /**
+     * This feature's watermark identity.  Declared on the config rec as
+     * {@code watermark => [key=>..., tag=>...]} to override either; these are the
+     * defaults, and the single place the server-side lookup and the skill prose
+     * both take their marker from.
+     */
+    static final String WATERMARK_KEY = "summarize";
+    static final String WATERMARK_CODEC = "mtron";
+
+    private static final String SUMMARIZE_INSTRUCTIONS = """
+                                                        When a session becomes overly complex or you need to recall decisions, problems, and observations
+                                                        from your past, append a `<<mtron:summarize>>` watermark to your response — a deferred `summary()`
+                                                        call, where the watermark body is the same argument rec `summary()` takes:
+                                                        
+                                                            <<mtron:summarize>>
+                                                            [scope=>day::2.0, kind=>[problem, decision], concept=>["AgentExtractor"]]
+                                                            <</mtron:summarize>>
+                                                        
+                                                        The summarization runs in the background — acknowledge that recall is queued and respond normally.
+                                                        On the next chat, a structured briefing is injected into your system context:
+                                                        
+                                                            [claim=>[[text=>"a claim",location=>!*/usr/dr/claim/3],...],
+                                                             loose_end=>[[text=>"an open thread",location=>!*/usr/dr/loose_end/1],...]]
+                                                        
+                                                        The `location` fields are mtron deref pointers — follow them (e.g. `*<location>` or
+                                                        `*<location>/source`) to dig into the underlying records.
+                                                        
+                                                        Config (all optional):
+                                                          scope     — only summarize messages since this time (a time::T like hour::48.0 or day::2.0,
+                                                                      or an absolute datetime::T). Default: all messages.
+                                                          kind      — focus the follow-on briefing on claims of this kind (decision, problem,
+                                                                      solution, observation). Default: all kinds.
+                                                          concept   — focus the follow-on briefing on claims whose source messages touch this
+                                                                      concept. Default: no concept filter.
+                                                        """;
+
     public void registerSkill(final Agent agent) {
         if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
             return;
-        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(mutableMap(uri(NAME), uri(LLM_SUMMARIZE_FEATURE_TID.name()),
+        final String instructions = Watermarks.instructions(WATERMARK_CODEC,
+                Watermarks.key(this, WATERMARK_KEY), SUMMARIZE_INSTRUCTIONS);
+        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(mutableMap(
+                uri(NAME), uri(LLM_SUMMARIZE_FEATURE_TID.name()),
                 uri(DESC), str("summarize a session into claims and loose ends, recalling them on demand"),
-                uri(CONTENT), str("""
-                                  When a session becomes overly complex or you need to recall decisions, problems, and observations
-                                  from your past, append a `<<mtron:summarize>>` block to your response — a deferred `summary()`
-                                  call, where the block rec is the same argument rec `summary()` takes:
-                                  
-                                      <<mtron:summarize>>
-                                      [scope=>day::2.0, kind=>[problem, decision], concept=>["AgentExtractor"]]
-                                      <</mtron:summarize>>
-                                  
-                                  The summarization runs in the background — acknowledge that recall is queued and respond normally.
-                                  On the next chat, a structured briefing is injected into your system context:
-                                  
-                                      [claim=>[[text=>"a claim",location=>!*/usr/dr/claim/3],...],
-                                       loose_end=>[[text=>"an open thread",location=>!*/usr/dr/loose_end/1],...]]
-                                  
-                                  The `location` fields are mtron deref pointers — follow them (e.g. `*<location>` or
-                                  `*<location>/source`) to dig into the underlying records.
-                                  
-                                  Config (all optional):
-                                    scope     — only summarize messages since this time (a time::T like hour::48.0 or day::2.0,
-                                                or an absolute datetime::T). Default: all messages.
-                                    kind      — focus the follow-on briefing on claims of this kind (decision, problem,
-                                                solution, observation). Default: all kinds.
-                                    concept   — focus the follow-on briefing on claims whose source messages touch this
-                                                concept. Default: no concept filter.
-                                  
-                                  **IMPORTANT**: This skill is about formatting your response, not calling a function. The block
-                                  is stripped from what the user sees.
-                                  """)))));
+                uri(CONTENT), str(instructions)))));
     }
 
     @Override
     public void onCompleteResponse(final Agent agent, final ChatResult result) {
-        final Obj blocks = result.at(uri(BLOCK)).orElse(noobj());
-        if (blocks.isNoObj())
-            return;
-        final Obj signal = blocks.asRec().at(uri("summarize"));
+        this.noteWatermarkFailure(result, WATERMARK_CODEC, WATERMARK_KEY);
+        final Obj signal = result.watermark(Watermarks.key(this, WATERMARK_KEY));
         if (signal.isNoObj())
             return;
         final Rec block = signal.asRec();
@@ -149,6 +159,7 @@ public class SummarizeFeature extends AbstractFeature {
     @Override
     public Obj onBeforeChat(final Agent agent) {
         this.registerSkill(agent);
+        this.surfaceWatermarkRejections(agent);
         final fURI outputBase = this.outputBase(agent);
         // always-on loose-end reminder
         final Obj looseEnds = Router.readFromSpace(outputBase.extend("loose_end").extend("+"));

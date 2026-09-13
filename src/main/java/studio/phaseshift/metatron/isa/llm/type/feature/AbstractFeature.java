@@ -19,7 +19,9 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.Watermarks;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.m.type.Bool;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -29,10 +31,13 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.ACTIVE;
 import static studio.phaseshift.metatron.Tokens.FEATURE;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -61,6 +66,14 @@ import static studio.phaseshift.metatron.Tokens.FEATURE;
 public abstract class AbstractFeature extends MRec implements Feature {
 
     protected final GraphittyLogger LOG = Graphitty.log(this);
+
+    /**
+     * Watermark rejections awaiting the next chat, where the model can see them.
+     * Recorded when the model addressed a watermark to this feature and its body
+     * did not decode — the model is told nothing else, so without this it repeats
+     * the same malformed marker indefinitely.
+     */
+    private final List<String> watermarkRejections = new ArrayList<>();
 
     public AbstractFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -99,5 +112,53 @@ public abstract class AbstractFeature extends MRec implements Feature {
             return true;
         LOG.warn("%s", this.missingFeatureException(required).getMessage());
         return false;
+    }
+
+    // ========================================================================
+    // Watermark feedback
+    // ========================================================================
+
+    /**
+     * Note a watermark rejection for the model to see on the next chat.  The
+     * primitive both rejection paths use — the completed-response path via
+     * {@link #noteWatermarkFailure} and the streaming path, which has a
+     * {@code Hit} rather than a published rec.
+     */
+    protected void rejectWatermark(final String message) {
+        this.watermarkRejections.add(message);
+    }
+
+    /**
+     * Record a rejection when the model addressed a watermark to this feature's
+     * key and its body did not decode.  Called from {@code onCompleteResponse};
+     * {@link #surfaceWatermarkRejections(Agent)} hands the report to the model on
+     * the next chat.
+     *
+     * @param result     the chat result the watermarks were published on
+     * @param codec      this feature's declared codec, for the marker in the report
+     * @param defaultKey this feature's watermark key, unless its config declares one
+     */
+    protected void noteWatermarkFailure(final ChatResult result, final String codec, final String defaultKey) {
+        final String key = Watermarks.key(this, defaultKey);
+        final Obj rejected = Watermarks.failed(result.watermarks(), key);
+        if (rejected.isRec())
+            this.rejectWatermark(Watermarks.report(codec, key, rejected.asRec()));
+    }
+
+    /**
+     * Hand any recorded watermark rejections to the model as system context.
+     * Called from {@code onBeforeChat} — the system channel is the only place a
+     * feature can speak to the model about its own last turn, because
+     * {@code SystemFeature} clears its messages at the end of every chat.
+     */
+    protected void surfaceWatermarkRejections(final Agent agent) {
+        if (this.watermarkRejections.isEmpty() || !agent.hasFeature(LLM_SYSTEM_FEATURE_TID))
+            return;
+        agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage("""
+                                                                                   the watermark instructions you were given were not followed:
+                                                                                   
+                                                                                   %s
+                                                                                   """.formatted(String.join("\n", this.watermarkRejections)));
+        this.watermarkRejections.clear();
     }
 }

@@ -27,6 +27,7 @@ import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
+import studio.phaseshift.metatron.isa.llm.Watermarks;
 import studio.phaseshift.metatron.isa.llm.mToolProvider;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
@@ -39,19 +40,15 @@ import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
-import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -299,27 +296,8 @@ public class Agent extends MRec {
         return path;
     }
 
-    /**
-     * Matches {@code <<TYPE:KEY>>...<</TYPE:KEY>>} blocks for LLM-to-feature signaling.
-     */
-    private static final Pattern MTRON_BLOCK =
-            Pattern.compile("<<(\\w+):(\\w+)>>\\s*(.+?)\\s*<</\\1:\\2>>", Pattern.DOTALL);
-
-    /**
-     * Maps block tag names to MIME types for deserialization.
-     */
-    private static MIME.MIMEType mimeForTag(final String tag) {
-        return switch (tag) {
-            case "mtron" -> MIME.MIMEType.APPLICATION_MTRON;
-            case "json" -> MIME.MIMEType.APPLICATION_JSON;
-            case "html" -> MIME.MIMEType.TEXT_HTML;
-            case "md" -> MIME.MIMEType.TEXT_MARKDOWN;
-            case "xml" -> MIME.MIMEType.APPLICATION_XML;
-            case "txt", "plain" -> MIME.MIMEType.TEXT_PLAIN;
-            case "bson" -> MIME.MIMEType.APPLICATION_BSON;
-            default -> MIME.MIMEType.APPLICATION_MTRON;
-        };
-    }
+    // Watermark scanning lives in {@link Watermarks} — one owner for the
+    // pattern, the tag→codec mapping, the decode policy, and the stripping.
 
     // ── Hook dispatch ──────────────────────────────────────────────
 
@@ -328,15 +306,19 @@ public class Agent extends MRec {
      * at {@code hookKey}, it is evaluated with {@code args} bound and the
      * Agent as lhs.  If the feature lacks the hook, the noobj chain is a
      * silent no-op ({@code noobj().args(...).apply(this) → noobj}).
+     *
+     * @return what the hook evaluated to — dropped by every stage but
+     *         {@code on_tool_result}, which is the one whose value is the point
+     *         (see {@link #dispatchToolResult})
      */
-    private void dispatchHook(final Rec feature, final String hookKey, final Obj... args) {
+    private Obj dispatchHook(final Rec feature, final String hookKey, final Obj... args) {
         try {
             if (hookKey.equals(ON_AGENT_CTOR) || feature.at(ACTIVE).orElse(BOOL_TRUE).boolValue()) {
                 if (!hookKey.equals(ON_ERROR))
                     this.currentHook.set(Tuple.Pair.with(feature.tid(), f(hookKey)));
                 //StatusLine.message(str("current llm stage: [%s][%s]".formatted(feature.tid(), hookKey)));
                 final Obj hook = feature.at(uri(hookKey));
-                (hook.isInst() ? hook.asInst().args(lst(args)) : hook).apply(this);
+                return (hook.isInst() ? hook.asInst().args(lst(args)) : hook).apply(this);
             } else {
                 LOG.debug("skipping inactive feature: [%s][%s]", feature.tid(), hookKey);
             }
@@ -345,6 +327,28 @@ public class Agent extends MRec {
             if (feature.has(ON_ERROR))
                 feature.at(ON_ERROR).apply(fail(e).caught());
         }
+        return noobj();
+    }
+
+    /**
+     * Fold the {@code on_tool_result} stage over every attached feature and return
+     * the payload the model should be handed.
+     *
+     * <p>The one stage dispatched from outside the turn: {@code mToolExecutor} calls
+     * this between the tool and the model, so the result of each hook is carried into
+     * the next rather than dropped.  A feature that has nothing to add returns the
+     * payload it was given, and a feature with no hook at all evaluates to
+     * {@code noobj} — which is skipped, so a feature that merely exists cannot erase
+     * the tool's output.
+     */
+    public Obj dispatchToolResult(final Obj result, final String requestId) {
+        Obj payload = result;
+        for (final Obj feature : this.features().elements().toList()) {
+            final Obj folded = this.dispatchHook(feature.asRec(), ON_TOOL_RESULT, payload, str(requestId));
+            if (!folded.isNoObj())
+                payload = folded;
+        }
+        return payload;
     }
 
     public void interrupt() {
@@ -355,14 +359,72 @@ public class Agent extends MRec {
         return this.interrupt.get();
     }
 
+    /**
+     * Messages a user sent while this turn was in flight.  The atomic is the
+     * source of truth and the {@code message_stack} field mirrors it for
+     * visibility: LC4j executes a round's tool calls concurrently, so a
+     * read-then-clear on the rec field would let two parallel calls split one
+     * user message between them — or deliver the same one twice.
+     */
+    /**
+     * Offer a message to the agent mid-turn.
+     *
+     * <p>It is queued in the {@code MidChatFeature}'s own subspace
+     * ({@code pending_messages}), not in a field here: {@link #agent(Rec)} builds a
+     * fresh Agent on <em>every</em> call, so the instance that pushes a message — a
+     * console line, a second {@code chat} while the first is streaming — is never the
+     * instance running the turn that has to deliver it.  A field here belongs to the
+     * pusher alone, and the turn reads nothing.
+     */
     public void pushMidChatMessage(final Rec message) {
-        this.at(MESSAGE_STACK, this.at(MESSAGE_STACK).orElse(lst()).add(message.at(TIME, ObjmtronSerializer.parse("!math:datetime_now().minus(%s).normalize()".formatted(mathInstSet.nowDatetime()))), MUTABLE), MUTABLE);
+        if (!this.hasFeature(LLM_MIDCHAT_FEATURE_TID)) {
+            LOG.warn("no mid-chat feature attached — a message sent mid-turn was dropped: %s", this.vidOrTid());
+            return;
+        }
+        final Uri now = mathInstSet.nowDatetime();
+        this.feature(LLM_MIDCHAT_FEATURE_TID).<MidChatFeature>as().push(this, message
+                .at(TIME, now)
+                .at(RUNTIME, ObjmtronSerializer.parse("!math:datetime_now().minus(%s).normalize()".formatted(now))));
     }
 
+    /**
+     * The messages waiting to be read, drained.  The MidChatFeature owns them; this is
+     * the agent's door onto its subspace.
+     */
     public Lst popMidChatMessages() {
-        final Lst messages = this.at(MESSAGE_STACK).orElse(lst());
-        this.at(MESSAGE_STACK, lst(), MUTABLE);
-        return messages;
+        return this.hasFeature(LLM_MIDCHAT_FEATURE_TID)
+                ? this.feature(LLM_MIDCHAT_FEATURE_TID).<MidChatFeature>as().drain(this)
+                : lst();
+    }
+
+    /**
+     * Close the tool and mid-chat channels, and do it on a thread whose interrupt
+     * flag is clear.
+     *
+     * <p>Both closes <em>write to the ledger</em>, and {@code Router.writeToSpace}
+     * goes through a space that may do blocking IO — an interrupted thread can
+     * abort that IO partway.  The damage is specific and nasty: the close writes
+     * the ai message first and its results after, so an aborted close leaves an ai
+     * message with fewer results than {@code tool_requests}, which every provider
+     * rejects with "insufficient tool messages following tool_calls message" and
+     * which makes the whole history unusable.
+     *
+     * <p>The ordering fix alone is not enough: the {@code catch} path re-arms the
+     * flag and then the {@code finally} calls this again with it already set.  So
+     * the flag is cleared for the duration of the work and restored afterwards,
+     * which makes the close safe wherever it is called from.
+     */
+    private void closeChannels(final AtomicReference<Set<String>> orphanToolRequests) {
+        final boolean interrupted = Thread.interrupted(); // clears the flag
+        try {
+            if (this.hasFeature(LLM_TOOL_FEATURE_TID))
+                this.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().handleOrphanToolRequests(this, orphanToolRequests.get());
+            if (this.hasFeature(LLM_MIDCHAT_FEATURE_TID))
+                this.feature(LLM_MIDCHAT_FEATURE_TID).<MidChatFeature>as().handleOrphanMidChatMessages(this);
+        } finally {
+            if (interrupted)
+                Thread.currentThread().interrupt();
+        }
     }
 
 
@@ -499,7 +561,12 @@ public class Agent extends MRec {
                                 return;
                             }
                             Router.global().stats().ioStats().incrBytesRecv(t.text().getBytes().length);
-                            features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_THINKING, str(t.text())));
+                            // thinking is the one stage this class does not dispatch:
+                            // ThinkFeature owns it, seeds the thought with the chunk,
+                            // applies it, and cascades it through the other features
+                            if (this.hasFeature(LLM_THINK_FEATURE_TID))
+                                this.feature(LLM_THINK_FEATURE_TID).<ThinkFeature>as()
+                                        .onPartialThinking(this, str(t.text()));
                         })
                         .onError(e -> {
                             final fURI currentFeature = this.currentHook.get().get0();
@@ -520,44 +587,29 @@ public class Agent extends MRec {
                             // Parse response format if requested
                             final boolean formatted = !responseFormat.isNoObj();
                             final Obj chatObj;
-                            final Map<Obj, Obj> blocks = new LinkedHashMap<>();
+                            // A formatted response is a structured rec end to end — there is
+                            // no text channel for a watermark to ride in.
+                            final Watermarks.Scan scan = formatted ? null : Watermarks.scan(fullText);
                             if (formatted) {
                                 chatObj = ObjJSONSerializer.simple().inputBytes(fullText);
                             } else {
-                                // Parse <<TYPE:KEY>>...<</TYPE:KEY>> blocks into the result's
-                                // blocks rec (features read them there), strip from chat
-                                final Matcher blockMatcher = MTRON_BLOCK.matcher(fullText);
-                                final StringBuilder cleaned = new StringBuilder(fullText);
-                                int stripped = 0;
-                                while (blockMatcher.find()) {
-                                    final String tag = blockMatcher.group(1);
-                                    final String key = blockMatcher.group(2);
-                                    final String body = blockMatcher.group(3);
-                                    try {
-                                        final MIME.MIMEType mime = mimeForTag(tag);
-                                        final Obj parsed = mime.fromBytes(body.getBytes(StandardCharsets.UTF_8));
-                                        blocks.put(uri(key), parsed);
-                                        // Strip block from visible text
-                                        final int start = blockMatcher.start() - stripped;
-                                        final int end = blockMatcher.end() - stripped;
-                                        cleaned.delete(start, end);
-                                        stripped += (end - start);
-                                    } catch (final Exception e) {
-                                        LOG.warn("failed to parse <<%s:%s>> block: %s", tag, key, e.getMessage());
-                                    }
-                                }
-                                chatObj = str(cleaned.toString().stripTrailing());
+                                // Scan the watermarks out of the response: what the model
+                                // addressed to a feature lands on the result, and the markup
+                                // is stripped from what the user sees — and, because the chat
+                                // is persisted, from what the ledger keeps.
+                                chatObj = str(scan.visible());
                             }
                             // Build the chat_result — monos inline (chat, user, time), the
-                            // parsed <<TYPE:KEY>> blocks on a blocks rec; feature outputs are
-                            // attached by the features themselves in their onCompleteResponse.
+                            // watermarks the model emitted as an ordered watermark::T lst;
+                            // feature outputs are attached by the features themselves in
+                            // their onCompleteResponse.
                             final long elapsed = (System.nanoTime() - startNanos) / 1_000_000;
                             final ChatResult result = ChatResult.chatResult()
                                     .put(CHAT, chatObj.apply(this))
                                     .put(USER, str(this.userMessage))
                                     .put(TIME, mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)));
-                            if (!blocks.isEmpty())
-                                result.put(BLOCK, rec(blocks, null, null));
+                            if (null != scan && !scan.isEmpty())
+                                result.put(WATERMARK, scan.list());
                             this.currentResult = result;
                             this.logger().none("\n");
                             features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_COMPLETE_RESPONSE, result));
@@ -575,9 +627,9 @@ public class Agent extends MRec {
                 if (null != isError.get())
                     throw isError.get();
             } catch (final InterruptedException e) {
+                // close the channels before re-arming this thread's interrupt flag
+                this.closeChannels(orphanToolRequests);
                 Thread.currentThread().interrupt();
-                if (!orphanToolRequests.get().isEmpty())
-                    this.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().handleOrphanToolRequests(this, orphanToolRequests.get());
                 return ChatResult.chatResult()
                         .put(STOP, BOOL_TRUE)
                         .put(TIME, nowDatetime())
@@ -598,12 +650,11 @@ public class Agent extends MRec {
             }
             return ChatResult.chatResult();
         } finally {
-            // the tool channel closes with the chat: a request the loop never
-            // answered gets a lost result and its parked ai message is
-            // published as a group — the ledger never holds tool_requests
-            // without their tool_results
-            if (this.hasFeature(LLM_TOOL_FEATURE_TID))
-                this.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().handleOrphanToolRequests(this, orphanToolRequests.get());
+            // both channels close with the chat: a tool request the loop never
+            // answered gets a lost result and its parked ai message is published as
+            // a group, and a mid-chat message still queued is written rather than
+            // dropped
+            this.closeChannels(orphanToolRequests);
             // SystemFeature owns the per-chat system-message state — clear it so the
             // next chat re-surfaces its own system context.
             if (this.hasFeature(LLM_SYSTEM_FEATURE_TID))

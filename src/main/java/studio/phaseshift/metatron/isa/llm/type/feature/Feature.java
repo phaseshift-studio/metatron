@@ -60,6 +60,7 @@ public interface Feature extends Rec {
         on_partial_thinking,
         on_partial_tool_call,
         on_tool_executed,
+        on_tool_result,
         on_complete_response,
         on_error
     }
@@ -93,7 +94,27 @@ public interface Feature extends Rec {
     default void onPartialResponse(final Agent agent, final Str text) {
     }
 
-    default void onPartialThinking(final Agent agent, final Str text) {
+    /**
+     * Shape the thought as it streams — the cascading half of the thinking stage.
+     *
+     * <p>Unlike the other streaming hooks this one is a fold, and it is not dispatched
+     * by {@link Agent}: {@link ThinkFeature} owns the stage.  It seeds the thought with
+     * the raw chunk, applies it to the agent ({@code ${...}} templates resolved, and
+     * {@code <<...>>} watermark markup left untouched for the feature whose tag it is),
+     * then hands it to every feature that has this hook wired.  Each either abstains or
+     * returns the thought as it should read, and what comes back from the last of them
+     * is what gets cataloged.
+     *
+     * @param agent   the agent whose turn this is
+     * @param thought the thought so far — the chunk on the first call, and whatever the
+     *                previous feature made of it thereafter.  Deliberately an
+     *                {@code Obj}: what a feature returns need not be the {@code str::T}
+     *                it was handed.
+     * @return the thought as this feature would have it, or {@code noobj()} to leave it
+     *         exactly as it arrived
+     */
+    default Obj onPartialThinking(final Agent agent, final Obj thought) {
+        return noobj();
     }
 
     default void onPartialToolCall(final Agent agent, final Inst request) {
@@ -107,8 +128,34 @@ public interface Feature extends Rec {
     default void onToolExecuted(final Agent agent, final Obj result) {
     }
 
-    default void onToolResult(final Agent agent, final Inst tool, final Obj result) {
-        //TODO finish
+    /**
+     * Shape the tool result the model is about to see — the inbound mirror of a
+     * watermark.  A watermark is the model addressing a feature; this is a feature
+     * addressing the model, riding inside the result of the call it answered.
+     *
+     * <h3>The one stage whose return value is consumed</h3>
+     * Every other hook observes a turn that has already happened and is dispatched
+     * from {@link Agent}; its result is dropped.  This one runs inside
+     * {@code mToolExecutor}, between the tool and the model, and is the <em>only</em>
+     * place a tool result can still be shaped: {@code onToolExecuted} is an
+     * observational LC4j listener that cannot alter the payload, and
+     * {@code beforeToolExecution} runs before the result exists.  So the value
+     * returned here is what the model is handed, and the features attached to the
+     * agent are folded over the payload in turn.
+     *
+     * <p>A feature that has nothing to add returns {@code result} unchanged — folding
+     * is unconditional, so pass-through must be a no-op rather than a special case in
+     * the executor.  (A feature with no {@code on_tool_result} at all evaluates to
+     * {@code noobj}, which the fold leaves out rather than letting it erase the
+     * payload.)
+     *
+     * @param agent     the agent whose tool call this was
+     * @param result    the payload as folded so far (the raw result on the first call)
+     * @param requestId the tool call id, the join key back to the ai message
+     * @return the payload to hand the model — {@code result} itself if unchanged
+     */
+    default Obj onToolResult(final Agent agent, final Obj result, final String requestId) {
+        return result;
     }
 
     // ── Completion ───────────────────────────────────────────────
