@@ -593,6 +593,196 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         term.close();
     }
 
+    // ── drag: the chevron handle, the translation, and what it writes ─
+
+    /** A 120-column by 40-row terminal (jline's Size takes columns first). */
+    private static Terminal dragTerminal(final java.io.OutputStream out) throws IOException {
+        return TerminalBuilder.builder().dumb(true)
+                .size(new org.jline.terminal.Size(120, 40))
+                .streams(new java.io.ByteArrayInputStream(new byte[0]), out).build();
+    }
+
+    /**
+     * The drag is a translation, and that is the whole point of the chevron being the
+     * handle: the cell the user grabs is the widget's own top-left corner, so the corner
+     * lands wherever the pointer goes — for every anchor, top or bottom or middle.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "top_left", "top_middle", "top_right",
+            "middle",
+            "bottom_left", "bottom_middle", "bottom_right",
+    })
+    public void testDraggingMovesTheWidgetByThePointerDelta(final String anchorName) throws Exception {
+        final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        final Terminal term = dragTerminal(out);
+        final FloatingSurface surface_ = new FloatingSurface(term);
+        final AccordionWidget widget = new AccordionWidget("drag me");
+        final FloatingSurface.Anchor anchor = FloatingSurface.Anchor.parse(anchorName);
+        surface_.add(widget, anchor, 40, 0, 0);
+        surface_.renderNow();
+
+        final FloatingSurface.Cell before = surface_.origin(widget);
+        assertNotNull(before, anchorName + ": a pinned widget has a drawn origin");
+        // move toward the middle, so the delta is in range for every anchor (a
+        // bottom-anchored widget starts near the bottom, a top-anchored one near the top)
+        final int dRow = before.row() <= term.getHeight() / 2 ? 3 : -3;
+        final int dCol = before.col() <= term.getWidth() / 2 ? 5 : -5;
+        assertTrue(surface_.placeAt(widget, before.row() + dRow, before.col() + dCol),
+                anchorName + ": an anchored widget accepts a placement");
+        surface_.renderNow();
+        final FloatingSurface.Cell after = surface_.origin(widget);
+        assertEquals(before.row() + dRow, after.row(), anchorName + ": the corner follows the pointer in rows");
+        assertEquals(before.col() + dCol, after.col(), anchorName + ": the corner follows the pointer in columns");
+
+        // and the offsets it stored are the ones that reproduce that cell
+        final FloatingSurface.Placement placement = surface_.placement(widget);
+        assertEquals(anchor, placement.anchor(), anchorName + ": the anchor is not changed by a drag");
+        surface_.add(widget, anchor, 40, placement.top(), placement.left());
+        surface_.renderNow();
+        final FloatingSurface.Cell refloated = surface_.origin(widget);
+        assertEquals(after.row(), refloated.row(), anchorName + ": re-floating at the dragged offsets stays put");
+        assertEquals(after.col(), refloated.col(), anchorName + ": re-floating at the dragged offsets stays put");
+        assertEquals(1, surface_.drawnWidgetCount(), anchorName + ": and replaces the slot instead of orphaning it");
+        term.close();
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "-100 % -100 % dragged off the top-left, the handle is held at the corner",
+            "9999 % 9999 % dragged past the bottom-right, the handle is held on screen",
+    }, delimiter = '%')
+    public void testDraggingClampsSoTheHandleStaysReachable(final int row, final int col,
+                                                            final String description) throws Exception {
+        final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        final Terminal term = dragTerminal(out);
+        final FloatingSurface surface_ = new FloatingSurface(term);
+        final AccordionWidget widget = new AccordionWidget("hold me");
+        surface_.add(widget, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        surface_.renderNow();
+
+        assertTrue(surface_.placeAt(widget, row, col), description);
+        surface_.renderNow();
+        final FloatingSurface.Cell origin = surface_.origin(widget);
+        assertEquals(Math.min(Math.max(1, row), term.getHeight()), origin.row(), description + " (row)");
+        assertEquals(Math.min(Math.max(1, col), term.getWidth()), origin.col(), description + " (col)");
+        term.close();
+    }
+
+    @Test
+    public void testAWidgetOffersExactlyTwoHandles() throws Exception {
+        final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        final Terminal term = dragTerminal(out);
+        final FloatingSurface surface_ = new FloatingSurface(term);
+        final AccordionWidget widget = new AccordionWidget("handle", "one\ntwo\nthree");
+        surface_.add(widget, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        surface_.renderNow();
+
+        // Scan the terminal rather than guess at the box: exactly two cells of a widget
+        // are handles — its top-left (MOVE, the chevron) and its bottom-right (RESIZE,
+        // the corner marker).  Everything else stays free for clicks and scrolling.
+        final java.util.List<String> handles = new java.util.ArrayList<>();
+        for (int row = 1; row <= term.getHeight(); row++)
+            for (int col = 1; col <= term.getWidth(); col++) {
+                final FloatingSurface.Handle handle = surface_.handleAt(widget, row, col);
+                if (null != handle) handles.add(row + "," + col + ":" + handle);
+            }
+        assertEquals(2, handles.size(), "one move handle and one resize handle: " + handles);
+
+        final FloatingSurface.Cell origin = surface_.origin(widget);
+        assertEquals(origin.row() + "," + origin.col() + ":MOVE", handles.get(0),
+                "the move handle is the widget's own top-left cell (the chevron)");
+        assertTrue(handles.get(1).endsWith(":RESIZE"), "the other is the resize handle: " + handles);
+        assertNull(surface_.handleAt(widget, origin.row(), origin.col() + 1),
+                "the body is not a handle — clicks there keep working");
+        assertNull(surface_.handleAt(widget, origin.row() + 1, origin.col()),
+                "and neither is the row below the chevron");
+        term.close();
+    }
+
+    /**
+     * A resize is measured from where the box already is — the slot's width is the base
+     * (nudge()'s convention) and the height cap, when there is one, is the other — and
+     * it is clamped to the lower bounds (a resize can never demolish a widget) and to
+     * the terminal (it cannot outgrow it).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "55 % 12   % the requested box is taken",
+            "999 % 999 % past the terminal, the box stops at it",
+            "1 % 1     % below the lower bounds, the widget keeps a body",
+    }, delimiter = '%')
+    public void testResizeClampsToTheTerminalAndTheLowerBounds(final int width, final int height,
+                                                                final String description) throws Exception {
+        final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        final Terminal term = dragTerminal(out);
+        final FloatingSurface surface_ = new FloatingSurface(term);
+        final AccordionWidget widget = new AccordionWidget("resize me", "one\ntwo\nthree");
+        surface_.add(widget, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        surface_.renderNow();
+
+        assertTrue(surface_.resizeTo(widget, width, height), description);
+        surface_.renderNow();
+        final FloatingSurface.Placement placement = surface_.placement(widget);
+        assertEquals(Math.min(Math.max(10, width), term.getWidth()), placement.width(),
+                description + " (width, floored at MIN_WIDTH and capped at the terminal)");
+        assertEquals(Math.min(Math.max(3, height), term.getHeight()), placement.height(),
+                description + " (height, floored at MIN_HEIGHT and capped at the terminal)");
+        term.close();
+    }
+
+    @Test
+    public void testResizingMovesTheFreeEdgeAndNotTheAnchoredOne() throws Exception {
+        final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        final Terminal term = dragTerminal(out);
+        final FloatingSurface surface_ = new FloatingSurface(term);
+        // 18 body lines (20 drawn rows) behind a 14-row cap, so raising the cap to 26
+        // grows the drawn box to the content's 20 rows — a cap only ever limits, which
+        // is why a resize that raises it past the content changes nothing
+        final AccordionWidget widget = new AccordionWidget("grower",
+                "l01\nl02\nl03\nl04\nl05\nl06\nl07\nl08\nl09\nl10\nl11\nl12\nl13\nl14\nl15\nl16\nl17\nl18");
+        widget.expand();
+        widget.style().height(14).applyStyle();
+        surface_.add(widget, FloatingSurface.Anchor.BOTTOM_RIGHT, 30, 0, 0);
+        surface_.renderNow();
+
+        final FloatingSurface.Cell before = surface_.origin(widget);
+        assertTrue(surface_.resizeTo(widget, 55, 26));
+        surface_.renderNow();
+        final FloatingSurface.Cell after = surface_.origin(widget);
+        assertTrue(after.col() < before.col(),
+                "a right-anchored box grows leftward: " + before.col() + " -> " + after.col());
+        assertTrue(after.row() < before.row(),
+                "and a bottom-anchored box grows upward: " + before.row() + " -> " + after.row());
+        term.close();
+    }
+
+    @Test
+    public void testAFixedWidgetIsNotResizable() throws Exception {
+        final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        final Terminal term = dragTerminal(out);
+        final FloatingSurface surface_ = new FloatingSurface(term);
+        final AccordionWidget widget = new AccordionWidget("pane-owned");
+        surface_.add(widget, 3, 5);
+        surface_.renderNow();
+        assertFalse(surface_.resizeTo(widget, 20, 8), "a fixed slot belongs to a pane layout");
+        term.close();
+    }
+
+    @Test
+    public void testAFixedWidgetIsNotDraggable() throws Exception {
+        final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        final Terminal term = dragTerminal(out);
+        final FloatingSurface surface_ = new FloatingSurface(term);
+        final AccordionWidget widget = new AccordionWidget("pane-owned");
+        surface_.add(widget, 3, 5);            // a fixed cell — a pane layout owns it
+        surface_.renderNow();
+
+        assertNull(surface_.placement(widget), "a fixed slot has no anchor to offset from");
+        assertFalse(surface_.placeAt(widget, 10, 10), "and cannot be moved by a drag");
+        term.close();
+    }
+
     @Test
     public void shouldKeepEveryPinnedWidgetKeyResolvableAcrossRepeatedRefloats() throws Exception {
         final Terminal term = TerminalBuilder.builder().dumb(true)

@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.isa.mach.type.ui.graphitty;
 
 import org.jline.utils.AttributedString;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.ByteArrayOutputStream;
@@ -36,6 +36,16 @@ public class Graphitty {
     // TODO: cherry pick from: https://gist.github.com/jonlabelle/7a76ecd29976aeb30877be326c683979
 
     public static final String RULE_SEPARATOR = "&";
+
+    /**
+     * {@code {{syntax:java}}} … {@code {{/syntax:java}}} — everything between the
+     * tags is foreign source: captured verbatim (the DSL is inert inside, so code
+     * carrying {@code {{…}}} or a {@code \{\}} arrives intact) and colorized by
+     * {@link Highlighter#highlightBlock(String, String)}, which maps the language
+     * token to a {@code conf/nanorc} syntax file.  The end tag must name the same
+     * language as the open tag.
+     */
+    public static final String SYNTAX_RULE_PREFIX = "syntax:";
     public static final Map<String, String> CURSOR_REWRITES = new LinkedHashMap<>();
     private static final Graphitty GRAPHITTY_STDOUT = new Graphitty(System.out);
 
@@ -103,6 +113,34 @@ public class Graphitty {
     private final Stack<String> rewriteStack = new Stack<>();
     private boolean ansiOn = true;
 
+    /**
+     * Language of the {@code {{syntax:lang}}} block currently being captured, or
+     * {@code null} when not inside one.
+     */
+    private String syntaxLanguage;
+
+    /**
+     * Literal text of the block being captured, or {@code null} when not inside one —
+     * the buffer itself is the "capturing" state.  Only LITERAL text lands here: the
+     * markup of the surrounding document (a widget's borders, a colour, a cursor
+     * code) still applies inside a block, which is what lets a widget decorate the
+     * lines of a block it is drawing.  See {@link #flushSyntax(boolean)}.
+     */
+    private StringBuilder syntaxBlock;
+
+    /** Colorizer of the block being captured, carrying jline's multi-line state across the seams. */
+    private Highlighter.Block syntaxSession;
+
+    /** Set once markup split a block into pieces, so the block is no longer one text. */
+    private boolean syntaxFragmented;
+
+    /**
+     * {@link #parseDSL} recursion depth (a rule rewrite re-enters it).  A block
+     * left open belongs to the outermost call, which flushes it: an unterminated
+     * block renders, it does not throw.
+     */
+    private int parseDepth;
+
     public Graphitty(final Map<String, String> rewrites, final OutputStream out) {
         this.out = out;
         this.rewrites = new HashMap<>();
@@ -165,7 +203,7 @@ public class Graphitty {
         Graphitty.terminalWriter = writer;
     }
     
-    public static Graphitty stdout() {
+   /* public static Graphitty stdout() {
         return GRAPHITTY_STDOUT;
     }
 
@@ -183,7 +221,7 @@ public class Graphitty {
         }
         ret.append("{{^").append(backs.size()).append("}}");
         return ret.toString();
-    }
+    }*/
 
     public String writeToString(final String f, final Object... args) {
         this.parseDSL(f.formatted(args));
@@ -193,6 +231,12 @@ public class Graphitty {
     }
 
     public static String string(final String f, final Object... args) {
+        // The format call belongs INSIDE the try: a literal percent in the text
+        // (a payload, an exception message, a log line) raises
+        // UnknownFormatConversionException, and the fallback below — which escapes
+        // percents and formats again — is what makes it literal.  Hoisting the
+        // call out of the try makes that fallback unreachable (GraphittyLogger's
+        // "logging must never break its caller" tests catch exactly this).
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             final Graphitty temp = new Graphitty(out);
             temp.parseDSL(f.formatted(args));
@@ -208,11 +252,6 @@ public class Graphitty {
             }
         }
     }
-
-    public static String string(final Obj obj) {
-        return new ObjmtronSerializer().write(obj);
-    }
-
 
     public static String sillyPrint(final String text, final boolean rainbow, final boolean rollercoaster) {
         final Random random = new Random();
@@ -262,21 +301,8 @@ public class Graphitty {
         return strip(string).length();
     }
 
-    public void removeRewrites(final Map<String, String> deadRewrites) {
-        deadRewrites.forEach((k, v) -> {
-            this.rewrites.remove(k);
-        });
-    }
-
-    public void addRewrites(final Map<String, String> newRewrites) {
-        this.rewrites.putAll(newRewrites);
-    }
-
-    public void clearRewrites() {
-        this.rewrites.clear();
-    }
-
     private void parseDSL(final String buffer) {
+        this.parseDepth++;
         try {
             final int bufferLength = buffer.length();
             for (int i = 0; i < bufferLength; i++) {
@@ -289,7 +315,7 @@ public class Graphitty {
                     // getBytes(UTF_8), so a char-by-char write corrupts 🐿 to "??".
                     final int cp = buffer.codePointAt(i);
                     final int width = Character.charCount(cp);
-                    this.out.write(new String(Character.toChars(cp)).getBytes(StandardCharsets.UTF_8));
+                    this.emit(new String(Character.toChars(cp)));
                     i += width - 1;
                     continue;
                 }
@@ -308,7 +334,7 @@ public class Graphitty {
                         this.print("}");
                         i++;
                     } else {
-                        this.out.write(buffer.charAt(i));
+                        this.emit(buffer.charAt(i));
                     }
                 } else if (i + 4 < buffer.length() &&
                         buffer.charAt(i) == '{' &&
@@ -325,6 +351,30 @@ public class Graphitty {
                         }
                         rule.append(buffer.charAt(m));
                         i = m;
+                    }
+                    // {{syntax:java}} … {{/syntax:java}}: the literal text between the tags
+                    // is source code, colorized from that language's conf/nanorc file.  The
+                    // tags are handled in BOTH modes — rendering captures the code to colorize
+                    // it, measuring captures it to keep it, so strip() measures what a terminal
+                    // shows.  Inside a block the rest of the markup still applies; a rule
+                    // therefore flushes the code captured so far BEFORE it is emitted, which
+                    // keeps code and decoration in buffer order.  A rule only opens a block
+                    // when it STARTS with the prefix: {{/syntax:java}} (and any other rule
+                    // merely containing it) names no language.
+                    if (null != this.syntaxBlock) {
+                        if (rule.indexOf("/" + SYNTAX_RULE_PREFIX) == 0) {
+                            if (("/" + SYNTAX_RULE_PREFIX + this.syntaxLanguage).contentEquals(rule)) {
+                                this.closeSyntax();
+                                continue;   // the end tag closes the block here and is not a rule of its own
+                            }
+                            throw MTronException.of("unmatched syntax wrap: %s != %s",
+                                    rule, "/" + SYNTAX_RULE_PREFIX + this.syntaxLanguage);
+                        }
+                        this.flushSyntax(true);
+                    } else if (rule.indexOf(SYNTAX_RULE_PREFIX) >= 0) {
+                        final String language = syntaxPiece(rule.toString());
+                        if (null != language)
+                            this.openSyntax(language);
                     }
                     if (this.ansiOn) {
                         Stream.of(rule.toString().split(RULE_SEPARATOR))
@@ -360,7 +410,11 @@ public class Graphitty {
                                             }
                                             return;
                                         }
-                                        this.rewriteStack.push(rulePiece);
+                                        // a block's own tag stays OFF the rewrite stack: markup
+                                        // inside the block pushes and pops above whatever encloses
+                                        // it, and the end tag is matched by name instead
+                                        if (!rulePiece.startsWith(SYNTAX_RULE_PREFIX))
+                                            this.rewriteStack.push(rulePiece);
                                         String r = this.rewrites.get(rulePiece);
                                         while (null != r && r.startsWith("{{") && r.endsWith("}}"))
                                             r = this.rewrites.get(r.substring(2, r.length() - 2));
@@ -378,10 +432,144 @@ public class Graphitty {
                     }
 
                 } else {
-                    this.out.write(buffer.charAt(i));
+                    this.emit(buffer.charAt(i));
                 }
             }
+            if (1 == this.parseDepth && null != this.syntaxLanguage)
+                this.closeSyntax();   // {{syntax:…}} left open: flush what was captured
             this.flush();
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        } finally {
+            this.parseDepth--;
+        }
+    }
+
+    /**
+     * Enter a block: the literal text that follows is source code of {@code language}.
+     * Nothing else changes — the markup of the surrounding document keeps working
+     * inside the block, which is how a widget draws its border through one.
+     */
+    private void openSyntax(final String language) {
+        this.syntaxLanguage = language.trim();
+        this.syntaxBlock = new StringBuilder();
+        // stateful: a block's text can reach us in pieces (a widget decorates its rows),
+        // and jline's multi-line rule state — a comment opened on an earlier line — must
+        // survive those seams
+        this.syntaxSession = this.ansiOn ? Highlighter.block(this.syntaxLanguage) : null;
+        this.syntaxFragmented = false;
+    }
+
+    /**
+     * Emit the code captured so far, colorized.
+     *
+     * <p>A block's text is split whenever the surrounding document states markup, so this
+     * is called mid-block as well as at its end.  Trailing whitespace is dropped from the
+     * colorized part and emitted as it is: at a markup boundary it is layout (the padding
+     * a widget puts before its border), and colouring it would paint the padding.
+     *
+     * @param midBlock {@code true} when decoration follows and the block continues — the
+     *                 block is then no longer a single text and needs the stateful
+     *                 colorizer rather than a memoized whole-block pass
+     */
+    private void flushSyntax(final boolean midBlock) {
+        if (null == this.syntaxBlock || this.syntaxBlock.isEmpty()) return;
+        final String pending = this.syntaxBlock.toString();
+        this.syntaxBlock.setLength(0);
+        if (midBlock) this.syntaxFragmented = true;
+        final int end = trimTrailingWhitespace(pending);
+        final String code = pending.substring(0, end);
+        if (!code.isEmpty())
+            this.writeRaw(null == this.syntaxSession ? code : this.syntaxSession.highlight(code));
+        if (end < pending.length())
+            this.writeRaw(pending.substring(end));
+    }
+
+    private static int trimTrailingWhitespace(final String string) {
+        int end = string.length();
+        while (end > 0 && Character.isWhitespace(string.charAt(end - 1))) end--;
+        return end;
+    }
+
+    /**
+     * Close the block: emit what it captured, then restore the rule that encloses it —
+     * the same stack discipline {@code {{/rule}}} follows, so a block inside
+     * {@code {{c}}…{{/c}}} leaves the cyan running after it.
+     */
+    private void closeSyntax() {
+        final String language = this.syntaxLanguage;
+        this.syntaxLanguage = null;
+        final Highlighter.Block session = this.syntaxSession;
+        final boolean fragmented = this.syntaxFragmented;
+        this.syntaxSession = null;
+        this.syntaxFragmented = false;
+        if (!this.ansiOn) {
+            this.flushSyntax(false);
+            this.syntaxBlock = null;
+            return;
+        }
+        if (fragmented) {
+            this.syntaxSession = session;
+            this.flushSyntax(false);
+        } else {
+            // nothing drew inside the block: the whole text is one pass, and a pass
+            // repeated on every render of a widget is what the block memo exists for
+            final String code = this.syntaxBlock.toString();
+            if (!code.isEmpty())
+                this.writeRaw(Highlighter.highlightBlock(language, code));
+        }
+        this.syntaxBlock = null;
+        // what resumes after the block is the rule the stack leads with — the same restore
+        // {{/rule}} performs, and the reason a block inside {{c}}…{{/c}} stays cyan
+        String reset = this.rewriteStack.isEmpty() ? null : this.rewrites.get(this.rewriteStack.peek());
+        reset = null == reset ? this.rewrites.get("X") : reset.replace("\033[", "\033[0;");
+        if (null != reset)
+            this.parseDSL(reset);
+    }
+
+    /**
+     * The language a rule names ({@code r&syntax:java} → {@code java}), or {@code null}
+     * when the rule names none — a close tag, or any rule merely containing the prefix.
+     */
+    private static String syntaxPiece(final String rule) {
+        return Stream.of(rule.split(RULE_SEPARATOR))
+                .filter(piece -> piece.startsWith(SYNTAX_RULE_PREFIX))
+                .findFirst()
+                .map(piece -> piece.substring(SYNTAX_RULE_PREFIX.length()))
+                .orElse(null);
+    }
+
+    /**
+     * Emit one literal character: into the block being captured when there is one (it is
+     * code), otherwise straight to the output stream.
+     */
+    private void emit(final char c) {
+        if (null != this.syntaxBlock) {
+            this.syntaxBlock.append(c);
+            return;
+        }
+        try {
+            this.out.write(c);
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    /** Emit literal text (a code point above ASCII, written as UTF-8). */
+    private void emit(final String string) {
+        if (null != this.syntaxBlock)
+            this.syntaxBlock.append(string);
+        else
+            this.writeRaw(string);
+    }
+
+    /**
+     * Write text that is already rendered (ANSI escapes and all) without parsing it as
+     * DSL — colorized code is terminal-bound, not markup.
+     */
+    private void writeRaw(final String string) {
+        try {
+            this.out.write(string.getBytes(StandardCharsets.UTF_8));
         } catch (final Exception e) {
             throw MTronException.of(e);
         }

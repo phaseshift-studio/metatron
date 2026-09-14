@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 import org.jline.terminal.Cursor;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
+import studio.phaseshift.metatron.isa.m.type.reflect.SpaceRec;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
@@ -44,7 +44,7 @@ import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_ACCORDION_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class AccordionWidget extends JRec<AccordionWidget> implements Widget<AccordionWidget> {
+public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget<AccordionWidget> {
 
     private static final Obj K_TITLE = uri("title");
     private static final Obj K_BODY = uri("body");
@@ -54,39 +54,18 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     private static final String EXPAND_INDICATOR = "[-]";
     private static final String COLLAPSE_INDICATOR = "[+]";
 
-    private Style<AccordionWidget> style = Style.empty();
-    private int lastRenderHeight;
-    private Cursor cursor;
+    // No state fields: `title`, `body`, `expanded` and `style` are the rec's
+    // (title/body are declared by the accordion type, style by the widget base),
+    // and that is the only copy.  Nothing here needs rehydrating because nothing
+    // here holds data.
 
-    /**
-     * Buffered appends — coalesced to avoid O(n²) string joining and per-line Router reads.
-     */
-    private StringBuilder pendingBuffer = new StringBuilder();
-    private static final int BUFFER_FLUSH_THRESHOLD = 4096;
-
-    // ── JRec constructor ───────────────────────────────────────────
+    // ── constructor ────────────────────────────────────────────────
 
     public AccordionWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(new ConcurrentHashMap<>(jvm), tid, vid);
-        if (this.style.border() == Border.none) this.style.border(Border.continuous);
-        if (this.style.foreground().isEmpty()) this.style.foreground("{{g}}");
-        // Pull style config (incl. float) from the JVM so run() sees it
-        readStyle();
-    }
-
-    /**
-     * JRec rehydration (a widget read back from a serialized space) bypasses the
-     * constructor, so the plain-Java transient fields are left null.  Restore
-     * them before any method touches {@link #style} or {@link #pendingBuffer}.
-     */
-    private void ensureRehydrated() {
-        if (null == this.style) {
-            this.style = Style.empty();
-            if (this.style.border() == Border.none) this.style.border(Border.continuous);
-            if (this.style.foreground().isEmpty()) this.style.foreground("{{g}}");
-        }
-        if (null == this.pendingBuffer)
-            this.pendingBuffer = new StringBuilder();
+        // The style lives in the rec (materialised with this widget's defaults
+        // on first construction), never in a Java field a re-hydration loses.
+        this.readStyle();
     }
 
     // ── convenience constructors ───────────────────────────────────
@@ -109,138 +88,68 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
     // ── state mutators (write through to persistent store) ─────────
 
     public void expand() {
-        jvmWrite(K_EXP, bool(true));
+        this.put(K_EXP, bool(true));
     }
 
     public void collapse() {
-        jvmWrite(K_EXP, bool(false));
+        this.put(K_EXP, bool(false));
     }
 
     public void toggle() {
-        jvmWrite(K_EXP, bool(!this.isExpanded()));
+        this.put(K_EXP, bool(!this.isExpanded()));
     }
 
     public AccordionWidget title(final String t) {
-        jvmWrite(K_TITLE, str(t));
+        this.put(K_TITLE, str(t));
         return this;
     }
 
     public AccordionWidget body(final String text) {
-        ensureRehydrated();
-        synchronized (this.pendingBuffer) {
-            this.pendingBuffer.setLength(0);
-        }
-        jvmWrite(K_BODY, str(text != null ? text : ""));
+        this.put(K_BODY, str(text != null ? text : ""));
         return this;
     }
 
     /**
-     * Append a line to the body. Lines are buffered in memory and flushed to the
-     * backing JVM when the buffer exceeds {@link #BUFFER_FLUSH_THRESHOLD} chars,
-     * or when {@link #flush()}, {@link #format()}, {@link #bodyLines()}, or
-     * {@link #height()} is called.
+     * Append text to the body — read the anchored lines, add, write back.  No
+     * Java-side buffer, no flush, no rehydration: the rec is the text, and this
+     * one merge is the only thing an append does.
      */
     public AccordionWidget appendLine(final String line) {
-        ensureRehydrated();
-        if (line == null || line.isEmpty()) return this;
-        boolean shouldFlush = false;
-        synchronized (this.pendingBuffer) {
-            if (this.pendingBuffer.length() > 0) {
-                this.pendingBuffer.append('\n');
-            }
-            this.pendingBuffer.append(line);
-            shouldFlush = this.pendingBuffer.length() >= BUFFER_FLUSH_THRESHOLD;
-        }
-        if (shouldFlush) {
-            flush();
-        }
-        return this;
-    }
-
-    /**
-     * Flush the pending append buffer to the JVM backing store.
-     * Idempotent — safe to call from render loops.
-     */
-    public AccordionWidget flush() {
-        ensureRehydrated();
-        final String pending;
-        synchronized (this.pendingBuffer) {
-            if (this.pendingBuffer.length() == 0) return this;
-            pending = this.pendingBuffer.toString();
-            this.pendingBuffer.setLength(0);
-        }
-        // I/O outside the lock — read + merge + write
-        final Obj existing = field(jvmRead(), K_BODY);
-        final String existingStr = (existing != null && existing.isStr()) ? existing.strValue() : "";
-        final String newBody = existingStr.isEmpty() ? pending : existingStr + "\n" + pending;
-        jvmWrite(K_BODY, str(newBody));
+        if (null == line || line.isEmpty()) return this;
+        final List<String> lines = this.getLines(this.read(), K_BODY);
+        for (final String text : line.replace("\\n", "\n").split("\n", -1))
+            lines.add(text);
+        this.put(K_BODY, str(String.join("\n", lines)));
         return this;
     }
 
     // ── public accessors ───────────────────────────────────────────
 
-    /**
-     * A field read through the widget's SOURCE OF TRUTH.
-     *
-     * <p>{@code at()} reads the construction-time snapshot, which is the whole
-     * story for an ephemeral widget but wrong for a pinned, store-backed one
-     * ({@code accordion_widget::[...]@<think_widget>}): {@link #jvmWrite} lands
-     * a mutation in the space, so a read that does not go to the space would
-     * keep serving the pre-mutation value — an accordion would fold in the
-     * store and go on drawing itself unfolded.  Reads are taken through
-     * {@link #jvmRead()} (the same source {@code format()} renders from), with
-     * a uri-name fallback because a store round-trip need not preserve key
-     * identity.
-     */
-    private static Obj field(final Map<Obj, Obj> fields, final Obj key) {
-        final Obj direct = fields.get(key);
-        if (null != direct) return direct;
-        for (final Map.Entry<Obj, Obj> entry : fields.entrySet())
-            if (entry.getKey().isUri() && key.isUri()
-                    && entry.getKey().uriValue().equals(key.uriValue()))
-                return entry.getValue();
-        return null;
-    }
-
     public boolean isExpanded() {
-        return isExpanded(jvmRead());
-    }
-
-    private boolean isExpanded(final Map<Obj, Obj> fields) {
-        final Obj e = field(fields, K_EXP);
-        return null == e || !e.isBool() || e.boolValue();
+        return this.getBool(this.read(), K_EXP, true);
     }
 
     public String title() {
-        return title(jvmRead());
-    }
-
-    private String title(final Map<Obj, Obj> fields) {
-        final Obj t = field(fields, K_TITLE);
-        return null != t && t.isStr() ? t.strValue() : "";
+        return this.getStr(this.read(), K_TITLE);
     }
 
     public List<String> bodyLines() {
-        flush();
-        return this.readBody(jvmRead());
+        return this.getLines(this.read(), K_BODY);
     }
 
     public AccordionWidget clearBody() {
-        ensureRehydrated();
-        synchronized (this.pendingBuffer) {
-            this.pendingBuffer.setLength(0);
-        }
-        jvmWrite(K_BODY, str(""));
+        this.put(K_BODY, str(""));
         return this;
     }
 
     @Override
     public AccordionWidget cursor(final Cursor c) {
-        this.cursor = c;
-        return this;
+        return this;   // a layout hint for a parent widget (GridWidget); nothing reads it back
     }
 
-    /** Columns the {@code [-]} / {@code [+]} indicator occupies in the header. */
+    /**
+     * Columns the {@code [-]} / {@code [+]} indicator occupies in the header.
+     */
     private static final int INDICATOR_WIDTH = 3;
 
     /**
@@ -269,87 +178,79 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
 
     @Override
     public Style<AccordionWidget> getStyle() {
-        ensureRehydrated();
-        return this.style;
+        return Style.from(this.get(this.read(), STYLE_KEY));
     }
 
     @Override
     public AccordionWidget style(final Style<AccordionWidget> s) {
-        this.style = s;
-        if (this.style.border() == Border.none) this.style.border(Border.continuous);
-        if (this.style.foreground().isEmpty()) this.style.foreground("{{g}}");
+        final Style<AccordionWidget> st = null == s ? Style.empty() : s;
+        st.stylable = this;
+        if (st.border() == Border.none) st.border(Border.continuous);
+        if (st.foreground().isEmpty()) st.foreground("{{g}}");
+        this.put(STYLE_KEY, st);
         return this;
     }
 
     // ── lifecycle ──────────────────────────────────────────────────
 
+    /**
+     * A display widget must NOT take the default {@link Widget#close()}: that
+     * unfloats the widget from the console's surface, and {@code .display()}
+     * closes what it just ran — which would erase the widget it just pinned.
+     */
     @Override
     public void close() {
-        if (this.lastRenderHeight > 0) {
-            Graphitty.out(Console.getTerminal().output(), "\033[" + this.lastRenderHeight + "A\033[J");
-            this.lastRenderHeight = 0;
-        }
     }
 
     @Override
     public int height() {
-        flush();
-        final long __p0 = System.nanoTime();
-        final Map<Obj, Obj> fields = jvmRead();
-        final long __p1 = System.nanoTime();
-        if (!this.isExpanded(fields)) return 2;
-        final List<String> lines = this.displayLines(fields);
+        final Map<Obj, Obj> fields = this.read();   // one anchored read, like format()
+        if (!this.getBool(fields, K_EXP, true)) return 2;
+        final List<String> lines = this.displayLines(this.getLines(fields, K_BODY),
+                Style.from(this.get(fields, STYLE_KEY)));
         return lines.isEmpty() ? 2 : lines.size() + 2;
     }
 
     /**
      * Body lines after word-wrap (if floatWidth is set on the style).
      */
-    private List<String> displayLines(final Map<Obj, Obj> fields) {
-        final List<String> body = this.readBody(fields);
-        final int floatW = this.style.width();
+    private List<String> displayLines(final List<String> body, final Style<AccordionWidget> style) {
+        final int floatW = style.width();
         if (floatW <= 0) return body;
         return Stylable.Style.wrapLines(body, floatW - 3);
     }
 
     /**
-     * Read the body from the rec, resolving any auto_ expression.
+     * Adopt the style the rec carries, materialising this widget's defaults into
+     * the rec when it carries none.  Read through {@link #read()} so an anchored
+     * widget adopts what the space holds, not a construction-time snapshot.
      */
-    private List<String> readBody(final Map<Obj, Obj> fields) {
-        final Obj b = field(fields, K_BODY);
-        final List<String> lines = new ArrayList<>();
-        if (b != null && !b.isNoObj()) {
-            if (b.isStr())
-                java.util.Arrays.asList(b.strValue().replace("\\n", "\n").split("\n", -1)).forEach(lines::add);
-            else
-                b.stream().filter(Obj::isStr).forEach(o -> lines.add(o.strValue()));
-        }
-        return lines;
-    }
-
     private void readStyle() {
-        final Obj s = this.at(uri("style"));
-        if (s != null && s.isRec()) {
-            final Style<AccordionWidget> st = Style.from(s.as());
-            st.stylable = this;
-            this.style(st);
+        final Obj s = this.get(this.read(), STYLE_KEY);
+        if (Style.isStyle(s)) {
+            this.style(Style.from(s));
+            return;
         }
+        final Style<AccordionWidget> fresh = Style.empty();
+        fresh.stylable = this;
+        fresh.border(Border.continuous);
+        fresh.foreground("{{g}}");
+        this.put(STYLE_KEY, fresh);
     }
 
     // ── rendering ──────────────────────────────────────────────────
 
     @Override
     public String format() {
-        ensureRehydrated();
-        flush();  // persist buffered appends before rendering
-        // ONE read of the source of truth for the whole pass: a store-backed
-        // widget must render (and toggle) from the space, not from a snapshot
+        // ONE anchored read for the whole pass: an anchored widget renders (and
+        // toggles) from the space, not from a construction-time snapshot
         final long __p0 = System.nanoTime();
-        final Map<Obj, Obj> fields = jvmRead();
+        final Map<Obj, Obj> fields = this.read();
         final long __p1 = System.nanoTime();
-        final String title = this.title(fields);
-        final boolean expanded = this.isExpanded(fields);
-        final List<String> body = this.readBody(fields);
+        final String title = this.getStr(fields, K_TITLE);
+        final boolean expanded = this.getBool(fields, K_EXP, true);
+        final List<String> body = this.getLines(fields, K_BODY);
+        final Style<AccordionWidget> style = Style.from(this.get(fields, STYLE_KEY));
 
         // A folded accordion shows nothing but its header, so the header says
         // how much it is holding: a folded box with text in it and a box with
@@ -359,21 +260,21 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
                 : (body.isEmpty() ? COLLAPSE_INDICATOR : COLLAPSE_INDICATOR + " " + body.size());
 
         // Latch instructions and style from JVM on first render
-        if (!jvmRead().containsKey(K_TOGGLE)) {
+        if (!this.read().containsKey(K_TOGGLE)) {
             readStyle();
-            this.at(K_TOGGLE, instLambda((l, i) -> {
+            this.put(K_TOGGLE, instLambda((l, i) -> {
                 this.toggle();
                 return noobj();
             }), MUTABLE);
-            this.at(uri("expand"), instLambda((l, i) -> {
+            this.put(uri("expand"), instLambda((l, i) -> {
                 this.expand();
                 return noobj();
             }), MUTABLE);
-            this.at(uri("collapse"), instLambda((l, i) -> {
+            this.put(uri("collapse"), instLambda((l, i) -> {
                 this.collapse();
                 return noobj();
             }), MUTABLE);
-            this.at(uri("append"), instLambda((l, i) -> {
+            this.put(uri("append"), instLambda((l, i) -> {
                 this.appendLine(l.isStr() ? l.strValue() : "");
                 // Defer rendering to the Console prompt cycle — rendering
                 // mid-stream fights with the console cursor.
@@ -385,20 +286,20 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
         }
 
         // Width: use floatWidth from style if set, else compute from content
-        final int floatW = this.style.width();
-        final List<String> displayLines = floatW > 0 ? displayLines(fields) : new ArrayList<>(body);
+        final int floatW = style.width();
+        final List<String> displayLines = floatW > 0 ? displayLines(body, style) : new ArrayList<>(body);
         final long __p2 = System.nanoTime();
         if (Boolean.getBoolean("metatron.render.trace"))
-            System.err.println("[render]   acc jvmRead=" + (__p1 - __p0) / 1_000_000
+            System.err.println("[render]   acc anchored-read=" + (__p1 - __p0) / 1_000_000
                     + "ms body=" + (__p2 - __p1) / 1_000_000 + "ms lines=" + displayLines.size());
         final int bodyWidth = displayLines.stream().map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
         final int titleW = Highlighter.visualLength(title) + Highlighter.visualLength(ind) + 3;
         final int width = floatW > 0 ? Math.max(titleW, Math.min(Math.max(1, floatW - 2), bodyWidth + 3))
                 : Math.max(titleW, bodyWidth + 3);
 
-        final Border border = this.style.border() == Border.none ? Border.continuous : this.style.border();
+        final Border border = style.border() == Border.none ? Border.continuous : style.border();
         // read the highlight language ONCE per pass, not once per body line
-        final String language = this.style.highlight();
+        final String language = style.highlight();
         final StringBuilder sb = new StringBuilder();
 
         if (expanded && !displayLines.isEmpty()) {
@@ -406,7 +307,7 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
             sb.append("\n");
             for (final String line : displayLines) {
                 sb.append(Widget.X).append(border.leftSide()).append(Widget.X)
-                        .append(this.style.foreground()).append(" ").append(Highlighter.highlightLine(language, line))
+                        .append(style.foreground()).append(" ").append(Highlighter.highlightLine(language, line))
                         .repeat(" ", Math.max(0, width - Highlighter.visualLength(line) - 1))
                         .append(Widget.X).append(border.rightSide()).append(Widget.X).append("\n");
             }
@@ -439,20 +340,11 @@ public class AccordionWidget extends JRec<AccordionWidget> implements Widget<Acc
 
     @Override
     public String renderInPlace() {
-        final String f = this.format();
-        final int n = f.split("\n").length;
-        final StringBuilder sb = new StringBuilder();
-        if (this.lastRenderHeight > 0) {
-            sb.append("\033[").append(this.lastRenderHeight).append("A\033[J");
-        }
-        sb.append(f).append("\n");
-        this.lastRenderHeight = n + 1;
-        return sb.toString();
+        return this.format() + "\n";
     }
 
     @Override
     public String renderFresh() {
-        this.lastRenderHeight = 0;
         return this.format() + "\n";
     }
 }

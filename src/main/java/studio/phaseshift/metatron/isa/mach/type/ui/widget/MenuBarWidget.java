@@ -61,23 +61,19 @@ public class MenuBarWidget extends AbstractWidget<MenuBarWidget> {
     }
 
     private void readStyle() {
-        final Obj s = this.at(uri("style"));
-        if (s != null && s.isRec()) {
-            final Style<MenuBarWidget> st = Style.from(s.as());
-            st.stylable = this;
-            this.style(st);
-        }
+        final Obj s = this.get(this.read(), STYLE_KEY);
+        if (Style.isStyle(s)) this.style(Style.from(s));
     }
 
     public MenuBarWidget lines(final AbstractLineWidget<?>... lineWidgets) {
         final Obj[] objs = new Obj[lineWidgets.length];
         for (int i = 0; i < lineWidgets.length; i++) objs[i] = lineWidgets[i];
-        jvmWrite(K_LINES, lst(objs));
+        this.put(K_LINES, lst(objs));
         return this;
     }
 
     public MenuBarWidget height(final int height) {
-        jvmWrite(K_HEIGHT, jnt(Math.max(1, height)));
+        this.put(K_HEIGHT, jnt(Math.max(1, height)));
         return this;
     }
 
@@ -85,9 +81,10 @@ public class MenuBarWidget extends AbstractWidget<MenuBarWidget> {
     public String format() {
         final Obj h = this.at(K_HEIGHT);
         final int barHeight = null != h && h.isInt() ? Math.max(1, h.asInt().intValue().intValue()) : 1;
-        final Border border = this.style.border();
-        final String fg = this.style.foreground();
-        final String bg = this.style.background();
+        final Style<MenuBarWidget> style = this.getStyle();
+        final Border border = style.border();
+        final String fg = style.foreground();
+        final String bg = style.background();
         final boolean bordered = null != border && border != Border.none;
         // Query the terminal at render time (not the construction-time snapshot),
         // so a menu bar built before the console is ready still spans full width.
@@ -176,7 +173,7 @@ public class MenuBarWidget extends AbstractWidget<MenuBarWidget> {
         // Menu bars are persistent chrome: give them the highest z-index so
         // overlapping floating widgets (e.g. a tall bottom-anchored accordion
         // that grows up into the bar's row) never paint over the bar.
-        this.style.zIndex(Integer.MAX_VALUE);
+        this.style().zIndex(Integer.MAX_VALUE);
         // top=-1 pulls the bar to terminal row 1; FloatingSurface TOP anchors
         // resolve to 2 + offsetRow, leaving a buffer row above by default.
         this.floatAt(surface, FloatingSurface.Anchor.TOP_LEFT, width, -1, 0);

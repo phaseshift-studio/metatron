@@ -1,3 +1,0 @@
-include /usr/share/nano/*.nanorc
-include mtron.nanorc
-include java.nanorc

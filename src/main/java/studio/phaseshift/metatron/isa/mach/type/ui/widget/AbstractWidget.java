@@ -26,42 +26,42 @@ import org.jline.utils.Display;
 import org.jline.utils.InfoCmp;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
+import studio.phaseshift.metatron.isa.m.type.reflect.SpaceRec;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.Map;
 
-/*
+/**
+ * The base for interactive widgets and tools: a {@link SpaceRec}, so state is rec
+ * keys and the two rules of {@code SpaceRec} (one read path, one write path) apply
+ * here too.  What is left in Java are collaborators and per-render scratch — the
+ * terminal, its {@link Display}, the saved terminal {@link Attributes}, and the pane
+ * bounds the console sets before a redraw — none of which is widget data.
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public abstract class AbstractWidget<W extends AbstractWidget<W>> extends JRec<W> implements Widget<W> {
+public abstract class AbstractWidget<W extends AbstractWidget<W>> extends SpaceRec<W> implements Widget<W> {
 
     public AbstractWidget() {
-        // A mutable map is required so that jvmWrite() (the single source of
-        // truth for widget data) can populate it on ephemeral (vid-less) widgets.
+        // the map must be mutable: the write path installs into this rec
         this(new java.util.LinkedHashMap<>(), studio.phaseshift.metatron.isa.m.mInstSet.REC_TID, null);
     }
 
     public AbstractWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.size = null == this.terminal ? new Size() : this.terminal.getSize();
-        this.cursor = new Cursor(0, 0);
         // The jline Display is terminal-bound (its ctor calls getStringCapability).
         // Defer creating it until a terminal is actually available so headless
         // construction (e.g. type::rec in an MCP/agent eval) still yields a Widget.
         if (null != this.terminal) {
+            final Size size = this.terminal.getSize();
             this.display = new Display(this.terminal, false);
-            this.display.resize(this.size.getRows(), this.size.getColumns());
+            this.display.resize(size.getRows(), size.getColumns());
         }
     }
 
     protected Terminal terminal = Console.getTerminal();
-    protected Style<W> style = Style.empty();
-    protected Size size;
     protected Display display;
-    protected Cursor cursor;
     protected Attributes attributes;
 
     // Pane bounds - set when this widget should be confined to a specific pane region.
@@ -72,11 +72,6 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> extends JRec<W
     protected int paneAvailWidth = -1;
 
     /**
-     * Tracks the number of lines the last render consumed, for in-place updates.
-     */
-    private int lastRenderHeight;
-
-    /**
      * Returns an ANSI string that renders this widget in-place, overwriting the
      * previous render.  On the first call (or after {@link #renderFresh()}) this
      * behaves like a normal render.  On subsequent calls the cursor moves up to
@@ -85,27 +80,13 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> extends JRec<W
      * @return ANSI-escaped string suitable for writing directly to the terminal
      */
     public String renderInPlace() {
-        final String formatted = this.format();
-        final int newLines = formatted.split("\n").length;
-
-        final StringBuilder sb = new StringBuilder();
-        if (this.lastRenderHeight > 0) {
-            sb.append("\033[").append(this.lastRenderHeight).append("A"); // move up
-            sb.append("\033[J"); // clear from cursor to end of screen
-        }
-        sb.append(formatted).append("\n");
-        this.lastRenderHeight = newLines + 1; // +1 for the trailing newline
-        return sb.toString();
+        return this.format() + "\n";
     }
 
     /**
-     * Resets the in-place tracking and returns a fresh render string.
-     * Useful after other output has been written to the terminal.
-     *
      * @return the widget's formatted output with a trailing newline
      */
     public String renderFresh() {
-        this.lastRenderHeight = 0;
         return this.format() + "\n";
     }
 
@@ -151,50 +132,31 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> extends JRec<W
         return new WidgetCanvas(this, previousTotalHeight);
     }
 
-    /**
-     * Erase the widget's rendered area.  Call from {@link #close()} instead
-     * of manually emitting cursor-movement escape sequences.
-     *
-     * <p>In <b>absolute mode</b> (pane bounds set) this is a no-op: the
-     * pane layout will be restored by the console's {@code renderPanes()}
-     * call that follows every widget invocation.
-     *
-     * <p>In <b>relative mode</b> the cursor is moved up to the start of the
-     * widget area, all rendered lines are cleared, and the cursor is
-     * repositioned ready for the caller to redraw the prompt.
-     *
-     * @param totalHeightUsed the value returned by {@link WidgetCanvas#finish()}
-     *                        in the last completed redraw cycle.
-     */
-    protected void eraseWidget(final int totalHeightUsed) {
-        if (hasPaneBounds() || totalHeightUsed <= 0) return;
-        // Relative mode: move up, clear each line, then position cursor at top
-        // so the caller can redraw the prompt at the same location.
-        final StringBuilder sb = new StringBuilder();
-        sb.append(Graphitty.string("{{^%d}}{{|1}}", totalHeightUsed));
-        for (int i = 0; i <= totalHeightUsed; i++) {
-            sb.append(Graphitty.string("{{-X-}}\n"));
-        }
-        sb.append(Graphitty.string("{{^%d}}{{|1}}", totalHeightUsed + 1));
-        Graphitty.out(terminal.output(), sb.toString());
-        terminal.writer().flush();
-    }
-
-
     @Override
     public Style<W> getStyle() {
-        return this.style;
+        return Style.from(this.get(this.read(), STYLE_KEY));
     }
 
     @Override
     public W cursor(final Cursor cursor) {
-        this.cursor = cursor;
+        // a position hint for a parent laying this widget out; nothing reads it
+        // back, so there is nothing to keep
         return (W) this;
     }
 
+    /**
+     * Bind a style to this widget and put it in the widget's rec.
+     *
+     * <p>The rec — not a Java field — is the home of the style, so a
+     * store-backed widget's look survives the re-hydration every
+     * {@code .display()} update performs, and anything that reads the widget's
+     * rec sees the same style the render does.
+     */
     @Override
     public W style(final Style<W> style) {
-        this.style = style;
+        final Style<W> s = null == style ? Style.empty() : style;
+        s.stylable = (W) this;
+        this.put(STYLE_KEY, s);
         return (W) this;
     }
 
@@ -204,14 +166,14 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> extends JRec<W
         this.terminal.puts(InfoCmp.Capability.keypad_xmit);
         this.terminal.writer().flush();
         //this.display.updateAnsi(Arrays.stream(this.format().split("\n")).map(Graphitty::string).toList(), -1);
-        final Widget<?> attachment = this.style.attachment();
+        final Widget<?> attachment = this.getStyle().attachment();
         if (attachment != null)
             attachment.run();
     }
 
     @Override
     public void close() {
-        final Widget<?> attachment = this.style.attachment();
+        final Widget<?> attachment = this.getStyle().attachment();
         if (null != attachment)
             attachment.close();
         //this.terminal.puts(InfoCmp.Capability.clear_screen);

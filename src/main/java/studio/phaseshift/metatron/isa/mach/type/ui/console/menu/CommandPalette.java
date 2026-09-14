@@ -858,10 +858,15 @@ public final class CommandPalette extends MRec {
                             if (console.getActiveWidget() != target) console.focusWidget(target);
                         }
                     } else if (event.getType() == org.jline.terminal.MouseEvent.Type.Pressed) {
-                        // A click: focus what is under the pointer, let the
-                        // widget work its own affordances, or — on empty
-                        // terminal — drop the focus entirely.
-                        console.clickAt(row, col);
+                        // A press on the focused widget's chevron takes hold of it to
+                        // drag; anything else is a click: focus what is under the
+                        // pointer, let the widget work its own affordances, or — on
+                        // empty terminal — drop the focus entirely.
+                        console.mousePressed(row, col);
+                    } else if (event.getType() == org.jline.terminal.MouseEvent.Type.Dragged) {
+                        console.mouseDragged(row, col);
+                    } else if (event.getType() == org.jline.terminal.MouseEvent.Type.Released) {
+                        console.mouseReleased(row, col);
                     }
                 } catch (final Exception e) {
                     // a malformed event must never break the input loop

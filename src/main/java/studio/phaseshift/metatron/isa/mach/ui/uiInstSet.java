@@ -50,9 +50,11 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -212,17 +214,20 @@ public class uiInstSet extends AbstractInstSet {
                                         .constructor(arg -> new ProgressTableWidget(arg.recValue(), UI_PROGRESS_TABLE_TID, arg.vid()))
                                         .create(),
                                 "a table of progress bars",
-                                "progress_table::[rows=>[[text=>'layer1',percent=>58.0],[text=>'layer2',percent=>23.0]]].run()"),
+                                "progress_table::[row=>[[text=>'layer1',percent=>58.0],[text=>'layer2',percent=>23.0]]].run()"),
                         docWrap(UI_TABLE_TYPE = Type.Builder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_TABLE_TID)
                                         .isaPredicate(rec(
                                                 uri(HEADER).maybe().asUri(), LST_TYPE,
-                                                uri(ROW).maybe(), T(LST_TID.maybeSome())))
+                                                uri(ROW).maybe(), T(LST_TID.maybeSome()),
+                                                // the data behind each displayed row, never drawn
+                                                uri(METADATA).maybe(), T(LST_TID.maybeSome())))
                                         .constructor(arg -> new TableWidget(arg.asRec().jvm(), UI_TABLE_TID, arg.vid())).create(),
                                 "maybe an obj", "a table widget",
                                 Map.of(uri(HEADER).maybe().asUri(), "a lst of obj table headers",
-                                        uri(ROW).maybe(), "a lst of poly table rows"),
+                                        uri(ROW).maybe(), "a lst of poly table rows",
+                                        uri(METADATA).maybe(), "a lst of rows of data behind the display"),
                                 "a tabular data widget"),
                         docWrap(UI_TREE_TYPE = Type.Builder.build()
                                         .tid(UI_WIDGET_TID)
@@ -230,12 +235,20 @@ public class uiInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri(ROOT), URI_TYPE,
                                                 uri(MAX), INT_TYPE,
-                                                uri(CODE).maybe(), ALL_TYPE.orElse(id_().tryToInst())))
+                                                uri(CODE).maybe(), ALL_TYPE.orElse(id_().tryToInst()),
+                                                // keys the widget reads: declaring them makes the
+                                                // contract explicit and their value types checked
+                                                uri(FLATTEN).maybe(), BOOL_TYPE,
+                                                uri(XREF).maybe(), REC_TYPE,
+                                                uri(EXPAND).maybe(), T(URI_TID.maybeSome())))
                                         .constructor(arg -> new TreeWidget(arg.as().jvm(), UI_TREE_TID, arg.vid()))
                                         .create(), "maybe an obj", "a tree widget",
                                 Map.of(uri(ROOT), "the root uri to traverse from",
                                         uri(MAX), "the max depth to traverse",
-                                        uri(CODE).maybe(), "transform obj prior to insertion into tree (default _)"),
+                                        uri(CODE).maybe(), "transform obj prior to insertion into tree (default _)",
+                                        uri(FLATTEN).maybe(), "fold single-folder chains into one path row (default false)",
+                                        uri(XREF).maybe(), "xref=>[max=>N, code=><call>] cross-reference decoration",
+                                        uri(EXPAND).maybe(), "branch uris whose children are read regardless of max"),
                                 "the root uri space is traversed to specified depth generating a tree data structure"),
                         docWrap(UI_SELECTOR_TYPE = Type.Builder.build()
                                         .tid(UI_WIDGET_TID)

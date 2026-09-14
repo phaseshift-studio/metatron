@@ -36,12 +36,12 @@ public abstract class AbstractLineWidget<W extends AbstractLineWidget<W>> extend
     public AbstractLineWidget() {
         super();
         // A line widget is always a single row tall.
-        this.style.height(1);
+        this.style().height(1);
     }
 
     public AbstractLineWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.style.height(1);
+        this.style().height(1);
         this.readStyle();
     }
 
@@ -52,17 +52,13 @@ public abstract class AbstractLineWidget<W extends AbstractLineWidget<W>> extend
     @Override
     public W style(final Style<W> style) {
         super.style(style);
-        this.style.height(1);
+        this.style().height(1);
         return (W) this;
     }
 
     protected void readStyle() {
-        final Obj s = this.at(uri("style"));
-        if (s != null && s.isRec()) {
-            final Style<W> st = Style.from(s.as());
-            st.stylable = (W) this;
-            this.style(st);
-        }
+        final Obj s = this.get(this.read(), STYLE_KEY);
+        if (Style.isStyle(s)) this.style(Style.from(s));
     }
 
     /**

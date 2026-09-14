@@ -107,6 +107,6 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
 
     @Override
     public String format() {
-        return this.style.attachment().format();
+        return this.getStyle().attachment().format();
     }
 }
