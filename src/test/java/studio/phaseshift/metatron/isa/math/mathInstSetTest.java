@@ -379,6 +379,163 @@ public class mathInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            // bare real to metric unit (no conversion — re-tagging only)
+            "5.0.as(meter::T)                                                                    % meter::5.0",
+
+            // mm conversions (identity and upward)
+            "mm::10.0.as(mm::T)                                                                  % mm::10.0",
+            "mm::10.0.as(cm::T)                                                                  % cm::1.0",
+            "mm::100.0.as(dm::T)                                                                 % dm::1.0",
+            "mm::1000.0.as(meter::T)                                                             % meter::1.0",
+            "mm::1000000.0.as(km::T)                                                             % km::1.0",
+
+            // cm conversions (downward, identity, and upward)
+            "cm::1.0.as(mm::T)                                                                   % mm::10.0",
+            "cm::10.0.as(cm::T)                                                                  % cm::10.0",
+            "cm::10.0.as(dm::T)                                                                  % dm::1.0",
+            "cm::100.0.as(meter::T)                                                              % meter::1.0",
+            "cm::100000.0.as(km::T)                                                              % km::1.0",
+
+            // dm conversions (downward, identity, and upward)
+            "dm::1.0.as(mm::T)                                                                   % mm::100.0",
+            "dm::1.0.as(cm::T)                                                                   % cm::10.0",
+            "dm::10.0.as(dm::T)                                                                  % dm::10.0",
+            "dm::10.0.as(meter::T)                                                               % meter::1.0",
+            "dm::10000.0.as(km::T)                                                               % km::1.0",
+
+            // meter conversions (downward, identity, and upward)
+            "meter::1.0.as(mm::T)                                                                % mm::1000.0",
+            "meter::1.0.as(cm::T)                                                                % cm::100.0",
+            "meter::1.0.as(dm::T)                                                                % dm::10.0",
+            "meter::1000.0.as(meter::T)                                                          % meter::1000.0",
+            "meter::1000.0.as(km::T)                                                             % km::1.0",
+
+            // km conversions (downward and identity)
+            "km::1.0.as(mm::T)                                                                   % mm::1000000.0",
+            "km::1.0.as(cm::T)                                                                   % cm::100000.0",
+            "km::1.0.as(dm::T)                                                                   % dm::10000.0",
+            "km::1.0.as(meter::T)                                                                % meter::1000.0",
+            "km::1.0.as(km::T)                                                                   % km::1.0",
+
+            // multi-step conversions (skip levels)
+            "mm::1500000.0.as(km::T)                                                             % km::1.5",
+            "mm::127.0.as(dm::T)                                                                 % dm::1.27",
+            "km::0.5.as(cm::T)                                                                   % cm::50000.0",
+
+            // inch conversions (identity and upward)
+            "inch::12.0.as(inch::T)                                                              % inch::12.0",
+            "inch::12.0.as(foot::T)                                                              % foot::1.0",
+            "inch::36.0.as(yard::T)                                                              % yard::1.0",
+            "inch::63360.0.as(mile::T)                                                           % mile::1.0",
+
+            // foot conversions (downward, identity, and upward)
+            "foot::1.0.as(inch::T)                                                               % inch::12.0",
+            "foot::12.0.as(foot::T)                                                              % foot::12.0",
+            "foot::3.0.as(yard::T)                                                               % yard::1.0",
+            "foot::5280.0.as(mile::T)                                                            % mile::1.0",
+
+            // yard conversions (downward, identity, and upward)
+            "yard::1.0.as(inch::T)                                                               % inch::36.0",
+            "yard::1.0.as(foot::T)                                                               % foot::3.0",
+            "yard::2.0.as(yard::T)                                                               % yard::2.0",
+            "yard::1760.0.as(mile::T)                                                            % mile::1.0",
+
+            // mile conversions (downward and identity)
+            "mile::1.0.as(inch::T)                                                               % inch::63360.0",
+            "mile::1.0.as(foot::T)                                                               % foot::5280.0",
+            "mile::1.0.as(yard::T)                                                               % yard::1760.0",
+            "mile::1.0.as(mile::T)                                                               % mile::1.0",
+
+            // multi-step conversions (skip levels)
+            "inch::18.0.as(foot::T)                                                              % foot::1.5",
+            "foot::6.0.as(yard::T)                                                               % yard::2.0",
+            "yard::2200.0.as(mile::T)                                                            % mile::1.25",
+            "mile::1.5.as(inch::T)                                                               % inch::95040.0",
+
+            // cross-system metric → imperial (bridged through 25.4 mm per inch)
+            "meter::1.0.as(inch::T)                                                              % inch::39.37007874015748",
+            "meter::1.0.as(foot::T)                                                              % foot::3.2808398950131235",
+            "meter::1.5.as(foot::T)                                                              % foot::4.921259842519685",
+            "mm::127.0.as(inch::T)                                                               % inch::5.0",
+            "cm::1.0.as(inch::T)                                                                 % inch::0.3937007874015748",
+            "dm::1.0.as(inch::T)                                                                 % inch::3.937007874015748",
+            "km::1.0.as(mile::T)                                                                 % mile::0.6213711922373341",
+            "km::1.0.as(foot::T)                                                                 % foot::3280.8398950131236",
+
+            // cross-system imperial → metric
+            "inch::1.0.as(mm::T)                                                                 % mm::25.4",
+            "inch::1.0.as(cm::T)                                                                 % cm::2.54",
+            "inch::1.0.as(dm::T)                                                                 % dm::0.254",
+            "inch::1.0.as(meter::T)                                                              % meter::0.0254",
+            "yard::1.0.as(meter::T)                                                              % meter::0.9144",
+            "mile::1.0.as(mm::T)                                                                 % mm::1609344.0",
+            "mile::1.0.as(meter::T)                                                              % meter::1609.344",
+            "mile::1.0.as(km::T)                                                                 % km::1.609344",
+
+            // within-system equality (routes through type constructors, not the as-instruction)
+            "foot::1.0.eq(inch::12.0)                                                            % true",
+            "yard::1.0.eq(foot::3.0)                                                             % true",
+            "mile::1.0.eq(yard::1760.0)                                                          % true",
+            "mile::1.0.eq(foot::5280.0)                                                          % true",
+            "meter::1.0.eq(mm::1000.0)                                                           % true",
+            "km::1.0.eq(meter::1000.0)                                                           % true",
+            "foot::12.0.eq(yard::1.0)                                                            % false",
+            "mm::5.0.eq(cm::1.0)                                                                 % false",
+
+            // nominal typing of metric and imperial units
+            "mm::5.0.matches(metric::T)                                                          % true",
+            "km::1.0.matches(metric::T)                                                          % true",
+            "inch::5.0.matches(imperial::T)                                                      % true",
+            "mile::1.0.matches(imperial::T)                                                      % true",
+            "mm::5.0.matches(imperial::T)                                                        % false",
+            "meter::5.0.matches(imperial::T)                                                     % false",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testDistanceConversions(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // below threshold — stays put
+            "mm::19.0.normalize()                       % mm::19.0",
+            "cm::15.0.normalize()                       % cm::15.0",
+            "dm::15.0.normalize()                       % dm::15.0",
+            "meter::1999.0.normalize()                  % meter::1999.0",
+
+            // cascade upward until stable
+            "mm::150.0.normalize()                      % cm::15.0",
+            "cm::25.0.normalize()                       % dm::2.5",
+            "dm::25.0.normalize()                       % meter::2.5",
+            "meter::2500.0.normalize()                  % km::2.5",
+
+            // already the largest unit — stays put
+            "km::1.5.normalize()                        % km::1.5",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testMetricNormalize(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // below threshold — stays put
+            "inch::23.0.normalize()                     % inch::23.0",
+            "foot::5.0.normalize()                      % foot::5.0",
+            "yard::3519.0.normalize()                   % yard::3519.0",
+
+            // cascade upward until stable
+            "inch::48.0.normalize()                     % foot::4.0",
+            "foot::15.0.normalize()                     % yard::5.0",
+            "yard::7200.0.normalize()                   % mile::4.090909090909091",
+
+            // already the largest unit — stays put
+            "mile::1.5.normalize()                      % mile::1.5",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testImperialNormalize(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
     @ParameterizedTest(name = "[{index}] {0} => {1}")
     @CsvSource(value = {
             // Winter date, negative offset

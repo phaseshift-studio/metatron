@@ -1,6 +1,6 @@
 ---
 name: math instruction set
-description: numeric constants, dates, time, space, and currency.
+description: numeric constants, dates, time, distance, space, and currency.
 ---
 
 # math instruction set (`/m/math`)
@@ -34,6 +34,19 @@ under `/m/math/+` and available via the standard type resolution system.
 | `currency::T`   | `real::T`       | currency base               |
 | `usd::T`        | `currency::T`   | united states currency      |
 | `euro::T`       | `currency::T`   | european union currency     |
+| *************** | *************** | *************************** |
+| `metric::T`     | `real::T`       | metric distance base        |
+| `mm::T`         | `metric::T`     | millimeter unit             |
+| `cm::T`         | `metric::T`     | centimeter (10 mm)          |
+| `dm::T`         | `metric::T`     | decimeter (10 cm)           |
+| `meter::T`      | `metric::T`     | meter (100 cm)              |
+| `km::T`         | `metric::T`     | kilometer (1000 m)          |
+| *************** | *************** | *************************** |
+| `imperial::T`   | `real::T`       | imperial distance base      |
+| `inch::T`       | `imperial::T`   | inch (25.4 mm)              |
+| `foot::T`       | `imperial::T`   | foot (12 inches)            |
+| `yard::T`       | `imperial::T`   | yard (3 feet)               |
+| `mile::T`       | `imperial::T`   | mile (1760 yards)           |
 
 ### dateTime (`/m/math/datetime`)
 
@@ -304,6 +317,149 @@ kB::1000.0.normalize()
 bB::1048576.0.normalize()
 kB::2048.0.normalize()
 tB::2048.0.normalize()
+```
+
+### metric (`/m/math/metric`)
+
+`metric::T` is a `real::T` refinement. The metric distance unit types (`mm::T` … `km::T`) convert to each other via
+`.as()` at decimal ratios (the base unit is the millimeter); a conversion preserves the total millimeters, changing
+only the unit label.
+
+#### conversion
+
+```mtron_pre
+[-- upward: value shrinks, unit grows --]
+mm::1000.0.as(meter::T)
+cm::100.0.as(meter::T)
+dm::10.0.as(meter::T)
+
+[-- downward: value grows, unit shrinks --]
+meter::1.0.as(cm::T)
+km::1.0.as(meter::T)
+
+[-- multi-step: levels can be skipped --]
+mm::1500000.0.as(km::T)
+km::0.5.as(cm::T)
+
+[-- cross-system: metric → imperial (25.4 mm = 1 inch) --]
+meter::1.0.as(inch::T)
+mm::127.0.as(inch::T)
+km::1.0.as(mile::T)
+
+[-- cross-system: imperial → metric --]
+inch::1.0.as(cm::T)
+yard::1.0.as(meter::T)
+mile::1.0.as(km::T)
+
+[-- bare real: re-label only, no conversion --]
+5.0.as(meter::T)
+```
+
+A converted value tests as its target unit:
+
+```mtron_pre
+mm::1000.0.as(meter::T).matches(meter::T)
+```
+
+#### relational operators
+
+```mtron_pre
+[-- equality across units --]
+mm::1000.0.eq(meter::1.0)
+cm::100.0.eq(meter::1.0)
+km::1.0.eq(mm::1000000.0)
+```
+
+#### normalize
+
+`normalize()` cascades upward while the value reaches ~2× the next larger unit, until stable:
+
+| from  | threshold | to    |
+|-------|-----------|-------|
+| mm    | ≥ 20      | cm    |
+| cm    | ≥ 20      | dm    |
+| dm    | ≥ 20      | meter |
+| meter | ≥ 2000    | km    |
+
+```mtron_pre
+[-- below threshold: unchanged --]
+mm::19.0.normalize()
+km::1.5.normalize()
+
+[-- cascade until stable --]
+mm::150.0.normalize()
+cm::25.0.normalize()
+dm::25.0.normalize()
+meter::2500.0.normalize()
+```
+
+### imperial (`/m/math/imperial`)
+
+`imperial::T` is a `real::T` refinement. The imperial distance unit types (`inch::T` … `mile::T`) convert to each other
+via `.as()` at exact ratios (the base unit is the inch); a conversion preserves the total inches, changing only the
+unit label.
+
+#### conversion
+
+```mtron_pre
+[-- upward: value shrinks, unit grows --]
+inch::12.0.as(foot::T)
+foot::3.0.as(yard::T)
+yard::1760.0.as(mile::T)
+
+[-- downward: value grows, unit shrinks --]
+foot::1.0.as(inch::T)
+yard::1.0.as(foot::T)
+mile::1.0.as(yard::T)
+
+[-- multi-step: levels can be skipped --]
+inch::18.0.as(foot::T)
+yard::2200.0.as(mile::T)
+mile::1.5.as(inch::T)
+
+[-- cross-system: imperial → metric (25.4 mm = 1 inch) --]
+inch::1.0.as(mm::T)
+foot::1.0.as(meter::T)
+mile::1.0.as(km::T)
+
+[-- bare real: re-label only, no conversion --]
+5.0.as(foot::T)
+```
+
+A converted value tests as its target unit:
+
+```mtron_pre
+inch::12.0.as(foot::T).matches(foot::T)
+```
+
+#### relational operators
+
+```mtron_pre
+[-- equality across units --]
+inch::12.0.eq(foot::1.0)
+yard::1.0.eq(foot::3.0)
+mile::1.0.eq(yard::1760.0)
+```
+
+#### normalize
+
+`normalize()` cascades upward while the value reaches ~2× the next larger unit, until stable:
+
+| from | threshold | to   |
+|------|-----------|------|
+| inch | ≥ 24      | foot |
+| foot | ≥ 6       | yard |
+| yard | ≥ 3520    | mile |
+
+```mtron_pre
+[-- below threshold: unchanged --]
+inch::23.0.normalize()
+mile::1.5.normalize()
+
+[-- cascade until stable --]
+inch::48.0.normalize()
+foot::15.0.normalize()
+yard::7200.0.normalize()
 ```
 
 **************************************************************************
