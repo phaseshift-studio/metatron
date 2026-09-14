@@ -253,10 +253,11 @@ public final class mcpMetatronBuilder {
                     .forEach(sr -> {
                         try {
                             final Map<String, List<String>> frontMatter = mSkill.parseFrontMatter(sr.content());
+                            final List<String> descriptionList = frontMatter.getOrDefault("description", List.of("no description"));
                             final Rec resource = rec(
                                     uri(URI), uri(sr.relativePath()),
                                     uri(NAME), str(frontMatter.getOrDefault(NAME, List.of(Path.of(sr.relativePath()).getFileName().toString())).getFirst()),
-                                    uri(DESC), str(frontMatter.getOrDefault("description", List.of("no description")).getFirst()));
+                                    uri(DESC), str(descriptionList.isEmpty() ? "no description" : descriptionList.getFirst()));
                             if (sr.content().length() > LARGE_RESOURCE_THRESHOLD) {
                                 // large resource — expose a reference to the file, not its inline content
                                 resource.at(uri(REFERENCE), str(skillDir.resolve(sr.relativePath()).toAbsolutePath().toString()), MUTABLE);
@@ -265,7 +266,7 @@ public final class mcpMetatronBuilder {
                             }
                             resources.jvm().put(uri(sr.relativePath()), resource);
                         } catch (final Exception e) {
-                            LOG.warn("unable to build resource: %s", e);
+                            LOG.warn("unable to build resource %s: %s", sr.relativePath(), e);
                         }
                     });
             jvm.put(uri(RESOURCE), resources);

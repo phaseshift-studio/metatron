@@ -29,12 +29,12 @@ isa.mach.type.ui.widget
 isa.mach.type.ui.console
   Console.java              ← REPL, terminal, pane tree, FloatingSurface integration
   StatusLine.java           ← terminal status bar
-  Highlighter.java          ← syntax highlighting + visualLength/unformat
+  Highlighter.java          ← syntax highlighting (language tokens + blocks) + visualLength/unformat
   ColonMenu.java            ← : commands including :float demo
 isa.mach.type.ui.console.menu
   ColonMenu.java            ← see above
 isa.mach.type.ui.graphitty
-  Graphitty.java            ← {{macro}} DSL → ANSI escapes
+  Graphitty.java            ← {{macro}} DSL → ANSI escapes, incl. {{syntax:lang}} blocks
 isa.mach.type.ui.tmux
   Pane.java                 ← tmux-style split pane
   PaneNode.java             ← pane tree interface
@@ -214,6 +214,7 @@ Style is a JVM-backed rec. Fields:
 | `border`        | uri             | simple, continuous, rounded, none, thick, hash, asterisk, period                                                                                 |
 | `background`    | str             | Graphitty color macro e.g. `{{[R]}}`                                                                                                             |
 | `foreground`    | str             | Graphitty color macro e.g. `{{g}}`                                                                                                               |
+| `highlight`     | str             | Syntax a widget colorizes its own body lines with — a `conf/nanorc` token (`mtron`, `java`, `python`, `txt`).  A line carrying a `{{syntax:…}}` tag is left to the whole-body pass (§ 4, § 9) |
 | `divider`       | str             | Column/row divider char                                                                                                                          |
 | `headerDivider` | str             | Header divider char                                                                                                                              |
 | `pointer`       | str             | Selection pointer e.g. `{{r}}>`                                                                                                                  |
@@ -678,7 +679,8 @@ silently no-ops. The compiler can't catch this because `Style extends MRec exten
 ## 9. Graphitty — terminal markup DSL (`Graphitty.java`)
 
 Graphitty is a lightweight macro-to-ANSI preprocessor used throughout the UI layer. Tags are written `{{...}}` and are
-stripped by `Graphitty.strip()` for visual-length calculations. The DSL supports three families of tags:
+stripped by `Graphitty.strip()` for visual-length calculations. The DSL supports four families of tags: colour and effect,
+cursor and screen, chaining with `&`, and `{{syntax:lang}}` blocks of foreign source.
 
 ### Colour / effect tags
 
@@ -718,6 +720,65 @@ stripped by `Graphitty.strip()` for visual-length calculations. The DSL supports
 | `{{*}}`   | `\033[?25h`     | show cursor                                  |
 | `{{.}}`   | `\033[?25l`     | hide cursor                                  |
 
+### Syntax blocks (`{{syntax:lang}}` … `{{/syntax:lang}}`)
+
+Everything between the tags is **foreign source code**: its literal text is captured and colorized from a `conf/nanorc`
+syntax file, and the tags themselves never reach the terminal.  The end tag must name the same language as the open tag.
+
+```java
+// colorize a block of source anywhere a string is drawn:
+"{{syntax:java}}" + source + "{{/syntax:java}}"
+```
+
+| Language token                                                                             | Resolves to                                     |
+|--------------------------------------------------------------------------------------------|-------------------------------------------------|
+| `java`, `python`, `yaml`, `sql`, `json`, `javascript`, `html`, `xml`, `markdown`, `mtron`   | `conf/nanorc/<token>.nanorc`                    |
+| `js` / `ts` → javascript, `py` → python, `yml` → yaml, `md` → markdown, `htm` → html        | the same files, short forms                     |
+| `txt`, `text`, `plain`, `none`, anything else                                               | no highlighting — the text is emitted as it is |
+
+A token names the **file**; jline is then asked for the syntax name that file *declares* (`syntax "Java"`), because jline
+matches a syntax name by exact equality — passing `java` straight through landed on a same-named system nanorc, or, on a
+host without one, on nothing at all.  A user file in `~/.metatron/<token>.nanorc` wins over the shipped one.  A new
+language needs both halves: `conf/nanorc/<language>.nanorc` **and** an `include <language>.nanorc` line in
+`conf/nanorc/jnanorc` — resolution reads the file, but jline only looks at the files `jnanorc` includes, so one that is
+missing from that list resolves to a syntax with no rules and the text is drawn plain.
+
+| Call                                         | Use                                                                              |
+|----------------------------------------------|----------------------------------------------------------------------------------|
+| `Highlighter.syntaxName(language)`           | the syntax a token resolves to; `null` means plain text                          |
+| `Highlighter.highlightBlock(language, code)` | a whole block in one pass, memoized                                              |
+| `Highlighter.block(language)`                | a stateful colorizer for a block that arrives in pieces                          |
+| `Highlighter.highlightLine(language, line)`  | one line of a body — a line with no syntax, or carrying a block tag, is handed back |
+
+Rules of the road:
+
+- **Markup still applies inside a block.**  A block is not a verbatim region: the markup of the document around it keeps
+  working through it, which is what lets a widget draw its border and its colours *through* the lines of a block it
+  renders.  Only literal text is code.  Code that has to *show* a tag escapes it — `\{\{b\}\}` renders as `{{b}}`.
+- **Measuring captures the block too**, with escapes off: the tags are dropped and the code is kept, so
+  `Graphitty.strip()`, `viewLength()` and `Highlighter.visualLength()` measure exactly what is drawn on the line.
+- **A block that is never closed** renders what it captured; the flush belongs to the outermost parse.  A tag alone on a
+  line is simply dropped — a widget measures its body line by line, so an end tag can arrive without its opener.
+- **A mismatched end tag reports** `unmatched syntax wrap: /syntax:sql != /syntax:java`, the same shape as any other
+  unmatched rule wrap.
+- **No nesting**: inside a block another `{{syntax:…}}` is markup like any other and does not open a second block.
+- **A rule that merely contains the prefix** — `{{/syntax:java}}`, `{{not_syntax:java}}` — names no language: a block opens
+  only on a rule that STARTS with `syntax:`.
+
+Trailing whitespace at a markup boundary is emitted outside the colouring: in a bordered body it is the widget's padding,
+and a syntax file that colours trailing whitespace would otherwise paint it.
+
+```java
+// a widget drawing its border through the block's lines — one block, two rows of it:
+"{{X}}│{{X}} {{syntax:java}}class A {" + padding + "{{X}}│{{X}}\n"
+  + "{{X}}│{{X}} int x = 42;" + padding + "{{X}}│{{X}}\n"
+  + "{{X}}│{{X}} {{/syntax:java}}{{X}}│{{X}}\n"
+// → the border is emitted in order, `int` is colorized, no tag text is drawn
+```
+
+`bin/test/console-syntax-block.steps` drives this in a real console — an accordion whose body is a block — and is the
+regression for the day a line-oriented pass split a block apart.
+
 ### Stack and chaining
 
 Every opened tag is **pushed onto a stack**. Closing with `{{/rule}}` pops the most-recently-opened matching rule and
@@ -727,6 +788,10 @@ a
 
 Tags separated by `&` are **chained** — `{{r&_}}` emits red-foreground (`\033[31m`)
 followed by underline (`\033[4m`), pushing both rules in left-to-right order.
+
+A `{{syntax:lang}}` block is the exception: it is matched **by name**, not by position, and never joins that stack.  So
+markup inside the block pushes and pops above whatever encloses it, the rule the stack leads with is what resumes after
+the block, and only the exactly-spelled `{{/syntax:lang}}` closes it.
 
 ```java
 // Stack example — closing restores the previous colour:
@@ -748,6 +813,9 @@ followed by underline (`\033[4m`), pushing both rules in left-to-right order.
 | `Graphitty.out(stream, f, args...)`     | Write a Graphitty string directly to an output stream.  Used by `WidgetCanvas.finish()` for the final flush.                                            |
 | `Graphitty.writeToTerminal(f, args...)` | Write through the serialized terminal-writer bridge (FloatingSurface-safe).                                                                             |
 | `Graphitty.viewLength(str)`             | Alias for `strip(str).length()`.                                                                                                                        |
+
+`Graphitty` owns the tags; what a `{{syntax:lang}}` block is colored *with* is `Highlighter`'s — see **Syntax blocks**
+above for `syntaxName`, `highlightBlock`, `block` and the line-oriented `highlightLine`.
 
 ### Typical widget usage
 

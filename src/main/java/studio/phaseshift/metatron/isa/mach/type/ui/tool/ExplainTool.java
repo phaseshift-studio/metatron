@@ -726,7 +726,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
     private void renderArgTablePopupLines(ExplainLevel level, WidgetCanvas canvas, String indent) {
         TableWidget tbl = level.argTablePopup;
         String popupIndent = indent + "  ";
-        List<String> headers = tbl.headers;
+        List<String> headers = tbl.headers();
         List<List<Object>> rows = tbl.rows();
 
         if (headers.isEmpty() && rows.isEmpty()) return;

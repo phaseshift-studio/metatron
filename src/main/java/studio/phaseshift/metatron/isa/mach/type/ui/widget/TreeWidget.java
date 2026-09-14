@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
+import studio.phaseshift.metatron.isa.m.type.reflect.SpaceRec;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -41,12 +41,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
+public class TreeWidget extends SpaceRec<TreeWidget> implements Widget<TreeWidget> {
 
-    private final List<TreeRow> rows = new ArrayList<>();
-    private Style<TreeWidget> style = Style.empty();
-    private Cursor cursor;
-    private Set<fURI> forceExpand = Set.of();
+    private static final Obj K_ROOT = uri(ROOT);
+    private static final Obj K_MAX = uri(MAX);
+    private static final Obj K_CODE = uri(CODE);
+    private static final Obj K_XREF = uri(XREF);
+    private static final Obj K_FLATTEN = uri(FLATTEN);
+    private static final Obj K_EXPAND = uri(EXPAND);
 
     /**
      * One precomputed row in the tree.  The {@code name} is what is rendered —
@@ -59,53 +61,54 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
         }
     }
 
-    // ── JRec constructor ───────────────────────────────────────────
+    // ── constructor ────────────────────────────────────────────────
 
     public TreeWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        if (this.style.border() == Border.none) this.style.border(Border.continuous);
-        readStyle();
+        this.readStyle();
     }
 
+    /**
+     * Adopt the style the rec carries, materialising this widget's defaults into
+     * the rec when it carries none.  Read through {@link #read()} so an anchored
+     * tree adopts what the space holds, not a construction-time snapshot.
+     */
     private void readStyle() {
-        final Obj s = this.at(uri("style"));
-        if (s != null && s.isRec()) {
-            final Style<TreeWidget> st = Style.from(s.as());
-            st.stylable = this;
-            this.style(st);
+        final Obj s = this.get(this.read(), STYLE_KEY);
+        if (Style.isStyle(s)) {
+            this.style(Style.from(s));
+            return;
         }
+        final Style<TreeWidget> fresh = Style.empty();
+        fresh.stylable = this;
+        fresh.border(Border.continuous);
+        this.put(STYLE_KEY, fresh);
     }
 
     /* ================================================================
      * Row building
      * ================================================================ */
 
-    private void ensureBuilt() {
-        this.buildRows();
-    }
-
     /**
-     * Set URIs whose children should always be read regardless of {@link #max}
-     * depth, enabling per-branch expansion.  Triggers a rebuild on next render.
+     * The rows of the tree, as a pure function of the rec.  There is no row cache:
+     * the widget's Java object is re-created whenever the rec changes, so a field
+     * could only ever hold a stale tree.  One {@link #read()} per pass, everything
+     * below derived from it.
      */
-    public void forceExpand(final Set<fURI> forceExpand) {
-        this.forceExpand = Objects.requireNonNull(forceExpand);
-    }
-
-    private void buildRows() {
-        rows.clear();
-        final Obj r = this.at(uri(ROOT));
+    private List<TreeRow> buildRows(final Map<Obj, Obj> fields) {
+        final List<TreeRow> rows = new ArrayList<>();
+        final Obj r = this.get(fields, K_ROOT);
         final fURI root = (r != null && r.isUri()) ? r.uriValue() : null;
-        if (null == root) return;
-        final Obj m = this.at(uri(MAX));
-        final int max = (m != null && m.isInt()) ? m.asInt().intValue().intValue() : 0;
-        final Obj c = this.at(uri(CODE));
+        if (null == root) return rows;
+        final int max = this.getInt(fields, K_MAX, 0);
+        final Obj c = this.get(fields, K_CODE);
         final Call code = (c != null && c.isObjCall()) ? c.as() : noobj();
-        final Border border = this.style.border();
+        final Border border = Style.from(this.get(fields, STYLE_KEY)).border();
+        final Set<fURI> expand = expansions(fields);
 
         // xref config: xref=>[max=>N, code=><call>].  Present (as a rec) enables the
         // cross-reference pass; absent keeps the historical behavior byte-for-byte.
-        final Obj xrefRec = this.at(uri(XREF));
+        final Obj xrefRec = this.get(fields, K_XREF);
         final boolean xrefEnabled = xrefRec != null && xrefRec.isRec();
         int xrefMax = 2;
         Call xrefCode = noobj();
@@ -117,13 +120,13 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
             if (xc != null && xc.isObjCall()) xrefCode = xc.as();
         }
 
-        if (this.flatten()) {
+        if (this.getBool(fields, K_FLATTEN, false)) {
             final List<CommonUtil.TreeEntry> entries = new ArrayList<>();
-            CommonUtil.treeConsumer(root, max, this.forceExpand, entries::add);
-            this.buildFlattenedRows(entries, code, border);
+            CommonUtil.treeConsumer(root, max, expand, entries::add);
+            this.buildFlattenedRows(rows, entries, code, border);
         } else {
             final boolean[] lastStack = new boolean[Math.max(max, 1) + 32]; // generous upper bound for expanded branches
-            CommonUtil.treeConsumer(root, max, this.forceExpand, entry -> {
+            CommonUtil.treeConsumer(root, max, expand, entry -> {
                 final int d = entry.depth();
                 if (d > 0) lastStack[d - 1] = entry.isLast();
                 final String prefix = treePrefix(d, lastStack, entry.isLast(), border);
@@ -132,7 +135,21 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
                 rows.add(new TreeRow(entry, prefix, entry.name(), suffix));
             });
         }
-        if (xrefEnabled) this.decorateXrefs(xrefMax, xrefCode);
+        if (xrefEnabled) this.decorateXrefs(rows, xrefMax, xrefCode);
+        return rows;
+    }
+
+    /**
+     * The branch uris whose children are read regardless of {@code max} — read from
+     * the rec ({@code expand} => one or more uris), so any writer can set them and
+     * they survive a re-hydration.  A Java field could do neither: the widget object
+     * is rebuilt from the rec on every update.
+     */
+    private Set<fURI> expansions(final Map<Obj, Obj> fields) {
+        final Set<fURI> expansions = new HashSet<>();
+        final Obj e = this.get(fields, K_EXPAND);
+        if (null != e) e.stream().filter(Obj::isUri).forEach(u -> expansions.add(u.uriValue()));
+        return expansions;
     }
 
     /**
@@ -164,7 +181,7 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
      * </ul>
      * With no {@code xref.code} call, labels default to the target's tail segment.
      */
-    private void decorateXrefs(final int xrefMax, final Call xrefCode) {
+    private void decorateXrefs(final List<TreeRow> rows, final int xrefMax, final Call xrefCode) {
         if (rows.isEmpty()) return;
         final int size = rows.size();
         final Map<fURI, Integer> rowIndexOf = new HashMap<>();
@@ -316,11 +333,6 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
                 uri(URI), uri(target));
     }
 
-    private boolean flatten() {
-        final Obj f = this.at(uri("flatten"));
-        return f.isBool() && f.asBool().jvm();
-    }
-
     /**
      * A node is a folder when it has children of its own or its URI is a branch
      * (trailing {@code /}).  Files — and empty branches without the marker — are
@@ -338,7 +350,8 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
      * or no children.  Children of the final folder hang one level below the
      * flattened path — never pushed right by the path's full width.
      */
-    private void buildFlattenedRows(final List<CommonUtil.TreeEntry> entries,
+    private void buildFlattenedRows(final List<TreeRow> rows,
+                                    final List<CommonUtil.TreeEntry> entries,
                                     final Call code, final Border border) {
         final int maxNatural = entries.stream().mapToInt(CommonUtil.TreeEntry::depth).max().orElse(0);
         final boolean[] lastStack = new boolean[maxNatural + 64];
@@ -429,19 +442,20 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
 
     @Override
     public TreeWidget cursor(final Cursor cursor) {
-        this.cursor = cursor;
-        return this;
+        return this;   // a layout hint for a parent widget; nothing reads it back
     }
 
     @Override
     public Style<TreeWidget> getStyle() {
-        return this.style;
+        return Style.from(this.get(this.read(), STYLE_KEY));
     }
 
     @Override
     public TreeWidget style(final Style<TreeWidget> style) {
-        this.style = style;
-        if (this.style.border() == Border.none) this.style.border(Border.continuous);
+        final Style<TreeWidget> s = null == style ? Style.empty() : style;
+        s.stylable = this;
+        if (s.border() == Border.none) s.border(Border.continuous);
+        this.put(STYLE_KEY, s);
         return this;
     }
 
@@ -464,17 +478,14 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
      * Rendering
      * ================================================================ */
 
-    public void refresh() {
-        ensureBuilt();
-    }
-
     @Override
     public String format() {
-        ensureBuilt();
+        final Map<Obj, Obj> fields = this.read();
         final StringBuilder sb = new StringBuilder();
-        final String fg = this.style.foreground();
-        final String bg = this.style.background();
-        for (final TreeRow row : rows) {
+        final Style<TreeWidget> style = Style.from(this.get(fields, STYLE_KEY));
+        final String fg = style.foreground();
+        final String bg = style.background();
+        for (final TreeRow row : this.buildRows(fields)) {
             sb.append(bg).append(fg).append(row.fullLine()).append("\n");
         }
         if (!sb.isEmpty()) sb.deleteCharAt(sb.length() - 1);
@@ -490,11 +501,10 @@ public class TreeWidget extends JRec<TreeWidget> implements Widget<TreeWidget> {
      * ================================================================ */
 
     public List<CommonUtil.TreeEntry> entries() {
-        ensureBuilt();
-        return rows.stream().map(TreeRow::entry).toList();
+        return this.buildRows(this.read()).stream().map(TreeRow::entry).toList();
     }
 
     public int rowCount() {
-        return rows.size();
+        return this.buildRows(this.read()).size();
     }
 }

@@ -36,60 +36,61 @@ public class CardWidget extends AbstractWidget<CardWidget> {
 
     public CardWidget(final String title, final String body) {
         super();
-        jvmWrite(K_TITLE, str(title.trim()));
-        jvmWrite(K_BODY, str(body.trim()));
+        this.put(K_TITLE, str(title.trim()));
+        this.put(K_BODY, str(body.trim()));
     }
 
     @Override
     public String format() {
+        final Style<CardWidget> style = this.getStyle();
         final Obj t = this.at(K_TITLE);
         final String title = null != t && t.isStr() ? t.strValue() : "";
         final Obj b = this.at(K_BODY);
         final String body = null != b && b.isStr() ? b.strValue() : "";
         final StringBuilder sb = new StringBuilder();
         final int width = Utilities.maxWidth(Arrays.asList(title, body));
-        sb.append(this.style.border().topLeftCorner())
-                .append(this.style.border().topSide().repeat(width + this.style.leftMargin() + this.style.rightMargin()))
-                .append(this.style.border().topRightCorner())
+        sb.append(style.border().topLeftCorner())
+                .append(style.border().topSide().repeat(width + style.leftMargin() + style.rightMargin()))
+                .append(style.border().topRightCorner())
                 .append("\n");
-        for (int i = 0; i < this.style.topMargin(); i++) {
-            sb.append(this.style.border().leftSide())
-                    .append(" ".repeat(width + this.style.leftMargin() + this.style.rightMargin()))
-                    .append(this.style.border().rightSide())
+        for (int i = 0; i < style.topMargin(); i++) {
+            sb.append(style.border().leftSide())
+                    .append(" ".repeat(width + style.leftMargin() + style.rightMargin()))
+                    .append(style.border().rightSide())
                     .append("\n");
         }
-        sb.append(this.style.border().leftSide())
-                .append(this.style.foreground())
-                .append(this.style.background())
-                .append(" ".repeat(this.style.leftMargin()))
+        sb.append(style.border().leftSide())
+                .append(style.foreground())
+                .append(style.background())
+                .append(" ".repeat(style.leftMargin()))
                 .append(title)
-                .append(" ".repeat(width - Highlighter.visualLength(title) + this.style.rightMargin()))
+                .append(" ".repeat(width - Highlighter.visualLength(title) + style.rightMargin()))
                 .append("{{X}}")
-                .append(this.style.border().rightSide())
+                .append(style.border().rightSide())
                 .append("\n");
-        if (!this.style.divider().isEmpty())
-            sb.append(this.style.border().leftSide())
-                    .append(this.style.divider().repeat(this.style.leftMargin() + width + this.style.rightMargin()))
+        if (!style.divider().isEmpty())
+            sb.append(style.border().leftSide())
+                    .append(style.divider().repeat(style.leftMargin() + width + style.rightMargin()))
                     .append("{{X}}")
-                    .append(this.style.border().rightSide())
+                    .append(style.border().rightSide())
                     .append("\n");
         Arrays.stream(body.split("\n")).forEach(line ->
-                sb.append(this.style.border().leftSide())
-                        .append(this.style.foreground())
-                        .append(" ".repeat(this.style.leftMargin()))
-                        .append(line).append(" ".repeat(width - Highlighter.visualLength(line) + this.style.rightMargin()))
+                sb.append(style.border().leftSide())
+                        .append(style.foreground())
+                        .append(" ".repeat(style.leftMargin()))
+                        .append(line).append(" ".repeat(width - Highlighter.visualLength(line) + style.rightMargin()))
                         .append("{{X}}")
-                        .append(this.style.border().rightSide())
+                        .append(style.border().rightSide())
                         .append("\n"));
-        for (int i = 0; i < this.style.bottomMargin(); i++) {
-            sb.append(this.style.border().leftSide())
-                    .append(" ".repeat(width + this.style.leftMargin() + this.style.rightMargin()))
-                    .append(this.style.border().rightSide())
+        for (int i = 0; i < style.bottomMargin(); i++) {
+            sb.append(style.border().leftSide())
+                    .append(" ".repeat(width + style.leftMargin() + style.rightMargin()))
+                    .append(style.border().rightSide())
                     .append("\n");
         }
-        sb.append(this.style.border().bottomLeftCorner())
-                .append(this.style.border().bottomSide().repeat(width + this.style.leftMargin() + this.style.rightMargin()))
-                .append(this.style.border().bottomRightCorner());
+        sb.append(style.border().bottomLeftCorner())
+                .append(style.border().bottomSide().repeat(width + style.leftMargin() + style.rightMargin()))
+                .append(style.border().bottomRightCorner());
         return sb.append("{{X}}").toString();
     }
 }

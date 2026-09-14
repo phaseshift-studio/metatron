@@ -21,6 +21,9 @@ package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 import org.jline.utils.AttributedString;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -36,12 +39,19 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Poly;
+
+import java.util.Arrays;
+import java.util.Map;
+
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -97,8 +107,9 @@ public class TreeWidgetTest extends AbstractMetatronTest {
                 uri(ROOT), uri("local:"),
                 uri(MAX), jnt(5),
                 uri(CODE), instLambda((lhs, inst) -> jnt(lhs.as(STR_TYPE).strValue().length())).tryToInst()), UI_TREE_TID, null);
-        LOG.none("\n" + tree.format() + "\n");
-
+        final String out = tree.format();
+        assertTrue(out.contains("docs"), "the fixture's docs branch is in the tree:\n" + out);
+        assertTrue(out.contains("projects"), "and so is its projects branch:\n" + out);
     }
 
     @Test
@@ -260,9 +271,64 @@ public class TreeWidgetTest extends AbstractMetatronTest {
                 uri(MAX), jnt(5),
                 uri(XREF), rec(uri(MAX), jnt(2))), UI_TREE_TID, null);
         final String out = tree.format();
-        LOG.none("\n" + out + "\n");
         assertTrue(out.contains("field  ──(2)──> members"), "field row should fold its aliases, got:\n" + out);
         assertTrue(out.contains("method  ──(2)──> members"), "method row should fold its aliases, got:\n" + out);
         assertFalse(out.contains("»"), "folded aliases should not carry leaf markers, got:\n" + out);
+    }
+
+    /* ================================================================
+     * State lives in the rec, not in a Java field
+     * ================================================================ */
+
+    /**
+     * {@code expand} is rec state: which branches are read past {@code max}.  Written
+     * as a runtime uri it is one value; as a coefficient ({@code uri{*}}) it is many.
+     * Either way the render is a function of the rec alone, so a second widget built
+     * from the same map renders the same tree — the property a Java field cannot have,
+     * because the widget object is re-created on every rec update.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "local:chain/a              % max 1 + one expanded branch shows its child",
+            "local:chain/a,local:chain  % max 1 + a multiplicity of branches (uri{*})",
+    }, delimiter = '%')
+    void testExpandIsRecState(final String expandSpec, final String description) {
+        final Map<Obj, Obj> jvm = mutableMap(
+                uri(ROOT), uri("local:chain"),
+                uri(MAX), jnt(1),
+                uri(EXPAND), objs(Arrays.stream(expandSpec.split(",")).map(u -> (Obj) uri(u.trim())).toArray(Obj[]::new)));
+        final TreeWidget first = new TreeWidget(jvm, UI_TREE_TID, null);
+        final String rendered = first.format();
+        assertEquals(rendered, new TreeWidget(jvm, UI_TREE_TID, null).format(),
+                description + ": two widgets over one rec render the same tree");
+        assertTrue(rendered.contains("b"), description + ": the expanded branch reads past max=1, got:\n" + rendered);
+        // the same rec without expand is the control: it stops at the max depth
+        final Map<Obj, Obj> noExpand = mutableMap(uri(ROOT), uri("local:chain"), uri(MAX), jnt(1));
+        assertFalse(new TreeWidget(noExpand, UI_TREE_TID, null).format().contains("b"),
+                description + ": without expand the walk stops at max");
+    }
+
+    /**
+     * The point of the rec being the only home of state: the render is recomputed
+     * from the rec on every pass, so a write to the rec shows up immediately and a
+     * second widget built from the same rec renders the same tree.  A row cache or
+     * an {@code expand} field would pass the first and fail the second.
+     */
+    @Test
+    public void testTheRenderIsAFunctionOfTheRec() {
+        final Map<Obj, Obj> jvm = mutableMap(uri(ROOT), uri("local:chain"), uri(MAX), jnt(1));
+        final TreeWidget first = new TreeWidget(jvm, UI_TREE_TID, null);
+        assertTrue(Stylable.Style.isStyle(first.at(Stylable.STYLE_KEY)),
+                "construction materialises the default style into the rec: " + first);
+        assertEquals(first.format(), new TreeWidget(jvm, UI_TREE_TID, null).format(),
+                "two widgets over one rec render the same tree");
+
+        final int shallow = first.rowCount();
+        first.at(uri(MAX), jnt(4), Poly.MUTABLE);            // a write to the rec, mid-life
+        assertTrue(first.rowCount() > shallow,
+                "the walk re-reads the rec rather than a cached row list: " + shallow + " -> " + first.rowCount());
+        first.style().foreground("{{b}}").applyStyle();
+        assertEquals("{{b}}", first.getStyle().foreground(), "a style write lands in the rec");
+        assertTrue(first.format().contains("{{b}}"), "and the render picks it up: " + first.format());
     }
 }

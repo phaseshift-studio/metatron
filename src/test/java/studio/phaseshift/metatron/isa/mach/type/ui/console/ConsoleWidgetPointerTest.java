@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -165,5 +166,110 @@ public class ConsoleWidgetPointerTest extends AbstractMetatronTest {
         this.console.getFloatingSurface().clear();
         assertEquals(false, this.console.getFloatingSurface().hasPointerTargets(),
                 "with nothing on screen the terminal keeps its own mouse");
+    }
+
+    // ── the drag gesture ───────────────────────────────────────────
+    //
+    // The chevron is the focused widget's top-left cell, so a press there takes hold
+    // of the widget and the corner follows the pointer.  Where it sits while moving is
+    // view state (the slot); where it is PARKED is rec state (the style's top/left),
+    // written once on release so it survives the re-hydration every update performs.
+
+    @Test
+    public void shouldGrabTheChevronsCellAndDragTheWidget() {
+        this.console.focusWidget(this.notes);
+        assertEquals(2, this.console.getFloatingSurface().origin(this.notes).row(), "TOP_LEFT floats at row 2");
+        assertEquals(1, this.console.getFloatingSurface().origin(this.notes).col(), "and column 1");
+
+        assertTrue(this.console.mousePressed(2, 1), "a press on the chevron is taken by the widget");
+        assertTrue(this.console.dragging(), "and starts a drag");
+        this.console.mouseDragged(5, 9);
+        this.console.getFloatingSurface().renderNow();
+        assertEquals(5, this.console.getFloatingSurface().origin(this.notes).row(), "the corner followed the pointer");
+        assertEquals(9, this.console.getFloatingSurface().origin(this.notes).col(), "the corner followed the pointer");
+
+        this.console.mouseReleased(5, 9);
+        assertFalse(this.console.dragging(), "the release ends the gesture");
+        assertEquals(3, this.notes.getStyle().top(),
+                "the release parks the widget in its style (row 5 from a top anchor at row 2)");
+        assertEquals(8, this.notes.getStyle().left(),
+                "the release parks the widget in its style (column 9 from a left anchor at column 1)");
+    }
+
+    @Test
+    public void shouldTreatAPressAndReleaseWithoutMotionAsAClick() {
+        this.console.focusWidget(this.notes);
+        assertTrue(this.console.mousePressed(2, 1), "the press still takes hold");
+        assertTrue(this.console.mouseReleased(2, 1), "and the release ends it");
+        assertFalse(this.console.dragging(), "no drag is left in flight");
+        assertEquals(0, this.notes.getStyle().top(), "a click on the chevron moves nothing");
+        assertEquals(0, this.notes.getStyle().left(), "a click on the chevron moves nothing");
+    }
+
+    @Test
+    public void shouldNotDragFromAnywhereButTheChevron() {
+        this.console.focusWidget(this.notes);
+        assertFalse(this.console.mousePressed(4, 2), "the body is not a handle — the click stays the console's");
+        assertFalse(this.console.dragging(), "so no drag starts");
+        assertSame(this.notes, this.console.getActiveWidget(), "and the click still focuses the widget");
+    }
+
+    @Test
+    public void shouldNotDragAWidgetThatIsNotFocused() {
+        assertNull(this.console.getActiveWidget(), "nothing is focused yet");
+        assertFalse(this.console.mousePressed(2, 1), "the press is a click, not a grab");
+        assertFalse(this.console.dragging(), "no drag without the focus whose chevron it is");
+        assertSame(this.notes, this.console.getActiveWidget(), "the click focused it");
+    }
+
+    /** The focused widget's resize cell: the bottom-right corner of its drawn box. */
+    private int[] resizeCorner() {
+        final FloatingSurface surface = this.console.getFloatingSurface();
+        final org.jline.terminal.Size size = Console.getTerminal().getSize();
+        for (int row = 1; row <= size.getRows(); row++)
+            for (int col = 1; col <= size.getColumns(); col++)
+                if (FloatingSurface.Handle.RESIZE == surface.handleAt(this.notes, row, col))
+                    return new int[]{row, col};
+        return null;
+    }
+
+    @Test
+    public void shouldResizeFromTheCornerMarker() {
+        this.console.focusWidget(this.notes);
+        final FloatingSurface surface = this.console.getFloatingSurface();
+        final FloatingSurface.Placement before = surface.placement(this.notes);
+        final int[] corner = this.resizeCorner();
+        assertNotNull(corner, "the focused widget offers a resize handle");
+
+        assertTrue(this.console.mousePressed(corner[0], corner[1]), "a press on the marker takes it");
+        assertTrue(this.console.dragging(), "and starts a gesture");
+        this.console.mouseDragged(corner[0] + 4, corner[1] + 6);
+        surface.renderNow();
+        assertEquals(before.width() + 6, surface.placement(this.notes).width(),
+                "the box grew by the pointer's column delta");
+        assertEquals(before.height() + 4, surface.placement(this.notes).height(),
+                "and by its row delta");
+
+        this.console.mouseReleased(corner[0] + 4, corner[1] + 6);
+        assertFalse(this.console.dragging(), "the release ends the gesture");
+        assertEquals(before.width() + 6, this.notes.getStyle().width(),
+                "the width is parked in the style, so it survives re-hydration");
+        assertEquals(before.height() + 4, this.notes.getStyle().height(),
+                "and so is the height");
+    }
+
+    @Test
+    public void shouldLeaveTheSizeAloneWhenTheChevronIsTheHandle() {
+        this.console.focusWidget(this.notes);
+        final FloatingSurface surface = this.console.getFloatingSurface();
+        final FloatingSurface.Placement before = surface.placement(this.notes);
+        assertTrue(this.console.mousePressed(2, 1), "the press takes the chevron");
+        this.console.mouseDragged(5, 9);
+        this.console.mouseReleased(5, 9);
+        final FloatingSurface.Placement after = surface.placement(this.notes);
+        assertEquals(before.width(), after.width(), "a move does not resize");
+        assertEquals(before.height(), after.height(), "a move does not resize");
+        assertEquals(0, this.notes.getStyle().height(),
+                "and it writes no height at all — a cap it was never asked for would clip later content");
     }
 }

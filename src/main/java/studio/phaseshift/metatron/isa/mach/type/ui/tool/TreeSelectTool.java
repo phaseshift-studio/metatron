@@ -45,6 +45,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -113,13 +114,16 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
                     uri(ROOT), root.toUri(),
                     uri(MAX), jnt(maxDepth),
                     uri(CODE), label,
-                    uri("flatten"), bool(flatten));
+                    uri(FLATTEN), bool(flatten));
+            // per-branch expansion is rec state, not a Java field: the widget is
+            // rebuilt from this rec on every update (objs() collapses one uri to
+            // that uri, so both the one and many cases land as uri{*})
+            if (!forceExpand.isEmpty())
+                jvm.put(uri(EXPAND), objs(forceExpand.stream().map(fURI::toUri).toArray(Obj[]::new)));
             if (parentStyle != null) {
                 jvm.put(uri(STYLE), parentStyle);
             }
             this.tree = new TreeWidget(jvm, UI_TREE_TID, null);
-            if (!forceExpand.isEmpty())
-                this.tree.forceExpand(forceExpand);
         }
 
         int rowCount() {
@@ -200,7 +204,7 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
     }
 
     private void maxDepth(final int value) {
-        jvmWrite(uri(MAX), jnt(value));
+        this.put(uri(MAX), jnt(value));
     }
 
     /**
@@ -228,8 +232,7 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
         if (s != null && s.isRec()) {
             final Style<TreeSelectTool> st = Style.from(s.as());
             st.stylable = this;
-            this.style = st;
-            this.at(STYLE, st);
+            this.style(st);
         }
     }
 

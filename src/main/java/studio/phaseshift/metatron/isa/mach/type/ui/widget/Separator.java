@@ -52,7 +52,7 @@ public class Separator extends AbstractWidget<Separator> {
 
     @Override
     public Separator style(final Style<Separator> style) {
-        this.style = style;
+        super.style(style);
         return new Separator(style.foreground() + this.sepToken + "{{X}}", this.coupledWidth);
     }
 }

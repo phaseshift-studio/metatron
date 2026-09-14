@@ -48,7 +48,7 @@ public class LabelLineWidget extends AbstractLineWidget<LabelLineWidget> {
     }
 
     public LabelLineWidget body(final String body) {
-        jvmWrite(K_BODY, str(null != body ? body : ""));
+        this.put(K_BODY, str(null != body ? body : ""));
         return this;
     }
 
@@ -59,6 +59,6 @@ public class LabelLineWidget extends AbstractLineWidget<LabelLineWidget> {
 
     @Override
     public String format() {
-        return this.style.foreground() + this.style.background() + this.body() + Widget.X;
+        return this.getStyle().foreground() + this.getStyle().background() + this.body() + Widget.X;
     }
 }

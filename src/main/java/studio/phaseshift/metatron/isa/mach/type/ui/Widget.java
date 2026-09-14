@@ -51,6 +51,12 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
         Console.userMode.set(false);
     }
 
+    /**
+     * A position hint for a widget laid out inside another widget (a grid places
+     * its cells this way).  Nothing reads it back: where the terminal cursor
+     * actually sits is the console's and the rendering surface's business, so an
+     * implementation is free to record it or ignore it.
+     */
     W cursor(final Cursor cursor);
 
     /**
@@ -98,9 +104,10 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
     }
 
     /**
-     * Render in-place: move cursor up over previous render, clear old lines,
-     * print new content.  First call renders normally; subsequent calls
-     * overwrite the previous output.
+     * The widget's text for a caller that draws it itself (a tool painting into a
+     * pane, a serializer embedding a widget in another obj).  Nothing in the
+     * console uses it: a pinned widget is drawn by {@code FloatingSurface}, which
+     * owns the geometry and the erasing, and an unpinned one is printed once.
      */
     String renderInPlace();
 

@@ -22,7 +22,7 @@ import org.jline.terminal.Cursor;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
+import studio.phaseshift.metatron.isa.m.type.reflect.SpaceRec;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget> {
+public class PanelWidget extends SpaceRec<PanelWidget> implements Widget<PanelWidget> {
 
     public static final fURI UI_PANEL_TID = f("/m/mach/ui/widget/panel");
 
@@ -62,24 +62,28 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
     private static final Obj K_TITLE = uri("title");
     private static final Obj K_BODY = uri("body");
 
-    private Style<PanelWidget> style = Style.empty();
-    private int maxWidth = 0;   // 0 = no word-wrap; >0 = max chars per body line
-    private Cursor cursor;
-
-    // ── JRec constructor ───────────────────────────────────────────
+    // ── constructor ────────────────────────────────────────────────
 
     public PanelWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
         readStyle();
     }
 
+    /**
+     * Adopt the style the rec carries, materialising this widget's defaults into
+     * the rec when it carries none.  Read through {@link #read()} so an anchored
+     * panel adopts what the space holds, not a construction-time snapshot.
+     */
     private void readStyle() {
-        final Obj s = this.at(uri("style"));
-        if (s != null && s.isRec()) {
-            final Style<PanelWidget> st = Style.from(s.as());
-            st.stylable = this;
-            this.style(st);
+        final Obj s = this.get(this.read(), STYLE_KEY);
+        if (Style.isStyle(s)) {
+            this.style(Style.from(s));
+            return;
         }
+        final Style<PanelWidget> fresh = Style.empty();
+        fresh.stylable = this;
+        fresh.border(Border.continuous);
+        this.put(STYLE_KEY, fresh);
     }
 
     // ── convenience constructors ───────────────────────────────────
@@ -94,8 +98,8 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
 
     public PanelWidget(final String title, final String body) {
         this(new LinkedHashMap<>(), UI_PANEL_TID, null);
-        if (null != title) jvmWrite(K_TITLE, str(title));
-        if (null != body) jvmWrite(K_BODY, str(body));
+        if (null != title) this.put(K_TITLE, str(title));
+        if (null != body) this.put(K_BODY, str(body));
     }
 
     // ── composition ────────────────────────────────────────────────
@@ -113,29 +117,39 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
             sb.append("\n");
         }
         sb.deleteCharAt(sb.length() - 1);
-        return new PanelWidget(sb.toString()).style().border(this.style.border()).applyStyle();
+        return new PanelWidget(sb.toString()).style().border(this.getStyle().border()).applyStyle();
     }
 
     public PanelWidget setTitle(final String title) {
-        jvmWrite(K_TITLE, str(null != title ? title : ""));
+        this.put(K_TITLE, str(null != title ? title : ""));
         return this;
     }
 
-    /** Set the maximum width for body lines. 0 = no wrapping. */
+    /**
+     * Body-line wrap width — the style's {@code width} in the rec, which is also
+     * what the surface uses to place and clip the panel.  0 = no wrapping.
+     */
     public PanelWidget maxWidth(final int w) {
-        this.maxWidth = w;
+        this.style().width(w).applyStyle();
         return this;
+    }
+
+    public int maxWidth() {
+        return this.getStyle().width();
     }
 
     // ── Widget contract ────────────────────────────────────────────
 
-    @Override public PanelWidget cursor(final Cursor cursor) { this.cursor = cursor; return this; }
-    @Override public Style<PanelWidget> getStyle()           { return this.style; }
+    /** A layout hint for a parent widget; nothing reads it back (see Widget#cursor). */
+    @Override public PanelWidget cursor(final Cursor cursor) { return this; }
+    @Override public Style<PanelWidget> getStyle()           { return Style.from(this.get(this.read(), STYLE_KEY)); }
 
     @Override
     public PanelWidget style(final Style<PanelWidget> style) {
-        this.style = style;
-        if (this.style.border() == Border.none) this.style.border(Border.continuous);
+        final Style<PanelWidget> st = null == style ? Style.empty() : style;
+        st.stylable = this;
+        if (st.border() == Border.none) st.border(Border.continuous);
+        this.put(STYLE_KEY, st);
         return this;
     }
 
@@ -147,18 +161,22 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
 
     @Override
     public String format() {
-        final Obj t = this.at(K_TITLE);
-        final String title = null != t && t.isStr() ? t.strValue() : "";
-        final Obj b = this.at(K_BODY);
-        final String body = null != b && b.isStr() ? b.strValue() : "";
-        final List<String> rawLines = Arrays.asList(body.replace("\\n", "\n").split("\\r?\\n", -1));
+        // ONE anchored read for the whole pass (fields and style both come from it)
+        final Map<Obj, Obj> fields = this.read();
+        final Style<PanelWidget> style = Style.from(this.get(fields, STYLE_KEY));
+        final String title = this.getStr(fields, K_TITLE);
+        // a body is a str or a list of lines — both are lines here
+        final List<String> rawLines = this.getLines(fields, K_BODY).stream()
+                .map(l -> l.endsWith("\r") ? l.substring(0, l.length() - 1) : l)
+                .toList();
 
-        // Word-wrap if maxWidth is set
+        // Word-wrap when the style carries a width (see maxWidth())
+        final int maxWidth = style.width();
         final List<String> lines;
-        if (this.maxWidth > 0) {
+        if (maxWidth > 0) {
             lines = new ArrayList<>();
             for (final String raw : rawLines) {
-                lines.addAll(wrapLine(raw, this.maxWidth));
+                lines.addAll(wrapLine(raw, maxWidth));
             }
         } else {
             lines = rawLines;
@@ -178,33 +196,33 @@ public class PanelWidget extends JRec<PanelWidget> implements Widget<PanelWidget
         // Style background/foreground are re-applied on every line because each
         // body line ends with a {{X}} reset (background+foreground, TableWidget
         // order, so a foreground code wins when both are fg codes).
-        final String color = this.style.background() + this.style.foreground();
-        sb.append(this.style.prefix()).append(color);
+        final String color = style.background() + style.foreground();
+        sb.append(style.prefix()).append(color);
         final String top = "%s%s".formatted(
                 title,
-                this.style.border().topSide().repeat(
+                style.border().topSide().repeat(
                         title.isEmpty() ? maxLen : maxLen - Highlighter.visualLength(title)))
                 .stripTrailing();
         if (!top.isEmpty())
-            sb.append(this.style.border().topLeftCorner()).append(top)
-                    .append(this.style.border().topRightCorner()).append("{{X}}\n");
+            sb.append(style.border().topLeftCorner()).append(top)
+                    .append(style.border().topRightCorner()).append("{{X}}\n");
         for (int i = 0; i < lines.size(); i++) {
             final String line = lines.get(i);
             // Line 0 already carries its own leading codes; re-apply them to
             // the subsequent lines so a multi-line body keeps one text color.
             final String lead = i == 0 ? "" : bodyLead;
             sb.append(color)
-                    .append(this.style.border().leftSide())
+                    .append(style.border().leftSide())
                     .append(lead).append(line)
                     .append(" ".repeat(maxLen - Highlighter.visualLength(line)))
                     .append(color)  // re-assert so the right border matches the style color, not the body's
-                    .append(this.style.border().rightSide()).append("{{X}}\n");
+                    .append(style.border().rightSide()).append("{{X}}\n");
         }
-        final String bottom = this.style.border().bottomSide().repeat(maxLen).stripTrailing();
+        final String bottom = style.border().bottomSide().repeat(maxLen).stripTrailing();
         if (!bottom.isEmpty())
             sb.append(color)
-                    .append(this.style.border().bottomLeftCorner()).append(bottom)
-                    .append(this.style.border().bottomRightCorner()).append("{{X}}\n");
+                    .append(style.border().bottomLeftCorner()).append(bottom)
+                    .append(style.border().bottomRightCorner()).append("{{X}}\n");
         // The final {{X}} above is load-bearing: a colored panel must not leave
         // the terminal with background/foreground active, or the FloatingSurface's
         // erase/buffer-zone spaces in the next render pass get painted with the

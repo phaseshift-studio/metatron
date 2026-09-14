@@ -913,13 +913,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         if (null == widget) {
             this.activeWidgetKey = null;
             getFloatingSurface().setFocusKey(null);
-            LOG.debug("cleared floating widget focus");
         } else {
             this.activeWidgetKey = FloatingSurface.widgetKey(widget);
             getFloatingSurface().setFocusKey(this.activeWidgetKey);
-            final String info = getFloatingSurface().scrollInfo(widget);
-            LOG.debug("focused floating widget {{y}}%s{{X}}%s",
-                    this.activeWidgetKey, info.isEmpty() ? "" : " (" + info + ")");
         }
         if (null != widget) this.pointerDismissed = false;   // the pointer is wanted again
         // fire-and-forget: a click must never stall the console thread on a
@@ -1007,10 +1003,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             LOG.warn("no floating widget in focus");
             return;
         }
-        if (getFloatingSurface().nudge(active, widthDelta, heightDelta)) {
-            LOG.info("resized floating widget {{y}}%s{{X}} (width %+d, height %+d)",
-                    this.activeWidgetKey, widthDelta, heightDelta);
-        }
+        getFloatingSurface().nudge(active, widthDelta, heightDelta);
     }
 
     // ========== Floating Widget Scrolling ==========
@@ -1151,14 +1144,165 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         final boolean consumed = getFloatingSurface().click(hit, row, col, false);
         if (consumed) {
             getFloatingSurface().render();
-            // LOG.info("pointer: {{y}}%s{{X}} worked its affordance", getFloatingSurface().resolveKey(this.activeWidgetKey));
         }
         return consumed;
     }
 
+    // ── the drag gesture ──────────────────────────────────────────────
+    //
+    // Where a widget sits and how big it is WHILE the pointer works on it is VIEW state,
+    // so it lives here and on the widget's slot — never in the widget's rec.  Only the
+    // release writes the rec (style top/left after a move, width/height after a resize),
+    // because that is what has to outlive the session: every .display() re-hydrates the
+    // widget into a fresh instance, and geometry that only lived in this console would be
+    // gone the next time the widget's content changed.
+
+    /** The widget the pointer is working on, or null when no drag is in flight. */
+    private volatile Widget<?> dragWidget = null;
+    /** Which handle was taken hold of: the chevron (move) or the corner marker (resize). */
+    private FloatingSurface.Handle dragHandle = null;
+    /** Where the pointer took hold — the handle's own cell. */
+    private int dragRow = 0;
+    private int dragCol = 0;
+    /** The box at press time: a resize is a delta from it, not an accumulation of events. */
+    private int dragWidth = 0;
+    private int dragHeight = 0;
+    /** True once the pointer actually moved, so a press-and-release stays a click. */
+    private boolean dragMoved = false;
+
     /**
-     * Terminal mouse modes this console turns on: button events (1000) in the
-     * SGR encoding (1006), and nothing else.
+     * A pointer press: taking hold of one of the focused widget's handles starts a
+     * gesture, and anything else keeps the click semantics (focus the widget under the
+     * pointer, let it work its affordance, or clear the focus on empty terminal).
+     *
+     * <p>The handles are the two cells a widget can be worked from, and both are
+     * painted in the widget's own box — so the cell the user grabs IS the geometry the
+     * gesture changes: the chevron ({@code ▶}) in the top-left cell is the widget's
+     * origin, which makes a move a translation, and the marker ({@code ◢}) in the
+     * bottom-right cell is the far corner of its box, which makes a resize a
+     * width/height delta.  No offset arithmetic, and targets that small stay easy to
+     * hit on purpose: nobody clicks a corner by accident, and the body of the widget
+     * stays free for selection, scrolling and affordances.
+     *
+     * <p>An affordance under the press still wins: the click runs first, and only a
+     * press the widget did not consume becomes a grab.  A widget whose own top-left
+     * cell acts on a click (a selector's first row, say) keeps that click and simply
+     * cannot be dragged by its chevron.
+     *
+     * @param row 1-based terminal row of the press
+     * @param col 1-based terminal column of the press
+     * @return true when the press was consumed — by the widget's affordance or by a grab
+     */
+    public boolean mousePressed(final int row, final int col) {
+        // whose handles these are: the ALREADY focused widget's.  A press on the corner
+        // of an unfocused widget is how you focus it (no handle is drawn there yet, so
+        // the user did not aim at one), and a second press then grabs.
+        final Widget<?> focused = getActiveWidget();
+        final FloatingSurface.Handle handle = null == focused
+                ? null : getFloatingSurface().handleAt(focused, row, col);
+        // the click runs first so a widget's own affordance keeps its cell
+        final boolean consumed = this.clickAt(row, col);
+        if (null == handle || consumed) return consumed;
+        final FloatingSurface.Placement placement = getFloatingSurface().placement(focused);
+        this.dragWidget = focused;
+        this.dragHandle = handle;
+        this.dragRow = row;
+        this.dragCol = col;
+        this.dragWidth = null == placement ? 0 : placement.width();
+        this.dragHeight = null == placement ? 0 : placement.height();
+        this.dragMoved = false;
+        // hold the pointer for the whole gesture: a mid-drag hand-back to the
+        // terminal would drop the release event and leave the widget in flight
+        this.syncWidgetMouseTracking(true);
+        return true;
+    }
+
+    /**
+     * A pointer motion with a button held: the grabbed handle follows the pointer — the
+     * chevron moves the widget to where the pointer is, the corner marker sizes the box
+     * by how far the pointer has come from where it took hold.
+     *
+     * @return true when a gesture is in flight
+     */
+    public boolean mouseDragged(final int row, final int col) {
+        final Widget<?> widget = this.dragWidget;
+        if (null == widget) return false;
+        if (row == this.dragRow && col == this.dragCol) return true;   // still on the handle
+        this.dragMoved = true;
+        this.applyDrag(widget, this.dragHandle, row, col);
+        return true;
+    }
+
+    /**
+     * Put the gesture's current pointer cell to work on the widget: measured from the
+     * press cell, so a drag is a delta and not an accumulation of motion events.
+     */
+    private void applyDrag(final Widget<?> widget, final FloatingSurface.Handle handle,
+                           final int row, final int col) {
+        if (FloatingSurface.Handle.RESIZE == handle)
+            getFloatingSurface().resizeTo(widget,
+                    this.dragWidth + (col - this.dragCol),
+                    this.dragHeight + (row - this.dragRow));
+        else
+            // the corner lands where the pointer is — placeAt clamps so the handle itself
+            // can never be dragged off screen and out of reach
+            getFloatingSurface().placeAt(widget, row, col);
+    }
+
+    /**
+     * A pointer release: park the widget — write what the gesture changed into its style
+     * so it survives re-hydration — and end the gesture.  A press and release that never
+     * moved is just a click on a handle, and the press already focused the widget.
+     *
+     * @return true when a gesture was in flight
+     */
+    public boolean mouseReleased(final int row, final int col) {
+        final Widget<?> widget = this.dragWidget;
+        if (null == widget) return false;
+        final FloatingSurface.Handle handle = this.dragHandle;
+        if (this.dragMoved) {
+            this.dragMoved = false;
+            // the release cell is the final word: a terminal need not send a motion
+            // event for the last cell the pointer crossed
+            this.applyDrag(widget, handle, row, col);
+            this.parkDrag(widget, handle);
+        }
+        this.dragWidget = null;
+        this.dragHandle = null;
+        this.syncWidgetMouseTracking(true);
+        return true;
+    }
+
+    /**
+     * Write what the gesture changed into the widget's style — the rec is where a
+     * widget's geometry lives, so both survive the re-hydration every update performs
+     * and a later session.  A move parks {@code top}/{@code left}; a resize parks
+     * {@code width}/{@code height} (and, harmlessly, the position it was resized from,
+     * because the anchor's free edge moves as the box grows).  The rest of the style is
+     * untouched: this reads it, changes a couple of keys, and puts it back.
+     */
+    private void parkDrag(final Widget<?> widget, final FloatingSurface.Handle handle) {
+        final FloatingSurface.Placement placement = getFloatingSurface().placement(widget);
+        if (null == placement) return;
+        try {
+            final var style = widget.style().top(placement.top()).left(placement.left());
+            if (FloatingSurface.Handle.RESIZE == handle)
+                style.width(placement.width()).height(placement.height());
+            style.applyStyle();
+        } catch (final Exception e) {
+            LOG.warn("pointer: could not park the widget's geometry: {{r}}%s{{X}}", e.getMessage());
+        }
+    }
+
+    /** True while the pointer is moving a widget. */
+    public boolean dragging() {
+        return null != this.dragWidget;
+    }
+
+    /**
+     * Terminal mouse modes this console turns on: button events (1000), button-event
+     * tracking (1002) — motion while a button is held, which is what a drag is — and
+     * the SGR encoding (1006), and nothing else.
      *
      * <p>Deliberately NOT jline's {@code MouseSupport.trackMouse(Normal)}, which
      * also enables {@code ?1005h} — the legacy UTF-8 coordinate encoding.  With
@@ -1167,7 +1311,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * (an accordion's {@code [-]} cell) impossible to hit while a large one (the
      * widget body) still works.
      */
-    private static final String MOUSE_ON = "\033[?1000h\033[?1006h";
+    private static final String MOUSE_ON = "\033[?1000h\033[?1002h\033[?1006h";
     /**
      * Every mode jline may have enabled, off — a full hand-back to the terminal.
      */
@@ -1207,7 +1351,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         final int widgets = getFloatingSurface().drawnWidgetCount();
         if (widgets > this.pointerWidgets) this.pointerDismissed = false;
         this.pointerWidgets = widgets;
-        final boolean wanted = pointerWanted(null != getActiveWidget(), this.pointerDismissed, widgets);
+        // a drag holds the pointer whatever else changes — the gesture is not over
+        // until the button comes up
+        final boolean wanted = this.dragging()
+                || pointerWanted(null != getActiveWidget(), this.pointerDismissed, widgets);
         if (wanted == this.widgetMouseTracking && !force) return;
         try {
             // only the enable is worth re-asserting (jline turns it off again at

@@ -78,13 +78,15 @@ public class Selector extends AbstractWidget<Selector> {
 
     @Override
     public String format() {
-        final Widget<?> attachment = this.style.attachment();
+        final Widget<?> attachment = this.getStyle().attachment();
         return attachment == null ? "" : attachment.format();
     }
 
     public void run() {
         super.run();
         try {
+            // One rec read for the whole pass — the loop below renders from this view.
+            final Style<Selector> style = this.getStyle();
             final BindingReader bindingReader = new BindingReader(terminal.reader());
             int selectRow = style.lowRowRange();
             int selectCol = 0;
@@ -95,19 +97,19 @@ public class Selector extends AbstractWidget<Selector> {
             keyMap.bind(LEFT_COL, key(this.terminal, InfoCmp.Capability.key_left));
             keyMap.bind(QUIT, "\u0004"); // Ctrl-D
             keyMap.bind(SELECTED, Utilities.enter_key);
-            // Graphitty.log(this).none("{{^%s}}", this.style.attachment().rowCount() + 1);
+            // Graphitty.log(this).none("{{^%s}}", style.attachment().rowCount() + 1);
             boolean done = false;
             while (!done) {
                 final List<String> currentStateDisplay = new ArrayList<>();
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////
                 final String divider = "{{g}}|";
                 final int dividerLength = divider.length() - 1;
-                final Widget<?> attachment = this.style.attachment();
+                final Widget<?> attachment = style.attachment();
                 if (attachment == null) return;
                 for (int i = 0; i < attachment.rowCount(); i++) {
                     boolean selectedRow = i == selectRow;
                     final StringBuilder current = new StringBuilder();
-                    current.append(" ".repeat(this.style.leftMargin()));
+                    current.append(" ".repeat(style.leftMargin()));
                     if (selectedRow) {
                         final String currentRow = attachment.rowString(i);
                         int pointer = 0;
@@ -121,7 +123,7 @@ public class Selector extends AbstractWidget<Selector> {
                         }
                         if (counter < currentRow.length() - dividerLength) {
                             current.append(currentRow, 0, counter + dividerLength);
-                            current.append(this.style.pointer());
+                            current.append(style.pointer());
                             current.append(currentRow, counter + dividerLength + 1, currentRow.length());
                         } else {
                             current.append(attachment.rowString(i));
@@ -138,23 +140,23 @@ public class Selector extends AbstractWidget<Selector> {
                 switch (op) {
                     case RIGHT_COL:
                         selectCol++;
-                        if (selectCol > this.style.highColRange() - 1)
-                            selectCol = this.style.lowColRange();
+                        if (selectCol > style.highColRange() - 1)
+                            selectCol = style.lowColRange();
                         break;
                     case LEFT_COL:
                         selectCol--;
                         if (selectCol < 0)
-                            selectCol = this.style.highColRange() - 1;
+                            selectCol = style.highColRange() - 1;
                         break;
                     case DOWN_ROW:
                         selectRow++;
-                        if (selectRow > this.style.highRowRange() - 1)
-                            selectRow = this.style.lowRowRange();
+                        if (selectRow > style.highRowRange() - 1)
+                            selectRow = style.lowRowRange();
                         break;
                     case UP_ROW:
                         selectRow--;
-                        if (selectRow < this.style.lowRowRange())
-                            selectRow = this.style.highRowRange() - 1;
+                        if (selectRow < style.lowRowRange())
+                            selectRow = style.highRowRange() - 1;
                         break;
                     case SELECTED:
                         done = true;

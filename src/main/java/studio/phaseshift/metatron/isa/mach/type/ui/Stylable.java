@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui;
 
+import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -54,9 +55,27 @@ public interface Stylable<T extends Stylable<T>> {
      */
     int SCROLL_NONE = 0;
 
+    /**
+     * The style of this stylable, read from its own rec ({@code style} key).
+     *
+     * <p>The returned Style is a <em>view over the rec</em>, not a copy: a
+     * setter on it writes into the rec the widget renders from, and
+     * {@link Style#applyStyle()} hands it back to the widget, which stores it
+     * in the rec (write-through, so a store-backed widget's style survives a
+     * re-hydration).  Reading instead of inventing an empty style also means a
+     * {@code widget.style().border(x).applyStyle()} chain starts from the
+     * settings the widget already had, instead of silently dropping them.
+     */
+    @SuppressWarnings("unchecked")
     default Style<T> style() {
-        return new Style<>((T) this);
+        final Obj styleObj = this instanceof Rec owner ? (Obj) owner.at(STYLE_KEY) : NoObj.noobj();
+        final Style<T> s = Style.from(styleObj);
+        s.stylable = (T) this;
+        return s;
     }
+
+    /** The rec key a stylable's style lives under. */
+    Obj STYLE_KEY = uri("style");
 
     T style(final Style<T> style);
 
@@ -81,8 +100,6 @@ public interface Stylable<T extends Stylable<T>> {
 
     class Style<T extends Stylable<T>> extends MRec {
         public T stylable;
-        public Border border = null;
-        public FloatingSurface.Anchor anchor = null;
 
         protected Style(final T stylable) {
             super(new LinkedHashMap<>(), UI_STYLE_TID, null);
@@ -93,13 +110,53 @@ public interface Stylable<T extends Stylable<T>> {
             return new Style<>(null);
         }
 
+        /**
+         * A Style that IS the given rec — the same map instance, the same vid,
+         * no copy.  Writes through it are writes to that rec.
+         */
+        @SuppressWarnings("unchecked")
+        public static <T extends Stylable<T>> Style<T> of(final T stylable, final Rec styleRec) {
+            final Style<T> s = new Style<>(stylable);
+            if (null != styleRec)
+                s.self(styleRec.jvm(),
+                        null == styleRec.tid() ? UI_STYLE_TID : styleRec.tid(),
+                        styleRec.vid());
+            return s;
+        }
+
+        /**
+         * Read a style out of whatever a rec read hands back: a Style is
+         * returned as-is, a style-shaped rec (or an {@code Objs} whose member
+         * is one — a rec read can answer a key multi-valued) is wrapped in
+         * place, and anything else yields an empty style.  Typing is decided
+         * here, once, so no widget has to guess what {@code at(style)} returned.
+         */
+        @SuppressWarnings("unchecked")
+        public static <T extends Stylable<T>> Style<T> from(final Obj styleObj) {
+            if (styleObj instanceof Style<?> s)
+                return (Style<T>) s;
+            final Rec styleRec = asStyleRec(styleObj);
+            return null == styleRec ? empty() : of(null, styleRec);
+        }
+
+        /** True when a rec read handed back something that IS a style (or holds one). */
+        public static boolean isStyle(final Obj styleObj) {
+            return null != asStyleRec(styleObj);
+        }
+
+        /** The rec a style read landed on, or null when there is none. */
+        private static Rec asStyleRec(final Obj styleObj) {
+            if (null == styleObj || styleObj.isNoObj()) return null;
+            if (styleObj instanceof Rec rec) return rec;
+            return styleObj.stream().filter(Obj::isRec).findFirst().map(Obj::asRec).orElse(null);
+        }
+
         public Border border() {
-            return null != this.border ? this.border : (this.at("border").isUri() ? Border.parse(this.at("border").uriValue().toString()) : Border.none);
+            return this.at("border").isUri() ? Border.parse(this.at("border").uriValue().toString()) : Border.none;
         }
 
         public Style<T> border(final Border border) {
             this.jvm().put(uri("border"), uri(border.toString()));
-            this.border = border;
             return this;
         }
 
@@ -259,20 +316,16 @@ public interface Stylable<T extends Stylable<T>> {
         /**
          * Read style fields from a mtron style Rec.
          */
-        public static <T extends Stylable<T>> Style<T> from(final Rec styleRec) {
-            if (styleRec == null) return new Style<>(null);
-            if (styleRec instanceof Style) return (Style<T>) styleRec;
-            final Style<T> s = new Style<>(null);
-            s.jvm().putAll(styleRec.jvm());
-            return s;
-        }
-
         /**
-         * Read style fields from a mtron style Rec.
+         * Bind a style read to a stylable and apply it (the rec stays the state).
+         *
+         * <p>Takes {@link Obj}, deliberately: an overload taking {@link Rec} made
+         * a generic {@code at(key)} result infer as {@code Rec} and inserted a
+         * cast that threw on a {@code noobj} or an absent style.
          */
-        public static <T extends Stylable<T>> T from(final Rec styleRec, final T stylable) {
-            final Style<T> s = new Style<>(stylable);
-            s.jvm().putAll(styleRec.jvm());
+        public static <T extends Stylable<T>> T from(final Obj styleObj, final T stylable) {
+            final Style<T> s = from(styleObj);
+            s.stylable = stylable;
             return s.applyStyle();
         }
 
@@ -282,7 +335,6 @@ public interface Stylable<T extends Stylable<T>> {
             this.jvm().put(uri("width"), jnt(width));
             this.jvm().put(uri("top"), jnt(top));
             this.jvm().put(uri("left"), jnt(left));
-            this.anchor = anchor;
             return this;
         }
 
@@ -291,19 +343,17 @@ public interface Stylable<T extends Stylable<T>> {
             this.jvm().remove(uri("width"));
             this.jvm().remove(uri("top"));
             this.jvm().remove(uri("left"));
-            this.anchor = null;
             return this;
         }
 
         public boolean hasFloat() {
-            return this.anchor != null || this.at("anchor").isUri();
+            return this.at("anchor").isUri();
         }
 
         public FloatingSurface.Anchor anchor() {
-            if (this.anchor != null) return this.anchor;
-            if (this.at("anchor").isUri())
-                return FloatingSurface.Anchor.parse(this.at("anchor").uriValue().toString());
-            return null;
+            return this.at("anchor").isUri()
+                    ? FloatingSurface.Anchor.parse(this.at("anchor").uriValue().toString())
+                    : null;
         }
 
         /**

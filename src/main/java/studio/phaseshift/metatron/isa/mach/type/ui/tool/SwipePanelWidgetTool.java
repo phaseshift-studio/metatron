@@ -35,6 +35,7 @@ import java.util.Map;
 
 import static org.jline.keymap.KeyMap.key;
 import static studio.phaseshift.metatron.Tokens.OBJ;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 /**
@@ -70,11 +71,15 @@ public class SwipePanelWidgetTool extends AbstractWidget<SwipePanelWidgetTool> {
      * Java API constructor.
      */
     public SwipePanelWidgetTool(final Lst items) {
-        this.at(OBJ, items);
+        // put(), not at(): at(key, value) is the *immutable* two-arg form — it
+        // returns a clone with the key set and discards it, which left this
+        // constructor building a widget that run() then skipped (it bails when the
+        // rec has no obj).  A write path has to be a write.
+        this.put(uri(OBJ), items);
     }
 
     /**
-     * JRec constructor — mtron construction via {@code swipe_panel::[obj=>[...]]}.
+     * rec constructor — mtron construction via {@code swipe_panel::[obj=>[...]]}.
      */
     public SwipePanelWidgetTool(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -295,15 +300,21 @@ public class SwipePanelWidgetTool extends AbstractWidget<SwipePanelWidgetTool> {
      * Transfer style from this widget to a PanelWidget card.
      */
     private void applyStyleToPanel(final PanelWidget panel) {
-        if (this.style == null) return;
+        // The old null-guard tested the (now removed) style field, which was
+        // null until a style was assigned.  getStyle() reads the rec and never
+        // returns null: an unset style reads as an empty style whose empty bg/fg
+        // and Border.none fall through the checks below untouched (only
+        // ps.applyStyle() still runs, exactly as it did for a non-null-but-empty
+        // style before), so the guard is dropped rather than re-expressed.
+        final Style<SwipePanelWidgetTool> style = this.getStyle();
         final var ps = panel.getStyle();
         if (ps == null) return;
 
-        final String bg = this.style.background();
+        final String bg = style.background();
         if (bg != null && !bg.isEmpty()) ps.background(bg);
-        final String fg = this.style.foreground();
+        final String fg = style.foreground();
         if (fg != null && !fg.isEmpty()) ps.foreground(fg);
-        final Border border = this.style.border();
+        final Border border = style.border();
         if (border != null && border != Border.none) ps.border(border);
 
         ps.applyStyle();

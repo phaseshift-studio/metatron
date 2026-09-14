@@ -25,8 +25,6 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import java.util.List;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.STYLE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_PROGRESS_TABLE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -45,12 +43,9 @@ public class ProgressTableWidget extends TableWidget {
 
     public ProgressTableWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.headers.clear();
-        this.headers.addAll(List.of("layer", "progress", " ", " "));
-        if (this.has(STYLE)) {
-            Style.from(this.at(STYLE), this);
-        } else
-            Style.from(rec(), this);
+        // headers are rec state like everything else: the old constructor cleared and
+        // refilled the Java list, which no read of the rec could ever see
+        this.headers(List.of("layer", "progress", " ", " "));
     }
 
     public ProgressTableWidget() {
@@ -82,6 +77,6 @@ public class ProgressTableWidget extends TableWidget {
                 + " ".repeat(Math.max(0, BAR_WIDTH - filled - (pct < 100 ? 1 : 0))) + "]";
         final String pctStr = String.format("%3.0f%%", pct);
 
-        super.addRow(List.<Object>of(label, bar, pctStr + " ".repeat(4 - pctStr.length()), pct >= 100 ? "{{g}}✓" : " "), 0);
+        this.upsertRow(List.of(label, bar, pctStr + " ".repeat(4 - pctStr.length()), pct >= 100 ? "{{g}}✓" : " "), 0);
     }
 }

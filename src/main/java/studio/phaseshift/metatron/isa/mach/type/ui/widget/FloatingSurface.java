@@ -167,9 +167,13 @@ public class FloatingSurface {
      *  never linger after focus moves, a widget relocates, or is removed. */
     private int markerRow = 0;
     private int markerCol = 0;
+    private int resizeMarkerRow = 0;
+    private int resizeMarkerCol = 0;
 
-    /** The focus marker character shown next to the focused widget. */
+    /** The focus marker character, drawn in the focused widget's top-left cell. */
     private static final String FOCUS_MARKER = "▶";
+    /** The resize marker, drawn in the focused widget's bottom-right cell. */
+    private static final String RESIZE_MARKER = "◢";
 
     /** Lower bounds for {@link #nudge} — resize can never demolish a widget. */
     private static final int MIN_WIDTH = 10;
@@ -510,6 +514,11 @@ public class FloatingSurface {
             sb.append(" ");
             this.markerRow = 0;
         }
+        if (this.resizeMarkerRow > 0) {
+            sb.append("\033[").append(this.resizeMarkerRow).append(";").append(this.resizeMarkerCol).append("H");
+            sb.append(" ");
+            this.resizeMarkerRow = 0;
+        }
 
         // Draw lower z-index widgets first so higher z-index widgets (e.g.
         // menu bars) render on top when their regions overlap.  Stable sort:
@@ -715,6 +724,130 @@ public class FloatingSurface {
     // -----------------------------------------------------------------
     // Public API — scrolling (the viewport over content that outlives it)
     // -----------------------------------------------------------------
+
+    /**
+     * A cell on the terminal, 1-based — the console's coordinate space.
+     */
+    public record Cell(int row, int col) {
+    }
+
+    /**
+     * Where an anchored widget sits and how big it is: the anchor and offsets the style
+     * carries as {@code anchor}/{@code top}/{@code left}, plus the box the pointer can
+     * reshape ({@code width}, {@code height} — the height cap when one is set, else the
+     * height last drawn).
+     */
+    public record Placement(Anchor anchor, int top, int left, int width, int height) {
+    }
+
+    /**
+     * The handles a pinned widget offers the pointer: {@code MOVE} is the chevron in
+     * its top-left cell, {@code RESIZE} the marker in its bottom-right cell.
+     */
+    public enum Handle {
+        MOVE, RESIZE
+    }
+
+    /**
+     * Where a widget hangs from, or null when it is not an anchored float.  A fixed
+     * slot belongs to a pane layout (the layout owns its position), and a widget with
+     * no slot is not pinned at all — neither is draggable.
+     */
+    public Placement placement(final Widget<?> widget) {
+        final Slot slot = slot(widget);
+        if (null == slot || !slot.isAnchored()) return null;
+        final int height = slot.heightCap > 0 ? slot.heightCap
+                : (slot.prevHeight > 0 ? slot.prevHeight : 0);
+        return new Placement(slot.anchor, slot.offsetRow, slot.offsetCol, slot.targetWidth, height);
+    }
+
+    /**
+     * The widget's top-left cell — the cell the focus chevron is painted in — or null
+     * when the widget has no drawn region.
+     */
+    public Cell origin(final Widget<?> widget) {
+        final Slot slot = slot(widget);
+        return null == slot || slot.lastRow <= 0 ? null : new Cell(slot.lastRow, slot.lastCol);
+    }
+
+    /**
+     * Which handle the given cell is for this widget, or null when it is none of them.
+     *
+     * <p>Both handles are painted INSIDE the widget's own box (see {@code renderWidget}),
+     * so the handles and the geometry agree by construction: the chevron cell is the
+     * widget's origin — which is what makes a move a translation rather than an offset
+     * calculation — and the resize marker is the box's bottom-right cell, which is what
+     * makes a resize a width/height delta rather than a corner calculation.
+     */
+    public Handle handleAt(final Widget<?> widget, final int row, final int col) {
+        final Cell origin = this.origin(widget);
+        if (null == origin) return null;
+        if (origin.row() == row && origin.col() == col) return Handle.MOVE;
+        final Slot slot = slot(widget);
+        if (null == slot || slot.prevHeight <= 0 || slot.prevWidth <= 0) return null;
+        final int cornerRow = origin.row() + slot.prevHeight - 1;
+        final int cornerCol = origin.col() + slot.prevWidth - 1;
+        if (cornerRow == origin.row() && cornerCol == origin.col()) return null;   // one cell: no resize handle
+        return cornerRow == row && cornerCol == col ? Handle.RESIZE : null;
+    }
+
+    /**
+     * Move an anchored widget so its top-left corner (the chevron) lands on the given
+     * cell, clamped to the terminal: the handle must stay reachable, or a widget could
+     * be dragged out of its own grasp.  The off-screen parts of the body are the
+     * renderer's problem, not the drag's.
+     *
+     * <p>The new position is written to the slot as anchor offsets — the slot, not the
+     * incoming args, is the source of truth for a floating widget's geometry — and a
+     * render is queued (never a synchronous one: a drag re-positions on every motion
+     * event, and a blocking render per event is what made the pointer feel sluggish
+     * before).
+     *
+     * @return true when the widget is an anchored float and the cell was in range
+     */
+    public boolean placeAt(final Widget<?> widget, final int row, final int col) {
+        final Slot slot = slot(widget);
+        if (null == slot || !slot.isAnchored()) return false;
+        final int termHeight = Math.max(1, this.terminal.getHeight());
+        final int termWidth = Math.max(1, this.terminal.getWidth());
+        final int height = Math.max(1, slot.prevHeight > 0 ? slot.prevHeight : slot.heightCap);
+        final int placedRow = Math.min(Math.max(1, row), termHeight);
+        final int placedCol = Math.min(Math.max(1, col), termWidth);
+        final int offsetRow = slot.offsetRowFor(placedRow, termHeight, height);
+        final int offsetCol = slot.offsetColFor(placedCol, termWidth, Math.max(1, slot.targetWidth));
+        if (offsetRow == slot.offsetRow && offsetCol == slot.offsetCol) return true;
+        slot.offsetRow = offsetRow;
+        slot.offsetCol = offsetCol;
+        this.render();
+        return true;
+    }
+
+    /**
+     * Resize an anchored widget's box — the mouse counterpart of {@link #nudge}, which
+     * is the same two slot fields moved by a key step instead of by a pointer delta.
+     * Clamped to the lower bounds (a resize can never demolish a widget) and to the
+     * terminal (it cannot outgrow it), keeping {@code nudge}'s convention that the
+     * anchor pins one edge and the free edge does the moving.
+     *
+     * <p>As with a move, the size goes to the slot during the gesture — the slot is the
+     * authority for a floating widget's geometry once it has lived here — and only the
+     * release writes the style.
+     *
+     * @return true when the widget is an anchored float and the size was applied
+     */
+    public boolean resizeTo(final Widget<?> widget, final int width, final int height) {
+        final Slot slot = slot(widget);
+        if (null == slot || !slot.isAnchored()) return false;
+        final int termWidth = Math.max(1, this.terminal.getWidth());
+        final int termHeight = Math.max(1, this.terminal.getHeight());
+        final int newWidth = Math.min(Math.max(MIN_WIDTH, width), Math.max(MIN_WIDTH, termWidth));
+        final int newHeight = Math.min(Math.max(MIN_HEIGHT, height), Math.max(MIN_HEIGHT, termHeight));
+        if (newWidth == slot.targetWidth && newHeight == slot.heightCap) return true;
+        slot.targetWidth = newWidth;
+        slot.heightCap = newHeight;
+        this.render();
+        return true;
+    }
 
     /**
      * Scroll a pinned widget's viewport by {@code (dx, dy)} cells and
@@ -1137,6 +1270,18 @@ public class FloatingSurface {
             this.markerCol = slot.lastCol;
             sb.append("\033[").append(slot.lastRow).append(";").append(slot.lastCol).append("H");
             sb.append("{{y}}").append(FOCUS_MARKER).append("{{X}}");
+            // The resize handle rides in the box's bottom-right cell — the corner a
+            // mouse reaches for to reshape it.  A box drawn one cell wide and one tall
+            // would put it on top of the chevron, so that degenerate case gets no
+            // marker rather than two glyphs on one cell.
+            final int handleRow = slot.lastRow + Math.max(1, slot.prevHeight) - 1;
+            final int handleCol = slot.lastCol + Math.max(1, slot.prevWidth) - 1;
+            if (handleRow != slot.lastRow || handleCol != slot.lastCol) {
+                this.resizeMarkerRow = handleRow;
+                this.resizeMarkerCol = handleCol;
+                sb.append("\033[").append(handleRow).append(";").append(handleCol).append("H");
+                sb.append("{{y}}").append(RESIZE_MARKER).append("{{X}}");
+            }
         }
 
         slot.prevHeight = effectiveHeight;
@@ -1214,8 +1359,10 @@ public class FloatingSurface {
         // re-floats.  The slot — not the widget instance — is the source of
         // truth for the width (widgets are re-hydrated as fresh instances).
         volatile int targetWidth;
-        final int offsetRow;
-        final int offsetCol;
+        // Mutable: a drag moves the widget, so these are the one piece of geometry
+        // the pointer writes directly (nudge() writes targetWidth/heightCap).
+        volatile int offsetRow;
+        volatile int offsetCol;
 
         // Effective height cap — -1 = fall back to the widget's own style
         // height (i.e. natural height).  Mutable: nudge() resizes it and
@@ -1280,16 +1427,48 @@ public class FloatingSurface {
          */
         void resolve(final int termHeight, final int termWidth, final int widgetHeight) {
             if (this.anchor == null) return;
+            this.lastRow = rowFor(this.offsetRow, termHeight, widgetHeight);
+            this.lastCol = colFor(this.offsetCol, termWidth, this.targetWidth);
+        }
 
-            this.lastRow = switch (this.anchor) {
-                case TOP_LEFT, TOP_MIDDLE, TOP_RIGHT -> 2 + this.offsetRow;
-                case MIDDLE -> Math.max(1, (termHeight - widgetHeight) / 2 + 1 + this.offsetRow);
-                case BOTTOM_LEFT, BOTTOM_MIDDLE, BOTTOM_RIGHT -> Math.max(1, termHeight - widgetHeight + 1 - this.offsetRow);
+        /** The terminal row this widget's top edge lands on for the given row offset. */
+        int rowFor(final int offset, final int termHeight, final int widgetHeight) {
+            return switch (this.anchor) {
+                case TOP_LEFT, TOP_MIDDLE, TOP_RIGHT -> 2 + offset;
+                case MIDDLE -> Math.max(1, (termHeight - widgetHeight) / 2 + 1 + offset);
+                case BOTTOM_LEFT, BOTTOM_MIDDLE, BOTTOM_RIGHT -> Math.max(1, termHeight - widgetHeight + 1 - offset);
             };
-            this.lastCol = switch (this.anchor) {
-                case TOP_LEFT, BOTTOM_LEFT -> 1 + this.offsetCol;
-                case TOP_MIDDLE, BOTTOM_MIDDLE, MIDDLE -> Math.max(1, (termWidth - this.targetWidth) / 2 + this.offsetCol);
-                case TOP_RIGHT, BOTTOM_RIGHT -> Math.max(1, termWidth - this.targetWidth + 1 + this.offsetCol);
+        }
+
+        /** The terminal column this widget's left edge lands on for the given column offset. */
+        int colFor(final int offset, final int termWidth, final int widgetWidth) {
+            return switch (this.anchor) {
+                case TOP_LEFT, BOTTOM_LEFT -> 1 + offset;
+                case TOP_MIDDLE, BOTTOM_MIDDLE, MIDDLE -> Math.max(1, (termWidth - widgetWidth) / 2 + offset);
+                case TOP_RIGHT, BOTTOM_RIGHT -> Math.max(1, termWidth - widgetWidth + 1 + offset);
+            };
+        }
+
+        /**
+         * The row offset that puts this widget's top edge on {@code row} — the inverse
+         * of {@link #rowFor}, exact across the clamped range.  A drag is expressed in
+         * screen cells (where the pointer is) and stored as offsets (what the style
+         * holds), so the two directions have to agree in one place.
+         */
+        int offsetRowFor(final int row, final int termHeight, final int widgetHeight) {
+            return switch (this.anchor) {
+                case TOP_LEFT, TOP_MIDDLE, TOP_RIGHT -> row - 2;
+                case MIDDLE -> row - ((termHeight - widgetHeight) / 2 + 1);
+                case BOTTOM_LEFT, BOTTOM_MIDDLE, BOTTOM_RIGHT -> termHeight - widgetHeight + 1 - row;
+            };
+        }
+
+        /** The column offset that puts this widget's left edge on {@code col}. */
+        int offsetColFor(final int col, final int termWidth, final int widgetWidth) {
+            return switch (this.anchor) {
+                case TOP_LEFT, BOTTOM_LEFT -> col - 1;
+                case TOP_MIDDLE, BOTTOM_MIDDLE, MIDDLE -> col - (termWidth - widgetWidth) / 2;
+                case TOP_RIGHT, BOTTOM_RIGHT -> col - (termWidth - widgetWidth + 1);
             };
         }
     }

@@ -1,6 +1,6 @@
 ---
 name: metatron-ui-architecture
-description: Architecture of the metatron UI subsystem (Widget, Style, FloatingSurface, JRec state bridge, uiInstSet type registration).  Reference for agents creating or modifying widgets.
+description: Architecture of the metatron UI subsystem (Widget, Style, FloatingSurface, rec-backed widget state via SpaceRec, uiInstSet type registration).  Reference for agents creating or modifying widgets.
 ---
 
 # Metatron UI Architecture
@@ -30,13 +30,13 @@ isa.mach.type.ui.widget
 isa.mach.type.ui.console
   Console.java              ← REPL, terminal, pane tree, FloatingSurface integration
   StatusLine.java           ← terminal status bar
-  Highlighter.java          ← syntax highlighting + visualLength/unformat
+  Highlighter.java          ← syntax highlighting (language tokens + blocks) + visualLength/unformat
   Hotkeys.java              ← keystrokes typed while a job holds the console (alt+b, [q], type-ahead)
   CommandPalette.java       ← see isa.mach.type.ui.console.menu
 isa.mach.type.ui.console.menu
   CommandPalette.java       ← : commands, builtin shortcut keys
 isa.mach.type.ui.graphitty
-  Graphitty.java            ← {{macro}} DSL → ANSI escapes
+  Graphitty.java            ← {{macro}} DSL → ANSI escapes, incl. {{syntax:lang}} blocks
 isa.mach.type.ui.tmux
   Pane.java                 ← tmux-style split pane
   PaneNode.java             ← pane tree interface
@@ -55,7 +55,8 @@ isa.mach.type.ui.tool
 isa.mach.ui
   uiInstSet.java            ← mtron type/instruction registration for all UI types
 isa.m.type.reflect
-  JRec.java                 ← Java-backed mtron rec: jvmRead(), jvmWrite(), extractors
+  SpaceRec.java             ← widget base: one read path (read()), one write path (put()), no reflection
+  JRec.java                 ← Java-backed mtron rec (frozen; clients: Console/Pane, Rewriter)
 ```
 
 ## 1. Widget interface (`Widget.java`)
@@ -85,6 +86,12 @@ default W unfloat(FloatingSurface surface)
 
 **Consolidation note:** `display()` was removed — `run()` is the single presentation method.
 
+**Who draws:** `run()`'s default renders, but `AbstractWidget` overrides it with raw mode + attachment
+only. So a widget under `AbstractWidget` appears on screen only if it overrides `run()` itself
+(`MenuBarWidget`, `Selector`, `SelectorWidget`, `GridWidget`, and every tool do) or is drawn by a parent
+that holds it (a line widget is drawn by its `MenuBarWidget`). Displaying a lone line widget prints
+nothing — by design, not a bug.
+
 **`chromeLines()`** — defaults to 1 if a border is configured, 0 otherwise. Widgets with column headers or status bars
 override to add their own. Used by `FloatingSurface` to preserve structural chrome when the `height` cap clips body
 lines.
@@ -93,120 +100,96 @@ lines.
 over these for cursor navigation; a widget that wants column-aware selection should either override them or attach a
 `TableWidget`.
 
-## 2. JRec state bridge (`JRec.java`)
+## 2. Widget state — the rec is the only home (`SpaceRec.java`)
 
-There are **two** state models in the widget tree, depending on when the widget was written:
-
-### Model A: JVM-as-source-of-truth (AccordionWidget — preferred for new widgets)
-
-State lives in the **persistent store** (memSpace, tbleSpace, etc.). Java fields annotated with `@JRecElement` are
-**metadata for mtron introspection only** — never read by Java code. Mutators call `jvmWrite()`.  `format()` calls
-`jvmRead()`
-and extracts values fresh on every render.
-
-### Model B: Java-fields-as-storage (legacy — TableWidget, PanelWidget, TreeWidget)
-
-Java fields ARE the data store. A private `sync()` method pulls initial state from JVM when the widget was constructed
-from mtron, but once Java fields are populated (by Java API or prior sync), JVM is never consulted again. Mutators use
-direct field assignment or builders (`addRow()`, `addMetadata()`).
-
-**Shared primitives** (both models):
+A widget's state is its rec and nothing else. `SpaceRec` is the base that enforces it, with two rules:
 
 ```java
-// Read latest state from persistent store (if vid is set) or local JVM merge.
-jvmRead() → Router.
+// one read path — the space's copy when the rec is anchored, the local map otherwise
+protected Map<Obj, Obj> read()
 
-global().
-
-read(vid) → freshObj.
-
-jvm()
-
-// Write a single field with >>=-style merge: read fresh, merge, write back.
-jvmWrite(key, value)
-
-// Static typed extractors — use with Map<Obj,Obj> from jvmRead():
-jvmStr(jvm, key)     →
-
-String
-jvmBool(jvm, key)    →
-
-boolean(defaults true if absent)
-
-jvmInt(jvm, key, fb) →
-
-int(with fallback)
-
-jvmBody(jvm, key)    → List<String>  (splits \\
-n and \n)
+// one write path — at(key, value, MUTABLE): installs in the rec and saves it to the space
+protected void put(final Obj key, final Obj value)
 ```
 
-**Model A — JVM-as-source-of-truth** (AccordionWidget; preferred for new widgets):
+What follows from those two rules:
+
+- **Read once per pass, pass the map down.** `read()` hits the space when the rec is anchored, so
+  `format()` does one `read()` and derives everything from it (`get(fields, key)`,
+  `getStr`/`getBool`/`getInt`/`getLines`). A render never reads per cell, per line or per call.
+- **Walk values with `forEachValue(Obj, Consumer)`.** `stream()` over a `Lst` yields the *list*, not its
+  members, so a caller that meant to walk members silently gets one value — a whole row read as a single
+  cell, a body read as no lines at all.
+- **Never shape-inspect a read.** `str`, `str{*}` (a coefficient: many str *values*) and `lst[str]::T`
+  (one value that is a list) are three different types; `getLines` reads all three and
+  `getBool(fields, key, fallback)` normalizes what it finds.
+- **No state fields.** A Java field holding rec data goes stale the moment the rec changes — and the
+  widget object is re-created from the rec on every update, so a field cannot even survive that. What
+  may stay in Java: collaborators, per-render scratch, and the identity of the rec being rendered (view
+  state such as scroll lives in `FloatingSurface` slots, not in the widget).
+- **A key a widget reads should be declared by its `Type`** (`uiInstSet`), which also puts a value type
+  on it. Rec patterns are open, so an undeclared key *works* — which is exactly why it needs the
+  declaration to be a contract rather than a habit.
 
 ```java
-// Constructor — reads style from JVM so run() sees it
-public MyWidget(Map<Obj, Obj> jvm, fURI tid, fURI vid) {
-    super(new HashMap<>(jvm), tid, vid);
-    readStyle(this.jvm());
-}
+public class MyWidget extends SpaceRec<MyWidget> implements Widget<MyWidget> {
 
-// format() — one jvmRead(), all state extracted fresh
-@Override
-public String format() {
-    Map<Obj, Obj> jvm = jvmRead();
-    String title = jvmStr(jvm, keyTitle);
-    // ... render ...
-}
+    private static final Obj K_BODY = uri(BODY);
 
-// Mutators — write through to persistent store
-public void setTitle(String t) {
-    jvmWrite(kTitle, str(t));
+    public MyWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
+        readStyle();                                        // materialise defaults INTO the rec
+    }
+
+    private void readStyle() {
+        final Obj s = this.get(this.read(), STYLE_KEY);
+        final Style<MyWidget> style = Style.isStyle(s) ? Style.from(s) : Style.empty();
+        style.stylable = this;
+        this.put(STYLE_KEY, style);
+    }
+
+    @Override
+    public String format() {
+        final Map<Obj, Obj> fields = this.read();           // ONE read for the pass
+        return this.getStr(fields, K_BODY);                 // typed, normalized
+    }
+
+    public MyWidget append(final String line) {
+        final Map<Obj, Obj> fields = this.read();
+        this.put(K_BODY, str(this.getStr(fields, K_BODY) + line));   // read-merge-write
+        return this;
+    }
 }
 ```
 
-**Model B — Java-fields-as-storage** (TableWidget, PanelWidget, TreeWidget; legacy):
+**Historical note.** Until the 2026-07 widget pass this section documented two JRec models: *Model A*,
+where `jvmRead()`/`jvmWrite()` were called ad hoc and `@JRecElement` fields were declared "metadata for
+mtron introspection only" while Java went on reading them; and *Model B*, where the Java fields **were**
+the store and a `sync()` method arbitrated against the rec using a `javaPopulated` flag (before that
+flag, `TableWidget.sync()` destroyed Java-constructed tables, because the JVM round-trip changes
+container types). Both models are gone — `AccordionWidget`, `PanelWidget`, `TreeWidget` and
+`TableWidget` are `SpaceRec`s with no state fields, and builders such as `addRow()`/`addMetadata()`
+write rec keys.
 
-```java
-// The fool-proof version — tracking flag prevents JVM from overwriting Java data.
-private boolean javaPopulated = false;
+### What the migration removed, widget by widget
 
-// Every Java API mutation sets the flag.
-public TableWidget addRow(final List<Object> entries) {
-    this.javaPopulated = true;
-    this.table.add(entries);
-    return this;
-}
+| widget | state fields before | now |
+|---|---|---|
+| `AccordionWidget` | `cursor`, `style`, `lastRenderHeight` + rehydration helper | none; body/toggle latch in the rec |
+| `PanelWidget` | `cursor`, `maxWidth`, `style` | none; wrap width is the style's `width` |
+| `TreeWidget` | `rows` (a render cache), `style`, `forceExpand` (Java-only, lost on re-hydration) | none; `expand` is a rec key (`uri{*}` of branch uris) |
+| `TableWidget` | `headers`, `table`, `metadata` (`@JRecElement`), `style`, `javaPopulated` | none; `header`/`row`/`metadata` are rec keys |
+| `AbstractWidget` (and every widget/tool under it) | six `jvmWrite()` call sites, two style reads through `at()` | `put()`/`read()`; `size` and `eraseWidget()` were dead and are gone |
+| `Console`, `Pane`, `Rewriter` | many `@JRecElement` fields | unchanged — `JRec` is frozen; these are its only remaining clients |
 
-private void sync() {
-    if (this.style == null) return;    // construction guard
-    if (this.javaPopulated) return;    // Java API owns the data — skip
-    Map<Obj, Obj> jvm = jvmRead();     // snapshot JVM
-    // Populate Java fields FROM JVM (mtron-constructed tables only):
-    Obj h = jvm.get(uri("headers"));
-    if (h != null && !h.isNoObj())
-        h.stream().filter(Obj::isStr).forEach(o -> this.headers.add(o.strValue()));
-    // ... rows, metadata ...
-}
-```
+Two traps that came out of that pass, both worth knowing before you touch a widget:
 
-**⚠️ History:** Before 2026-07-26, `TableWidget.sync()` unconditionally `clear()`ed Java fields and repopulated from the
-JVM snapshot. This destroyed Java-constructed tables (ProfileTool, ExplainTool, TraceTool) because the JVM serialization
-round-trip through `MObjFactory.toObj()` changes container types (`Objs` vs `Lst`, `ListN` vs
-`ArrayList`). The `javaPopulated` flag (shown above) fixes this. It's safer than per-field `isEmpty()` guards because a
-Java-constructed table may legitimately have an empty field (e.g. headers-only table with no rows) — without the flag,
-sync would pull stale rows from a prior mtron construction.
-
-**Also: avoid `Stream.toList()` in sync ().**  `Stream.toList()` (Java 16+) returns immutable
-`ImmutableCollections$ListN`. Use `Collectors.toCollection(ArrayList::new)`
-instead — it keeps rows on the mutable-`ArrayList` path the rest of the codebase expects.
-
-**When to use the legacy sync pattern vs. direct `jvmRead()`:**
-
-- **New widgets** (AccordionWidget): read from `jvmRead()` directly in `format()`. Java fields are metadata only.
-  Mutators use `jvmWrite()`.
-- **Legacy widgets** (TableWidget, PanelWidget, TreeWidget): Java fields are the storage.  `sync()` populates them from
-  JVM. Mutators use direct field assignment or `addRow()`/`addMetadata()` builders. The sync guard protects these from
-  being overwritten.
+- **`at(key, value)` is not a write.** Two-arg `at` is the *immutable* form: it clones the rec with the
+  key set and returns the clone, so `this.at(k, v);` writes nothing. Use `put(k, v)`. This is exactly
+  how `SwipePanelWidgetTool(Lst)` came to build a swipe panel with no `obj` for months.
+- **`JRec.jvm()` returns a copy** (it folds annotated fields and methods into a temp map), so
+  `jvm().put(...)` on a JRec subclass is a silent no-op. On a `SpaceRec` the map is the rec's own. If
+  you are on a JRec-backed class (Console, Pane, Rewriter), write through `put`/`jvmWrite`. 
 
 ## 3. Style system (`Stylable.Style`)
 
@@ -217,6 +200,7 @@ Style is a JVM-backed rec. Fields:
 | `border`        | uri             | simple, continuous, rounded, none, thick, hash, asterisk, period                                                                                 |
 | `background`    | str             | Graphitty color macro e.g. `{{[R]}}`                                                                                                             |
 | `foreground`    | str             | Graphitty color macro e.g. `{{g}}`                                                                                                               |
+| `highlight`     | str             | Syntax a widget colorizes its own body lines with — a `conf/nanorc` token (`mtron`, `java`, `python`, `txt`).  A line carrying a `{{syntax:…}}` tag is left to the whole-body pass (§ 4, § 9) |
 | `divider`       | str             | Column/row divider char                                                                                                                          |
 | `headerDivider` | str             | Header divider char                                                                                                                              |
 | `pointer`       | str             | Selection pointer e.g. `{{r}}>`                                                                                                                  |
@@ -565,6 +549,53 @@ Any pinned widget can be worked with the mouse (see `Console.clickAt`):
 | click a widget's own affordance | the widget acts — an accordion's header (its `[-]` / `[+]` included) folds it (see `Widget.onClick`) |
 | click terminal with no widget under it | clear the focus **and hand the mouse back to the terminal** |
 | wheel | scroll the widget under the pointer (or the focused one) |
+| **press the focused widget's chevron** | take hold of the widget — the chevron is its top-left cell, so the drag is a translation |
+| **press the focused widget's corner marker** (`◢`, its bottom-right cell) | take hold of its size — the mouse counterpart of `nudge()` |
+| **drag with the button held** | the corner follows the pointer (`FloatingSurface.placeAt`) or the box follows the pointer's delta (`FloatingSurface.resizeTo`), both clamped |
+| **release** | park it: a move writes `style => [top=>, left=>]`, a resize writes `width`/`height` — the rec, which is what survives the next `.display()` |
+
+### Moving and reshaping a widget by mouse
+
+**The handles are painted in the widget's own box**, and that is the whole design:
+`FloatingSurface` draws `▶` in the *top-left* rendered cell and `◢` in the *bottom-right* one, so the
+cell a user grabs is the geometry the gesture changes — the origin for a move (which makes the drag a
+translation, the corner landing where the pointer is) and the far corner for a resize (which makes it a
+width/height delta).  Neither needs an offset calculation, and targets that small stay safe to hit:
+nobody clicks a corner by accident, and the body stays free for selection, scrolling and affordances.
+Only the focused widget has handles, and a box drawn one cell wide and tall gets no corner marker
+rather than two glyphs on one cell.
+
+The two gestures are one code path with the handle as the difference: `FloatingSurface.handleAt`
+returns `MOVE` or `RESIZE` for a cell, and `Console` keeps `{widget, handle, press cell, box at press}`
+so a motion is a delta from the press instead of an accumulation of events.
+
+Where the widget sits *while moving* is view state and lives on its slot; where it is **parked** is
+rec state and is written once, on release:
+
+- `Console.mousePressed/Dragged/Released` (dispatched from the mouse handler in `CommandPalette`)
+  run the gesture.  A press and release with no motion stays a click — the press already focused it.
+- `FloatingSurface.placeAt(widget, row, col)` writes the slot's anchor offsets via the anchor
+  **inverse** (`Slot.offsetRowFor/offsetColFor`, the mirror of `rowFor/colFor`) and queue-renders —
+  never a synchronous pass per motion event.
+- `FloatingSurface.resizeTo(widget, width, height)` writes the slot's `targetWidth`/`heightCap` — the
+  same two fields `nudge()` steps by key — clamped to `MIN_WIDTH`/`MIN_HEIGHT` (a resize can never
+  demolish a widget) and to the terminal.  A **cap only ever limits**: the drawn box is
+  `min(cap, content)`, so raising a cap past the content's length changes nothing, and a right- or
+  bottom-anchored box grows leftward/upward because the anchor pins one edge and the free edge moves.
+- the release calls the widget's style write path (`style().top(..).left(..).applyStyle()`, plus
+  `width`/`height` after a resize), so the geometry lands in the rec and survives the re-hydration
+  every update performs.  A move deliberately writes *no* height: a cap nobody asked for would clip
+  content that arrives later.
+- **Clamping** keeps the chevron on screen: a handle dragged off the terminal would be
+  unreachable, and the widget would be stuck where only its body showed.
+- Only **anchored** widgets are draggable (`FloatingSurface.placement` returns null otherwise): a
+  `Slot.fixed` belongs to a pane layout, which owns its position.
+
+A drag holds the pointer for its whole duration (`syncWidgetMouseTracking` treats `dragging()` as
+"wanted"), because a mid-gesture hand-back to the terminal would drop the release event and leave the
+widget in flight.  End-to-end coverage: `bin/test/console-drag.steps` sends press/motion/release bytes
+and reads the widgets back out of the store — rendered text cannot say where a box sits, but the store
+can (a move parks `top=>3, left=>8`; a resize parks `width=>33, height=>6`).
 
 Affordances go through `Widget.onClick(int row, int col)` — **local** coordinates
 (`0,0` = the widget's top-left rendered cell), so a widget tests a click against its own
@@ -601,7 +632,8 @@ made the pointer feel heavy.)
 - **nothing on screen** → the terminal's mouse, always.
 
 The enable/disable sequences are the console's own, not jline's:
-`MOUSE_ON = ?1000h ?1006h` (button events, SGR encoding) and a full `MOUSE_OFF` sweep.
+`MOUSE_ON = ?1000h ?1002h ?1006h` (button events, button-event tracking — motion while a button is
+held, which is what a drag is — and the SGR encoding) and a full `MOUSE_OFF` sweep.
 **Deliberately not `MouseSupport.trackMouse(Normal)`, which also enables `?1005h`** — the legacy
 UTF-8 coordinate encoding, whose mix with 1006 makes a terminal report the pointer in either
 encoding and mis-decode columns; that is exactly the failure mode where a widget's *body* still
@@ -656,6 +688,14 @@ click.  Three things make that affordable (measured on a 300-line accordion: a p
   memo (`LINE_CACHE`, bounded, shared across widget instances on purpose — a widget is
   re-hydrated into a fresh instance by every update, so a per-widget memo would be cold exactly
   when a live widget needs it).
+
+  A `{{syntax:java}} … {{/syntax:java}}` block is highlighted the same way, and the seam is where the
+  widget draws.  A block that nothing draws inside is ONE memoized `Highlighter.highlightBlock` pass;
+  a block whose lines carry the widget's own border and colour is colorized piece by piece through
+  `Highlighter.block(language)`, which carries jline's multi-line state across the seams (a comment
+  opened on one line of the block is still a comment on the next).  A line carrying a block tag is
+  handed back untouched either way: a block spans several lines, so only the pass that sees the whole
+  body can colorize it — that pass is `FloatingSurface`'s `Graphitty.string(sb)`.
 - **Measuring text is O(1) for plain text.** `Graphitty.strip`/`viewLength` return the input
   unchanged when it has no `{{…}}` code, no ANSI escape and nothing outside ASCII — 2.4 µs → 34 ns
   per call, and every widget measures every one of its lines.
@@ -1063,7 +1103,8 @@ silently no-ops. The compiler can't catch this because `Style extends MRec exten
 ## 9. Graphitty — terminal markup DSL (`Graphitty.java`)
 
 Graphitty is a lightweight macro-to-ANSI preprocessor used throughout the UI layer. Tags are written `{{...}}` and are
-stripped by `Graphitty.strip()` for visual-length calculations. The DSL supports three families of tags:
+stripped by `Graphitty.strip()` for visual-length calculations. The DSL supports four families of tags: colour and effect,
+cursor and screen, chaining with `&`, and `{{syntax:lang}}` blocks of foreign source.
 
 ### Colour / effect tags
 
@@ -1103,6 +1144,65 @@ stripped by `Graphitty.strip()` for visual-length calculations. The DSL supports
 | `{{*}}`   | `\033[?25h`     | show cursor                                  |
 | `{{.}}`   | `\033[?25l`     | hide cursor                                  |
 
+### Syntax blocks (`{{syntax:lang}}` … `{{/syntax:lang}}`)
+
+Everything between the tags is **foreign source code**: its literal text is captured and colorized from a `conf/nanorc`
+syntax file, and the tags themselves never reach the terminal.  The end tag must name the same language as the open tag.
+
+```java
+// colorize a block of source anywhere a string is drawn:
+"{{syntax:java}}" + source + "{{/syntax:java}}"
+```
+
+| Language token                                                                             | Resolves to                                     |
+|--------------------------------------------------------------------------------------------|-------------------------------------------------|
+| `java`, `python`, `yaml`, `sql`, `json`, `javascript`, `html`, `xml`, `markdown`, `mtron`   | `conf/nanorc/<token>.nanorc`                    |
+| `js` / `ts` → javascript, `py` → python, `yml` → yaml, `md` → markdown, `htm` → html        | the same files, short forms                     |
+| `txt`, `text`, `plain`, `none`, anything else                                               | no highlighting — the text is emitted as it is |
+
+A token names the **file**; jline is then asked for the syntax name that file *declares* (`syntax "Java"`), because jline
+matches a syntax name by exact equality — passing `java` straight through landed on a same-named system nanorc, or, on a
+host without one, on nothing at all.  A user file in `~/.metatron/<token>.nanorc` wins over the shipped one.  A new
+language needs both halves: `conf/nanorc/<language>.nanorc` **and** an `include <language>.nanorc` line in
+`conf/nanorc/jnanorc` — resolution reads the file, but jline only looks at the files `jnanorc` includes, so one that is
+missing from that list resolves to a syntax with no rules and the text is drawn plain.
+
+| Call                                         | Use                                                                              |
+|----------------------------------------------|----------------------------------------------------------------------------------|
+| `Highlighter.syntaxName(language)`           | the syntax a token resolves to; `null` means plain text                          |
+| `Highlighter.highlightBlock(language, code)` | a whole block in one pass, memoized                                              |
+| `Highlighter.block(language)`                | a stateful colorizer for a block that arrives in pieces                          |
+| `Highlighter.highlightLine(language, line)`  | one line of a body — a line with no syntax, or carrying a block tag, is handed back |
+
+Rules of the road:
+
+- **Markup still applies inside a block.**  A block is not a verbatim region: the markup of the document around it keeps
+  working through it, which is what lets a widget draw its border and its colours *through* the lines of a block it
+  renders.  Only literal text is code.  Code that has to *show* a tag escapes it — `\{\{b\}\}` renders as `{{b}}`.
+- **Measuring captures the block too**, with escapes off: the tags are dropped and the code is kept, so
+  `Graphitty.strip()`, `viewLength()` and `Highlighter.visualLength()` measure exactly what is drawn on the line.
+- **A block that is never closed** renders what it captured; the flush belongs to the outermost parse.  A tag alone on a
+  line is simply dropped — a widget measures its body line by line, so an end tag can arrive without its opener.
+- **A mismatched end tag reports** `unmatched syntax wrap: /syntax:sql != /syntax:java`, the same shape as any other
+  unmatched rule wrap.
+- **No nesting**: inside a block another `{{syntax:…}}` is markup like any other and does not open a second block.
+- **A rule that merely contains the prefix** — `{{/syntax:java}}`, `{{not_syntax:java}}` — names no language: a block opens
+  only on a rule that STARTS with `syntax:`.
+
+Trailing whitespace at a markup boundary is emitted outside the colouring: in a bordered body it is the widget's padding,
+and a syntax file that colours trailing whitespace would otherwise paint it.
+
+```java
+// a widget drawing its border through the block's lines — one block, two rows of it:
+"{{X}}│{{X}} {{syntax:java}}class A {" + padding + "{{X}}│{{X}}\n"
+  + "{{X}}│{{X}} int x = 42;" + padding + "{{X}}│{{X}}\n"
+  + "{{X}}│{{X}} {{/syntax:java}}{{X}}│{{X}}\n"
+// → the border is emitted in order, `int` is colorized, no tag text is drawn
+```
+
+`bin/test/console-syntax-block.steps` drives this in a real console — an accordion whose body is a block — and is the
+regression for the day a line-oriented pass split a block apart.
+
 ### Stack and chaining
 
 Every opened tag is **pushed onto a stack**. Closing with `{{/rule}}` pops the most-recently-opened matching rule and
@@ -1112,6 +1212,10 @@ a
 
 Tags separated by `&` are **chained** — `{{r&_}}` emits red-foreground (`\033[31m`)
 followed by underline (`\033[4m`), pushing both rules in left-to-right order.
+
+A `{{syntax:lang}}` block is the exception: it is matched **by name**, not by position, and never joins that stack.  So
+markup inside the block pushes and pops above whatever encloses it, the rule the stack leads with is what resumes after
+the block, and only the exactly-spelled `{{/syntax:lang}}` closes it.
 
 ```java
 // Stack example — closing restores the previous colour:
@@ -1133,6 +1237,9 @@ followed by underline (`\033[4m`), pushing both rules in left-to-right order.
 | `Graphitty.out(stream, f, args...)`     | Write a Graphitty string directly to an output stream.  Used by `WidgetCanvas.finish()` for the final flush.                                            |
 | `Graphitty.writeToTerminal(f, args...)` | Write through the serialized terminal-writer bridge (FloatingSurface-safe).                                                                             |
 | `Graphitty.viewLength(str)`             | Alias for `strip(str).length()`.                                                                                                                        |
+
+`Graphitty` owns the tags; what a `{{syntax:lang}}` block is colored *with* is `Highlighter`'s — see **Syntax blocks**
+above for `syntaxName`, `highlightBlock`, `block` and the line-oriented `highlightLine`.
 
 ### Typical widget usage
 
