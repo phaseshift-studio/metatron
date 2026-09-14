@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title> · PhaseShift Studio</title>
+    <title>dsh-mtron · PhaseShift Studio</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -378,13 +378,12 @@
 </script>
 <main class="container my-4 flex-grow-1">
     <div class="skill-doc mb-4">
-        <h1 class="skill-title mb-1"></h1>
-        <small></small><br/>
+        <h1 class="skill-title mb-1">dsh-mtron</h1>
+        <small>Migrate DSH harness session memory into a native metatron agent memory tree. The first adapter on the inter-harness memory bus: a zstd JSONL transcript becomes a lst of typed message recs (user, system, thinking, ai, tool_result) that load into a live VM and are written with a single .to() -- after which the migrated agent's history is addressable, queryable, and assertable in metatron.</small><br/>
         <a href="dsh-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>dsh-mtron.md</a>
     </div>
     <div class="markdown-body">
-<h2>dhs→mtron — the harness memory bus, first adapter</h2>
-<p><code>--- name: dhs-mtron description: &gt; Migrate DSH harness session memory into a native metatron agent memory tree. The first adapter on the inter-harness memory bus: a zstd JSONL transcript becomes a lst of typed message recs (user, system, thinking, ai, tool_result) that load into a live VM and are written with a single .to() -- after which the migrated agent's history is addressable, queryable, and assertable in metatron. ---</code></p>
+<h2>dsh→mtron — the harness memory bus, first adapter</h2>
 <h3>What this is</h3>
 <p>AI harnesses each keep agent memory in their own format (DSH: zstd-compressed
 JSONL; others: markdown dirs, API JSON, ...). A harness-bound agent cannot

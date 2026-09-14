@@ -379,7 +379,7 @@
 <main class="container my-4 flex-grow-1">
     <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">tble instruction set</h1>
-        <small>The /m/tble instruction set and the tblespace::T it belongs to: a JDBC relational database mounted as a</small><br/>
+        <small>The /m/tble instruction set and the tblespace::T it belongs to: a JDBC relational database mounted as a metatron space — tables that appear from the first rec write, typed rows, the rewrite family that pushes reads down into SQL, the key/value fall-through, auto_from foreign keys, and native sql(). TRIGGER: When connecting a database (SQLite, PostgreSQL, MariaDB, MySQL), writing or reading table rows in mtron, wondering whether a read was pushed down to SQL, mapping a row cell to a !* pointer, or asking what a table's schema is.</small><br/>
         <a href="tble-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>tble-instset-mtron.md</a>
     </div>
     <div class="markdown-body">
@@ -514,6 +514,11 @@ keeps what SQL cannot say:</p>
     obj_tid=&gt;'/m/inst/auto_from',
     ref_table=&gt;'person']
 ==&gt;[
+    table_name=&gt;'note',
+    column_name=&gt;'$table',
+    base_vid=&gt;'/m/rec',
+    obj_tid=&gt;'/m/rec']
+==&gt;[
     table_name=&gt;'person',
     column_name=&gt;'age',
     base_vid=&gt;'/m/int',
@@ -523,6 +528,11 @@ keeps what SQL cannot say:</p>
     column_name=&gt;'name',
     base_vid=&gt;'/m/str',
     obj_tid=&gt;'/m/str{2}']
+==&gt;[
+    table_name=&gt;'note',
+    column_name=&gt;'body',
+    base_vid=&gt;'/m/str',
+    obj_tid=&gt;'/m/str']
 </code></pre>
 <p>A structural obj (<code>tags=&gt;['a','b']</code>) rides in a <code>TEXT</code> column with its type preserved in <code>obj_tid</code>, so a read
 reconstructs the lst rather than a string that looks like one.</p>
@@ -723,6 +733,7 @@ kinds may sit in one row.</p>
 ==&gt;/sys/space/tbledoc/instset/#
 mtron&gt; */sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
 ==&gt;/sys/space/tbledoc/instset/award=&gt;rec::T[?[{?}trophy=&gt;str::T,recipient=&gt;isa(person/+/id).!*id(),uri{?}::T=&gt;#::T]]@/sys/space/tbledoc/instset/award
+==&gt;/sys/space/tbledoc/instset/note=&gt;rec::T[?[{?}body=&gt;str::T,uri{?}::T=&gt;#::T]]@/sys/space/tbledoc/instset/note
 ==&gt;/sys/space/tbledoc/instset/person=&gt;rec::T[?[{?}name=&gt;str::T,{?}age=&gt;int::T,{?}skill=&gt;str::T,uri{?}::T=&gt;#::T]]@/sys/space/tbledoc/instset/person
 </code></pre>
 <p>Reading the schema is how you meet a table you have never seen: each entry is an <code>isa([{?}name=&gt;str::T,…])</code> refinement
@@ -767,14 +778,22 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/2
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/10
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/4
+==&gt;[body=&gt;'another one']@tbledoc:note/12
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;1
+==&gt;12
 ==&gt;3
+==&gt;10
+==&gt;11
 ==&gt;2
 ==&gt;4
+==&gt;5
+==&gt;6
+==&gt;7
+==&gt;8
+==&gt;9
 </code></pre>
 <h3>taking the space down</h3>
 <p>A space is a <strong>mount</strong>, not a copy. Writing <code>noobj</code> to its vid takes it down: the pattern stops routing, the JDBC
@@ -827,7 +846,8 @@ is fine.</li>
 stream, not recs. The projection rewrite is <code>==[col=&gt;_]</code> (<code>sql_select</code>).</p>
 </li>
 <li>
-<p><strong>the docs runner doubles a <code>_?incrq</code> row.</strong> In a live VM session one <code>_?incrq</code> write inserts one row, and the assigned
+<p><strong>the docs runner doubles a <code>_?incrq</code> row.</strong> In a live VM session one <code>_?incrq</code> write inserts one row, and the
+assigned
 key stamps onto the vid. Evaluated by the docs runner — which evaluates with type checking disabled — the same write
 lands <em>two</em> rows, and the vid it returns is the second key, so the key list above reads <code>1, 3, 2, 4</code> rather than
 <code>1, 2</code>. The idiom is the same either way; the doubling is a runner-context artifact, not a misconfiguration.</p>
