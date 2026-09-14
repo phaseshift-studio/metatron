@@ -21,10 +21,12 @@ package studio.phaseshift.metatron.isa.mach.type.ui.tool;
 import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
 import org.jline.terminal.Attributes;
+import org.jline.terminal.Terminal;
 import org.jline.utils.InfoCmp;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
+import studio.phaseshift.metatron.isa.mach.type.ui.ScrollView;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.AbstractWidget;
@@ -32,6 +34,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.widget.PanelWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.Utilities;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.WidgetCanvas;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -56,13 +59,26 @@ import java.util.Map;
 public class ModalTool extends AbstractWidget<ModalTool> {
 
     private enum Action {
-        DISMISS
+        DISMISS,
+        SCROLL_UP,
+        SCROLL_DOWN,
+        PAGE_UP,
+        PAGE_DOWN,
+        MOUSE
     }
+
+    /** Rows scrolled per mouse-wheel notch. */
+    private static final int WHEEL_ROWS = 3;
 
     private final PanelWidget panel;
     private Attributes savedAttributes;
     private boolean running = false;
     private int totalHeightUsed = 0;
+    /** Viewport over the modal's own body: rows off-screen are scrolled back into view, never dropped. */
+    private int scrollOffset = 0;
+    private int maxScrollOffset = 0;
+    private int viewportRows = 0;
+    private boolean floats = false;
 
     public ModalTool(final String title, final String body) {
         this(new PanelWidget(title, body));
@@ -126,6 +142,7 @@ public class ModalTool extends AbstractWidget<ModalTool> {
         final Stylable.Style<PanelWidget> style = this.panel.getStyle();
         final boolean floats = Console.LOCAL_INSTANCE != null
                 && style != null && style.hasFloat();
+        this.floats = floats;
         if (floats) {
             // Constrain the panel to the terminal width before floating.  The
             // surface clips lines wider than the terminal via Graphitty.strip(),
@@ -138,6 +155,8 @@ public class ModalTool extends AbstractWidget<ModalTool> {
                     floatW, style.top(), style.left());
             Console.LOCAL_INSTANCE.getFloatingSurface().render();
         }
+        if (this.terminal.hasMouseSupport())
+            this.terminal.trackMouse(Terminal.MouseTracking.Normal);
 
         this.running = true;
         final BindingReader bindingReader = new BindingReader(this.terminal.reader());
@@ -145,8 +164,14 @@ public class ModalTool extends AbstractWidget<ModalTool> {
         while (this.running) {
             if (!floats) redraw();
             final Action action = bindingReader.readBinding(keyMap);
-            if (action == Action.DISMISS) {
-                this.running = false;
+            if (null == action) continue;
+            switch (action) {
+                case DISMISS -> this.running = false;
+                case SCROLL_UP -> this.scrollBy(-1);
+                case SCROLL_DOWN -> this.scrollBy(1);
+                case PAGE_UP -> this.scrollBy(-this.pageRows());
+                case PAGE_DOWN -> this.scrollBy(this.pageRows());
+                case MOUSE -> this.onMouse(bindingReader);
             }
         }
     }
@@ -158,6 +183,8 @@ public class ModalTool extends AbstractWidget<ModalTool> {
             this.terminal.setAttributes(this.savedAttributes);
         }
         this.terminal.puts(InfoCmp.Capability.keypad_local);
+        if (this.terminal.hasMouseSupport())
+            this.terminal.trackMouse(Terminal.MouseTracking.Off);
         this.terminal.writer().flush();
         super.close();
     }
@@ -167,21 +194,86 @@ public class ModalTool extends AbstractWidget<ModalTool> {
         keyMap.bind(Action.DISMISS, "");             // Ctrl-D
         keyMap.bind(Action.DISMISS, Utilities.enter_key);  // Enter
         keyMap.bind(Action.DISMISS, " ");                  // Space
+        // A modal body can be taller than the screen: the viewport scrolls over
+        // it (arrows / j / k for a line, page keys for a page, wheel for the
+        // mouse) instead of the terminal scrolling past it.
+        keyMap.bind(Action.SCROLL_UP, "\033[A");           // up
+        keyMap.bind(Action.SCROLL_DOWN, "\033[B");         // down
+        keyMap.bind(Action.PAGE_UP, "\033[5~");            // page up
+        keyMap.bind(Action.PAGE_DOWN, "\033[6~");          // page down
+        keyMap.bind(Action.SCROLL_UP, "k");
+        keyMap.bind(Action.SCROLL_DOWN, "j");
+        for (final String mouse : org.jline.terminal.impl.MouseSupport.keys())
+            keyMap.bind(Action.MOUSE, mouse);
         return keyMap;
     }
 
     /**
+     * Rows a page step moves: the visible body less one row of context, so no
+     * line falls between two pages.
+     */
+    private int pageRows() {
+        return Math.max(1, this.viewportRows - 1);
+    }
+
+    /**
+     * Scroll the modal by {@code dy} rows.  A floating modal scrolls through
+     * its {@link studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface}
+     * slot — the surface owns those pixels — while an in-place modal keeps its
+     * own offset and redraws.
+     */
+    private void scrollBy(final int dy) {
+        if (this.floats && null != Console.LOCAL_INSTANCE) {
+            Console.LOCAL_INSTANCE.getFloatingSurface().scroll(this, 0, dy);
+            return;
+        }
+        final int next = Math.max(0, Math.min(this.maxScrollOffset, this.scrollOffset + dy));
+        if (next != this.scrollOffset) {
+            this.scrollOffset = next;
+            redraw();
+        }
+    }
+
+    /**
+     * Handle a mouse event: the wheel scrolls the body.  Reads the event the
+     * way jline does — the keymap already consumed the sequence and left the
+     * payload as a macro, so the event is read back through the binding reader.
+     */
+    private void onMouse(final BindingReader bindingReader) {
+        try {
+            final org.jline.terminal.MouseEvent event =
+                    this.terminal.readMouseEvent(bindingReader::readCharacter, bindingReader.getLastBinding());
+            if (null == event || event.getType() != org.jline.terminal.MouseEvent.Type.Wheel) return;
+            this.scrollBy(event.getButton() == org.jline.terminal.MouseEvent.Button.WheelUp ? -WHEEL_ROWS : WHEEL_ROWS);
+        } catch (final Exception e) {
+            // a malformed event must never break the modal's input loop
+        }
+    }
+
+    /**
      * Redraw the panel and its dismiss hint, wrapping the body to the
-     * terminal width so long bodies stay on screen.
+     * terminal width so long bodies stay on screen, and windowing it to the
+     * terminal height so a long body scrolls instead of spilling.
      */
     private void redraw() {
         final WidgetCanvas canvas = beginRedraw(this.totalHeightUsed);
         final int avail = this.terminal.getWidth() - 6;
         if (avail > 20) this.panel.maxWidth(avail);
-        for (final String line : this.format().split("\n", -1)) {
+
+        final List<String> lines = List.of(this.format().split("\n", -1));
+        // Window the body to what the screen can hold (less the hint line).  A
+        // body that fits is drawn exactly as before.
+        final int viewport = Math.max(3, this.terminal.getHeight() - 2);
+        final int body = lines.size();
+        this.maxScrollOffset = ScrollView.maxY(body, 0, viewport);
+        this.scrollOffset = Math.min(this.scrollOffset, this.maxScrollOffset);
+        this.viewportRows = Math.max(1, Math.min(viewport, body));
+        for (final String line : ScrollView.windowVertically(lines, 0, this.scrollOffset, this.viewportRows))
             canvas.line("  " + line);
-        }
-        canvas.statusLine("{{w}}space/enter/ctrl-d{{g}}:dismiss {{X}}");
+        canvas.statusLine(this.maxScrollOffset > 0
+                ? "{{w}}space/enter/ctrl-d{{g}}:dismiss {{w}}↑/↓{{g}}:scroll %d/%d {{X}}".formatted(
+                        Math.min(this.scrollOffset + this.viewportRows, body), body)
+                : "{{w}}space/enter/ctrl-d{{g}}:dismiss {{X}}");
         this.totalHeightUsed = canvas.finish();
     }
 

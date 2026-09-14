@@ -8,7 +8,6 @@ import studio.phaseshift.metatron.isa.llm.mToolProvider;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.space.ToolPairGate;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.llm.type.mcp.mcpClient;
 import studio.phaseshift.metatron.isa.m.type.Lst;
@@ -24,17 +23,14 @@ import java.util.Set;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrapDocs;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_CLIENT_TYPE;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * The gatekeeper of the agent's tool channel.
@@ -124,16 +120,10 @@ public class ToolFeature extends AbstractFeature {
                 }
             });
         }
-        // ── 2. own usage-doc skill → the skill gateway (its tools are registered first-class) ──
-        if (agent.hasFeature(LLM_SKILL_FEATURE_TID))
-            agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(mutableMap(
-                    uri(NAME), uri(LLM_TOOL_FEATURE_TID.name()),
-                    uri(DESC), str("tool extensions intended for llm use"),
-                    uri(CONTENT), str("any mtron inst can be added to tool feature and it will be mapped to an mcp tool")))));
-        // ── 3. project the registry onto the agent's LC4j tool bag ──
-        LOG.status(DEBUG, "registering %s tools", this.toolProvider.getTools().size());
+        // ── 2. project the registry onto the agent's LC4j tool bag ──
         if (!this.mcpClients.isEmpty())
             this.addToolProvider(McpToolProvider.builder().mcpClients(this.mcpClients.stream().map(mcpClient::client).toList()).build());
+        LOG.status(DEBUG, "registering %s tools", this.toolProvider.getTools().size());
         return noobj();
     }
 

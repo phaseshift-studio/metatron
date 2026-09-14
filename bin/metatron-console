@@ -437,6 +437,10 @@ def main():
                       ("java.util.logging.config.file", os.path.join(REPO, "conf", "logging.properties"))):
         if os.path.isfile(path):
             argv.insert(2, "-D%s=%s" % (key, path))
+    # extra -D switches from the environment: METATRON_CONSOLE_JAVA_OPTS="-Da=b -Dc=d"
+    for op in os.environ.get("METATRON_CONSOLE_JAVA_OPTS", "").split():
+        if op:
+            argv.insert(2, op)
 
     print("metatron-console: %s" % " ".join(argv[:1] + ["..."] + argv[-3:]))
     print("      boot: %s\n      cwd:  %s\n      tty:  %dx%d\n"

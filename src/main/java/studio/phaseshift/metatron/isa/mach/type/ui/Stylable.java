@@ -37,6 +37,23 @@ import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_STYLE_TID;
  */
 public interface Stylable<T extends Stylable<T>> {
 
+    /**
+     * Axis mask: scroll horizontally.
+     */
+    int SCROLL_X = 1;
+    /**
+     * Axis mask: scroll vertically.
+     */
+    int SCROLL_Y = 2;
+    /**
+     * Axis mask: scroll on both axes (the default when {@code scroll} is unset).
+     */
+    int SCROLL_XY = SCROLL_X | SCROLL_Y;
+    /**
+     * Axis mask: scrolling disabled.
+     */
+    int SCROLL_NONE = 0;
+
     default Style<T> style() {
         return new Style<>((T) this);
     }
@@ -130,6 +147,15 @@ public interface Stylable<T extends Stylable<T>> {
         public Style<T> background(final String bg) {
             this.jvm().put(uri("background"), str(bg));
             return this;
+        }
+
+        public Style<T> highlight(final String language) {
+            this.jvm().put(uri("highlight"), str(language));
+            return this;
+        }
+
+        public String highlight() {
+            return this.at("highlight").orElse(str("txt")).strValue();
         }
 
         public String foreground() {
@@ -305,6 +331,127 @@ public interface Stylable<T extends Stylable<T>> {
         public Style<T> height(final int h) {
             this.jvm().put(uri("height"), jnt(h));
             return this;
+        }
+
+        /**
+         * Initial {@code x} (column) scroll offset — the column of the widget's
+         * content shown in the leftmost visible cell.  0 = content flush left.
+         *
+         * <p>For a widget pinned to a {@link FloatingSurface} this is only the
+         * <em>seed</em>: the surface's slot owns the live offset (exactly like
+         * {@link #width()} seeds the slot's target width), so the offset the
+         * user scrolls to survives the widget being re-hydrated into a fresh
+         * instance by the next {@code .display()} update.
+         */
+        public int scrollX() {
+            return this.at("scrollX").orElse(jnt(0)).asInt().intValue().intValue();
+        }
+
+        /**
+         * Initial {@code y} (row) scroll offset — the body row shown at the top
+         * of the widget's viewport.  See {@link #scrollX()} for the seed
+         * semantics.
+         */
+        public int scrollY() {
+            return this.at("scrollY").orElse(jnt(0)).asInt().intValue().intValue();
+        }
+
+        public Style<T> scrollTo(final int x, final int y) {
+            this.jvm().put(uri("scrollX"), jnt(x));
+            this.jvm().put(uri("scrollY"), jnt(y));
+            return this;
+        }
+
+        public Style<T> scrollBy(final int dx, final int dy) {
+            return this.scrollTo(this.scrollX() + dx, this.scrollY() + dy);
+        }
+
+        /**
+         * Which axes this widget accepts scrolling on, declared as
+         * {@code style=>[scroll=>union(x,y)]}.  Accepted forms — all of them
+         * are the same declaration in different clothes:
+         *
+         * <pre>{@code
+         *   scroll=>union(x,y)          // both axes (also: [x=>true,y=>true], xy, both)
+         *   scroll=>union(x)            // horizontal only   (also: x, union(x,none))
+         *   scroll=>union(y)            // vertical only     (also: y, union(y,none))
+         *   scroll=>none                // no scrolling      (also: scroll=>false)
+         * }</pre>
+         *
+         * <p>An <em>unset</em> {@code scroll} means {@link #SCROLL_XY}: scrolling
+         * is available on any axis whose content actually overflows the
+         * viewport.  Nothing scrolls until there is something off-screen, so
+         * the default is free.
+         */
+        public int scrollAxes() {
+            return parseAxes(this.at("scroll"));
+        }
+
+        public boolean scrollableX() {
+            return (this.scrollAxes() & SCROLL_X) != 0;
+        }
+
+        public boolean scrollableY() {
+            return (this.scrollAxes() & SCROLL_Y) != 0;
+        }
+
+        /**
+         * Declare the scroll axes (see {@link #scrollAxes()}), writing the
+         * canonical uri form ({@code x}, {@code y}, {@code xy}, {@code none}).
+         */
+        public Style<T> scrollAxes(final int axes) {
+            this.jvm().put(uri("scroll"), uri(axesName(axes)));
+            return this;
+        }
+
+        public static String axesName(final int axes) {
+            return switch (axes & SCROLL_XY) {
+                case SCROLL_X -> "x";
+                case SCROLL_Y -> "y";
+                case SCROLL_XY -> "xy";
+                default -> "none";
+            };
+        }
+
+        /**
+         * Parse a {@code scroll} declaration into an {@link #SCROLL_XY}-style
+         * axis mask.  Deliberately tolerant — the declaration arrives as a
+         * quoted value ({@code union(x,y)} is kept unevaluated by {@code =>}),
+         * a uri ({@code y}), a bool, a lst, or a rec, and every one of them
+         * means the same thing: which axes are permitted to scroll.
+         */
+        public static int parseAxes(final Obj scroll) {
+            if (null == scroll || scroll.isNoObj()) return SCROLL_XY;
+            if (scroll.isBool()) return scroll.boolValue() ? SCROLL_XY : SCROLL_NONE;
+            if (scroll.isUri()) return axesOf(scroll.uriValue().toString());
+            if (scroll.isRec()) {
+                final Rec axesRec = scroll.asRec();
+                int axes = SCROLL_NONE;
+                final Obj x = axesRec.at(uri("x"));
+                final Obj y = axesRec.at(uri("y"));
+                if (null != x && x.boolValue()) axes |= SCROLL_X;
+                if (null != y && y.boolValue()) axes |= SCROLL_Y;
+                return axes == SCROLL_NONE ? SCROLL_XY : axes;
+            }
+            if (scroll.isLst())
+                return scroll.lstValue().stream().map(Style::parseAxes)
+                        .reduce(SCROLL_NONE, (a, b) -> a | b);
+            return axesOf(scroll.toString());
+        }
+
+        /**
+         * Textual form of the axis declaration: {@code union(x,y)} (the quoted
+         * mtron form), {@code xy}, {@code y}, {@code none}, ...
+         */
+        private static int axesOf(final String declaration) {
+            if (null == declaration) return SCROLL_XY;
+            final String text = declaration.toLowerCase().replace(" ", "");
+            if (text.contains("none") || text.contains("off") || text.equals("false") || text.equals("0"))
+                return SCROLL_NONE;
+            int axes = SCROLL_NONE;
+            if (text.contains("x")) axes |= SCROLL_X;
+            if (text.contains("y")) axes |= SCROLL_Y;
+            return axes == SCROLL_NONE ? SCROLL_XY : axes;
         }
 
         /**

@@ -36,11 +36,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Editor;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Hotkeys;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.*;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.Pane;
@@ -48,11 +44,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitLayout;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.ExplainTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.InstSelectorTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.fURISelectorTool;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.PanelWidget;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.SubsWidget;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Utilities;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
 
 import java.io.PrintStream;
 import java.nio.file.Paths;
@@ -151,7 +143,12 @@ public final class CommandPalette extends MRec {
                     .addRow(List.of(kc("<alt>+w"), "cycle focus between floating widgets"))
                     .addRow(List.of(kc("<alt>+^") + "  /  " + kc("<alt>+v"), "grow / shrink focused widget height"))
                     .addRow(List.of(kc("<alt>+>") + "  /  " + kc("<alt>+<"), "grow / shrink focused widget width (pane resize when no widget focused)"))
+                    .addRow(List.of(kc("<alt>+u") + "  /  " + kc("<alt>+d"), "scroll focused widget up / down a line (page up/down = a page)"))
+                    .addRow(List.of(kc("<alt>+,") + "  /  " + kc("<alt>+."), "scroll focused widget left / right a column"))
+                    .addRow(List.of(kc("<wheel>") + "  /  " + kc("<alt>+0"), "scroll the widget under the pointer / jump back to its newest line"))
+                    .addRow(List.of(kc("<click>"), "focus the widget under the pointer; click its [-] / [+] to expand / collapse it; click empty terminal to unfocus"))
                     .addRow(List.of(cc(":widgets") + "  " + cc(":focus-widget [off]"), "list floating widgets / clear (or set) the focus"))
+                    .addRow(List.of(cc(":scroll [up|down|pageup|pagedown|left|right|top|bottom] [n]"), "move (or report) the focused widget's viewport"))
                     .addRow(List.of(cc(":keymap"), "who currently owns the builtin shortcut keys (builtin vs shadowed)"))
                     /// ///////////////////////////////////////////////////////////////////////////////////////
                     .addRow(List.of("{{[g]&w}}completion", "{{[g]&w}}"))
@@ -506,10 +503,48 @@ public final class CommandPalette extends MRec {
             for (final studio.phaseshift.metatron.isa.mach.type.ui.Widget<?> w : widgets) {
                 final String key = FloatingSurface.widgetKey(w);
                 final String activeMark = key.equals(activeKey) ? " {{g}}[active]{{X}}" : "";
-                LOG.info("  [%s] %s%s", key, w.getClass().getSimpleName(), activeMark);
+                final String scrollInfo = console.getFloatingSurface().scrollInfo(w);
+                final String scrollMark = scrollInfo.isEmpty() ? "" : " {{m}}" + scrollInfo + "{{X}}";
+                LOG.info("  [%s] %s%s%s", key, w.getClass().getSimpleName(), scrollMark, activeMark);
             }
             if (widgets.isEmpty())
                 LOG.info("  (none)");
+            return noobj();
+        }), MUTABLE);
+
+        // ===== scroll (move the focused widget's viewport over its own text) =====
+        this.at("scroll", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+            final String arg = lhs.isStr() ? lhs.strValue().trim() : "";
+            if (arg.isEmpty()) {
+                final String info = console.activeWidgetScrollInfo();
+                if (info.isEmpty())
+                    LOG.info("focused floating widget has nothing off its viewport");
+                else
+                    LOG.info("{{y}}%s{{X}}", info);
+                return noobj();
+            }
+            final String[] parts = arg.split("\\s+");
+            final int amount = parts.length > 1 && parts[1].matches("-?\\d+")
+                    ? Integer.parseInt(parts[1]) : Integer.MIN_VALUE;
+            switch (parts[0].toLowerCase()) {
+                case "up", "back" ->
+                        console.scrollActiveWidget(0, -(amount == Integer.MIN_VALUE ? 1 : Math.abs(amount)));
+                case "down", "forward" ->
+                        console.scrollActiveWidget(0, amount == Integer.MIN_VALUE ? 1 : Math.abs(amount));
+                case "pageup", "page-up", "pgup" -> console.pageActiveWidget(-1);
+                case "pagedown", "page-down", "pgdn" -> console.pageActiveWidget(1);
+                case "left" -> console.scrollActiveWidget(-1, 0);
+                case "right" -> console.scrollActiveWidget(1, 0);
+                case "top", "home" -> console.scrollActiveWidgetTo(0);
+                case "bottom", "tail", "end" -> console.tailActiveWidget();
+                case "line" -> {
+                    final int row = (parts.length > 1 && parts[1].matches("-?\\d+")) ? Integer.parseInt(parts[1]) : 0;
+                    console.scrollActiveWidgetTo(row);
+                }
+                default ->
+                        LOG.error("{{r}}%s{{X}} is not a scroll action (up, down, pageup, pagedown, left, right, top, bottom, line N)",
+                                parts[0]);
+            }
             return noobj();
         }), MUTABLE);
 
@@ -619,7 +654,44 @@ public final class CommandPalette extends MRec {
         this.builtinKeyLabels.put(sequence, label);
     }
 
-    /** sequence -&gt; human label for the builtin shortcuts (e.g. "\033<" -&gt; "alt+<") */
+    /**
+     * Rows scrolled per mouse-wheel notch.
+     */
+    private static final int MOUSE_WHEEL_ROWS = 3;
+
+    /**
+     * A widget that scrolls the console's focused floating widget by
+     * {@code (dx, dy)} — and reports "not handled" (false) when there is no
+     * focused widget, or the focused one does not scroll, so a chained binding
+     * can fall through to whatever owned the key before.
+     */
+    private static Widget scrollBy(final Console console, final int dx, final int dy) {
+        return () -> console.scrollActiveWidget(dx, dy);
+    }
+
+    /**
+     * Chain a widget in front of whatever currently owns a key: when the
+     * override does not handle the key, the previous binding runs instead, so
+     * a scroll shortcut never steals a key from the rest of the console.  The
+     * previous binding is captured at bind time — and a builtin is reasserted
+     * on every prompt, so a later binder cannot make the chain point at itself.
+     */
+    private Widget chained(final Widgets widgets, final String sequence, final Widget override) {
+        final Object prior = widgets.getKeyMap().getBound(sequence);
+        return () -> {
+            if (override.apply()) return true;
+            if (prior instanceof Widget previous && previous != null) return previous.apply();
+            if (prior instanceof CharSequence text) {
+                this.console.getReader().getBuffer().write(text.toString());
+                return true;
+            }
+            return true;
+        };
+    }
+
+    /**
+     * sequence -&gt; human label for the builtin shortcuts (e.g. "\033<" -&gt; "alt+<")
+     */
     private final java.util.Map<String, String> builtinKeyLabels = new java.util.LinkedHashMap<>();
 
     // ========== Keyboard Shortcuts ==========
@@ -722,6 +794,83 @@ public final class CommandPalette extends MRec {
                 return true;
             };
             bindBuiltin(widgets, "\033^", "alt+^", growHeight);
+        }
+
+        // -------------------------------------------------------
+        // Widget scrolling — the focused widget's viewport over its own
+        // text.  A pinned widget draws through a viewport, so what does not
+        // fit is off the viewport, not gone: these keys move the viewport
+        // (the mouse wheel does the same while a widget has something to
+        // scroll).  They are chained builtins: when no scrollable widget is
+        // focused the key falls back to whatever bound it before (jline's own
+        // page/history bindings), so the console behaves as it always did.
+        // -------------------------------------------------------
+        {
+            bindBuiltin(widgets, "\033u", "alt+u", chained(widgets, "\033u", scrollBy(console, 0, -1)));
+            bindBuiltin(widgets, "\033d", "alt+d", chained(widgets, "\033d", scrollBy(console, 0, 1)));
+            bindBuiltin(widgets, "\033,", "alt+,", chained(widgets, "\033,", scrollBy(console, -1, 0)));
+            bindBuiltin(widgets, "\033.", "alt+.", chained(widgets, "\033.", scrollBy(console, 1, 0)));
+            bindBuiltin(widgets, "\0330", "alt+0", chained(widgets, "\0330", () -> {
+                if (null == console.getActiveWidget()) return false;
+                console.tailActiveWidget();
+                return true;
+            }));
+            // PageUp/PageDown are jline's history keys; they only become scroll
+            // keys while a widget that HAS content off its viewport is focused,
+            // and fall back to jline otherwise.
+            for (final String[] page : List.of(new String[]{"\033[5~", "-1"}, new String[]{"\033[6~", "1"})) {
+                final int direction = Integer.parseInt(page[1]);
+                bindBuiltin(widgets, page[0], direction < 0 ? "pageup" : "pagedown",
+                        chained(widgets, page[0], () -> {
+                            if (!console.activeWidgetScrolls()) return false;
+                            console.pageActiveWidget(direction);
+                            return true;
+                        }));
+            }
+        }
+
+        // -------------------------------------------------------
+        // Mouse wheel — scrolls the widget under the pointer (or the focused
+        // one) while terminal mouse tracking is on.  The console turns tracking
+        // on exactly while a focused widget has content off its viewport (see
+        // Console.syncWidgetMouseTracking), so ordinary text selection is
+        // untouched the rest of the time.
+        // -------------------------------------------------------
+        {
+            final Widget mouse = () -> {
+                try {
+                    final org.jline.terminal.MouseEvent event = console.getReader().readMouseEvent();
+                    if (null == event) return true;
+                    // jline reports the pointer 0-BASED (a terminal's own
+                    // coordinates are 1-based, so a click at column 5 arrives as
+                    // x=4); widget geometry and the console's gestures are
+                    // 1-based, so the conversion happens exactly here.
+                    final int row = event.getY() + 1;
+                    final int col = event.getX() + 1;
+                    final FloatingSurface surface = console.getFloatingSurface();
+                    final var hovered = surface.widgetAt(row, col);
+                    if (event.getType() == org.jline.terminal.MouseEvent.Type.Wheel) {
+                        final var target = null != hovered ? hovered : console.getActiveWidget();
+                        if (null != target) {
+                            final int step = event.getButton() == org.jline.terminal.MouseEvent.Button.WheelUp
+                                    ? -MOUSE_WHEEL_ROWS : MOUSE_WHEEL_ROWS;
+                            surface.scroll(target, 0, step);
+                            if (console.getActiveWidget() != target) console.focusWidget(target);
+                        }
+                    } else if (event.getType() == org.jline.terminal.MouseEvent.Type.Pressed) {
+                        // A click: focus what is under the pointer, let the
+                        // widget work its own affordances, or — on empty
+                        // terminal — drop the focus entirely.
+                        console.clickAt(row, col);
+                    }
+                } catch (final Exception e) {
+                    // a malformed event must never break the input loop
+                    LOG.error(e);
+                }
+                return true;
+            };
+            for (final String sequence : org.jline.terminal.impl.MouseSupport.keys())
+                bindBuiltin(widgets, sequence, "mouse", mouse);
         }
         widgets.getKeyMap().bind((Widget) () -> {
             this.at("split").apply(str("v"));
