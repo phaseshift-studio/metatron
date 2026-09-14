@@ -237,36 +237,58 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 
 **Language & types**
 
-* [mtron language reference](references/language-reference-mtron.md) -- types, operators, instruction sets, expression
-  model.
-* [mtron type system](references/type-system-mtron.md) -- vid/tid, nominal vs structural, pattern types.
+* [mtron language reference](references/language-reference-mtron.md) -- the whole surface in 23 sections: mono/poly/call
+  types, coefficients, arithmetic and strings, `*` dereference, `.as(type::T)` casting, map/filter/group, merge/split,
+  `>>`/`<<`, the `|` barrier, `>>=` update, `!*`/`!@` auto-references, path ops, failure handling, and the expression
+  evaluation model.
+* [mtron type system](references/type-system-mtron.md) -- vid/tid, coefficients, the universal type, defining types,
+  predicates (isa vs non-isa), nominal vs structural, refinement, pattern/generic types, casting, lowest common
+  denominator.
 
 **Spaces & data sources**
 
-* [Connecting Data Sources](references/connecting-datasources.md) -- the pattern + route model for external sources;
-  `!*` references.
-* [dckrSpace](references/dckrspace-mtron.md) -- Docker: containers, images, volumes, compose as a space.
-* [sys instruction set](references/sys-instset-mtron.md) -- `/m/sys` bash, sleep process i/o, and file system.
-* [math instruction set](references/math-instset-mtron.md) -- `/m/math` constants, unit types, time, dates.
-* [web instruction set](references/web-instset-mtron.md) -- `/m/web` protocols, MIME document types, route tables, and
-  server side conventions.
+* [sys instruction set + fsSpace](references/sys-instset-mtron.md) -- one file, two docs: `/m/sys` (the guarded `bash`
+  and its security modulators, `sleep`/`stdout`/`stdin`, mounted state) and the full `fsspace::T` tour (configuration,
+  MIME detection and the mime-to-tid map, `?mimeq` typed strings, file read/write, binary and structural reads,
+  pattern-based access, `lineq` line-level editing).
+* [math instruction set](references/math-instset-mtron.md) -- `/m/math`: the unit types (`time`, `datasize`,
+  `currency`), the `datetime` uri and its construction/arithmetic, `normalize` and the trig/rounding instructions, and
+  the `pi`/`e` constants.
+* [web instruction set](references/web-instset-mtron.md) -- `/m/web`: the protocol surfaces and MIME document types,
+  `route::T` mount tables and the literal-prefix rule, templated route values, mounting an obj, and what is not
+  available yet.
+* [tble instruction set](references/tble-instset-mtron.md) -- `/m/tble` and `tblespace::T`: a JDBC database as a space
+  -- tables that appear from the first rec write, typed rows, the SQL rewrite family that pushes reads down into the
+  backend, the key/value fall-through, `!*` foreign keys, and native `sql()`.
+* [dckrSpace](references/dckrspace-mtron.md) -- Docker as a space: containers, images, volumes, networks, compose,
+  remote hosts, and an end-to-end SQLite container + tbleSpace walkthrough.
+* [Connecting Data Sources](references/connecting-datasources.md) -- the pattern + route model, discovering a space's
+  prefixes from `*/sys/space/...`, `!*` lazy references, validation, and common failures.
 
 **Protocol & services**
 
-* [MCP Server Architecture](references/mcp-server-architecture.md) -- building MCP servers in mtron; tool registration.
-* [MCP Server Notifications](references/mcp-server-notifications.md) -- server-to-client push via subq on a WebSocket
-  space.
-* [DSH Memory Bus](references/dsh-mtron.md) -- the first inter-harness memory adapter (DSH transcripts into a metatron
-  agent tree).
+* [MCP Server Architecture](references/mcp-server-architecture.md) -- building MCP servers in mtron: `mcp_wsHandler` /
+  `mcp_mtron_wsHandler`, websocket routing, tool registration, `SpaceChatMemoryStore`, and the agent memory flow.
+* [MCP Server Notifications](references/mcp-server-notifications.md) -- server-to-client push via a `?subq` subscription
+  on a WebSocket space; boot integration and the development pitfalls.
+* [DSH Memory Bus](references/dsh-mtron.md) -- the first inter-harness memory adapter: a DSH zstd JSONL transcript
+  becomes typed message recs, loaded and written into a native metatron agent memory tree.
 
 **Practice**
 
-* [Unsloth Training](references/unsloth-training-mtron.md) -- fine-tuning an LLM on mtron; the training pipeline;
-  `@Training` extraction.
+* [Unsloth Training](references/unsloth-training-mtron.md) -- fine-tuning an LLM on mtron: dataset extraction via
+  `@Training`, model selection, training, GGUF export, and Ollama/HuggingFace deployment.
 
-**Coming soon** (the deep dives this entry doc points at but which are not yet split out):
+**Not yet split out** (deep dives this entry doc points at, but which have no reference doc of their own):
 
-* `update` -- the full `>>=` update algebra: overlay, `+N` numeric add, `+[v]` set promotion, `none` delete; `@` anchor
-  vs `*` clone; the HTTP PATCH door.
-* `qprocs` -- the `?q` family: `?docq`, `?incq` (auto-increment), `?subq` (pubsub), `?hasq`, `?statq` (address-level
-  read/write heat), and how a qproc's data space is independent of the obj's.
+* `qprocs` -- the `?q` family as a whole: `?docq` (each instruction's own doc), `?incq` (auto-increment), `?hasq`,
+  `?statq` (address-level read/write heat), `?subq` (pubsub), and the fact that a qproc's data space is independent of
+  the obj's. Only two corners are written down today: `?subq` in
+  [MCP Server Notifications](references/mcp-server-notifications.md), and `?mimeq`/`?lineq` in the fsSpace half of
+  [sys instruction set](references/sys-instset-mtron.md).
+* the rest of the `>>=` update algebra -- `+[v]` set promotion and the HTTP PATCH door. Overlay merge, `+N`, `none`
+  delete, and anchor-vs-clone *are* covered (language reference section 14); the door is specified in
+  `docs/design/memory-server-architecture.md`.
+* `httpPage` fetching -- the client side of the web carrier: `http://` dereference, HTML parse trees, traversal. The web
+  doc's *see also* still points at a sibling `web_instset_mtron.md`, but that file is gone; the only surviving copy is
+  a stale build artifact under `docs/website/skills/mtron/references/http-page-fetching.md`.

@@ -1,6 +1,5 @@
-# dhs→mtron — the harness memory bus, first adapter
-
-`--- name: dhs-mtron
+---
+name: dsh-mtron
 description: >
   Migrate DSH harness session memory into a native metatron agent memory tree.
   The first adapter on the inter-harness memory bus: a zstd JSONL transcript
@@ -8,7 +7,9 @@ description: >
   that load into a live VM and are written with a single .to() -- after which
   the migrated agent's history is addressable, queryable, and assertable in
   metatron.
----`
+---
+
+# dsh→mtron — the harness memory bus, first adapter
 
 ## What this is
 
