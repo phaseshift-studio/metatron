@@ -1,11 +1,10 @@
 [== boot args ==]
-[space  => /sys/space,
- web    => [
+[web    => [
    http/host  => <http://0.0.0.0:8777>,
    ws/host    => <ws://0.0.0.0:8555>],
- typer/stages => [inst_dom     => true, 
-                  inst_rng     => true,
-                  type_ctor    => true,
+ typer/stages => [inst_dom     => false, 
+                  inst_rng     => false,
+                  type_ctor    => false,
                   obj_write    => true,
                   code_resolve => false] 
 ]
@@ -27,157 +26,25 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
 [== mount instruction sets ==]
 print("{{y}}mounting instruction sets\n{{X}}");
 import(/m/mach/io);
-import(/m/math,math:);
-import(/m/web,web:);
-import(/m/iot);
-import(/m/iot/haos);
-import(/m/iot/miot);
-import(/m/grph);
+import(/m/mach);
+import(/m/mach/ui);
+import(/m/math,math);
+import(/m/web,web);
 import(/m/llm);
 import(/m/tble);
-import(/m/dcmnt);
-import(/m/rdf);
-
-[== global settings store in boot ==]
-print("{{y}}mqtt broker location{{X}}: ", <boot/args/mqtt>.else(boot/args/mqtt -> [broker => <mqtt://chibi.local:1883>]),"\n");
-print("{{y}}cluster peers{{X}}: ", *<boot/peers>.else(boot/peers -> [ws://localhost:6666,<ws://127.0.0.1:7777>]),"\n");
-print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/script -> 
- [sh     => /bin/sh,
-  bash   => /bin/bash, 
-  zsh    => /bin/zsh, 
-  python => /usr/bin/python3,
-  perl   => /usr/bin/perl,
-  mtron  => /bin/mtron]),"\n");
 [== mount computing spaces ==]
  memspace::[pattern   => /usr/#,                                 
                   q   => [mintq::[=>],docq::[=>],subq::[=>],incrq::[=>]]]@/sys/space/usr;       
- memspace::[pattern   => /shared/#,
-            persist   => </tmp/shared.mtron>]@/sys/space/shared;
  fsspace::[pattern    => local:#,
             route     => [local:=><~/>]]@/sys/space/fs/home;
- memspace::[pattern    => home:#,
-             route    => [=>]]@/sys/space/fs/m_home;
-  fsspace::[pattern   => mtronfs:#,
-             route    => [mtronfs:=><.metatron>]]@/sys/space/fs/mtronfs;
  httpspace::[host     => !*boot/args/web/http/host,
              pattern  => <http://#>,
-             route    => [/          => <>,
-                          /emulator  => mcp_emulator_http,
-                          /mcp       => mcp_mtron,
-                          /docs      => <metatronfs:docs/website>,
-                          /console   => <metatronfs:src/main/resources/web/console>]]@/sys/space/web/http;
+             route    => [/ => <metatronfs:docs/website>]]@/sys/space/web/http;
    wsspace::[host     => !*boot/args/web/ws/host,
              pattern  => <ws://#>,
              q        => [docq::[=>],subq::[=>]],
-             route    => [/emulator => mcp_emulator_ws, 
-                          /mtron    => mtron_ws,
+             route    => [/mtron    => mtron_ws,
                           /mcp      => mcp_mtron]]@/sys/space/web/ws;
-  [-- support for server->client notifications --]
-   !*boot/args/web/ws/host * /mcp/+/notifications/#?subq -> sub::[                                           
-      on_recv => inst?#<=lst(message=>?lst::T){                    
-        -<json::[jsonrpc => '2.0', 
-           method  => >>0 - ${!*boot/args/web/ws/host}/mcp/${*message>>0>>1}${/},              
-           params  => *message>>1](payload=>_){                                        
-             *${!*boot/args/web/ws/host}/mcp/${*message>>0>>1}>>send.apply(*payload)}}];
-  grphspace::[pattern  => /h/#,
-        route    => [</h/+/>=><>],
-        native   => [factory  => mfactory::[=>],
-                     load     => grateful]]@/sys/space/grateful;                    
-  memspace::[pattern => /storage/mail/#]@/sys/space/mail;
-  grphspace::[pattern  => g:#,
-        route    => [g:V/+/mail => </storage/mail/${>>1}>,
-                     g:V        => V,
-                     g:E        => E,
-                     g:S        => /m/grph/schema/modern],
-        native   => [factory  => mfactory::[=>],
-                     load     => modern]]@/sys/space/modern;
-mqttspace::[pattern => <ha:#>,
-            host    => <mqtt://localhost:1883>,
-            q       => [subq::[=>]],
-            route   => [ha:=><>]]@/sys/space/mqtt;
-[==  miot::[pattern    => <mtron:#>,
-         host       => !*boot/args/mqtt/broker,
-         serializer => !*</m/mach/io/serializer/json/simple>,
-         route      => [mtron:=>metatron/]]@/sys/space/mqtt/metatron;
-  mqttspace::[pattern    => <z2m:#>,
-            host       => !*boot/args/mqtt/broker,
-            serializer => !*</m/mach/io/serializer/json/simple>,
-            route      => [z2m:=>zigbee2mqtt/]]@/sys/space/mqtt/zigbee2mqtt;
-  haos::[pattern       => <ha:#>,
-         host          => !*boot/args/mqtt/broker,
-         serializer    => !*</m/mach/io/serializer/json/simple>,
-         command_topic => inst?uri<=rec(){ to(a).map(z2m:).mult(*a>>friendly_name).mult(set/state) },
-         route         => [ha:=>homeassistant/]]@/sys/space/mqtt/homeassistant;
- serial::[pattern => <serial:#>,
-          route   => [serial:=><>]]@/sys/space/serial; ==]
- catalog::[host    => <http://localhost:11434>,
-           pattern => <ollama:#>,
-           name    => <ollama>,
-           route   => [ollama:=><>]]@/sys/space/ollama;
- catalog::[host         => <https://api.openai.com/v1>,
-           organization => !*</sys/env/OPENAI_ORG_ID>,
-           api_key      => !*</sys/env/OPENAI_API_KEY>,
-           pattern      => <openai:#>,
-           name         => <openai>,
-           route        => [<openai:>=><>]]@/sys/space/openai;
- catalog::[host         => <https://api.deepseek.com/>,
-           api_key      => !*</sys/env/DEEPSEEK_API_KEY>,
-           pattern      => <deep:#>,
-           name         => <openai>,
-           route        => [<deep:>=><>]]@/sys/space/deepseek;
- tblespace::[pattern => cg:#,
-                q    => [docq::[
-                          cg:nodes=>docs::[desc=>"code concepts", example=>["*cg:nodes/+.count()","*cg:nodes/+/kind"]]]],
-             host    => <sqlite:/home/killswitch/software/metatron/.codegraph/codegraph.db>,
-             table   => [,],
-             route   => [cg: => <>],
-             driver  => <org.sqlite.JDBC>]@/sys/space/codegraph;
-
- tblespace::[pattern => nw:#,
-             host    => <mariadb://localhost:3306/northwind?user=mtron&password=mtron>,
-             table   => [,],
-             route   => [nw:schema => /sys/space/play/schema,
-                         nw:       => <>],
-             driver  => <org.mariadb.jdbc.Driver>]@/sys/space/nw;
- tblespace::[pattern    => netflix:#,
-             host       => <mariadb://localhost:3306/netflix?user=mtron&password=mtron>,
-             route      => [<netflix:schema>=>/sys/space/netflix/schema,
-                            <netflix:>=><>],
-             serializer => !*</m/mach/io/serializer/json/simple>,
-             table      => [,],
-             driver     => <org.mariadb.jdbc.Driver>]@/sys/space/netflix;
- tblespace::[pattern    => acme:#,
-             host       => <mariadb://localhost:3306/classicmodels?user=mtron&password=mtron>,
-             route      => [<acme:>=><>],
-             serializer => !*</m/mach/io/serializer/string/clean>,
-             table      => [,],
-             driver     => <org.mariadb.jdbc.Driver>]@/sys/space/acme;
- tblespace::[pattern => chat:#,
-        host         => <mariadb://localhost:3306/chat?createDatabaseIfNotExist=true&user=mtron&password=mtron>,
-        route        => [<chat:>=><>],
-        table        => [,],
-        driver       => <org.mariadb.jdbc.Driver>]@/sys/space/chat;
- dcmntspace::[pattern    => mongo:#,
-              host       => <mongodb://localhost:27017/mflix>,
-              serializer => !*</m/mach/io/serializer/bson>,
-              root       => rec::T,
-              schema     => instset::[type=>[rec::T]],
-              route      => [mongo:=><>]]@/sys/space/mongo;
-[== rdfspace::[pattern => <wikidata:#>,
-            host    => <https://query.wikidata.org/sparql>,
-            serializer => !*</m/mach/io/serializer/rdf>,
-            route   => [
-              bd:       =><http://www.bigdata.com/rdf#>,
-              wikibase: =><http://wikiba.se/ontology#>,
-              wd:       =><http://www.wikidata.org/entity/>,
-              wdt:      =><http://www.wikidata.org/prop/direct/>,
-              wikidata: =><>]]@/sys/space/wikidata;       ==]     
-  cluster::[pattern => <ws://+/cluster/#>,
-            host    => <ws://localhost:8555/cluster>,
-            route   => [<ws://localhost:8555/cluster> => <>],
-            peers=>[=>]]@/sys/space/cluster;    
-*<mtronfs:instset/ai.mtron>;
-*<mtronfs:agent.mtron>;
 console::[=>]@/usr/ui/console;
 *boot/args.print(_,'\n');
 print('\n{{y}}mounting {{b}}boot/usr/# {{y}}to {{b}}/usr/# {{g}}(count:{{y}}${*x}{{g}}){{X}}\n');

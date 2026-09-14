@@ -22,6 +22,8 @@ import org.jline.terminal.Terminal;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.ScrollView;
+import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
@@ -92,7 +94,12 @@ public class FloatingSurface {
     }
 
     private final Terminal terminal;
-    private final Map<Widget<?>, Slot> slots = new java.util.concurrent.ConcurrentHashMap<>();
+    // Keyed by IDENTITY, not by equals/hashCode: an Obj's hashCode is derived
+    // from its jvm() contents (Obj.Helper.objHashCode), and a widget writes to
+    // its jvm() as it renders (an accordion latches its toggle instruction, a
+    // body append lands) — so a content-keyed map silently loses track of a
+    // widget the moment it draws.  The slot must follow the instance.
+    private final Map<Widget<?>, Slot> slots = new java.util.IdentityHashMap<>();
 
     // ── Render thread + queue ──────────────────────────────────────
     // ALL terminal writes are serialized through this single daemon.
@@ -101,6 +108,23 @@ public class FloatingSurface {
 
     private final java.util.concurrent.BlockingQueue<Runnable> renderQueue =
             new java.util.concurrent.LinkedBlockingQueue<>();
+
+    /**
+     * Widget passes the user is waiting on — a wheel notch, a scroll key, a
+     * click.  They are drained AHEAD of console output: an agent streaming a
+     * widget body can queue thousands of output writes, and a scroll that waits
+     * behind them is exactly the "the wheel takes a moment" feel.  The two
+     * queues never interleave badly, because a widget pass positions the cursor
+     * absolutely and restores it ([s … [u).
+     */
+    private final java.util.concurrent.BlockingQueue<Runnable> urgentQueue =
+            new java.util.concurrent.LinkedBlockingQueue<>();
+
+    /** How long the render thread waits for work before re-checking the urgent queue. */
+    private static final long RENDER_POLL_MS = 2;
+
+    /** {@code -Dmetatron.render.trace=true} logs a line per rendered pass. */
+    private static final boolean RENDER_TRACE = Boolean.getBoolean("metatron.render.trace");
     private final Thread renderThread;
     private volatile boolean running = true;
 
@@ -155,7 +179,12 @@ public class FloatingSurface {
         renderThread = new Thread(() -> {
             while (running) {
                 try {
-                    renderQueue.take().run();
+                    // urgent (widget) passes first, then console output; polling
+                    // rather than blocking on one queue so neither can starve
+                    Runnable task = this.urgentQueue.poll();
+                    if (null == task)
+                        task = this.renderQueue.poll(RENDER_POLL_MS, java.util.concurrent.TimeUnit.MILLISECONDS);
+                    if (null != task) task.run();
                 } catch (final InterruptedException e) {
                     if (!running) break;
                 } catch (final Throwable t) {
@@ -179,6 +208,11 @@ public class FloatingSurface {
         this.renderQueue.offer(task);
     }
 
+    /** Fire-and-forget, ahead of console output: a widget pass the user waits on. */
+    private void submitUrgent(final Runnable task) {
+        this.urgentQueue.offer(task);
+    }
+
     /** Maximum seconds to wait for the render thread before falling back
      *  to a direct terminal write.  Kept short because the calling thread
      *  (often the console REPL) freezes while waiting. */
@@ -188,12 +222,16 @@ public class FloatingSurface {
      *  is stalled (e.g. blocked on a slow Router write inside format()),
      *  falls back to a direct write after the timeout. */
     private void submitAndWait(final Runnable task) {
+        submitAndWait(task, false);
+    }
+
+    private void submitAndWait(final Runnable task, final boolean urgent) {
         if (Thread.currentThread() == this.renderThread) {
             task.run();
             return;
         }
         final var latch = new java.util.concurrent.CountDownLatch(1);
-        this.renderQueue.offer(() -> {
+        (urgent ? this.urgentQueue : this.renderQueue).offer(() -> {
             try { task.run(); } finally { latch.countDown(); }
         });
         try {
@@ -237,6 +275,39 @@ public class FloatingSurface {
         Graphitty.setTerminalWriter(this::writeToTerminal);
     }
 
+    // ── the slot registry (identity-keyed, guarded) ────────────────
+    // A snapshot is taken for every iteration, so a render pass never holds
+    // the lock while it calls into a widget (format() can read the Router).
+
+    private synchronized Slot slot(final Widget<?> widget) {
+        return this.slots.get(widget);
+    }
+
+    private synchronized void putSlot(final Widget<?> widget, final Slot slot) {
+        this.slots.put(widget, slot);
+    }
+
+    private synchronized Slot takeSlot(final Widget<?> widget) {
+        return this.slots.remove(widget);
+    }
+
+    private synchronized boolean hasSlots() {
+        return !this.slots.isEmpty();
+    }
+
+    private synchronized int slotCount() {
+        return this.slots.size();
+    }
+
+    /** The slot registry as a list, safe to iterate without the lock. */
+    private synchronized List<Map.Entry<Widget<?>, Slot>> slotSnapshot() {
+        return new ArrayList<>(this.slots.entrySet());
+    }
+
+    private synchronized boolean hasSlotFor(final Widget<?> widget) {
+        return this.slots.containsKey(widget);
+    }
+
     // -----------------------------------------------------------------
     // Public API — absolute positioning
     // -----------------------------------------------------------------
@@ -251,7 +322,7 @@ public class FloatingSurface {
      * @param col    1-based terminal column
      */
     public void add(final Widget<?> widget, final int row, final int col) {
-        final Slot existing = this.slots.get(widget);
+        final Slot existing = slot(widget);
         if (existing != null && !existing.isAnchored()) {
             existing.lastRow = row;
             existing.lastCol = col;
@@ -261,7 +332,7 @@ public class FloatingSurface {
                 slot.prevHeight = existing.prevHeight;
                 slot.prevWidth = existing.prevWidth;
             }
-            this.slots.put(widget, slot);
+            putSlot(widget, slot);
         }
     }
 
@@ -293,7 +364,7 @@ public class FloatingSurface {
         // up and render over each other, doubling borders and never refreshing.
         Slot replaced = null;
         Widget<?> replacedWidget = null;
-        for (final Map.Entry<Widget<?>, Slot> e : this.slots.entrySet()) {
+        for (final Map.Entry<Widget<?>, Slot> e : slotSnapshot()) {
             final Slot s = e.getValue();
             if (s.isAnchored() && s.anchor == anchor && s.offsetRow == top && s.offsetCol == left) {
                 replaced = s;
@@ -302,7 +373,7 @@ public class FloatingSurface {
             }
         }
         if (replaced != null) {
-            this.slots.values().remove(replaced);
+            takeSlot(replacedWidget);
             // Key lineage: the fresh instance may not carry the same vid the
             // outgoing one did (store re-hydration, vid-less construction).
             // Remember old→new so a key resolved one line earlier still
@@ -328,6 +399,12 @@ public class FloatingSurface {
             slot.lastRow = replaced.lastRow;
             slot.lastCol = replaced.lastCol;
             slot.heightCap = replaced.heightCap;
+            // The reader's place in the widget's text survives the re-float too
+            // — otherwise every appended line would yank a scrolled-back
+            // viewport down to the tail.
+            slot.scrollX = replaced.scrollX;
+            slot.scrollY = replaced.scrollY;
+            slot.follow = replaced.follow;
             // Re-apply the resized width to the fresh instance's style so
             // content shaping (e.g. AccordionWidget body wrap) survives too.
             try {
@@ -340,15 +417,24 @@ public class FloatingSurface {
             }
         } else {
             // First float: seed the slot's height cap from the widget's own
-            // style height (0 = unset → keep -1 so natural height applies).
+            // style height (0 = unset → keep -1 so natural height applies),
+            // and its scroll place from the style's declared offsets.
             try {
                 final int h = widget.getStyle().height();
                 if (h > 0) slot.heightCap = h;
             } catch (final Exception ignored) {
                 // no style height — natural height
             }
+            try {
+                final var style = widget.getStyle();
+                slot.scrollX = Math.max(0, style.scrollX());
+                slot.scrollY = Math.max(0, style.scrollY());
+                slot.follow = style.scrollY() <= 0;
+            } catch (final Exception ignored) {
+                // no style — start at the top of the tail
+            }
         }
-        this.slots.put(widget, slot);
+        putSlot(widget, slot);
     }
 
     // -----------------------------------------------------------------
@@ -362,7 +448,7 @@ public class FloatingSurface {
      * @param widget the widget to stop floating
      */
     public void remove(final Widget<?> widget) {
-        final Slot slot = this.slots.remove(widget);
+        final Slot slot = takeSlot(widget);
         if (slot != null) {
             clearSlot(slot);
         }
@@ -374,9 +460,9 @@ public class FloatingSurface {
      * with redundant render tasks that would starve console writes.
      */
     public void render() {
-        if (this.slots.isEmpty()) return;
+        if (!hasSlots()) return;
         if (!this.renderQueued.compareAndSet(false, true)) return;
-        submit(() -> {
+        submitUrgent(() -> {
             try {
                 renderInternal();
             } finally {
@@ -385,13 +471,25 @@ public class FloatingSurface {
         });
     }
 
+    /**
+     * Render and <em>wait</em> for the pass to complete.  Used where a decision
+     * has to be made from what the widgets just rendered (e.g. whether the
+     * newly focused widget has anything to scroll), which the fire-and-forget
+     * {@link #render()} cannot answer.
+     */
+    public void renderNow() {
+        if (!hasSlots()) return;
+        submitAndWait(this::renderInternal, true);
+    }
+
     /** Runs on the render thread.  Builds save-cursor + widgets + restore-cursor
      *  in one StringBuilder, expands {{X}} codes, and writes atomically. */
     private void renderInternal() {
+        final long __t0 = System.nanoTime();
         // Consume the scroll accumulated since the last pass so each widget's
         // stale copy — carried up by scrolled console output — gets erased.
         final int scroll = this.scrollAccum.getAndSet(0);
-        if (this.slots.isEmpty()) return;
+        if (!hasSlots()) return;
         final int termWidth = this.terminal.getWidth();
         final int termHeight = this.terminal.getHeight();
         final var sb = new StringBuilder(512);
@@ -416,7 +514,7 @@ public class FloatingSurface {
         // Draw lower z-index widgets first so higher z-index widgets (e.g.
         // menu bars) render on top when their regions overlap.  Stable sort:
         // equal-z widgets keep their current iteration order.
-        final var ordered = new java.util.ArrayList<>(this.slots.entrySet());
+        final var ordered = slotSnapshot();
         ordered.sort(java.util.Comparator.comparingInt(e -> {
             final var s = e.getKey().getStyle();
             return s == null ? 0 : s.zIndex();
@@ -426,7 +524,7 @@ public class FloatingSurface {
             final Widget<?> widget = entry.getKey();
             if (isDeleted(widget)) {
                 eraseSlot(sb, entry.getValue());
-                this.slots.remove(widget);
+                takeSlot(widget);
                 continue;
             }
             renderWidget(sb, widget, entry.getValue(), termWidth, termHeight, scroll);
@@ -436,6 +534,8 @@ public class FloatingSurface {
 
         // Process {{X}} codes → ANSI, then write directly (bypass bridge)
         final String processed = Graphitty.string(sb.toString());
+        if (RENDER_TRACE)
+            System.err.println("[render] pass took " + (System.nanoTime() - __t0) / 1_000_000 + "ms");
         synchronized (this.terminal) {
             this.terminal.writer().print(processed);
             this.terminal.writer().flush();
@@ -455,21 +555,21 @@ public class FloatingSurface {
      * @return true if the given widget is currently pinned to this surface
      */
     public boolean contains(final Widget<?> widget) {
-        return this.slots.containsKey(widget);
+        return hasSlotFor(widget);
     }
 
     /**
      * @return true if no widgets are currently pinned to this surface
      */
     public boolean isEmpty() {
-        return this.slots.isEmpty();
+        return !hasSlots();
     }
 
     /**
      * @return the number of widgets currently pinned to this surface
      */
     int size() {
-        return this.slots.size();
+        return slotCount();
     }
 
     /**
@@ -477,7 +577,7 @@ public class FloatingSurface {
      *         Package-visible so in-package tests can inspect resize geometry.
      */
     Slot slotOf(final Widget<?> widget) {
-        return this.slots.get(widget);
+        return slot(widget);
     }
 
     // -----------------------------------------------------------------
@@ -538,7 +638,7 @@ public class FloatingSurface {
      * across re-floats — so cycling never jumps around.
      */
     public List<Widget<?>> widgets() {
-        final List<Map.Entry<Widget<?>, Slot>> ordered = new ArrayList<>(this.slots.entrySet());
+        final List<Map.Entry<Widget<?>, Slot>> ordered = slotSnapshot();
         ordered.sort(Comparator.comparingInt((Map.Entry<Widget<?>, Slot> e) -> {
                     final var s = e.getKey().getStyle();
                     return null == s ? 0 : s.zIndex();
@@ -575,7 +675,7 @@ public class FloatingSurface {
      * @return true if the widget is pinned and was nudged
      */
     public boolean nudge(final Widget<?> widget, final int widthDelta, final int heightDelta) {
-        final Slot slot = this.slots.get(widget);
+        final Slot slot = slot(widget);
         if (null == slot) return false;
         if (widthDelta != 0) {
             final int termWidth = this.terminal.getWidth();
@@ -612,15 +712,230 @@ public class FloatingSurface {
         return true;
     }
 
+    // -----------------------------------------------------------------
+    // Public API — scrolling (the viewport over content that outlives it)
+    // -----------------------------------------------------------------
+
+    /**
+     * Scroll a pinned widget's viewport by {@code (dx, dy)} cells and
+     * re-render.  Lines that scroll out of the viewport are not lost — a
+     * widget's content is its whole rendered body, and scrolling is only a
+     * move of the window over it, so scrolling back shows the text that was
+     * there all along.
+     *
+     * <p>Vertical scrolling is tail-relative: while the viewport sits at the
+     * newest content it keeps following new content as it arrives, and the
+     * moment the reader scrolls back it holds its absolute place instead (so a
+     * live log does not yank the view down under a reader who is looking at
+     * earlier lines).  Scrolling back down to the end restores the follow.
+     *
+     * <p>The offset is clamped to the content, and the axes the widget's style
+     * declares ({@link Stylable.Style#scrollAxes()}) are respected — a widget
+     * declaring {@code scroll=>union(y)} ignores {@code dx}.
+     *
+     * @param widget the pinned widget to scroll
+     * @param dx     horizontal delta in columns (positive = later content)
+     * @param dy     vertical delta in rows (positive = later content)
+     * @return true when the widget is pinned and accepts scrolling on the
+     * requested axis (even if it was already at the end), false otherwise
+     */
+    public boolean scroll(final Widget<?> widget, final int dx, final int dy) {
+        final Slot slot = slot(widget);
+        if (null == slot) return false;
+        final int axes = widget.getStyle().scrollAxes();
+        boolean accepted = false;
+        if (dx != 0 && (axes & Stylable.SCROLL_X) != 0) {
+            slot.scrollX = clamp(slot.scrollX + dx, 0, slot.maxScrollX);
+            accepted = true;
+        }
+        if (dy != 0 && (axes & Stylable.SCROLL_Y) != 0) {
+            final int current = slot.follow ? slot.maxScrollY : slot.scrollY;
+            final int next = clamp(current + dy, 0, slot.maxScrollY);
+            slot.scrollY = next;
+            // at the end (again) → keep following the tail
+            slot.follow = next >= slot.maxScrollY;
+            accepted = true;
+        }
+        if (accepted) render();
+        return accepted;
+    }
+
+    /**
+     * Jump a widget's viewport to an absolute body row (clamped), leaving
+     * follow mode unless the row is the tail.
+     */
+    public boolean scrollTo(final Widget<?> widget, final int y) {
+        final Slot slot = slot(widget);
+        if (null == slot) return false;
+        slot.scrollY = clamp(y, 0, slot.maxScrollY);
+        slot.follow = slot.scrollY >= slot.maxScrollY;
+        render();
+        return true;
+    }
+
+    /**
+     * Put a widget's viewport back on the newest content (the tail) — the
+     * state a widget starts in, and the one it returns to as content arrives.
+     */
+    public boolean scrollToTail(final Widget<?> widget) {
+        final Slot slot = slot(widget);
+        if (null == slot) return false;
+        slot.follow = true;
+        slot.scrollY = slot.maxScrollY;
+        render();
+        return true;
+    }
+
+    /** One page for a vertical scroll: the body rows a viewport can show, minus one for context. */
+    public int pageRows(final Widget<?> widget) {
+        final Slot slot = slot(widget);
+        if (null == slot) return MIN_HEIGHT - 1;
+        return Math.max(1, Math.max(0, slot.viewportHeight - Math.max(1, slot.chrome)) - 1);
+    }
+
+    /**
+     * @return true when the widget's content overflows the viewport on an axis
+     * it is willing to scroll — i.e. there is something off-screen to see
+     */
+    public boolean canScroll(final Widget<?> widget) {
+        final Slot slot = slot(widget);
+        if (null == slot) return false;
+        final int axes = widget.getStyle().scrollAxes();
+        return ((axes & Stylable.SCROLL_Y) != 0 && slot.maxScrollY > 0)
+                || ((axes & Stylable.SCROLL_X) != 0 && slot.maxScrollX > 0);
+    }
+
+    /** True when the widget is scrolled away from the newest content. */
+    public boolean isScrolled(final Widget<?> widget) {
+        final Slot slot = slot(widget);
+        return null != slot && (!slot.follow || slot.scrollX > 0);
+    }
+
+    /**
+     * A one-line description of a widget's viewport — e.g.
+     * {@code rows 12-31/240} — for status/console feedback and tests.
+     * Empty when the widget is not pinned.
+     */
+    public String scrollInfo(final Widget<?> widget) {
+        final Slot slot = slot(widget);
+        if (null == slot) return "";
+        final StringBuilder info = new StringBuilder();
+        if (slot.maxScrollY > 0 || slot.contentHeight > slot.viewportHeight) {
+            final int body = Math.max(0, slot.contentHeight - slot.chrome);
+            final int first = Math.min(slot.scrollY + 1, Math.max(1, body));
+            final int last = Math.min(slot.scrollY + Math.max(0, slot.viewportHeight - slot.chrome), Math.max(1, body));
+            info.append("rows ").append(first).append('-').append(last).append('/').append(body);
+            if (!slot.follow) info.append(" (scrolled)");
+        }
+        if (slot.maxScrollX > 0) {
+            if (info.length() > 0) info.append(' ');
+            info.append("col ").append(slot.scrollX + 1).append('/').append(slot.contentWidth);
+        }
+        return info.toString();
+    }
+
+    /**
+     * The pinned widget whose rendered region covers a terminal cell, or null.
+     * Used to scroll or click the widget under the pointer; the topmost
+     * (highest z-index, drawn last) widget wins where regions overlap.
+     *
+     * @param row 1-based terminal row
+     * @param col 1-based terminal column
+     */
+    public Widget<?> widgetAt(final int row, final int col) {
+        final List<Widget<?>> ordered = widgets();
+        Widget<?> hit = null;
+        for (final Widget<?> widget : ordered) {
+            final Slot slot = slot(widget);
+            if (null == slot || slot.prevHeight <= 0 || slot.lastRow <= 0) continue;
+            if (row >= slot.lastRow && row < slot.lastRow + slot.prevHeight
+                    && col >= slot.lastCol && col < slot.lastCol + Math.max(1, slot.prevWidth))
+                hit = widget;
+        }
+        return hit;
+    }
+
+    /**
+     * Deliver a pointer click to a pinned widget, translated into the widget's
+     * own coordinates ({@code (0, 0)} = its top-left rendered cell) so the
+     * widget can test the click against its own layout — an accordion's
+     * {@code [-]} / {@code [+]} toggle, for example — without ever knowing
+     * where it was pinned.  Re-renders when the widget consumed the click.
+     *
+     * @param widget the pinned widget the click landed on
+     * @param row    1-based terminal row of the click
+     * @param col    1-based terminal column of the click
+     * @return true when the widget consumed the click (the console then does
+     * not treat it as a plain "focus me")
+     */
+    public boolean click(final Widget<?> widget, final int row, final int col) {
+        return click(widget, row, col, true);
+    }
+
+    /**
+     * @param render re-render when the widget consumed the click.  Pass false
+     *               when the caller is about to render anyway (e.g. the console
+     *               focusing the widget in the same gesture) — a click must not
+     *               cost two passes over a large widget.
+     */
+    public boolean click(final Widget<?> widget, final int row, final int col, final boolean render) {
+        final Slot slot = slot(widget);
+        if (null == slot || slot.lastRow <= 0) return false;
+        final boolean handled = widget.onClick(row - slot.lastRow, col - slot.lastCol);
+        if (handled && render) render();
+        return handled;
+    }
+
+    /**
+     * The terminal region a pinned widget last drew into, as
+     * {@code row:col:HxW} (1-based, {@code ""} when it has not drawn) — for
+     * diagnostics and tests outside this package.
+     */
+    public String regionOf(final Widget<?> widget) {
+        final Slot slot = slot(widget);
+        if (null == slot) return "";
+        return "%d:%d:%dx%d".formatted(slot.lastRow, slot.lastCol, slot.prevHeight, slot.prevWidth);
+    }
+
+    /**
+     * True when at least one pinned widget has a drawn region — i.e. the
+     * pointer has something to act on (click to focus, click an affordance,
+     * wheel to scroll).  This is what licenses terminal mouse tracking;
+     * nothing on screen means the terminal keeps its own mouse behavior.
+     */
+    public boolean hasPointerTargets() {
+        return drawnWidgetCount() > 0;
+    }
+
+    /**
+     * How many pinned widgets have a drawn region right now.  The console uses
+     * the count (not just emptiness) to tell "a widget arrived" from "the same
+     * widgets redrew", so a pointer the user waved off is not handed back to
+     * them by an unrelated refresh.
+     */
+    public int drawnWidgetCount() {
+        int drawn = 0;
+        for (final Map.Entry<Widget<?>, Slot> entry : slotSnapshot())
+            if (entry.getValue().prevHeight > 0) drawn++;
+        return drawn;
+    }
+
     /**
      * Remove all widgets and clear their rendered areas.
      */
     public void clear() {
-        for (final Slot slot : this.slots.values()) {
+        for (final Slot slot : slotSnapshot().stream().map(Map.Entry::getValue).toList()) {
             clearSlot(slot);
         }
-        this.slots.clear();
+        synchronized (this) {
+            this.slots.clear();
+        }
     }
+
+    private static int clamp(final int value, final int low, final int high) {
+        return Math.max(low, Math.min(high, value));
+    }
+
 
     // -----------------------------------------------------------------
     // Internal rendering
@@ -662,32 +977,46 @@ public class FloatingSurface {
     private void renderWidget(final StringBuilder sb, final Widget<?> widget,
                               final Slot slot, final int termWidth, final int termHeight,
                               final int scroll) {
+        final long __f0 = RENDER_TRACE ? System.nanoTime() : 0;
         final String formatted = widget.format();
-        String[] lines = formatted.split("\n", -1);
+        final long __f1 = RENDER_TRACE ? System.nanoTime() : 0;
+        final String[] content = formatted.split("\n", -1);
+        if (RENDER_TRACE)
+            System.err.println("[render] format=" + (__f1 - __f0) / 1_000_000 + "ms lines=" + content.length);
 
-        // Apply height cap — keep header lines + last N body lines (scroll-up).
-        // The slot carries the surface-owned cap (seeded from the widget's
-        // style height at first float, then user-resizable and carried across
-        // re-floats); the widget's own style height is the fallback.
+        // ── the viewport ───────────────────────────────────────────────
+        // Every pinned widget is drawn through a viewport: the rows it may
+        // occupy.  That is its style height when set (the explicit window), and
+        // otherwise its natural height capped by the terminal — a widget whose
+        // content runs past the bottom edge is windowed rather than spilled
+        // off-screen, so nothing it holds is unreachable.
+        // Only clamp to the terminal when it reports a usable height — a
+        // terminal that reports nothing (0 rows) must not collapse every
+        // widget to the bare minimum.
+        final int maxViewport = termHeight > MIN_HEIGHT + 2 ? termHeight - 2 : Integer.MAX_VALUE;
         final int heightCap = slot.heightCap > 0 ? slot.heightCap : widget.getStyle().height();
-        final int effectiveHeight;
-        if (heightCap > 0 && lines.length > heightCap) {
-            final int header = widget.chromeLines();
-            if (header > 0 && header < heightCap && header < lines.length) {
-                // Preserve header: keep first `header` lines + last (heightCap - header) of the rest
-                final int bodyKeep = heightCap - header;
-                final String[] clipped = new String[heightCap];
-                System.arraycopy(lines, 0, clipped, 0, header);
-                System.arraycopy(lines, lines.length - bodyKeep, clipped, header, bodyKeep);
-                lines = clipped;
-                effectiveHeight = heightCap;
-            } else {
-                lines = java.util.Arrays.copyOfRange(lines, lines.length - heightCap, lines.length);
-                effectiveHeight = heightCap;
-            }
-        } else {
-            effectiveHeight = lines.length;
-        }
+        final int viewport = Math.min(heightCap > 0 ? heightCap : content.length, maxViewport);
+        final int chrome = Math.min(Math.max(0, widget.chromeLines()), content.length);
+        final int axes = widget.getStyle().scrollAxes();
+        final boolean scrollableY = (axes & Stylable.SCROLL_Y) != 0;
+        final boolean scrollableX = (axes & Stylable.SCROLL_X) != 0;
+        final int maxScrollY = scrollableY ? ScrollView.maxY(content.length, chrome, viewport) : 0;
+
+        // follow = show the newest content.  Once the reader scrolls back the
+        // viewport holds its ABSOLUTE row, so text appended below grows the
+        // content without dragging the reader's place along; scrolling back
+        // down to the end restores the follow.
+        final int offsetY = !scrollableY || slot.follow
+                ? maxScrollY
+                : Math.min(Math.max(0, slot.scrollY), maxScrollY);
+        if (offsetY >= maxScrollY) slot.follow = true;
+        slot.scrollY = offsetY;
+
+        final List<String> windowed = content.length > viewport
+                ? ScrollView.windowVertically(java.util.Arrays.asList(content), chrome, offsetY, viewport)
+                : java.util.Arrays.asList(content);
+        String[] lines = windowed.toArray(new String[0]);
+        final int effectiveHeight = lines.length;
 
         // Snapshot the old render region before resolve() mutates the slot.
         // Bottom-anchored widgets shift lastRow when height changes, so we
@@ -700,6 +1029,41 @@ public class FloatingSurface {
         slot.resolve(termHeight, termWidth, effectiveHeight);
 
         final int maxWidth = Math.max(1, termWidth - slot.lastCol + 1);
+        final int clipWidth = Math.max(1, maxWidth - 2);
+
+        // ── the horizontal window ──────────────────────────────────────
+        // A line that fits is drawn exactly as the widget formatted it (color
+        // codes intact); a line wider than the viewport — or one shifted by a
+        // horizontal scroll — is drawn as its text window.
+        final int contentWidth = ScrollView.contentWidth(java.util.Arrays.asList(lines));
+        // A viewport too narrow to draw a line in (a terminal that reports no
+        // width) must not claim it has columns to scroll to.
+        final int maxScrollX = scrollableX && maxWidth > 2 ? ScrollView.maxX(contentWidth, clipWidth) : 0;
+        final int offsetX = Math.min(Math.max(0, slot.scrollX), maxScrollX);
+        slot.scrollX = offsetX;
+        final String[] drawn = new String[lines.length];
+        for (int i = 0; i < lines.length; i++) {
+            final String line = lines[i];
+            if (offsetX > 0)
+                drawn[i] = ScrollView.windowHorizontally(line, offsetX, clipWidth);
+            else if (Graphitty.viewLength(line) <= maxWidth)
+                drawn[i] = line;
+            else
+                drawn[i] = Graphitty.strip(line).substring(0, Math.max(0, Math.min(clipWidth, Graphitty.strip(line).length())));
+        }
+        lines = drawn;
+
+        // Metrics for the scroll API: what the reader can scroll THROUGH, and
+        // where they currently are.  Kept on the slot so scroll() can clamp
+        // without re-formatting the widget.
+        slot.contentHeight = content.length;
+        slot.contentWidth = contentWidth;
+        slot.chrome = chrome;
+        slot.viewportHeight = effectiveHeight;
+        slot.viewportWidth = clipWidth;
+        slot.maxScrollY = maxScrollY;
+        slot.maxScrollX = maxScrollX;
+
         final int newWidth = renderedWidth(lines, maxWidth);
 
         // Scroll compensation: console output written at the bottom scrolled
@@ -756,13 +1120,10 @@ public class FloatingSurface {
 
         for (int i = 0; i < lines.length; i++) {
             sb.append("\033[").append(slot.lastRow + i).append(";").append(slot.lastCol).append("H");
-            final String line = lines[i];
-            if (Graphitty.viewLength(line) <= maxWidth) {
-                sb.append(line);
-            } else {
-                sb.append(Graphitty.strip(line), 0, Math.max(0, maxWidth - 2));
-                //sb.append("...");
-            }
+            // lines are already windowed to the viewport (see above) — the
+            // horizontal window and the width clip happen there, so drawing is
+            // a plain write.
+            sb.append(lines[i]);
         }
 
         // Focus marker: FOCUS_MARKER in the widget's own top-left corner
@@ -860,6 +1221,24 @@ public class FloatingSurface {
         // height (i.e. natural height).  Mutable: nudge() resizes it and
         // add() carries it across re-floats.
         volatile int heightCap = -1;
+
+        // ---- scroll state (the viewport's place in the content) ----
+        // Like targetWidth/heightCap these live on the SLOT, not the widget:
+        // a .display() update re-hydrates the widget into a fresh instance, and
+        // the reader's place in its own text must not be lost to that.
+        volatile int scrollX = 0;
+        volatile int scrollY = 0;
+        /** Show the newest content (the tail) — true until the user scrolls back. */
+        volatile boolean follow = true;
+
+        // ---- content metrics, refreshed on every render ----
+        volatile int contentHeight = 0;
+        volatile int contentWidth = 0;
+        volatile int chrome = 0;
+        volatile int viewportHeight = 0;
+        volatile int viewportWidth = 0;
+        volatile int maxScrollY = 0;
+        volatile int maxScrollX = 0;
 
         // ---- computed each render ----
         int lastRow;

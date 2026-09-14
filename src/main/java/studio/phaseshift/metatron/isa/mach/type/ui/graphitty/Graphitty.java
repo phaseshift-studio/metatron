@@ -231,11 +231,31 @@ public class Graphitty {
     }
 
     public static String strip(final String string) {
+        if (null == string || string.isEmpty()) return "";
+        // Fast path: a line with no DSL codes, no ANSI escapes and nothing
+        // outside ASCII has nothing to strip, and `strip` is called per line by
+        // every widget that measures its own text — building a parser for each
+        // of those lines cost ~2.4us, which a big widget paid hundreds of times
+        // per render pass.
+        if (!needsParsing(string)) return string;
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         final Graphitty temp = new Graphitty(out);
         temp.ansiOn = false;
         temp.parseDSL(AttributedString.stripAnsi(string));
         return out.toString(StandardCharsets.UTF_8);
+    }
+
+    /**
+     * True when {@link #strip(String)} has work to do: the string carries a
+     * DSL code ({@code {{…}}}), an ANSI escape, or a non-ASCII character (the
+     * parser treats those specially so their display width stays right).
+     */
+    private static boolean needsParsing(final String string) {
+        for (int i = 0; i < string.length(); i++) {
+            final char c = string.charAt(i);
+            if (c == '{' || c == '\u001b' || c > 126) return true;
+        }
+        return false;
     }
 
     public static int viewLength(final String string) {

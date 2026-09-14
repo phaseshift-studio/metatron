@@ -23,6 +23,8 @@ import org.jline.terminal.TerminalBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 
@@ -667,5 +669,297 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
             index += needle.length();
         }
         return count;
+    }
+
+    // ── scrolling: content off the viewport is off-viewport, not gone ──
+
+    /** A widget whose body is longer than any viewport it will be given. */
+    private static AccordionWidget noteWidget(final int bodyLines) {
+        final StringBuilder body = new StringBuilder();
+        for (int i = 1; i <= bodyLines; i++) {
+            if (body.length() > 0) body.append('\n');
+            body.append("L%02d".formatted(i));
+        }
+        final AccordionWidget widget = new AccordionWidget("notes", body.toString());
+        widget.expand();
+        return widget;
+    }
+
+    /** A terminal + surface whose output can be read back per render pass. */
+    private static final class CapturingSurface {
+        final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        final Terminal term;
+        final FloatingSurface surface;
+
+        CapturingSurface() throws IOException {
+            this.term = TerminalBuilder.builder().dumb(true)
+                    .size(new org.jline.terminal.Size(TERM_HEIGHT, TERM_WIDTH))
+                    .streams(new java.io.ByteArrayInputStream(new byte[0]), this.out).build();
+            this.surface = new FloatingSurface(this.term);
+        }
+
+        /** Render synchronously and return only what these passes wrote.
+         *  <p>The first (barrier) pass drains anything the surface queued
+         *  fire-and-forget — a scroll/nudge render would otherwise land inside
+         *  the captured window and be read as this pass's output.  Two
+         *  capturing passes then follow: a widget's render can be a no-op on a
+         *  pass (its region already matches), so one pass is not enough
+         *  evidence — the assertions only need this state to have been drawn
+         *  once, and never need a pre-scroll pass to have been missed. */
+        String pass() {
+            this.surface.renderNow();
+            final String before = this.out.toString(java.nio.charset.StandardCharsets.UTF_8);
+            this.surface.renderNow();
+            this.surface.renderNow();
+            final String all = this.out.toString(java.nio.charset.StandardCharsets.UTF_8);
+            // measured in CHARS, not bytes — the box-drawing glyphs are 3 bytes each
+            return all.substring(before.length());
+        }
+
+        void close() throws IOException {
+            // stop the render thread first — a queued pass that lands after the
+            // terminal closes writes into a dead stream (and logs about it)
+            this.surface.shutdown();
+            this.term.close();
+        }
+    }
+
+    @ParameterizedTest()
+    @CsvSource(value = {
+            "0 % 0 % 8  % L30 % L01 % the tail is what a live widget shows",
+            "0 % 0 % 20 % L30 % L01 % a taller viewport still shows the tail",
+            "0 % 4 % 8  % L05 % L30 % a style seeded offset opens the widget partway into its own text (4 body rows in)",
+    }, delimiter = '%')
+    void testViewportShowsTheNewestContent(final int scrollX, final int scrollY, final int height,
+                                           final String visible, final String hidden, final String description) throws Exception {
+        final CapturingSurface capturing = new CapturingSurface();
+        final AccordionWidget widget = noteWidget(30);
+        widget.style().height(height).scrollTo(scrollX, scrollY).applyStyle();
+        capturing.surface.add(widget, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        capturing.surface.renderNow();
+        final String pass = capturing.pass();
+        assertTrue(pass.contains(visible), "%s: should show %s in %s".formatted(description, visible, printable(pass)));
+        assertFalse(pass.contains(hidden), "%s: the newest content fills the viewport, so %s is off it: %s"
+                .formatted(description, hidden, printable(pass)));
+        capturing.close();
+    }
+
+    @ParameterizedTest()
+    @CsvSource(value = {
+            "-30 % L01 % L30 % scrolling back reveals the first line and drops the last",
+            "-5  % L26 % L01 % a five row scroll back stops five rows into the text",
+    }, delimiter = '%')
+    void testScrollBackRevealsTextThatLeftTheViewport(final int dy, final String visible,
+                                                      final String hidden, final String description) throws Exception {
+        final CapturingSurface capturing = new CapturingSurface();
+        final AccordionWidget widget = noteWidget(30);
+        widget.style().height(8).applyStyle();
+        capturing.surface.add(widget, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        capturing.surface.renderNow();
+        assertTrue(capturing.surface.scroll(widget, 0, dy), "the widget should accept a vertical scroll");
+        final String pass = capturing.pass();
+        assertTrue(pass.contains(visible), "%s: %s should be back in view: %s".formatted(description, visible, printable(pass)));
+        assertFalse(pass.contains(hidden), "%s: the far end is now off the viewport: %s".formatted(description, printable(pass)));
+        capturing.close();
+    }
+
+    @Test
+    public void shouldNotDiscardContentWhenScrolled() {
+        final AccordionWidget widget = noteWidget(30);
+        widget.style().height(8).applyStyle();
+        surface.add(widget, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        surface.renderNow();
+        // the body the widget holds is untouched by any amount of scrolling —
+        // the viewport is a window over it, not a destructive crop
+        final String bodyBefore = widget.bodyLines().toString();
+        surface.scroll(widget, 0, -20);
+        surface.scroll(widget, 0, 7);
+        surface.scroll(widget, 0, -99);
+        assertEquals(bodyBefore, widget.bodyLines().toString(),
+                "scrolling must never mutate the widget's body");
+        assertEquals(30, widget.bodyLines().size(), "every appended line stays alive in the body");
+    }
+
+    @Test
+    public void shouldFollowNewContentUntilTheReaderScrollsBack() {
+        final AccordionWidget widget = noteWidget(30);
+        widget.style().height(8).applyStyle();
+        surface.add(widget, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        surface.renderNow();
+        assertFalse(surface.isScrolled(widget), "a fresh widget follows its newest content");
+
+        // scroll back: the reader's place is now theirs, and new content must
+        // not yank it away
+        surface.scroll(widget, 0, -10);
+        assertTrue(surface.isScrolled(widget));
+        final int heldRow = surface.slotOf(widget).scrollY;
+        widget.appendLine("L31");
+        surface.renderNow();
+        assertEquals(heldRow, surface.slotOf(widget).scrollY,
+                "appending text must not move a reader who is reading earlier text");
+
+        // back to the end → following again
+        surface.scroll(widget, 0, 99);
+        assertFalse(surface.isScrolled(widget), "scrolling to the end resumes the follow");
+        assertEquals(surface.slotOf(widget).maxScrollY, surface.slotOf(widget).scrollY);
+    }
+
+    @Test
+    public void shouldCarryTheScrollPlaceAcrossReFloat() {
+        final AccordionWidget first = noteWidget(30);
+        first.style().height(8).applyStyle();
+        surface.add(first, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        surface.renderNow();
+        surface.scroll(first, 0, -12);
+        final int scrolledTo = surface.slotOf(first).scrollY;
+        assertTrue(scrolledTo > 0, "the widget should have scrolled back");
+
+        // .display() re-hydrates the widget into a fresh instance; the reader's
+        // place in the text is not something an update should throw away
+        final AccordionWidget fresh = noteWidget(30);
+        fresh.style().height(8).applyStyle();
+        surface.add(fresh, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        assertEquals(scrolledTo, surface.slotOf(fresh).scrollY, "the scroll offset must survive the re-float");
+        assertTrue(surface.isScrolled(fresh), "and so must the fact that the reader is not at the tail");
+    }
+
+    @Test
+    public void shouldSeedTheScrollPlaceFromTheStyle() {
+        final AccordionWidget widget = noteWidget(30);
+        widget.style().height(8).scrollTo(0, 4).applyStyle();
+        surface.add(widget, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        surface.renderNow();
+        assertEquals(4, surface.slotOf(widget).scrollY,
+                "a style scrollY seeds the viewport (a widget can open partway into its own text)");
+        assertTrue(surface.isScrolled(widget), "a seeded offset is not the tail, so it is not following");
+    }
+
+    @ParameterizedTest()
+    @CsvSource(value = {
+            "union(x,y) % true  % true  % both axes are offered",
+            "union(y)   % false % true  % a vertical-only widget refuses a horizontal scroll",
+            "union(x)   % true  % false % a horizontal-only widget refuses a vertical scroll",
+            "none       % false % false % a widget can opt out of scrolling entirely",
+    }, delimiter = '%')
+    void testScrollRespectsDeclaredAxes(final String declaration, final boolean acceptsX,
+                                        final boolean acceptsY, final String description) throws Exception {
+        final AccordionWidget widget = noteWidget(30);
+        widget.style().height(8).applyStyle();
+        widget.getStyle().jvm().put(studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("scroll"),
+                studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(
+                        declaration.replace("union(", "").replace(")", "")));
+        surface.add(widget, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        surface.renderNow();
+        assertEquals(acceptsX, surface.scroll(widget, 3, 0), description + " (x)");
+        assertEquals(acceptsY, surface.scroll(widget, 0, 3), description + " (y)");
+    }
+
+    @Test
+    public void shouldReportWhereTheViewportSits() {
+        final AccordionWidget widget = noteWidget(30);
+        widget.style().height(8).applyStyle();
+        surface.add(widget, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        surface.renderNow();
+        assertTrue(surface.canScroll(widget), "30 body lines in an 8 row viewport must be scrollable");
+        assertTrue(surface.scrollInfo(widget).startsWith("rows "),
+                "the viewport should report its place: " + surface.scrollInfo(widget));
+        surface.scroll(widget, 0, -10);
+        assertTrue(surface.scrollInfo(widget).contains("scrolled"),
+                "scrolled away from the tail should say so: " + surface.scrollInfo(widget));
+        final String atTail = surface.scrollInfo(widget);
+        surface.scrollToTail(widget);
+        assertFalse(surface.scrollInfo(widget).contains("scrolled"), "back at the tail: " + surface.scrollInfo(widget));
+        assertNotEquals(atTail, surface.scrollInfo(widget));
+    }
+
+    @Test
+    public void shouldNotScrollAWidgetThatFits() {
+        final AccordionWidget widget = noteWidget(2);
+        widget.style().height(20).applyStyle();
+        surface.add(widget, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        surface.renderNow();
+        assertFalse(surface.canScroll(widget), "a widget that fits has nothing off its viewport");
+        assertEquals("", surface.scrollInfo(widget));
+        assertEquals(0, surface.slotOf(widget).maxScrollY);
+    }
+
+    @Test
+    public void shouldWindowAWidgetTallerThanTheTerminal() throws Exception {
+        // No style height at all: the widget is naturally taller than the
+        // screen.  It becomes a viewport on the screen rather than drawing
+        // rows off the bottom of the terminal.
+        final CapturingSurface capturing = new CapturingSurface();
+        final AccordionWidget widget = noteWidget(TERM_HEIGHT * 3);
+        capturing.surface.add(widget, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        capturing.surface.renderNow();
+        final FloatingSurface.Slot slot = capturing.surface.slotOf(widget);
+        final int termRows = capturing.term.getHeight();
+        assertTrue(slot.prevHeight <= termRows - 2,
+                "a widget must stay on screen: " + slot.prevHeight + " rows on a " + termRows + " row terminal");
+        assertTrue(capturing.surface.canScroll(widget), "and what did not fit is reachable by scrolling");
+        assertTrue(capturing.surface.scrollInfo(widget).contains("/"),
+                "the viewport knows the content it is windowing: " + capturing.surface.scrollInfo(widget));
+        capturing.close();
+    }
+
+    @Test
+    public void shouldHitTestTheWidgetUnderAPoint() {
+        final AccordionWidget left = noteWidget(6);
+        left.style().height(6).applyStyle();
+        surface.add(left, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        surface.renderNow();
+        final FloatingSurface.Slot slot = surface.slotOf(left);
+        assertSame(left, surface.widgetAt(slot.lastRow, slot.lastCol),
+                "the widget's own top-left cell is inside it");
+        assertNull(surface.widgetAt(slot.lastRow + slot.prevHeight + 5, slot.lastCol),
+                "well below the widget is outside it");
+    }
+
+    private static String printable(final String rendered) {
+        return rendered.replace("\033", "<ESC>").replace("\n", "<LF>");
+    }
+
+    // ── pointer clicks (focus, affordances) ────────────────────────
+
+    @Test
+    public void shouldTranslateAClickIntoTheWidgetsOwnCoordinates() throws Exception {
+        final CapturingSurface capturing = new CapturingSurface();
+        final AccordionWidget widget = new AccordionWidget("notes", "one\ntwo");
+        widget.expand();
+        widget.style().height(10).applyStyle();
+        capturing.surface.add(widget, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        capturing.surface.renderNow();
+        final FloatingSurface.Slot slot = capturing.surface.slotOf(widget);
+
+        // the indicator lives at title-row, column 3 + title length
+        final int indicatorCol = slot.lastCol + 3 + "notes".length();
+        assertTrue(capturing.surface.click(widget, slot.lastRow, indicatorCol),
+                "the surface must hand the click to the widget, in the widget's own cells");
+        assertFalse(widget.isExpanded(), "the click on [-] collapsed the accordion");
+
+        // a click in the body is nobody's affordance: the widget declines it
+        assertFalse(capturing.surface.click(widget, slot.lastRow + 2, slot.lastCol),
+                "a body click is not an affordance — the console focuses the widget instead");
+        assertTrue(capturing.surface.click(widget, slot.lastRow, indicatorCol + 1),
+                "the indicator is a target again (it now reads [+])");
+        assertTrue(widget.isExpanded());
+        capturing.close();
+    }
+
+    @Test
+    public void shouldOnlyClaimPointerTargetsOnceSomethingIsDrawn() throws Exception {
+        final CapturingSurface capturing = new CapturingSurface();
+        assertEquals(false, capturing.surface.hasPointerTargets(),
+                "an empty surface has nothing for the pointer to do");
+        final AccordionWidget widget = noteWidget(6);
+        capturing.surface.add(widget, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        assertEquals(false, capturing.surface.hasPointerTargets(),
+                "pinned but not yet drawn is still nothing to click");
+        capturing.surface.renderNow();
+        assertEquals(true, capturing.surface.hasPointerTargets(),
+                "a drawn widget is something the pointer can focus or scroll");
+        capturing.surface.clear();
+        assertEquals(false, capturing.surface.hasPointerTargets(), "and it goes away with the widgets");
+        capturing.close();
     }
 }

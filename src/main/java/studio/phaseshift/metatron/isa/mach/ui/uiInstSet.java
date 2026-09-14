@@ -156,9 +156,13 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri("bottomMargin").maybe(), INT_TYPE,
                                                 uri("anchor").maybe(), UI_ANCHOR_TYPE,
                                                 uri("width").maybe(), INT_TYPE,
+                                                uri("height").maybe(), INT_TYPE,
                                                 uri("top").maybe(), INT_TYPE,
                                                 uri("left").maybe(), INT_TYPE,
-                                                uri("zIndex").maybe(), INT_TYPE))
+                                                uri("zIndex").maybe(), INT_TYPE,
+                                                uri("scroll").maybe(), ALL_TYPE.orElse(id_().tryToInst()),
+                                                uri("scrollX").maybe(), INT_TYPE,
+                                                uri("scrollY").maybe(), INT_TYPE))
                                         .constructor(arg -> Stylable.Style.from(arg.asRec()))
                                         .create(), "maybe an obj", "a style obj", mutableMap(
                                         uri("border").maybe().asUri(), "the border style of the widget (e.g. border::none, border::simple, etc.)",
@@ -173,9 +177,13 @@ public class uiInstSet extends AbstractInstSet {
                                         uri("bottomMargin").maybe(), "the bottom margin of the widget",
                                         uri("anchor").maybe(), "float anchor: top_left, top_middle, top_right, middle, bottom_left, bottom_middle, bottom_right",
                                         uri("width").maybe(), "display width override in columns (0 = natural)",
+                                        uri("height").maybe(), "viewport height in rows (0 = natural); content taller than this scrolls rather than being dropped",
                                         uri("top").maybe(), "row offset from anchor edge (CSS top)",
                                         uri("left").maybe(), "col offset from anchor edge (CSS left)",
-                                        uri("zIndex").maybe(), "render order among floating widgets: higher = drawn later (on top); default 0"),
+                                        uri("zIndex").maybe(), "render order among floating widgets: higher = drawn later (on top); default 0",
+                                        uri("scroll").maybe(), "scroll axes: scroll=>union(x,y) (both, the default), union(y) (vertical only), none (off)",
+                                        uri("scrollX").maybe(), "initial horizontal scroll offset (column shown at the left edge)",
+                                        uri("scrollY").maybe(), "initial vertical scroll offset (body row shown at the top); 0 = newest content"),
                                 "a widget style specification"),
                         docWrap(UI_WIDGET_TYPE = Type.Builder.build()
                                         .tid(REC_TID)

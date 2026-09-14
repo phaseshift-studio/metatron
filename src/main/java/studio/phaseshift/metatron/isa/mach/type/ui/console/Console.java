@@ -426,6 +426,12 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             this.watcherClosed = true;
             this.watching = false;
             this.reader.getBuffer().clear();
+            // Hand mouse tracking back to the terminal if widget scrolling
+            // owns it — the shell we return to must not inherit it.
+            if (this.widgetMouseTracking && terminal.hasMouseSupport()) {
+                terminal.writer().print(MOUSE_OFF);
+                this.widgetMouseTracking = false;
+            }
             // Disable extended key reporting before exit so we don't leave the
             // terminal in a state that confuses subsequent applications.
             terminal.writer().print("\033[<u");    // kitty: pop keyboard enhancement
@@ -487,6 +493,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         // Built-in shortcut keys are reasserted before every read, so a
         // shadow binding (menu line key, tool) can never outlive this turn.
         this.reassertBuiltinKeys();
+        // The widget set may have changed since the last prompt, and jline
+        // releases mouse tracking at the end of every readLine — so the mode is
+        // re-asserted here, once per prompt (the watcher tick only reacts to a
+        // change, so nothing chatters in between).
+        this.syncWidgetMouseTracking(true);
         if (this.splitMode && this.activePane != null) {
             // Disable AUTO_FRESH_LINE in split mode - it interferes with cursor positioning
             // by outputting a ~ marker when cursor isn't at column 1
@@ -790,6 +801,24 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     private volatile String activeWidgetKey = null;
 
     /**
+     * Whether terminal mouse tracking is currently owned by widget scrolling
+     * (see {@link #syncWidgetMouseTracking()}).
+     */
+    private volatile boolean widgetMouseTracking = false;
+
+    /**
+     * True once the user has pointed AWAY from the widgets (a click on empty
+     * terminal): the mouse is the terminal's again until something asks for it
+     * — a widget being focused, or a new widget arriving.
+     */
+    private volatile boolean pointerDismissed = false;
+
+    /**
+     * Drawn-widget count at the last pointer sync (see {@link #pointerDismissed}).
+     */
+    private volatile int pointerWidgets = 0;
+
+    /**
      * @return true when the console's floating surface has at least one pinned widget
      */
     public boolean hasFloatingWidgets() {
@@ -884,13 +913,19 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         if (null == widget) {
             this.activeWidgetKey = null;
             getFloatingSurface().setFocusKey(null);
-            LOG.info("cleared floating widget focus");
+            LOG.debug("cleared floating widget focus");
         } else {
             this.activeWidgetKey = FloatingSurface.widgetKey(widget);
             getFloatingSurface().setFocusKey(this.activeWidgetKey);
-            LOG.info("focused floating widget {{y}}%s{{X}}", this.activeWidgetKey);
+            final String info = getFloatingSurface().scrollInfo(widget);
+            LOG.debug("focused floating widget {{y}}%s{{X}}%s",
+                    this.activeWidgetKey, info.isEmpty() ? "" : " (" + info + ")");
         }
+        if (null != widget) this.pointerDismissed = false;   // the pointer is wanted again
+        // fire-and-forget: a click must never stall the console thread on a
+        // render, and the pointer decision only needs the focus itself
         getFloatingSurface().render();
+        this.syncWidgetMouseTracking();
     }
 
     /**
@@ -976,6 +1011,245 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             LOG.info("resized floating widget {{y}}%s{{X}} (width %+d, height %+d)",
                     this.activeWidgetKey, widthDelta, heightDelta);
         }
+    }
+
+    // ========== Floating Widget Scrolling ==========
+    // A pinned widget draws through a viewport (its style height, else the
+    // terminal), so content that does not fit is not discarded — it is simply
+    // off the viewport, still alive in the widget's body.  These methods move
+    // that viewport, which is how the text scrolled out of sight is read again.
+
+    /**
+     * Scroll the focused floating widget's viewport by {@code (dx, dy)} cells.
+     * Positive {@code dy} moves toward newer content, positive {@code dx}
+     * toward later columns.
+     *
+     * @return true when the focused widget accepted the scroll
+     */
+    public boolean scrollActiveWidget(final int dx, final int dy) {
+        final Widget<?> active = getActiveWidget();
+        // nothing focused is not an error — a scroll key is allowed to fall
+        // through to the binding that owned it before
+        if (null == active) return false;
+        if (!getFloatingSurface().scroll(active, dx, dy)) {
+            LOG.warn("focused floating widget {{y}}%s{{X}} does not scroll", this.activeWidgetKey);
+            return false;
+        }
+        this.reportWidgetScroll(active);
+        return true;
+    }
+
+    /**
+     * Scroll the focused floating widget by one viewport page
+     * ({@code direction} &lt; 0 = back in the text, &gt; 0 = forward).
+     */
+    public boolean pageActiveWidget(final int direction) {
+        final Widget<?> active = getActiveWidget();
+        // nothing focused is not an error — a scroll key is allowed to fall
+        // through to the binding that owned it before
+        if (null == active) return false;
+        final int page = getFloatingSurface().pageRows(active) * (direction < 0 ? -1 : 1);
+        if (!getFloatingSurface().scroll(active, 0, page)) {
+            LOG.warn("focused floating widget {{y}}%s{{X}} does not scroll", this.activeWidgetKey);
+            return false;
+        }
+        this.reportWidgetScroll(active);
+        return true;
+    }
+
+    /**
+     * Put the focused floating widget's viewport back on its newest content —
+     * the state it starts in, and the one it returns to as content arrives.
+     */
+    public boolean tailActiveWidget() {
+        final Widget<?> active = getActiveWidget();
+        // nothing focused is not an error — a scroll key is allowed to fall
+        // through to the binding that owned it before
+        if (null == active) return false;
+        getFloatingSurface().scrollToTail(active);
+        this.reportWidgetScroll(active);
+        return true;
+    }
+
+    /**
+     * Jump the focused floating widget's viewport to an absolute body row
+     * (clamped to the content).
+     */
+    public boolean scrollActiveWidgetTo(final int row) {
+        final Widget<?> active = getActiveWidget();
+        // nothing focused is not an error — a scroll key is allowed to fall
+        // through to the binding that owned it before
+        if (null == active) return false;
+        getFloatingSurface().scrollTo(active, row);
+        this.reportWidgetScroll(active);
+        return true;
+    }
+
+    /**
+     * @return true when the focused floating widget has content off its
+     * viewport that a scroll would reveal
+     */
+    public boolean activeWidgetScrolls() {
+        final Widget<?> active = getActiveWidget();
+        return null != active && getFloatingSurface().canScroll(active);
+    }
+
+    /**
+     * A one-line description of the focused widget's viewport, e.g.
+     * {@code rows 12-31/240} (empty when it is not scrollable).
+     */
+    public String activeWidgetScrollInfo() {
+        final Widget<?> active = getActiveWidget();
+        if (null == active) return "";
+        final String info = getFloatingSurface().scrollInfo(active);
+        return info.isEmpty() ? "" : getFloatingSurface().resolveKey(this.activeWidgetKey) + " " + info;
+    }
+
+    /**
+     * Echo a widget's viewport position to the status line, so a scroll (which
+     * changes nothing a cursor can point at) is still visibly acknowledged.
+     */
+    private void reportWidgetScroll(final Widget<?> widget) {
+        final String key = getFloatingSurface().resolveKey(this.activeWidgetKey);
+        final String info = getFloatingSurface().scrollInfo(widget);
+        StatusLine.message(str(info.isEmpty()
+                ? "{{y}}%s{{X}} {{w}}has nothing off its viewport{{X}}".formatted(key)
+                : "{{y}}%s{{X}} %s".formatted(key, info)));
+    }
+
+    /**
+     * A pointer click at a terminal cell.
+     *
+     * <p>The gesture vocabulary is the one a pointer implies: the widget under
+     * the pointer is focused, its own affordances get first refusal (an
+     * accordion's {@code [-]} / {@code [+]} toggle, for example — see
+     * {@link Widget#onClick(int, int)}), and a click on terminal that has no
+     * widget under it means no widget owns the user's attention, so the focus
+     * is cleared.
+     *
+     * @param row 1-based terminal row of the click
+     * @param col 1-based terminal column of the click
+     * @return true when a widget consumed the click for itself
+     */
+    public boolean clickAt(final int row, final int col) {
+        final Widget<?> hit = getFloatingSurface().widgetAt(row, col);
+        if (null == hit) {
+            // Empty terminal — including the prompt area: put the widgets down
+            // and hand the mouse back to the terminal (its own wheel and
+            // drag-selection), which is what a pointer waving "not you" means.
+            this.pointerDismissed = true;
+            if (null != getActiveWidget()) focusWidget(null);
+            else syncWidgetMouseTracking();
+            return false;
+        }
+        final boolean focused = getActiveWidget() == hit;
+        if (!focused) focusWidget(hit);
+        // The affordance gets its own render: a click that both focuses a widget
+        // and toggles it must show the toggled state (focusWidget's render ran
+        // before the widget acted).  surface.render() coalesces, so a click
+        // never costs more than one pass.
+        final boolean consumed = getFloatingSurface().click(hit, row, col, false);
+        if (consumed) {
+            getFloatingSurface().render();
+            // LOG.info("pointer: {{y}}%s{{X}} worked its affordance", getFloatingSurface().resolveKey(this.activeWidgetKey));
+        }
+        return consumed;
+    }
+
+    /**
+     * Terminal mouse modes this console turns on: button events (1000) in the
+     * SGR encoding (1006), and nothing else.
+     *
+     * <p>Deliberately NOT jline's {@code MouseSupport.trackMouse(Normal)}, which
+     * also enables {@code ?1005h} — the legacy UTF-8 coordinate encoding.  With
+     * 1005 and 1006 enabled together a terminal may report the pointer in either
+     * encoding, and a mis-decoded column is exactly what makes a small target
+     * (an accordion's {@code [-]} cell) impossible to hit while a large one (the
+     * widget body) still works.
+     */
+    private static final String MOUSE_ON = "\033[?1000h\033[?1006h";
+    /**
+     * Every mode jline may have enabled, off — a full hand-back to the terminal.
+     */
+    private static final String MOUSE_OFF =
+            "\033[?1000l\033[?1002l\033[?1003l\033[?1005l\033[?1006l\033[?1015l\033[?1016l";
+
+    /**
+     * Turn terminal mouse tracking on or off to match the focus.
+     *
+     * <p>The pointer belongs to the widgets exactly while one of them is
+     * focused: that is what makes it available for scrolling, for working a
+     * widget's affordances and for moving the focus between widgets — and it is
+     * what gives the terminal its own mouse back the moment the focus is
+     * cleared (clicking off a widget, {@code :focus-widget off}), so the wheel
+     * scrolls the terminal again and drag-selection works again.
+     *
+     * <p>Called only when the prompt owns the terminal (the console's watcher
+     * thread, and the console thread itself): while a job holds the console the
+     * mouse stays off, so its bytes can never be mistaken for typed input.
+     */
+    public void syncWidgetMouseTracking() {
+        syncWidgetMouseTracking(false);
+    }
+
+    /**
+     * @param force re-assert the mode even when it has not changed — used once
+     *              per prompt, because jline releases mouse tracking at the end
+     *              of every readLine, so the flag alone would leave the pointer
+     *              dead from the second prompt on
+     */
+    public void syncWidgetMouseTracking(final boolean force) {
+        final Terminal term = getTerminal();
+        if (null == term || !term.hasMouseSupport()) return;
+        // A new widget arriving re-arms the pointer: it is asking to be worked
+        // with.  The same widgets merely redrawing does not (the count is
+        // unchanged), so waving the mouse away sticks.
+        final int widgets = getFloatingSurface().drawnWidgetCount();
+        if (widgets > this.pointerWidgets) this.pointerDismissed = false;
+        this.pointerWidgets = widgets;
+        final boolean wanted = pointerWanted(null != getActiveWidget(), this.pointerDismissed, widgets);
+        if (wanted == this.widgetMouseTracking && !force) return;
+        try {
+            // only the enable is worth re-asserting (jline turns it off again at
+            // the end of every readLine); a disable is written once, on the way out
+            if (wanted) {
+                term.writer().print(MOUSE_ON);
+            } else if (this.widgetMouseTracking) {
+                term.writer().print(MOUSE_OFF);
+            }
+            term.writer().flush();
+            this.widgetMouseTracking = wanted;
+        } catch (final Exception e) {
+            LOG.warn("could not %s mouse tracking: {{r}}%s{{X}}", wanted ? "enable" : "disable", e.getMessage());
+        }
+    }
+
+    /**
+     * Whether terminal mouse tracking is currently owned by widget scrolling.
+     */
+    public boolean widgetMouseTracking() {
+        return this.widgetMouseTracking;
+    }
+
+    /**
+     * Who owns the pointer: the widgets while one of them is focused, or while
+     * widgets are on screen and the user has not waved the pointer off them.
+     * With nothing on screen — or after a click on empty terminal — the terminal
+     * keeps its own mouse (wheel, drag-selection).
+     *
+     * @param focused   a widget currently holds the focus
+     * @param dismissed the user pointed away from the widgets (see {@link #clickAt})
+     * @param widgets   widgets with a drawn region on screen
+     */
+    static boolean pointerWanted(final boolean focused, final boolean dismissed, final int widgets) {
+        return focused || (!dismissed && widgets > 0);
+    }
+
+    /**
+     * True when the user has pointed away from the widgets (the terminal owns the mouse).
+     */
+    public boolean pointerDismissed() {
+        return this.pointerDismissed;
     }
 
     /**
@@ -1497,7 +1771,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     private void watchTerminal() {
         while (!this.watcherClosed) {
             if (!this.beginWatch()) {
-                CommonUtil.sleepThread(WATCHER_IDLE_MS);  // the prompt owns the terminal
+                // The prompt owns the terminal: keep the pointer alive for
+                // whatever widgets are on screen (a widget floated while the
+                // user sat at the prompt turns the mouse on within a tick).
+                if (!this.watching) this.syncWidgetMouseTracking();
+                CommonUtil.sleepThread(WATCHER_IDLE_MS);
                 continue;
             }
             try {

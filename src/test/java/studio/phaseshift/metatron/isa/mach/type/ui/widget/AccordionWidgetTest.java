@@ -1,6 +1,8 @@
 package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -130,5 +132,73 @@ public class AccordionWidgetTest extends AbstractMetatronTest {
         assertTrue(a.isExpanded());
         a.toggle();
         assertFalse(a.isExpanded());
+    }
+
+    // ── the pointer works the indicator ────────────────────────────
+
+    /**
+     * The title bar is the toggle target: one border cell, a space, the title,
+     * a space, the {@code [-]} / {@code [+]} glyph, all on the widget's first
+     * rendered row.
+     */
+    private static int indicatorColumn(final String title) {
+        return 3 + title.length();
+    }
+
+    @ParameterizedTest()
+    @CsvSource(value = {
+            "0  % 8  % handled     % the first [-]/[+] cell folds",
+            "0  % 9  % handled     % the middle cell folds",
+            "0  % 10 % handled     % the last cell folds",
+            "0  % 7  % not-handled % the space before the glyph is the title bar, not the glyph",
+            "0  % 11 % not-handled % the space after the glyph is the title bar, not the glyph",
+            "0  % 2  % not-handled % the title text focuses the widget — it must not fold it",
+            "0  % 0  % not-handled % the header's own corner focuses, it does not fold",
+            "0  % 20 % not-handled % the header's trailing padding focuses, it does not fold",
+            "1  % 8  % not-handled % the body is not the glyph",
+            "2  % 8  % not-handled % the bottom border is not the glyph",
+            "-1 % 8  % not-handled % a click above the box is not this widget's at all",
+    }, delimiter = '%')
+    void testIndicatorClickRegion(final int row, final int col, final String expectation, final String description) {
+        final AccordionWidget a = new AccordionWidget("notes", "one\ntwo");
+        a.expand();
+        final boolean handled = a.onClick(row, col);
+        if ("handled".equals(expectation.trim())) {
+            assertTrue(handled, "the glyph should consume the click (row %d, col %d): %s".formatted(row, col, description));
+            assertFalse(a.isExpanded(), "a click on the glyph folds the accordion");
+        } else {
+            assertFalse(handled, "a click off the glyph must fall through to the console: " + description);
+            assertTrue(a.isExpanded(), "an unhandled click changes nothing (a header click focuses instead)");
+        }
+    }
+
+    @Test
+    public void shouldToggleBothWaysFromTheIndicator() {
+        final AccordionWidget a = new AccordionWidget("notes", "one\ntwo");
+        a.expand();
+        assertTrue(a.onClick(0, indicatorColumn("notes") + 1), "the indicator is live");
+        assertFalse(a.isExpanded(), "clicked [-] → collapsed");
+        assertTrue(a.format().contains("[+]"), "the collapsed box shows [+]: " + a.format());
+        assertTrue(a.onClick(0, indicatorColumn("notes") + 1), "the indicator is live while collapsed too");
+        assertTrue(a.isExpanded(), "clicked [+] → expanded");
+        assertTrue(a.format().contains("[-]"), "the expanded box shows [-]: " + a.format());
+    }
+
+    @Test
+    public void shouldSayHowMuchAFoldedHeaderHides() {
+        final AccordionWidget a = new AccordionWidget("notes", "one\ntwo\nthree");
+        a.expand();
+        assertTrue(a.format().contains("[-]"), "an expanded header shows [-]: " + a.format());
+
+        a.collapse();
+        final String folded = a.format();
+        assertTrue(folded.contains("[+] 3"), "a folded header reports the lines it is holding: " + folded);
+        assertFalse(folded.contains("one"), "and draws none of them: " + folded);
+
+        final AccordionWidget empty = new AccordionWidget("notes", "");
+        empty.collapse();
+        assertTrue(empty.format().contains("[+]"), "an empty folded box still shows the toggle: " + empty.format());
+        assertFalse(empty.format().contains("[+] 0"),
+                "an empty body has nothing to report — no '0' to read as a count: " + empty.format());
     }
 }

@@ -10,7 +10,8 @@ description: Architecture of the metatron UI subsystem (Widget, Style, FloatingS
 ```
 isa.mach.type.ui
   Widget.java              ← interface: run(), format(), style(), floatAt()
-  Stylable.java            ← Style inner class: border, anchor, width, top, left, zIndex, floatAt(), hasFloat()
+  Stylable.java            ← Style inner class: border, anchor, width, height, scroll, top, left, zIndex, floatAt(), hasFloat()
+  ScrollView.java          ← viewport windowing math (windowVertically/windowHorizontally/maxX/maxY) shared by FloatingSurface and widget-owned viewports
   Border.java              ← border constants (simple, continuous, rounded, none, hash, etc.)
 isa.mach.type.ui.widget
   FloatingSurface.java     ← terminal-absolute rendering + Anchor enum + Slot + scroll tracking
@@ -227,7 +228,10 @@ Style is a JVM-backed rec. Fields:
 | `rightMargin`   | int             | Right margin                                                                                                                                     |
 | `topMargin`     | int             | Top margin                                                                                                                                       |
 | `bottomMargin`  | int             | Bottom margin                                                                                                                                    |
-| `height`        | int             | Display height cap in rows; 0 = unbounded. Content exceeding this cap keeps header/chrome lines and discards top body lines (scroll-up behavior) |
+| `height`        | int             | **Viewport** height in rows; 0 = natural. Content taller than this is windowed (header/chrome pinned, newest lines at the bottom) and scrolls — nothing is discarded |
+| `scroll`        | union/uri/bool  | Which axes may scroll: `scroll=>union(x,y)` (both, the default), `union(y)` (vertical only), `none`/`false` (off) |
+| `scrollX`       | int             | Initial horizontal scroll offset (column at the left edge) |
+| `scrollY`       | int             | Initial vertical scroll offset (body row at the top); 0 = follow the newest content |
 | `zIndex`        | int             | Render order among floating widgets: higher = drawn later (on top). Default 0. Menu bars use `Integer.MAX_VALUE`. |
 | `focus`         | str             | Focus highlight color (Graphitty code, e.g. `{{r}}`) applied to the focus marker of the active widget |
 | `focus_token`   | str             | Marker char drawn at the focused widget's top-left corner (default `▶`) |
@@ -265,7 +269,16 @@ focusToken(token) / focusToken()  // focus marker char (default ▶)
 style.
 
 focused(bool) / focused()         // transient keyboard-focus flag
+
+style.scrollAxes() / scrollAxes(mask)   // SCROLL_X | SCROLL_Y | SCROLL_XY | SCROLL_NONE
+style.scrollableX() / scrollableY()     // axis predicates
+style.scrollX() / scrollY()             // seeded offsets (a viewport opens partway into the text)
+style.scrollTo(x, y) / scrollBy(dx, dy) // write the offsets
 ```
+
+`scrollAxes()` parses the declaration tolerantly (`union(x,y)` arrives unevaluated — `=>` quotes
+it — so the text, uri, bool, lst and rec forms all resolve to the same axis mask;
+`Style.parseAxes(Obj)` is the entry point).
 
 Text utility:
 
@@ -470,6 +483,217 @@ scroll-compensation erase blanks a **wrap-tolerant band** (4 rows above + 1 belo
 computed stale position, scoped to the widget's own columns) — wrapped console lines add
 visual rows without newlines, so the true scroll can exceed `scrollAccum` and leave a stale
 box copy otherwise.
+
+### Widget scrolling
+
+Every pinned widget is drawn through a **viewport**: the rows it may occupy (its `style.height`
+when set, otherwise its natural height capped by the terminal).  Content that does not fit is
+**off the viewport, never discarded** — the widget's body still holds every line — so the
+reader can scroll back to it.  That is the whole point: a live `thoughts`/`audit` widget used
+to lose the top of its text to the height cap.
+
+The mechanics are deliberately general:
+
+- **`ScrollView`** (pure static math, no terminal) does the windowing:
+  `maxY(content, chrome, viewport)`, `maxX(contentWidth, viewportWidth)`,
+  `windowVertically(lines, chrome, offset, viewport)`, `windowHorizontally(line, offset, width)`,
+  `contentWidth(lines)`.  `FloatingSurface` uses it for every widget, and any widget that owns
+  its own viewport (see `ModalTool`) uses the same calls — so scrolling means the same thing
+  everywhere.
+- **Chrome is pinned.** `Stylable.chromeLines()` (1 when a border is configured, widgets with
+  headers/status rows override) rows never scroll; only the body under them does.
+- **Tail by default.** A viewport that is not scrolled shows the *newest* content — the legacy
+  cap behavior, byte-identical: `offset = maxY` (follow).  Scrolling up (or seeding
+  `style.scrollY`) drops the follow and holds the reader's **absolute** row, so text appended
+  by an ongoing job does not yank the view out from under someone reading earlier lines.
+  Scrolling back down to the end restores the follow.
+- **One horizontal window per line.** A line that fits is drawn verbatim (color codes intact);
+  a shifted or overlong line is drawn as its text window (Graphitty-stripped), which is the
+  same treatment the width clip always applied.
+- **Tall without a cap** — a widget with no `height` whose content is taller than the terminal
+  is windowed to the terminal (`termHeight - 2`) instead of drawing rows off the bottom edge,
+  and becomes scrollable.  A terminal that reports no usable height (`0`) is not clamped at all.
+
+**The slot owns the scroll place** — exactly like `targetWidth`/`heightCap`:
+
+```java
+surface.scroll(w, dx, dy)      // move the viewport (respects style scrollAxes); true = accepted
+surface.scrollTo(w, row)       // absolute body row (clamped); drops follow unless at the tail
+surface.scrollToTail(w)        // back to the newest content (follow again)
+surface.canScroll(w)           // is there anything off the viewport on a scrollable axis?
+surface.isScrolled(w)          // scrolled away from the newest content / from column 0
+surface.scrollInfo(w)          // "rows 12-31/240 (scrolled) col 3/180" — for status + tests
+surface.pageRows(w)            // one page (viewport body rows − 1)
+surface.widgetAt(row, col)     // hit test: the topmost widget covering a terminal cell
+surface.renderNow()            // render AND wait (decisions that need fresh metrics)
+```
+
+`add()` carries `scrollX`/`scrollY`/`follow` across a re-float (a `.display()` update
+re-hydrates a fresh instance), and a first float seeds them from `style.scrollX/scrollY`.
+
+> **The slot registry is identity-keyed** (`IdentityHashMap` behind synchronized accessors).
+> `Obj.hashCode` is derived from `jvm()` contents (`Obj.Helper.objHashCode`), and a widget
+> writes to its own jvm as it renders (an accordion latches its toggle instruction, an append
+> lands) — so a content-keyed map silently loses the widget the moment it draws.  Iteration
+> always goes through `slotSnapshot()` so the lock is never held while calling into a widget.
+
+**Keys** (`CommandPalette.bindKeys()`, all registered as reasserted builtins):
+
+| Keys                          | Action |
+|-------------------------------|--------|
+| `alt+u` / `alt+d`             | scroll the focused widget's viewport up / down one line |
+| `pageup` / `pagedown`         | scroll it one page (viewport body rows − 1) |
+| `alt+,` / `alt+.`             | scroll it one column left / right |
+| `alt+0`                       | put the viewport back on the newest line (follow again) |
+| click                         | focus the widget under the pointer; click its header to fold it; click empty terminal to clear the focus and give the mouse back |
+| mouse wheel                   | scroll the widget under the pointer (or the focused one); a left click on a widget focuses it |
+
+The scroll keys are **chained builtins** (`CommandPalette.chained`): when nothing scrollable is
+focused they fall through to whatever previously owned the key (jline's own page/history
+bindings), so taking `pageup`/`pagedown` costs the console nothing.
+
+Colon commands: `:scroll [up|down|pageup|pagedown|left|right|top|bottom|line N] [n]` (no argument
+reports the focused widget's viewport), and `:widgets` now appends each widget's scroll info.
+
+### The pointer's gesture vocabulary
+
+Any pinned widget can be worked with the mouse (see `Console.clickAt`):
+
+| Gesture | Effect |
+|---------|--------|
+| click a widget | focus it (`Console.focusWidget`), and the pointer is armed for the widgets |
+| click a widget's own affordance | the widget acts — an accordion's header (its `[-]` / `[+]` included) folds it (see `Widget.onClick`) |
+| click terminal with no widget under it | clear the focus **and hand the mouse back to the terminal** |
+| wheel | scroll the widget under the pointer (or the focused one) |
+
+Affordances go through `Widget.onClick(int row, int col)` — **local** coordinates
+(`0,0` = the widget's top-left rendered cell), so a widget tests a click against its own
+layout without knowing where it was pinned; the default returns false, which leaves the click
+to the console (focus).  `FloatingSurface.click(widget, row, col)` does the translation and
+re-renders when the widget consumed the click.
+
+`AccordionWidget` makes the **`[-]` / `[+]` glyph** the toggle, NOT the whole header: a header is
+where a pointer naturally lands to focus and scroll a widget, and folding on the way in turns "let
+me read this" into "where did the text go" — a folded accordion draws nothing but its header, and
+that regression is exactly what a whole-header target caused once.
+
+A **folded header reports what it is holding** (`[+] 3` = three body lines), so a folded widget and
+a widget whose body never arrived can never be mistaken for each other.  The fold lives in the
+widget's rec — the space, for a store-backed widget — so it survives the agent's
+`>>=[body=>...].display()` updates: folded once, it stays folded while text piles up inside it
+(verified in `bin/test/console-widget-mouse.steps`, which folds, writes more body, and checks the
+fold held).
+
+A click costs **one render pass**: `Console.clickAt` renders the focus change and, when the
+widget also acted, the affordance (the surface coalesces the two), and it never blocks the
+console thread — `focusWidget` renders fire-and-forget.  (It used to `renderNow()`, which
+stalled the reader thread on a full pass for every focus and every click; that stall is what
+made the pointer feel heavy.)
+
+**Who owns the pointer** — `Console.pointerWanted(focused, dismissed, widgets)` (pure, tested):
+
+- a widget is **focused** → the widgets own the mouse (scroll, affordances, moving the focus);
+- widgets are **on screen and not dismissed** → they own it, so a cold click can focus one;
+- the user **pointed at empty terminal** → `pointerDismissed`, the terminal gets its own mouse
+  back (wheel scrolls it, drag-selection works) until a widget is focused or a *new* widget
+  arrives (`drawnWidgetCount()` growing — the same widgets merely redrawing does not re-arm,
+  which is what makes waving the pointer off stick);
+- **nothing on screen** → the terminal's mouse, always.
+
+The enable/disable sequences are the console's own, not jline's:
+`MOUSE_ON = ?1000h ?1006h` (button events, SGR encoding) and a full `MOUSE_OFF` sweep.
+**Deliberately not `MouseSupport.trackMouse(Normal)`, which also enables `?1005h`** — the legacy
+UTF-8 coordinate encoding, whose mix with 1006 makes a terminal report the pointer in either
+encoding and mis-decode columns; that is exactly the failure mode where a widget's *body* still
+focuses on a click while its three-cell `[-]` target cannot be hit.
+
+Two callers keep the mode honest:
+
+- `Console.prepareForInput()` re-asserts it **once per prompt** (forced) — jline releases
+  tracking at the end of every `readLine`, so the flag alone would leave the pointer dead from
+  the second prompt on.
+- the hotkey watcher's idle tick reconciles **only on a change**, so a widget floated while the
+  user sat at the prompt becomes clickable within a tick — and only while the prompt owns the
+  terminal.  While a job holds the console the mouse stays off, so its bytes can never be
+  mistaken for typed input by the watcher.
+
+The handler is bound to `MouseSupport.keys()` (the `\033[<` / `\033[M` prefixes) and reads the
+event the way jline does — `reader.readMouseEvent()`, whose payload the keymap already pushed
+back as a macro.  Two jline details are load-bearing:
+
+- **`MouseEvent` coordinates are 0-BASED** (a click at terminal column 5 arrives as `x=4`),
+  while widget geometry and the console's gestures are 1-based: `CommandPalette` converts once,
+  at the handler.
+- **a click is a press *and* a release** — jline keeps the button down until the release
+  (`\033[<0;Cx;CyM` then `...m`) arrives, and reads any later press as a `dragged` event.  This
+  only bites hand-written mouse bytes (a real terminal always sends both).
+
+Console-side API:
+
+```java
+console.scrollActiveWidget(dx, dy)   // + pageActiveWidget(dir), tailActiveWidget(), scrollActiveWidgetTo(row)
+console.activeWidgetScrolls()        // focused widget has something off its viewport
+console.activeWidgetScrollInfo()     // "notes rows 12-31/240 (scrolled)"
+console.clickAt(row, col)            // the pointer's gesture: affordance → focus → (empty terminal) blur
+console.syncWidgetMouseTracking()    // re-evaluate mouse mode against what is on screen
+```
+
+**Widgets that draw their own viewport** — `ModalTool` (the non-floating path) windows the panel
+to the screen with the same `ScrollView` calls, and binds ↑/↓/`j`/`k`, page keys and the wheel
+through its own `BindingReader` key loop (`terminal.readMouseEvent(reader::readCharacter,
+reader.getLastBinding())` is the read-back idiom, since the keymap consumed the payload).
+
+### Rendering a pinned widget has to stay cheap
+
+A pinned widget is re-rendered **in full, on every pass** — a wheel notch, a page key, a resize, a
+click.  Three things make that affordable (measured on a 300-line accordion: a pass went from
+~500 ms to ~8 ms):
+
+- **Highlighting is memoized, not repeated.** A widget that colorizes its own body lines
+  (`style.highlight(language)`) asks for `Highlighter.highlightLine(language, line)`, never
+  `new Highlighter(lang).highlight(line)` per line: highlighting is a full syntax pass per line
+  (~600 µs), and a 60 row body re-highlighted on every pass cost **38 ms per pass** before the
+  memo (`LINE_CACHE`, bounded, shared across widget instances on purpose — a widget is
+  re-hydrated into a fresh instance by every update, so a per-widget memo would be cold exactly
+  when a live widget needs it).
+- **Measuring text is O(1) for plain text.** `Graphitty.strip`/`viewLength` return the input
+  unchanged when it has no `{{…}}` code, no ANSI escape and nothing outside ASCII — 2.4 µs → 34 ns
+  per call, and every widget measures every one of its lines.
+- **Widget passes outrank console output.** The render thread drains `urgentQueue` (widget
+  passes: `render()`, `renderNow()`) ahead of `renderQueue` (console output, slot erases), so an
+  agent streaming a widget body cannot make a scroll wait behind thousands of output writes.  The
+  queues cannot interleave badly: a widget pass positions the cursor absolutely and restores it.
+
+`-Dmetatron.render.trace=true` logs one line per pass (and the widget's `format()` time inside
+it); `bin/metatron-console` passes extra switches via
+`METATRON_CONSOLE_JAVA_OPTS="-Dmetatron.render.trace=true"`.
+
+### Reads must go through the store, not `at()`
+
+`JRec.at()` reads the **construction-time snapshot**; `jvmWrite()` on a *store-backed* widget
+(`accordion_widget::[…]@<think_widget>`) writes the space.  So a widget that reads its own fields
+with `at()` keeps serving the pre-mutation value: a click folded the accordion *in the space*
+while it went on drawing itself unfolded — invisible for every ephemeral (vid-less) widget, which
+is why it survived the unit tests and showed up only on a live `think_widget`.
+
+Pinned widgets therefore read through `jvmRead()` — one snapshot per render pass, with a uri-name
+fallback because a store round-trip need not preserve key identity (`AccordionWidget.field`).
+
+**End-to-end checks** — `bin/test/console-widget-scroll.steps` floats a 24-line accordion in a
+10-row viewport and asserts, in a real pty, that `alt+w` + `alt+u` + `pageup` + the wheel bring
+earlier lines back and that `alt+0` returns to the tail; `bin/test/console-widget-mouse.steps`
+does the same for the pointer: click to focus, click `[-]`/`[+]` to collapse/expand, click empty
+terminal to unfocus.
+
+```bash
+bin/metatron-console --from classes --steps bin/test/console-widget-scroll.steps
+bin/metatron-console --from classes --steps bin/test/console-widget-mouse.steps
+bin/metatron-docker build console --steps bin/test/console-widget-mouse.steps   # isolated
+```
+
+The pointer suite ends by clicking away, re-arming with `alt+w` and folding the accordion
+again — and `--raw` shows the hand-back in bytes: `?1006l` right after the click that landed on
+empty terminal, `?1006h` again once a widget is focused.
 
 **Deterministic focus order** — `surface.widgets()` sorts slots by z-index (lowest first) →
 anchor reading order (top row→bottom row, left→right) → top/left offsets → target width

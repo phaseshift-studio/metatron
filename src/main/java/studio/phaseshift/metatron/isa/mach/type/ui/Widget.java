@@ -54,6 +54,26 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
     W cursor(final Cursor cursor);
 
     /**
+     * Handle a pointer click inside this widget's rendered region.
+     *
+     * <p>A widget that draws interactive affordances (e.g. an
+     * {@code AccordionWidget}'s {@code [-]} / {@code [+]} toggle) overrides
+     * this, tests the click against its own layout, acts, and returns true.
+     * The default does nothing, which leaves the click to the console: it
+     * focuses the widget under the pointer (see {@code Console.clickAt}).
+     *
+     * <p>Coordinates are LOCAL to the widget's rendered box — {@code (0, 0)} is
+     * its top-left cell — so a widget never has to know where it was pinned.
+     *
+     * @param row 0-based row within the widget's rendered box
+     * @param col 0-based column within the widget's rendered box
+     * @return true when the widget consumed the click
+     */
+    default boolean onClick(final int row, final int col) {
+        return false;
+    }
+
+    /**
      * Present this widget on the terminal.  Display-only widgets render
      * once and return; interactive widgets (selectors, explain tools)
      * override this to enter a modal input loop.

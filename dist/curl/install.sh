@@ -178,6 +178,7 @@ if [ "$MVN_EXIT" -eq 0 ]; then
     echo -e "${GREEN}up next${NC}"
     echo "cd ${BUILD_DIR}"
     echo "bin/metatron --help"
+    echo "bin/metatron -b boot/boot.mtron"
 else
     echo -e "${RED} build failed${NC}"
     exit 1
