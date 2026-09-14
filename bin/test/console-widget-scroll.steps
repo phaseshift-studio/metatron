@@ -1,0 +1,58 @@
+# Console widget-scroll test — floats a widget whose body is longer than its
+# viewport and checks that the text which scrolled out of sight can be read
+# again: keyboard (alt+u, page up, alt+0) and the mouse wheel.
+#
+#   bin/metatron-console --from classes --steps bin/test/console-widget-scroll.steps
+#
+# The widget holds 24 body lines in a 10 row viewport, so the tail (what a live
+# widget shows) is l17..l24 while everything before it is off the viewport —
+# still alive in the widget's body, and reachable by scrolling back.
+#
+# Rendered rows are matched as "│ lnn" (box glyph + space): the echoed command
+# line contains the bare literals l01..l24, so matching those alone would pass
+# even when nothing scrolled.  (The harness lowercases the transcript for its
+# case-insensitive matching, which is why the needles here are lowercase.)
+# The mouse bytes use \x3b for ";" because a ";" separates steps in this file.
+
+WAIT_CONSOLE
+
+# --- float it: the tail is what you see, l01 is off the viewport ---
+MARK float
+SEND accordion_widget::[title=>'notes',body=>"l01\nl02\nl03\nl04\nl05\nl06\nl07\nl08\nl09\nl10\nl11\nl12\nl13\nl14\nl15\nl16\nl17\nl18\nl19\nl20\nl21\nl22\nl23\nl24",style=>[anchor=>top_left,width=>40,height=>10]].display()
+WAIT │ l24 15
+SILENT float │ l01 3
+
+# --- focus it with alt+w, then scroll back a line at a time ---
+MARK focus
+KEY alt+w
+WAIT ▶ 10
+KEY alt+u
+KEY alt+u
+KEY alt+u
+KEY alt+u
+KEY alt+u
+KEY alt+u
+WAIT_SINCE focus │ l11 10
+
+# --- a page back reaches further into the text (and the tail is gone) ---
+MARK page
+KEY pageup
+WAIT_SINCE page │ l03 10
+SILENT page │ l24 3
+
+# --- the mouse wheel scrolls the same viewport ---
+MARK tail1
+KEY alt+0
+WAIT_SINCE tail1 │ l24 10
+MARK wheel
+RAW b"\x1b[<64\x3b10\x3b5M"
+SLEEP 1
+RAW b"\x1b[<64\x3b10\x3b5M"
+WAIT_SINCE wheel │ l11 10
+SILENT wheel │ l24 3
+
+# --- alt+0 puts the viewport back on the newest line (following again) ---
+MARK tail2
+KEY alt+0
+WAIT_SINCE tail2 │ l24 10
+SILENT tail2 │ l11 3

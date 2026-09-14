@@ -1,0 +1,96 @@
+# Console widget-pointer test — the pointer's gesture vocabulary on a real
+# console: a click focuses the widget under it, a click on an accordion header
+# (its [-]/[+] glyph included) folds it, and a click on terminal with no widget
+# under it drops the focus AND hands the mouse back to the terminal.
+#
+#   bin/metatron-console --from classes --steps bin/test/console-widget-mouse.steps
+#
+# The widget is created @<notes> — i.e. STORE-BACKED, exactly like the live
+# think_widget — because that is the case that used to fold in the space while
+# still drawing itself unfolded (an AccordionWidget read its construction-time
+# snapshot instead of the space; see AccordionWidget.field).
+#
+# It is TOP_LEFT anchored, so its box starts at row 2, column 1:
+#   ┌ notes [-] ┐
+#   1         13
+# the header is that whole first row.  A click is an SGR press AND release —
+# the release (lowercase "m") is what resets jline's button state, or every
+# later press reads as a drag.  "\x3b" is how a ";" is written in a steps file,
+# since ";" separates steps.  (The harness lowercases the transcript for its
+# case-insensitive matching, which is why needles here are lowercase.)
+
+WAIT_CONSOLE
+
+# --- create a store-backed accordion and float it ---
+MARK float
+SEND accordion_widget::[title=>'notes',body=>"one\ntwo\nthree",style=>[anchor=>top_left,width=>40,height=>10]]@<notes>
+SLEEP 1
+SEND @<notes>.display()
+WAIT │ one 20
+SILENT float ▶ 2
+
+# --- click the widget: it takes the focus (and the mouse with it) ---
+MARK click
+RAW b"\x1b[<0\x3b5\x3b4M"
+RAW b"\x1b[<0\x3b5\x3b4m"
+SLEEP 1
+WAIT_SINCE click ▶ 10
+
+# --- click its header: that focuses, it does NOT fold (a folded accordion
+# --- draws only its header, which reads as "my text disappeared")
+MARK header
+RAW b"\x1b[<0\x3b4\x3b2M"
+RAW b"\x1b[<0\x3b4\x3b2m"
+SLEEP 1
+SILENT header notes [+] 2
+# (a header click on an already-focused widget changes nothing, so nudge a
+# redraw to prove the text is still drawn)
+KEY alt+w
+WAIT_SINCE header │ one 5
+
+# --- click the header: the accordion folds ---
+MARK collapse
+RAW b"\x1b[<0\x3b10\x3b2M"
+RAW b"\x1b[<0\x3b10\x3b2m"
+SLEEP 1
+WAIT_SINCE collapse notes [+] 10
+SILENT collapse │ one 3
+
+# --- a folded header says how much it is holding, so "folded" can never be
+# --- mistaken for "the text never arrived" (notes holds three body lines) ---
+WAIT_SINCE collapse notes [+] 3 5
+
+# --- and the fold is in the SPACE, so an update does not undo it ---
+MARK update
+SEND @<notes>>>=[body=>+*"four\n"].display()
+SLEEP 2
+SILENT update notes [-] 3
+
+# --- click it again: the accordion unfolds ---
+MARK expand
+RAW b"\x1b[<0\x3b10\x3b2M"
+RAW b"\x1b[<0\x3b10\x3b2m"
+SLEEP 1
+WAIT_SINCE expand │ one 10
+
+# --- click terminal with no widget under it: unfocus + hand the mouse back ---
+MARK blur
+RAW b"\x1b[<0\x3b70\x3b30M"
+RAW b"\x1b[<0\x3b70\x3b30m"
+SLEEP 1
+SLEEP 1
+SILENT blur ▶ 3
+SEND :widgets
+SLEEP 1
+WAIT_SINCE blur 1 floating widget
+SILENT blur [active] 3
+
+# --- the pointer is the terminal's now, so the keyboard re-arms it ---
+MARK rearm
+KEY alt+w
+WAIT_SINCE rearm ▶ 10
+MARK click2
+RAW b"\x1b[<0\x3b10\x3b2M"
+RAW b"\x1b[<0\x3b10\x3b2m"
+SLEEP 1
+WAIT_SINCE click2 notes [+] 10

@@ -1,0 +1,43 @@
+# Console syntax-block test — an accordion widget whose body is a {{syntax:lang}}
+# block over several lines.  A widget measures and colorizes its body LINE BY LINE,
+# so a block's tags reach the rendering pass separately: the end tag alone used to
+# throw (openSyntax(null) — a rule that merely CONTAINS the "syntax:" prefix, such
+# as /syntax:python, was taken for a language), and the border a widget draws through
+# the block's lines came out as literal tag text.
+#
+#   bin/metatron-console --steps bin/test/console-syntax-block.steps
+#   bin/metatron-console --cwd repo --steps bin/test/console-syntax-block.steps
+#
+# The body text is asserted after a forced redraw (alt+w): the echoed command line
+# carries the same literals, so a needle matched against the whole transcript would
+# pass even when the widget drew nothing.  Border glyphs are NOT matched — this pty
+# draws the right border as "|" and the left as "│" — and neither is colour: run with
+# --cwd repo (a cwd holding conf/nanorc) to have the block colorized at all, since
+# conf/nanorc is resolved relative to the vm's working directory.
+#
+# Two characters cannot appear in a SEND line here: ";" separates steps and "#"
+# starts a comment, so the sample is Python rather than Java.
+
+WAIT_CONSOLE
+
+# the widget floats (its title bar is render-only: the echo never contains it)
+MARK block
+SEND accordion_widget::[title=>'syntax block',body=>"{{syntax:python}}class Sample:\n    ANSWER = 42\n\ndef helper(value):\n    return value * ANSWER\n{{/syntax:python}}",style=>[anchor=>top_left,width=>64,height=>16]].display()
+WAIT_SINCE block ┌ syntax block 25
+SILENT block task threw
+SILENT block cannot invoke
+SILENT block unmatched
+
+# focus it: the surface redraws the widget, so the body prints AFTER the echo and a
+# body-text needle matches the render and nothing else
+MARK redraw
+KEY alt+w
+WAIT_SINCE redraw class sample 25
+WAIT_SINCE redraw def helper 25
+WAIT_SINCE redraw return value 25
+
+# the redraw shows code, never the tags
+MARK tags
+SLEEP 1
+SILENT tags {{syntax:python}}
+SILENT tags {{/syntax:python}}
