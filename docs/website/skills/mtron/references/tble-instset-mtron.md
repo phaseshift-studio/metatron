@@ -1,12 +1,8 @@
 ---
 name: tble instruction set
-description: |
-  The `/m/tble` instruction set and the `tblespace::T` it belongs to: a JDBC relational database mounted as a
-  metatron space — tables that appear from the first rec write, typed rows, the rewrite family that pushes reads down
-  into SQL, the key/value fall-through, `auto_from` foreign keys, and native `sql()`.
-  TRIGGER: When connecting a database (SQLite, PostgreSQL, MariaDB, MySQL), writing or reading table rows in mtron,
-  wondering whether a read was pushed down to SQL, mapping a row cell to a `!*` pointer, or asking what a table's
-  schema is.
+description:
+  The `/m/tble` instruction set and the `tblespace::T` it belongs to:
+    a JDBC relational database mounted as a metatron space — tables that appear from the first rec write, typed rows, the rewrite family that pushes reads down into SQL, the key/value fall-through, `auto_from` foreign keys, and native `sql()`. TRIGGER: When connecting a database (SQLite, PostgreSQL, MariaDB, MySQL), writing or reading table rows in mtron, wondering whether a read was pushed down to SQL, mapping a row cell to a `!*` pointer, or asking what a table's schema is.
 ---
 
 # tble instruction set (`/m/tble`)
@@ -148,6 +144,11 @@ mtron> */sys/space/tbledoc.sql('SELECT table_name, column_name, base_vid, obj_ti
     obj_tid=>'/m/inst/auto_from',
     ref_table=>'person']
 ==>[
+    table_name=>'note',
+    column_name=>'$table',
+    base_vid=>'/m/rec',
+    obj_tid=>'/m/rec']
+==>[
     table_name=>'person',
     column_name=>'age',
     base_vid=>'/m/int',
@@ -157,6 +158,11 @@ mtron> */sys/space/tbledoc.sql('SELECT table_name, column_name, base_vid, obj_ti
     column_name=>'name',
     base_vid=>'/m/str',
     obj_tid=>'/m/str{2}']
+==>[
+    table_name=>'note',
+    column_name=>'body',
+    base_vid=>'/m/str',
+    obj_tid=>'/m/str']
 ```
 A structural obj (`tags=>['a','b']`) rides in a `TEXT` column with its type preserved in `obj_tid`, so a read
 reconstructs the lst rather than a string that looks like one.
@@ -377,6 +383,7 @@ mtron> */sys/space/tbledoc/schema/pattern      [-- where the discovered types ar
 ==>/sys/space/tbledoc/instset/#
 mtron> */sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
 ==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,recipient=>isa(person/+/id).!*id(),uri{?}::T=>#::T]]@/sys/space/tbledoc/instset/award
+==>/sys/space/tbledoc/instset/note=>rec::T[?[{?}body=>str::T,uri{?}::T=>#::T]]@/sys/space/tbledoc/instset/note
 ==>/sys/space/tbledoc/instset/person=>rec::T[?[{?}name=>str::T,{?}age=>int::T,{?}skill=>str::T,uri{?}::T=>#::T]]@/sys/space/tbledoc/instset/person
 ```
 Reading the schema is how you meet a table you have never seen: each entry is an `isa([{?}name=>str::T,…])` refinement
@@ -434,14 +441,22 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/2
+==>[body=>'a note with a database-assigned key']@tbledoc:note/10
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/4
+==>[body=>'another one']@tbledoc:note/12
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==>1
+==>12
 ==>3
+==>10
+==>11
 ==>2
 ==>4
+==>5
+==>6
+==>7
+==>8
+==>9
 ```
 ## taking the space down
 
@@ -498,7 +513,8 @@ pattern, and reads of an unmounted scheme fall through to the router's catch-all
 * **`>>{col}` is a drain, not a projection.** `*tbledoc:person/+>>{name,age}` yields the field *values* as a flat
   stream, not recs. The projection rewrite is `==[col=>_]` (`sql_select`).
 
-* **the docs runner doubles a `_?incrq` row.** In a live VM session one `_?incrq` write inserts one row, and the assigned
+* **the docs runner doubles a `_?incrq` row.** In a live VM session one `_?incrq` write inserts one row, and the
+  assigned
   key stamps onto the vid. Evaluated by the docs runner — which evaluates with type checking disabled — the same write
   lands *two* rows, and the vid it returns is the second key, so the key list above reads `1, 3, 2, 4` rather than
   `1, 2`. The idiom is the same either way; the doubling is a runner-context artifact, not a misconfiguration.

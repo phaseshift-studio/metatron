@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.docs;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -85,9 +87,12 @@ public class MarkdownRunnerTest {
         assertFalse(MarkdownRunner.renderSiteHtml(skillsDir) >= 1, "a second pass must write nothing (idempotent)");
         final String html = Files.readString(references.resolve("ops.html"));
 
-        // page chrome: the frontmatter owns the single h1 title
+        // page chrome: the frontmatter owns the single h1 title, the description the line beneath it
         assertTrue(html.contains("class=\"skill-title"), "page must carry the frontmatter h1 chrome: " + html);
-        assertTrue(html.contains("ops: operator fidelity probe"), "h1 must be name + description: " + html);
+        assertTrue(html.contains("<h1 class=\"skill-title mb-1\">ops</h1>"),
+                "the h1 must carry the frontmatter name: " + html);
+        assertTrue(html.contains("<small>operator fidelity probe</small>"),
+                "the description must sit under the h1: " + html);
 
         assertFalse(containsAny(html, LOOKALIKES),
                 "rendered html file must not contain a compressed single-character look-alike");
@@ -96,6 +101,64 @@ public class MarkdownRunnerTest {
             assertTrue(text.contains(operator),
                     "rendered html file must keep the operator " + operator + " verbatim");
         }
+    }
+
+    /**
+     * The frontmatter value forms the skill docs actually write: a plain scalar on
+     * one line, a plain scalar wrapped onto indented lines (which folds back to one
+     * line), and the {@code |} / {@code >} block scalars with their chomping
+     * indicators. A value owns every line indented deeper than its key — and
+     * nothing else — so a following key at the key's own indentation closes it.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "description: operator fidelity%description%operator fidelity%a one-line plain scalar",
+            "'description:\n  The /m/tble instruction set:\n    a JDBC database as a space.'%description%The /m/tble instruction set: a JDBC database as a space.%a plain scalar wrapped onto deeper lines folds to one line",
+            "'description: |\n  one\n  two'%description%'one\ntwo'%a literal block keeps its line breaks",
+            "'description: |-\n  one\n  two'%description%'one\ntwo'%literal with strip chomping",
+            "'description: >\n  one\n  two'%description%one two%a folded block folds its breaks to spaces",
+            "'description: >-\n  one\n  two'%description%one two%folded with strip chomping",
+            "'description: >\n  one\n\n  two'%description%'one\ntwo'%a blank line in a folded block is a break",
+            "'description: |\n  one\n    two'%description%'one\n  two'%deeper indentation survives in a literal block",
+            "'description: |\n  one\n  two\nname: ops'%description%'one\ntwo'%a following key at the same indentation ends the block",
+            "'description: |\nlist: x'%description%''%an empty block scalar",
+            "'  description: |\n    one\n    two'%description%'one\ntwo'%an indented key owns its own block",
+            "name: ops%description%''%a missing key yields the empty value",
+            "namespace: x%name%''%a longer key must not match",
+            "'namespace: x\ndescription: yes'%description%yes%a sibling key still matches",
+    }, delimiter = '%')
+    public void testFrontmatterScalarForms(final String front, final String key, final String expected, final String desc) {
+        assertEquals(expected, MarkdownRunner.extract(front, key), desc);
+    }
+
+    /**
+     * The bug this guards: a block-scalar (or wrapped) description used to reach
+     * the page chrome truncated to its first line, because the extractor returned
+     * the first non-blank line of the block and stopped there.
+     */
+    @Test
+    public void testRenderedPageCarriesTheWholeDescription(@TempDir final Path tmp) throws IOException {
+        final Path references = tmp.resolve("skills").resolve("mtron").resolve("references");
+        Files.createDirectories(references);
+        Files.writeString(references.resolve("tble.md"), """
+                ---
+                name: tble instruction set
+                description:
+                  The /m/tble instruction set and the tblespace::T it belongs to:
+                    a JDBC database mounted as a metatron space.
+                  TRIGGER: when a read may be pushed down into SQL.
+                ---
+
+                # tble
+
+                body
+                """);
+
+        assertTrue(MarkdownRunner.renderSiteHtml(tmp.resolve("skills")) >= 1, "a new page must be written");
+        final String html = Files.readString(references.resolve("tble.html"));
+        assertTrue(html.contains("<small>The /m/tble instruction set and the tblespace::T it belongs to: "
+                        + "a JDBC database mounted as a metatron space. TRIGGER: when a read may be pushed down into SQL.</small>"),
+                "the whole description must reach the page chrome, not its first line: " + html);
     }
 
     @Test
@@ -143,6 +206,29 @@ public class MarkdownRunnerTest {
         final String html = Files.readString(skillRoot.resolve("SKILL.html"));
         assertTrue(html.contains("css/metatron.css"), "page chrome must link the website stylesheet: " + html);
         assertEquals(0, MarkdownRunner.renderSiteHtml(skillsDir), "a second pass must write nothing (idempotent)");
+    }
+
+    /**
+     * The freshness test the markdown pass now gates its write on. A doc whose blocks
+     * all render as written — or that has no {@code mtron_pre} block at all — still has
+     * to reach the website tree with its own prose and frontmatter, so the gate is the
+     * <em>copy</em> being current, not evaluation having changed the text. {@code MISSING}
+     * stands for "no copy on disk yet" and {@code +NL} for a line break (so the CSV
+     * stays one row per case).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "body with no evaluated blocks%MISSING%false%a missing copy must be written",
+            "body with no evaluated blocks%body with no evaluated blocks%true%an identical copy must not be rewritten",
+            "body with no evaluated blocks+NL%body with no evaluated blocks%true%the writer strips trailing whitespace, so the source's trailing blank line is not a change",
+            "body with no evaluated blocks%body with no evaluated blocks+NL%false%a copy still carrying a trailing blank line is stale (it is rewritten once, then stays current)",
+            "edited body%[-- stale copy --]%false%a stale copy must be rewritten",
+    }, delimiter = '%')
+    public void testProcessedCopyFreshness(final String processed, final String existing, final boolean current,
+                                          final String desc) throws IOException {
+        final Path target = Files.createTempDirectory("processed-copy").resolve("doc.md");
+        if (!"MISSING".equals(existing)) Files.writeString(target, existing.replace("+NL", "\n"));
+        assertEquals(current, MarkdownRunner.isCurrent(target, processed.replace("+NL", "\n")), desc);
     }
 
     private static boolean containsAny(final String s, final String chars) {

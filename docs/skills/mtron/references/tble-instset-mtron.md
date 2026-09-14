@@ -1,12 +1,8 @@
 ---
 name: tble instruction set
-description: |
-  The `/m/tble` instruction set and the `tblespace::T` it belongs to: a JDBC relational database mounted as a
-  metatron space — tables that appear from the first rec write, typed rows, the rewrite family that pushes reads down
-  into SQL, the key/value fall-through, `auto_from` foreign keys, and native `sql()`.
-  TRIGGER: When connecting a database (SQLite, PostgreSQL, MariaDB, MySQL), writing or reading table rows in mtron,
-  wondering whether a read was pushed down to SQL, mapping a row cell to a `!*` pointer, or asking what a table's
-  schema is.
+description:
+  The `/m/tble` instruction set and the `tblespace::T` it belongs to:
+    a JDBC relational database mounted as a metatron space — tables that appear from the first rec write, typed rows, the rewrite family that pushes reads down into SQL, the key/value fall-through, `auto_from` foreign keys, and native `sql()`. TRIGGER: When connecting a database (SQLite, PostgreSQL, MariaDB, MySQL), writing or reading table rows in mtron, wondering whether a read was pushed down to SQL, mapping a row cell to a `!*` pointer, or asking what a table's schema is.
 ---
 
 # tble instruction set (`/m/tble`)
@@ -309,7 +305,8 @@ pattern, and reads of an unmounted scheme fall through to the router's catch-all
 * **`>>{col}` is a drain, not a projection.** `*tbledoc:person/+>>{name,age}` yields the field *values* as a flat
   stream, not recs. The projection rewrite is `==[col=>_]` (`sql_select`).
 
-* **the docs runner doubles a `_?incrq` row.** In a live VM session one `_?incrq` write inserts one row, and the assigned
+* **the docs runner doubles a `_?incrq` row.** In a live VM session one `_?incrq` write inserts one row, and the
+  assigned
   key stamps onto the vid. Evaluated by the docs runner — which evaluates with type checking disabled — the same write
   lands *two* rows, and the vid it returns is the second key, so the key list above reads `1, 3, 2, 4` rather than
   `1, 2`. The idiom is the same either way; the doubling is a runner-context artifact, not a misconfiguration.

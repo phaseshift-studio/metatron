@@ -181,13 +181,17 @@ public class MarkdownRunner {
             final String content = Files.readString(file);
             final String processed = new MtronPreprocessor(MtronPreprocessor.MARKDOWN_HEADER).process(content);
 
-            if (!processed.equals(content)) {
-                final Path target = out.resolve(rel);
+            final Path target = out.resolve(rel);
+            // Written when the *copy* is out of date, not when evaluation changed the
+            // text: a doc whose blocks all render as written (or that has no mtron_pre
+            // block at all) still has to pick up its own frontmatter and prose edits,
+            // and a new such doc still has to reach the website tree.
+            if (isCurrent(target, processed)) {
+                LOG.info("  unchanged " + rel + " (" + elapsedMs(t0) + "ms)");
+            } else {
                 Files.createDirectories(target.getParent());
                 Files.writeString(target, processed.stripTrailing());
                 LOG.info("  processed " + rel + " (" + elapsedMs(t0) + "ms)");
-            } else {
-                LOG.info("  unchanged " + rel + " (" + elapsedMs(t0) + "ms)");
             }
             ThreadExecutor.instance().shutdownNow();
         }
@@ -303,7 +307,7 @@ public class MarkdownRunner {
         page.append(header);
         page.append("    <div class=\"skill-doc mb-4\">\n");
         page.append("        <h1 class=\"skill-title mb-1\">").append(fm.name()).append("</h1>\n");
-        page.append("        <small>").append(fm.description().replace("`", "")).append("</small><br/>\n");
+        page.append("        <small>").append(fm.description().replace("`", "").replaceAll("\\s+", " ").strip()).append("</small><br/>\n");
         page.append("        <a href=\"").append(mdName).append("\" class=\"text-decoration-none text-light small\"><i class=\"bi bi-file-earmark-code me-1\"></i>").append(mdName).append("</a>\n");
         page.append("    </div>\n");
         page.append("    <div class=\"markdown-body\">\n");
@@ -332,10 +336,19 @@ public class MarkdownRunner {
     }
 
     /**
+     * True when the processed copy at {@code target} already holds {@code processed}
+     * (trailing whitespace ignored, as the writer strips it) — so the docs pass is
+     * idempotent and a clean build writes nothing.
+     */
+    static boolean isCurrent(final Path target, final String processed) throws IOException {
+        return Files.exists(target) && processed.stripTrailing().equals(Files.readString(target));
+    }
+
+    /**
      * Split the YAML frontmatter from the markdown body and surface the
      * {@code name} and {@code description} fields for the page chrome.
      */
-    private static FrontMatter split(final String md) {
+    static FrontMatter split(final String md) {
         if (!md.startsWith("---")) {
             return new FrontMatter("", "", md);
         }
@@ -349,25 +362,102 @@ public class MarkdownRunner {
     }
 
     /**
-     * Best-effort extraction of a single frontmatter field, tolerating YAML
-     * block scalars ({@code key: |} / {@code key: >}) by taking their first line.
+     * Best-effort extraction of one frontmatter field, honoring every form the
+     * skill docs actually use. A value owns the lines indented deeper than its
+     * key, so a wrapped <b>plain scalar</b> ({@code description:} on its own line,
+     * prose indented under it) folds those lines with spaces, while the block
+     * styles keep their own shape: {@code key: |} is literal — line breaks are
+     * kept — and {@code key: >} folds them, one break becoming a space and a blank
+     * line a break. Both block styles tolerate the {@code -} / {@code +} chomping
+     * and explicit-indent indicators, and trailing breaks are dropped because
+     * every consumer here renders the value as prose.
+     *
+     * <p>A key matches only when its colon ends the name ({@code name:} never
+     * matches {@code namespace:}).
      */
-    private static String extract(final String front, final String key) {
-        final String[] lines = front.split("\n");
+    static String extract(final String front, final String key) {
+        final String[] lines = front.split("\n", -1);
         for (int i = 0; i < lines.length; i++) {
-            final String line = lines[i].trim();
-            if (!line.startsWith(key + ":")) continue;
-            final String value = line.substring(key.length() + 1).trim();
-            if ("|".equals(value) || ">".equals(value)) {
-                for (int j = i + 1; j < lines.length; j++) {
-                    final String next = lines[j].trim();
-                    if (!next.isEmpty()) return next;
-                }
-                return "";
-            }
-            return value;
+            final String raw = lines[i];
+            final String line = raw.strip();
+            final String prefix = key + ":";
+            if (!line.startsWith(prefix)) continue;
+            if (line.length() > prefix.length() && !Character.isWhitespace(line.charAt(prefix.length()))) continue;
+            final String header = line.substring(prefix.length()).strip();
+            final int indent = indentOf(raw);
+            return header.startsWith("|") || header.startsWith(">")
+                    ? block(lines, i, indent, header)
+                    : plain(lines, i, indent, header);
         }
         return "";
+    }
+
+    /**
+     * A plain scalar: its header text plus any deeper-indented lines it wraps
+     * onto, folded back into one line.
+     */
+    private static String plain(final String[] lines, final int keyLine, final int indent, final String header) {
+        final List<String> parts = new ArrayList<>();
+        if (!header.isEmpty()) parts.add(header);
+        for (int j = keyLine + 1; j < lines.length; j++) {
+            final String line = lines[j].strip();
+            if (line.isEmpty() || indentOf(lines[j]) <= indent) break;
+            parts.add(line);
+        }
+        return String.join(" ", parts);
+    }
+
+    /**
+     * A {@code |} (literal) or {@code >} (folded) block scalar, ending at the first
+     * line indented no deeper than the key.
+     */
+    private static String block(final String[] lines, final int keyLine, final int indent, final String header) {
+        final int explicit = header.chars().filter(Character::isDigit).findFirst().orElse('0') - '0';
+        final List<String> body = new ArrayList<>();
+        int base = explicit > 0 ? indent + explicit : -1;
+        for (int j = keyLine + 1; j < lines.length; j++) {
+            final String raw = lines[j];
+            if (raw.isBlank()) {
+                body.add("");
+                continue;
+            }
+            if (indentOf(raw) <= indent) break;
+            final String stripped = raw.stripTrailing();
+            if (base < 0) base = indentOf(raw);
+            body.add(stripped.substring(Math.min(base, stripped.length())));
+        }
+        while (!body.isEmpty() && body.getLast().isBlank()) body.removeLast();
+        return header.startsWith("|") ? String.join("\n", body) : fold(body);
+    }
+
+    /**
+     * YAML folded style: the break between two lines becomes a space, and each
+     * blank line becomes a break.
+     */
+    private static String fold(final List<String> body) {
+        final StringBuilder folded = new StringBuilder();
+        int breaks = 0;
+        for (final String line : body) {
+            if (line.isEmpty()) {
+                breaks++;
+                continue;
+            }
+            if (!folded.isEmpty()) folded.append(breaks == 0 ? " " : "\n".repeat(breaks));
+            folded.append(line);
+            breaks = 0;
+        }
+        return folded.toString();
+    }
+
+    /**
+     * Column of the first non-whitespace character. A blank line answers
+     * {@link Integer#MAX_VALUE} so it never ends a block.
+     */
+    private static int indentOf(final String line) {
+        if (line.isBlank()) return Integer.MAX_VALUE;
+        int i = 0;
+        while (i < line.length() && Character.isWhitespace(line.charAt(i))) i++;
+        return i;
     }
 
     /**
@@ -383,7 +473,7 @@ public class MarkdownRunner {
     /**
      * A parsed skill document: name, description, and the frontmatter-free body.
      */
-    private record FrontMatter(String name, String description, String body) {
+    record FrontMatter(String name, String description, String body) {
     }
 
     /**
