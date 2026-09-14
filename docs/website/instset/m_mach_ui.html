@@ -138,13 +138,13 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
                     <li>
-                        <div class="terminal-box click-to-copy" title="click to copy">
+                        <div class="click-to-copy" title="click to copy">
                             <span class="badge bg-danger">only linux tested</span>
                             <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
                         </div>
                     </li>
                     <li>
-                        <div class="terminal-box click-to-copy" title="click to copy">
+                        <div class="click-to-copy" title="click to copy">
                             <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
                         </div>
                     </li>
@@ -269,15 +269,18 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/connecting-datasources.html">connecting-datasources</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/http-page-fetching.html">http-page-fetching</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference_mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math_instset_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference_mtron.html">language-reference_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mtron-fsspace.html">mtron-fsspace</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
@@ -408,11 +411,6 @@
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m/mach],
- inst=&gt;[
-  as?str&lt;=widget(str::T),
-  display?noobj{0}&lt;=widget(),
-  nano?#{?}&lt;=#{?}(),
-  less?noobj{0}&lt;=str(isa(int::T).else(10))],
  type=&gt;[
   console::T,
   anchor::T,
@@ -428,7 +426,12 @@
   menu_bar_widget::T,
   tree_select_widget::T,
   swipe_panel_widget::T,
-  modal_widget::T]]@/m/mach/ui</code></pre>
+  modal_widget::T],
+ inst=&gt;[
+  as?str&lt;=widget(str::T),
+  display?noobj{0}&lt;=widget(),
+  nano?#{?}&lt;=#{?}(),
+  less?noobj{0}&lt;=str(isa(int::T).else(10))]]@/m/mach/ui</code></pre>
                     </div>
                 </div>
             </div>
@@ -520,8 +523,8 @@
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#an accordion obj" class="text-success">an accordion obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}title" class="text-light">{?}title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the accordion'" class="text-info">&#39;the title of the accordion&#39;</a>
-  <a href="#{?}body" class="text-light">{?}body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the accordion'" class="text-info">&#39;the body content of the accordion&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}body" class="text-light">{?}body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the accordion'" class="text-info">&#39;the body content of the accordion&#39;</a>
+  <a href="#{?}title" class="text-light">{?}title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the accordion'" class="text-info">&#39;the title of the accordion&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__anchor">
@@ -602,8 +605,8 @@
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#rec" class="text-info">rec</a> <span class="text-light">=&gt;</span> <a href="#modal" class="text-success">modal</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the modal'" class="text-info">&#39;the title of the modal&#39;</a>
-  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the modal'" class="text-info">&#39;the body content of the modal&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the modal'" class="text-info">&#39;the body content of the modal&#39;</a>
+  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the modal'" class="text-info">&#39;the title of the modal&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__panel_widget">
@@ -621,8 +624,8 @@
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#rec" class="text-info">rec</a> <span class="text-light">=&gt;</span> <a href="#panel" class="text-success">panel</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the panel'" class="text-info">&#39;the title of the panel&#39;</a>
-  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the panel'" class="text-info">&#39;the body content of the panel&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the panel'" class="text-info">&#39;the body content of the panel&#39;</a>
+  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the panel'" class="text-info">&#39;the title of the panel&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__progress_table_widget">
@@ -639,7 +642,7 @@
     <p class="mb-0 text-light">[structural] a table of progress bars</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">progress_table::[rows=&gt;[[text=&gt;&#39;layer1&#39;,percent=&gt;58.0],[text=&gt;&#39;layer2&#39;,percent=&gt;23.0]]].run()</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">progress_table::[row=&gt;[[text=&gt;&#39;layer1&#39;,percent=&gt;58.0],[text=&gt;&#39;layer2&#39;,percent=&gt;23.0]]].run()</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__selector_widget">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -664,7 +667,7 @@
         </span>
         <small class="text-muted code">/m/mach/ui/style</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;anchor::T,{?}width=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@/m/mach/ui/style</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;anchor::T,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;#::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@/m/mach/ui/style</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a widget style specification</p>
@@ -683,9 +686,13 @@
   <a href="#{?}bottomMargin" class="text-light">{?}bottomMargin</a> <span class="text-light">=&gt;</span> <a href="#'the bottom margin of the widget'" class="text-info">&#39;the bottom margin of the widget&#39;</a>
   <a href="#{?}anchor" class="text-light">{?}anchor</a> <span class="text-light">=&gt;</span> <a href="#'float anchor: top_left, top_middle, top_right, middle, bottom_left, bottom_middle, bottom_right'" class="text-info">&#39;float anchor: top_left, top_middle, top_right, middle, bottom_left, bottom_middle, bottom_right&#39;</a>
   <a href="#{?}width" class="text-light">{?}width</a> <span class="text-light">=&gt;</span> <a href="#'display width override in columns (0 = natural)'" class="text-info">&#39;display width override in columns (0 = natural)&#39;</a>
+  <a href="#{?}height" class="text-light">{?}height</a> <span class="text-light">=&gt;</span> <a href="#'viewport height in rows (0 = natural); content taller than this scrolls rather than being dropped'" class="text-info">&#39;viewport height in rows (0 = natural); content taller than this scrolls rather than being dropped&#39;</a>
   <a href="#{?}top" class="text-light">{?}top</a> <span class="text-light">=&gt;</span> <a href="#'row offset from anchor edge (CSS top)'" class="text-info">&#39;row offset from anchor edge (CSS top)&#39;</a>
   <a href="#{?}left" class="text-light">{?}left</a> <span class="text-light">=&gt;</span> <a href="#'col offset from anchor edge (CSS left)'" class="text-info">&#39;col offset from anchor edge (CSS left)&#39;</a>
   <a href="#{?}zIndex" class="text-light">{?}zIndex</a> <span class="text-light">=&gt;</span> <a href="#'render order among floating widgets: higher = drawn later (on top); default 0'" class="text-info">&#39;render order among floating widgets: higher = drawn later (on top); default 0&#39;</a>
+  <a href="#{?}scroll" class="text-light">{?}scroll</a> <span class="text-light">=&gt;</span> <a href="#'scroll axes: scroll=>union(x,y) (both, the default), union(y) (vertical only), none (off)'" class="text-info">&#39;scroll axes: scroll=&gt;union(x,y) (both, the default), union(y) (vertical only), none (off)&#39;</a>
+  <a href="#{?}scrollX" class="text-light">{?}scrollX</a> <span class="text-light">=&gt;</span> <a href="#'initial horizontal scroll offset (column shown at the left edge)'" class="text-info">&#39;initial horizontal scroll offset (column shown at the left edge)&#39;</a>
+  <a href="#{?}scrollY" class="text-light">{?}scrollY</a> <span class="text-light">=&gt;</span> <a href="#'initial vertical scroll offset (body row shown at the top); 0 = newest content'" class="text-info">&#39;initial vertical scroll offset (body row shown at the top); 0 = newest content&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__swipe_panel_widget">
@@ -714,15 +721,16 @@
         </span>
         <small class="text-muted code">/m/mach/ui/widget/table_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst{*}::T]][ctor?table_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/table_widget</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst{*}::T,{?}metadata=&gt;lst{*}::T]][ctor?table_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/table_widget</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;style::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a tabular data widget</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a table widget" class="text-success">a table widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}header" class="text-light">{?}header</a> <span class="text-light">=&gt;</span> <a href="#'a lst of obj table headers'" class="text-info">&#39;a lst of obj table headers&#39;</a>
-  <a href="#{?}row" class="text-light">{?}row</a> <span class="text-light">=&gt;</span> <a href="#'a lst of poly table rows'" class="text-info">&#39;a lst of poly table rows&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}row" class="text-light">{?}row</a> <span class="text-light">=&gt;</span> <a href="#'a lst of poly table rows'" class="text-info">&#39;a lst of poly table rows&#39;</a>
+  <a href="#{?}header" class="text-light">{?}header</a> <span class="text-light">=&gt;</span> <a href="#'a lst of obj table headers'" class="text-info">&#39;a lst of obj table headers&#39;</a>
+  <a href="#{?}metadata" class="text-light">{?}metadata</a> <span class="text-light">=&gt;</span> <a href="#'a lst of rows of data behind the display'" class="text-info">&#39;a lst of rows of data behind the display&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__tree_select_widget">
@@ -744,10 +752,10 @@
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a tree select tool" class="text-success">a tree select tool</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
-  <a href="#{?}label" class="text-light">{?}label</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on each tree node's obj to produce a suffix label (default: identity)"" class="text-info">&quot;instruction called on each tree node&#39;s obj to produce a suffix label (default: identity)&quot;</a>
-  <a href="#{?}on_select" class="text-light">{?}on_select</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on Enter with the selected node's rel::T (default: identity)"" class="text-info">&quot;instruction called on Enter with the selected node&#39;s rel::T (default: identity)&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}on_select" class="text-light">{?}on_select</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on Enter with the selected node's rel::T (default: identity)"" class="text-info">&quot;instruction called on Enter with the selected node&#39;s rel::T (default: identity)&quot;</a>
   <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
+  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
+  <a href="#{?}label" class="text-light">{?}label</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on each tree node's obj to produce a suffix label (default: identity)"" class="text-info">&quot;instruction called on each tree node&#39;s obj to produce a suffix label (default: identity)&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__tree_widget">
@@ -758,16 +766,25 @@
         </span>
         <small class="text-muted code">/m/mach/ui/widget/tree_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[root=&gt;uri::T,max=&gt;int::T,{?}code=&gt;#::T]][ctor?tree_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/tree_widget</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[
+  root=&gt;uri::T,
+  max=&gt;int::T,
+  {?}code=&gt;#::T,
+  {?}flatten=&gt;bool::T,
+  {?}xref=&gt;rec::T,
+  {?}expand=&gt;uri{*}::T]][ctor?tree_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/tree_widget</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;style::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] the root uri space is traversed to specified depth generating a tree data structure</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a tree widget" class="text-success">a tree widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}code" class="text-light">{?}code</a> <span class="text-light">=&gt;</span> <a href="#'transform obj prior to insertion into tree (default _)'" class="text-info">&#39;transform obj prior to insertion into tree (default _)&#39;</a>
-  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
+  <a href="#{?}flatten" class="text-light">{?}flatten</a> <span class="text-light">=&gt;</span> <a href="#'fold single-folder chains into one path row (default false)'" class="text-info">&#39;fold single-folder chains into one path row (default false)&#39;</a>
   <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
+  <a href="#{?}xref" class="text-light">{?}xref</a> <span class="text-light">=&gt;</span> <a href="#'xref=>[max=>N, code=><call>] cross-reference decoration'" class="text-info">&#39;xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration&#39;</a>
+  <a href="#{?}expand" class="text-light">{?}expand</a> <span class="text-light">=&gt;</span> <a href="#'branch uris whose children are read regardless of max'" class="text-info">&#39;branch uris whose children are read regardless of max&#39;</a>
+  <a href="#{?}code" class="text-light">{?}code</a> <span class="text-light">=&gt;</span> <a href="#'transform obj prior to insertion into tree (default _)'" class="text-info">&#39;transform obj prior to insertion into tree (default _)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget">
