@@ -140,12 +140,12 @@
                     <li>
                         <div class="click-to-copy" title="click to copy">
                             <span class="badge bg-danger">only linux tested</span>
-                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                            <pre><code style="padding:25px;" class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
                         </div>
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <pre><code style="padding:25px;" class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -429,7 +429,18 @@
   minute::T,
   hour::T,
   day::T,
-  datetime::T],
+  datetime::T,
+  metric::T,
+  mm::T,
+  cm::T,
+  dm::T,
+  meter::T,
+  km::T,
+  imperial::T,
+  inch::T,
+  foot::T,
+  yard::T,
+  mile::T],
  inst=&gt;[
   datetime_now?datetime&lt;=#{?}(),
   plus?time&lt;=time(time::T),
@@ -443,6 +454,12 @@
   as?datetime&lt;=str(datetime::T),
   normalize?time&lt;=time(),
   normalize?datasize&lt;=datasize(),
+  normalize?metric&lt;=metric(),
+  normalize?imperial&lt;=imperial(),
+  as?metric&lt;=metric(metric::T),
+  as?imperial&lt;=imperial(imperial::T),
+  as?imperial&lt;=metric(imperial::T),
+  as?metric&lt;=imperial(metric::T),
   cos?real&lt;=#{?}(as(real::T)),
   sin?real&lt;=#{?}(real::T),
   tan?real&lt;=#{?}(real::T),
@@ -466,7 +483,7 @@
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">18</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">16</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">29</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">18</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -490,6 +507,12 @@
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__math__datetime" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">datetime</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__imperial" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">imperial</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__metric" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">metric</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__math__nat" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">nat</span>
@@ -520,6 +543,33 @@
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__math__datasize__tB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">tB</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">imperial</small></div><div class="d-flex flex-wrap"><a href="#__m__math__imperial__foot" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">foot</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__imperial__inch" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">inch</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__imperial__mile" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">mile</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__imperial__yard" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">yard</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">metric</small></div><div class="d-flex flex-wrap"><a href="#__m__math__metric__cm" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">cm</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__metric__dm" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">dm</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__metric__km" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">km</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__metric__meter" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">meter</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__metric__mm" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">mm</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">time</small></div><div class="d-flex flex-wrap"><a href="#__m__math__time__day" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">day</span>
@@ -605,7 +655,7 @@
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">18</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">29</span></h3>
     <div class="card mb-3" id="__m__math__datasize__bB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -618,6 +668,19 @@
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a byte of data</p>
+</div>
+</div><div class="card mb-3" id="__m__math__metric__cm">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">cm::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__metric" class="instset-doc-small-code text-info code">/m/math/metric::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/metric/cm</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?cm&lt;=#{?}(#{*}::T)]@/m/math/metric/cm</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] a centimeter of distance (10 millimeters)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__currency">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -669,6 +732,19 @@
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a day of time (24 hours)</p>
 </div>
+</div><div class="card mb-3" id="__m__math__metric__dm">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">dm::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__metric" class="instset-doc-small-code text-info code">/m/math/metric::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/metric/dm</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?dm&lt;=#{?}(#{*}::T)]@/m/math/metric/dm</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] a decimeter of distance (10 centimeters)</p>
+</div>
 </div><div class="card mb-3" id="__m__math__currency__euro">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -681,6 +757,19 @@
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[nominal] </p>
+</div>
+</div><div class="card mb-3" id="__m__math__imperial__foot">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">foot::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__imperial" class="instset-doc-small-code text-info code">/m/math/imperial::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/imperial/foot</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?foot&lt;=#{?}(#{*}::T)]@/m/math/imperial/foot</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] a foot of distance (12 inches)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__datasize__gB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -708,6 +797,32 @@
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] an hour of time (60 minutes)</p>
 </div>
+</div><div class="card mb-3" id="__m__math__imperial">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">imperial::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__real" class="instset-doc-small-code text-info code">/m/real::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/imperial</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T@/m/math/imperial</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[nominal] </p>
+</div>
+</div><div class="card mb-3" id="__m__math__imperial__inch">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">inch::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__imperial" class="instset-doc-small-code text-info code">/m/math/imperial::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/imperial/inch</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?inch&lt;=#{?}(#{*}::T)]@/m/math/imperial/inch</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] an inch of distance (25.4 millimeters)</p>
+</div>
 </div><div class="card mb-3" id="__m__math__datasize__kB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -721,6 +836,19 @@
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a kilobyte (1024 bytes) of data</p>
 </div>
+</div><div class="card mb-3" id="__m__math__metric__km">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">km::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__metric" class="instset-doc-small-code text-info code">/m/math/metric::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/metric/km</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?km&lt;=#{?}(#{*}::T)]@/m/math/metric/km</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] a kilometer of distance (1000 meters)</p>
+</div>
 </div><div class="card mb-3" id="__m__math__datasize__mB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -733,6 +861,45 @@
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a megabyte (1024 kilobytes) of data</p>
+</div>
+</div><div class="card mb-3" id="__m__math__metric__meter">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">meter::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__metric" class="instset-doc-small-code text-info code">/m/math/metric::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/metric/meter</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?meter&lt;=#{?}(#{*}::T)]@/m/math/metric/meter</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] a meter of distance (100 centimeters)</p>
+</div>
+</div><div class="card mb-3" id="__m__math__metric">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">metric::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__real" class="instset-doc-small-code text-info code">/m/real::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/metric</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T@/m/math/metric</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[nominal] </p>
+</div>
+</div><div class="card mb-3" id="__m__math__imperial__mile">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">mile::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__imperial" class="instset-doc-small-code text-info code">/m/math/imperial::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/imperial/mile</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?mile&lt;=#{?}(#{*}::T)]@/m/math/imperial/mile</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] a mile of distance (1760 yards)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__time__millis">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -759,6 +926,19 @@
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a minute of time (60 seconds)</p>
+</div>
+</div><div class="card mb-3" id="__m__math__metric__mm">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">mm::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__metric" class="instset-doc-small-code text-info code">/m/math/metric::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/metric/mm</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?mm&lt;=#{?}(#{*}::T)]@/m/math/metric/mm</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] a millimeter of distance</p>
 </div>
 </div><div class="card mb-3" id="__m__math__nat">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -838,9 +1018,22 @@
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[nominal] </p>
 </div>
+</div><div class="card mb-3" id="__m__math__imperial__yard">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">yard::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__imperial" class="instset-doc-small-code text-info code">/m/math/imperial::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/imperial/yard</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?yard&lt;=#{?}(#{*}::T)]@/m/math/imperial/yard</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] a yard of distance (3 feet)</p>
+</div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">16</span></h3>
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">18</span></h3>
     <div class="card mb-3" id="__m__math__inst__abs?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -961,6 +1154,8 @@
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=time&dom=time(){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=datasize&dom=datasize(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=metric&dom=metric(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=imperial&dom=imperial(){<j>}</code></pre>
 </div>
     
 </div><div class="card mb-3" id="__m__math__inst__round?rng=__m__int&dom=#{?}">
