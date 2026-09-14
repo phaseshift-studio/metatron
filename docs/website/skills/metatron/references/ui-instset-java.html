@@ -137,13 +137,13 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
                     <li>
-                        <div class="terminal-box click-to-copy" title="click to copy">
+                        <div class="click-to-copy" title="click to copy">
                             <span class="badge bg-danger">only linux tested</span>
                             <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
                         </div>
                     </li>
                     <li>
-                        <div class="terminal-box click-to-copy" title="click to copy">
+                        <div class="click-to-copy" title="click to copy">
                             <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
                         </div>
                     </li>
@@ -266,13 +266,15 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <div class="skill-resource-group"> └─ instset</div>
+                                <div class="skill-resource-group"> └─ language</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system</a>
+                                <div class="skill-resource-group"> └─ instset</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ui-instset-mtron.html">ui-instset</a>
                                 <div class="skill-resource-group"> └─ other</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">deepseek harness</a>
@@ -379,7 +381,7 @@
 <main class="container my-4 flex-grow-1">
     <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">metatron-ui-architecture</h1>
-        <small>Architecture of the metatron UI subsystem (Widget, Style, FloatingSurface, JRec state bridge, uiInstSet type registration). Reference for agents creating or modifying widgets.</small><br/>
+        <small>Architecture of the metatron UI subsystem (Widget, Style, FloatingSurface, rec-backed widget state via SpaceRec, uiInstSet type registration). Reference for agents creating or modifying widgets.</small><br/>
         <a href="ui-instset-java.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>ui-instset-java.md</a>
     </div>
     <div class="markdown-body">
@@ -387,7 +389,8 @@
 <h3>Package map</h3>
 <pre><code>isa.mach.type.ui
   Widget.java              ← interface: run(), format(), style(), floatAt()
-  Stylable.java            ← Style inner class: border, anchor, width, top, left, zIndex, floatAt(), hasFloat()
+  Stylable.java            ← Style inner class: border, anchor, width, height, scroll, top, left, zIndex, floatAt(), hasFloat()
+  ScrollView.java          ← viewport windowing math (windowVertically/windowHorizontally/maxX/maxY) shared by FloatingSurface and widget-owned viewports
   Border.java              ← border constants (simple, continuous, rounded, none, hash, etc.)
 isa.mach.type.ui.widget
   FloatingSurface.java     ← terminal-absolute rendering + Anchor enum + Slot + scroll tracking
@@ -406,13 +409,13 @@ isa.mach.type.ui.widget
 isa.mach.type.ui.console
   Console.java              ← REPL, terminal, pane tree, FloatingSurface integration
   StatusLine.java           ← terminal status bar
-  Highlighter.java          ← syntax highlighting + visualLength/unformat
+  Highlighter.java          ← syntax highlighting (language tokens + blocks) + visualLength/unformat
   Hotkeys.java              ← keystrokes typed while a job holds the console (alt+b, [q], type-ahead)
   CommandPalette.java       ← see isa.mach.type.ui.console.menu
 isa.mach.type.ui.console.menu
   CommandPalette.java       ← : commands, builtin shortcut keys
 isa.mach.type.ui.graphitty
-  Graphitty.java            ← {{macro}} DSL → ANSI escapes
+  Graphitty.java            ← {{macro}} DSL → ANSI escapes, incl. {{syntax:lang}} blocks
 isa.mach.type.ui.tmux
   Pane.java                 ← tmux-style split pane
   PaneNode.java             ← pane tree interface
@@ -431,7 +434,8 @@ isa.mach.type.ui.tool
 isa.mach.ui
   uiInstSet.java            ← mtron type/instruction registration for all UI types
 isa.m.type.reflect
-  JRec.java                 ← Java-backed mtron rec: jvmRead(), jvmWrite(), extractors
+  SpaceRec.java             ← widget base: one read path (read()), one write path (put()), no reflection
+  JRec.java                 ← Java-backed mtron rec (frozen; clients: Console/Pane, Rewriter)
 </code></pre>
 <h3>1. Widget interface (<code>Widget.java</code>)</h3>
 <p>Every widget implements <code>Widget&lt;W&gt; extends Stylable&lt;W&gt;, AutoCloseable, Runnable</code>.</p>
@@ -454,109 +458,103 @@ default W floatAt(FloatingSurface surface, Anchor anchor, int width, int top, in
 default W unfloat(FloatingSurface surface)
 </code></pre>
 <p><strong>Consolidation note:</strong> <code>display()</code> was removed — <code>run()</code> is the single presentation method.</p>
+<p><strong>Who draws:</strong> <code>run()</code>'s default renders, but <code>AbstractWidget</code> overrides it with raw mode + attachment
+only. So a widget under <code>AbstractWidget</code> appears on screen only if it overrides <code>run()</code> itself
+(<code>MenuBarWidget</code>, <code>Selector</code>, <code>SelectorWidget</code>, <code>GridWidget</code>, and every tool do) or is drawn by a parent
+that holds it (a line widget is drawn by its <code>MenuBarWidget</code>). Displaying a lone line widget prints
+nothing — by design, not a bug.</p>
 <p><strong><code>chromeLines()</code></strong> — defaults to 1 if a border is configured, 0 otherwise. Widgets with column headers or status bars
 override to add their own. Used by <code>FloatingSurface</code> to preserve structural chrome when the <code>height</code> cap clips body
 lines.</p>
 <p><strong><code>rowCount()</code> / <code>rowString(int)</code> / <code>rowStrings()</code></strong> — defaults that split <code>format()</code> output by <code>\n</code>. Selectors iterate
 over these for cursor navigation; a widget that wants column-aware selection should either override them or attach a
 <code>TableWidget</code>.</p>
-<h3>2. JRec state bridge (<code>JRec.java</code>)</h3>
-<p>There are <strong>two</strong> state models in the widget tree, depending on when the widget was written:</p>
-<h4>Model A: JVM-as-source-of-truth (AccordionWidget — preferred for new widgets)</h4>
-<p>State lives in the <strong>persistent store</strong> (memSpace, tbleSpace, etc.). Java fields annotated with <code>@JRecElement</code> are
-<strong>metadata for mtron introspection only</strong> — never read by Java code. Mutators call <code>jvmWrite()</code>.  <code>format()</code> calls
-<code>jvmRead()</code>
-and extracts values fresh on every render.</p>
-<h4>Model B: Java-fields-as-storage (legacy — TableWidget, PanelWidget, TreeWidget)</h4>
-<p>Java fields ARE the data store. A private <code>sync()</code> method pulls initial state from JVM when the widget was constructed
-from mtron, but once Java fields are populated (by Java API or prior sync), JVM is never consulted again. Mutators use
-direct field assignment or builders (<code>addRow()</code>, <code>addMetadata()</code>).</p>
-<p><strong>Shared primitives</strong> (both models):</p>
-<pre><code class="language-java">// Read latest state from persistent store (if vid is set) or local JVM merge.
-jvmRead() → Router.
+<h3>2. Widget state — the rec is the only home (<code>SpaceRec.java</code>)</h3>
+<p>A widget's state is its rec and nothing else. <code>SpaceRec</code> is the base that enforces it, with two rules:</p>
+<pre><code class="language-java">// one read path — the space's copy when the rec is anchored, the local map otherwise
+protected Map&lt;Obj, Obj&gt; read()
 
-global().
-
-read(vid) → freshObj.
-
-jvm()
-
-// Write a single field with &gt;&gt;=-style merge: read fresh, merge, write back.
-jvmWrite(key, value)
-
-// Static typed extractors — use with Map&lt;Obj,Obj&gt; from jvmRead():
-jvmStr(jvm, key)     →
-
-String
-jvmBool(jvm, key)    →
-
-boolean(defaults true if absent)
-
-jvmInt(jvm, key, fb) →
-
-int(with fallback)
-
-jvmBody(jvm, key)    → List&lt;String&gt;  (splits \\
-n and \n)
+// one write path — at(key, value, MUTABLE): installs in the rec and saves it to the space
+protected void put(final Obj key, final Obj value)
 </code></pre>
-<p><strong>Model A — JVM-as-source-of-truth</strong> (AccordionWidget; preferred for new widgets):</p>
-<pre><code class="language-java">// Constructor — reads style from JVM so run() sees it
-public MyWidget(Map&lt;Obj, Obj&gt; jvm, fURI tid, fURI vid) {
-    super(new HashMap&lt;&gt;(jvm), tid, vid);
-    readStyle(this.jvm());
-}
-
-// format() — one jvmRead(), all state extracted fresh
-@Override
-public String format() {
-    Map&lt;Obj, Obj&gt; jvm = jvmRead();
-    String title = jvmStr(jvm, keyTitle);
-    // ... render ...
-}
-
-// Mutators — write through to persistent store
-public void setTitle(String t) {
-    jvmWrite(kTitle, str(t));
-}
-</code></pre>
-<p><strong>Model B — Java-fields-as-storage</strong> (TableWidget, PanelWidget, TreeWidget; legacy):</p>
-<pre><code class="language-java">// The fool-proof version — tracking flag prevents JVM from overwriting Java data.
-private boolean javaPopulated = false;
-
-// Every Java API mutation sets the flag.
-public TableWidget addRow(final List&lt;Object&gt; entries) {
-    this.javaPopulated = true;
-    this.table.add(entries);
-    return this;
-}
-
-private void sync() {
-    if (this.style == null) return;    // construction guard
-    if (this.javaPopulated) return;    // Java API owns the data — skip
-    Map&lt;Obj, Obj&gt; jvm = jvmRead();     // snapshot JVM
-    // Populate Java fields FROM JVM (mtron-constructed tables only):
-    Obj h = jvm.get(uri(&quot;headers&quot;));
-    if (h != null &amp;&amp; !h.isNoObj())
-        h.stream().filter(Obj::isStr).forEach(o -&gt; this.headers.add(o.strValue()));
-    // ... rows, metadata ...
-}
-</code></pre>
-<p><strong>⚠️ History:</strong> Before 2026-07-26, <code>TableWidget.sync()</code> unconditionally <code>clear()</code>ed Java fields and repopulated from the
-JVM snapshot. This destroyed Java-constructed tables (ProfileTool, ExplainTool, TraceTool) because the JVM serialization
-round-trip through <code>MObjFactory.toObj()</code> changes container types (<code>Objs</code> vs <code>Lst</code>, <code>ListN</code> vs
-<code>ArrayList</code>). The <code>javaPopulated</code> flag (shown above) fixes this. It's safer than per-field <code>isEmpty()</code> guards because a
-Java-constructed table may legitimately have an empty field (e.g. headers-only table with no rows) — without the flag,
-sync would pull stale rows from a prior mtron construction.</p>
-<p><strong>Also: avoid <code>Stream.toList()</code> in sync ().</strong>  <code>Stream.toList()</code> (Java 16+) returns immutable
-<code>ImmutableCollections$ListN</code>. Use <code>Collectors.toCollection(ArrayList::new)</code>
-instead — it keeps rows on the mutable-<code>ArrayList</code> path the rest of the codebase expects.</p>
-<p><strong>When to use the legacy sync pattern vs. direct <code>jvmRead()</code>:</strong></p>
+<p>What follows from those two rules:</p>
 <ul>
-<li><strong>New widgets</strong> (AccordionWidget): read from <code>jvmRead()</code> directly in <code>format()</code>. Java fields are metadata only.
-Mutators use <code>jvmWrite()</code>.</li>
-<li><strong>Legacy widgets</strong> (TableWidget, PanelWidget, TreeWidget): Java fields are the storage.  <code>sync()</code> populates them from
-JVM. Mutators use direct field assignment or <code>addRow()</code>/<code>addMetadata()</code> builders. The sync guard protects these from
-being overwritten.</li>
+<li><strong>Read once per pass, pass the map down.</strong> <code>read()</code> hits the space when the rec is anchored, so
+<code>format()</code> does one <code>read()</code> and derives everything from it (<code>get(fields, key)</code>,
+<code>getStr</code>/<code>getBool</code>/<code>getInt</code>/<code>getLines</code>). A render never reads per cell, per line or per call.</li>
+<li><strong>Walk values with <code>forEachValue(Obj, Consumer)</code>.</strong> <code>stream()</code> over a <code>Lst</code> yields the <em>list</em>, not its
+members, so a caller that meant to walk members silently gets one value — a whole row read as a single
+cell, a body read as no lines at all.</li>
+<li><strong>Never shape-inspect a read.</strong> <code>str</code>, <code>str{*}</code> (a coefficient: many str <em>values</em>) and <code>lst[str]::T</code>
+(one value that is a list) are three different types; <code>getLines</code> reads all three and
+<code>getBool(fields, key, fallback)</code> normalizes what it finds.</li>
+<li><strong>No state fields.</strong> A Java field holding rec data goes stale the moment the rec changes — and the
+widget object is re-created from the rec on every update, so a field cannot even survive that. What
+may stay in Java: collaborators, per-render scratch, and the identity of the rec being rendered (view
+state such as scroll lives in <code>FloatingSurface</code> slots, not in the widget).</li>
+<li><strong>A key a widget reads should be declared by its <code>Type</code></strong> (<code>uiInstSet</code>), which also puts a value type
+on it. Rec patterns are open, so an undeclared key <em>works</em> — which is exactly why it needs the
+declaration to be a contract rather than a habit.</li>
+</ul>
+<pre><code class="language-java">public class MyWidget extends SpaceRec&lt;MyWidget&gt; implements Widget&lt;MyWidget&gt; {
+
+    private static final Obj K_BODY = uri(BODY);
+
+    public MyWidget(final Map&lt;Obj, Obj&gt; jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
+        readStyle();                                        // materialise defaults INTO the rec
+    }
+
+    private void readStyle() {
+        final Obj s = this.get(this.read(), STYLE_KEY);
+        final Style&lt;MyWidget&gt; style = Style.isStyle(s) ? Style.from(s) : Style.empty();
+        style.stylable = this;
+        this.put(STYLE_KEY, style);
+    }
+
+    @Override
+    public String format() {
+        final Map&lt;Obj, Obj&gt; fields = this.read();           // ONE read for the pass
+        return this.getStr(fields, K_BODY);                 // typed, normalized
+    }
+
+    public MyWidget append(final String line) {
+        final Map&lt;Obj, Obj&gt; fields = this.read();
+        this.put(K_BODY, str(this.getStr(fields, K_BODY) + line));   // read-merge-write
+        return this;
+    }
+}
+</code></pre>
+<p><strong>Historical note.</strong> Until the 2026-07 widget pass this section documented two JRec models: <em>Model A</em>,
+where <code>jvmRead()</code>/<code>jvmWrite()</code> were called ad hoc and <code>@JRecElement</code> fields were declared &quot;metadata for
+mtron introspection only&quot; while Java went on reading them; and <em>Model B</em>, where the Java fields <strong>were</strong>
+the store and a <code>sync()</code> method arbitrated against the rec using a <code>javaPopulated</code> flag (before that
+flag, <code>TableWidget.sync()</code> destroyed Java-constructed tables, because the JVM round-trip changes
+container types). Both models are gone — <code>AccordionWidget</code>, <code>PanelWidget</code>, <code>TreeWidget</code> and
+<code>TableWidget</code> are <code>SpaceRec</code>s with no state fields, and builders such as <code>addRow()</code>/<code>addMetadata()</code>
+write rec keys.</p>
+<h4>What the migration removed, widget by widget</h4>
+<table>
+<thead>
+<tr><th>widget</th><th>state fields before</th><th>now</th></tr>
+</thead>
+<tbody>
+<tr><td><code>AccordionWidget</code></td><td><code>cursor</code>, <code>style</code>, <code>lastRenderHeight</code> + rehydration helper</td><td>none; body/toggle latch in the rec</td></tr>
+<tr><td><code>PanelWidget</code></td><td><code>cursor</code>, <code>maxWidth</code>, <code>style</code></td><td>none; wrap width is the style's <code>width</code></td></tr>
+<tr><td><code>TreeWidget</code></td><td><code>rows</code> (a render cache), <code>style</code>, <code>forceExpand</code> (Java-only, lost on re-hydration)</td><td>none; <code>expand</code> is a rec key (<code>uri{*}</code> of branch uris)</td></tr>
+<tr><td><code>TableWidget</code></td><td><code>headers</code>, <code>table</code>, <code>metadata</code> (<code>@JRecElement</code>), <code>style</code>, <code>javaPopulated</code></td><td>none; <code>header</code>/<code>row</code>/<code>metadata</code> are rec keys</td></tr>
+<tr><td><code>AbstractWidget</code> (and every widget/tool under it)</td><td>six <code>jvmWrite()</code> call sites, two style reads through <code>at()</code></td><td><code>put()</code>/<code>read()</code>; <code>size</code> and <code>eraseWidget()</code> were dead and are gone</td></tr>
+<tr><td><code>Console</code>, <code>Pane</code>, <code>Rewriter</code></td><td>many <code>@JRecElement</code> fields</td><td>unchanged — <code>JRec</code> is frozen; these are its only remaining clients</td></tr>
+</tbody>
+</table>
+<p>Two traps that came out of that pass, both worth knowing before you touch a widget:</p>
+<ul>
+<li><strong><code>at(key, value)</code> is not a write.</strong> Two-arg <code>at</code> is the <em>immutable</em> form: it clones the rec with the
+key set and returns the clone, so <code>this.at(k, v);</code> writes nothing. Use <code>put(k, v)</code>. This is exactly
+how <code>SwipePanelWidgetTool(Lst)</code> came to build a swipe panel with no <code>obj</code> for months.</li>
+<li><strong><code>JRec.jvm()</code> returns a copy</strong> (it folds annotated fields and methods into a temp map), so
+<code>jvm().put(...)</code> on a JRec subclass is a silent no-op. On a <code>SpaceRec</code> the map is the rec's own. If
+you are on a JRec-backed class (Console, Pane, Rewriter), write through <code>put</code>/<code>jvmWrite</code>.</li>
 </ul>
 <h3>3. Style system (<code>Stylable.Style</code>)</h3>
 <p>Style is a JVM-backed rec. Fields:</p>
@@ -568,6 +566,7 @@ being overwritten.</li>
 <tr><td><code>border</code></td><td>uri</td><td>simple, continuous, rounded, none, thick, hash, asterisk, period</td></tr>
 <tr><td><code>background</code></td><td>str</td><td>Graphitty color macro e.g. <code>{{[R]}}</code></td></tr>
 <tr><td><code>foreground</code></td><td>str</td><td>Graphitty color macro e.g. <code>{{g}}</code></td></tr>
+<tr><td><code>highlight</code></td><td>str</td><td>Syntax a widget colorizes its own body lines with — a <code>conf/nanorc</code> token (<code>mtron</code>, <code>java</code>, <code>python</code>, <code>txt</code>).  A line carrying a <code>{{syntax:…}}</code> tag is left to the whole-body pass (§ 4, § 9)</td></tr>
 <tr><td><code>divider</code></td><td>str</td><td>Column/row divider char</td></tr>
 <tr><td><code>headerDivider</code></td><td>str</td><td>Header divider char</td></tr>
 <tr><td><code>pointer</code></td><td>str</td><td>Selection pointer e.g. <code>{{r}}&gt;</code></td></tr>
@@ -579,7 +578,10 @@ being overwritten.</li>
 <tr><td><code>rightMargin</code></td><td>int</td><td>Right margin</td></tr>
 <tr><td><code>topMargin</code></td><td>int</td><td>Top margin</td></tr>
 <tr><td><code>bottomMargin</code></td><td>int</td><td>Bottom margin</td></tr>
-<tr><td><code>height</code></td><td>int</td><td>Display height cap in rows; 0 = unbounded. Content exceeding this cap keeps header/chrome lines and discards top body lines (scroll-up behavior)</td></tr>
+<tr><td><code>height</code></td><td>int</td><td><strong>Viewport</strong> height in rows; 0 = natural. Content taller than this is windowed (header/chrome pinned, newest lines at the bottom) and scrolls — nothing is discarded</td></tr>
+<tr><td><code>scroll</code></td><td>union/uri/bool</td><td>Which axes may scroll: <code>scroll=&gt;union(x,y)</code> (both, the default), <code>union(y)</code> (vertical only), <code>none</code>/<code>false</code> (off)</td></tr>
+<tr><td><code>scrollX</code></td><td>int</td><td>Initial horizontal scroll offset (column at the left edge)</td></tr>
+<tr><td><code>scrollY</code></td><td>int</td><td>Initial vertical scroll offset (body row at the top); 0 = follow the newest content</td></tr>
 <tr><td><code>zIndex</code></td><td>int</td><td>Render order among floating widgets: higher = drawn later (on top). Default 0. Menu bars use <code>Integer.MAX_VALUE</code>.</td></tr>
 <tr><td><code>focus</code></td><td>str</td><td>Focus highlight color (Graphitty code, e.g. <code>{{r}}</code>) applied to the focus marker of the active widget</td></tr>
 <tr><td><code>focus_token</code></td><td>str</td><td>Marker char drawn at the focused widget's top-left corner (default <code>▶</code>)</td></tr>
@@ -616,7 +618,15 @@ focusToken(token) / focusToken()  // focus marker char (default ▶)
 style.
 
 focused(bool) / focused()         // transient keyboard-focus flag
+
+style.scrollAxes() / scrollAxes(mask)   // SCROLL_X | SCROLL_Y | SCROLL_XY | SCROLL_NONE
+style.scrollableX() / scrollableY()     // axis predicates
+style.scrollX() / scrollY()             // seeded offsets (a viewport opens partway into the text)
+style.scrollTo(x, y) / scrollBy(dx, dy) // write the offsets
 </code></pre>
+<p><code>scrollAxes()</code> parses the declaration tolerantly (<code>union(x,y)</code> arrives unevaluated — <code>=&gt;</code> quotes
+it — so the text, uri, bool, lst and rec forms all resolve to the same axis mask;
+<code>Style.parseAxes(Obj)</code> is the entry point).</p>
 <p>Text utility:</p>
 <pre><code class="language-java">Style.wrapLines(List&lt;String&gt; lines, int maxWidth) →List&lt;String&gt;
 // Splits lines at word boundaries to fit maxWidth visual chars.
@@ -798,6 +808,253 @@ scroll-compensation erase blanks a <strong>wrap-tolerant band</strong> (4 rows a
 computed stale position, scoped to the widget's own columns) — wrapped console lines add
 visual rows without newlines, so the true scroll can exceed <code>scrollAccum</code> and leave a stale
 box copy otherwise.</p>
+<h4>Widget scrolling</h4>
+<p>Every pinned widget is drawn through a <strong>viewport</strong>: the rows it may occupy (its <code>style.height</code>
+when set, otherwise its natural height capped by the terminal).  Content that does not fit is
+<strong>off the viewport, never discarded</strong> — the widget's body still holds every line — so the
+reader can scroll back to it.  That is the whole point: a live <code>thoughts</code>/<code>audit</code> widget used
+to lose the top of its text to the height cap.</p>
+<p>The mechanics are deliberately general:</p>
+<ul>
+<li><strong><code>ScrollView</code></strong> (pure static math, no terminal) does the windowing:
+<code>maxY(content, chrome, viewport)</code>, <code>maxX(contentWidth, viewportWidth)</code>,
+<code>windowVertically(lines, chrome, offset, viewport)</code>, <code>windowHorizontally(line, offset, width)</code>,
+<code>contentWidth(lines)</code>.  <code>FloatingSurface</code> uses it for every widget, and any widget that owns
+its own viewport (see <code>ModalTool</code>) uses the same calls — so scrolling means the same thing
+everywhere.</li>
+<li><strong>Chrome is pinned.</strong> <code>Stylable.chromeLines()</code> (1 when a border is configured, widgets with
+headers/status rows override) rows never scroll; only the body under them does.</li>
+<li><strong>Tail by default.</strong> A viewport that is not scrolled shows the <em>newest</em> content — the legacy
+cap behavior, byte-identical: <code>offset = maxY</code> (follow).  Scrolling up (or seeding
+<code>style.scrollY</code>) drops the follow and holds the reader's <strong>absolute</strong> row, so text appended
+by an ongoing job does not yank the view out from under someone reading earlier lines.
+Scrolling back down to the end restores the follow.</li>
+<li><strong>One horizontal window per line.</strong> A line that fits is drawn verbatim (color codes intact);
+a shifted or overlong line is drawn as its text window (Graphitty-stripped), which is the
+same treatment the width clip always applied.</li>
+<li><strong>Tall without a cap</strong> — a widget with no <code>height</code> whose content is taller than the terminal
+is windowed to the terminal (<code>termHeight - 2</code>) instead of drawing rows off the bottom edge,
+and becomes scrollable.  A terminal that reports no usable height (<code>0</code>) is not clamped at all.</li>
+</ul>
+<p><strong>The slot owns the scroll place</strong> — exactly like <code>targetWidth</code>/<code>heightCap</code>:</p>
+<pre><code class="language-java">surface.scroll(w, dx, dy)      // move the viewport (respects style scrollAxes); true = accepted
+surface.scrollTo(w, row)       // absolute body row (clamped); drops follow unless at the tail
+surface.scrollToTail(w)        // back to the newest content (follow again)
+surface.canScroll(w)           // is there anything off the viewport on a scrollable axis?
+surface.isScrolled(w)          // scrolled away from the newest content / from column 0
+surface.scrollInfo(w)          // &quot;rows 12-31/240 (scrolled) col 3/180&quot; — for status + tests
+surface.pageRows(w)            // one page (viewport body rows − 1)
+surface.widgetAt(row, col)     // hit test: the topmost widget covering a terminal cell
+surface.renderNow()            // render AND wait (decisions that need fresh metrics)
+</code></pre>
+<p><code>add()</code> carries <code>scrollX</code>/<code>scrollY</code>/<code>follow</code> across a re-float (a <code>.display()</code> update
+re-hydrates a fresh instance), and a first float seeds them from <code>style.scrollX/scrollY</code>.</p>
+<blockquote>
+<p><strong>The slot registry is identity-keyed</strong> (<code>IdentityHashMap</code> behind synchronized accessors).
+<code>Obj.hashCode</code> is derived from <code>jvm()</code> contents (<code>Obj.Helper.objHashCode</code>), and a widget
+writes to its own jvm as it renders (an accordion latches its toggle instruction, an append
+lands) — so a content-keyed map silently loses the widget the moment it draws.  Iteration
+always goes through <code>slotSnapshot()</code> so the lock is never held while calling into a widget.</p>
+</blockquote>
+<p><strong>Keys</strong> (<code>CommandPalette.bindKeys()</code>, all registered as reasserted builtins):</p>
+<table>
+<thead>
+<tr><th>Keys</th><th>Action</th></tr>
+</thead>
+<tbody>
+<tr><td><code>alt+u</code> / <code>alt+d</code></td><td>scroll the focused widget's viewport up / down one line</td></tr>
+<tr><td><code>pageup</code> / <code>pagedown</code></td><td>scroll it one page (viewport body rows − 1)</td></tr>
+<tr><td><code>alt+,</code> / <code>alt+.</code></td><td>scroll it one column left / right</td></tr>
+<tr><td><code>alt+0</code></td><td>put the viewport back on the newest line (follow again)</td></tr>
+<tr><td>click</td><td>focus the widget under the pointer; click its header to fold it; click empty terminal to clear the focus and give the mouse back</td></tr>
+<tr><td>mouse wheel</td><td>scroll the widget under the pointer (or the focused one); a left click on a widget focuses it</td></tr>
+</tbody>
+</table>
+<p>The scroll keys are <strong>chained builtins</strong> (<code>CommandPalette.chained</code>): when nothing scrollable is
+focused they fall through to whatever previously owned the key (jline's own page/history
+bindings), so taking <code>pageup</code>/<code>pagedown</code> costs the console nothing.</p>
+<p>Colon commands: <code>:scroll [up|down|pageup|pagedown|left|right|top|bottom|line N] [n]</code> (no argument
+reports the focused widget's viewport), and <code>:widgets</code> now appends each widget's scroll info.</p>
+<h4>The pointer's gesture vocabulary</h4>
+<p>Any pinned widget can be worked with the mouse (see <code>Console.clickAt</code>):</p>
+<table>
+<thead>
+<tr><th>Gesture</th><th>Effect</th></tr>
+</thead>
+<tbody>
+<tr><td>click a widget</td><td>focus it (<code>Console.focusWidget</code>), and the pointer is armed for the widgets</td></tr>
+<tr><td>click a widget's own affordance</td><td>the widget acts — an accordion's header (its <code>[-]</code> / <code>[+]</code> included) folds it (see <code>Widget.onClick</code>)</td></tr>
+<tr><td>click terminal with no widget under it</td><td>clear the focus <strong>and hand the mouse back to the terminal</strong></td></tr>
+<tr><td>wheel</td><td>scroll the widget under the pointer (or the focused one)</td></tr>
+<tr><td><strong>press the focused widget's chevron</strong></td><td>take hold of the widget — the chevron is its top-left cell, so the drag is a translation</td></tr>
+<tr><td><strong>press the focused widget's corner marker</strong> (<code>◢</code>, its bottom-right cell)</td><td>take hold of its size — the mouse counterpart of <code>nudge()</code></td></tr>
+<tr><td><strong>drag with the button held</strong></td><td>the corner follows the pointer (<code>FloatingSurface.placeAt</code>) or the box follows the pointer's delta (<code>FloatingSurface.resizeTo</code>), both clamped</td></tr>
+<tr><td><strong>release</strong></td><td>park it: a move writes <code>style =&gt; [top=&gt;, left=&gt;]</code>, a resize writes <code>width</code>/<code>height</code> — the rec, which is what survives the next <code>.display()</code></td></tr>
+</tbody>
+</table>
+<h4>Moving and reshaping a widget by mouse</h4>
+<p><strong>The handles are painted in the widget's own box</strong>, and that is the whole design:
+<code>FloatingSurface</code> draws <code>▶</code> in the <em>top-left</em> rendered cell and <code>◢</code> in the <em>bottom-right</em> one, so the
+cell a user grabs is the geometry the gesture changes — the origin for a move (which makes the drag a
+translation, the corner landing where the pointer is) and the far corner for a resize (which makes it a
+width/height delta).  Neither needs an offset calculation, and targets that small stay safe to hit:
+nobody clicks a corner by accident, and the body stays free for selection, scrolling and affordances.
+Only the focused widget has handles, and a box drawn one cell wide and tall gets no corner marker
+rather than two glyphs on one cell.</p>
+<p>The two gestures are one code path with the handle as the difference: <code>FloatingSurface.handleAt</code>
+returns <code>MOVE</code> or <code>RESIZE</code> for a cell, and <code>Console</code> keeps <code>{widget, handle, press cell, box at press}</code>
+so a motion is a delta from the press instead of an accumulation of events.</p>
+<p>Where the widget sits <em>while moving</em> is view state and lives on its slot; where it is <strong>parked</strong> is
+rec state and is written once, on release:</p>
+<ul>
+<li><code>Console.mousePressed/Dragged/Released</code> (dispatched from the mouse handler in <code>CommandPalette</code>)
+run the gesture.  A press and release with no motion stays a click — the press already focused it.</li>
+<li><code>FloatingSurface.placeAt(widget, row, col)</code> writes the slot's anchor offsets via the anchor
+<strong>inverse</strong> (<code>Slot.offsetRowFor/offsetColFor</code>, the mirror of <code>rowFor/colFor</code>) and queue-renders —
+never a synchronous pass per motion event.</li>
+<li><code>FloatingSurface.resizeTo(widget, width, height)</code> writes the slot's <code>targetWidth</code>/<code>heightCap</code> — the
+same two fields <code>nudge()</code> steps by key — clamped to <code>MIN_WIDTH</code>/<code>MIN_HEIGHT</code> (a resize can never
+demolish a widget) and to the terminal.  A <strong>cap only ever limits</strong>: the drawn box is
+<code>min(cap, content)</code>, so raising a cap past the content's length changes nothing, and a right- or
+bottom-anchored box grows leftward/upward because the anchor pins one edge and the free edge moves.</li>
+<li>the release calls the widget's style write path (<code>style().top(..).left(..).applyStyle()</code>, plus
+<code>width</code>/<code>height</code> after a resize), so the geometry lands in the rec and survives the re-hydration
+every update performs.  A move deliberately writes <em>no</em> height: a cap nobody asked for would clip
+content that arrives later.</li>
+<li><strong>Clamping</strong> keeps the chevron on screen: a handle dragged off the terminal would be
+unreachable, and the widget would be stuck where only its body showed.</li>
+<li>Only <strong>anchored</strong> widgets are draggable (<code>FloatingSurface.placement</code> returns null otherwise): a
+<code>Slot.fixed</code> belongs to a pane layout, which owns its position.</li>
+</ul>
+<p>A drag holds the pointer for its whole duration (<code>syncWidgetMouseTracking</code> treats <code>dragging()</code> as
+&quot;wanted&quot;), because a mid-gesture hand-back to the terminal would drop the release event and leave the
+widget in flight.  End-to-end coverage: <code>bin/test/console-drag.steps</code> sends press/motion/release bytes
+and reads the widgets back out of the store — rendered text cannot say where a box sits, but the store
+can (a move parks <code>top=&gt;3, left=&gt;8</code>; a resize parks <code>width=&gt;33, height=&gt;6</code>).</p>
+<p>Affordances go through <code>Widget.onClick(int row, int col)</code> — <strong>local</strong> coordinates
+(<code>0,0</code> = the widget's top-left rendered cell), so a widget tests a click against its own
+layout without knowing where it was pinned; the default returns false, which leaves the click
+to the console (focus).  <code>FloatingSurface.click(widget, row, col)</code> does the translation and
+re-renders when the widget consumed the click.</p>
+<p><code>AccordionWidget</code> makes the <strong><code>[-]</code> / <code>[+]</code> glyph</strong> the toggle, NOT the whole header: a header is
+where a pointer naturally lands to focus and scroll a widget, and folding on the way in turns &quot;let
+me read this&quot; into &quot;where did the text go&quot; — a folded accordion draws nothing but its header, and
+that regression is exactly what a whole-header target caused once.</p>
+<p>A <strong>folded header reports what it is holding</strong> (<code>[+] 3</code> = three body lines), so a folded widget and
+a widget whose body never arrived can never be mistaken for each other.  The fold lives in the
+widget's rec — the space, for a store-backed widget — so it survives the agent's
+<code>&gt;&gt;=[body=&gt;...].display()</code> updates: folded once, it stays folded while text piles up inside it
+(verified in <code>bin/test/console-widget-mouse.steps</code>, which folds, writes more body, and checks the
+fold held).</p>
+<p>A click costs <strong>one render pass</strong>: <code>Console.clickAt</code> renders the focus change and, when the
+widget also acted, the affordance (the surface coalesces the two), and it never blocks the
+console thread — <code>focusWidget</code> renders fire-and-forget.  (It used to <code>renderNow()</code>, which
+stalled the reader thread on a full pass for every focus and every click; that stall is what
+made the pointer feel heavy.)</p>
+<p><strong>Who owns the pointer</strong> — <code>Console.pointerWanted(focused, dismissed, widgets)</code> (pure, tested):</p>
+<ul>
+<li>a widget is <strong>focused</strong> → the widgets own the mouse (scroll, affordances, moving the focus);</li>
+<li>widgets are <strong>on screen and not dismissed</strong> → they own it, so a cold click can focus one;</li>
+<li>the user <strong>pointed at empty terminal</strong> → <code>pointerDismissed</code>, the terminal gets its own mouse
+back (wheel scrolls it, drag-selection works) until a widget is focused or a <em>new</em> widget
+arrives (<code>drawnWidgetCount()</code> growing — the same widgets merely redrawing does not re-arm,
+which is what makes waving the pointer off stick);</li>
+<li><strong>nothing on screen</strong> → the terminal's mouse, always.</li>
+</ul>
+<p>The enable/disable sequences are the console's own, not jline's:
+<code>MOUSE_ON = ?1000h ?1002h ?1006h</code> (button events, button-event tracking — motion while a button is
+held, which is what a drag is — and the SGR encoding) and a full <code>MOUSE_OFF</code> sweep.
+<strong>Deliberately not <code>MouseSupport.trackMouse(Normal)</code>, which also enables <code>?1005h</code></strong> — the legacy
+UTF-8 coordinate encoding, whose mix with 1006 makes a terminal report the pointer in either
+encoding and mis-decode columns; that is exactly the failure mode where a widget's <em>body</em> still
+focuses on a click while its three-cell <code>[-]</code> target cannot be hit.</p>
+<p>Two callers keep the mode honest:</p>
+<ul>
+<li><code>Console.prepareForInput()</code> re-asserts it <strong>once per prompt</strong> (forced) — jline releases
+tracking at the end of every <code>readLine</code>, so the flag alone would leave the pointer dead from
+the second prompt on.</li>
+<li>the hotkey watcher's idle tick reconciles <strong>only on a change</strong>, so a widget floated while the
+user sat at the prompt becomes clickable within a tick — and only while the prompt owns the
+terminal.  While a job holds the console the mouse stays off, so its bytes can never be
+mistaken for typed input by the watcher.</li>
+</ul>
+<p>The handler is bound to <code>MouseSupport.keys()</code> (the <code>\033[&lt;</code> / <code>\033[M</code> prefixes) and reads the
+event the way jline does — <code>reader.readMouseEvent()</code>, whose payload the keymap already pushed
+back as a macro.  Two jline details are load-bearing:</p>
+<ul>
+<li><strong><code>MouseEvent</code> coordinates are 0-BASED</strong> (a click at terminal column 5 arrives as <code>x=4</code>),
+while widget geometry and the console's gestures are 1-based: <code>CommandPalette</code> converts once,
+at the handler.</li>
+<li><strong>a click is a press <em>and</em> a release</strong> — jline keeps the button down until the release
+(<code>\033[&lt;0;Cx;CyM</code> then <code>...m</code>) arrives, and reads any later press as a <code>dragged</code> event.  This
+only bites hand-written mouse bytes (a real terminal always sends both).</li>
+</ul>
+<p>Console-side API:</p>
+<pre><code class="language-java">console.scrollActiveWidget(dx, dy)   // + pageActiveWidget(dir), tailActiveWidget(), scrollActiveWidgetTo(row)
+console.activeWidgetScrolls()        // focused widget has something off its viewport
+console.activeWidgetScrollInfo()     // &quot;notes rows 12-31/240 (scrolled)&quot;
+console.clickAt(row, col)            // the pointer's gesture: affordance → focus → (empty terminal) blur
+console.syncWidgetMouseTracking()    // re-evaluate mouse mode against what is on screen
+</code></pre>
+<p><strong>Widgets that draw their own viewport</strong> — <code>ModalTool</code> (the non-floating path) windows the panel
+to the screen with the same <code>ScrollView</code> calls, and binds ↑/↓/<code>j</code>/<code>k</code>, page keys and the wheel
+through its own <code>BindingReader</code> key loop (<code>terminal.readMouseEvent(reader::readCharacter, reader.getLastBinding())</code> is the read-back idiom, since the keymap consumed the payload).</p>
+<h4>Rendering a pinned widget has to stay cheap</h4>
+<p>A pinned widget is re-rendered <strong>in full, on every pass</strong> — a wheel notch, a page key, a resize, a
+click.  Three things make that affordable (measured on a 300-line accordion: a pass went from
+~500 ms to ~8 ms):</p>
+<ul>
+<li>
+<p><strong>Highlighting is memoized, not repeated.</strong> A widget that colorizes its own body lines
+(<code>style.highlight(language)</code>) asks for <code>Highlighter.highlightLine(language, line)</code>, never
+<code>new Highlighter(lang).highlight(line)</code> per line: highlighting is a full syntax pass per line
+(~600 µs), and a 60 row body re-highlighted on every pass cost <strong>38 ms per pass</strong> before the
+memo (<code>LINE_CACHE</code>, bounded, shared across widget instances on purpose — a widget is
+re-hydrated into a fresh instance by every update, so a per-widget memo would be cold exactly
+when a live widget needs it).</p>
+<p>A <code>{{syntax:java}} … {{/syntax:java}}</code> block is highlighted the same way, and the seam is where the
+widget draws.  A block that nothing draws inside is ONE memoized <code>Highlighter.highlightBlock</code> pass;
+a block whose lines carry the widget's own border and colour is colorized piece by piece through
+<code>Highlighter.block(language)</code>, which carries jline's multi-line state across the seams (a comment
+opened on one line of the block is still a comment on the next).  A line carrying a block tag is
+handed back untouched either way: a block spans several lines, so only the pass that sees the whole
+body can colorize it — that pass is <code>FloatingSurface</code>'s <code>Graphitty.string(sb)</code>.</p>
+</li>
+<li>
+<p><strong>Measuring text is O(1) for plain text.</strong> <code>Graphitty.strip</code>/<code>viewLength</code> return the input
+unchanged when it has no <code>{{…}}</code> code, no ANSI escape and nothing outside ASCII — 2.4 µs → 34 ns
+per call, and every widget measures every one of its lines.</p>
+</li>
+<li>
+<p><strong>Widget passes outrank console output.</strong> The render thread drains <code>urgentQueue</code> (widget
+passes: <code>render()</code>, <code>renderNow()</code>) ahead of <code>renderQueue</code> (console output, slot erases), so an
+agent streaming a widget body cannot make a scroll wait behind thousands of output writes.  The
+queues cannot interleave badly: a widget pass positions the cursor absolutely and restores it.</p>
+</li>
+</ul>
+<p><code>-Dmetatron.render.trace=true</code> logs one line per pass (and the widget's <code>format()</code> time inside
+it); <code>bin/metatron-console</code> passes extra switches via
+<code>METATRON_CONSOLE_JAVA_OPTS=&quot;-Dmetatron.render.trace=true&quot;</code>.</p>
+<h4>Reads must go through the store, not <code>at()</code></h4>
+<p><code>JRec.at()</code> reads the <strong>construction-time snapshot</strong>; <code>jvmWrite()</code> on a <em>store-backed</em> widget
+(<code>accordion_widget::[…]@&lt;think_widget&gt;</code>) writes the space.  So a widget that reads its own fields
+with <code>at()</code> keeps serving the pre-mutation value: a click folded the accordion <em>in the space</em>
+while it went on drawing itself unfolded — invisible for every ephemeral (vid-less) widget, which
+is why it survived the unit tests and showed up only on a live <code>think_widget</code>.</p>
+<p>Pinned widgets therefore read through <code>jvmRead()</code> — one snapshot per render pass, with a uri-name
+fallback because a store round-trip need not preserve key identity (<code>AccordionWidget.field</code>).</p>
+<p><strong>End-to-end checks</strong> — <code>bin/test/console-widget-scroll.steps</code> floats a 24-line accordion in a
+10-row viewport and asserts, in a real pty, that <code>alt+w</code> + <code>alt+u</code> + <code>pageup</code> + the wheel bring
+earlier lines back and that <code>alt+0</code> returns to the tail; <code>bin/test/console-widget-mouse.steps</code>
+does the same for the pointer: click to focus, click <code>[-]</code>/<code>[+]</code> to collapse/expand, click empty
+terminal to unfocus.</p>
+<pre><code class="language-bash">bin/metatron-console --from classes --steps bin/test/console-widget-scroll.steps
+bin/metatron-console --from classes --steps bin/test/console-widget-mouse.steps
+bin/metatron-docker build console --steps bin/test/console-widget-mouse.steps   # isolated
+</code></pre>
+<p>The pointer suite ends by clicking away, re-arming with <code>alt+w</code> and folding the accordion
+again — and <code>--raw</code> shows the hand-back in bytes: <code>?1006l</code> right after the click that landed on
+empty terminal, <code>?1006h</code> again once a widget is focused.</p>
 <p><strong>Deterministic focus order</strong> — <code>surface.widgets()</code> sorts slots by z-index (lowest first) →
 anchor reading order (top row→bottom row, left→right) → top/left offsets → target width
 (widest first). Only slot geometry — stable across re-floats — feeds the order, so cycling
@@ -1134,7 +1391,8 @@ silently no-ops. The compiler can't catch this because <code>Style extends MRec 
 <code>default Obj apply() { return this.apply(noobj()); }</code>.</p>
 <h3>9. Graphitty — terminal markup DSL (<code>Graphitty.java</code>)</h3>
 <p>Graphitty is a lightweight macro-to-ANSI preprocessor used throughout the UI layer. Tags are written <code>{{...}}</code> and are
-stripped by <code>Graphitty.strip()</code> for visual-length calculations. The DSL supports three families of tags:</p>
+stripped by <code>Graphitty.strip()</code> for visual-length calculations. The DSL supports four families of tags: colour and effect,
+cursor and screen, chaining with <code>&amp;</code>, and <code>{{syntax:lang}}</code> blocks of foreign source.</p>
 <h4>Colour / effect tags</h4>
 <table>
 <thead>
@@ -1179,6 +1437,64 @@ stripped by <code>Graphitty.strip()</code> for visual-length calculations. The D
 <tr><td><code>{{.}}</code></td><td><code>\033[?25l</code></td><td>hide cursor</td></tr>
 </tbody>
 </table>
+<h4>Syntax blocks (<code>{{syntax:lang}}</code> … <code>{{/syntax:lang}}</code>)</h4>
+<p>Everything between the tags is <strong>foreign source code</strong>: its literal text is captured and colorized from a <code>conf/nanorc</code>
+syntax file, and the tags themselves never reach the terminal.  The end tag must name the same language as the open tag.</p>
+<pre><code class="language-java">// colorize a block of source anywhere a string is drawn:
+&quot;{{syntax:java}}&quot; + source + &quot;{{/syntax:java}}&quot;
+</code></pre>
+<table>
+<thead>
+<tr><th>Language token</th><th>Resolves to</th></tr>
+</thead>
+<tbody>
+<tr><td><code>java</code>, <code>python</code>, <code>yaml</code>, <code>sql</code>, <code>json</code>, <code>javascript</code>, <code>html</code>, <code>xml</code>, <code>markdown</code>, <code>mtron</code></td><td><code>conf/nanorc/&lt;token&gt;.nanorc</code></td></tr>
+<tr><td><code>js</code> / <code>ts</code> → javascript, <code>py</code> → python, <code>yml</code> → yaml, <code>md</code> → markdown, <code>htm</code> → html</td><td>the same files, short forms</td></tr>
+<tr><td><code>txt</code>, <code>text</code>, <code>plain</code>, <code>none</code>, anything else</td><td>no highlighting — the text is emitted as it is</td></tr>
+</tbody>
+</table>
+<p>A token names the <strong>file</strong>; jline is then asked for the syntax name that file <em>declares</em> (<code>syntax &quot;Java&quot;</code>), because jline
+matches a syntax name by exact equality — passing <code>java</code> straight through landed on a same-named system nanorc, or, on a
+host without one, on nothing at all.  A user file in <code>~/.metatron/&lt;token&gt;.nanorc</code> wins over the shipped one.  A new
+language needs both halves: <code>conf/nanorc/&lt;language&gt;.nanorc</code> <strong>and</strong> an <code>include &lt;language&gt;.nanorc</code> line in
+<code>conf/nanorc/jnanorc</code> — resolution reads the file, but jline only looks at the files <code>jnanorc</code> includes, so one that is
+missing from that list resolves to a syntax with no rules and the text is drawn plain.</p>
+<table>
+<thead>
+<tr><th>Call</th><th>Use</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Highlighter.syntaxName(language)</code></td><td>the syntax a token resolves to; <code>null</code> means plain text</td></tr>
+<tr><td><code>Highlighter.highlightBlock(language, code)</code></td><td>a whole block in one pass, memoized</td></tr>
+<tr><td><code>Highlighter.block(language)</code></td><td>a stateful colorizer for a block that arrives in pieces</td></tr>
+<tr><td><code>Highlighter.highlightLine(language, line)</code></td><td>one line of a body — a line with no syntax, or carrying a block tag, is handed back</td></tr>
+</tbody>
+</table>
+<p>Rules of the road:</p>
+<ul>
+<li><strong>Markup still applies inside a block.</strong>  A block is not a verbatim region: the markup of the document around it keeps
+working through it, which is what lets a widget draw its border and its colours <em>through</em> the lines of a block it
+renders.  Only literal text is code.  Code that has to <em>show</em> a tag escapes it — <code>\{\{b\}\}</code> renders as <code>{{b}}</code>.</li>
+<li><strong>Measuring captures the block too</strong>, with escapes off: the tags are dropped and the code is kept, so
+<code>Graphitty.strip()</code>, <code>viewLength()</code> and <code>Highlighter.visualLength()</code> measure exactly what is drawn on the line.</li>
+<li><strong>A block that is never closed</strong> renders what it captured; the flush belongs to the outermost parse.  A tag alone on a
+line is simply dropped — a widget measures its body line by line, so an end tag can arrive without its opener.</li>
+<li><strong>A mismatched end tag reports</strong> <code>unmatched syntax wrap: /syntax:sql != /syntax:java</code>, the same shape as any other
+unmatched rule wrap.</li>
+<li><strong>No nesting</strong>: inside a block another <code>{{syntax:…}}</code> is markup like any other and does not open a second block.</li>
+<li><strong>A rule that merely contains the prefix</strong> — <code>{{/syntax:java}}</code>, <code>{{not_syntax:java}}</code> — names no language: a block opens
+only on a rule that STARTS with <code>syntax:</code>.</li>
+</ul>
+<p>Trailing whitespace at a markup boundary is emitted outside the colouring: in a bordered body it is the widget's padding,
+and a syntax file that colours trailing whitespace would otherwise paint it.</p>
+<pre><code class="language-java">// a widget drawing its border through the block's lines — one block, two rows of it:
+&quot;{{X}}│{{X}} {{syntax:java}}class A {&quot; + padding + &quot;{{X}}│{{X}}\n&quot;
+  + &quot;{{X}}│{{X}} int x = 42;&quot; + padding + &quot;{{X}}│{{X}}\n&quot;
+  + &quot;{{X}}│{{X}} {{/syntax:java}}{{X}}│{{X}}\n&quot;
+// → the border is emitted in order, `int` is colorized, no tag text is drawn
+</code></pre>
+<p><code>bin/test/console-syntax-block.steps</code> drives this in a real console — an accordion whose body is a block — and is the
+regression for the day a line-oriented pass split a block apart.</p>
 <h4>Stack and chaining</h4>
 <p>Every opened tag is <strong>pushed onto a stack</strong>. Closing with <code>{{/rule}}</code> pops the most-recently-opened matching rule and
 restores the previous style. If the popped rule had a parent still on the stack, the parent's escape is re-emitted with
@@ -1186,6 +1502,9 @@ a
 <code>\033[0;…</code> prefix so the parent style &quot;wins&quot; over the default reset.</p>
 <p>Tags separated by <code>&amp;</code> are <strong>chained</strong> — <code>{{r&amp;_}}</code> emits red-foreground (<code>\033[31m</code>)
 followed by underline (<code>\033[4m</code>), pushing both rules in left-to-right order.</p>
+<p>A <code>{{syntax:lang}}</code> block is the exception: it is matched <strong>by name</strong>, not by position, and never joins that stack.  So
+markup inside the block pushes and pops above whatever encloses it, the rule the stack leads with is what resumes after
+the block, and only the exactly-spelled <code>{{/syntax:lang}}</code> closes it.</p>
 <pre><code class="language-java">// Stack example — closing restores the previous colour:
 &quot;{{B}}blue title{{/B}} and normal text&quot;   // bold blue → reset → normal
 
@@ -1208,6 +1527,8 @@ followed by underline (<code>\033[4m</code>), pushing both rules in left-to-righ
 <tr><td><code>Graphitty.viewLength(str)</code></td><td>Alias for <code>strip(str).length()</code>.</td></tr>
 </tbody>
 </table>
+<p><code>Graphitty</code> owns the tags; what a <code>{{syntax:lang}}</code> block is colored <em>with</em> is <code>Highlighter</code>'s — see <strong>Syntax blocks</strong>
+above for <code>syntaxName</code>, <code>highlightBlock</code>, <code>block</code> and the line-oriented <code>highlightLine</code>.</p>
 <h4>Typical widget usage</h4>
 <p>Widgets emit <strong>Graphitty-markup strings</strong> from <code>format()</code>. The caller is responsible for converting them to ANSI before
 writing to the terminal:</p>

@@ -260,6 +260,10 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 * [tble instruction set](references/tble-instset-mtron.md) -- `/m/tble` and `tblespace::T`: a JDBC database as a space
   -- tables that appear from the first rec write, typed rows, the SQL rewrite family that pushes reads down into the
   backend, the key/value fall-through, `!*` foreign keys, and native `sql()`.
+* [ui instruction set](references/ui-instset-mtron.md) -- `/m/mach/ui`: a widget as a rec whose state is its own
+  map, `as?str<=widget(str::T)` to render one inline anywhere a str fits, the `style::T` keys (border, width,
+  anchor, `top`/`left`, the viewport), the anchor arithmetic and the pointer vocabulary (chevron to move, corner
+  marker to reshape), and the three insts `display`/`nano`/`less`.
 * [dckrSpace](references/dckrspace-mtron.md) -- Docker as a space: containers, images, volumes, networks, compose,
   remote hosts, and an end-to-end SQLite container + tbleSpace walkthrough.
 * [Connecting Data Sources](references/connecting-datasources.md) -- the pattern + route model, discovering a space's

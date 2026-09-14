@@ -166,13 +166,13 @@ The `?mimeq=` query parameter on a file URI controls what the space returns:
 
 ```mtron_pre
 [-- default: typed string (predicate-validated) --]
-*<mfs:docs/website/index.html>
+[MAXOUTPUT 20] *<mfs:docs/website/index.html>
 
 [-- explicit type tag (same as default for .html files) --]
-*<mfs:docs/website/index.html?mimeq=text/html>
+[MAXOUTPUT 20] *<mfs:docs/website/index.html?mimeq=text/html>
 
 [-- structural parse via application/x-mtron --]
-*<mfs:docs/website/index.html?mimeq=application/x-mtron>
+[MAXOUTPUT 20] *<mfs:docs/website/index.html?mimeq=application/x-mtron>
 ```
 
 `mimeq` is implemented in `QCollection.mimeQ()` as a space-level `postRead` query processor. It:

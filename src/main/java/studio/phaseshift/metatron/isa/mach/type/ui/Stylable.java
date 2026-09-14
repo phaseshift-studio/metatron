@@ -74,7 +74,9 @@ public interface Stylable<T extends Stylable<T>> {
         return s;
     }
 
-    /** The rec key a stylable's style lives under. */
+    /**
+     * The rec key a stylable's style lives under.
+     */
     Obj STYLE_KEY = uri("style");
 
     T style(final Style<T> style);
@@ -139,12 +141,16 @@ public interface Stylable<T extends Stylable<T>> {
             return null == styleRec ? empty() : of(null, styleRec);
         }
 
-        /** True when a rec read handed back something that IS a style (or holds one). */
+        /**
+         * True when a rec read handed back something that IS a style (or holds one).
+         */
         public static boolean isStyle(final Obj styleObj) {
             return null != asStyleRec(styleObj);
         }
 
-        /** The rec a style read landed on, or null when there is none. */
+        /**
+         * The rec a style read landed on, or null when there is none.
+         */
         private static Rec asStyleRec(final Obj styleObj) {
             if (null == styleObj || styleObj.isNoObj()) return null;
             if (styleObj instanceof Rec rec) return rec;
@@ -152,7 +158,7 @@ public interface Stylable<T extends Stylable<T>> {
         }
 
         public Border border() {
-            return this.at("border").isUri() ? Border.parse(this.at("border").uriValue().toString()) : Border.none;
+            return this.at("border").isUri() ? Border.parse(this.at("border").uriValue().toString()) : Border.continuous;
         }
 
         public Style<T> border(final Border border) {

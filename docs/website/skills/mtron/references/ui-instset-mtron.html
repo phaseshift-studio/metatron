@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>mtron-language-reference · PhaseShift Studio</title>
+    <title>ui instruction set · PhaseShift Studio</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -380,541 +380,400 @@
 </script>
 <main class="container my-4 flex-grow-1">
     <div class="skill-doc mb-4">
-        <h1 class="skill-title mb-1">mtron-language-reference</h1>
-        <small>Complete mtron language reference — mono, poly, and call types, operators, expression chaining, and syntax.</small><br/>
-        <a href="language-reference-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>language-reference-mtron.md</a>
+        <h1 class="skill-title mb-1">ui instruction set</h1>
+        <small>The /m/mach/ui instruction set: a widget is a rec whose state is its own map, as?str<=widget(str::T) renders one inline anywhere a str fits, style::T says how it looks and where it hangs from, and the console floats it on a terminal where the pointer works it — click to focus, drag the chevron to move, drag the corner marker to reshape. TRIGGER: when rendering or floating a widget, styling or anchoring one, reading or writing a widget's state, moving or resizing a widget with the mouse, or asking which keys a widget type declares.</small><br/>
+        <a href="ui-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>ui-instset-mtron.md</a>
     </div>
     <div class="markdown-body">
-<h2>mtron Language Reference</h2>
-<p>A data-flow language over the metatron object graph. Every value is an <strong>Obj</strong> — int, str, real, bool, uri, rec, lst,
-inst, code, bytes, etc. Expressions chain left-to-right: <code>lhs.inst(rhs)</code>.</p>
-<hr />
-<h3>1. Mono Types</h3>
-<pre><code class="language-mtron">mtron&gt; 1           [-- int (64-bit signed) --]
-==&gt;1
-mtron&gt; 1.0         [-- real (double) --]
-==&gt;1.0000
-mtron&gt; true        [-- bool --]
-==&gt;true
-mtron&gt; false       [-- bool --]
-==&gt;false
-mtron&gt; &quot;metatron&quot;  [-- str (double-quoted) --]
-==&gt;'metatron'
-mtron&gt; 'mtron'     [-- str (single-quoted) --]
-==&gt;'mtron'
-mtron&gt; &quot;&quot;&quot;mtron&quot;&quot;&quot; [-- str (triple double-quoted, multi-line) --]
-==&gt;'mtron'
-mtron&gt; &lt;a.b.c&gt;     [-- uri (angle-bracket necessary of uri has . or space) --]
-==&gt;&lt;a.b.c&gt;
-mtron&gt; /foo/bar    [-- uri (path literal) --]
-==&gt;/foo/bar
-mtron&gt; a           [-- uri (bare name — no angle brackets if alphanumeric) --]
-==&gt;a
-mtron&gt; 0x0F        [-- bytes (hex literal) --]
-==&gt;0x0f
-mtron&gt; noobj       [-- &quot;no obj&quot; (empty, none) --]
+<h2>ui instruction set (<code>/m/mach/ui</code>)</h2>
+<p>A widget is a <strong>rec</strong>. Its title, its body, its style, whether it is folded, where it sits — every one of
+those is a key in its own map, and when the widget is anchored (<code>@uri</code>) that map is the space's. There is
+no widget object holding state beside the rec: a <code>.display()</code> update re-hydrates a fresh instance from the
+same rec, so the rec is the only thing that survives it.</p>
+<p>That is why the instruction set is small — three insts and a family of types. <strong>Rendering is a cast</strong>:
+<code>as?str&lt;=widget(str::T)</code> turns a widget into the str you would see, so a widget can be shown inside a doc,
+a chat message or a test, anywhere a str fits. <strong>Floating</strong> one on a live terminal, and working it with
+the pointer, belongs to the console (see <em>anchoring, and the pointer</em>).</p>
+<p>The instruction set's own subgraph — at once the map of this doc and a widget:</p>
+<pre><code class="language-mtron">mtron&gt; tree_widget::[root=&gt;/m/mach/ui, max=&gt;2].as?str&lt;=widget(str::T)
+==&gt;&quot;&quot;&quot;
+   ui
+   ├─ anchor
+   ├─ console
+   ├─ style
+   └─ widget
+       ├─ accordion_widget
+       ├─ label_line_widget
+       ├─ menu_bar_widget
+       ├─ modal_widget
+       ├─ panel_widget
+       ├─ progress_table_widget
+       ├─ selector_widget
+       ├─ swipe_panel_widget
+       ├─ table_widget
+       ├─ tree_select_widget
+       └─ tree_widget
+   &quot;&quot;&quot;
 </code></pre>
-<hr />
-<h3>2. Poly Types</h3>
-<h4>lst (<code>[ , ]</code> — ordered, indexable)</h4>
-<pre><code class="language-mtron">mtron&gt; [1, 2, 3]         [-- List of 3 ints --]
-==&gt;[1,2,3]
-mtron&gt; [1, [2, 3]]       [-- Nested list --]
-==&gt;[1,[2,3]]
-mtron&gt; [a=&gt;1, b=&gt;2]      [-- Record (key-value pairs) --]
-==&gt;[a=&gt;1,b=&gt;2]
-mtron&gt; [,]               [-- Empty list --]
-==&gt;[,]
-</code></pre>
-<h4>rec (<code>[key=&gt;val, ...]</code> — unordered, keyed)</h4>
-<pre><code class="language-mtron">mtron&gt; [name=&gt;'marko', age=&gt;29]
-==&gt;[name=&gt;'marko',age=&gt;29]
-mtron&gt; [1=&gt;2, 2=&gt;3, 3=&gt;4]
-==&gt;[1=&gt;2,2=&gt;3,3=&gt;4]
-</code></pre>
-<h4>objs (<code>{ , }</code> — unordered, streamed and bulked)</h4>
-<pre><code class="language-mtron">mtron&gt; {1,2,3} [-- equivalent to {2,1,3} (unordered) --]
-==&gt;1
-==&gt;2
-==&gt;3
-mtron&gt; {1,1,2} [-- becomes {{2}1,2} (duplicates merged on coefficient) --]
-==&gt;{2}1
-==&gt;2
-</code></pre>
-<h4>Indexing / Access</h4>
-<pre><code class="language-mtron">mtron&gt; [1,2,3]&gt;&gt;0
-==&gt;1
-mtron&gt; [a=&gt;1,b=&gt;2]&gt;&gt;a
-==&gt;1
-mtron&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[e=&gt;4]]]&gt;&gt;a/b
-mtron&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[e=&gt;4]]]&gt;&gt;a/b/d
-mtron&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[e=&gt;4]]]&gt;&gt;a/b/d/e
-</code></pre>
-<h4>Rel (relation) — key/value pair</h4>
-<pre><code class="language-mtron">mtron&gt; name=&gt;'marko'
-==&gt;name=&gt;'marko'
-mtron&gt; name=&gt;'marko'=&gt;age=&gt;29
-==&gt;name=&gt;('marko'=&gt;(age=&gt;29))
-mtron&gt; name=&gt;'marko'=&gt;age=&gt;29.&gt;&gt;.&gt;&gt;.&gt;&gt;
-==&gt;29
-</code></pre>
-<p>Objs can carry a <strong>vid</strong> (address URI) via <code>@</code>:</p>
-<pre><code class="language-mtron">mtron&gt; [a=&gt;1]@a                 [-- rec anchored at uri myVid --]
-==&gt;[a=&gt;1]@a
-mtron&gt; [1,2,3,4]@b              [-- lst anchored at *a --]
-==&gt;[1,2,3,4]@b
-mtron&gt; *a + [b=&gt;2]
-==&gt;[a=&gt;1,b=&gt;2]
-mtron&gt; *a
-==&gt;[a=&gt;1]
-mtron&gt; @b + [5,6]
-==&gt;[1,2,3,4,5,6,5,6]@b
-mtron&gt; *b
-==&gt;[1,2,3,4,5,6,5,6]
-</code></pre>
-<hr />
-<h3>3. Coefficients (count / multiplicity)</h3>
-<p>Every obj has a coefficient. Shorthand is <code>{n}obj</code> -- standing for <code>type{n}::obj</code>:</p>
-<pre><code class="language-mtron">mtron&gt; 3                      [-- coefficient {1} (default) --]
-==&gt;3
-mtron&gt; {0}3                   [-- equivalent to noobj (0 3s) --]
-mtron&gt; int{5}::3              [-- coefficient {5} represents 5 3s --]
-==&gt;{5}3
-mtron&gt; {5}3                   [-- shorthand for the previous example (5 3s) --]
-==&gt;{5}3
-mtron&gt; {1,2,3}.sum{2}()       [-- two parallel sums yields {2}6 --]
-==&gt;{2}6
-mtron&gt; {1,2,3}.sum{2}().sum() [-- {2}6 merged by sum is 12 --]
-==&gt;12
-</code></pre>
-<p>Coefficients propagate through arithmetic and affect count, sum, repeat:</p>
-<pre><code class="language-mtron">mtron&gt; {1,2,3}.count()               [-- 3  (sum of coefficients) --]
-==&gt;3
-mtron&gt; {1,2,{10}3}.count()           [-- 13  (sum of coefficients) --]
-==&gt;12
-mtron&gt; int{50}::10.mult(10)          [-- int{50}::100 (coefficient account for) --]
-==&gt;{50}100
-mtron&gt; {int{2}::1,int{3}::2}.sum()   [-- int::8 (coefficients account for) --]
-==&gt;8
-</code></pre>
-<hr />
-<h3>4. Arithmetic &amp; Logic</h3>
-<pre><code class="language-mtron">mtron&gt; 1.plus(2)                      [-- 3 --]
-==&gt;3
-mtron&gt; 1.plus(_)                      [-- 2  (underscore is the identity function = lhs) --]
-==&gt;2
-mtron&gt; 1 + 2                          [-- sugar stynax for previous --]
-==&gt;3
-mtron&gt; {1,2,3}.plus(2)                [-- {3,4,5} (applied to each obj in the stream) --]
-==&gt;3
-==&gt;4
-==&gt;5
-mtron&gt; {1,2,3}.mult(10)               [-- {10,20,30} --]
-==&gt;10
-==&gt;20
-==&gt;30
-mtron&gt; 1.plus(1.plus(1))              [-- 3  (nested) --]
-==&gt;3
-mtron&gt; {1,2,3,4}.prod()               [-- 24 --]
-==&gt;24
-mtron&gt; {1,2,3}.sum()                  [-- 6 --]
-==&gt;6
-mtron&gt; {1,2,3,4,5}.reduce(|plus(0))   [-- 15 (| necessary to block evaluation) --]
-==&gt;15
-</code></pre>
-<p><strong>Short-circuit:</strong> <code>_</code> (underscore) is the identity function — returns the unmodified lhs:</p>
-<pre><code class="language-mtron">mtron&gt; 1.plus(_)                   [-- 2 --]
-==&gt;2
-mtron&gt; {1,2,3}.map(_).plus(2)      [-- {3,4,5} --]
-==&gt;3
-==&gt;4
-==&gt;5
-</code></pre>
-<p><strong>Compound ops:</strong> <code>?inst&lt;=type(body)</code> for inline insts (lambdas):</p>
-<pre><code class="language-mtron">mtron&gt; {1,2,3}.inst?int&lt;=int(a=&gt;plus(2)){ plus(*a) }     [-- {4,8,18} --]
-==&gt;4
-==&gt;6
-==&gt;8
-</code></pre>
-<h4>Boolean logic</h4>
-<pre><code class="language-mtron">mtron&gt; 3.is(gt(2))                 [-- 3  (filters: passes lhs through if true, noobj if false) --]
-==&gt;3
-mtron&gt; 3.is(true)                  [-- 3 --]
-==&gt;3
-mtron&gt; {1,2,3,4,5}.is(gt(2))       [-- {3,4,5} --]
-==&gt;3
-==&gt;4
-==&gt;5
-mtron&gt; {1,2,3,4,5}.is(and(gt(2),lt(5)))   [-- {3,4} --]
-==&gt;3
-==&gt;4
-mtron&gt; 1.and(gt(2),lt(5))          [-- false --]
-==&gt;false
-</code></pre>
-<hr />
-<h3>5. String Operations</h3>
-<pre><code class="language-mtron">mtron&gt; &quot;goodbye&quot;.plus(&quot; nowhere&quot;)    [-- &quot;goodbye nowhere&quot; --]
-==&gt;'goodbye nowhere'
-mtron&gt; &quot;goodbye&quot; + &quot; nowhere&quot;        [-- sugar sytnax for previous --]
-==&gt;'goodbye nowhere'
-mtron&gt; 'a b c'.split(' ')            [-- [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;] --]
-==&gt;['a','b','c']
-mtron&gt; 'a b c'-&lt;' '                  [-- sugar syntax for previous --]
-==&gt;['a','b','c']
-mtron&gt; {&quot;a&quot;,&quot;b&quot;,&quot;c&quot;}&gt;-' '            [-- &quot;a b c&quot;  (merge with separator) --]
-==&gt;'a b c'
-mtron&gt; 'ab3cd'.regex('\d+')          [-- ['3'] --]
-==&gt;['3']
-mtron&gt; 'ab3cd'.regex('\d{2}')        [-- [,]  (no match — empty pair) --]
-==&gt;[,]
-</code></pre>
-<hr />
-<h3>6. URI Dereferencing (<code>*</code> — <code>from()</code>)</h3>
-<p><code>*</code> dereferences a uri to its referent in space:
-<code>@</code> anchors a uri to its referent in space</p>
-<pre><code class="language-mtron">*/path/to/obj              [-- read obj at uri (detached) --]
-@/path/to/obj              [-- real obj at uri (attached) --]
-*local:software/           [-- read with trailing --]
-*&lt;/pa.th/to/o b .j&gt;        [-- angle-bracket handles special chars --]
-</code></pre>
-<p>Wildcards:</p>
-<pre><code class="language-mtron">*/path/+/obj               [-- + matches one segment --]
-*/path/+/+                 [-- ++, children at depth 2 --]
-*/path/#                   [-- matches all remaining segments (recursive) --]
-</code></pre>
-<p><strong>uri::T</strong> type drives URI-specific operations:</p>
-<pre><code class="language-mtron">mtron&gt; http://abc:123/a/b/c.as(rec::T)&gt;&gt;scheme        [-- http --]
-==&gt;http
-mtron&gt; http://abc:123/a/b/c.as(rec::T)&gt;&gt;host          [-- abc --]
-==&gt;abc
-mtron&gt; http://abc:123/a/b/c.as(rec::T)&gt;&gt;port          [-- 123 (noobj if no port) --]
-==&gt;123
-mtron&gt; http://abc:123/a/b/c.as(rec::T)&gt;&gt;authority     [-- abc:123 --]
-==&gt;abc:123
-mtron&gt; http://abc:123/a/b/c.as(rec::T)&gt;&gt;{schema,path} [-- {http,/a/b/c} --]
-==&gt;[&lt;&gt;,a,b,c]
-</code></pre>
-<hr />
-<h3>7. Type Casting (<code>.as(type::T)</code>)</h3>
-<pre><code class="language-mtron">mtron&gt; 1.as(str::T)              [-- &quot;1&quot; --]
-==&gt;'1'
-mtron&gt; 1.0.as(int::T)            [-- 1 --]
-==&gt;1
-mtron&gt; &quot;abc&quot;.as(bytes::T)        [-- 0x616263 --]
-==&gt;0x616263
-mtron&gt; &quot;/a/b/c&quot;.as(uri::T)       [-- /a/b/c --]
-==&gt;/a/b/c
-mtron&gt; true.as(int::T)           [-- 1 --]
-==&gt;1
-mtron&gt; [a=&gt;1,b=&gt;2].as(lst::T)    [-- [(0=&gt;(a=&gt;1)),(1=&gt;(b=&gt;2))] --]
-==&gt;[0=&gt;a=&gt;1,1=&gt;b=&gt;2]
-mtron&gt; [a,b].as(rec::T)          [-- [0=&gt;a,1=&gt;b] --]
-==&gt;[0=&gt;a,1=&gt;b]
-</code></pre>
-<p>Custom types via <code>tid::T[predicate][constructor]@vid</code>:</p>
-<pre><code class="language-mtron">mtron&gt; int::T[is(gt(0))]@nat     [-- type nat, only positive ints --]
-==&gt;int::T[is(gt(0))]@/m/math/nat
-mtron&gt; int::T[?&gt;0]@nat           [-- syntax sugar on is(gt(0)) --]
-==&gt;int::T[is(gt(0))]@/m/math/nat
-mtron&gt; nat::2                    [-- ok --]
-==&gt;nat::2
-mtron&gt; nat::-1                   [-- &lt;ERROR&gt; --]
-==&gt;ERROR: -1 is not a int::T[is(gt(0))]@/m/math/nat
-</code></pre>
-<hr />
-<h3>8. Mapping &amp; Filtering</h3>
-<pre><code class="language-mtron">mtron&gt; {1,2,3,4}.map(+2)                [-- {3,4,5,6} --]
-==&gt;3
-==&gt;4
-==&gt;5
-==&gt;6
-mtron&gt; {1,2,3,4}.map(_).plus(2)         [-- same --]
-==&gt;3
-==&gt;4
-==&gt;5
-==&gt;6
-mtron&gt; {1,2,3,4}.map(map(+2))           [-- nested --]
-==&gt;3
-==&gt;4
-==&gt;5
-==&gt;6
-mtron&gt; {1,2,3}.where(gt(1))             [-- {2,3}  (filter: keep if predicate matches) --]
-mtron&gt; {1,2,3}.is(gt(1))                [-- {2,3}  (same, filter via is()) --]
-==&gt;2
-==&gt;3
-</code></pre>
-<h4>Select (structural projection)</h4>
-<pre><code class="language-mtron">mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3].select([_=&gt;_])                            [-- [a=&gt;1,b=&gt;2,c=&gt;3] --]
-==&gt;[a=&gt;1,b=&gt;2,c=&gt;3]
-mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[_=&gt;_]                                   [-- syntax sugar for above --]
-==&gt;[a=&gt;1,b=&gt;2,c=&gt;3]
-mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[a=&gt;_]                                   [-- [a=&gt;1] --]
-==&gt;[a=&gt;1]
-mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[a=&gt;+10]                                 [-- [a=&gt;11] --]
-==&gt;[a=&gt;11]
-mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}==[a=&gt;?&gt;=2.+10]                      [-- {[a=&gt;12],[a=&gt;13]} --]
-==&gt;[a=&gt;12]
-==&gt;[a=&gt;13]
-mtron&gt; [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3] --]
-==&gt;[1,7,3]
-</code></pre>
-<h4>Where (filter)</h4>
-<pre><code class="language-mtron">mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}.where([a=&gt;is(gt(1))])               [-- {[a=&gt;2],[a=&gt;3]} --]
-==&gt;[a=&gt;2]
-==&gt;[a=&gt;3]
-mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}=?=[a=&gt;is(gt(1))]                    [-- syntax sugar for above --]
-==&gt;[a=&gt;2]
-==&gt;[a=&gt;3]
-mtron&gt; [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   [-- [1,7,3] --]
-==&gt;[1,7,3]
-</code></pre>
-<hr />
-<h3>9. Grouping</h3>
-<pre><code class="language-mtron">mtron&gt; {1,2,3}.group([_=&gt;+10])                [-- [1=&gt;11, 2=&gt;12, 3=&gt;13] --]
-==&gt;[1=&gt;11,2=&gt;12,3=&gt;13]
-mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3].group([_=&gt;_])          [-- [[a=&gt;1,b=&gt;2,c=&gt;3]=&gt;[a=&gt;1,b=&gt;2,c=&gt;3]] --]
-==&gt;[[a=&gt;1,b=&gt;2,c=&gt;3]=&gt;[a=&gt;1,b=&gt;2,c=&gt;3]]
-</code></pre>
-<hr />
-<h3>10. Merging &amp; Splitting</h3>
-<h4>Merge (<code>&gt;-</code>)</h4>
-<p>Unwraps collections: <code>{1,2,3}&gt;-</code>   # {1,2,3} (flattens coefficient barriers)</p>
-<pre><code class="language-mtron">mtron&gt; {1,2,3}&gt;-                            [-- {1,2,3} --]
-==&gt;1
-==&gt;2
-==&gt;3
-mtron&gt; [1=&gt;2,2=&gt;3,3=&gt;4]&gt;-                  [-- {1=&gt;2,2=&gt;3,3=&gt;4} --]
-==&gt;1=&gt;2
-==&gt;2=&gt;3
-==&gt;3=&gt;4
-mtron&gt; {1,2}&gt;-[3,4]                         [-- [1,2,3,4] --]
-==&gt;[1,2,3,4]
-mtron&gt; {1,2,3}&gt;-1                           [-- {1,1,2,3} --]
-==&gt;{2}1
-==&gt;2
-==&gt;3
-mtron&gt; [a=&gt;1,b=&gt;2]&gt;-.&gt;-[b=&gt;2]              [-- [a=&gt;1,b=&gt;2]  (merge into existing rec) --]
-==&gt;[a=&gt;1,b=&gt;{2}2]
-</code></pre>
-<h4>Split (<code>-&lt;</code>)</h4>
-<p>Distributes elements:</p>
-<pre><code class="language-mtron">mtron&gt; 1-&lt;[_,_]                            [-- [1,1] --]
-==&gt;[1,1]
-mtron&gt; {1,2,3}-&lt;[plus(1),plus(2)]          [-- {2,3,4,5} --]
-==&gt;[2,3]
-==&gt;[3,4]
-==&gt;[4,5]
-</code></pre>
-<h4>Conditional branch: <code>-&lt;|[?pred=&gt;a, _=&gt;b]</code></h4>
-<pre><code class="language-mtron">mtron&gt; 1-&lt;|[?&gt;1 =&gt; +100, _=&gt; +2]          [-- {3,102}  (1
-==&gt;1=&gt;3
-mtron&gt; {1,2}-&lt;|[?&gt;1 =&gt; +100, _=&gt; +2]&gt;&gt;    [-- {3,102} --]
-==&gt;3
-==&gt;102
-</code></pre>
-<hr />
-<h3>11. Right-Shift / Left-Shift (<code>&gt;&gt;</code>, <code>&lt;&lt;</code>)</h3>
-<p>Traverse into structures:</p>
-<h4>On lst</h4>
-<pre><code class="language-mtron">mtron&gt; [1,2,[a=&gt;3],4]&lt;&lt;2                  [-- [[a=&gt;3],4] --]
-mtron&gt; [1,2,[a=&gt;3],4]&gt;&gt;2                  [-- [1,2] --]
-==&gt;[a=&gt;3]
-mtron&gt; [1,2,[a=&gt;3],4]&gt;&gt;(-2)               [-- [a=&gt;3] (negative indicies) --]
-==&gt;[a=&gt;3]
-mtron&gt; [1,2,[a=&gt;3],4]&gt;&gt;+                  [-- {1,2,[a=&gt;3],4} (selectors are uris) --]
-==&gt;1
-==&gt;2
-==&gt;[a=&gt;3]
-==&gt;4
-</code></pre>
-<h4>On records</h4>
-<pre><code class="language-mtron">mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;[d=&gt;3]].dom()        [-- {a,b,c}           (extract keys) --]
-==&gt;a
-==&gt;b
-==&gt;c
-mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;[d=&gt;3]].rng()        [-- {1,2,[d=&gt;3]}      (extract values) --]
-==&gt;1
-==&gt;2
-==&gt;[d=&gt;3]
-mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;[d=&gt;[e=&gt;3]]]&gt;&gt;c      [-- [d=&gt;[e=&gt;3]]       (access by key) --]
-==&gt;[d=&gt;[e=&gt;3]]
-mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;[d=&gt;[e=&gt;3]]]&gt;&gt;c/d/e  [-- 3                 (walk nested structure) --]
-==&gt;3
-</code></pre>
-<h4>On URIs</h4>
-<pre><code class="language-mtron">mtron&gt; a/b/c&lt;&lt;                   [-- b/c    (drop leftmost segment) --]
-==&gt;a/b
-mtron&gt; a/b/c&gt;&gt;                   [-- a/b    (drop rightmost segment) --]
-mtron&gt; a/b/c&lt;&lt;1                  [-- b/c --]
-==&gt;a/b
-mtron&gt; a/b/c&gt;&gt;1                  [-- a/b --]
-mtron&gt; a/b/c&lt;&lt;3                  [-- &lt;.&gt;    (empty) --]
-==&gt;&lt;&gt;
-</code></pre>
-<hr />
-<h3>12. Skip / Take</h3>
-<pre><code class="language-mtron">mtron&gt; {1,2,3,4}.take(2)        [-- {1,2} --]
-==&gt;1
-==&gt;2
-mtron&gt; {1,2,3,4}.skip(2)        [-- {3,4} --]
-==&gt;3
-==&gt;4
-mtron&gt; {1,2,3,4,5}.skip(2).take(2)   [-- {3,4} --]
-==&gt;3
-==&gt;4
-</code></pre>
-<hr />
-<h3>13. Barrier (<code>|</code>)</h3>
-<p>Delays evaluation — wraps in a monadic barrier:</p>
-<pre><code class="language-mtron">mtron&gt; |(plus(30)).map(20)      [-- 20   (the barrier is not evaluated by map) --]
-==&gt;20
-mtron&gt; |(plus(30)).swap(20)     [-- 50   (swap applies the barrier's lhs) --]
-==&gt;50
-</code></pre>
-<hr />
-<h3>14. The <code>&gt;&gt;=</code> Update Instruction</h3>
-<p>Modifies a value at a URI address and writes back:</p>
-<pre><code class="language-mtron">mtron&gt; @xyz &gt;&gt;= [a=&gt;+2]                        [-- merge: add 2 to field 'a' at xyz --]
-mtron&gt; @xyz/c/d&gt;&gt;=10                           [-- write 10 to path --]
-mtron&gt; [1,2]@a &gt;&gt;= [_,+4]                      [-- [1,6]@a  (second element +4) --]
-==&gt;[1,6]
-mtron&gt; [a=&gt;1,b=&gt;2] &gt;&gt;= [b=&gt;none]               [-- [a=&gt;1]  (remove field b) --]
-==&gt;[a=&gt;1]
-mtron&gt; @&lt;people/+&gt;.&gt;&gt;= [name=&gt;&quot;Micky Mouse&quot;]   [-- wildcard update --]
-==&gt;[name=&gt;'Micky Mouse',role=&gt;architect]
-==&gt;[name=&gt;'Micky Mouse',role=&gt;developer]
-==&gt;[name=&gt;'Micky Mouse',role=&gt;oracle]
-</code></pre>
-<p><code>@</code> means &quot;anchor the write-back to the VID&quot; (persist).  <code>*</code> means &quot;anonymous copy&quot; (no write-back):</p>
-<pre><code class="language-mtron">mtron&gt; @a/b/c&gt;&gt;= +10      [-- modifies *a/b/c and writes back --]
-mtron&gt; *a/b/c&gt;&gt;= +10      [-- evaluates but discards the result --]
-</code></pre>
-<hr />
-<h3>15. Auto-references (<code>!*</code>, <code>!@</code>)</h3>
-<p>Lazy cross-reference via the Router:</p>
-<pre><code class="language-mtron">mtron&gt; [company=&gt;!*db:companies/101]     [-- auto_from — resolved on access --]
-==&gt;[company=&gt;!*db:companies/101]
-mtron&gt; [company=&gt;!@db:companies/101]     [-- auto_at — resolved on access, with anchor --]
-==&gt;[company=&gt;!@db:companies/101]
-</code></pre>
-<p><code>!*</code> is sugar for <code>auto_from(uri)</code>. When you <code>.at(company)</code> on the record, the Router resolves <code>db:companies/101</code> and
-returns the target Obj.</p>
-<p>Chain through auto-refs:</p>
-<pre><code class="language-mtron">mtron&gt; *a&gt;&gt;x&gt;&gt;x           [-- follows !* chain to the final target --]
-mtron&gt; *a&gt;&gt;x/x            [-- reads a field after resolving the auto-ref --]
-</code></pre>
-<hr />
-<h3>16. Math Instruction</h3>
-<p>Embedded mathematical expressions:</p>
-<pre><code class="language-mtron">mtron&gt; math('1+2')                           [-- 3.0 --]
-==&gt;3.0000
-mtron&gt; 10.to(a).math('a^2')                  [-- 100.0 --]
-==&gt;100.0000
-mtron&gt; 10.to(a).plus(10).to(b).math('a+b')   [-- 30.0 --]
-==&gt;30.0000
-</code></pre>
-<hr />
-<h3>17. URI Path Operations</h3>
-<pre><code class="language-mtron">mtron&gt; a/b/c.split(/)                   [-- [a,b,c] --]
-==&gt;[a,b,c]
-mtron&gt; {a,b,c}&gt;-/                       [-- a/b/c --]
-==&gt;a/b/c
-mtron&gt; a/b/c.split(/).merge(/)           [-- a/b/c --]
-==&gt;a/b/c
-mtron&gt; a/b/c.split(/).merge(/).mult(&lt;.&gt;)  [-- a/b/c  (identity) --]
-==&gt;a/b/c
-</code></pre>
-<hr />
-<h3>18. Failure &amp; Error Handling</h3>
-<pre><code class="language-mtron">mtron&gt; 1.plus('a').catch(34)                    [-- 34 --]
-==&gt;34
-mtron&gt; 1.plus('a').catch(cause().cause())       [-- noobj --]
-mtron&gt; 1.plus(mult(throw('bad'))).catch(34).plus(2)  [-- 36 --]
-==&gt;36
-</code></pre>
-<hr />
-<h3>19. Objs (coefficient collections <code>{ }</code>)</h3>
-<p>Braces create a multi-value Objs collection (coefficient barrier):</p>
-<pre><code class="language-mtron">mtron&gt; {1,2,3}                        [-- three ints --]
-==&gt;1
-==&gt;2
-==&gt;3
-mtron&gt; &gt;-.sum()                       [-- sum flattens the coefficient barrier --]
-==&gt;0
-</code></pre>
-<p>Collections distribute operations:</p>
-<pre><code class="language-mtron">mtron&gt; {1,2,3}.plus(2)                [-- {3,4,5} --]
-==&gt;3
-==&gt;4
-==&gt;5
-mtron&gt; {1,2,3}&gt;-                      [-- unmerge — flattens barriers --]
-==&gt;1
-==&gt;2
-==&gt;3
-</code></pre>
-<hr />
-<h3>20. Type Annotations</h3>
-<p>Inline type predicates:</p>
-<pre><code class="language-mtron">mtron&gt; ?int::T                        [-- test: is this an int? --]
-mtron&gt; ?uri::T                        [-- is this a uri? --]
-mtron&gt; isa(uri::T)                    [-- same, sugar --]
-mtron&gt; ?int{5}::3                     [-- coefficient-aware check --]
-mtron&gt; int{?}::10                     [-- optional coefficient {0,1} --]
-==&gt;{?}10
-</code></pre>
-<p><code>==</code></p>
-<pre><code class="language-mtron">mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[a=&gt;_]     [-- select with pattern match --]
-==&gt;[a=&gt;1]
-mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[a=&gt;is(gt(1))]  [-- select with filter --]
-</code></pre>
-<hr />
-<h3>21. Pattern Matching (<code>?=</code> prefix)</h3>
-<pre><code class="language-mtron">mtron&gt; ?=1        [-- check if equal to 1 --]
-mtron&gt; ?&gt;1        [-- check if greater than 1 --]
-mtron&gt; ?&lt;5        [-- check if less than 5 --]
-mtron&gt; ?int::T    [-- check if type is int --]
-</code></pre>
-<hr />
-<h3>22. Sugar &amp; Syntax Summary</h3>
+<h3>the space these examples use</h3>
+<p>The docs runner is <strong>headless</strong>: no terminal, no console. Everything below that <em>renders</em> is <code>mtron_pre</code>
+— evaluated on every docs build, so it cannot drift from the code — while a block that would <em>float</em> a
+widget on a terminal is shown as a plain <code>mtron</code> block, because there is nothing to float it on here. The
+widget recs live at <code>/usr/uidoc/#</code>; the last block in this doc leaves the graph as it found it.</p>
+<h3>types</h3>
 <table>
 <thead>
-<tr><th>Sugar</th><th>Expansion</th><th>Use</th></tr>
+<tr><th>type</th><th>vid</th><th>tid</th><th>meaning</th></tr>
 </thead>
 <tbody>
-<tr><td><code>*uri</code></td><td><code>from(uri)</code></td><td>Dereference URI</td></tr>
-<tr><td><code>!*uri</code></td><td><code>auto_from(uri)</code></td><td>Lazy cross-ref</td></tr>
-<tr><td><code>@uri</code></td><td><code>at(uri)</code></td><td>Anchor to URI location</td></tr>
-<tr><td><code>_</code></td><td><code>id()</code></td><td>Identity function</td></tr>
-<tr><td><code>&gt;&gt;=</code></td><td><code>update()</code></td><td>Update-and-write-back</td></tr>
-<tr><td><code>&gt;&gt;</code></td><td><code>rshift()</code></td><td>Right-shift (drop last)</td></tr>
-<tr><td><code>&lt;&lt;</code></td><td><code>lshift()</code></td><td>Left-shift (drop first)</td></tr>
-<tr><td><code>&gt;-</code></td><td><code>merge()</code></td><td>Flatten / merge barrier</td></tr>
-<tr><td><code>-&lt;</code></td><td><code>split()</code></td><td>Distribute into branches</td></tr>
-<tr><td><code>\|</code></td><td><code>barrier()</code></td><td>Monadic barrier</td></tr>
-<tr><td><code>_/...\\_</code></td><td><code>within()</code></td><td>Structural within-block</td></tr>
-<tr><td><code>.</code></td><td><code>.plus(1)</code></td><td>Dot-instruction call</td></tr>
-<tr><td><code>=&gt;</code></td><td><code>rel()</code></td><td>Key → value relation</td></tr>
-<tr><td><code>-&gt;</code></td><td><code>ref()</code></td><td>Write to URI reference</td></tr>
-<tr><td><code>;</code></td><td><code>end()</code></td><td>Sequence separator</td></tr>
-<tr><td><code>?pred</code></td><td><code>is(pred)</code></td><td>Type/condition check</td></tr>
-<tr><td><code>==</code></td><td><code>select()</code></td><td>Structural select</td></tr>
-<tr><td><code>=?=</code></td><td><code>where()</code></td><td>Filter after select</td></tr>
+<tr><td><code>widget::T</code></td><td><code>/m/mach/ui/widget</code></td><td><code>rec::T</code></td><td>the widget base — every widget is a rec, and isa this</td></tr>
+<tr><td><code>style::T</code></td><td><code>/m/mach/ui/style</code></td><td><code>rec::T</code></td><td>how a widget looks and where it hangs from (see <em>style</em>)</td></tr>
+<tr><td><code>anchor::T</code></td><td><code>/m/mach/ui/anchor</code></td><td><code>uri::T</code></td><td><code>top_left</code>, <code>top_middle</code>, <code>top_right</code>, <code>middle</code>, <code>bottom_*</code></td></tr>
+<tr><td><code>console::T</code></td><td><code>/m/mach/ui/console</code></td><td><code>rec::T</code></td><td>the terminal: panes, the prompt, and the surface widgets float on</td></tr>
 </tbody>
 </table>
-<hr />
-<h3>23. Expression Evaluation Model</h3>
-<ol>
-<li><strong>Left-to-right chaining:</strong> <code>lhs.inst(rhs)</code> — <code>inst</code> receives <code>lhs</code> and <code>rhs</code></li>
-<li><strong>Coefficient propagation:</strong> ops distribute over collections; result coefficients combine</li>
-<li><strong>Space reads:</strong> <code>*uri</code> fetches from the graph; <code>!*uri</code> fetches lazily on <code>.at()</code></li>
-<li><strong>Write-back:</strong> <code>@</code>-prefixed writes persist through <code>&gt;&gt;=</code> back to space</li>
-<li><strong>No mutation of existing objects</strong> — operations create new Objs (immutable)</li>
-</ol>
-<pre><code class="language-mtron">mtron&gt; [-- Chaining example (read test data from test file): --]
-mtron&gt; {1,2,3,4}.sum{2}().sum?int&lt;=int{1,7}().sum()-&lt;[_,_]&gt;-.sum?int&lt;=int{2}()  #
-==&gt;ERROR: monad obj coefficient is greater than inst dom coefficient:
-	40 [{1} X=&gt; {0}] start?rng=A{**}&amp;dom=noobj{0}(&lt;#&gt;){&lt;j&gt;}@&lt;6&gt;
+<p>A widget type declares <strong>the keys its widget reads</strong> and carries the ctor that builds it, which makes the
+type readable as the contract:</p>
+<pre><code class="language-mtron">mtron&gt; */m/mach/ui/widget/panel_widget       [-- title and body, both optional; ctor?panel_widget&lt;=#{?} --]
+==&gt;widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?panel_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/panel_widget
+mtron&gt; */m/mach/ui/widget/tree_widget        [-- root and max required; code/flatten/xref/expand optional --]
+==&gt;widget::T[?[
+     root=&gt;uri::T,
+     max=&gt;int::T,
+     {?}code=&gt;#::T,
+     {?}flatten=&gt;bool::T,
+     {?}xref=&gt;rec::T,
+     {?}expand=&gt;uri{*}::T]][ctor?tree_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/tree_widget
 </code></pre>
+<p><code>*/m/mach/ui/widget?docq</code> is the catalog — one entry per widget type, each with its args, its dom/rng and
+its own example. It is the fastest way to answer &quot;what can I put in this thing&quot;, and it is generated from
+the same declarations the type checker uses:</p>
+<pre><code class="language-mtron">mtron&gt; */m/mach/ui/widget?docq
+==&gt;docs::[ obj=&gt;widget::T,
+    args=&gt;[{?}style=&gt;'the style specification for the widget'],
+    desc=&gt;'[structural] the base widget type',
+    accordion_widget=&gt;docs::[
+     obj=&gt;accordion_widget::T,
+     dom=&gt;'maybe an obj',
+     rng=&gt;'an accordion obj',
+     args=&gt;[{?}title=&gt;'the title of the accordion',{?}body=&gt;'the body content of the accordion'],
+     desc=&gt;'[structural] an expandable/collapsible accordion widget'],
+    progress_table_widget=&gt;docs::[
+     obj=&gt;progress_table_widget::T,
+     desc=&gt;'[structural] a table of progress bars',
+     example=&gt;[&quot;progress_table::[row=&gt;[[text=&gt;'layer1',percent=&gt;58.0],[text...&quot;]],
+    table_widget=&gt;docs::[
+     obj=&gt;table_widget::T,
+     dom=&gt;'maybe an obj',
+     rng=&gt;'a table widget',
+     args=&gt;[{?}metadata=&gt;'a lst of rows of data behind the display',{?}row=&gt;'a lst of poly table rows',{?}header=&gt;'a lst of obj table headers'],
+     desc=&gt;'[structural] a tabular data widget'],
+    tree_widget=&gt;docs::[
+     obj=&gt;tree_widget::T,
+     dom=&gt;'maybe an obj',
+     rng=&gt;'a tree widget',
+     args=&gt;[{?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration',{?}expand=&gt;'branch uris whose children are read regardless of max',{?}code=&gt;'transform obj prior to insertion into tree (default _)',root=&gt;'the root uri to traverse from',{?}flatten=&gt;'fold single-folder chains into one path row (default false)',max=&gt;'the max depth to traverse'],
+     desc=&gt;'[structural] the root uri space is traversed to specified d...'],
+    selector_widget=&gt;docs::[
+     obj=&gt;selector_widget::T,
+     dom=&gt;'maybe an obj',
+     rng=&gt;'a selector widget',
+     desc=&gt;'[structural] an interactive item selector widget'],
+    panel_widget=&gt;docs::[
+     obj=&gt;panel_widget{*}::T,
+     dom=&gt;'rec',
+     rng=&gt;'panel',
+     args=&gt;[
+      title=&gt;'the title of the panel',
+      body=&gt;'the body content of the panel'],
+     desc=&gt;'[structural] a simple bordered UI panel widget'],
+    label_line_widget=&gt;docs::[
+     obj=&gt;label_line_widget::T,
+     dom=&gt;'maybe an obj',
+     rng=&gt;'a label line widget',
+     args=&gt;[body=&gt;'the text body displayed on the label'],
+     desc=&gt;'[structural] a single-line text label widget'],
+    ...(4 more)]
+</code></pre>
+<table>
+<thead>
+<tr><th>widget type</th><th>keys it reads</th></tr>
+</thead>
+<tbody>
+<tr><td><code>accordion_widget::T</code></td><td><code>title</code>, <code>body</code></td></tr>
+<tr><td><code>panel_widget::T</code></td><td><code>title</code>, <code>body</code></td></tr>
+<tr><td><code>table_widget::T</code></td><td><code>header</code>, <code>row</code>, <code>metadata</code> (rows of data behind the display)</td></tr>
+<tr><td><code>tree_widget::T</code></td><td><code>root</code>, <code>max</code>, <code>code</code>, <code>flatten</code>, <code>xref</code>, <code>expand</code></td></tr>
+<tr><td><code>progress_table_widget::T</code></td><td><code>header</code>, <code>row</code></td></tr>
+<tr><td><code>label_line_widget::T</code></td><td><code>body</code>, <code>key</code>, <code>on_key</code></td></tr>
+<tr><td><code>menu_bar_widget::T</code></td><td><code>height</code>, <code>lines</code></td></tr>
+<tr><td><code>modal_widget::T</code></td><td><code>title</code>, <code>body</code></td></tr>
+<tr><td><code>swipe_panel_widget::T</code></td><td><code>obj</code></td></tr>
+<tr><td><code>tree_select_widget::T</code></td><td><code>root</code>, <code>max</code>, <code>on_select</code>, <code>label</code></td></tr>
+<tr><td><code>selector_widget::T</code></td><td><em>(none of its own — it works the rec it is handed)</em></td></tr>
+</tbody>
+</table>
+<p>A widget also answers to more than the keys its type declares: a store-backed accordion grows <code>expand</code>,
+<code>toggle</code>, <code>append</code> and <code>collapse</code> — <strong>insts latched into its rec</strong> when it is constructed. That is its API,
+and it is readable as data:</p>
+<pre><code class="language-mtron">mtron&gt; accordion_widget::[title=&gt;'notes',
+                          body=&gt;&quot;l01\nl02\nl03&quot;]@/usr/uidoc/notes
+==&gt;accordion_widget::[
+    title=&gt;'notes',
+    body=&gt;'l01
+l02
+l03',
+    style=&gt;style::[
+     border=&gt;┌;┐;└;┘;│;│;─;─;┬;┴;├;┤,
+     foreground=&gt;'']]@/usr/uidoc/notes
+mtron&gt; @/usr/uidoc/notes &gt;&gt;= [body=&gt;&quot;l01\nl02\nl03\nl04&quot;]              [-- the update carries the insts with it --]
+==&gt;accordion_widget::[
+    style=&gt;style::[
+     border=&gt;┌;┐;└;┘;│;│;─;─;┬;┴;├;┤,
+     foreground=&gt;''],
+    body=&gt;'l01
+l02
+l03
+l04',
+    title=&gt;'notes']
+mtron&gt; */usr/uidoc/notes                                               [-- the widget, as the rec it is --]
+==&gt;accordion_widget::[
+    style=&gt;style::[
+     border=&gt;┌;┐;└;┘;│;│;─;─;┬;┴;├;┤,
+     foreground=&gt;''],
+    body=&gt;'l01
+l02
+l03
+l04',
+    title=&gt;'notes']
+</code></pre>
+<h3>a widget is a rec — state lives in the map</h3>
+<p>Construct it, anchor it, read it back: the map <em>is</em> the widget, and the space is the map when it has a vid.
+Nothing about it is Java-side, which is why an mtron write is a first-class way to change a widget the
+console is showing:</p>
+<pre><code class="language-mtron">mtron&gt; panel_widget::[title=&gt;'note',body=&gt;&quot;alpha\nbeta&quot;]@/usr/uidoc/panel
+==&gt;panel_widget::[
+    title=&gt;'note',
+    body=&gt;'alpha
+beta',
+    style=&gt;style::[border=&gt;┌;┐;└;┘;│;│;─;─;┬;┴;├;┤]]@/usr/uidoc/panel
+mtron&gt; */usr/uidoc/panel/title                [-- one key --]
+==&gt;'note'
+mtron&gt; */usr/uidoc/panel/body                 [-- another --]
+==&gt;'alpha\nbeta'
+</code></pre>
+<p>The style is a key like any other, so a widget's look is set by writing one:</p>
+<pre><code class="language-mtron">mtron&gt; @/usr/uidoc/panel &gt;&gt;= [style=&gt;[anchor=&gt;top_left,width=&gt;20,foreground=&gt;'']]
+==&gt;panel_widget::[
+    title=&gt;'note',
+    body=&gt;'alpha
+beta',
+    style=&gt;style::[border=&gt;┌;┐;└;┘;│;│;─;─;┬;┴;├;┤]]
+mtron&gt; */usr/uidoc/panel/style
+==&gt;style::[border=&gt;┌;┐;└;┘;│;│;─;─;┬;┴;├;┤]
+</code></pre>
+<h3>rendering a widget inline</h3>
+<p>A widget renders wherever a str fits, by casting it through the widget's own <code>as</code> inst:</p>
+<pre><code class="language-mtron">mtron&gt; panel_widget::[title=&gt;'note',body=&gt;&quot;alpha\nbeta\ngamma&quot;].as?str&lt;=widget(str::T)
+==&gt;&quot;&quot;&quot;
+   ┌note─┐
+   │alpha│
+   │beta │
+   │gamma│
+   └─────┘
+   
+   &quot;&quot;&quot;
+</code></pre>
+<p><strong><code>as(str::T)</code> is not this.</strong> A widget <em>is</em> a rec, so the plain cast resolves to the rec-to-str
+conversion and prints the fields:</p>
+<pre><code class="language-mtron">mtron&gt; panel_widget::[title=&gt;'note',body=&gt;'alpha'].as(str::T)     [-- the rec, quoted: not the render --]
+==&gt;&quot;{title='note', body='alpha', style=style::[border=&gt;┌;┐;└;┘;│;│;─;─;┬;┴;├;┤]}&quot;
+</code></pre>
+<p>The explicit dom (<code>as?str&lt;=widget(str::T)</code>) is what selects the widget's own rendering, and a widget read
+back out of the space renders the same way — from the <em>anchor</em>, not the clone:</p>
+<pre><code class="language-mtron">mtron&gt; @/usr/uidoc/panel.as?str&lt;=widget(str::T)
+==&gt;&quot;&quot;&quot;
+   ┌note─┐
+   │alpha│
+   │beta │
+   └─────┘
+   
+   &quot;&quot;&quot;
+</code></pre>
+<h4>the gallery</h4>
+<pre><code class="language-mtron">mtron&gt; panel_widget::[title=&gt;'note',body=&gt;&quot;alpha\nbeta\ngamma&quot;].as?str&lt;=widget(str::T)
+==&gt;&quot;&quot;&quot;
+   ┌note─┐
+   │alpha│
+   │beta │
+   │gamma│
+   └─────┘
+   
+   &quot;&quot;&quot;
+mtron&gt; accordion_widget::[title=&gt;'notes',body=&gt;&quot;l01\nl02\nl03&quot;].as?str&lt;=widget(str::T)
+==&gt;&quot;&quot;&quot;
+   ┌ notes [-] ┐
+   │ l01       │
+   │ l02       │
+   │ l03       │
+   └───────────┘
+   &quot;&quot;&quot;
+</code></pre>
+<pre><code class="language-mtron">mtron&gt; table_widget::[header=&gt;['name','qty'],row=&gt;[['alpha','3'],['beta','12']]].as?str&lt;=widget(str::T)
+==&gt;&quot;&quot;&quot;
+               
+    name  qty  
+    alpha 3    
+    beta  12   
+               
+   &quot;&quot;&quot;
+</code></pre>
+<pre><code class="language-mtron">mtron&gt; tree_widget::[root=&gt;/m/mach/ui, max=&gt;1].as?str&lt;=widget(str::T)
+==&gt;&quot;&quot;&quot;
+   ui
+   ├─ anchor
+   ├─ console
+   ├─ style
+   └─ widget
+   &quot;&quot;&quot;
+</code></pre>
+<pre><code class="language-mtron">mtron&gt; menu_bar_widget::[height=&gt;1,lines=&gt;[label_line_widget::[body=&gt;'File'],label_line_widget::[body=&gt;'Edit']]].as?str&lt;=widget(str::T)
+==&gt;&quot;&quot;&quot;
+   File  Edit
+   &quot;&quot;&quot;
+mtron&gt; label_line_widget::[body=&gt;'a label line'].as?str&lt;=widget(str::T)
+==&gt;&quot;&quot;&quot;
+   a label line
+   &quot;&quot;&quot;
+</code></pre>
+<h3>style</h3>
+<p><code>style::T</code> is a rec of presentation keys. The ones that change what you see:</p>
+<table>
+<thead>
+<tr><th>key</th><th>type</th><th>meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>border</code></td><td><code>uri::T</code></td><td><code>border::continuous</code>, <code>border::rounded</code>, <code>border::none</code>, …</td></tr>
+<tr><td><code>foreground</code></td><td><code>str::T</code></td><td>a graphitty color, e.g. <code>'{{c}}'</code>; <code>background</code> likewise, plus <code>divider</code>, <code>headerDivider</code>, <code>pointer</code></td></tr>
+<tr><td><code>width</code></td><td><code>int::T</code></td><td>the column width: a panel wraps its body to it</td></tr>
+<tr><td><code>height</code></td><td><code>int::T</code></td><td>the row <strong>cap</strong>: the surface clips the viewport to it (see the caveat below)</td></tr>
+<tr><td><code>anchor</code></td><td><code>uri::T</code></td><td>which corner/edge the widget hangs from</td></tr>
+<tr><td><code>top</code>, <code>left</code></td><td><code>int::T</code></td><td>offsets <strong>from that anchor</strong> — what a drag writes</td></tr>
+<tr><td><code>zIndex</code></td><td><code>int::T</code></td><td>paint order when floats overlap</td></tr>
+<tr><td><code>scroll</code>, <code>scrollX</code>, <code>scrollY</code></td><td> </td><td>the viewport a widget over its own content starts at</td></tr>
+</tbody>
+</table>
+<p>Width is a rendering instruction — it is the widget's own format that wraps:</p>
+<pre><code class="language-mtron">mtron&gt; panel_widget::[title=&gt;'note',body=&gt;'alpha beta gamma delta epsilon zeta',style=&gt;[width=&gt;24]].as?str&lt;=widget(str::T)
+==&gt;&quot;&quot;&quot;
+   ┌note──────────────────┐
+   │alpha beta gamma delta│
+   │epsilon zeta          │
+   └──────────────────────┘
+   
+   &quot;&quot;&quot;
+</code></pre>
+<p>Height is a <strong>viewport</strong> instruction: <code>format()</code> draws the whole body and the surface shows a window of
+it, so a height cap in a plain render changes nothing (the same render with the cap draws every line):</p>
+<pre><code class="language-mtron">mtron&gt; panel_widget::[title=&gt;'note',body=&gt;&quot;l01\nl02\nl03\nl04\nl05&quot;,style=&gt;[height=&gt;3,width=&gt;18]].as?str&lt;=widget(str::T)
+==&gt;&quot;&quot;&quot;
+   ┌note┐
+   │l01 │
+   │l02 │
+   │l03 │
+   │l04 │
+   │l05 │
+   └────┘
+   ...
+</code></pre>
+<h3>anchoring, and the pointer</h3>
+<p>An anchored widget (<code>style =&gt; [anchor=&gt;…]</code>) is pinned to a corner and then offset from it. Which cell that
+lands on is arithmetic the surface does on every render, from the terminal's size and the widget's own
+height and width:</p>
+<table>
+<thead>
+<tr><th>anchor family</th><th>row</th><th>column</th></tr>
+</thead>
+<tbody>
+<tr><td><code>top_*</code></td><td><code>2 + top</code></td><td><code>1 + left</code> (left), centred <code>+ left</code> (middle), <code>termW - w + 1 + left</code> (right)</td></tr>
+<tr><td><code>middle</code></td><td><code>(termH - h)/2 + 1 + top</code></td><td>as above</td></tr>
+<tr><td><code>bottom_*</code></td><td><code>termH - h + 1 - top</code></td><td>as above</td></tr>
+</tbody>
+</table>
+<p>The sign in the <code>top</code> row is the whole reason a drag is a translation: a <strong>bottom</strong> anchor measures <em>up</em>
+from the bottom edge, so growing a bottom-anchored widget pushes its top edge up while a top-anchored one
+pushes its bottom edge down. <code>left</code> is <code>+ left</code> for every column anchor, which is why one horizontal
+offset works for all of them.</p>
+<p>The pointer works the two corners of a focused widget:</p>
+<table>
+<thead>
+<tr><th>gesture</th><th>effect</th></tr>
+</thead>
+<tbody>
+<tr><td>click a widget</td><td>focus it — and only the focused widget shows its handles</td></tr>
+<tr><td>press the <strong>chevron</strong> (<code>▶</code>, its top-left cell) and drag</td><td>move it: the corner you grabbed <em>is</em> the widget's origin, so it lands where the pointer is</td></tr>
+<tr><td>press the <strong>corner marker</strong> (<code>◢</code>, its bottom-right cell) and drag</td><td>reshape it: a width/height delta from the press, floored (10×3, so a resize cannot demolish a widget) and capped at the terminal</td></tr>
+<tr><td>release</td><td><strong>park it</strong>: the position (or the size) is written into <code>style</code>, so it survives the next <code>.display()</code></td></tr>
+<tr><td>click empty terminal</td><td>drop the focus and hand the mouse back to the terminal</td></tr>
+</tbody>
+</table>
+<p>While the pointer is working, the geometry lives on the surface's slot and <strong>nothing</strong> is written to the
+rec; the release is what persists, and it is the only thing that needs to:</p>
+<pre><code class="language-mtron">panel_widget::[title=&gt;'note',body=&gt;'drag me'].display()      [-- floats, if the style anchors it --]
+</code></pre>
+<pre><code class="language-mtron">@/usr/uidoc/panel &gt;&gt;= [style=&gt;[top=&gt;3,left=&gt;8]]              [-- what a move writes on release --]
+@/usr/uidoc/panel &gt;&gt;= [style=&gt;[width=&gt;33,height=&gt;6]]         [-- what a resize writes --]
+</code></pre>
+<p>A move writes only <code>top</code>/<code>left</code> and a resize only <code>width</code>/<code>height</code> (plus the position it was resized from):
+a height cap nobody asked for would clip content that arrives later.</p>
+<h3>the three insts</h3>
+<table>
+<thead>
+<tr><th>inst</th><th>dom → rng</th><th>what it does</th></tr>
+</thead>
+<tbody>
+<tr><td><code>display</code></td><td><code>widget::T</code> → <code>noobj{0}</code></td><td>runs the widget: a display-only render, the interactive modal loop for a tool, or a float if the style carries an anchor</td></tr>
+<tr><td><code>nano</code></td><td><code>#{?}</code> → <code>#{?}</code></td><td>opens the obj in a nano-like editor and reads the edited value back</td></tr>
+<tr><td><code>less</code></td><td><code>str::T</code> → <code>noobj{0}</code></td><td>pages a str (<code>less(20)</code> for 20 lines a page)</td></tr>
+</tbody>
+</table>
+<pre><code class="language-mtron">panel_widget::[title=&gt;'note',body=&gt;&quot;alpha\nbeta&quot;].display()
+'one\ntwo\nthree'.less(2)
+</code></pre>
+<h3>not available yet</h3>
+<ul>
+<li><strong>Floating needs a terminal.</strong> <code>display</code>/<code>nano</code>/<code>less</code> drive the console: <code>display()</code> on a headless VM
+dies inside it, and <code>less</code> blocks on stdin. That is why the blocks above that use them are plain <code>mtron</code>:</li>
+</ul>
+<pre><code class="language-mtron">panel_widget::[title=&gt;'note',body=&gt;'alpha'].display()
+    [-- fail:: inst apply failure: NullPointerException: Console.getTerminal() is null --]
+</code></pre>
+<ul>
+<li><strong><code>*/uri</code> does not render — the anchor does.</strong> <code>@/usr/uidoc/panel.as?str&lt;=widget(str::T)</code> renders the
+widget the store holds; the clone form (<code>*/usr/uidoc/panel.as?str&lt;=widget(str::T)</code>) produces nothing,
+because the dereferenced rec no longer satisfies the inst's dom. Anchor the read.</li>
+<li><strong>A height cap is not visible in a plain render</strong> — the viewport belongs to the surface (see <em>style</em>).</li>
+<li><strong>A rec-built <code>progress_table</code> draws raw recs, not bars.</strong> The bars come from
+<code>addProgressRow</code> at runtime; a table constructed from <code>row =&gt; [[text=&gt;…,percent=&gt;…]]</code> renders the rows as
+they were written.</li>
+<li><strong><code>tree_widget</code> can fail on some roots.</strong> <code>tree_widget::[root=&gt;/sys, max=&gt;1].as?str&lt;=widget(str::T)</code>
+raises a <code>fail::</code> NPE from the tree walk (<code>Tuple$Pair.get1()</code> is null for one of <code>/sys</code>'s entries);
+<code>/m/mach/ui</code>, <code>/usr/...</code> and the project subgraphs the ide skill walks are fine.</li>
+<li><strong>A box drawn one cell wide and tall shows no corner marker</strong> — it would sit on top of the chevron.</li>
+</ul>
+<h3>see also</h3>
+<ul>
+<li><a href="../metatron/references/ui-instset-java.html">ui (Java)</a> — the same subsystem from the inside: <code>Widget</code>,
+<code>Stylable.Style</code>, <code>FloatingSurface</code>, <code>ScrollView</code>, the widget classes and the type registrations.</li>
+<li><a href="../ide/SKILL.html">ide</a> — the tree widget used as a project browser, inline, in situ.</li>
+<li><a href="tble-instset-mtron.html">tble instruction set</a> — the other space-as-a-type doc, and the style this one
+follows.</li>
+<li><code>docs/design/widget-jrec-review.md</code> — why a widget's state is its rec and not a Java field, and what the
+migration removed.</li>
+<li><code>bin/test/console-drag.steps</code>, <code>console-widget-scroll.steps</code>, <code>console-widget-mouse.steps</code> — the pty
+suites that drive the pointer and the viewport in a real console.</li>
+<li><code>*/m/mach/ui?docq</code> — the instruction set's own inventory (3 insts and the type family).</li>
+</ul>
 
     </div>
 </main>
