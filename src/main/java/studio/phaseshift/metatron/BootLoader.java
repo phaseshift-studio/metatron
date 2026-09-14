@@ -85,6 +85,15 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static boolean BOOTING = true;
     public static boolean TESTING = false;
     public static boolean ONE_SHOT = false;
+    /**
+     * Read-only type-test mode. When {@code true}, type-checking and obj
+     * construction run without the incidental space-write (clone+save) side
+     * effects: {@code Obj.Helper.objCheckAndSave} becomes check-only and
+     * {@code Rec.test} resolves values without autoResolve. Defaults {@code false}
+     * so production behavior is byte-for-byte unchanged; the test harness flips
+     * this on to keep classification cheap and side-effect free.
+     */
+    public static boolean RO_TEST = false;
     public static volatile boolean RESET = false;
     /**
      * Exit code returned to the shell when a restart is requested.

@@ -158,7 +158,7 @@ public interface Stylable<T extends Stylable<T>> {
         }
 
         public Border border() {
-            return this.at("border").isUri() ? Border.parse(this.at("border").uriValue().toString()) : Border.continuous;
+            return this.at("border").isUri() ? Border.parse(this.at("border").uriValue().toString()) : Border.none;
         }
 
         public Style<T> border(final Border border) {

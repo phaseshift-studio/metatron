@@ -925,6 +925,16 @@ public class mathInstSet extends AbstractInstSet {
                             return real(lhs.tid(normalizedTID).realValue() +
                                     inst.arg(0).tid(normalizedTID).realValue(), normalizedTID, lhs.vid()).tid(lhs.tid());
                         }),
+                        instC(PLUS_INST_TID.dom(MATH_METRIC_TID).rng(MATH_METRIC_TID), lst(METRIC_TYPE), (lhs, inst) -> {
+                            final fURI normalizedTID = inst.arg(0).tid().basePath().equals(REAL_TID) ? lhs.tid().basePath() : MATH_METER_TID;
+                            return real(lhs.tid(normalizedTID).realValue() +
+                                    inst.arg(0).tid(normalizedTID).realValue(), normalizedTID, lhs.vid()).tid(lhs.tid());
+                        }),
+                        instC(PLUS_INST_TID.dom(MATH_IMPERIAL_TID).rng(MATH_IMPERIAL_TID), lst(IMPERIAL_TYPE), (lhs, inst) -> {
+                            final fURI normalizedTID = inst.arg(0).tid().basePath().equals(REAL_TID) ? lhs.tid().basePath() : MATH_FOOT_TID;
+                            return real(lhs.tid(normalizedTID).realValue() +
+                                    inst.arg(0).tid(normalizedTID).realValue(), normalizedTID, lhs.vid()).tid(lhs.tid());
+                        }),
                         instC(AS_INST_TID.dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(TIME_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vid())),
                         instC(PLUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_DATETIME_TID), lst(TIME_TYPE), (lhs, inst) ->
                                 buildDatetimeUri(ZonedDateTime.ofInstant(Instant.ofEpochMilli(datetimeToMillis(lhs.asUri()) + (long) timeToMillis(inst.arg(0))), ZoneOffset.UTC))),

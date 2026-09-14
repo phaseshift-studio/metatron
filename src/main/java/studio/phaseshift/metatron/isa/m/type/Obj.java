@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import org.zeroturnaround.exec.ProcessExecutor;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
@@ -1057,7 +1058,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
         public static void objCheckAndSave(final Obj obj) {
             objTypeCheck(obj);
-            if (null != obj.vid() && !obj.isType())
+            // RO_TEST (read-only type-test mode): check only, skip the incidental space write
+            if (!BootLoader.RO_TEST && null != obj.vid() && !obj.isType())
                 Router.writeToSpace(obj.vid(), obj);
         }
 
