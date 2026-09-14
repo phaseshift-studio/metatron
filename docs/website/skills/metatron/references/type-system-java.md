@@ -11,6 +11,7 @@ description: Java-side type system API — Type interface, MType factory, Fluent
 furi/c/cInt.java               ← coefficient type [min,max]
 furi/C.java                    ← coefficient interface (span, within, plus, mult)
 isa/m/type/Type.java           ← Type interface + Type.Helper + Type.Builder
+isa/m/type/TypeGraph.java      ← TypeGraph: cached type-resolution graph (memo + write invalidation)
 isa/m/type/Obj.java            ← Obj interface (base of all metatron objects)
 isa/m/type/Call.java           ← Call interface (instruction chain, Ring<Call>)
 isa/m/type/Inst.java           ← Inst interface (single instruction)
@@ -199,6 +200,46 @@ Type parent = type.parentType();
 // For non-base types (tid != vid): parent = T(tid)  — the type being refined
 // For base types (tid == vid): parent = ALL_TYPE.c(this.c())
 // For root type: returns this
+```
+
+### TypeGraph (cached resolution)
+
+`TypeGraph.global()` is a process-wide memoization over `MType.T(...)` — the single
+entry point every hierarchy walk (`parentType()`, `isRefinementOf()`, `test()`) funnels
+through on each hop. A hit is a map lookup instead of a `Router` space read; the key is
+the value-equality tuple `(tid, vid, predicate, constructor)`.
+
+Soundness for a dynamic registry:
+
+- the router is hooked at `BasicRouter.write` — a write to a watched type path
+  (or a wildcard path that redirects onto one) bumps a generation counter and drops
+  the affected entries, so a later `T(...)` re-reads space
+- a stale entry that is being computed concurrently with an invalidating write is
+  never cached (generation-stamped)
+- a new router instance (re-boot / reload) rebinds the graph and clears it
+- while `BootLoader.BOOTING` is true the registry is still being assembled — the
+  memo is bypassed in that window, so a resolution is only ever cached once the
+  registry is stable
+
+**registry-driven type constants.** The datetime object-identity incident
+(`testDateTime*` failing under the memo): `mathInstSet.DATETIME_TYPE` used to be a
+clinit-time constant; it is now a registry field assigned during the instset's
+`setup()` (so name resolution returns the *registered* object, predicate and all).
+Two consequences:
+
+- a test class that touches `datetime` semantics must run the math instset through
+  `setup()` first — the idiom is `extends AbstractInstSetTest` +
+  `super(mathInstSet::new)` (see `DatetimeTypeTest` and `mathInstSetTest`)
+- every consumer of the field must null-guard it in contexts where the math set is
+  not registered — e.g. the uri branch of the rshift lambda in `Obj`
+  (`null != DATETIME_TYPE && ...`)
+
+The cache holds references to resolved `Type`s — never back-pointers inside them — so
+serialization, cloning, and save semantics of type objects are untouched.
+
+```java
+TypeGraph.global().size();          // cached resolutions
+TypeGraph.global().clear();         // force re-resolution (e.g. after a mass redefine)
 ```
 
 ### isRefinementOf()

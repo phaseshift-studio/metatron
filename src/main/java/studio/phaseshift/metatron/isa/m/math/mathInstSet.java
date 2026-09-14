@@ -252,37 +252,7 @@ public class mathInstSet extends AbstractInstSet {
      */
     private static final Pattern DT_HOST_PATTERN = Pattern.compile("\\d{4}\\.\\d{2}");
 
-    public static final Type DATETIME_TYPE = Type.Builder.build()
-            .tid(URI_TID)
-            .vid(MATH_DATETIME_TID)
-            .predicate((lhs, inst) -> {
-                final fURI dt = inst.arg(0).asUri().uriValue();
-                if (dt.hasScheme() && dt.scheme() != null && !dt.scheme().isEmpty())
-                    return noobj();
-                if (!dt.hasHost() || !DT_HOST_PATTERN.matcher(dt.host()).matches())
-                    return noobj();
-                final int month = Integer.parseInt(dt.host().substring(5, 7));
-                if (month < 1 || month > 12) return noobj();
-                if (!dt.hasPort()) return noobj();
-                final int day = dt.port();
-                if (day < 1 || day > 31) return noobj();
-                final List<String> path = dt.path();
-                if (path.size() < 4) return noobj();
-                try {
-                    final int hour = Integer.parseInt(path.get(path.size() - 4));
-                    if (hour < 0 || hour > 23) return noobj();
-                    final int minute = Integer.parseInt(path.get(path.size() - 3));
-                    if (minute < 0 || minute > 59) return noobj();
-                    final int second = Integer.parseInt(path.get(path.size() - 2));
-                    if (second < 0 || second > 59) return noobj();
-                    Integer.parseInt(path.getLast()); // millis: any int OK
-                } catch (NumberFormatException e) {
-                    return noobj();
-                }
-                if (!dt.qMap().containsKey("tz")) return noobj();
-                return inst.arg(0);
-            })
-            .create();
+    public static Type DATETIME_TYPE;
 
     /**
      * Creates a {@link Uri} representing the current system datetime.
@@ -671,168 +641,28 @@ public class mathInstSet extends AbstractInstSet {
             .vid(MATH_METRIC_TID)
             .create();
 
-    public static final Type MM_TYPE = Type.Builder.build()
-            .tid(MATH_METRIC_TID)
-            .vid(MATH_MM_TID)
-            .constructor(arg -> {
-                final String tid = arg.tid().toString();
-                return switch (tid) {
-                    case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d);
-                    case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() * 100.0d);
-                    case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
-                    case MATH_KM_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d);
-                    case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() * MM_PER_INCH);
-                    case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() * 12.0d * MM_PER_INCH);
-                    case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() * 36.0d * MM_PER_INCH);
-                    case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH);
-                    default -> arg;
-                };
-            }).create();
+    public static Type MM_TYPE;
 
-    public static final Type CM_TYPE = Type.Builder.build()
-            .tid(MATH_METRIC_TID)
-            .vid(MATH_CM_TID)
-            .constructor(arg -> {
-                final String tid = arg.tid().toString();
-                return switch (tid) {
-                    case MATH_MM_STRING -> arg.jvm(arg.asReal().jvm() / 10.0d);
-                    case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d);
-                    case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() * 100.0d);
-                    case MATH_KM_STRING -> arg.jvm(arg.asReal().jvm() * 100.0d * 1000.0d);
-                    case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() * MM_PER_INCH / 10.0d);
-                    case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() * 12.0d * MM_PER_INCH / 10.0d);
-                    case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() * 36.0d * MM_PER_INCH / 10.0d);
-                    case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH / 10.0d);
-                    default -> arg;
-                };
-            }).create();
+    public static Type CM_TYPE;
 
-    public static final Type DM_TYPE = Type.Builder.build()
-            .tid(MATH_METRIC_TID)
-            .vid(MATH_DM_TID)
-            .constructor(arg -> {
-                final String tid = arg.tid().toString();
-                return switch (tid) {
-                    case MATH_MM_STRING -> arg.jvm(arg.asReal().jvm() / 100.0d);
-                    case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() / 10.0d);
-                    case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d);
-                    case MATH_KM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d * 1000.0d);
-                    case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() * MM_PER_INCH / 100.0d);
-                    case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() * 12.0d * MM_PER_INCH / 100.0d);
-                    case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() * 36.0d * MM_PER_INCH / 100.0d);
-                    case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH / 100.0d);
-                    default -> arg;
-                };
-            }).create();
+    public static Type DM_TYPE;
 
-    public static final Type METER_TYPE = Type.Builder.build()
-            .tid(MATH_METRIC_TID)
-            .vid(MATH_METER_TID)
-            .constructor(arg -> {
-                final String tid = arg.tid().toString();
-                return switch (tid) {
-                    case MATH_MM_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
-                    case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() / 100.0d);
-                    case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() / 10.0d);
-                    case MATH_KM_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
-                    case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() * MM_PER_INCH / 1000.0d);
-                    case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() * 12.0d * MM_PER_INCH / 1000.0d);
-                    case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() * 36.0d * MM_PER_INCH / 1000.0d);
-                    case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH / 1000.0d);
-                    default -> arg;
-                };
-            }).create();
+    public static Type METER_TYPE;
 
-    public static final Type KM_TYPE = Type.Builder.build()
-            .tid(MATH_METRIC_TID)
-            .vid(MATH_KM_TID)
-            .constructor(arg -> {
-                final String tid = arg.tid().toString();
-                return switch (tid) {
-                    case MATH_MM_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d / 1000.0d);
-                    case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d / 100.0d);
-                    case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d / 10.0d);
-                    case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
-                    case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() * MM_PER_INCH / 1000.0d / 1000.0d);
-                    case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() * 12.0d * MM_PER_INCH / 1000.0d / 1000.0d);
-                    case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() * 36.0d * MM_PER_INCH / 1000.0d / 1000.0d);
-                    case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH / 1000.0d / 1000.0d);
-                    default -> arg;
-                };
-            }).create();
+    public static Type KM_TYPE;
 
     public static final Type IMPERIAL_TYPE = Type.Builder.build()
             .tid(REAL_TID)
             .vid(MATH_IMPERIAL_TID)
             .create();
 
-    public static final Type INCH_TYPE = Type.Builder.build()
-            .tid(MATH_IMPERIAL_TID)
-            .vid(MATH_INCH_TID)
-            .constructor(arg -> {
-                final String tid = arg.tid().toString();
-                return switch (tid) {
-                    case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() * 12.0d);
-                    case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() * 36.0d);
-                    case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 63360.0d);
-                    case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d / MM_PER_INCH);
-                    case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() * 100.0d / MM_PER_INCH);
-                    case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d / MM_PER_INCH);
-                    case MATH_KM_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d / MM_PER_INCH);
-                    default -> arg;
-                };
-            }).create();
+    public static Type INCH_TYPE;
 
-    public static final Type FOOT_TYPE = Type.Builder.build()
-            .tid(MATH_IMPERIAL_TID)
-            .vid(MATH_FOOT_TID)
-            .constructor(arg -> {
-                final String tid = arg.tid().toString();
-                return switch (tid) {
-                    case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() / 12.0d);
-                    case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() * 3.0d);
-                    case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 5280.0d);
-                    case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d / MM_PER_INCH / 12.0d);
-                    case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() * 100.0d / MM_PER_INCH / 12.0d);
-                    case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d / MM_PER_INCH / 12.0d);
-                    case MATH_KM_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d / MM_PER_INCH / 12.0d);
-                    default -> arg;
-                };
-            }).create();
+    public static Type FOOT_TYPE;
 
-    public static final Type YARD_TYPE = Type.Builder.build()
-            .tid(MATH_IMPERIAL_TID)
-            .vid(MATH_YARD_TID)
-            .constructor(arg -> {
-                final String tid = arg.tid().toString();
-                return switch (tid) {
-                    case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() / 36.0d);
-                    case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() / 3.0d);
-                    case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 1760.0d);
-                    case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d / MM_PER_INCH / 36.0d);
-                    case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() * 100.0d / MM_PER_INCH / 36.0d);
-                    case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d / MM_PER_INCH / 36.0d);
-                    case MATH_KM_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d / MM_PER_INCH / 36.0d);
-                    default -> arg;
-                };
-            }).create();
+    public static Type YARD_TYPE;
 
-    public static final Type MILE_TYPE = Type.Builder.build()
-            .tid(MATH_IMPERIAL_TID)
-            .vid(MATH_MILE_TID)
-            .constructor(arg -> {
-                final String tid = arg.tid().toString();
-                return switch (tid) {
-                    case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() / 63360.0d);
-                    case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() / 5280.0d);
-                    case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() / 1760.0d);
-                    case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d / MM_PER_INCH / 63360.0d);
-                    case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() * 100.0d / MM_PER_INCH / 63360.0d);
-                    case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d / MM_PER_INCH / 63360.0d);
-                    case MATH_KM_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d / MM_PER_INCH / 63360.0d);
-                    default -> arg;
-                };
-            }).create();
+    public static Type MILE_TYPE;
 
     /**
      * Normalizes a metric distance {@link Real} to the most human-readable unit.
@@ -889,6 +719,37 @@ public class mathInstSet extends AbstractInstSet {
                 uri(TYPE), lst(
                         docWrap(NAT_TYPE, "a positive integer"),
                         DATA_SIZE_TYPE,
+                        docWrap(DATETIME_TYPE = Type.Builder.build()
+                                .tid(URI_TID)
+                                .vid(MATH_DATETIME_TID)
+                                .predicate((lhs, inst) -> {
+                                    final fURI dt = inst.arg(0).asUri().uriValue();
+                                    if (dt.hasScheme() && dt.scheme() != null && !dt.scheme().isEmpty())
+                                        return noobj();
+                                    if (!dt.hasHost() || !DT_HOST_PATTERN.matcher(dt.host()).matches())
+                                        return noobj();
+                                    final int month = Integer.parseInt(dt.host().substring(5, 7));
+                                    if (month < 1 || month > 12) return noobj();
+                                    if (!dt.hasPort()) return noobj();
+                                    final int day = dt.port();
+                                    if (day < 1 || day > 31) return noobj();
+                                    final List<String> path = dt.path();
+                                    if (path.size() < 4) return noobj();
+                                    try {
+                                        final int hour = Integer.parseInt(path.get(path.size() - 4));
+                                        if (hour < 0 || hour > 23) return noobj();
+                                        final int minute = Integer.parseInt(path.get(path.size() - 3));
+                                        if (minute < 0 || minute > 59) return noobj();
+                                        final int second = Integer.parseInt(path.get(path.size() - 2));
+                                        if (second < 0 || second > 59) return noobj();
+                                        Integer.parseInt(path.getLast()); // millis: any int OK
+                                    } catch (NumberFormatException e) {
+                                        return noobj();
+                                    }
+                                    if (!dt.qMap().containsKey("tz")) return noobj();
+                                    return inst.arg(0);
+                                })
+                                .create(), "a datetime as uri: <//yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm>"),
                         docWrap(BYTE_TYPE, "a byte of data"),
                         docWrap(KBYTE_TYPE, "a kilobyte (1024 bytes) of data"),
                         docWrap(MBYTE_TYPE, "a megabyte (1024 kilobytes) of data"),
@@ -904,18 +765,183 @@ public class mathInstSet extends AbstractInstSet {
                         docWrap(MINUTE_TYPE, "a minute of time (60 seconds)"),
                         docWrap(HOUR_TYPE, "an hour of time (60 minutes)"),
                         docWrap(DAY_TYPE, "a day of time (24 hours)"),
-                        docWrap(DATETIME_TYPE, "a datetime as uri: <//yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm>"),
                         docWrap(METRIC_TYPE, "the nominal base type of metric distance"),
-                        docWrap(MM_TYPE, "a millimeter of distance"),
-                        docWrap(CM_TYPE, "a centimeter of distance (10 millimeters)"),
-                        docWrap(DM_TYPE, "a decimeter of distance (10 centimeters)"),
-                        docWrap(METER_TYPE, "a meter of distance (100 centimeters)"),
-                        docWrap(KM_TYPE, "a kilometer of distance (1000 meters)"),
+                        docWrap(MM_TYPE = Type.Builder.build()
+                                .tid(MATH_METRIC_TID)
+                                .vid(MATH_MM_TID)
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().toString();
+                                    return switch (tid) {
+                                        case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d);
+                                        case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() * 100.0d);
+                                        case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
+                                        case MATH_KM_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d);
+                                        case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() * MM_PER_INCH);
+                                        case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() * 12.0d * MM_PER_INCH);
+                                        case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() * 36.0d * MM_PER_INCH);
+                                        case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH);
+                                        default -> arg;
+                                    };
+                                }).create(), "a millimeter of distance"),
+                        docWrap(CM_TYPE = Type.Builder.build()
+                                .tid(MATH_METRIC_TID)
+                                .vid(MATH_CM_TID)
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().toString();
+                                    return switch (tid) {
+                                        case MATH_MM_STRING -> arg.jvm(arg.asReal().jvm() / 10.0d);
+                                        case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d);
+                                        case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() * 100.0d);
+                                        case MATH_KM_STRING -> arg.jvm(arg.asReal().jvm() * 100.0d * 1000.0d);
+                                        case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() * MM_PER_INCH / 10.0d);
+                                        case MATH_FOOT_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 12.0d * MM_PER_INCH / 10.0d);
+                                        case MATH_YARD_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 36.0d * MM_PER_INCH / 10.0d);
+                                        case MATH_MILE_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH / 10.0d);
+                                        default -> arg;
+                                    };
+                                }).create(), "a centimeter of distance (10 millimeters)"),
+                        docWrap(DM_TYPE = Type.Builder.build()
+                                .tid(MATH_METRIC_TID)
+                                .vid(MATH_DM_TID)
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().toString();
+                                    return switch (tid) {
+                                        case MATH_MM_STRING -> arg.jvm(arg.asReal().jvm() / 100.0d);
+                                        case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() / 10.0d);
+                                        case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d);
+                                        case MATH_KM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d * 1000.0d);
+                                        case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() * MM_PER_INCH / 100.0d);
+                                        case MATH_FOOT_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 12.0d * MM_PER_INCH / 100.0d);
+                                        case MATH_YARD_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 36.0d * MM_PER_INCH / 100.0d);
+                                        case MATH_MILE_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH / 100.0d);
+                                        default -> arg;
+                                    };
+                                }).create(), "a decimeter of distance (10 centimeters)"),
+                        docWrap(METER_TYPE = Type.Builder.build()
+                                .tid(MATH_METRIC_TID)
+                                .vid(MATH_METER_TID)
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().toString();
+                                    return switch (tid) {
+                                        case MATH_MM_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
+                                        case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() / 100.0d);
+                                        case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() / 10.0d);
+                                        case MATH_KM_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
+                                        case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() * MM_PER_INCH / 1000.0d);
+                                        case MATH_FOOT_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 12.0d * MM_PER_INCH / 1000.0d);
+                                        case MATH_YARD_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 36.0d * MM_PER_INCH / 1000.0d);
+                                        case MATH_MILE_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH / 1000.0d);
+                                        default -> arg;
+                                    };
+                                }).create(), "a meter of distance (100 centimeters)"),
+                        docWrap(KM_TYPE = Type.Builder.build()
+                                .tid(MATH_METRIC_TID)
+                                .vid(MATH_KM_TID)
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().toString();
+                                    return switch (tid) {
+                                        case MATH_MM_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d / 1000.0d);
+                                        case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d / 100.0d);
+                                        case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d / 10.0d);
+                                        case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
+                                        case MATH_INCH_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * MM_PER_INCH / 1000.0d / 1000.0d);
+                                        case MATH_FOOT_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 12.0d * MM_PER_INCH / 1000.0d / 1000.0d);
+                                        case MATH_YARD_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 36.0d * MM_PER_INCH / 1000.0d / 1000.0d);
+                                        case MATH_MILE_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH / 1000.0d / 1000.0d);
+                                        default -> arg;
+                                    };
+                                }).create(), "a kilometer of distance (1000 meters)"),
                         docWrap(IMPERIAL_TYPE, "the nominal base type of imperial distance"),
-                        docWrap(INCH_TYPE, "an inch of distance (25.4 millimeters)"),
-                        docWrap(FOOT_TYPE, "a foot of distance (12 inches)"),
-                        docWrap(YARD_TYPE, "a yard of distance (3 feet)"),
-                        docWrap(MILE_TYPE, "a mile of distance (1760 yards)")),
+                        docWrap(INCH_TYPE = Type.Builder.build()
+                                .tid(MATH_IMPERIAL_TID)
+                                .vid(MATH_INCH_TID)
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().toString();
+                                    return switch (tid) {
+                                        case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() * 12.0d);
+                                        case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() * 36.0d);
+                                        case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 63360.0d);
+                                        case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d / MM_PER_INCH);
+                                        case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() * 100.0d / MM_PER_INCH);
+                                        case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d / MM_PER_INCH);
+                                        case MATH_KM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d / MM_PER_INCH);
+                                        default -> arg;
+                                    };
+                                }).create(), "an inch of distance (25.4 millimeters)"),
+                        docWrap(FOOT_TYPE = Type.Builder.build()
+                                .tid(MATH_IMPERIAL_TID)
+                                .vid(MATH_FOOT_TID)
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().toString();
+                                    return switch (tid) {
+                                        case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() / 12.0d);
+                                        case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() * 3.0d);
+                                        case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 5280.0d);
+                                        case MATH_CM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 10.0d / MM_PER_INCH / 12.0d);
+                                        case MATH_DM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 100.0d / MM_PER_INCH / 12.0d);
+                                        case MATH_METER_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 1000.0d / MM_PER_INCH / 12.0d);
+                                        case MATH_KM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d / MM_PER_INCH / 12.0d);
+                                        default -> arg;
+                                    };
+                                }).create(), "a foot of distance (12 inches)"),
+                        docWrap(YARD_TYPE = Type.Builder.build()
+                                .tid(MATH_IMPERIAL_TID)
+                                .vid(MATH_YARD_TID)
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().toString();
+                                    return switch (tid) {
+                                        case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() / 36.0d);
+                                        case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() / 3.0d);
+                                        case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 1760.0d);
+                                        case MATH_CM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 10.0d / MM_PER_INCH / 36.0d);
+                                        case MATH_DM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 100.0d / MM_PER_INCH / 36.0d);
+                                        case MATH_METER_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 1000.0d / MM_PER_INCH / 36.0d);
+                                        case MATH_KM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d / MM_PER_INCH / 36.0d);
+                                        default -> arg;
+                                    };
+                                }).create(), "a yard of distance (3 feet)"),
+                        docWrap(MILE_TYPE = Type.Builder.build()
+                                .tid(MATH_IMPERIAL_TID)
+                                .vid(MATH_MILE_TID)
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().toString();
+                                    return switch (tid) {
+                                        case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() / 63360.0d);
+                                        case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() / 5280.0d);
+                                        case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() / 1760.0d);
+                                        case MATH_CM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 10.0d / MM_PER_INCH / 63360.0d);
+                                        case MATH_DM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 100.0d / MM_PER_INCH / 63360.0d);
+                                        case MATH_METER_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 1000.0d / MM_PER_INCH / 63360.0d);
+                                        case MATH_KM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d / MM_PER_INCH / 63360.0d);
+                                        default -> arg;
+                                    };
+                                }).create(), "a mile of distance (1760 yards)")),
                 uri(INST), lst(
                         instC(MATH_INST_TID.extend("datetime_now").dom(ALL.maybe()).rng(MATH_DATETIME_TID), lst(), (lhs, inst) -> nowDatetime()),
                         // datetime arithmetic: datetime + time -> datetime, datetime - time -> datetime,

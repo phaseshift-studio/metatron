@@ -1466,7 +1466,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     //  "|-<[_,_].swap(||mult(_))  [-- [mult(_),mult(_)] --]"
                     //instC(RSHIFT_INST_TID.dom(ALL).rng(URI_TID.maybe()), lst(uri("vid")), (lhs, inst) -> null == lhs.vid() ? noobj() : lhs.vid().toUri()),
                     instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {
-                        if (lhs.isUri() && lhs.asUri().testNominally(DATETIME_TYPE))
+                        // DATETIME_TYPE is registry-driven (set during math instset setup)
+                        // and is null in a VM where the math set is not registered
+                        if (null != DATETIME_TYPE && lhs.isUri() && lhs.asUri().testNominally(DATETIME_TYPE))
                             return datetimeRshift(lhs.asUri(), inst.arg(0));
                         else if (lhs.isRec())
                             return Rec.Helper.rshiftRec(lhs.asRec(), inst.arg(0));

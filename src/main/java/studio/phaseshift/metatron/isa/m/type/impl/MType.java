@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.TypeGraph;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -52,7 +53,17 @@ public class MType extends MObj implements Type {
         return T(null, vid, predicate, null);
     }
 
-    public static Type T(final fURI tid, final fURI vid, final Call predicate, final Call constructor) {
+    /**
+     * a memoized entry point to type resolution. equal raw arguments resolve
+     * to the same cached type without a space read, until the type path is
+     * written or the router rebinds -- see {@link TypeGraph}.
+     */
+     public static Type T(final fURI tid, final fURI vid, final Call predicate, final Call constructor) {
+        final TypeGraph.Key key = new TypeGraph.Key(tid, vid, predicate, constructor);
+        return TypeGraph.global().memo(key, () -> T0(tid, vid, predicate, constructor));
+    }
+
+    private static Type T0(final fURI tid, final fURI vid, final Call predicate, final Call constructor) {
         final fURI bigTID = null == tid ? vid.big() : tid.big();
         final fURI bigVID = null == vid ? null : vid.big();
         final fURI checkID = null == bigVID ? bigTID : bigVID;

@@ -46,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_at_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -120,7 +121,8 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
      * ---------------------------------------------------------- */
     @BeforeAll
     public static void setup() {
-        InstSet.importInstSet(f("/m/llm"));
+        InstSet.importInstSet(MATH_ISA_TID);
+        InstSet.importInstSet(LLM_ISA_TID);
     }
 
     @BeforeEach

@@ -51,8 +51,8 @@ public class TypeTest extends AbstractMetatronTest {
 
 
     @Test
-    @Disabled
-    public void testXXX() {
+    //@Disabled
+    public void testTypeCoefficientTypedCoefficient() {
         Type a = T(INT_TID.maybe()).maybeSome();
         Type b = T(Tuple.Pair.with(null, null), INT_TID.maybe(), TYPE_TID.maybeSome());
         //KType c = TT(INT_TYPE.maybe().asType()).c(cInt.of(2, 77)).as();
