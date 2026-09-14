@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.ui;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -34,6 +35,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -162,6 +165,7 @@ public class uiInstSetTest extends AbstractInstSetTest {
         // AbstractWidget subclasses (swipe_panel, menu_bar) must construct to a
         // Widget even without a terminal (headless eval / MCP), so the display/as
         // insts' (Widget<?>) cast can never hit a bare MRec.
+        InstSet.importInstSet(MATH_ISA_TID, f("math"));
         for (final String code : new String[]{
                 "swipe_panel_widget::[obj=>[1,2,3,4]]",
                 "menu_bar_widget::[height=>1,lines=>[]]",
@@ -172,7 +176,7 @@ public class uiInstSetTest extends AbstractInstSetTest {
         }
         // format() and the widget-as-str inst must also be terminal-free
         // for embedding (widget-as-str).
-        final Obj swipe = ObjmtronSerializer.parse("swipe_panel_widget::[obj=>[1,2,3,4]]");
+        final Obj swipe = ObjmtronSerializer.parse("swipe_panel_widget::[obj=>[!math:datetime_now(),!math:datetime_now(),!math:datetime_now(),!math:datetime_now()]]");
         assertNotNull(((Widget) swipe).format());
         final Obj asStr = ObjmtronSerializer.parse("swipe_panel_widget::[obj=>[1,2,3,4]].as(str::T)").apply(noobj());
         assertTrue(asStr.isStr(), "swipe_panel.as(str::T) should produce a str headless: " + asStr);

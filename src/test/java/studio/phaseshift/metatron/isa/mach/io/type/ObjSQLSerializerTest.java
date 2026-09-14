@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.mach.io.type;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
@@ -34,28 +35,28 @@ import studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema.ColumnMetad
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.LOGG;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATETIME_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Tests for {@link ObjSQLSerializer} JSON detection and {@link ColumnMetadata} default probing.
  */
-public class ObjSQLSerializerTest {
+public class ObjSQLSerializerTest extends AbstractMetatronTest {
 
-    static {
-        BootLoader.TESTING = true;
-    }
 
     @BeforeAll
     static void beforeAll() {
+        InstSet.importInstSet(MATH_ISA_TID);
         memSpace.of(f("/sys/#"), null);
         TypeCheck.enable(TypeCheck.values());
         TypeCheck.disable(TypeCheck.values());
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
         BootLoader.load(rec(uri(LOGG), uri(LogObj.getSLF4J().toString().toLowerCase())));
-        InstSet.importInstSet(f("/m/math"));
+
     }
 
     @AfterAll
@@ -158,7 +159,7 @@ public class ObjSQLSerializerTest {
             // ISO-8601 string → datetime::T (the actual database round-trip)
             final Obj result = ObjSQLSerializer.readMaybeJSON("2026-08-07 18:42:12.889");
             assertTrue(result.isUri(), "expected Uri, got " + result.getClass().getSimpleName());
-            assertTrue(result.test(DATETIME_TYPE),
+            assertTrue(result.test(T(MATH_DATETIME_TID)),
                     "expected datetime::T, got " + result.tid());
         }
 

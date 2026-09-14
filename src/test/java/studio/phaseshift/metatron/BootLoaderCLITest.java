@@ -22,6 +22,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -39,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Uses {@link BootLoader#EXIT_HANDLER} to intercept exit calls and
  * capture stdout/stderr for assertion.
  */
+@Isolated
 public class BootLoaderCLITest {
 
     private final ByteArrayOutputStream outCapture = new ByteArrayOutputStream();

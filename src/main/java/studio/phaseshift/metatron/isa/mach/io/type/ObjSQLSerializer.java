@@ -37,7 +37,6 @@ import java.util.Map;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATETIME_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -46,6 +45,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -339,7 +339,7 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
                         ? raw.substring(1, raw.length() - 1)
                         : raw;
                 final Obj uriObj = uri(f(clean));
-                if (uriObj.test(DATETIME_TYPE))
+                if (uriObj.test(T(MATH_DATETIME_TID)))
                     return uri(f(clean), MATH_DATETIME_TID, null);
                 return uriObj;
             }

@@ -48,6 +48,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -74,9 +75,10 @@ public class AgentTest extends AbstractMetatronTest {
 
     private Rec fixture;
     private Agent agent;
-
+    
     @BeforeEach
     public void setup() {
+        InstSet.importInstSet(MATH_ISA_TID);
         InstSet.importInstSet(LLM_ISA_TID);
         fixture = buildFixture();
         agent = Agent.agent(fixture);

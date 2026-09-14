@@ -35,8 +35,9 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATETIME_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.humanReadableDatetime;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 /**
  * CardUtil — shared panel-card factory for consistent look &amp; feel across tools.
@@ -55,6 +56,7 @@ import static studio.phaseshift.metatron.isa.m.math.mathInstSet.humanReadableDat
 public final class CardUtil {
 
     private CardUtil() {
+        // do nothing
     }
 
     // =====================================================================
@@ -208,7 +210,7 @@ public final class CardUtil {
             return selectorFor(valueTable(obj.as()));
         }
         // Datetime → special card with human-readable format
-        if (obj.testNominally(DATETIME_TYPE)) {
+        if (obj.testNominally(T(MATH_DATETIME_TID))) {
             return datetimeCard(obj);
         }
         // Default PanelWidget

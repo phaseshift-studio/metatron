@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.space.stackSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.TypeGraph;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
@@ -346,6 +347,9 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
         /// ///////////////
         final Space space = this.getSpaceFor(writableVID);
         LOG.trace("writing %s {{g}}=>{{b}} %s{{X}} in %s", obj, vid, space.vid());
+        // invalidate cached type resolutions that this write may touch --
+        // before the write, so a failed write still errs on the safe side.
+        TypeGraph.global().onWrite(writableVID);
         return space.write(writableVID, obj);
     }
 

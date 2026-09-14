@@ -848,7 +848,7 @@ public class llmInstSet extends AbstractInstSet {
                                                         isa_(LLM_MODEL_TYPE).tryToInst(), id_().tryToInst(),
                                                         isa_(LLM_SESSION_TYPE).tryToInst(), from_(rshift_(uri(AGENT)).mult_(uri(MODEL))).tryToInst()))
                                                         .rshift_().tryToInst(),
-                                                uri(SCOPE).maybe().asUri(), union_(TIME_TYPE, DATETIME_TYPE).tryToInst(),
+                                                uri(SCOPE).maybe().asUri(), union_(T(MATH_TIME_TID), T(MATH_DATETIME_TID)).tryToInst(),
                                                 uri(KIND).maybe().asUri(), LST_TYPE,
                                                 uri(CONCEPT).maybe().asUri(), LST_TYPE),
                                         (lhs, inst) -> {
