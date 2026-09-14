@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>http-page-fetching · PhaseShift Studio</title>
+    <title>tble instruction set · PhaseShift Studio</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -378,146 +378,469 @@
 </script>
 <main class="container my-4 flex-grow-1">
     <div class="skill-doc mb-4">
-        <h1 class="skill-title mb-1">http-page-fetching</h1>
-        <small>Fetching HTTP pages in mtron via httpSpace, HTML parse tree structure, and tree traversal.</small><br/>
-        <a href="http-page-fetching.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>http-page-fetching.md</a>
+        <h1 class="skill-title mb-1">tble instruction set</h1>
+        <small>The /m/tble instruction set and the tblespace::T it belongs to: a JDBC relational database mounted as a</small><br/>
+        <a href="tble-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>tble-instset-mtron.md</a>
     </div>
     <div class="markdown-body">
-<h2>HTTP Page Fetching in mtron</h2>
-<h3>Architecture</h3>
-<p><code>httpSpace</code> uses Jsoup to fetch URLs and returns <strong>typed strings</strong> by default (e.g., <code>html::&quot;...&quot;</code>). The <code>html::T</code> type
-refines <code>str::T</code> — the MIME type is a <strong>predicate</strong> on the string content, not a structural transformation.</p>
-<pre><code>http:// url  →  httpSpace.directReader()  →  Jsoup fetch  →  html::&quot;&lt;html&gt;...&lt;/html&gt;&quot;  (typed str)
-                                                                     │
-                                                         .as(rec::T) or ?mimeq=application/x-mtron
-                                                                     │
-                                                                     ▼
-                                                              rec::T  (DOM tree)
+<h2>tble instruction set (<code>/m/tble</code>)</h2>
+<p>A relational database is a space, a table is a collection, and a row is a <code>rec::T</code> whose vid <strong>is</strong> its primary key.
+That is the whole idea, and it is why <code>/m/tble</code> is small: <em>one instruction</em> — <code>sql</code> — and a family of rewrites that
+turn a mtron read into the SQL the backend is already good at. Everything else is the space protocol you already know:
+write with <code>-&gt;</code>, read with <code>*</code>, walk the graph.</p>
+<p><code>tblespace::T</code> is a JDBC-backed <code>space::T</code> (SQLite, PostgreSQL, MariaDB and MySQL are the tested backends). It is
+<strong>dual-path</strong>: a collection that names a table routes to a SQL table; every other collection falls through to a typed
+key/value store in the same database.</p>
+<h3>the space these examples use</h3>
+<p>Every block below runs against one sqlite database mounted as <code>tbledoc:#</code>. (<code>mtron_pre</code> blocks are executed by the
+docs pipeline and inlined with their results; a plain <code>mtron</code> block is only shown.)</p>
+<pre><code class="language-mtron">mtron&gt; import(/m/tble)
+==&gt;instset::[
+    pattern=&gt;/m/tble/#,
+    q=&gt;[docq::[
+    pattern=&gt;docq,
+    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+    space=&gt;[super=&gt;!*/m],
+    const=&gt;[[llm_chat_schema=&gt;inst?#{*}&lt;=#{*}()]@helper],
+    type=&gt;[tblespace::T],
+    inst=&gt;[sql?rec{*}&lt;=tblespace(str::T)],
+    rewrite=&gt;[/m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_offset?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_offset_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_order?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_order_offset?code{?}&lt;=code(),...(8 more)]]@/m/tble
+mtron&gt; tblespace::[pattern =&gt; tbledoc:#,
+                   host    =&gt; &lt;sqlite:/tmp/mtron-tbledoc.db&gt;,
+                   driver  =&gt; &lt;org.sqlite.JDBC&gt;,
+                   q       =&gt; [incrq::[=&gt;],
+                               docq::[tbledoc:person =&gt; docs::[
+                                 desc    =&gt; &quot;a person row: name, age, and a skill once one is written&quot;,
+                                 example =&gt; [&quot;*tbledoc:person/+.count()&quot;]]]],
+                   route   =&gt; [tbledoc: =&gt; &lt;&gt;]]@/sys/space/tbledoc
+==&gt;tblespace::[
+    pattern=&gt;tbledoc:#,
+    host=&gt;&lt;sqlite:/tmp/mtron-tbledoc.db&gt;,
+    driver=&gt;&lt;org.sqlite.JDBC&gt;,
+    q=&gt;[
+     incrq::[
+      pattern=&gt;incrq,
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
+     docq::[
+      pattern=&gt;docq,
+      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+    route=&gt;[tbledoc:=&gt;&lt;&gt;]]@/sys/space/tbledoc
 </code></pre>
-<p>The space pattern is <code>&lt;http://#&gt;</code>, so any <code>http://</code> URI routes through the httpSpace. The space should have <code>mimeq</code>
-mounted so <code>?mimeq=</code> query parameters work:</p>
-<pre><code class="language-mtron">mtron&gt; httpspace::[
-         host    =&gt; &lt;http://localhost:8777&gt;,
-         pattern =&gt; &lt;http://#&gt;,
-         q       =&gt; [mimeq::[=&gt;]],          [-- enables ?mimeq= query processor --]
-         route   =&gt; [/ =&gt; &lt;local:web&gt;]]
-==&gt;ERROR: unable to construct httpspace::T: fail::[inst apply failure: Address already in use[Net&lt;-2&gt;:Address already in use]]@/sys/fail/1012
-</code></pre>
-<h3>Basic Dereference — Typed String (default)</h3>
-<p>Default reads return a typed <code>html::&quot;...&quot;</code> string with <code>tid = /m/web/mime/html</code>:</p>
-<pre><code class="language-mtron">mtron&gt; *&lt;http://example.com&gt;
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;http://example.com&gt;]@/sys/fail/1016
-mtron&gt; *&lt;http://example.com&gt;.test(html::T)
-==&gt;fail::[unable to locate inst-f of test(html::T)@&lt;1&gt;]@/sys/fail/1024
-</code></pre>
-<p>The string is predicate-validated: <code>html::T</code>'s predicate checks that the content is valid HTML.</p>
-<h3>Structural Parse — rec::T DOM Tree</h3>
-<p>To get the rich <code>rec::T</code> DOM representation, use <code>?mimeq=application/x-mtron</code> or <code>.as(rec::T)</code>:</p>
-<pre><code class="language-mtron">mtron&gt; [-- via query parameter on the URL --]
-mtron&gt; *&lt;http://example.com?mimeq=application/x-mtron&gt;
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;http://example.com?mimeq=application/x-mtron&gt;]@/sys/fail/1028
-mtron&gt; [-- via .as(rec::T) on a typed string --]
-mtron&gt; *&lt;http://example.com&gt;.as(rec::T)
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;http://example.com&gt;]@/sys/fail/1032
-</code></pre>
-<p>The <code>?mimeq=application/x-mtron</code> query is handled by <code>QCollection.mimeQ()</code> postRead processor, which (1) probes the
-content type from the response headers or URI extension, (2) tags the string with the correct TID (triggering predicate
-validation), and (3) if <code>application/x-mtron</code> is requested, runs the content-type-specific serializer
-(<code>ObjHTMLSerializer</code> for HTML) to produce the <code>rec::T</code> DOM tree.</p>
-<h3>HTML Rec Structure</h3>
-<p>When converted to <code>rec::T</code>, the parsed HTML is a nested rec:</p>
-<pre><code>[html =&gt; [
-  head =&gt; [
-    title =&gt; '...',
-    out =&gt; [
-      [tag =&gt; meta, name =&gt; '...', content =&gt; '...'],
-      [tag =&gt; style, data =&gt; '...']
-    ]
-  ],
-  body =&gt; [
-    out =&gt; [
-      [tag =&gt; div, out =&gt; [
-        [tag =&gt; h1, text =&gt; '...'],
-        [tag =&gt; p, text =&gt; '...'],
-        [tag =&gt; p, out =&gt; [
-          [tag =&gt; a, href =&gt; &lt;url&gt;, text =&gt; '...']
-        ]]
-      ]]
-    ]
-  ],
-  lang =&gt; 'en'
-]]
-</code></pre>
-<p><strong>Key fields per element:</strong></p>
-<ul>
-<li><code>tag</code> — HTML tag name (div, p, a, h1, meta, etc.)</li>
-<li><code>text</code> — inner text content (for leaf elements)</li>
-<li><code>data</code> — for style/script elements</li>
-<li><code>out</code> — array of child elements</li>
-<li><code>href</code>, <code>src</code>, <code>class</code>, <code>id</code>, etc. — HTML attributes</li>
-</ul>
-<h3>Tree Walking (requires rec::T)</h3>
-<p>Tree walking into the DOM tree requires the structural <code>rec::T</code> form. Use <code>.as(rec::T)</code> first, then walk the tree:</p>
-<pre><code class="language-mtron">mtron&gt; [-- Cast to rec first, then walk --]
-mtron&gt; *&lt;http://example.com&gt;.as(rec::T)/html/body/out           [-- body's children list --]
-==&gt;/html/body/out
-mtron&gt; *&lt;http://example.com&gt;.as(rec::T)/html/body/out/+/out      [-- first child's children (h1, p, p) --]
-==&gt;/html/body/out/+/out
-mtron&gt; *&lt;http://example.com&gt;.as(rec::T)/html/body/out/+/out/+/out  [-- grandchild (a tag) --]
-==&gt;/html/body/out/+/out/+/out
-</code></pre>
-<h4>With <code>+</code> wildcards</h4>
-<p>The <code>+</code> wildcard enters each list element, producing a stream/set:</p>
-<pre><code class="language-mtron">mtron&gt; *page.as(rec::T)/html/body/out/+/out        [-- all children of all body elements --]
-==&gt;/html/body/out/+/out
-mtron&gt; *page.as(rec::T)/html/body/out/+/out/+/out  [-- all grandchildren --]
-==&gt;/html/body/out/+/out/+/out
-</code></pre>
-<h4>Filtering with <code>where()</code></h4>
-<pre><code class="language-mtron">mtron&gt; [-- Filter for elements with tag=a, then extract href --]
-mtron&gt; *page.as(rec::T)/html/body/out/+/out/+/out/+&gt;.where([tag=&gt;a])&gt;&gt;href
-==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '&gt;.where([tag=&gt;a])&gt;&gt;href'
-</code></pre>
-<h3>Converting Back — rec::T → html::T</h3>
-<p>Serialize a <code>rec::T</code> DOM tree back to an HTML string with <code>.as(html::T)</code>:</p>
-<pre><code class="language-mtron">mtron&gt; [-- Parse to rec, mutate, serialize back to html string --]
-mtron&gt; *&lt;http://example.com&gt;.as(rec::T)
-         .at(html/body/out -&gt; [/* modified children */]).as(html::T)
-==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '(html/body/out -&gt; [/* modified children */]).as(html::T)'
-</code></pre>
-<p><code>ObjHTMLSerializer.write()</code> handles both <code>str::T</code> (pass-through via <code>Jsoup.parse()</code>) and <code>rec::T</code> (DOM rendering).</p>
-<h3>Other MIME Types</h3>
-<p>The same pattern applies to JSON, XML, Markdown, etc.:</p>
-<pre><code class="language-mtron">mtron&gt; *&lt;http://example.com/data.json&gt;
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;http://example.com/data.json&gt;]@/sys/fail/1050
-mtron&gt; *&lt;http://example.com/data.json?mimeq=application/x-mtron&gt;
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;http://example.com/data.json?mimeq=application/x-mtron&gt;]@/sys/fail/1054
-mtron&gt; *&lt;http://example.com/data.json&gt;.as(rec::T)
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;http://example.com/data.json&gt;]@/sys/fail/1058
-</code></pre>
-<h3>MIME Type → TID Mapping</h3>
-<p><code>MIME.MIMEType.toTid()</code> provides the reverse mapping used by the <code>mimeq</code> query processor:</p>
+<p>The two <code>q</code> entries are the space's <strong>query processors</strong>, and both earn their place: <code>docq</code> is what lets <em>a space
+document its own tables</em> — so <code>?docq</code> on a table tells an agent what it is looking at before it queries it — and <code>incrq</code>
+is what makes a <code>_?incrq</code> write assign its own key (see <em>keys the database assigns</em> below).</p>
+<h3>types</h3>
 <table>
 <thead>
-<tr><th>MIME Type</th><th>TID</th></tr>
+<tr><th>type</th><th>vid</th><th>tid</th><th>meaning</th></tr>
 </thead>
 <tbody>
-<tr><td><code>text/html</code></td><td><code>/m/web/mime/html</code> (<code>HTML_TID</code>)</td></tr>
-<tr><td><code>text/markdown</code></td><td><code>/m/web/mime/markdown</code> (<code>MARKDOWN_TID</code>)</td></tr>
-<tr><td><code>application/json</code></td><td><code>/m/web/mime/json</code> (<code>WEB_JSON_TID</code>)</td></tr>
-<tr><td><code>application/xml</code></td><td><code>/m/web/mime/xml</code> (<code>XML_TID</code>)</td></tr>
-<tr><td><code>text/css</code></td><td><code>/m/web/mime/css</code> (<code>CSS_TID</code>)</td></tr>
-<tr><td><code>text/x-java</code></td><td><code>/m/web/mime/java</code> (<code>JAVA_TID</code>)</td></tr>
-<tr><td><code>application/x-mtron</code></td><td><code>null</code> (structural parse gate)</td></tr>
+<tr><td><code>tblespace::T</code></td><td><code>/m/tble/space/tblespace</code></td><td><code>space::T</code></td><td>a JDBC database as a space; isa <code>rec[host=&gt;uri::T,driver=&gt;uri::T]</code></td></tr>
+<tr><td>table types</td><td><code>/sys/space/&lt;space&gt;/instset/&lt;table&gt;</code></td><td><code>rec::T</code></td><td>one per discovered table, published into the space's schema instset</td></tr>
 </tbody>
 </table>
-<h3>Important Notes</h3>
+<pre><code class="language-mtron">mtron&gt; *tblespace?docq      [-- the type, its ctor, and the space's own summary --]
+==&gt;docs::[
+    obj=&gt;tblespace::T,
+    desc=&gt;'[structural] a metatron realization of a relational database',
+    example=&gt;['*&lt;http://metatron.phaseshift.studio/skills/mtron/references...']]
+mtron&gt; *&lt;/m/tble/helper&gt;    [-- the instset's helper rec: the llm chat schema, as a str --]
+==&gt;[llm_chat_schema=&gt;inst?#{*}&lt;=#{*}()]
+</code></pre>
+<h3>configuration</h3>
+<table>
+<thead>
+<tr><th>key</th><th>type</th><th>meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>pattern</code></td><td><code>uri::T</code></td><td>the uri subtree this space owns — <code>tbledoc:#</code></td></tr>
+<tr><td><code>host</code></td><td><code>uri::T</code></td><td>the JDBC url <strong>without</strong> its <code>jdbc:</code> prefix: <code>&lt;sqlite:/tmp/x.db&gt;</code>, <code>&lt;postgresql://host:5432/db?user=..&amp;password=..&gt;</code></td></tr>
+<tr><td><code>driver</code></td><td><code>uri::T</code></td><td>the JDBC driver class — <code>&lt;org.sqlite.JDBC&gt;</code>, <code>&lt;org.postgresql.Driver&gt;</code>, <code>&lt;org.mariadb.jdbc.Driver&gt;</code></td></tr>
+<tr><td><code>route</code></td><td><code>rec::T</code></td><td>scheme → path inside the space: <code>[tbledoc: =&gt; &lt;&gt;]</code> strips the scheme; a value can point a subtree elsewhere</td></tr>
+<tr><td><code>q</code></td><td><code>rec::T</code></td><td>query processors — <code>incrq::[=&gt;]</code> for <code>_?incrq</code> key assignment, <code>docq</code> to document tables (above)</td></tr>
+<tr><td><code>serializer</code></td><td><code>uri::T</code></td><td>the serializer the key/value side uses; defaults to mtron's own</td></tr>
+<tr><td><code>table</code></td><td><code>lst::T</code></td><td><strong>deprecated and ignored</strong> — table mapping is always on (older boot files still carry <code>table =&gt; [,]</code>)</td></tr>
+</tbody>
+</table>
+<p>Two practical notes: sqlite will not create the parent directory of the database file, so it must already exist; and
+mariadb/mysql hosts carry their credentials in the uri. A space may also be built by the ctor alone —
+<code>tblespace::[host=&gt;..,driver=&gt;..]</code> — and mounted at any vid.</p>
+<h3>writing rows — the table appears from the first write</h3>
+<p>There is no DDL to write. The first <code>rec</code> written to a collection creates the table from the rec's fields; the vid's
+last segment becomes the primary key; and a field the table has never seen widens the table (<code>ALTER TABLE</code>) and the
+collection's type with it.</p>
+<pre><code class="language-mtron">mtron&gt; tbledoc:person/1 -&gt; [name=&gt;'marko',age=&gt;29]
+==&gt;[name=&gt;'marko',age=&gt;29]
+mtron&gt; tbledoc:person/2 -&gt; [name=&gt;'grant',age=&gt;25]
+==&gt;[name=&gt;'grant',age=&gt;25]
+mtron&gt; tbledoc:person/3 -&gt; [name=&gt;'metis',age=&gt;41]
+==&gt;[name=&gt;'metis',age=&gt;41]
+mtron&gt; tbledoc:person/4 -&gt; [name=&gt;'xilo',age=&gt;33,skill=&gt;'graph']    [-- a field the table has not seen --]
+==&gt;[name=&gt;'xilo',age=&gt;33,skill=&gt;'graph']
+</code></pre>
+<p>SQL column types follow the obj types, and the column catalog is readable as data — <code>_mtron_meta</code> is where metatron
+keeps what SQL cannot say:</p>
+<pre><code class="language-mtron">mtron&gt; */sys/space/tbledoc.sql('SELECT table_name, column_name, base_vid, obj_tid, ref_table FROM _mtron_meta')
+==&gt;[
+    table_name=&gt;'person',
+    column_name=&gt;'$table',
+    base_vid=&gt;'/m/rec',
+    obj_tid=&gt;'/m/rec']
+==&gt;[
+    table_name=&gt;'person',
+    column_name=&gt;'skill',
+    base_vid=&gt;'/m/str',
+    obj_tid=&gt;'/m/str']
+==&gt;[
+    table_name=&gt;'award',
+    column_name=&gt;'$table',
+    base_vid=&gt;'/m/rec',
+    obj_tid=&gt;'/m/rec']
+==&gt;[
+    table_name=&gt;'award',
+    column_name=&gt;'trophy',
+    base_vid=&gt;'/m/str',
+    obj_tid=&gt;'/m/str']
+==&gt;[
+    table_name=&gt;'award',
+    column_name=&gt;'recipient',
+    base_vid=&gt;'/m/inst',
+    obj_tid=&gt;'/m/inst/auto_from',
+    ref_table=&gt;'person']
+==&gt;[
+    table_name=&gt;'person',
+    column_name=&gt;'age',
+    base_vid=&gt;'/m/int',
+    obj_tid=&gt;'/m/int']
+==&gt;[
+    table_name=&gt;'person',
+    column_name=&gt;'name',
+    base_vid=&gt;'/m/str',
+    obj_tid=&gt;'/m/str{2}']
+</code></pre>
+<p>A structural obj (<code>tags=&gt;['a','b']</code>) rides in a <code>TEXT</code> column with its type preserved in <code>obj_tid</code>, so a read
+reconstructs the lst rather than a string that looks like one.</p>
+<h3>reading rows</h3>
+<pre><code class="language-mtron">mtron&gt; *tbledoc:person/+              [-- every row as a rec --]
+==&gt;[name=&gt;'xilo',age=&gt;33,skill=&gt;'graph']
+==&gt;[name=&gt;'marko',age=&gt;29]
+==&gt;[name=&gt;'metis',age=&gt;41]
+==&gt;[name=&gt;'grant',age=&gt;25]
+==&gt;[name=&gt;'vela',age=&gt;53]
+mtron&gt; *tbledoc:person/1              [-- one row --]
+==&gt;[name=&gt;'marko',age=&gt;29]
+mtron&gt; *tbledoc:person/+/             [-- vid =&gt; row --]
+==&gt;tbledoc:person/4=&gt;[name=&gt;'xilo',age=&gt;33,skill=&gt;'graph']
+==&gt;tbledoc:person/1=&gt;[name=&gt;'marko',age=&gt;29]
+==&gt;tbledoc:person/3=&gt;[name=&gt;'metis',age=&gt;41]
+==&gt;tbledoc:person/2=&gt;[name=&gt;'grant',age=&gt;25]
+==&gt;tbledoc:person/5=&gt;[name=&gt;'vela',age=&gt;53]
+mtron&gt; *tbledoc:person/+/name         [-- one column, across rows --]
+==&gt;'metis'
+==&gt;'grant'
+==&gt;'vela'
+==&gt;'marko'
+==&gt;'xilo'
+mtron&gt; *tbledoc:person/1/name         [-- one field: the row is unrolled --]
+==&gt;'marko'
+mtron&gt; *tbledoc:person/+/id           [-- the keys: they live in the vid, not in the body --]
+==&gt;1
+==&gt;5
+==&gt;2
+==&gt;4
+==&gt;3
+</code></pre>
+<p>Rows come back in whatever order the backend chose — say so in the expression (<code>.order(select(col))</code>) when position
+matters.</p>
+<h4>anchor vs clone: who keeps the address</h4>
+<p><code>*</code> is a <strong>clone</strong> and <code>@</code> is an <strong>anchor</strong>, and for a table row that is the difference between a value and an
+<em>addressable</em> value. Take the fields out of the rows and the clone loses the row it came from:</p>
+<pre><code class="language-mtron">mtron&gt; *tbledoc:person/+/+      [-- clone: fields detached from their rows --]
+==&gt;'metis'
+==&gt;41
+==&gt;'grant'
+==&gt;25
+==&gt;53
+==&gt;'vela'
+==&gt;33
+==&gt;29
+==&gt;'graph'
+==&gt;'marko'
+==&gt;'xilo'
+mtron&gt; @tbledoc:person/+/+      [-- anchor: the same fields, each still addressed to its row --]
+==&gt;'metis'@tbledoc:person/3/name
+==&gt;41@tbledoc:person/3/age
+==&gt;'grant'@tbledoc:person/2/name
+==&gt;25@tbledoc:person/2/age
+==&gt;53@tbledoc:person/5/age
+==&gt;'vela'@tbledoc:person/5/name
+==&gt;33@tbledoc:person/4/age
+==&gt;29@tbledoc:person/1/age
+==&gt;'graph'@tbledoc:person/4/skill
+==&gt;'marko'@tbledoc:person/1/name
+==&gt;'xilo'@tbledoc:person/4/name
+</code></pre>
+<p>The same holds for a rewrite's result — it is the clone path that hands rows back with a placeholder vid, which is why
+the anchored form is the one to keep when the rows might be written back:</p>
+<pre><code class="language-mtron">mtron&gt; *tbledoc:person/+.take(2)     [-- clone path --]
+==&gt;{2}[name=&gt;'marko',age=&gt;29]@tbledoc:person/noobj
+==&gt;{2}[name=&gt;'grant',age=&gt;25]@tbledoc:person/noobj
+mtron&gt; @tbledoc:person/+.take(2)     [-- anchor path --]
+==&gt;{2}[name=&gt;'marko',age=&gt;29]@tbledoc:person/noobj
+==&gt;{2}[name=&gt;'grant',age=&gt;25]@tbledoc:person/noobj
+</code></pre>
+<h3>the rewrites — reads that become SQL</h3>
+<p>The interesting half of <code>/m/tble</code>: a read that matches a table is rewritten to SQL before it runs, so <code>count()</code> is
+<code>SELECT COUNT(*)</code>, <code>=?=</code> is <code>WHERE</code>, and a projection is a column list. The match is on the <em>code</em>, not the data — the
+same expression over a <code>memspace</code> stays in mtron.</p>
+<pre><code class="language-mtron">mtron&gt; *tbledoc:person/+.=?=[age=&gt;?&lt;30]        [-- SELECT * FROM person WHERE age &lt; 30 --]
+==&gt;[name=&gt;'marko',age=&gt;29]@tbledoc:person/noobj
+==&gt;[name=&gt;'grant',age=&gt;25]@tbledoc:person/noobj
+mtron&gt; *tbledoc:person/+.count()               [-- SELECT COUNT(*) FROM person --]
+==&gt;5
+mtron&gt; *tbledoc:person/+/age.sum()             [-- SELECT SUM(age) FROM person --]
+==&gt;181.0000
+mtron&gt; *tbledoc:person/+/age.mean()            [-- SELECT AVG(age) FROM person --]
+==&gt;36.2000
+mtron&gt; *tbledoc:person/+.==[name=&gt;_]           [-- SELECT name FROM person --]
+==&gt;[name=&gt;'xilo']
+==&gt;[name=&gt;'marko']
+==&gt;[name=&gt;'metis']
+==&gt;[name=&gt;'grant']
+==&gt;[name=&gt;'vela']
+mtron&gt; *tbledoc:person/+.order(select(age))    [-- ... ORDER BY age --]
+==&gt;{2}[name=&gt;'grant',age=&gt;25]@tbledoc:person/noobj
+==&gt;{2}[name=&gt;'marko',age=&gt;29]@tbledoc:person/noobj
+==&gt;{2}[name=&gt;'xilo',age=&gt;33,skill=&gt;'graph']@tbledoc:person/noobj
+==&gt;{2}[name=&gt;'metis',age=&gt;41]@tbledoc:person/noobj
+==&gt;{2}[name=&gt;'vela',age=&gt;53]@tbledoc:person/noobj
+mtron&gt; *tbledoc:person/+.dedup(select(name))   [-- SELECT DISTINCT name FROM person --]
+==&gt;{2}'marko'
+==&gt;{2}'grant'
+==&gt;{2}'metis'
+==&gt;{2}'xilo'
+==&gt;{2}'vela'
+mtron&gt; *tbledoc:person/+.take(2)               [-- ... LIMIT 2 --]
+==&gt;{2}[name=&gt;'marko',age=&gt;29]@tbledoc:person/noobj
+==&gt;{2}[name=&gt;'grant',age=&gt;25]@tbledoc:person/noobj
+mtron&gt; *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
+==&gt;{2}[name=&gt;'grant',age=&gt;25]@tbledoc:person/noobj
+==&gt;{2}[name=&gt;'metis',age=&gt;41]@tbledoc:person/noobj
+==&gt;{2}[name=&gt;'xilo',age=&gt;33,skill=&gt;'graph']@tbledoc:person/noobj
+==&gt;{2}[name=&gt;'vela',age=&gt;53]@tbledoc:person/noobj
+</code></pre>
+<table>
+<thead>
+<tr><th>rewrite</th><th>mtron</th><th>sql</th></tr>
+</thead>
+<tbody>
+<tr><td><code>sql_where</code></td><td><code>*db:table/+/+.=?=[col=&gt;pred]</code></td><td><code>SELECT * ... WHERE</code></td></tr>
+<tr><td><code>sql_where_count</code></td><td><code>*db:table/+/+.=?=[col=&gt;pred].count()</code></td><td><code>SELECT COUNT(*) ... WHERE</code></td></tr>
+<tr><td><code>sql_where_order</code></td><td><code>...=?=[..].order(select(col))</code></td><td><code>... WHERE ... ORDER BY</code></td></tr>
+<tr><td><code>sql_where_order_offset</code></td><td><code>...=?=[..].order(select(col)).skip(n)</code></td><td><code>... ORDER BY ... OFFSET n</code></td></tr>
+<tr><td><code>sql_where_limit</code></td><td><code>...=?=[..].take(n)</code></td><td><code>... WHERE ... LIMIT n</code></td></tr>
+<tr><td><code>sql_where_offset</code></td><td><code>...=?=[..].skip(n)</code></td><td><code>... WHERE ... OFFSET n</code></td></tr>
+<tr><td><code>sql_where_offset_limit</code></td><td><code>...=?=[..].skip(m).take(n)</code></td><td><code>... WHERE ... LIMIT n OFFSET m</code></td></tr>
+<tr><td><code>sql_select</code></td><td><code>*db:table/+/+.==[col=&gt;_]</code></td><td><code>SELECT col ...</code></td></tr>
+<tr><td><code>sql_order</code></td><td><code>*db:table/+/+.order(select(col))</code></td><td><code>... ORDER BY col</code></td></tr>
+<tr><td><code>sql_distinct</code></td><td><code>*db:table/+/+.dedup(select(col))</code></td><td><code>SELECT DISTINCT col ...</code></td></tr>
+<tr><td><code>sql_count</code></td><td><code>*db:table/+/+.count()</code></td><td><code>SELECT COUNT(*)</code></td></tr>
+<tr><td><code>sql_sum</code></td><td><code>*db:table/+/col.sum()</code></td><td><code>SELECT SUM(col)</code></td></tr>
+<tr><td><code>sql_mean</code></td><td><code>*db:table/+/col.mean()</code></td><td><code>SELECT AVG(col)</code></td></tr>
+<tr><td><code>sql_limit</code></td><td><code>*db:table/+/+.take(n)</code></td><td><code>... LIMIT n</code></td></tr>
+<tr><td><code>sql_offset</code></td><td><code>*db:table/+/+.skip(n)</code></td><td><code>... OFFSET n</code></td></tr>
+<tr><td><code>sql_offset_limit</code></td><td><code>*db:table/+/+.skip(m).take(n)</code></td><td><code>... LIMIT n OFFSET m</code></td></tr>
+<tr><td><code>kv_count</code></td><td><code>*db:kv/+.count()</code></td><td><code>SELECT COUNT(*) FROM kv_store WHERE furi LIKE ...</code></td></tr>
+<tr><td><code>kv_limit</code></td><td><code>*db:kv/+.take(n)</code></td><td><code>... LIMIT n</code> (broken on the typed schema — below)</td></tr>
+</tbody>
+</table>
+<p>The instset prints that list itself, and each rewrite documents its own before/after code:</p>
+<pre><code class="language-mtron">mtron&gt; */m/tble?docq
+==&gt;docs::[
+    obj=&gt;instset::[
+     pattern=&gt;/m/tble/#,
+     q=&gt;[docq::[
+    pattern=&gt;docq,
+    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+     space=&gt;[super=&gt;!*/m],
+     const=&gt;[[llm_chat_schema=&gt;inst?#{*}&lt;=#{*}()]@helper],
+     type=&gt;[tblespace::T],
+     inst=&gt;[sql?rec{*}&lt;=tblespace(str::T)],
+     rewrite=&gt;[/m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_offset?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_offset_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_order?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_order_offset?code{?}&lt;=code(),...(8 more)]]@/m/tble,
+    desc=&gt;'relational tables, typed rows, and SQL rewrites within the ...',
+    example=&gt;['*acme:customer.where[person=&gt;[name=&gt;_=&gt;age=&gt;?&gt;29]]']]
+</code></pre>
+<h3>native sql</h3>
+<p>When the vocabulary is not enough, go to the backend. <code>sql</code> takes a <code>str</code> — templates included — and yields <code>rec{*}</code>,
+which mtron then treats like any other objs.</p>
+<pre><code class="language-mtron">mtron&gt; */sys/space/tbledoc.sql('SELECT name, age FROM person WHERE age &lt; 30')
+==&gt;[name=&gt;'marko',age=&gt;29]
+==&gt;[name=&gt;'grant',age=&gt;25]
+mtron&gt; */sys/space/tbledoc.sql('SELECT name, age FROM person WHERE age &lt; 30')&gt;&gt;age.sum()
+==&gt;54
+</code></pre>
+<p>A <code>sql</code> str may carry several statements: all but the last run as updates, the last is the query whose result set comes
+back. Templates reach the graph, so a query can be parameterized by live state — the instruction's own example is
+<code>sql('SELECT * FROM movie WHERE runtime &lt; ${*next_event} - time(now)')</code>.</p>
+<h3>foreign keys: a <code>!*</code> in the cell</h3>
+<p><code>auto_from</code> is metatron's <strong>structural</strong> foreign key: the pointer is part of the row value, and it stays lazy until a
+traversal forces the read. Where a <code>where</code>-join computes a relationship at query time, a <code>!*</code> cell <em>is</em> the
+relationship.</p>
+<pre><code class="language-mtron">mtron&gt; tbledoc:award/1 -&gt; [trophy=&gt;'gold',recipient=&gt;!*tbledoc:person/1]
+==&gt;[
+    trophy=&gt;'gold',
+    recipient=&gt;!*tbledoc:person/1]
+mtron&gt; tbledoc:award/2 -&gt; [trophy=&gt;'silver',recipient=&gt;!*tbledoc:person/2]
+==&gt;[
+    trophy=&gt;'silver',
+    recipient=&gt;!*tbledoc:person/2]
+mtron&gt; *tbledoc:award/+                [-- the cell renders as an unresolved pointer --]
+==&gt;[
+    trophy=&gt;'silver',
+    recipient=&gt;!*tbledoc:person/2]
+==&gt;[
+    trophy=&gt;'gold',
+    recipient=&gt;!*tbledoc:person/1]
+mtron&gt; *tbledoc:award/1/recipient      [-- traversal resolves it to the row --]
+==&gt;[name=&gt;'marko',age=&gt;29]
+</code></pre>
+<p>The SQL footprint is deliberately plain: the column is a bare <code>INTEGER</code> (<code>TEXT</code> for string keys), there is no SQL
+<code>FOREIGN KEY</code> constraint, and the pointer metadata — including <code>ref_table</code> — lives in <code>_mtron_meta</code>. An intra-space
+pointer stores the bare table name; an inter-space pointer (<code>!*mem:venue/1</code> into a <code>memspace</code>, a <code>grphspace</code>, an
+fsSpace…) keeps its scheme and routes through the router, so a row can point anywhere in the metatron graph. Both
+kinds may sit in one row.</p>
+<h3>the schema of what you are querying</h3>
+<pre><code class="language-mtron">mtron&gt; */sys/space/tbledoc/schema/pattern      [-- where the discovered types are published --]
+==&gt;/sys/space/tbledoc/instset/#
+mtron&gt; */sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
+==&gt;/sys/space/tbledoc/instset/award=&gt;rec::T[?[{?}trophy=&gt;str::T,recipient=&gt;isa(person/+/id).!*id(),uri{?}::T=&gt;#::T]]@/sys/space/tbledoc/instset/award
+==&gt;/sys/space/tbledoc/instset/person=&gt;rec::T[?[{?}name=&gt;str::T,{?}age=&gt;int::T,{?}skill=&gt;str::T,uri{?}::T=&gt;#::T]]@/sys/space/tbledoc/instset/person
+</code></pre>
+<p>Reading the schema is how you meet a table you have never seen: each entry is an <code>isa([{?}name=&gt;str::T,…])</code> refinement
+of <code>rec::T</code>, and a foreign-key column appears as <code>recipient=&gt;isa(person/+/id).!*id()</code> — the column <em>is</em> the pointer.
+A table's type is replaced when the table widens.</p>
+<p>Discovery is <strong>lazy</strong>, and it is worth knowing exactly what fires it: the catalog walk runs on the first <em>write</em>, or on
+a read of the space's instset (<code>*/sys/space/&lt;space&gt;/instset/+/</code>). Until it has run, the space does not know which
+collections are tables, so a table read falls through to the key/value side and comes back empty — a freshly mounted
+space answers <code>0</code> to a count that the database file can prove is not zero (see <em>taking the space down</em> below).</p>
+<h3>the key/value fall-through — and documents</h3>
+<p><code>kv</code>, <code>kv_store</code>, <code>msg</code> and <code>_mtron_meta</code> are the reserved collections. A write to a reserved path is stored as a
+typed key/value entry — same database, no table — and a nested <code>rec</code> turns that corner into a document store:</p>
+<pre><code class="language-mtron">mtron&gt; tbledoc:kv/greeting -&gt; 'salve, metatron'
+==&gt;'salve, metatron'
+mtron&gt; *tbledoc:kv/greeting
+==&gt;'salve, metatron'
+mtron&gt; tbledoc:kv/session/1 -&gt; [user=&gt;'marko',cart=&gt;['fig','olive']]
+==&gt;[user=&gt;'marko',cart=&gt;['fig','olive']]
+mtron&gt; *tbledoc:kv/session/1/cart      [-- a field of the stored document --]
+==&gt;['fig','olive']
+mtron&gt; *tbledoc:kv/+/                  [-- vid =&gt; value --]
+==&gt;tbledoc:kv/greeting=&gt;'salve, metatron'
+</code></pre>
+<h3>patching a row (a write replaces it)</h3>
+<p>A write to an existing key <strong>replaces the row body</strong> — fields left out of the rec are cleared:</p>
+<pre><code class="language-mtron">mtron&gt; tbledoc:person/5 -&gt; [name=&gt;'vela',age=&gt;52]
+==&gt;[name=&gt;'vela',age=&gt;52]
+mtron&gt; tbledoc:person/5 -&gt; [age=&gt;53]        [-- a partial write: `name` is cleared --]
+==&gt;[age=&gt;53]
+mtron&gt; *tbledoc:person/5
+==&gt;[age=&gt;53]
+</code></pre>
+<p>To patch, anchor the row and update it in place. <code>&gt;&gt;= [k=&gt;v]</code> overlays fields the row already has; <code>+[k=&gt;v]</code> promotes a
+field it does not (creating the column, if the table has never had one):</p>
+<pre><code class="language-mtron">mtron&gt; @tbledoc:person/5 &gt;&gt;= +[name=&gt;'vela']     [-- set promotion --]
+==&gt;[name=&gt;{2}'vela',age=&gt;53]
+mtron&gt; *tbledoc:person/5
+==&gt;[name=&gt;'vela',age=&gt;53]
+</code></pre>
+<h3>keys the database assigns</h3>
+<p><code>_</code> as the last path segment asks the backend for the key — the uri says <em>where the row lives in the table</em>, the
+database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
+processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
+<pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/2
+mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
+==&gt;[body=&gt;'another one']@tbledoc:note/4
+mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
+==&gt;1
+==&gt;3
+==&gt;2
+==&gt;4
+</code></pre>
+<h3>taking the space down</h3>
+<p>A space is a <strong>mount</strong>, not a copy. Writing <code>noobj</code> to its vid takes it down: the pattern stops routing, the JDBC
+connection closes, and the schema instset the space published goes with it. The rows do not — they live in the database
+file, so mounting a <code>tblespace</code> over the same file brings them back. The block below is also the shortest proof of how
+lazy that mount is: the rows are there from the first statement, but the space only learns they are <em>tables</em> when
+something walks the catalog:</p>
+<pre><code class="language-mtron">mtron&gt; /sys/space/tbledoc -&gt; noobj                 [-- unmount --]
+mtron&gt; tblespace::[pattern =&gt; tbledoc:#,
+                   host    =&gt; &lt;sqlite:/tmp/mtron-tbledoc.db&gt;,
+                   driver  =&gt; &lt;org.sqlite.JDBC&gt;,
+                   route   =&gt; [tbledoc: =&gt; &lt;&gt;]]@/sys/space/tbledoc
+==&gt;tblespace::[
+    pattern=&gt;tbledoc:#,
+    host=&gt;&lt;sqlite:/tmp/mtron-tbledoc.db&gt;,
+    driver=&gt;&lt;org.sqlite.JDBC&gt;,
+    route=&gt;[tbledoc:=&gt;&lt;&gt;]]@/sys/space/tbledoc
+mtron&gt; *tbledoc:person/+.count()                   [-- 0: a fresh mount has not discovered its tables yet --]
+==&gt;0
+mtron&gt; */sys/space/tbledoc/instset/+/              [-- reading the instset is what walks the catalog --]
+==&gt;/sys/space/tbledoc/instset/award=&gt;rec::T[?[{?}trophy=&gt;str::T,recipient=&gt;isa(person/+/id).!*id()]]@/sys/space/tbledoc/instset/award
+==&gt;/sys/space/tbledoc/instset/note=&gt;rec::T[?[{?}body=&gt;str::T]]@/sys/space/tbledoc/instset/note
+==&gt;/sys/space/tbledoc/instset/person=&gt;rec::T[?[{?}name=&gt;str::T,{?}age=&gt;int::T,{?}skill=&gt;str::T]]@/sys/space/tbledoc/instset/person
+mtron&gt; *tbledoc:person/+.count()                   [-- the rows were in the file all along --]
+==&gt;5
+mtron&gt; /sys/space/tbledoc -&gt; noobj                 [-- leave the graph as we found it --]
+</code></pre>
+<p>Unmount before re-mounting the same scheme under a different configuration: while a space is mounted it owns its
+pattern, and reads of an unmounted scheme fall through to the router's catch-all rather than failing loudly.</p>
+<h3>not available yet</h3>
 <ul>
-<li>Only <code>http://</code> currently works (not <code>https://</code>). Strip the 's' from https URLs.</li>
-<li>Tree walking requires <code>.as(rec::T)</code> first — typed strings don't support field access.</li>
-<li>httpSpace host is configured in boot: <code>host =&gt; &lt;http://localhost:8777&gt;</code>, <code>pattern =&gt; &lt;http://#&gt;</code></li>
-<li><code>?mimeq=application/x-mtron</code> on httpSpace triggers structural parse via the content-type serializer.</li>
-<li><code>?mimeq=text/html</code> just tags the string with <code>html::T</code> without structural conversion.</li>
+<li><strong><code>.explain()</code> on a rewritten read fails.</strong> The rewrite replaces the code with a rewrite inst that is not itself
+callable, so a <code>count()</code> read explains as
+<code>fail::[args do not match inst args: [X=&gt;/m/tble/inst/rewrite/sql_count?int&lt;=#{0}(person/+)]]</code>.
+Ask the rewrite instead — <code>*/m/tble?docq</code> prints the family, and each entry documents its own before/after code:</li>
+</ul>
+<pre><code class="language-mtron">*tbledoc:person/+.count().explain()    [-- fail:: args do not match inst args --]
+</code></pre>
+<ul>
+<li><strong><code>kv_limit</code> is broken on the typed key/value schema.</strong> <code>*tbledoc:kv/+.take(n)</code> compiles to
+<code>SELECT furi, obj FROM kv_store WHERE ...</code> and sqlite answers <em>no such column: obj</em>. <code>kv_count</code>
+(<code>*tbledoc:kv/+.count()</code>)
+is fine.</li>
+</ul>
+<pre><code class="language-mtron">*tbledoc:kv/+.take(1)                  [-- fail:: SQLITE_ERROR ... no such column: obj --]
+</code></pre>
+<ul>
+<li>
+<p><strong><code>&gt;&gt;{col}</code> is a drain, not a projection.</strong> <code>*tbledoc:person/+&gt;&gt;{name,age}</code> yields the field <em>values</em> as a flat
+stream, not recs. The projection rewrite is <code>==[col=&gt;_]</code> (<code>sql_select</code>).</p>
+</li>
+<li>
+<p><strong>the docs runner doubles a <code>_?incrq</code> row.</strong> In a live VM session one <code>_?incrq</code> write inserts one row, and the assigned
+key stamps onto the vid. Evaluated by the docs runner — which evaluates with type checking disabled — the same write
+lands <em>two</em> rows, and the vid it returns is the second key, so the key list above reads <code>1, 3, 2, 4</code> rather than
+<code>1, 2</code>. The idiom is the same either way; the doubling is a runner-context artifact, not a misconfiguration.</p>
+</li>
+</ul>
+<h3>see also</h3>
+<ul>
+<li><a href="../metatron/references/tble-space-java.html">tbleSpace (Java)</a> — the same space from the inside: dual-path reads, VID
+stamping, <code>ExistingTableSchema</code>, schema generation, dialect handling.</li>
+<li><a href="connecting-datasources.html">Connecting Data Sources</a> — the pattern + route model every space shares, and <code>!*</code>.</li>
+<li><a href="dckrspace-mtron.html">dckrSpace</a> — an end-to-end SQLite container + tbleSpace walkthrough.</li>
+<li>the design records at <code>docs/design/tbleSpace-update-design.md</code> and <code>docs/design/sql_mqtt_schema_design.md</code>.</li>
+<li><code>*/m/tble?docq</code> — the instset's own inventory (1 inst, 18 rewrites, 1 const) read straight from the VM.</li>
 </ul>
 
     </div>

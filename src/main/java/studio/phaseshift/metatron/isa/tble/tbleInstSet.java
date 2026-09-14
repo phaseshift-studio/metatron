@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.schema.SQLRewriteUtils;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
@@ -124,7 +123,7 @@ public class tbleInstSet extends AbstractInstSet {
                                                 instC(M_ISA_INST_TID.dom(ALL_STAR).rng(ALL_STAR), lst(), (lhs, inst) -> MTronException.wrap(() -> str(new String(new BufferedInputStream(Objects.requireNonNull(tbleInstSet.class.getResourceAsStream("llm_messages_schema.sql"))).readAllBytes()))))),
                                         REC_TID, TBLE_ISA_TID.extend("helper")),
                                 "a collection of tble related utilities")),
-                uri(TYPE), lst(docWrap(TBLE_SPACE_TYPE, "a metatron realization of a relational database", "*.metatron/skill/mtron/references/tble_space.md")),
+                uri(TYPE), lst(docWrap(TBLE_SPACE_TYPE, "a metatron realization of a relational database", "*<http://metatron.phaseshift.studio/skills/mtron/references/tble-instset-mtron.md>")),
                 uri(INST), lst(Stream.of(
                         docWrap(instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) ->
                                         MTronException.wrap(() -> lhs.<tbleSpace>as().sql(inst.arg(0).strValue()))
