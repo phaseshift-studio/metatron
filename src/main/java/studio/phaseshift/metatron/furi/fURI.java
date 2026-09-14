@@ -184,10 +184,19 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             return false;
         boolean hasCapitalGeneric = false;
         for (final String seg : this.path()) {
-            if (!seg.isEmpty() && seg.chars().allMatch(Character::isUpperCase))
+            // plain char loop (the chars() stream allocates a pipeline per segment)
+            if (seg.isEmpty())
+                continue;
+            boolean allUpper = true;
+            for (int i = 0; i < seg.length(); i++) {
+                final char c = seg.charAt(i);
+                if (c != '#' && c != '+' && !Character.isAlphabetic(c) || Character.isLowerCase(c))
+                    return false;
+                if (!Character.isUpperCase(c))
+                    allUpper = false;
+            }
+            if (allUpper)
                 hasCapitalGeneric = true;
-            if (seg.chars().anyMatch(c -> c != '#' && c != '+' && !Character.isAlphabetic(c) || Character.isLowerCase(c)))
-                return false;
         }
         return hasCapitalGeneric;
     }

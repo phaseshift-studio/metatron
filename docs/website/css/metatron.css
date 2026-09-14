@@ -137,7 +137,7 @@ table .ulist {
     background-color: var(--secondarycolor);
     background-clip: border-box;
     border: 2px solid;
-    border-color: var(--primary);
+    border-color: var(--mred);
     border-radius: 2px;
 }
 

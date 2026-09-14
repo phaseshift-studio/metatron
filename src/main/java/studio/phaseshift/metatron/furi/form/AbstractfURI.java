@@ -234,13 +234,12 @@ public abstract class AbstractfURI implements fURI {
             if (segment.equals("#") || segment.equals("+"))
                 return true;
         }
-        return this.qMap().entrySet().stream().anyMatch(kv -> {
-            if (kv.getValue().equals("#") || kv.getValue().equals("+"))
+        // plain loop over the query (a stream allocates a pipeline per call)
+        for (final Map.Entry<String, String> kv : this.qMap().entrySet()) {
+            if (kv.getValue().equals("#") || kv.getValue().equals("+") || kv.getKey().equals("#") || kv.getKey().equals("+"))
                 return true;
-            if (kv.getKey().equals("#") || kv.getKey().equals("+"))
-                return true;
-            return false;
-        });
+        }
+        return false;
     }
 
     @Override
@@ -316,7 +315,15 @@ public abstract class AbstractfURI implements fURI {
                 return true;
         } else
             return false;
-        if (rhs.one().equals(ALL))
+        // rhs.one() would allocate a fresh fURI per call; the comparison against ALL
+        // (path ["#"], no scheme/host/poly/query, coefficient normalized away by one()) can be inlined
+        if (rhs.path().size() == 1
+                && Objects.equals("#", rhs.path().getFirst())
+                && null == rhs.scheme()
+                && null == rhs.host()
+                && rhs.poly().isEmpty()
+                && rhs.qMap().isEmpty()
+                && (null == rhs.templates() || rhs.templates().isEmpty()))
             return true;
         if (!rhs.hasPattern() && !this.hasPattern()) {
             if (!this.name().equals(rhs.name()))
@@ -777,7 +784,13 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.scheme(), /*this.host(), this.port(),*/ this.path(), this.c() /*this.poly(), this.qMap()*/, this.templates());
+        // identical to Objects.hash(scheme, path, c, templates) without the Object[] allocation
+        int h = 1;
+        h = 31 * h + (null == this.scheme() ? 0 : this.scheme().hashCode());
+        h = 31 * h + (null == this.path() ? 0 : this.path().hashCode());
+        h = 31 * h + (null == this.c() ? 0 : this.c().hashCode());
+        h = 31 * h + (null == this.templates() ? 0 : this.templates().hashCode());
+        return h;
     }
 
     @Override

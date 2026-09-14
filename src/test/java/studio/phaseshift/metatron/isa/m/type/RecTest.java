@@ -80,7 +80,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[a=>b]                                % a                    % /m/uri::b",
             "[a=>b]                                % a/                   % a=>b",
             "[a=>{b,c}]                            % a/                   % a=>{b,c}",
-            "[a=>noobj]                            % a/                   % noobj",
+            "[a=>noobj]                            % a/                   % noobj", // (a=>noobj) TODO:
             "[a=>noobj]                            % a                    % noobj",
             "[=>]                                  % a                    % noobj",
             "[1=>[2=>3]]                           % 1                    % [2=>3]",

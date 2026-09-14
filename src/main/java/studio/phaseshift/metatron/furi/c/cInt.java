@@ -219,22 +219,24 @@ public class cInt implements C<Long, cInt> {
         return (this.min == null || this.min < 0L) && (this.max != null && this.max < 0L);
     }
 
-    private Long[] minMax() {
-        return new Long[]{this.min == null ? Long.MIN_VALUE : this.min, this.max == null ? Long.MAX_VALUE : this.max};
-    }
-
     @Override
     public boolean within(final cInt rhs) {
-        final Long[] thisMinMax = this.minMax();
-        final Long[] rhsMinMax = rhs.minMax();
-        return thisMinMax[0].compareTo(rhsMinMax[0]) >= 0 && thisMinMax[1].compareTo(rhsMinMax[1]) <= 0;
+        // no array allocation: compute the bounds check inline
+        final long thisMin = this.min == null ? Long.MIN_VALUE : this.min;
+        final long thisMax = this.max == null ? Long.MAX_VALUE : this.max;
+        final long rhsMin = rhs.min == null ? Long.MIN_VALUE : rhs.min;
+        final long rhsMax = rhs.max == null ? Long.MAX_VALUE : rhs.max;
+        return thisMin >= rhsMin && thisMax <= rhsMax;
     }
 
     @Override
     public boolean contains(final cInt rhs) {
-        final Long[] thisMinMax = this.minMax();
-        final Long[] rhsMinMax = rhs.minMax();
-        return thisMinMax[0].compareTo(rhsMinMax[0]) <= 0 && thisMinMax[1].compareTo(rhsMinMax[1]) >= 0;
+        // no array allocation: compute the bounds check inline
+        final long thisMin = this.min == null ? Long.MIN_VALUE : this.min;
+        final long thisMax = this.max == null ? Long.MAX_VALUE : this.max;
+        final long rhsMin = rhs.min == null ? Long.MIN_VALUE : rhs.min;
+        final long rhsMax = rhs.max == null ? Long.MAX_VALUE : rhs.max;
+        return thisMin <= rhsMin && thisMax >= rhsMax;
     }
 
     @Override
@@ -320,7 +322,8 @@ public class cInt implements C<Long, cInt> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.min, this.max);
+        // identical to Objects.hash(min, max) without the Object[] allocation
+        return 31 * (31 + (null == this.min ? 0 : this.min.hashCode())) + (null == this.max ? 0 : this.max.hashCode());
     }
 
     @Override
