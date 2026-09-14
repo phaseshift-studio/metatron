@@ -1,0 +1,27 @@
+# Console AbstractWidget base test — the base of the interactive widgets (menu bars,
+# selectors, grids, line widgets) and of every tool, after the move from JRec to
+# SpaceRec: rec-only state, one read path, one write path.
+#
+#   bin/metatron-console --from classes --steps bin/test/console-abstract-widget.steps
+#
+# A menu bar is the case worth driving: it is an AbstractWidget whose rec carries a
+# *lst of other widgets* (line widgets), and it draws itself through the console's
+# FloatingSurface — so this exercises the base as a state holder, as a container of
+# widgets, and as a renderer.
+#
+# The line bodies carry colour macros ("menu-{{r}}File"), so the *rendered* text
+# ("menu-File") appears nowhere in the echoed command: a WAIT on a bare literal would
+# pass on the echo alone and prove nothing.  (The harness lowercases the transcript
+# for its case-insensitive matching, and strips ANSI.)
+#
+# Note: a line widget on its own draws nothing on display() by design — AbstractLineWidget
+# inherits AbstractWidget.run(), which is raw mode + attachment, not a render.  It is the
+# bar (and the tools) that draw.  Do not add an assertion that a lone line widget prints.
+
+WAIT_CONSOLE
+
+# --- the bar draws the line widgets its rec carries ---
+MARK bar
+SEND menu_bar_widget::[height=>1,lines=>[label_line_widget::[body=>'menu-{{r}}File'],label_line_widget::[body=>'menu-{{b}}Edit']]].display()
+WAIT menu-file 15
+WAIT menu-edit 15
