@@ -139,12 +139,12 @@
                     <li>
                         <div class="click-to-copy" title="click to copy">
                             <span class="badge bg-danger">only linux tested</span>
-                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                            <pre><code style="padding:25px;" class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
                         </div>
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <pre><code style="padding:25px;" class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -236,6 +236,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
                             </div>
                         </div>
                     </li>
@@ -266,21 +267,21 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <div class="skill-resource-group"> └─ language</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system</a>
-                                <div class="skill-resource-group"> └─ instset</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ui-instset-mtron.html">ui-instset</a>
-                                <div class="skill-resource-group"> └─ other</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">deepseek harness</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/connecting-datasources.html">connecting-datasources</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference_mtron.html">language-reference_mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mtron-fsspace.html">mtron-fsspace</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -381,7 +382,7 @@
 <main class="container my-4 flex-grow-1">
     <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">math instruction set</h1>
-        <small>numeric constants, dates, time, space, and currency.</small><br/>
+        <small>numeric constants, dates, time, distance, space, and currency.</small><br/>
         <a href="math-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>math-instset-mtron.md</a>
     </div>
     <div class="markdown-body">
@@ -415,6 +416,19 @@ under <code>/m/math/+</code> and available via the standard type resolution syst
 <tr><td><code>currency::T</code></td><td><code>real::T</code></td><td>currency base</td></tr>
 <tr><td><code>usd::T</code></td><td><code>currency::T</code></td><td>united states currency</td></tr>
 <tr><td><code>euro::T</code></td><td><code>currency::T</code></td><td>european union currency</td></tr>
+<tr><td>***************</td><td>***************</td><td>***************************</td></tr>
+<tr><td><code>metric::T</code></td><td><code>real::T</code></td><td>metric distance base</td></tr>
+<tr><td><code>mm::T</code></td><td><code>metric::T</code></td><td>millimeter unit</td></tr>
+<tr><td><code>cm::T</code></td><td><code>metric::T</code></td><td>centimeter (10 mm)</td></tr>
+<tr><td><code>dm::T</code></td><td><code>metric::T</code></td><td>decimeter (10 cm)</td></tr>
+<tr><td><code>meter::T</code></td><td><code>metric::T</code></td><td>meter (100 cm)</td></tr>
+<tr><td><code>km::T</code></td><td><code>metric::T</code></td><td>kilometer (1000 m)</td></tr>
+<tr><td>***************</td><td>***************</td><td>***************************</td></tr>
+<tr><td><code>imperial::T</code></td><td><code>real::T</code></td><td>imperial distance base</td></tr>
+<tr><td><code>inch::T</code></td><td><code>imperial::T</code></td><td>inch (25.4 mm)</td></tr>
+<tr><td><code>foot::T</code></td><td><code>imperial::T</code></td><td>foot (12 inches)</td></tr>
+<tr><td><code>yard::T</code></td><td><code>imperial::T</code></td><td>yard (3 feet)</td></tr>
+<tr><td><code>mile::T</code></td><td><code>imperial::T</code></td><td>mile (1760 yards)</td></tr>
 </tbody>
 </table>
 <h4>dateTime (<code>/m/math/datetime</code>)</h4>
@@ -440,7 +454,7 @@ under <code>/m/math/+</code> and available via the standard type resolution syst
 <h5>construction</h5>
 <pre><code class="language-mtron">mtron&gt; [-- current system time --]
 mtron&gt; datetime_now()
-==&gt;datetime::&lt;//2026.09:13/14/55/13/899?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.09:14/11/22/27/195?tz=Z&gt;
 mtron&gt; [-- from record (goes through .as(uri::T) first) --]
 mtron&gt; [host=&gt;&lt;2024.12&gt;,port=&gt;25,path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
         c=&gt;[min=&gt;1,max=&gt;1],q=&gt;[tz=&gt;'-0500']].as(uri::T).as(datetime::T)
@@ -706,6 +720,162 @@ mtron&gt; kB::2048.0.normalize()
 ==&gt;mB::2.0000
 mtron&gt; tB::2048.0.normalize()
 ==&gt;pB::2.0000
+</code></pre>
+<h4>metric (<code>/m/math/metric</code>)</h4>
+<p><code>metric::T</code> is a <code>real::T</code> refinement. The metric distance unit types (<code>mm::T</code> … <code>km::T</code>) convert to each other via
+<code>.as()</code> at decimal ratios (the base unit is the millimeter); a conversion preserves the total millimeters, changing
+only the unit label.</p>
+<h5>conversion</h5>
+<pre><code class="language-mtron">mtron&gt; [-- upward: value shrinks, unit grows --]
+mtron&gt; mm::1000.0.as(meter::T)
+==&gt;meter::1.0000
+mtron&gt; cm::100.0.as(meter::T)
+==&gt;meter::1.0000
+mtron&gt; dm::10.0.as(meter::T)
+==&gt;meter::1.0000
+mtron&gt; [-- downward: value grows, unit shrinks --]
+mtron&gt; meter::1.0.as(cm::T)
+==&gt;cm::100.0000
+mtron&gt; km::1.0.as(meter::T)
+==&gt;meter::1000.0000
+mtron&gt; [-- multi-step: levels can be skipped --]
+mtron&gt; mm::1500000.0.as(km::T)
+==&gt;km::1.5000
+mtron&gt; km::0.5.as(cm::T)
+==&gt;cm::50000.0000
+mtron&gt; [-- cross-system: metric → imperial (25.4 mm = 1 inch) --]
+mtron&gt; meter::1.0.as(inch::T)
+==&gt;inch::39.3701
+mtron&gt; mm::127.0.as(inch::T)
+==&gt;inch::5.0000
+mtron&gt; km::1.0.as(mile::T)
+==&gt;mile::0.6214
+mtron&gt; [-- cross-system: imperial → metric --]
+mtron&gt; inch::1.0.as(cm::T)
+==&gt;cm::2.5400
+mtron&gt; yard::1.0.as(meter::T)
+==&gt;meter::0.9144
+mtron&gt; mile::1.0.as(km::T)
+==&gt;km::1.6093
+mtron&gt; [-- bare real: re-label only, no conversion --]
+mtron&gt; 5.0.as(meter::T)
+==&gt;meter::5.0000
+</code></pre>
+<p>A converted value tests as its target unit:</p>
+<pre><code class="language-mtron">mtron&gt; mm::1000.0.as(meter::T).matches(meter::T)
+==&gt;true
+</code></pre>
+<h5>relational operators</h5>
+<pre><code class="language-mtron">mtron&gt; [-- equality across units --]
+mtron&gt; mm::1000.0.eq(meter::1.0)
+==&gt;true
+mtron&gt; cm::100.0.eq(meter::1.0)
+==&gt;true
+mtron&gt; km::1.0.eq(mm::1000000.0)
+==&gt;true
+</code></pre>
+<h5>normalize</h5>
+<p><code>normalize()</code> cascades upward while the value reaches ~2× the next larger unit, until stable:</p>
+<table>
+<thead>
+<tr><th>from</th><th>threshold</th><th>to</th></tr>
+</thead>
+<tbody>
+<tr><td>mm</td><td>≥ 20</td><td>cm</td></tr>
+<tr><td>cm</td><td>≥ 20</td><td>dm</td></tr>
+<tr><td>dm</td><td>≥ 20</td><td>meter</td></tr>
+<tr><td>meter</td><td>≥ 2000</td><td>km</td></tr>
+</tbody>
+</table>
+<pre><code class="language-mtron">mtron&gt; [-- below threshold: unchanged --]
+mtron&gt; mm::19.0.normalize()
+==&gt;mm::19.0000
+mtron&gt; km::1.5.normalize()
+==&gt;km::1.5000
+mtron&gt; [-- cascade until stable --]
+mtron&gt; mm::150.0.normalize()
+==&gt;cm::15.0000
+mtron&gt; cm::25.0.normalize()
+==&gt;dm::2.5000
+mtron&gt; dm::25.0.normalize()
+==&gt;meter::2.5000
+mtron&gt; meter::2500.0.normalize()
+==&gt;km::2.5000
+</code></pre>
+<h4>imperial (<code>/m/math/imperial</code>)</h4>
+<p><code>imperial::T</code> is a <code>real::T</code> refinement. The imperial distance unit types (<code>inch::T</code> … <code>mile::T</code>) convert to each other
+via <code>.as()</code> at exact ratios (the base unit is the inch); a conversion preserves the total inches, changing only the
+unit label.</p>
+<h5>conversion</h5>
+<pre><code class="language-mtron">mtron&gt; [-- upward: value shrinks, unit grows --]
+mtron&gt; inch::12.0.as(foot::T)
+==&gt;foot::1.0000
+mtron&gt; foot::3.0.as(yard::T)
+==&gt;yard::1.0000
+mtron&gt; yard::1760.0.as(mile::T)
+==&gt;mile::1.0000
+mtron&gt; [-- downward: value grows, unit shrinks --]
+mtron&gt; foot::1.0.as(inch::T)
+==&gt;inch::12.0000
+mtron&gt; yard::1.0.as(foot::T)
+==&gt;foot::3.0000
+mtron&gt; mile::1.0.as(yard::T)
+==&gt;yard::1760.0000
+mtron&gt; [-- multi-step: levels can be skipped --]
+mtron&gt; inch::18.0.as(foot::T)
+==&gt;foot::1.5000
+mtron&gt; yard::2200.0.as(mile::T)
+==&gt;mile::1.2500
+mtron&gt; mile::1.5.as(inch::T)
+==&gt;inch::95040.0000
+mtron&gt; [-- cross-system: imperial → metric (25.4 mm = 1 inch) --]
+mtron&gt; inch::1.0.as(mm::T)
+==&gt;mm::25.4000
+mtron&gt; foot::1.0.as(meter::T)
+==&gt;meter::0.3048
+mtron&gt; mile::1.0.as(km::T)
+==&gt;km::1.6093
+mtron&gt; [-- bare real: re-label only, no conversion --]
+mtron&gt; 5.0.as(foot::T)
+==&gt;foot::5.0000
+</code></pre>
+<p>A converted value tests as its target unit:</p>
+<pre><code class="language-mtron">mtron&gt; inch::12.0.as(foot::T).matches(foot::T)
+==&gt;true
+</code></pre>
+<h5>relational operators</h5>
+<pre><code class="language-mtron">mtron&gt; [-- equality across units --]
+mtron&gt; inch::12.0.eq(foot::1.0)
+==&gt;true
+mtron&gt; yard::1.0.eq(foot::3.0)
+==&gt;true
+mtron&gt; mile::1.0.eq(yard::1760.0)
+==&gt;true
+</code></pre>
+<h5>normalize</h5>
+<p><code>normalize()</code> cascades upward while the value reaches ~2× the next larger unit, until stable:</p>
+<table>
+<thead>
+<tr><th>from</th><th>threshold</th><th>to</th></tr>
+</thead>
+<tbody>
+<tr><td>inch</td><td>≥ 24</td><td>foot</td></tr>
+<tr><td>foot</td><td>≥ 6</td><td>yard</td></tr>
+<tr><td>yard</td><td>≥ 3520</td><td>mile</td></tr>
+</tbody>
+</table>
+<pre><code class="language-mtron">mtron&gt; [-- below threshold: unchanged --]
+mtron&gt; inch::23.0.normalize()
+==&gt;inch::23.0000
+mtron&gt; mile::1.5.normalize()
+==&gt;mile::1.5000
+mtron&gt; [-- cascade until stable --]
+mtron&gt; inch::48.0.normalize()
+==&gt;foot::4.0000
+mtron&gt; foot::15.0.normalize()
+==&gt;yard::5.0000
+mtron&gt; yard::7200.0.normalize()
+==&gt;mile::4.0909
 </code></pre>
 <hr />
 <h3>instructions</h3>
