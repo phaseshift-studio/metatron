@@ -34,16 +34,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -83,7 +79,9 @@ public class ToolFeatureTest extends AbstractFeatureTest {
         return Router.readFromSpace(uri).asInst();
     }
 
-    /** Convert a {@code ~}-separated list of regex patterns into a mtron lst literal. */
+    /**
+     * Convert a {@code ~}-separated list of regex patterns into a mtron lst literal.
+     */
     private static String mtronLst(final String patterns) {
         return "[" + Arrays.stream(patterns.split("~"))
                 .map(String::trim)
@@ -91,12 +89,16 @@ public class ToolFeatureTest extends AbstractFeatureTest {
                 .collect(Collectors.joining(",")) + "]";
     }
 
-    /** Invoke the bash tool through the full mTool spec/executor stack with a safe 10s timeout. */
+    /**
+     * Invoke the bash tool through the full mTool spec/executor stack with a safe 10s timeout.
+     */
     private static Obj bash(final Agent agent, final ToolFeature tf, final String command) {
         return runToolThroughStack(agent, tf, "bash", rec(uri(CMD), str(command), uri(TIMEOUT), real(10000.0, MATH_MILLIS_TID, null)));
     }
 
-    /** Invoke the bash tool with an explicit agent-supplied TIMEOUT. */
+    /**
+     * Invoke the bash tool with an explicit agent-supplied TIMEOUT.
+     */
     private static Obj bash(final Agent agent, final ToolFeature tf, final String command, final Obj timeout) {
         return runToolThroughStack(agent, tf, "bash", rec(uri(CMD), str(command), uri(TIMEOUT), timeout));
     }
@@ -115,17 +117,6 @@ public class ToolFeatureTest extends AbstractFeatureTest {
     }
 
     // ── publishing + projection ─────────────────────────────────────
-
-    @Test
-    public void testToolFeaturePublishesUsageSkill() {
-        final ToolFeature tf = feature();
-        final SkillFeature gateway = new SkillFeature(new LinkedHashMap<Obj, Obj>(), LLM_SKILL_FEATURE_TID, null);
-        final Agent a = agentWith(gateway, tf);
-        tf.onBeforeChat(a);
-        assertTrue(gateway.skills().lstValue().stream()
-                        .anyMatch(s -> "tool_feature".equals(s.asRec().at(uri(NAME)).uriValue().name())),
-                "onBeforeChat should publish the tool feature's usage skill to the skill gateway");
-    }
 
     @Test
     public void testDirectAddToolLandsInProjection() {

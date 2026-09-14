@@ -164,7 +164,7 @@ public final class MtronPreprocessor {
             block.append(",role=\"").append(role).append("\"");
         block.append("]\n----\n");
         for (final String line : lines)
-            block.append(line).append('\n');
+            block.append(Graphitty.strip(line)).append('\n');
         block.append("----");
         return block.toString();
     }
@@ -176,7 +176,7 @@ public final class MtronPreprocessor {
         final StringBuilder block = new StringBuilder();
         block.append("```mtron\n");
         for (final String line : lines)
-            block.append(line).append('\n');
+            block.append(Graphitty.strip(line)).append('\n');
         block.append("```");
         return block.toString();
     }
