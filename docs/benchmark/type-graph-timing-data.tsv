@@ -1,0 +1,39 @@
+run	suite	mode	tests	failed	errors	skipped	elapsed_s	p50_ms	p90_ms	p95_ms	p99_ms	max_ms	top_slowtest
+G-full-1	G-full-1	G	314	0	0	2	168.2	522.00	577.00	603.00	724.00	878.00	studio.phaseshift.metatron.isa.math.mathInstSetTest
+G-full-2	G-full-2	G	314	0	0	2	162.0	505.00	537.00	559.00	653.00	871.00	studio.phaseshift.metatron.isa.math.mathInstSetTest
+G-full-3	G-full-3	G	314	0	0	2	162.5	507.00	544.00	561.00	656.00	872.00	studio.phaseshift.metatron.isa.math.mathInstSetTest
+G-95-1	G-95-1	G	95	0	0	0	49.9	497.00	550.00	614.00	687.00	881.00	studio.phaseshift.metatron.isa.math.mathInstSetTest
+G-95-2	G-95-2	G	95	0	0	0	51.0	510.00	574.00	589.00	682.00	828.00	studio.phaseshift.metatron.isa.math.mathInstSetTest
+G-bench-1	G-bench-1	G	4	0	0	1	11.6	564.00	9440.00	9440.00	9440.00	9440.00	studio.phaseshift.metatron.perf.TypeGraphBenchTest
+G-bench-2	G-bench-2	G	4	0	0	1	11.4	553.00	9353.00	9353.00	9353.00	9353.00	studio.phaseshift.metatron.perf.TypeGraphBenchTest
+G-bench-3	G-bench-3	G	4	0	0	1	11.6	561.00	9542.00	9542.00	9542.00	9542.00	studio.phaseshift.metatron.perf.TypeGraphBenchTest
+G-wave1	G-wave1	G	2368	0	0	33	53.1	9.00	36.00	52.00	137.00	562.00	studio.phaseshift.metatron.isa.m.type.TypeTest
+G-misc	G-misc	G	12	0	0	1	7.0	279.00	685.00	685.00	746.00	746.00	studio.phaseshift.metatron.isa.math.DatetimeTypeTest
+G-bench-1	BENCH typeT n=20000 totalMs=1 perCallNs=50 sink=0
+G-bench-1	BENCH parseApply n=500 totalMs=7017 perCallMs=14034 sink=228200532
+G-bench-1	BENCH nominal n=20000 totalMs=5 perCallUs=0 sink=false
+G-bench-2	BENCH typeT n=20000 totalMs=1 perCallNs=50 sink=0
+G-bench-2	BENCH parseApply n=500 totalMs=6956 perCallMs=13912 sink=228200532
+G-bench-2	BENCH nominal n=20000 totalMs=5 perCallUs=0 sink=false
+G-bench-3	BENCH typeT n=20000 totalMs=0 perCallNs=0 sink=0
+G-bench-3	BENCH parseApply n=500 totalMs=7065 perCallMs=14130 sink=228200532
+G-bench-3	BENCH nominal n=20000 totalMs=5 perCallUs=0 sink=false
+B-full-1	B-full-1	B	314	0	0	2	586.3	1887.00	1966.00	1985.00	2055.00	2266.00	studio.phaseshift.metatron.isa.math.mathInstSetTest
+B-full-2	B-full-2	B	314	0	0	2	587.1	1894.00	1971.00	1998.00	2083.00	2313.00	studio.phaseshift.metatron.isa.math.mathInstSetTest
+B-full-3	B-full-3	B	314	0	0	2	590.1	1901.00	1973.00	1990.00	2101.00	2236.00	studio.phaseshift.metatron.isa.math.mathInstSetTest
+B-95-1	B-95-1	B	95	0	0	0	173.0	1815.00	1872.00	1912.00	2085.00	2356.00	studio.phaseshift.metatron.isa.math.mathInstSetTest
+B-95-2	B-95-2	B	95	0	0	0	174.1	1815.00	1886.00	1999.00	2143.00	2246.00	studio.phaseshift.metatron.isa.math.mathInstSetTest
+B-bench-1	B-bench-1	B	4	0	0	1	76.6	4513.00	69096.00	69096.00	69096.00	69096.00	studio.phaseshift.metatron.perf.TypeGraphBenchTest
+B-bench-2	B-bench-2	B	4	0	0	1	75.9	4457.00	68472.00	68472.00	68472.00	68472.00	studio.phaseshift.metatron.perf.TypeGraphBenchTest
+B-bench-3	B-bench-3	B	4	0	0	1	76.6	4562.00	69116.00	69116.00	69116.00	69116.00	studio.phaseshift.metatron.perf.TypeGraphBenchTest
+B-wave1	B-wave1	B	2368	0	0	33	182.2	56.00	178.00	263.00	753.00	1514.00	studio.phaseshift.metatron.isa.m.mInstSetTest
+B-bench-1	BENCH typeT n=20000 totalMs=2161 perCallNs=108050 sink=767773488
+B-bench-1	BENCH parseApply n=500 totalMs=55641 perCallMs=111282 sink=1053635080
+B-bench-1	BENCH nominal n=20000 totalMs=17 perCallUs=0 sink=false
+B-bench-2	BENCH typeT n=20000 totalMs=2101 perCallNs=105050 sink=767773488
+B-bench-2	BENCH parseApply n=500 totalMs=55176 perCallMs=110352 sink=1053635080
+B-bench-2	BENCH nominal n=20000 totalMs=15 perCallUs=0 sink=false
+B-bench-3	BENCH typeT n=20000 totalMs=2127 perCallNs=106350 sink=767773488
+B-bench-3	BENCH parseApply n=500 totalMs=55721 perCallMs=111442 sink=1053635080
+B-bench-3	BENCH nominal n=20000 totalMs=16 perCallUs=0 sink=false
+G-final	G-final	G	66	0	0	1	40.1	520.00	659.00	854.00	1093.00	1176.00	studio.phaseshift.metatron.isa.math.DatetimeTypeTest
