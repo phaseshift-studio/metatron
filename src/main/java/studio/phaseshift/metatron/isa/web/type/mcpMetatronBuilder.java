@@ -159,15 +159,16 @@ public final class mcpMetatronBuilder {
                             rec(uri(CODE), CODE_TYPE, uri(NATIVE).maybe(), BOOL_TYPE), (lhs, inst) -> {
                                 // code arrives already parsed to code::T by the schema-aware JSON
                                 // layer — no JSON-massaging here; just evaluate it.
-                                Obj result;
                                 try {
-                                    result = inst.arg(CODE, 0).apply();
+                                    Obj result = inst.arg(CODE, 0).apply();
+                                    return inst.arg(NATIVE, 1).orElse(BOOL_FALSE).boolValue() ? str(result.toString()) : result;
                                 } catch (final Exception e) {
-                                    result = fail(e);
+                                    return fail(e);
                                 }
-                                return inst.arg(NATIVE, 1).orElse(BOOL_FALSE).boolValue() ? str(result.toString()) : result;
+
                             }), "noobj lhs", "the result of the code evaluation",
-                    Map.of(uri(CODE), "mtron code to evaluate"), "returns the result of evaluating the provided mtron expression"), MUTABLE);
+                    Map.of(uri(CODE), "mtron code to evaluate",
+                            uri(NATIVE).maybe(), "convert result to mtron expression (a string)"), "returns the result of evaluating the provided mtron expression"), MUTABLE);
             // list_space — return an index of currently accessible spaces
             tools.at(uri(mTool.toolName(toolTid("list_space"))), docWrap(instC(
                             toolTid("list_space").dom(NOOBJ_TID.zero()).rng(ALL.maybe()),

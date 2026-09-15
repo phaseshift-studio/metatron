@@ -168,6 +168,13 @@ public class mcp_httpHandler extends HttpRec {
 
     @Override
     protected void doGet(final HttpExchange exchange) throws IOException {
+        // The Streamable-HTTP GET is the SSE notification channel, opened only when the client
+        // accepts text/event-stream. A GET without it must not hold a socket open indefinitely.
+        final String accept = exchange.getRequestHeaders().getFirst("Accept");
+        if (null == accept || !accept.toLowerCase().contains("text/event-stream")) {
+            sendError(405, "mcp streamable-http GET requires Accept: text/event-stream");
+            return;
+        }
         final SseStream sse = this.openSse();
         final fURI outbox = this.vid().extend("subscriptions");
         try {

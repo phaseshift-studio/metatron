@@ -646,14 +646,7 @@ public class Agent extends MRec {
             final ChatResult result = this.currentResult;
             this.currentResult = null;
             this.currentHook.set(null);
-            if (null != result) {
-                this.feature(LLM_CHAT_FEATURE_TID).ifPresent(chat -> {
-                    if (chat.asRec() instanceof ChatFeature cf)
-                        Router.writeToSpace(cf.getRoot(this).extend("_").addQ(INCRQ), result);
-                });
-                return result;
-            }
-            return ChatResult.chatResult();
+            return null != result ? Router.writeToSpace(this.at(ROOT).uriValue().extend(LLM_CHAT_RESULT_TID.name()).extend("_").addQ(INCRQ), result).as() : ChatResult.chatResult();
         } finally {
             // both channels close with the chat: a tool request the loop never
             // answered gets a lost result and its parked ai message is published as

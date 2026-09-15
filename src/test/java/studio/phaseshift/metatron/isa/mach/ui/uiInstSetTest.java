@@ -176,9 +176,9 @@ public class uiInstSetTest extends AbstractInstSetTest {
         }
         // format() and the widget-as-str inst must also be terminal-free
         // for embedding (widget-as-str).
-        final Obj swipe = ObjmtronSerializer.parse("swipe_panel_widget::[obj=>[!math:datetime_now(),!math:datetime_now(),!math:datetime_now(),!math:datetime_now()]]");
+        final Obj swipe = ObjmtronSerializer.parse("swipe_panel_widget::[obj=>[!math:datetime_now(),!math:datetime_now(),!math:datetime_now(),!math:datetime_now()]]").apply();
         assertNotNull(((Widget) swipe).format());
-        final Obj asStr = ObjmtronSerializer.parse("swipe_panel_widget::[obj=>[1,2,3,4]].as(str::T)").apply(noobj());
+        final Obj asStr = ObjmtronSerializer.parse("swipe_panel_widget::[obj=>[!math:datetime_now(),!math:datetime_now(),!math:datetime_now(),!math:datetime_now()]].as(str::T)").apply(noobj());
         assertTrue(asStr.isStr(), "swipe_panel.as(str::T) should produce a str headless: " + asStr);
         LOG.warn(asStr.toCleanString());
         assertFalse(asStr.strValue().startsWith("swipe_panel_widet"), "swipe_panel.as(str::T) should produce a str headless: " + asStr);

@@ -94,9 +94,10 @@ Tool implementations are `Inst` objects with type signatures (dom/rng) and Java 
 ## Streamable HTTP (SSE) transport
 
 `mcp_httpHandler` carries the same `mcpServer` over HTTP. Its POST answers JSON-RPC request/response; its **GET** is
-the Streamable-HTTP notification channel — it opens an `sse::T` stream (`text/event-stream`), drains any
-notifications already in the server's subscription outbox, then holds the stream open with heartbeats while a `?subq`
-subscription on the outbox pushes each `notifications/resources/updated` as an `event: message`.
+the Streamable-HTTP notification channel — it opens an `sse::T` stream (`text/event-stream`) only when the client
+sends `Accept: text/event-stream` (otherwise 405), drains any notifications already in the server's subscription
+outbox, then holds the stream open with heartbeats while a `?subq` subscription on the outbox pushes each
+`notifications/resources/updated` as an `event: message`.
 
 ## SpaceChatMemoryStore
 

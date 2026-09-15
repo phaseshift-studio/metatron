@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.llm.type;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -26,6 +25,7 @@ import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.SkipWhenPortUnavailable;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -75,13 +75,14 @@ public class AgentTest extends AbstractMetatronTest {
 
     private Rec fixture;
     private Agent agent;
-    
+
     @BeforeEach
-    public void setup() {
+    public void setup() throws Exception {
         InstSet.importInstSet(MATH_ISA_TID);
         InstSet.importInstSet(LLM_ISA_TID);
         fixture = buildFixture();
         agent = Agent.agent(fixture);
+        initSQLiteSession();
     }
 
     private static Rec buildFixture() {
@@ -392,8 +393,8 @@ public class AgentTest extends AbstractMetatronTest {
         map.put(uri(NAME), str("system-clear-agent"));
         map.put(uri(DESC), str("test system message clearing"));
         map.put(uri(FEATURE), lst(system, chat, skill, tool));
+        map.put(uri(ROOT), uri(memSpace.pattern().retractPattern()));
         final Agent a = Agent.agent(rec(map, LLM_AGENT_TID, null));
-
         final SystemFeature sf = a.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as();
         try {
             sf.addSystemMessage("You are a test agent.");
@@ -489,6 +490,7 @@ public class AgentTest extends AbstractMetatronTest {
         this.memSpace = tbleSpace.of(
                 mutableMap(
                         uri(PATTERN), uri("sqlite:#"),
+                        uri(QPROC), lst(QCollection.incrQ()),
                         uri(HOST), uri("sqlite:" + TEST_DB_PATH),
                         uri(DRIVER), uri("org.sqlite.JDBC"),
                         uri(TABLE), lst(uri(MEM_TABLE)),
@@ -498,8 +500,8 @@ public class AgentTest extends AbstractMetatronTest {
         );
     }
 
-    @AfterEach
-    public void teardownSQLite() {
+    //  @AfterEach
+   /* public void teardownSQLite() {
         if (this.memSpace != null) {
             try {
                 Router.global().removeSpace(this.memSpace.vid());
@@ -510,7 +512,7 @@ public class AgentTest extends AbstractMetatronTest {
         }
         final File dbFile = new File(TEST_DB_PATH);
         if (dbFile.exists()) dbFile.delete();
-    }
+    }*/
 
     @Test
     public void testSQLiteSessionTypeDetection() throws Exception {

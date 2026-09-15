@@ -520,9 +520,10 @@ sse.close();                              // flush + end the stream
 <p>Each event is <code>event:</code>/<code>data:</code>/<code>:</code> lines terminated by a blank line; a multi-line payload becomes repeated <code>data:</code>
 fields. Writes are synchronized and flushed immediately, so a producing thread (<code>?subq</code>, a future LLM token stream)
 can push events across the handler thread.</p>
-<p>The first consumer is <code>mcp_httpHandler.doGet</code> — the Streamable-HTTP GET. It opens an <code>sse::T</code> stream, drains the
-server's subscription outbox, and streams each <code>notifications/resources/updated</code> as an <code>event: message</code>, then holds
-the stream open with heartbeats until the client disconnects.</p>
+<p>The first consumer is <code>mcp_httpHandler.doGet</code> — the Streamable-HTTP GET. It opens an <code>sse::T</code> stream (only for
+<code>Accept: text/event-stream</code>), drains the server's subscription outbox, and streams each
+<code>notifications/resources/updated</code> as an <code>event: message</code>, then holds the stream open with heartbeats until the
+client disconnects.</p>
 <h3>not available yet</h3>
 <ul>
 <li>the <strong>surface vocabulary</strong> — <code>*dr.as(mcp::T)</code>, <code>person::T.as(rest::T)</code> — needs <code>as</code> rows projecting an obj to a
