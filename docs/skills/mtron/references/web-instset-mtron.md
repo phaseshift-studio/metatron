@@ -169,9 +169,10 @@ Each event is `event:`/`data:`/`:` lines terminated by a blank line; a multi-lin
 fields. Writes are synchronized and flushed immediately, so a producing thread (`?subq`, a future LLM token stream)
 can push events across the handler thread.
 
-The first consumer is `mcp_httpHandler.doGet` — the Streamable-HTTP GET. It opens an `sse::T` stream, drains the
-server's subscription outbox, and streams each `notifications/resources/updated` as an `event: message`, then holds
-the stream open with heartbeats until the client disconnects.
+The first consumer is `mcp_httpHandler.doGet` — the Streamable-HTTP GET. It opens an `sse::T` stream (only for
+`Accept: text/event-stream`), drains the server's subscription outbox, and streams each
+`notifications/resources/updated` as an `event: message`, then holds the stream open with heartbeats until the
+client disconnects.
 
 
 ## not available yet
