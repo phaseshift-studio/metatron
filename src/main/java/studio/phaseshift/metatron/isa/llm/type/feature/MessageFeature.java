@@ -24,6 +24,7 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -79,11 +80,11 @@ public class MessageFeature extends AbstractFeature {
     }
 
     public Rec addMessage(final Agent agent, final Rec message) {
-        MessageBuilder.build(message.tid()).copy(message.jvm()).time().create();
+        return MessageBuilder.build(message.tid()).time().copy(message.jvm()).create(this.getRoot(agent).extend("_").addQ(INCRQ));
         // Adding a message is not a new turn — the session's chat_id counter
         // is untouched and the store is built for the turn already in flight.
-        final SpaceChatSessionStore store = this.createStore(agent, agent.chatId());
-        return store.addMessage(message);
+        //final SpaceChatSessionStore store = this.createStore(agent, agent.chatId());
+        //return store.addMessage(message);
     }
 
     /**

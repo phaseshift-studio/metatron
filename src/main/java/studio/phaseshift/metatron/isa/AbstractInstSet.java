@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -38,6 +39,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -180,13 +182,14 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     public Obj read(final fURI pattern) {
         if (Objects.equals(this.vid, pattern))
             return this;
+        // dom admission: a contract's dom is admitted for a queried dom iff it lies
+        // on the queried type's single path to the root (eg nat -> int -> # admits
+        // the int-dom plus, not the real-dom one), or the dom is generic (binds to
+        // anything). siblings (metric/imperial under real) admit each other for
+        // no query. results are ranked closest-to-the-token first.
+        final Type queriedDom = !pattern.hasDom() ? null : T(pattern.dom());
         return QProc.Helper.processPreRead(this.qs(), pattern).orElseGet(() -> {
-            final Obj result = objs(INST_TABLE.entrySet()
-                    .stream()
-                    .filter(kv -> kv.getKey().test(pattern.basePath().asNode()))
-                    .flatMap(kv -> kv.getValue().stream())
-                    .filter(i -> !pattern.hasDom() || i.dom().vidOrTid().test(pattern.dom()))
-                    .filter(i -> !pattern.hasRng() || i.rng().vidOrTid().test(pattern.rng()))
+            final Obj result = objs(admitted(pattern, queriedDom)
                     // copy any user qs to api inst
                     .map(i -> pattern.hasNonDomRngQ() ? i.clone().selfTID(i.tid().copyQ(pattern)) : i)
                     .map(i -> pattern.isNode() ? i : rel(i.tid().toUri(), i)))
@@ -210,6 +213,24 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                                     rel(kv.getKey().toUri(), kv.getValue()))));
             return QProc.Helper.processPostRead(this.qs(), pattern, result).orElse(result);
         });
+    }
+
+    /**
+     * the insts of this set matching the pattern's family, admitted on the
+     * dom axis per {@link Type#pathIncludes(Type)}, ranked closest-to-the-token
+     * first (a no-dom pattern returns them all, unranked).
+     */
+    private Stream<Obj> admitted(final fURI pattern, final Type queriedDom) {
+        final Stream<Obj> insts = INST_TABLE.entrySet()
+                .stream()
+                .filter(kv -> kv.getKey().test(pattern.basePath().asNode()))
+                .flatMap(kv -> kv.getValue().stream())
+                .<Obj>map(i -> i)
+                .filter(i -> null == queriedDom || queriedDom.pathIncludes(i.dom()))
+                .filter(i -> !pattern.hasRng() || i.rng().vidOrTid().test(pattern.rng()));
+        return null == queriedDom ?
+                insts :
+                insts.sorted(Comparator.comparingInt(i -> queriedDom.pathTo(i.dom())));
     }
 
     @Override

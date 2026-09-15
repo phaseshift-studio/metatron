@@ -587,7 +587,6 @@ public class llmInstSet extends AbstractInstSet {
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_SUMMARIZE_FEATURE_TID)
-                                .isaPredicate(rec(ROOT, URI_TYPE))
                                 .constructor(arg -> createStageLambdas(new SummarizeFeature(arg.asRec().jvm(), LLM_SUMMARIZE_FEATURE_TID, arg.vid())))
                                 .create(),
                         Type.Builder.build()
@@ -605,15 +604,12 @@ public class llmInstSet extends AbstractInstSet {
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_EMBED_FEATURE_TID)
-                                .isaPredicate(rec(
-                                        uri(ROOT), URI_TYPE,
-                                        uri(f(MODEL)).maybe(), LLM_MODEL_TYPE))
+                                .isaPredicate(rec(uri(f(MODEL)).maybe().asUri(), LLM_MODEL_TYPE))
                                 .constructor(arg -> createStageLambdas(new EmbedFeature(arg.asRec().jvm(), LLM_EMBED_FEATURE_TID, arg.vid())))
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_SKILL_FEATURE_TID)
-                                // .isaPredicate(rec(SKILL, LST_TYPE))
                                 .constructor(arg -> createStageLambdas(new SkillFeature(arg.asRec().jvm(), LLM_SKILL_FEATURE_TID, arg.vid())))
                                 .create(),
                         Type.Builder.build()
@@ -642,8 +638,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .constructor(arg -> createStageLambdas(new MidChatFeature(arg.asRec().jvm(), LLM_MIDCHAT_FEATURE_TID, arg.vid())))
                                         .create(),
                                 null, null,
-                                mutableMap(
-                                        uri(ROOT).maybe(), "where its messages are written; defaults to the agent's own root"),
+                                Map.of(),
                                 "the mid-chat channel: relays what the model says to the user mid-iteration, and carries what the user says back through the tool result of the call it answered"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
@@ -666,14 +661,12 @@ public class llmInstSet extends AbstractInstSet {
                                         .tid(LLM_FEATURE_TID)
                                         .vid(LLM_COST_FEATURE_TID)
                                         .isaPredicate(rec(
-                                                uri(ROOT), URI_TYPE,
                                                 uri(RATE), rec(
                                                         uri(IN), auto_from_(MATH_CURRENCY_TID).tryToInst(),
                                                         uri(OUT), auto_from_(MATH_CURRENCY_TID).tryToInst())))
                                         .constructor(arg -> createStageLambdas(new CostFeature(arg.asRec().jvm(), LLM_COST_FEATURE_TID, arg.vid())))
                                         .create(),
                                 null, null, mutableMap(
-                                        uri(ROOT), "the URI prefix where cost data is persisted (e.g., /usr/dr/cost)",
                                         uri(f(RATE).extend(IN)), "cost per million input tokens",
                                         uri(f(RATE).extend(OUT)), "cost per million output tokens"
                                 ),

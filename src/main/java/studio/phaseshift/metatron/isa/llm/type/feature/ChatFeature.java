@@ -1,29 +1,20 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.llm.type.mModel;
-import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
-import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -65,24 +56,21 @@ public class ChatFeature extends AbstractFeature {
                         the result you wanted is 4.
                     """.formatted(this.at(MODEL)));
         }
-        final Space space = Router.global().getSpaceFor(agent.at(ROOT).uriValue().extend(MESSAGE));
-        if (space.hasQ(f(INCRQ))) {
-            try {
-                this.lastMessage = MessageBuilder.build(USER_MESSAGE_TID)
-                        .text(Str.Helper.cleanString(str(userMessage).apply()))
-                        .contents(userMessage)
-                        .time()
-                        .session(agent.hasFeature(LLM_MESSAGE_FEATURE_TID)
-                                ? agent.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION).uriValue()
-                                : null)
-                        .depth(agent.chatDepth())
-                        .chatId(agent.chatId())
-                        .create(agent.at(ROOT).uriValue().extend(MESSAGE).extend("_").addQ(INCRQ));
-            } catch (final Exception e) {
-                this.logger().warn("user message write failed: %s", e.getMessage());
-            }
-        } else {
-            LOG.warn("user message storage requires an incrq space: %s", space.vidOrTid());
+
+        try {
+            this.lastMessage = agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as()
+                    .addMessage(agent, MessageBuilder.build(USER_MESSAGE_TID)
+                            .text(Str.Helper.cleanString(str(userMessage).apply()))
+                            .contents(userMessage)
+                            .time()
+                            .session(agent.hasFeature(LLM_MESSAGE_FEATURE_TID)
+                                    ? agent.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION).uriValue()
+                                    : null)
+                            .depth(agent.chatDepth())
+                            .chatId(agent.chatId())
+                            .create());
+        } catch (final Exception e) {
+            this.logger().warn("user message write failed: %s", e.getMessage());
         }
         return noobj();
     }
@@ -98,24 +86,6 @@ public class ChatFeature extends AbstractFeature {
     }
 
     /**
-     * Write the assembled {@code chat_result::T} to the chat feature's root
-     * space (e.g. {@code /usr/dr/chat_result/_?incrq}).  Called by
-     * {@code Agent.chat()} after every feature's {@code onCompleteResponse}
-     * hook has run — the Agent owns the chat_result lifecycle, this feature
-     * owns the persist logic and the {@code root} the result is stored at.
-     */
-    public void persist(final Agent agent, final ChatResult result) {
-        final Obj root = this.at(ROOT);
-        if (root.isNoObj())
-            return;
-        try {
-            Router.writeToSpace(root.uriValue().extend("_").addQ(INCRQ), result);
-        } catch (final Exception e) {
-            this.logger().warn("failed to persist chat_result: %s", e.getMessage());
-        }
-    }
-
-    /**
      * Write the messages a user sent while this turn was in flight into the
      * ledger, so a conversation conducted mid-iteration is durable instead of
      * confined to the tool result it rode in on.
@@ -125,7 +95,7 @@ public class ChatFeature extends AbstractFeature {
      * when no mid-chat feature is attached, so a queued message is still
      * persisted rather than stranded.
      */
-    public void publishMidIterationChat(final Agent agent, final Lst chatMessages) {
+ /*   public void publishMidIterationChat(final Agent agent, final Lst chatMessages) {
         try {
             chatMessages.elements().forEach(message -> {
                 MessageBuilder.buildUserMessage()
@@ -141,7 +111,7 @@ public class ChatFeature extends AbstractFeature {
             this.logger().warn("failed to publish mid-iteration chat: %s", e.getMessage());
         }
     }
-
+*/
 
     // @Override
     // public Set<fURI> requires() {

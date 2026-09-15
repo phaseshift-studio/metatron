@@ -20,10 +20,12 @@ package studio.phaseshift.metatron.isa.web.space.http.handler;
 
 import com.sun.net.httpserver.HttpExchange;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.web.space.http.HttpRec;
+import studio.phaseshift.metatron.isa.web.space.http.SseStream;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
 
@@ -37,8 +39,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import studio.phaseshift.metatron.isa.web.webInstSet;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_SUB_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -79,6 +86,9 @@ public class mcp_httpHandler extends HttpRec {
 
     // Transport-agnostic protocol handler (composition)
     private final mcpServer mcp;
+
+    /** Interval between SSE heartbeats — keeps the stream alive past idle proxies/timeouts. */
+    private static final long HEARTBEAT_MS = 15_000L;
 
     // Session registry: sessionId → session metadata
     private final Map<String, fURI> sessions = new ConcurrentHashMap<>();
@@ -158,8 +168,62 @@ public class mcp_httpHandler extends HttpRec {
 
     @Override
     protected void doGet(final HttpExchange exchange) throws IOException {
-        exchange.getResponseHeaders().set(MIME.MIMEType.VALUE, "text/event-stream");
-        sendError(501, "SSE streaming not yet implemented");
+        final SseStream sse = this.openSse();
+        final fURI outbox = this.vid().extend("subscriptions");
+        try {
+            // 1 — drain notifications already fired (between subscriptions/listen and this GET)
+            this.drainOutbox(sse, outbox);
+            // 2 — live push: wake on each notification the server writes to its outbox
+            Router.global().write(outbox.extend("#").addQ(SUBQ),
+                    rec(mutableMap(
+                            uri(TARGET), uri(outbox.extend("#")),
+                            uri(CODE), instC(f("mcp_sse_push").dom(LST_TID).rng(NOOBJ_TID.zero()), lst(),
+                                    (lhs, inst) -> {
+                                        try {
+                                            sse.send("message", this.JSON.write(lhs.asLst().at(1)).toString());
+                                        } catch (final IOException e) {
+                                            // client gone — the heartbeat loop below notices and closes
+                                        }
+                                        return noobj();
+                                    })),
+                            SUBQ_SUB_TID, null));
+            // 3 — hold the stream open, heartbeat until the client disconnects
+            while (!sse.isClosed()) {
+                try {
+                    Thread.sleep(HEARTBEAT_MS);
+                    sse.comment("ping");
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (final IOException e) {
+                    break; // client disconnected
+                }
+            }
+            // the stream is ending — drop the live-push subscription
+            Router.global().write(outbox.extend("#").addQ(SUBQ), noobj());
+        } finally {
+            sse.close();
+        }
+    }
+
+    /**
+     * Stream any notifications already sitting in this server's subscription outbox — they
+     * fired between a {@code subscriptions/listen} POST and this GET, so they would otherwise
+     * be stranded. Each is framed as an MCP {@code event: message}.
+     */
+    private void drainOutbox(final SseStream sse, final fURI outbox) {
+        if (!Router.loaded())
+            return;
+        final Obj pending = Router.readFromSpace(outbox.extend("#"));
+        if (pending.isNoObj())
+            return;
+        pending.stream().forEach(notification -> {
+            try {
+                sse.send("message", this.JSON.write(notification).toString());
+            } catch (final IOException e) {
+                LOG.warn("client gone while draining mcp notifications: %s", e.getMessage());
+            }
+        });
     }
 
     // ========================================

@@ -57,7 +57,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class CostFeature extends AbstractFeature {
 
-    private static final fURI ROOT = f("root");
     private final fURI currencyTID;
     private final CostCalculator calculator;
     private fURI sessionVID;
@@ -78,7 +77,7 @@ public class CostFeature extends AbstractFeature {
     @Override
     public void onAgentCtor(final Agent agent) {
         // Create calculator and store on Agent; LLMFactory will pick it up
-        Router.readFromSpace(this.at(ROOT).uriValue().extend("+")).stream().filter(x -> x.asRec().has(SESSION)).filter(x -> x.asRec().at(SESSION).uriValue().equals(this.sessionVID)).findFirst().orElse(rec());
+        Router.readFromSpace(this.getRoot(agent).extend("+")).stream().filter(x -> x.asRec().has(SESSION)).filter(x -> x.asRec().at(SESSION).uriValue().equals(this.sessionVID)).findFirst().orElse(rec());
         this.calculator.setCost(this.at(f(COST).extend(IN)).orElse(real(0.0)).realValue(), this.at(f(COST).extend(IN)).orElse(real(0.0)).realValue());
         this.sessionVID = agent.feature(LLM_MESSAGE_FEATURE_TID).orElse(rec()).at(SESSION).orElse(uri("")).uriValue();
     }
@@ -90,7 +89,7 @@ public class CostFeature extends AbstractFeature {
 
     @Override
     public void onCompleteResponse(final Agent agent, final ChatResult result) {
-        final Cost cost = persistCost();
+        final Cost cost = persistCost(agent);
         result.putRef("cost", this.lastCost);
         LOG.debug("running cost: %s => %s", cost, this.at(TO));
         if (!this.at(TO).isNoObj())
@@ -100,7 +99,7 @@ public class CostFeature extends AbstractFeature {
     @Override
     public void onError(final Agent agent, final Fail fail) {
         // Finalize cost even on error — whatever accumulated is still useful
-        final Cost cost = persistCost();
+        final Cost cost = persistCost(agent);
         if (!this.at(TO).isNoObj())
             this.at(TO).asInst().args(lst(cost.in(), cost.out(), cost.total())).apply(jnt(1));
     }
@@ -110,15 +109,14 @@ public class CostFeature extends AbstractFeature {
      * The blackboard is populated by Agent.chat() Phase 3 right before
      * feature hooks fire, so features can read it here.
      */
-    public Cost persistCost() {
-        final fURI root = this.at(ROOT).orThrow("no cost_feature root provided").uriValue();
+    public Cost persistCost(final Agent agent) {
         final Real inCost = real(this.calculator.getInputCost(), this.currencyTID, null);
         final Real outCost = real(this.calculator.getOutputCost(), this.currencyTID, null);
         final Real totalCost = real(this.calculator.getTotalCost(), this.currencyTID, null);
         try {
             // Write in/out/total to space so other features (e.g., AuditFeature) can read it
-            this.lastCost = Router.writeToSpace(this.at(ROOT).uriValue().extend("_").addQ(INCRQ), rec(uri(SESSION), uri(this.sessionVID), uri(TIME), mathInstSet.nowDatetime(), uri(IN), inCost, uri(OUT), outCost, uri(TOTAL), totalCost));
-            LOG.debug("persisted cost to %s: in=%.4f, out=%.4f, total=%.4f", root.toString(), inCost.realValue(), outCost.realValue(), totalCost.realValue());
+            this.lastCost = Router.writeToSpace(this.getRoot(agent).extend("_").addQ(INCRQ), rec(uri(SESSION), uri(this.sessionVID), uri(TIME), mathInstSet.nowDatetime(), uri(IN), inCost, uri(OUT), outCost, uri(TOTAL), totalCost));
+            LOG.debug("persisted cost to %s: in=%.4f, out=%.4f, total=%.4f", this.getRoot(agent).toString(), inCost.realValue(), outCost.realValue(), totalCost.realValue());
         } catch (final Exception e) {
             LOG.warn("failed to persist cost data: %s", e.getMessage());
         }

@@ -22,9 +22,11 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Set;
 
+import static studio.phaseshift.metatron.Tokens.ROOT;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /*
@@ -111,7 +113,7 @@ public interface Feature extends Rec {
      *                {@code Obj}: what a feature returns need not be the {@code str::T}
      *                it was handed.
      * @return the thought as this feature would have it, or {@code noobj()} to leave it
-     *         exactly as it arrived
+     * exactly as it arrived
      */
     default Obj onPartialThinking(final Agent agent, final Obj thought) {
         return noobj();
@@ -126,6 +128,14 @@ public interface Feature extends Rec {
     }
 
     default void onToolExecuted(final Agent agent, final Obj result) {
+    }
+
+    default fURI getRoot(final Agent agent) {
+        if (this.has(ROOT))
+            return this.at(ROOT).uriValue();
+        if (agent.has(ROOT))
+            return agent.at(ROOT).uriValue().extend(this.tid().name().split("_")[0]);
+        throw MTronException.of("no root uri found on feature nor agent: %s", this.tid());
     }
 
     /**

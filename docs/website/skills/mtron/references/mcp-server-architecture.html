@@ -449,6 +449,11 @@
 </ol>
 <p>Tool implementations are <code>Inst</code> objects with type signatures (dom/rng) and Java lambdas.</p>
 <p><strong>Tool naming</strong>: the MCP tool name is derived from the inst's tid by <code>mTool.toolName(tid)</code> — the base path flattened with <code>/</code> → <code>_</code>. e.g. <code>/m/inst/eval_mtron</code> → <code>m_inst_eval_mtron</code>. Each tool needs a <strong>unique</strong> tid under <code>/m/inst/&lt;name&gt;</code> so that <code>docWrap</code> docs (keyed by <code>inst.tid()</code>) don't collide; <code>mcpServer.handleToolsList</code> emits <code>spec.name()</code> (the <code>mTool</code>-derived name) rather than the rec key.</p>
+<h3>Streamable HTTP (SSE) transport</h3>
+<p><code>mcp_httpHandler</code> carries the same <code>mcpServer</code> over HTTP. Its POST answers JSON-RPC request/response; its <strong>GET</strong> is
+the Streamable-HTTP notification channel — it opens an <code>sse::T</code> stream (<code>text/event-stream</code>), drains any
+notifications already in the server's subscription outbox, then holds the stream open with heartbeats while a <code>?subq</code>
+subscription on the outbox pushes each <code>notifications/resources/updated</code> as an <code>event: message</code>.</p>
 <h3>SpaceChatMemoryStore</h3>
 <pre><code class="language-java">// src/main/java/.../isa/llm/space/SpaceChatMemoryStore.java
 </code></pre>

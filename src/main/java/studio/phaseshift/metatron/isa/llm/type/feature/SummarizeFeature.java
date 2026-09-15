@@ -139,11 +139,9 @@ public class SummarizeFeature extends AbstractFeature {
         // fill the keys the block left noobj
         final Rec config = this.resolveConfig(agent, block);
         // queue the distill on a background thread so this turn completes immediately
-        final fURI home = agentHome;
-        final fURI sess = sessionVID;
         final CoreThread thread = CoreThread.core(instLambda((lhs, inst) -> {
             try {
-                final Obj applied = summarizeSession(home, sess, config);
+                final Obj applied = summarizeSession(agentHome, sessionVID, config);
                 if (applied.isFail())
                     LOG.warn("summarize failed: %s", Str.Helper.cleanString(applied));
                 return applied;
@@ -153,7 +151,7 @@ public class SummarizeFeature extends AbstractFeature {
             }
         }));
         this.summaryTask.set(thread.applyAsync());
-        LOG.info("summarize queued for session %s", sess);
+        LOG.info("summarize queued for session %s", sessionVID);
     }
 
     @Override

@@ -52,6 +52,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.nowDatetime;
@@ -648,7 +649,7 @@ public class Agent extends MRec {
             if (null != result) {
                 this.feature(LLM_CHAT_FEATURE_TID).ifPresent(chat -> {
                     if (chat.asRec() instanceof ChatFeature cf)
-                        cf.persist(this, result);
+                        Router.writeToSpace(cf.getRoot(this).extend("_").addQ(INCRQ), result);
                 });
                 return result;
             }

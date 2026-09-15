@@ -65,6 +65,7 @@ public class MIME {
         TEXT_X_SHELLSCRIPT("text/x-shellscript"),
         TEXT_JAVA("text/x-java"),
         TEXT_PYTHON("text/x-python"),
+        TEXT_EVENT_STREAM("text/event-stream"),
         IMAGE_PNG("image/png"),
         IMAGE_JPEG("image/jpeg"),
         IMAGE_GIF("image/gif"),
@@ -181,6 +182,7 @@ public class MIME {
                 case APPLICATION_JSON -> WEB_JSON_TID;
                 case APPLICATION_XML -> XML_TID;
                 case TEXT_CSS -> CSS_TID;
+                case TEXT_EVENT_STREAM -> SSE_TID;
                 case TEXT_JAVA -> JAVA_TID;
                 case APPLICATION_YAML -> YAML_TID;
                 // APPLICATION_MTRON intentionally omitted — it's the structural parse gate

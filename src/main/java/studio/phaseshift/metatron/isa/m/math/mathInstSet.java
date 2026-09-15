@@ -636,10 +636,7 @@ public class mathInstSet extends AbstractInstSet {
                 };
             }).create();
 
-    public static final Type METRIC_TYPE = Type.Builder.build()
-            .tid(REAL_TID)
-            .vid(MATH_METRIC_TID)
-            .create();
+    public static Type METRIC_TYPE;
 
     public static Type MM_TYPE;
 
@@ -651,10 +648,7 @@ public class mathInstSet extends AbstractInstSet {
 
     public static Type KM_TYPE;
 
-    public static final Type IMPERIAL_TYPE = Type.Builder.build()
-            .tid(REAL_TID)
-            .vid(MATH_IMPERIAL_TID)
-            .create();
+    public static Type IMPERIAL_TYPE;
 
     public static Type INCH_TYPE;
 
@@ -765,7 +759,10 @@ public class mathInstSet extends AbstractInstSet {
                         docWrap(MINUTE_TYPE, "a minute of time (60 seconds)"),
                         docWrap(HOUR_TYPE, "an hour of time (60 minutes)"),
                         docWrap(DAY_TYPE, "a day of time (24 hours)"),
-                        docWrap(METRIC_TYPE, "the nominal base type of metric distance"),
+                        docWrap(METRIC_TYPE = Type.Builder.build()
+                                .tid(REAL_TID)
+                                .vid(MATH_METRIC_TID)
+                                .create(), "the nominal base type of metric distance"),
                         docWrap(MM_TYPE = Type.Builder.build()
                                 .tid(MATH_METRIC_TID)
                                 .vid(MATH_MM_TID)
@@ -864,7 +861,10 @@ public class mathInstSet extends AbstractInstSet {
                                         default -> arg;
                                     };
                                 }).create(), "a kilometer of distance (1000 meters)"),
-                        docWrap(IMPERIAL_TYPE, "the nominal base type of imperial distance"),
+                        docWrap(IMPERIAL_TYPE = Type.Builder.build()
+                                .tid(REAL_TID)
+                                .vid(MATH_IMPERIAL_TID)
+                                .create(), "the nominal base type of imperial distance"),
                         docWrap(INCH_TYPE = Type.Builder.build()
                                 .tid(MATH_IMPERIAL_TID)
                                 .vid(MATH_INCH_TID)

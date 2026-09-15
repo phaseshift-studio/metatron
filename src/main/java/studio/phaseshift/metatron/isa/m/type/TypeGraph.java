@@ -41,6 +41,9 @@ import java.util.function.Supplier;
  *       write is never cached</li>
  *   <li>while the VM is booting the registry is still being assembled -- never memoize
  *       in that window</li>
+ *   <li>an <em>ephemeral</em> entry (tid==vid, non-base label synthesized at a
+ *       name miss) caches fine, but a write of the name's registered form drops
+ *       it, so the next resolution yields the non-ephemeral type</li>
  *   <li>a new router instance (re-boot / reload) rebinds the graph and clears it, so a
  *       second {@code BootLoader.load()} never sees the first registry</li>
  * </ul>
@@ -99,6 +102,13 @@ public final class TypeGraph {
      * cached type is returned; otherwise {@code resolve} runs and its result is
      * cached under {@code key}.
      * <p>
+     * an <em>ephemeral</em> entry (tid==vid, not a base type -- a label synthesized
+     * for a name the registry did not know when it was first asked) is a trusted
+     * hit on the same terms as anything else; once a non-ephemeral form (tid!=vid,
+     * nominal or structural) of the name is written into a space the router routes
+     * through, {@link #onWrite(fURI)} retires the label so the next resolution
+     * yields the registered form -- see {@link #replaceEphemeralBy(fURI)}
+     * <p>
      * generation-stamped: if an invalidation lands while {@code resolve} is running,
      * the (possibly stale) result is returned to this caller but never cached.
      */
@@ -126,6 +136,13 @@ public final class TypeGraph {
      * and the base path is the one component that is stable across those
      * spellings -- or, for a pattern (wildcard) write, through the router's
      * redirect onto a watched big path.
+     * <p>
+     * a write also <em>replaces</em> ephemeral labels: an ephemeral entry (a
+     * tid==vid label synthesized for a name the registry did not yet know) stands
+     * in for the name's registered form, so when that form is written the label
+     * is dropped and the next resolution of the name yields the non-ephemeral
+     * type. the name is matched through the router's redirect ({@code big()}),
+     * the same oracle registration itself uses.
      */
     public void onWrite(final fURI vid) {
         this.rebind();
@@ -138,6 +155,43 @@ public final class TypeGraph {
             this.resolved.clear();
             this.watched.clear();
             this.watchedBase.clear();
+        }
+        this.replaceEphemeralBy(vid);
+    }
+
+    /**
+     * drop every cached ephemeral entry whose name this write is the registered
+     * form of. targeted: non-ephemeral entries and unrelated ephemerals are
+     * untouched, and a concurrent reader holding the old label converges on its
+     * next lookup (the entry is simply gone).
+     * <p>
+     * the match is order-independent: through the router's redirect
+     * ({@code big()}) when it is already registered, and by leaf-name otherwise
+     * (registration writes land as full paths while the cached key is the bare
+     * name -- the redirect binding them may not exist until the very next
+     * instant). this errs on dropping: a same-name collision between different
+     * families costs one re-resolution, never a stale label.
+     */
+    private void replaceEphemeralBy(final fURI written) {
+        if (this.resolved.isEmpty() || null == written.basePath())
+            return;
+        final fURI writtenBase = written.basePath();
+        final String writtenLeaf = written.name();
+        for (final var e : this.resolved.entrySet()) {
+            final Key k = e.getKey();
+            final Entry en = e.getValue();
+            if (!en.type.isEphemeral())
+                continue;
+            final fURI name = null != k.vid() ? k.vid() : k.tid();
+            if (null == name)
+                continue;
+            try {
+                if (name.big().basePath().equals(writtenBase)
+                        || (null != writtenLeaf && writtenLeaf.equals(name.name())))
+                    this.resolved.remove(k);
+            } catch (final Exception ignored) {
+                // a redirect lookup racing a re-boot is not a reason to keep a label
+            }
         }
     }
 
@@ -174,7 +228,9 @@ public final class TypeGraph {
             this.watchedBase.add(f.basePath());
     }
 
-    /** a new router instance is a new type registry: drop and rebind */
+    /**
+     * a new router instance is a new type registry: drop and rebind
+     */
     private synchronized void rebind() {
         final Object router = BootLoader.ROUTER;
         if (router != this.builtFor) {

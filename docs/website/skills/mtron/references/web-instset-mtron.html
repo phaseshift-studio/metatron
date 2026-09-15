@@ -417,6 +417,8 @@ mtron&gt; person::[name=&gt;'grant',age=&gt;25]@/data/person/2
 <tr><td><code>ws::T</code></td><td><code>/m/web/ws</code></td><td><code>protocol::T</code></td><td>the websocket vocabulary</td></tr>
 <tr><td><code>mcp::T</code></td><td><code>/m/web/mcp</code></td><td><code>protocol::T</code></td><td>an MCP surface</td></tr>
 <tr><td><code>mtron::T</code></td><td><code>/m/web/mtron</code></td><td><code>protocol::T</code></td><td>the mtron-eval surface</td></tr>
+<tr><td><code>stream::T</code></td><td><code>/m/web/stream</code></td><td><code>protocol::T</code></td><td>the raw byte / server-sent-event stream surface</td></tr>
+<tr><td><code>sse::T</code></td><td><code>/m/web/sse</code></td><td><code>stream::T</code></td><td>a server-sent-events response — a chunked <code>text/event-stream</code> over http</td></tr>
 <tr><td><code>mcp_server::T</code></td><td><code>/m/web/mcp/mcp_server</code></td><td><code>mcp::T</code></td><td>an MCP server obj — <strong>transport-agnostic</strong></td></tr>
 <tr><td><code>web_http</code></td><td><code>/m/web/http/web_http</code></td><td><code>rest::T</code></td><td>the handler that serves a web root</td></tr>
 <tr><td><code>mcp_http</code> / <code>mcp_ws</code></td><td><code>/m/web/mcp/mcp_http</code>, <code>/m/web/mcp/mcp_ws</code></td><td><code>mcp::T</code></td><td>an <code>mcp_server</code> bound to a carrier</td></tr>
@@ -506,6 +508,21 @@ rebuilt on every request.</p>
 /          =&gt; mfs:docs/website/
 </code></pre>
 <p>A websocket has no per-request uri, only a handshake, so a templated ws mount addresses per <em>connection</em>.</p>
+<h3>streaming a response (<code>sse::T</code>)</h3>
+<p>A mount is normally request/response — one body, then the handler closes. <code>sse::T</code> is the streaming exception: an
+http handler opens a chunked <code>text/event-stream</code> response and pushes any number of events before it closes. The
+primitive is <code>SseStream</code> (<code>isa/web/space/http/SseStream.java</code>), opened from an <code>HttpRec</code> subclass with <code>openSse()</code>:</p>
+<pre><code class="language-java">final SseStream sse = this.openSse();     // 200, text/event-stream, chunked (length 0)
+sse.send(&quot;message&quot;, &quot;{\&quot;ping\&quot;:true}&quot;); // event: message + data: {...}
+sse.comment(&quot;ping&quot;);                      // : ping   (heartbeat, ignored by clients)
+sse.close();                              // flush + end the stream
+</code></pre>
+<p>Each event is <code>event:</code>/<code>data:</code>/<code>:</code> lines terminated by a blank line; a multi-line payload becomes repeated <code>data:</code>
+fields. Writes are synchronized and flushed immediately, so a producing thread (<code>?subq</code>, a future LLM token stream)
+can push events across the handler thread.</p>
+<p>The first consumer is <code>mcp_httpHandler.doGet</code> — the Streamable-HTTP GET. It opens an <code>sse::T</code> stream, drains the
+server's subscription outbox, and streams each <code>notifications/resources/updated</code> as an <code>event: message</code>, then holds
+the stream open with heartbeats until the client disconnects.</p>
 <h3>not available yet</h3>
 <ul>
 <li>the <strong>surface vocabulary</strong> — <code>*dr.as(mcp::T)</code>, <code>person::T.as(rest::T)</code> — needs <code>as</code> rows projecting an obj to a

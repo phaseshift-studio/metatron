@@ -29,10 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AUDIT_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AUDIT_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -51,7 +51,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class AuditFeature extends AbstractFeature {
 
-    /** Counts of streamed events (from StageFeature) — recorded, not per-chunk rows. */
+    /**
+     * Counts of streamed events (from StageFeature) — recorded, not per-chunk rows.
+     */
     private int partialResponses;
     private int partialThinkings;
 
@@ -71,9 +73,9 @@ public class AuditFeature extends AbstractFeature {
                         uri("systemMsgs"), jnt(agent.hasFeature(LLM_SYSTEM_FEATURE_TID) ? agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().getSystemMessages().size() : 0),
                         uri("userMessage"), str(null == agent.userMessage() ? "" : agent.userMessage())));
         agent.feature(LLM_AUDIT_FEATURE_TID).asRec().at(TO).apply(str("""
-                                                      {{_}}{{g}}system{{/g}}{{/_}}: %s
-                                                      {{_}}{{g}}prompt{{/g}}{{/_}}: %s
-                                                      """.formatted(agent.hasFeature(LLM_SYSTEM_FEATURE_TID) ? agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().getSystemMessages().stream().collect(Collectors.joining()) : "", agent.userMessage())));
+                                                                      {{_}}{{g}}system{{/g}}{{/_}}: %s
+                                                                      {{_}}{{g}}prompt{{/g}}{{/_}}: %s
+                                                                      """.formatted(agent.hasFeature(LLM_SYSTEM_FEATURE_TID) ? agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().getSystemMessages().stream().collect(Collectors.joining()) : "", agent.userMessage())));
         return noobj();
     }
 
@@ -157,17 +159,15 @@ public class AuditFeature extends AbstractFeature {
 
         // Persist the trail (+ its table rendering) to the feature's root and
         // attach a reference on the chat_result.
-        final Obj root = this.at(ROOT);
-        if (!root.isNoObj()) {
-            try {
-                final Map<Obj, Obj> row = new LinkedHashMap<>();
-                row.put(uri("trail"), lst(rows.stream().map(r -> (Obj) r).toList()));
-                row.put(uri("table"), str(sb.toString()));
-                final Obj written = Router.writeToSpace(root.uriValue().extend("_").addQ(INCRQ), rec(row, null, null));
-                result.putRef("audit", written);
-            } catch (final Exception e) {
-                LOG.warn("failed to persist audit trail: %s", e.getMessage());
-            }
+
+        try {
+            final Map<Obj, Obj> row = new LinkedHashMap<>();
+            row.put(uri("trail"), lst(rows.stream().map(r -> (Obj) r).toList()));
+            row.put(uri("table"), str(sb.toString()));
+            final Obj written = Router.writeToSpace(this.getRoot(agent).extend("_").addQ(INCRQ), rec(row, null, null));
+            result.putRef("audit", written);
+        } catch (final Exception e) {
+            LOG.warn("failed to persist audit trail: %s", e.getMessage());
         }
     }
 

@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -36,7 +36,7 @@ public class MType extends MObj implements Type {
 
     protected MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid.big(), null == vid ? null : vid.big());
-        if (Router.loaded() && null != this.vid() && (this.hasPredicate() || this.hasConstructor()) && !this.isBaseType() && !this.isGeneric() && !this.isPattern()) {
+        if (Router.loaded() && null != this.vid() && !this.vid().equals(this.tid()) /*(this.hasPredicate() || this.hasConstructor())*/ && !this.isBaseType() && !this.isGeneric() && !this.isPattern()) {
             Router.global().write(this.vid(), this);
         }
     }
@@ -58,7 +58,7 @@ public class MType extends MObj implements Type {
      * to the same cached type without a space read, until the type path is
      * written or the router rebinds -- see {@link TypeGraph}.
      */
-     public static Type T(final fURI tid, final fURI vid, final Call predicate, final Call constructor) {
+    public static Type T(final fURI tid, final fURI vid, final Call predicate, final Call constructor) {
         final TypeGraph.Key key = new TypeGraph.Key(tid, vid, predicate, constructor);
         return TypeGraph.global().memo(key, () -> T0(tid, vid, predicate, constructor));
     }
@@ -85,10 +85,12 @@ public class MType extends MObj implements Type {
             }
         }
         final boolean isBaseType = BASE_TYPES.contains(checkID.basePath());
-        if (isBaseType || Objects.equals(bigVID, bigTID) || (null != vid && null != tid) || checkID.hasPattern() || checkID.isGeneric())
-            return isBaseType ?
-                    new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigTID) :
-                    new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
+        if (isBaseType)
+            return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigTID);
+        if (Objects.equals(bigVID, bigTID))
+            return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
+        if ((null != vid && null != tid) || checkID.hasPattern() || checkID.isGeneric())
+            return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
         //throw MTronException.of("type not found: %s@%s", tid, vid); // TODO: a few cases fail --namely around equality checks. fix and then replace the bottom with this/
         return new MType(Tuple.Pair.with(predicate, constructor), null == bigTID ? checkID : bigTID, null == bigVID ? checkID : bigVID).c(checkID.c()).as();
     }

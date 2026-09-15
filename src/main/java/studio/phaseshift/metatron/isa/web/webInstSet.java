@@ -247,6 +247,7 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI REST_TID = WEB_ISA_TID.extend("http").extend("rest");
     public static final fURI MTRON_TID = WEB_ISA_TID.extend("mtron");
     public static final fURI STREAM_TID = WEB_ISA_TID.extend("stream");
+    public static final fURI SSE_TID = WEB_ISA_TID.extend("sse");
     public static final fURI ROUTE_TID = WEB_ISA_TID.extend("route");
     public static Type PROTOCOL_TYPE;
     public static Type HTTP_TYPE;
@@ -255,6 +256,7 @@ public class webInstSet extends AbstractInstSet {
     public static Type REST_TYPE;
     public static Type MTRON_TYPE;
     public static Type STREAM_TYPE;
+    public static Type SSE_TYPE;
     public static Type ROUTE_TYPE;
 
 
@@ -467,6 +469,12 @@ public class webInstSet extends AbstractInstSet {
                                         .vid(STREAM_TID)
                                         .create(),
                                 "a raw byte / server-sent-event stream surface"),
+                        docWrap(SSE_TYPE = Type.Builder.build()
+                                        .tid(STREAM_TID)
+                                        .vid(SSE_TID)
+                                        .create(),
+                                "the server-sent-events surface — a chunked text/event-stream response over an http handler",
+                                "sse::T refines stream::T; an mcp http GET opens an sse stream to push server notifications"),
                         // declared *after* its members so their Type objects exist when the union is built
                         docWrap(PROTOCOL_TYPE = Type.Builder.build()
                                         .tid(REC_TID)

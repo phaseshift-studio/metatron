@@ -956,7 +956,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         if (index < 0 && widgets.size() > 1) {
             // lost the position — say so, so a live session can see it
             // (single-widget cycling back to the same widget is normal)
-            LOG.warn("focus key {{y}}%s{{X}} not found among {{y}}%d{{X}} floating widgets; cycling restarts at the first — see {{m}}:widgets{{X}}",
+            LOG.debug("focus key {{y}}%s{{X}} not found among {{y}}%d{{X}} floating widgets; cycling restarts at the first — see {{m}}:widgets{{X}}",
                     this.activeWidgetKey, widgets.size());
         }
         final Widget<?> next = widgets.get(((index + 1 + direction) % widgets.size() + widgets.size()) % widgets.size());
@@ -1157,17 +1157,27 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     // widget into a fresh instance, and geometry that only lived in this console would be
     // gone the next time the widget's content changed.
 
-    /** The widget the pointer is working on, or null when no drag is in flight. */
+    /**
+     * The widget the pointer is working on, or null when no drag is in flight.
+     */
     private volatile Widget<?> dragWidget = null;
-    /** Which handle was taken hold of: the chevron (move) or the corner marker (resize). */
+    /**
+     * Which handle was taken hold of: the chevron (move) or the corner marker (resize).
+     */
     private FloatingSurface.Handle dragHandle = null;
-    /** Where the pointer took hold — the handle's own cell. */
+    /**
+     * Where the pointer took hold — the handle's own cell.
+     */
     private int dragRow = 0;
     private int dragCol = 0;
-    /** The box at press time: a resize is a delta from it, not an accumulation of events. */
+    /**
+     * The box at press time: a resize is a delta from it, not an accumulation of events.
+     */
     private int dragWidth = 0;
     private int dragHeight = 0;
-    /** True once the pointer actually moved, so a press-and-release stays a click. */
+    /**
+     * True once the pointer actually moved, so a press-and-release stays a click.
+     */
     private boolean dragMoved = false;
 
     /**
@@ -1294,7 +1304,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         }
     }
 
-    /** True while the pointer is moving a widget. */
+    /**
+     * True while the pointer is moving a widget.
+     */
     public boolean dragging() {
         return null != this.dragWidget;
     }
@@ -1961,10 +1973,14 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     /**
      * Take the terminal for one read.  False when no job holds the console —
      * the prompt owns the keystrokes then, and the watcher must not be a second
-     * reader racing jline for them.
+     * reader racing jline for them — and also when a widget is in user mode:
+     * the widget (e.g. a selector or modal) reads the terminal itself with its
+     * own {@code BindingReader}, so the watcher must not race it for keystrokes.
      */
     private boolean beginWatch() {
         synchronized (this.watchGate) {
+            //if (Console.userMode.get())
+            //    return false;  // a widget owns the terminal; never race its reader
             if (!this.watching && !this.hotkeys.inSequence())
                 return false;
             this.watchingRead = true;

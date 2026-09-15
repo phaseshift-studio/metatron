@@ -88,6 +88,13 @@ Tool implementations are `Inst` objects with type signatures (dom/rng) and Java 
 
 **Tool naming**: the MCP tool name is derived from the inst's tid by `mTool.toolName(tid)` — the base path flattened with `/` → `_`. e.g. `/m/inst/eval_mtron` → `m_inst_eval_mtron`. Each tool needs a **unique** tid under `/m/inst/<name>` so that `docWrap` docs (keyed by `inst.tid()`) don't collide; `mcpServer.handleToolsList` emits `spec.name()` (the `mTool`-derived name) rather than the rec key.
 
+## Streamable HTTP (SSE) transport
+
+`mcp_httpHandler` carries the same `mcpServer` over HTTP. Its POST answers JSON-RPC request/response; its **GET** is
+the Streamable-HTTP notification channel — it opens an `sse::T` stream (`text/event-stream`), drains any
+notifications already in the server's subscription outbox, then holds the stream open with heartbeats while a `?subq`
+subscription on the outbox pushes each `notifications/resources/updated` as an `event: message`.
+
 ## SpaceChatMemoryStore
 
 ```java

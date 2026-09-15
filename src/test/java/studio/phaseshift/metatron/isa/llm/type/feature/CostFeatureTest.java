@@ -65,7 +65,7 @@ public class CostFeatureTest extends AbstractFeatureTest {
         final Agent agent = agentWith(cf);
         cf.onAgentCtor(agent);
         cf.getCalculator().setCost(0.00435, 0.00870);
-        cf.persistCost();
+        cf.persistCost(agent);
         final Obj rows = Router.readFromSpace(cf.at(uri("root")).uriValue().extend("+"));
         assertFalse(rows.isNoObj(), "cost row should be persisted");
         /*assertEquals(0.01305,
