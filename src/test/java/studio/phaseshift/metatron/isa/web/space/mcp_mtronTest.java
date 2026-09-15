@@ -456,10 +456,11 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
      */
     @Test
     public void testEvalMtronOverHttpStack() {
-        final mcpClient client = new mcpClient(
+        try (final mcpClient client = new mcpClient(
                 CommonUtil.mutableMap(uri(HOST), uri(baseUrl() + "/mcp")),
-                MCP_CLIENT_TID, null);
-        EvalMtronCases.run(LOG, "http", code -> evalMtron(client, code));
+                MCP_CLIENT_TID, null)) {
+            EvalMtronCases.run(LOG, "http", code -> evalMtron(client, code));
+        }
     }
 
     /**
@@ -468,10 +469,11 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
      */
     @Test
     public void testEvalMtronOverWsStack() {
-        final mcpClient client = new mcpClient(
+        try (final mcpClient client = new mcpClient(
                 CommonUtil.mutableMap(uri(HOST), uri("ws://" + wsHost + ":" + wsPort + "/mcp-mtron")),
-                MCP_CLIENT_TID, null);
-        EvalMtronCases.run(LOG, "ws", code -> evalMtron(client, code));
+                MCP_CLIENT_TID, null)) {
+            EvalMtronCases.run(LOG, "ws", code -> evalMtron(client, code));
+        }
     }
 
     /**

@@ -67,7 +67,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mcpClient extends MRec {
+public class mcpClient extends MRec implements AutoCloseable {
 
     protected static final GraphittyLogger LOG = Graphitty.log(mcpClient.class);
 
@@ -153,6 +153,20 @@ public class mcpClient extends MRec {
 
     public McpClient client() {
         return this.client;
+    }
+
+    /**
+     * Close the underlying MCP transport. The client opens its connection eagerly (on
+     * construction, via {@code listTools()}), so a caller that never closes it leaks a live
+     * connection and a server-side session — tests over real transports must close the client.
+     */
+    @Override
+    public void close() {
+        try {
+            this.client.close();
+        } catch (final Exception e) {
+            LOG.warn("error closing mcp client: %s", e.getMessage() == null ? e.getClass().getName() : e.getMessage());
+        }
     }
 
     protected static McpTransport createTransport(final Obj transport, final Map<Obj, Obj> headers, final Obj host, final List<Obj> command) {
