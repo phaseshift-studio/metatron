@@ -168,11 +168,9 @@ public class CompactionFeature extends AbstractFeature {
         // 4. queue the background compaction — the block rec is a deferred compact() call
         final fURI agentHome = agent.at(ROOT).uriValue();
         final Rec config = this.resolveConfig(agent, null == block ? rec() : block);
-        final fURI home = agentHome;
-        final fURI sess = sessionVID;
         final CoreThread thread = CoreThread.core(instLambda((lhs, inst) -> {
             try {
-                final Obj applied = compactSession(home, sess, config);
+                final Obj applied = compactSession(agentHome, sessionVID, config);
                 if (applied.isFail())
                     LOG.warn("compaction failed: %s", Str.Helper.cleanString(applied));
                 return applied;
@@ -182,7 +180,7 @@ public class CompactionFeature extends AbstractFeature {
             }
         }));
         this.compactionTask.set(thread.applyAsync());
-        LOG.info("compaction queued for session %s", sess);
+        LOG.info("compaction queued for session %s", sessionVID);
     }
 
     /**

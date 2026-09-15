@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -104,6 +105,11 @@ public class HttpRec extends MRec {
         return ADDRESS.get();
     }
 
+    // The SSE stream this thread's request opened, if any. A streamed response owns the
+    // exchange for its lifetime (it holds the chunked body open), so handle()'s finally must
+    // not close the exchange out from under it — the stream closes itself.
+    private final ThreadLocal<SseStream> STREAM = new ThreadLocal<>();
+
     /**
      * Handle a request whose mount already resolved its address — see {@link #address()}.
      */
@@ -170,6 +176,14 @@ public class HttpRec extends MRec {
             // response leaves the exchange open and the client waiting for its own timeout — observed as zero
             // bytes for 8s on a request whose uri failed to parse. Closing is a no-op after a response has been
             // written (every send closes its body stream) and is the difference between a fast failure and a hang.
+            // An SSE stream owns the exchange for its lifetime; if the handler returned without ending it, close it
+            // here so the client is never left waiting.
+            final SseStream stream = STREAM.get();
+            if (null != stream) {
+                if (!stream.isClosed())
+                    stream.close();
+                STREAM.remove();
+            }
             try {
                 exchange.close();
             } catch (final Exception e) {
@@ -395,6 +409,25 @@ public class HttpRec extends MRec {
             } catch (final IOException ignored) {
             }
         }
+    }
+
+    /**
+     * Open a server-sent-events response on the current request. Sets the
+     * {@code text/event-stream} content type and starts a chunked body (length 0 ⇒
+     * unknown), returning the channel that owns it until {@link SseStream#close()}.
+     * The handler must block until it closes the stream — the response completes
+     * only when the stream ends.
+     */
+    public SseStream openSse() throws IOException {
+        final HttpExchange ex = this.exchange();
+        if (null == ex)
+            throw MTronException.of("openSse requires an active http exchange");
+        ex.getResponseHeaders().set(MIME.MIMEType.VALUE, MIME.MIMEType.TEXT_EVENT_STREAM.value);
+        ex.getResponseHeaders().set("Cache-Control", "no-cache");
+        ex.sendResponseHeaders(200, 0);
+        final SseStream stream = new SseStream(ex.getResponseBody());
+        STREAM.set(stream);
+        return stream;
     }
 
     /**

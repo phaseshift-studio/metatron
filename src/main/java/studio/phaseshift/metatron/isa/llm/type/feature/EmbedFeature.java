@@ -94,7 +94,7 @@ public class EmbedFeature extends AbstractFeature {
         if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
             return;
         final String instructions = WatermarkUtil.instructions(WATERMARK_CODEC, WatermarkUtil.key(this, WATERMARK_KEY),
-                EMBED_FEATURE_INSTRUCTIONS.formatted(this.at(ROOT), this.at(MODEL)));
+                EMBED_FEATURE_INSTRUCTIONS.formatted(this.getRoot(agent), this.at(MODEL)));
         agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(
                 uri(NAME), uri(LLM_EMBED_FEATURE_TID.name()),
                 uri(DESC), str("embed chat results into a vector space for later similarity retrieval"),
@@ -124,7 +124,7 @@ public class EmbedFeature extends AbstractFeature {
         final Rec signal = watermark.isRec() ? watermark.asRec() : rec0();
         if (signal.isNoObj())
             return;
-        final fURI writeLocation = this.at(ROOT).uriValue().extend("_").addQ(INCRQ);
+        final fURI writeLocation = this.getRoot(agent).extend("_").addQ(INCRQ);
         LOG.status(DEBUG, "writing embedding to %s", writeLocation);
         final Lst vector = model(signal.at(MODEL).orElse(this.at(MODEL))).embed(result);
         final Rec embedding = rec(mutableMap(

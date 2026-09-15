@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -25,12 +26,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.mToolExecutor;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
@@ -38,16 +34,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import dev.langchain4j.agent.tool.ToolExecutionRequest;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.incrQ;
@@ -180,7 +169,9 @@ public class MidChatChannelTest extends AbstractMetatronTest {
         final Rec config = rec(mutableMap(
                         uri(NAME), str("test-agent"),
                         uri(ROOT), uri(address.toString()),
-                        uri(FEATURE), lst(new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null),
+                        uri(FEATURE), lst(
+                                new MessageFeature(mutableMap(uri(SESSION), uri("/test/usr/agent/session/1")), LLM_MESSAGE_FEATURE_TID, null),
+                                new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null),
                                 new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null), mid)),
                 LLM_AGENT_TID, address);
 
@@ -239,12 +230,16 @@ public class MidChatChannelTest extends AbstractMetatronTest {
         assertTrue(folded.isRec(), "a message pushed by an independently built agent must reach the turn: " + folded);
     }
 
-    /** A config carrying its own feature instances — the shape every call gets. */
+    /**
+     * A config carrying its own feature instances — the shape every call gets.
+     */
     private static Rec freshAgentConfig(final fURI address) {
         return rec(mutableMap(
                         uri(NAME), str("test-agent"),
                         uri(ROOT), uri(address.toString()),
-                        uri(FEATURE), lst(new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null),
+                        uri(FEATURE), lst(
+                                new MessageFeature(mutableMap(uri(SESSION), uri("/test/usr/agent/session/1")), LLM_MESSAGE_FEATURE_TID, null),
+                                new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null),
                                 new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null),
                                 midchatThroughItsType(address))),
                 LLM_AGENT_TID, address);
@@ -306,7 +301,9 @@ public class MidChatChannelTest extends AbstractMetatronTest {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
         map.put(uri(NAME), str("test-agent"));
         map.put(uri(ROOT), uri(root.toString()));
-        map.put(uri(FEATURE), lst(new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null),
+        map.put(uri(FEATURE), lst(
+                new MessageFeature(mutableMap(uri(SESSION), uri("/usr/test/agent/session/1")), LLM_MESSAGE_FEATURE_TID, null),
+                new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null),
                 new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null),
                 new ThinkFeature(mutableMap(), LLM_THINK_FEATURE_TID, null), mid));
         return Agent.agent(rec(map, LLM_AGENT_TID, null));
@@ -343,7 +340,9 @@ public class MidChatChannelTest extends AbstractMetatronTest {
         return sub.isUri() && sub.uriValue().equals(subtype);
     }
 
-    /** The first ledger message carrying the given subtype; {@code noobj} if none. */
+    /**
+     * The first ledger message carrying the given subtype; {@code noobj} if none.
+     */
     private static Obj firstWithSub(final fURI root, final fURI subtype) {
         return ledgerMessages(root).stream()
                 .filter(message -> hasSub(message, subtype))

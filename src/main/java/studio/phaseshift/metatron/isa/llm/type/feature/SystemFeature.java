@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
+import static studio.phaseshift.metatron.Tokens.BASE;
+import static studio.phaseshift.metatron.Tokens.SESSION;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MESSAGE_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.SYSTEM_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -178,13 +178,14 @@ public class SystemFeature extends AbstractFeature {
 
         final fURI sessionVID = agent.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION).uriValue();
         try {
-            MessageBuilder.build(SYSTEM_MESSAGE_TID)
-                    .text(text)
-                    .time()
-                    .session(sessionVID)
-                    .depth(agent.chatDepth())
-                    .chatId(agent.chatId())
-                    .create(agent.at(ROOT).uriValue().extend(MESSAGE).extend("_").addQ(INCRQ));
+            agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as()
+                    .addMessage(agent, MessageBuilder.build(SYSTEM_MESSAGE_TID)
+                            .text(text)
+                            .time()
+                            .session(sessionVID)
+                            .depth(agent.chatDepth())
+                            .chatId(agent.chatId())
+                            .create());
             this.at(uri(LAST), str(text), MUTABLE);
         } catch (final Exception e) {
             this.logger().warn("system message write failed (non-blocking): %s", e.getMessage());

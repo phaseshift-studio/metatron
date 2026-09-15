@@ -391,6 +391,7 @@
 <pre><code>furi/c/cInt.java               ← coefficient type [min,max]
 furi/C.java                    ← coefficient interface (span, within, plus, mult)
 isa/m/type/Type.java           ← Type interface + Type.Helper + Type.Builder
+isa/m/type/TypeGraph.java      ← TypeGraph: cached type-resolution graph (memo + write invalidation)
 isa/m/type/Obj.java            ← Obj interface (base of all metatron objects)
 isa/m/type/Call.java           ← Call interface (instruction chain, Ring&lt;Call&gt;)
 isa/m/type/Inst.java           ← Inst interface (single instruction)
@@ -547,6 +548,41 @@ Use <code>Call.tryToInst()</code> to normalize (Code→Inst if single, otherwise
 // For non-base types (tid != vid): parent = T(tid)  — the type being refined
 // For base types (tid == vid): parent = ALL_TYPE.c(this.c())
 // For root type: returns this
+</code></pre>
+<h4>TypeGraph (cached resolution)</h4>
+<p><code>TypeGraph.global()</code> is a process-wide memoization over <code>MType.T(...)</code> — the single
+entry point every hierarchy walk (<code>parentType()</code>, <code>isRefinementOf()</code>, <code>test()</code>) funnels
+through on each hop. A hit is a map lookup instead of a <code>Router</code> space read; the key is
+the value-equality tuple <code>(tid, vid, predicate, constructor)</code>.</p>
+<p>Soundness for a dynamic registry:</p>
+<ul>
+<li>the router is hooked at <code>BasicRouter.write</code> — a write to a watched type path
+(or a wildcard path that redirects onto one) bumps a generation counter and drops
+the affected entries, so a later <code>T(...)</code> re-reads space</li>
+<li>a stale entry that is being computed concurrently with an invalidating write is
+never cached (generation-stamped)</li>
+<li>a new router instance (re-boot / reload) rebinds the graph and clears it</li>
+<li>while <code>BootLoader.BOOTING</code> is true the registry is still being assembled — the
+memo is bypassed in that window, so a resolution is only ever cached once the
+registry is stable</li>
+</ul>
+<p><strong>registry-driven type constants.</strong> The datetime object-identity incident
+(<code>testDateTime*</code> failing under the memo): <code>mathInstSet.DATETIME_TYPE</code> used to be a
+clinit-time constant; it is now a registry field assigned during the instset's
+<code>setup()</code> (so name resolution returns the <em>registered</em> object, predicate and all).
+Two consequences:</p>
+<ul>
+<li>a test class that touches <code>datetime</code> semantics must run the math instset through
+<code>setup()</code> first — the idiom is <code>extends AbstractInstSetTest</code> +
+<code>super(mathInstSet::new)</code> (see <code>DatetimeTypeTest</code> and <code>mathInstSetTest</code>)</li>
+<li>every consumer of the field must null-guard it in contexts where the math set is
+not registered — e.g. the uri branch of the rshift lambda in <code>Obj</code>
+(<code>null != DATETIME_TYPE &amp;&amp; ...</code>)</li>
+</ul>
+<p>The cache holds references to resolved <code>Type</code>s — never back-pointers inside them — so
+serialization, cloning, and save semantics of type objects are untouched.</p>
+<pre><code class="language-java">TypeGraph.global().size();          // cached resolutions
+TypeGraph.global().clear();         // force re-resolution (e.g. after a mass redefine)
 </code></pre>
 <h4>isRefinementOf()</h4>
 <p><strong>Predicate-blind</strong> nominal ancestry check. Walks <code>this</code>'s parentType chain looking for a node whose VID matches <code>other</code>'s TID or VID:</p>

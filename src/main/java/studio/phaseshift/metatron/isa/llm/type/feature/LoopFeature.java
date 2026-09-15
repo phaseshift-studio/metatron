@@ -188,11 +188,8 @@ public class LoopFeature extends AbstractFeature {
      * iteration, so the last row carries the full loop history.
      */
     private void persist(final Agent agent, final ChatResult result) {
-        final Obj root = this.at(ROOT);
-        if (root.isNoObj())
-            return;
         try {
-            final Obj written = Router.writeToSpace(root.uriValue().extend("_").addQ(INCRQ),
+            final Obj written = Router.writeToSpace(this.getRoot(agent).extend("_").addQ(INCRQ),
                     rec(uri("iterations"), lst(this.iterations.stream().map(r -> (Obj) r).toList())));
             result.putRef("loop_results", written);
         } catch (final Exception e) {

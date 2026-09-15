@@ -40,6 +40,8 @@ person::[name=>'grant',age=>25]@/data/person/2
 | `ws::T`                   | `/m/web/ws`                                    | `protocol::T` | the websocket vocabulary                                                   |
 | `mcp::T`                  | `/m/web/mcp`                                   | `protocol::T` | an MCP surface                                                             |
 | `mtron::T`                | `/m/web/mtron`                                 | `protocol::T` | the mtron-eval surface                                                     |
+| `stream::T`               | `/m/web/stream`                                | `protocol::T` | the raw byte / server-sent-event stream surface                            |
+| `sse::T`                  | `/m/web/sse`                                   | `stream::T`   | a server-sent-events response — a chunked `text/event-stream` over http    |
 | `mcp_server::T`           | `/m/web/mcp/mcp_server`                        | `mcp::T`      | an MCP server obj — **transport-agnostic**                                 |
 | `web_http`                | `/m/web/http/web_http`                         | `rest::T`     | the handler that serves a web root                                         |
 | `mcp_http` / `mcp_ws`     | `/m/web/mcp/mcp_http`, `/m/web/mcp/mcp_ws`     | `mcp::T`      | an `mcp_server` bound to a carrier                                         |
@@ -149,6 +151,28 @@ rebuilt on every request.
 ```
 
 A websocket has no per-request uri, only a handshake, so a templated ws mount addresses per *connection*.
+
+## streaming a response (`sse::T`)
+
+A mount is normally request/response — one body, then the handler closes. `sse::T` is the streaming exception: an
+http handler opens a chunked `text/event-stream` response and pushes any number of events before it closes. The
+primitive is `SseStream` (`isa/web/space/http/SseStream.java`), opened from an `HttpRec` subclass with `openSse()`:
+
+```java
+final SseStream sse = this.openSse();     // 200, text/event-stream, chunked (length 0)
+sse.send("message", "{\"ping\":true}"); // event: message + data: {...}
+sse.comment("ping");                      // : ping   (heartbeat, ignored by clients)
+sse.close();                              // flush + end the stream
+```
+
+Each event is `event:`/`data:`/`:` lines terminated by a blank line; a multi-line payload becomes repeated `data:`
+fields. Writes are synchronized and flushed immediately, so a producing thread (`?subq`, a future LLM token stream)
+can push events across the handler thread.
+
+The first consumer is `mcp_httpHandler.doGet` — the Streamable-HTTP GET. It opens an `sse::T` stream, drains the
+server's subscription outbox, and streams each `notifications/resources/updated` as an `event: message`, then holds
+the stream open with heartbeats until the client disconnects.
+
 
 ## not available yet
 

@@ -43,6 +43,8 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -154,14 +156,16 @@ public final class mcpMetatronBuilder {
             // eval_mtron — the foundational tool: evaluate metatron expressions
             tools.at(uri(mTool.toolName(toolTid("eval_mtron"))), docWrap(instC(
                             f(mTool.toolName(toolTid("eval_mtron"))).dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
-                            rec(uri(CODE), CODE_TYPE), (lhs, inst) -> {
+                            rec(uri(CODE), CODE_TYPE, uri(NATIVE).maybe(), BOOL_TYPE), (lhs, inst) -> {
                                 // code arrives already parsed to code::T by the schema-aware JSON
                                 // layer — no JSON-massaging here; just evaluate it.
+                                Obj result;
                                 try {
-                                    return inst.arg(0).apply();
+                                    result = inst.arg(CODE, 0).apply();
                                 } catch (final Exception e) {
-                                    return fail(e);
+                                    result = fail(e);
                                 }
+                                return inst.arg(NATIVE, 1).orElse(BOOL_FALSE).boolValue() ? str(result.toString()) : result;
                             }), "noobj lhs", "the result of the code evaluation",
                     Map.of(uri(CODE), "mtron code to evaluate"), "returns the result of evaluating the provided mtron expression"), MUTABLE);
             // list_space — return an index of currently accessible spaces

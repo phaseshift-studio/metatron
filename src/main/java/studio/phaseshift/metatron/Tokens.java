@@ -32,7 +32,8 @@ public final class Tokens {
         // do nothing
     }
 
-    public static final String MTRON = "mtron";public static final String METATRON = "metatron";
+    public static final String MTRON = "mtron";
+    public static final String METATRON = "metatron";
     public static final String MTRON_ID = "mid_";
     public static final String METATRON_VERSION = "0.1-SNAPSHOT";
     public static final fURI HASH_FURI = f("#");
@@ -277,6 +278,7 @@ public final class Tokens {
     public static final String EXAMPLE = "example";
     public static final String MODEL = "model";
     public static final String STAGE = "stage";
+    public static final String SELECT = "select";
     public static final String DOC = "doc";
     public static final String LHS = "lhs";
     public static final String AGENT = "agent";

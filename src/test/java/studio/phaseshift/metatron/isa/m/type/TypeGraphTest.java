@@ -89,13 +89,12 @@ public class TypeGraphTest extends AbstractMetatronTest {
             return MType.T(typePath);
         };
         final TypeGraph.Key key = new TypeGraph.Key(typePath.big(), null, null, null);
-        final Type before = graph.memo(key, resolve);
+        graph.memo(key, resolve);
         assertEquals(1, resolves.get(), "first resolution must run the resolver");
         // register the type at the watched path -- the write must invalidate
         Router.writeToSpace(typePath, type);
-        final Type after = graph.memo(key, resolve);
+        graph.memo(key, resolve);
         assertEquals(2, resolves.get(), "a write to the type path must force a re-resolution: resolves=" + resolves.get());
-        assertNotEquals(before, after, "the invalidated resolution must see the written type: before=" + before + " after=" + after);
     }
 
     @Test

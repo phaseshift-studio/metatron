@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
@@ -31,15 +30,12 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -126,7 +122,7 @@ public class MidChatFeature extends AbstractFeature {
 
     @Override
     public Set<fURI> requires() {
-        return Set.of(LLM_SKILL_FEATURE_TID);
+        return Set.of(LLM_SKILL_FEATURE_TID, LLM_MESSAGE_FEATURE_TID);
     }
 
     /**
@@ -222,13 +218,15 @@ public class MidChatFeature extends AbstractFeature {
         if (text.isBlank())
             return "";
         StatusLine.message(str("\uD83D\uDCAC %s".formatted(text)));
-        this.write(agent, MessageBuilder.build(AI_MESSAGE_TID)
-                .sub(AI_MIDCHAT_TID)
-                .text(text)
-                .time()
-                .session(agent.sessionVID())
-                .depth(agent.chatDepth())
-                .chatId(agent.chatId()));
+        agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as()
+                .addMessage(agent, MessageBuilder.build(AI_MESSAGE_TID)
+                        .sub(AI_MIDCHAT_TID)
+                        .text(text)
+                        .time()
+                        .session(agent.sessionVID())
+                        .depth(agent.chatDepth())
+                        .chatId(agent.chatId())
+                        .create());
         return text;
     }
 
@@ -257,31 +255,10 @@ public class MidChatFeature extends AbstractFeature {
     }
 
     /**
-     * The address this feature's pending messages live at — its own subspace, under its
-     * declared root (or the agent's when it declares none).
-     *
-     * <p>An address, and not a field on this rec.  {@code Agent.agent(rec)} builds a
-     * fresh agent on every call and the feature it carries is constructed with it, so a
-     * field written by the pusher is a field the running turn never sees — the rec
-     * carries no vid, which means {@code at(PENDING_MESSAGES, ...)} reaches no space at
-     * all.  Only an address is shared by two instances, and only an address is where an
-     * agent's state can live.
-     */
-    private fURI pendingURI(final Agent agent) {
-        final Obj declared = this.at(ROOT);
-        final Obj inherited = agent.at(ROOT);
-        if (declared.isUri())
-            return declared.uriValue().extend(this.tid().name()).extend(PENDING_MESSAGES);
-        if (inherited.isUri())
-            return inherited.uriValue().extend(this.tid().name()).extend(PENDING_MESSAGES);
-        throw MTronException.of("the mid-chat feature has nowhere to keep pending messages: %s", this.tid());
-    }
-
-    /**
      * The messages waiting to be read.
      */
     public Lst pendingMessages(final Agent agent) {
-        final Obj pending = Router.readFromSpace(this.pendingURI(agent));
+        final Obj pending = Router.readFromSpace(this.getRoot(agent).extend(this.tid().name()).extend(PENDING_MESSAGES));
         return pending.isLst() ? pending.asLst() : lst();
     }
 
@@ -289,7 +266,7 @@ public class MidChatFeature extends AbstractFeature {
      * Queue a message for the next tool result.
      */
     public void push(final Agent agent, final Rec message) {
-        Router.writeToSpace(this.pendingURI(agent), this.pendingMessages(agent).add(message));
+        Router.writeToSpace(this.getRoot(agent).extend(this.tid().name()).extend(PENDING_MESSAGES), this.pendingMessages(agent).add(message));
     }
 
     /**
@@ -297,7 +274,7 @@ public class MidChatFeature extends AbstractFeature {
      */
     public Lst drain(final Agent agent) {
         final Lst messages = this.pendingMessages(agent);
-        Router.writeToSpace(this.pendingURI(agent), lst());
+        Router.writeToSpace(this.getRoot(agent).extend(this.tid().name()).extend(PENDING_MESSAGES), lst());
         return messages;
     }
 
@@ -345,41 +322,15 @@ public class MidChatFeature extends AbstractFeature {
      * message, which is why a long mid-iteration conversation left nothing behind.
      */
     private void publishInbound(final Agent agent, final Lst messages) {
-        messages.elements().forEach(message -> this.write(agent, MessageBuilder.build(USER_MESSAGE_TID)
-                .sub(USER_MIDCHAT_TID)
-                .text(message.asRec().at(uri(MESSAGE)).strValue())
-                .contents(message.asRec().at(uri(MESSAGE)).strValue())
-                .time(message.asRec().at(TIME).uriValue())
-                .session(agent.sessionVID())
-                .depth(agent.chatDepth())
-                .chatId(agent.chatId())));
+        messages.elements().forEach(message -> agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as()
+                .addMessage(agent, MessageBuilder.build(USER_MESSAGE_TID)
+                        .sub(USER_MIDCHAT_TID)
+                        .text(message.asRec().at(uri(MESSAGE)).strValue())
+                        .contents(message.asRec().at(uri(MESSAGE)).strValue())
+                        .time(message.asRec().at(TIME).uriValue())
+                        .session(agent.sessionVID())
+                        .depth(agent.chatDepth())
+                        .chatId(agent.chatId()).create()));
     }
 
-    /**
-     * Where mid-chat messages are written: the feature's own {@code root} when it
-     * declares one, else the agent's — the same convention {@code ChatFeature} and
-     * {@code ThinkFeature} follow for their own ledger writes.
-     */
-    private fURI ledgerRoot(final Agent agent) {
-        final Obj root = this.at(ROOT);
-        return root.isNoObj() ? agent.at(ROOT).uriValue() : root.uriValue();
-    }
-
-    /**
-     * Append one message to the ledger.  Best-effort: this runs inside streaming
-     * and tool callbacks, and a persistence failure must not abort the turn.
-     */
-    private void write(final Agent agent, final MessageBuilder message) {
-        final fURI root = this.ledgerRoot(agent);
-        final Space space = Router.global().getSpaceFor(root.extend(MESSAGE));
-        if (!space.hasQ(f(INCRQ))) {
-            this.logger().warn("mid-chat persistence requires an incrq message space: %s", space.vidOrTid());
-            return;
-        }
-        try {
-            message.create(root.extend(MESSAGE).extend("_").addQ(INCRQ));
-        } catch (final Exception e) {
-            this.logger().warn("mid-chat message write failed: %s", e.getMessage());
-        }
-    }
 }

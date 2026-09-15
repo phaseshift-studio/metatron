@@ -42,12 +42,18 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ThinkFeature extends AbstractFeature {
-    /** Prose batches at this many characters; a template or watermark flushes at once. */
+    /**
+     * Prose batches at this many characters; a template or watermark flushes at once.
+     */
     private static final int BATCH = 25;
 
-    /** The raw tail not yet thought — a construct split across chunks is held here. */
+    /**
+     * The raw tail not yet thought — a construct split across chunks is held here.
+     */
     private StringBuilder buffer = new StringBuilder();
-    /** The thought, in output order — what the turn's thinking row will hold. */
+    /**
+     * The thought, in output order — what the turn's thinking row will hold.
+     */
     private StringBuilder full = new StringBuilder();
     private String lastRendered = "";
     private final AtomicBoolean thinkDone = new AtomicBoolean(false);
@@ -97,7 +103,7 @@ public class ThinkFeature extends AbstractFeature {
      * cataloged.
      *
      * @return the thought this pass cataloged, or {@code noobj()} when the buffer was
-     *         still filling
+     * still filling
      */
     private Obj think(final Agent agent) {
         final String accumulated = this.buffer.toString();
@@ -139,7 +145,9 @@ public class ThinkFeature extends AbstractFeature {
         return value;
     }
 
-    /** Catalog a thought: append it to the turn's thinking, and show it as it arrives. */
+    /**
+     * Catalog a thought: append it to the turn's thinking, and show it as it arrives.
+     */
     private void catalog(final Agent agent, final Obj thought) {
         final String text = Str.Helper.cleanString(thought);
         if (text.isEmpty())
@@ -151,7 +159,9 @@ public class ThinkFeature extends AbstractFeature {
         this.lastRendered = text;
     }
 
-    /** Whether the text carries something that must not be rendered half-written. */
+    /**
+     * Whether the text carries something that must not be rendered half-written.
+     */
     private static boolean hasTemplate(final String text) {
         return text.contains("{{{") || text.contains("${") || text.contains("<<");
     }
@@ -160,14 +170,13 @@ public class ThinkFeature extends AbstractFeature {
     public void onPartialResponse(final Agent agent, final Str text) {
         if (!this.thinkDone.getAndSet(true)) {
             agent.feature(LLM_THINK_FEATURE_TID).asRec().at(f(THINK).extend(TO)).apply(str(Str.Helper.cleanString(str(this.buffer.toString()).apply(agent))));
-            final fURI thinkWriteURI = agent.feature(LLM_THINK_FEATURE_TID).asRec().at(ROOT).orElse(agent.at(ROOT).uriValue().extend(THINK).toUri()).uriValue().extend("_").addQ(INCRQ);
             this.lastThink = MessageBuilder.buildThinkingMessage()
                     .text(this.full.toString().trim())
                     .time()
                     .session(agent.sessionVID())
                     .depth(agent.chatDepth())
                     .chatId(agent.chatId())
-                    .create(thinkWriteURI);
+                    .create(this.getRoot(agent).extend("_").addQ(INCRQ));
             this.buffer = new StringBuilder();
             this.full = new StringBuilder();
             this.lastRendered = "";

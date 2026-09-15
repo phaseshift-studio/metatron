@@ -41,12 +41,12 @@ import java.util.*;
 
 import static org.jline.keymap.KeyMap.key;
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -187,7 +187,6 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
     private final Deque<Object> stack = new ArrayDeque<>();
     private final Set<fURI> expandedNodes = new HashSet<>();
     private Attributes savedAttributes;
-    private boolean running = false;
     private int totalHeightUsed = 0;
 
     public TreeSelectTool(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -252,14 +251,16 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
 
             pushTreeLevel(rootUri(), maxDepth(), expandedNodes, 0, 0, -1, -1);
 
-            this.running = true;
+            if (this.at(RUN).isNoObj())
+                this.at(RUN, BOOL_TRUE, MUTABLE);
             final BindingReader bindingReader = new BindingReader(terminal.reader());
             final KeyMap<Action> keyMap = buildKeyMap();
 
-            while (running && !stack.isEmpty()) {
+            while (this.read().getOrDefault(uri(RUN), noobj()).booleanCheck() && !stack.isEmpty()) {
                 redrawStack();
                 final Action action = bindingReader.readBinding(keyMap);
                 handleAction(action);
+
             }
         } catch (final IOError e) {
             if (!(e.getCause() instanceof InterruptedIOException))
@@ -331,7 +332,7 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
             case QUIT -> {
                 popLevel();
                 if (stack.isEmpty()) {
-                    running = false;
+                    this.at(RUN, noobj(), MUTABLE);
                 }
             }
         }

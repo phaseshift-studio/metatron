@@ -145,6 +145,63 @@ public interface Type extends Obj {
         return false;
     }
 
+    default boolean isEphemeral() {
+        return !BASE_TYPES.contains(this.tid().basePath()) && this.tid().equals(this.vid());
+    }
+
+    /**
+     * whether the single refinement path from this type to the root ({@code #::T})
+     * includes {@code node} — eg {@code nat.pathIncludes(int)} is true because
+     * {@code nat -> int -> #}, while {@code imperial.pathIncludes(metric)} is
+     * false: imperial's path is {@code imperial -> real -> #} and never
+     * includes the sibling metric, although {@code metric.isRefinementOf(imperial)}
+     * is true (both branch off real). this is the admission rule for instruction
+     * family reads on the {@code dom} axis: what is on the path is what may be
+     * legally used; siblings and cousins are not.
+     * <p>
+     * root ({@code #}) and generic nodes are on every path, as they bind to
+     * anything.
+     *
+     * @param node the candidate (eg a contract's dom) this type's path may include
+     * @return true if node lies on this type's chain to the root
+     */
+    default boolean pathIncludes(final Type node) {
+        if (null == node || node.isGeneric() || node.isRootType())
+            return true;
+        Type t = this;
+        int hops = 0;
+        while (null != t && !t.isRootType() && hops < 256) {
+            if (null != t.vid() && null != node.vid() && t.vid().basePath().equals(node.vid().basePath()))
+                return true;
+            if (t.isBaseType())
+                break;
+            t = t.parentType();
+            hops++;
+        }
+        return false;
+    }
+
+    /**
+     * distance in refinement hops from this type down to {@code node} on the
+     * path to the root, or a large distance if the node is generic/root (least
+     * specific). used to rank family read results, closest-to-the-token first.
+     */
+    default int pathTo(final Type node) {
+        if (null == node || node.isGeneric() || node.isRootType())
+            return Integer.MAX_VALUE / 2;
+        Type t = this;
+        int hops = 0;
+        while (null != t && !t.isRootType() && hops < 256) {
+            if (null != t.vid() && null != node.vid() && t.vid().basePath().equals(node.vid().basePath()))
+                return hops;
+            if (t.isBaseType())
+                break;
+            t = t.parentType();
+            hops++;
+        }
+        return Integer.MAX_VALUE;
+    }
+
     default boolean isIsaPredicate() {
         return this.hasPredicate() && this.predicate().isObjCall() && this.predicate().asCall().insts().size() == 1 &&
                 this.predicate().asCall().insts().getFirst().tid().equals(ISA_INST_TID);
