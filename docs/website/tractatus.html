@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>PhaseShift Studio</title>
+    <title>metatron</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -108,6 +108,7 @@
         }
     </style>
     <script src="js/metatron.js" type="text/javascript"></script>
+    
 </head>
 <body class="d-flex flex-column min-vh-100" spellcheck="false">
 <!------------------------------------------------------->
@@ -680,16 +681,11 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |&lt;1&gt;?int&lt;=#{?}(){1}@&lt;1&gt;   [-- 1 --]
 ==&gt;1?rng=int&amp;dom=#{?}(){1}@<i class="conum" data-value="1"></i><b>(1)</b>
 mtron&gt; &lt;1&gt;()                     [-- 2 --]
+==&gt;1
 mtron&gt; 10.&lt;1&gt;()                  [-- 3 --]
-==&gt;fail::[unable to determine inst function:
-   	10          =&gt; 1?dom=int()@&lt;1&gt;   | [inst]
-   	int::T      =&gt; int::T   |  \_dom
-   	int::T     ==&gt; [,]   |  \_args]@/sys/fail/418
+==&gt;1
 mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
-==&gt;fail::[inst apply failure: fail::[unable to determine inst function:
-   	12          =&gt; 1?dom=int()   | [inst]
-   	int::T      =&gt; int::T   |  \_dom
-   	int::T     ==&gt; [,]   |  \_args]@/sys/fail/424 [value] unable to convert fail::T]@/sys/fail/426</code></pre>
+==&gt;24</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -727,33 +723,27 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;+/#/&gt;
-==&gt;boot/args/boot=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;
-==&gt;boot/args=&gt;[
-    log=&gt;info,
-    boot=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;,
-    local=&gt;booger]
 ==&gt;&lt;1/x/total&gt;=&gt;15.0000
 ==&gt;v5/name=&gt;'ripple'
-==&gt;boot/args/local=&gt;booger
 ==&gt;animal=&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T]]@animal
 ==&gt;v6/age=&gt;35
 ==&gt;&lt;1/x&gt;=&gt;[
     item=&gt;'book',
     total=&gt;15.0000,
     seller=&gt;!*g:V/4]@&lt;1/x&gt;
-==&gt;&lt;1&gt;=&gt;plus?rng=int&amp;dom=int(fail::[unable to determine inst function:]@/sys/fail/428){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
+==&gt;&lt;1&gt;=&gt;plus?rng=int&amp;dom=int(12){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;v5/lang=&gt;java
 ==&gt;knows=&gt;edge::T[?[weight=&gt;real::T]]@knows
 ==&gt;person=&gt;vrtx::T[?[name=&gt;str::T,age=&gt;int::T]]@person
-==&gt;animals=&gt;rec::T[?[
-     __mtron_tid=&gt;str::T,
-     name=&gt;str::T,
-     age=&gt;int::T,
-     {?}shelter=&gt;rec::T]]@animals
 ==&gt;v1/outE_=&gt;[knows=&gt;{[weight=&gt;0.5000,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5000,inV_=&gt;!*v4,outV_=&gt;!*v1]}]
+==&gt;boot/args=&gt;[
+    log=&gt;info,
+    boot=&gt;&lt;/work/boot/docs.mtron&gt;,
+    local=&gt;&lt;881db532e060&gt;]
 ==&gt;v2/name=&gt;'vadas'
 ==&gt;v1/created=&gt;[weight=&gt;0.2000,inV_=&gt;!*v3,outV_=&gt;!*v1]
 ==&gt;created=&gt;edge::T[?[weight=&gt;real::T]]@created
+==&gt;boot/args/boot=&gt;&lt;/work/boot/docs.mtron&gt;
 ==&gt;v4=&gt;[name=&gt;'lop']
 ==&gt;v1=&gt;[
     name=&gt;'marko',
@@ -761,9 +751,9 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
     outE_=&gt;[knows=&gt;{[weight=&gt;0.5000,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5000,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
     created=&gt;[weight=&gt;0.2000,inV_=&gt;!*v3,outV_=&gt;!*v1]]
 ==&gt;v6/out_=&gt;[created=&gt;!*v4]
+==&gt;boot/file=&gt;&lt;/work/boot/docs.mtron&gt;@boot/file
 ==&gt;v1/name=&gt;'marko'
 ==&gt;chicken=&gt;animal::T@chicken
-==&gt;boot/file=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;@boot/file
 ==&gt;equipment=&gt;rec{*}::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment
 ==&gt;&lt;1/x/item&gt;=&gt;'book'
 ==&gt;v6=&gt;[
@@ -772,6 +762,7 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
     out_=&gt;[created=&gt;!*v4]]
 ==&gt;v2=&gt;[name=&gt;'vadas']
 ==&gt;v4/name=&gt;'lop'
+==&gt;boot/args/local=&gt;&lt;881db532e060&gt;
 ==&gt;v1/age=&gt;29
 ==&gt;boot/args/log=&gt;info
 ==&gt;v3=&gt;[name=&gt;'josh']
@@ -1160,7 +1151,7 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)     ​1​</code></pre>
 mtron&gt; 10.is_divisible(2)
 ==&gt;true
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[inst apply failure: 'abc' [value] unable to convert str::T]@/sys/fail/464</code></pre>
+==&gt;fail::[inst apply failure: 'abc' [value] unable to convert str::T]@/sys/fail/514</code></pre>
 </div>
 </div>
 </div>
@@ -1215,7 +1206,7 @@ This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> p
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​1​
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]]@/sys/fail/468
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]]@/sys/fail/518
 mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​2​
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
 mtron&gt; *trpl     ​3​
@@ -1566,7 +1557,7 @@ mtron&gt; httpspace::[host     =&gt; http://localhost:8777,
                    pattern  =&gt; &lt;http://#&gt;,
                    route    =&gt; [/mcp     =&gt; mcp_mtron_http,
                                 /       =&gt; &lt;&gt;]]@/sys/space/web/http
-==&gt;ERROR: unable to construct httpspace::T: fail::[inst apply failure: Address already in use[Net&lt;-2&gt;:Address already in use]]@/sys/fail/594
+==&gt;ERROR: unable to construct httpspace::T: fail::[inst apply failure: Address already in use[Net&lt;-2&gt;:Address already in use]]@/sys/fail/644
 mtron&gt; wsspace::[host     =&gt; ws://localhost:8555,
                  pattern  =&gt; &lt;ws://#&gt;,
                  q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
@@ -1682,26 +1673,13 @@ Two example models are provided below.</p>
                protocol =&gt; ollama,
                host     =&gt; http://localhost:11434,
                llm      =&gt; &lt;qwen3.5:4b&gt;]
-==&gt;model::[
-    skill=&gt;[completion,vision,tools,thinking],
-    size=&gt;gB::3.1572,
-    context=&gt;262144,
-    provider=&gt;ollama,
-    protocol=&gt;ollama,
-    host=&gt;http://localhost:11434,
-    llm=&gt;&lt;qwen3.5:4b&gt;]
+==&gt;ERROR: unable to construct model::T: fail::[inst apply failure: java.lang.RuntimeException: java.net.ConnectException]@/sys/fail/652
 mtron&gt; model::[host     =&gt; &lt;https://api.deepseek.com/v1&gt;,
                api_key  =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
                provider =&gt; deepseek,
                protocol =&gt; openai,
                llm      =&gt; &lt;deepseek-v4-pro&gt;]
-==&gt;model::[
-    name=&gt;deepseek-v4-pro,
-    host=&gt;&lt;https://api.deepseek.com/v1&gt;,
-    api_key=&gt;!*/sys/env/DEEPSEEK_API_KEY,
-    provider=&gt;deepseek,
-    protocol=&gt;openai,
-    llm=&gt;deepseek-v4-pro]</code></pre>
+==&gt;ERROR: unable to construct model::T: fail::[inst apply failure: dev.langchain4j.exception.HttpException: Authentication Fails (auth header format should be Bearer sk-...)]@/sys/fail/660</code></pre>
 </div>
 </div>
 <!--
@@ -1759,7 +1737,8 @@ The purpose of breaking up the example into two expression is to highlight the O
                to(http://localhost:11434/api/show).
                =?=[capabilities=&gt;has(thinking).has(tools)]].dom().
          order(&gt;&gt;size * -1).
-         take(1).to(ollama_model)</code></pre>
+         take(1).to(ollama_model)
+==&gt;[fail::[inst apply failure: fail[SocketChannelImpl&lt;204&gt;:(ConnectExc...]@/sys/fail/738]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2023,7 +2002,7 @@ mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*eval],
           response  => [to=>_]]]
-==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/670
+==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/742
 ----
 
 [source,mtron]
@@ -2071,12 +2050,12 @@ As such, an MCP client has an natural mapping to an LLM tool feature.
 [source,mtron]
 ----
 mtron> mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
-==>ERROR: unable to construct mcp_client::T: fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26").]@/sys/fail/678
+==>ERROR: unable to construct mcp_client::T: fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26").]@/sys/fail/750
 mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*/usr/ai/mcp/mtron],
           response  => [to=>_]]]
-==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/682
+==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/754
 ----
 
 Given that an `mcp_client::T` is an index of `insts`.
@@ -2147,7 +2126,7 @@ mtron> *ollama:+.
               think    => print(_),
               response => [to=>to(/usr/ai/response)]]].
         to(aix)
-==>[fail::[inst apply failure: no active space supports pattern ollama...]@/sys/fail/768]
+==>[fail::[inst apply failure: no active space supports pattern ollama...]@/sys/fail/840]
 ----
 
 <1> create a `lst` to server as the an ordered sequence of chat interactions.
@@ -2505,7 +2484,7 @@ Note the use of the tools provided to the agent.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1.plus(b)     ​1​
-==&gt;fail::[inst apply failure: 1 [int::T] unable to convert uri::T]@/sys/fail/126
+==&gt;fail::[inst apply failure: 1 [int::T] unable to convert uri::T]@/sys/fail/174
 mtron&gt; */sys/fail/+     ​2​
 mtron&gt; */sys/fail/+.catch(_)     ​3​
 mtron&gt; */sys/fail     ​4​</code></pre>
@@ -2773,9 +2752,9 @@ mtron&gt; nat::T[?&lt;120]@age     ​2​
 mtron&gt; 21.as(int::T).as(nat::T).as(age::T)     ​3​
 ==&gt;age::21
 mtron&gt; -21.as(int::T).as(nat::T).as(age::T)     ​4​
-==&gt;fail::[inst apply failure: -21 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/1562
+==&gt;fail::[inst apply failure: -21 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/1634
 mtron&gt; 121.as(int::T).as(nat::T).as(age::T)     ​5​
-==&gt;fail::[inst apply failure: nat::121 is not a nat::T[is(lt(120))]@age [structural]]@/sys/fail/1566
+==&gt;fail::[inst apply failure: nat::121 is not a nat::T[is(lt(120))]@age [structural]]@/sys/fail/1638
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;age::T]]@chicken     ​6​
 ==&gt;animal::T[?[
      name=&gt;str::T,
@@ -2917,13 +2896,13 @@ mtron&gt; being::T@chicken     ​3​
 mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T)     ​4​
 ==&gt;chicken::[name=&gt;'marko',age=&gt;29]
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7].as(human::T)     ​5​
-==&gt;fail::[inst apply failure: chicken::[name=&gt;'snowbutt',age=&gt;7] is not a being::T@human [nominal]]@/sys/fail/1572
+==&gt;fail::[inst apply failure: chicken::[name=&gt;'snowbutt',age=&gt;7] is not a being::T@human [nominal]]@/sys/fail/1644
 mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)     ​6​
 ==&gt;chicken::[name=&gt;'fuzzy feet',age=&gt;2]
 mtron&gt; 'punky'.as(chicken::T)     ​7​
 ==&gt;fail::[inst apply failure: 'punky' is not a animal::T[?[
      name=&gt;str::T,
-     age=&gt;age::T]]@chicken [structural]]@/sys/fail/1576</code></pre>
+     age=&gt;age::T]]@chicken [structural]]@/sys/fail/1648</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3035,9 +3014,9 @@ mtron&gt; nat::-2     ​4​
 mtron&gt; 2.as(nat::T)     ​5​
 ==&gt;nat::2
 mtron&gt; -2.as(nat::T)     ​6​
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/1582
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/1654
 mtron&gt; nat::2 * -1     ​7​
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/1586</code></pre>
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@/m/math/nat]@/sys/fail/1658</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3064,7 +3043,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}M{{g}}E{{m}}t{{b}}A{{y}}T{{r}}r{{r}}o{{b}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{b}}M{{c}}e{{c}}t{{c}}A{{y}}t{{c}}r{{y}}O{{m}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3715,7 +3694,7 @@ mtron&gt; nat::10
 mtron&gt; nat::-10
 ==&gt;ERROR: -10 is not a int::T[is(gt(0))]@/m/math/nat
 mtron&gt; int::-10.as(nat::T)
-==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/1732</code></pre>
+==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/1804</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3816,7 +3795,7 @@ mtron&gt; nat::10
 mtron&gt; nat::-10
 ==&gt;ERROR: -10 is not a int::T[is(gt(0))]@/m/math/nat
 mtron&gt; int::-10.as(nat::T)
-==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/1738</code></pre>
+==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@/m/math/nat [structural]]@/sys/fail/1810</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3846,7 +3825,7 @@ mtron&gt; age::125
 mtron&gt; nat::125.as(age::T)
 ==&gt;ERROR: 125 is not a int::T[is(lt(120))]@/m/math/nat
 mtron&gt; 125.as(nat::T).as(age::T)
-==&gt;fail::[inst apply failure: 125 is not a int::T[is(lt(120))]@/m/math/nat [structural]]@/sys/fail/1748</code></pre>
+==&gt;fail::[inst apply failure: 125 is not a int::T[is(lt(120))]@/m/math/nat [structural]]@/sys/fail/1820</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -4179,7 +4158,7 @@ together. Via the colocation of two objs within the confines of a <code>poly</co
 mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-     ​2​
 ==&gt;1
 mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-.map(&lt;${g:V/_}&gt;)&gt;&gt;+     ​3​
-==&gt;fail::[inst apply failure: unable to parse ${g to a furi: ${g]@/sys/fail/1168</code></pre>
+==&gt;fail::[inst apply failure: unable to parse ${g to a furi: ${g]@/sys/fail/1240</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6857,8 +6836,8 @@ See <code>docs/design/ring-uri.md</code> for the full theory.</p>
 ==&gt;fsspace::[
     pattern=&gt;fs:#,
     route=&gt;[
-     fs:m=&gt;/home/killswitch/software/metatron,
-     fs:=&gt;/home/killswitch/],
+     fs:m=&gt;/home/ubuntu/software/metatron,
+     fs:=&gt;/home/ubuntu/],
     script=&gt;!*boot/script]@/sys/space/localfs</code></pre>
 </div>
 </div>
@@ -6888,13 +6867,11 @@ See <code>docs/design/ring-uri.md</code> for the full theory.</p>
 ==&gt;fsspace::[
     pattern=&gt;fs:#,
     route=&gt;[
-     fs:m=&gt;/home/killswitch/software/metatron,
-     fs:=&gt;/home/killswitch/],
+     fs:m=&gt;/home/ubuntu/software/metatron,
+     fs:=&gt;/home/ubuntu/],
     script=&gt;!*boot/script]@/sys/space/localfs
 mtron&gt; *fs:software/metatron     ​2​
-==&gt;fs:m
-mtron&gt; *fs:m     ​3​
-==&gt;fs:m</code></pre>
+mtron&gt; *fs:m     ​3​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6919,21 +6896,13 @@ mtron&gt; *fs:m     ​3​
 ==&gt;fsspace::[
     pattern=&gt;fs:#,
     route=&gt;[
-     fs:m=&gt;/home/killswitch/software/metatron,
-     fs:=&gt;/home/killswitch/],
+     fs:m=&gt;/home/ubuntu/software/metatron,
+     fs:=&gt;/home/ubuntu/],
     script=&gt;!*boot/script]@/sys/space/localfs
 mtron&gt; */sys/space/localfs/script     ​2​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
-==&gt;/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
-==&gt;docs::[
-    obj=&gt;as?bytes&lt;=inst(bytes::T),
-    dom=&gt;'/m/inst',
-    rng=&gt;'/m/bytes',
-    args=&gt;[0=&gt;'/m/bytes'],
-    desc=&gt;'&lt;no description&gt;']
-mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
-==&gt;"{obj=as?rng=bytes&amp;dom=inst(bytes::T){&lt;j&gt;}, dom='/m/inst', rng='/m/bytes', args=[0=&gt;'/m/bytes'], desc='&lt;no description&gt;'}"</code></pre>
+mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6978,17 +6947,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
-==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355856       6488   6349368   1% /run'
-==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2         959786032  515560512 395397312  57% /'
-==&gt;'tmpfs                   31779264     206652  31572612   1% /dev/shm'
-==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
-==&gt;'tmpfs                   31779264          0  31779264   0% /run/qemu'
-==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        860   6354992   1% /run/user/1000'
-==&gt;'/dev/nvme0n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1409516188 511692356  74% /srv/beast/hdd1'
+==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
+==&gt;'overlay        959786032 516381152 394576672  57% /'
+==&gt;'tmpfs              65536         0     65536   0% /dev'
+==&gt;'shm                65536         0     65536   0% /dev/shm'
+==&gt;'/dev/nvme1n1p2 959786032 516381152 394576672  57% /work'
+==&gt;'tmpfs           31779264         0  31779264   0% /proc/acpi'
+==&gt;'tmpfs           31779264         0  31779264   0% /proc/asound'
+==&gt;'tmpfs           31779264         0  31779264   0% /proc/scsi'
+==&gt;'tmpfs           31779264         0  31779264   0% /sys/devices/virtual/powercap'
+==&gt;'tmpfs           31779264         0  31779264   0% /sys/firmware'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
@@ -7000,7 +6968,6 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;dsh-plugins
 ==&gt;'language.properties'
 ==&gt;LICENSE
-==&gt;'metatron.ide.mtron'
 ==&gt;mvnw
 ==&gt;'mvnw.cmd'
 ==&gt;node_modules
@@ -7010,7 +6977,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;602</code></pre>
+==&gt;589</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7042,7 +7009,7 @@ the location of the respective script engine. If found, then what were originall
      python=&gt;/usr/bin/python3,
      perl=&gt;/usr/bin/perl,
      mtron=&gt;/bin/metatron],
-    route=&gt;[local:=&gt;/home/killswitch]]@/sys/space/fs/local</code></pre>
+    route=&gt;[local:=&gt;/home/ubuntu]]@/sys/space/fs/local</code></pre>
 </div>
 </div>
 <h3 id="sec-directories-as-navigable-polys" class="discrete">Directories as Navigable Polys</h3>
@@ -7052,24 +7019,10 @@ the location of the respective script engine. If found, then what were originall
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;fs:m/src&gt;     ​1​
-==&gt;fs:m/src
 mtron&gt; *&lt;fs:m/src&gt; &gt;&gt; main &gt;&gt; java     ​2​
-==&gt;fs:m/src/main/java
 mtron&gt; fs:m/src &gt;&gt;     ​3​
-==&gt;fs:m/src/main
-==&gt;fs:m/src/test
 mtron&gt; fs:m/src &gt;&gt; 2     ​4​
-==&gt;fs:m/src/main/python
-==&gt;fs:m/src/main/js
-==&gt;fs:m/src/main/assembly
-==&gt;fs:m/src/main/java
-==&gt;fs:m/src/main/resources
-==&gt;fs:m/src/main/mpython
-==&gt;fs:m/src/test/python
-==&gt;fs:m/src/test/java
-==&gt;fs:m/src/test/resources
-mtron&gt; *&lt;fs:m/src/main/java&gt;     ​5​
-==&gt;fs:m/src/main/java</code></pre>
+mtron&gt; *&lt;fs:m/src/main/java&gt;     ​5​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7222,7 +7175,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.09:16/00/25/15/322?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.09:16/07/16/33/691?tz=Z&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7235,13 +7188,13 @@ mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;{hour,minu
 ==&gt;9
 ==&gt;{3}0
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;host     ​7​
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]@/sys/fail/916
+==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt;]@/sys/fail/988
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;port     ​8​
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/944
+==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/1016
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;path&gt;&gt;0     ​9​
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/path?tz=-0500&gt;]@/sys/fail/972
+==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/path?tz=-0500&gt;]@/sys/fail/1044
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;==[port=&gt;+1]&gt;&gt;port     ​10​
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:26/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/1000
+==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:26/09/00/00/000/port?tz=-0500&gt;]@/sys/fail/1072
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;=?=[port=&gt;25]     ​11​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)&gt;&gt;=[q=&gt;[tz=&gt;'+0000']].as(datetime::T)     ​12​
@@ -7563,17 +7516,17 @@ mtron&gt; *g:E/7/IN/name     ​7​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
 ==&gt;person::[name=&gt;marko,age=&gt;29]
 mtron&gt; *g:V/1.outE()     ​2​
-==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/186
+==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/234
 mtron&gt; *g:V/1.outE(created)     ​3​
-==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/190
+==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/238
 mtron&gt; *g:V/1.out(created)     ​4​
-==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/194
+==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/242
 mtron&gt; *g:V/1.out(knows)&gt;&gt;name     ​5​
-==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/198
+==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/246
 mtron&gt; *g:V/1.out(knows).count()     ​6​
 ==&gt;1
 mtron&gt; *g:E/7.inV()&gt;&gt;name     ​7​
-==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/230</code></pre>
+==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/278</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -7748,12 +7701,7 @@ In this way, mtron conveniently supports space agnostic retrieval of data across
                    route   =&gt; [&lt;acme:&gt;=&gt;&lt;&gt;],
                    table   =&gt; [,],
                    driver  =&gt; &lt;org.mariadb.jdbc.Driver&gt;]@/sys/space/acme;
-==&gt;tblespace::[
-    pattern=&gt;acme:#,
-    host=&gt;mariadb://localhost:3306/acme?user=mtron&amp;password=mtron,
-    route=&gt;[acme:=&gt;&lt;&gt;],
-    table=&gt;[,],
-    driver=&gt;&lt;org.mariadb.jdbc.Driver&gt;]@/sys/space/acme</code></pre>
+==&gt;ERROR: unable to construct tblespace::T: fail::[inst apply failure: Socket fail to connect to localhost. Connection refused[Net&lt;-2&gt;:Socket fail to connect to localhost. Connection refused ← Connection refused]]@/sys/fail/286</code></pre>
 </div>
 </div>
 <div class="exampleblock primary">
@@ -7930,12 +7878,13 @@ To unify these two contrasting perspectives, metatron capitalizes on each&#8217;
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
 ==&gt;person::[name=&gt;marko,age=&gt;29]
 mtron&gt; *acme:customers/357     ​2​
+==&gt;fail::[inst apply failure: no active space supports pattern acme:customers/357]@/sys/fail/330
 mtron&gt; @g:V/1.addE(consulted,|*acme:customers/357)     ​3​
 ==&gt;consulted::[=&gt;]@g:E/17
 mtron&gt; *g:V/1.out(consulted)     ​4​
-==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/274
+==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/338
 mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​
-==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/278</code></pre>
+==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/342</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7980,13 +7929,13 @@ These expressions highlight the nested structural pattern matching and data mani
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1.out(consulted)-&lt;[
          name    =&gt;"${&gt;&gt;contactFirstName} ${&gt;&gt;contactLastName}",
          address =&gt;==[city=&gt;_,country=&gt;_]]
-==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/282
+==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/346
 mtron&gt; *g:V/1.out(consulted)
          &gt;&gt;salesRepEmployeeNumber
          &gt;&gt;reportsTo.-&lt;[
            name  =&gt;"${&gt;&gt;firstName} ${&gt;&gt;lastName}",
            job   =&gt;-&lt;[title=&gt;&gt;&gt;jobTitle,email=&gt;&gt;&gt;email]]
-==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/286</code></pre>
+==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/350</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8156,7 +8105,7 @@ mtron&gt; *g:V/1/OUT/te:hot/a/owner/name     ​3​
       name=&gt;(/=&gt;name)=&gt;vadas=&gt;X=&gt;str::T,
       age=&gt;(==&gt;age)=&gt;27=&gt;==&gt;int::T,
       noobj=&gt;(==&gt;{?}OUT)=&gt;noobj=&gt;/=&gt;[uri::T=&gt;edge{*}::T],
-      noobj=&gt;(==&gt;{?}IN)=&gt;noobj=&gt;/=&gt;[uri::T=&gt;edge{*}::T]]]@/sys/fail/298
+      noobj=&gt;(==&gt;{?}IN)=&gt;noobj=&gt;/=&gt;[uri::T=&gt;edge{*}::T]]]@/sys/fail/362
 mtron&gt; *g:V/1/OUT/te:cold/x/total     ​4​
 ==&gt;15.0000
 mtron&gt; *g:V/1/OUT/knows.count()     ​5​
@@ -8169,11 +8118,11 @@ mtron&gt; *g:V/1/OUT/knows.count()     ​5​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1.outE(te:hot).count()     ​1​
 ==&gt;1
 mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;item     ​2​
-==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/354
+==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/418
 mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;owner&gt;&gt;name     ​3​
-==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/382
+==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/446
 mtron&gt; *g:V/1.outE(te:cold/x)&gt;&gt;total     ​4​
-==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/410
+==&gt;fail::[inst apply failure: java.lang.ClassCastException: class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/474
 mtron&gt; *g:V/1.outE(knows).count()     ​5​
 ==&gt;1</code></pre>
 </div>
@@ -9074,7 +9023,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
      code=&gt;at(ab).plus('B'),
      loop=&gt;second::1.0000,
      state=&gt;pause]@/sys/thread/b,
-    time=&gt;datetime::&lt;//2026.09:16/00/25/26/559?tz=-0600&gt;,
+    time=&gt;datetime::&lt;//2026.09:16/07/16/44/502?tz=Z&gt;,
     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -9089,8 +9038,9 @@ mtron&gt; virtual::[code  =&gt; @ab + 'A',
      loop=&gt;second::1.0000,
      yield=&gt;!*/sys/thread/b]@/sys/thread/a,
     state=&gt;run,
-    time=&gt;datetime::&lt;//2026.09:16/00/25/26/618?tz=-0600&gt;,
-    runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T)]@/sys/thread/a
+    time=&gt;datetime::&lt;//2026.09:16/07/16/44/550?tz=Z&gt;,
+    runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
+    result=&gt;'BA'@ab]@/sys/thread/a
 mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
 ==&gt;virtual::[
     code=&gt;at(ab).plus('B'),
@@ -9101,7 +9051,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
      code=&gt;at(ab).plus('B'),
      loop=&gt;second::1.0000,
      state=&gt;pause]@/sys/thread/b,
-    time=&gt;datetime::&lt;//2026.09:16/00/25/26/559?tz=-0600&gt;,
+    time=&gt;datetime::&lt;//2026.09:16/07/16/44/502?tz=Z&gt;,
     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
     result=&gt;'B'@ab]@/sys/thread/b
 mtron&gt; sleep(second::5.0)
@@ -9115,9 +9065,9 @@ mtron&gt; */sys/thread/b.stop()
      code=&gt;at(ab).plus('B'),
      loop=&gt;second::1.0000,
      state=&gt;pause]@/sys/thread/b,
-    time=&gt;datetime::&lt;//2026.09:16/00/25/26/559?tz=-0600&gt;,
+    time=&gt;datetime::&lt;//2026.09:16/07/16/44/502?tz=Z&gt;,
     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-    result=&gt;'BABABABABABABABABABAB'@ab]@/sys/thread/b
+    result=&gt;'BABABBAABBAABBAABBAABBAABBAABBAABB'@ab]@/sys/thread/b
 mtron&gt; */sys/thread/a.stop()
 ==&gt;virtual::[
     code=&gt;at(ab).plus('A'),
@@ -9129,11 +9079,11 @@ mtron&gt; */sys/thread/a.stop()
      loop=&gt;second::1.0000,
      yield=&gt;!*/sys/thread/b]@/sys/thread/a,
     state=&gt;stop,
-    time=&gt;datetime::&lt;//2026.09:16/00/25/26/618?tz=-0600&gt;,
+    time=&gt;datetime::&lt;//2026.09:16/07/16/44/550?tz=Z&gt;,
     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-    result=&gt;'BABABABABABABABABABABA'@ab]@/sys/thread/a
+    result=&gt;'BABABBAABBAABBAABBAABBAABBAABBAABBA'@ab]@/sys/thread/a
 mtron&gt; *ab
-==&gt;'BABABABABABABABABABABA'</code></pre>
+==&gt;'BABABBAABBAABBAABBAABBAABBAABBAABBABA'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9168,7 +9118,7 @@ mtron&gt; *ab
     source=&gt;!*/sys/thread/main,
     start=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example,
     state=&gt;run,
-    time=&gt;datetime::&lt;//2026.09:16/00/25/36/991?tz=-0600&gt;,
+    time=&gt;datetime::&lt;//2026.09:16/07/16/54/888?tz=Z&gt;,
     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
     result=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example]@/sys/thread/example
 mtron&gt; */sys/thread/example.pause()     ​2​
@@ -9178,7 +9128,7 @@ mtron&gt; */sys/thread/example.pause()     ​2​
     source=&gt;!*/sys/thread/main,
     start=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example,
     state=&gt;pause,
-    time=&gt;datetime::&lt;//2026.09:16/00/25/36/991?tz=-0600&gt;,
+    time=&gt;datetime::&lt;//2026.09:16/07/16/54/888?tz=Z&gt;,
     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
     result=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example]@/sys/thread/example
 mtron&gt; */sys/thread/example/state     ​3​
@@ -9190,7 +9140,7 @@ mtron&gt; */sys/thread/example.resume()     ​4​
     source=&gt;!*/sys/thread/main,
     start=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example,
     state=&gt;run,
-    time=&gt;datetime::&lt;//2026.09:16/00/25/36/991?tz=-0600&gt;,
+    time=&gt;datetime::&lt;//2026.09:16/07/16/54/888?tz=Z&gt;,
     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
     result=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example]@/sys/thread/example
 mtron&gt; */sys/thread/example/state     ​5​
@@ -9234,14 +9184,14 @@ mtron&gt; */sys/thread/example/state     ​5​
 ==&gt;core::[
     code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
     state=&gt;stop,
-    time=&gt;datetime::&lt;//2026.09:16/00/24/46/657?tz=-0600&gt;,
+    time=&gt;datetime::&lt;//2026.09:16/06/56/34/220?tz=Z&gt;,
     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T)]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[
     obj=&gt;core::[
      code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
      state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.09:16/00/24/46/657?tz=-0600&gt;,
+     time=&gt;datetime::&lt;//2026.09:16/06/56/34/220?tz=Z&gt;,
      runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T)],
     desc=&gt;'this root thread waits till all child threads are complete ...']</code></pre>
 </div>
@@ -9309,7 +9259,7 @@ When <code><a href="http://#" class="bare">http://#</a></code> is the pattern, t
                      /docs    =&gt; target/docs,
                      /console =&gt; src/main/resources/web/console]
        ]@/sys/space/web/http
-==&gt;ERROR: unable to construct httpspace::T: fail::[inst apply failure: Address already in use[Net&lt;-2&gt;:Address already in use]]@/sys/fail/1892</code></pre>
+==&gt;ERROR: unable to construct httpspace::T: fail::[inst apply failure: Address already in use[Net&lt;-2&gt;:Address already in use]]@/sys/fail/1964</code></pre>
 </div>
 </div>
 <h3 id="sec-html-type" class="discrete">HTML Type</h3>
@@ -9373,7 +9323,7 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​3​
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)/html/head/title     ​4​
 ==&gt;/html/head/title
 mtron&gt; *&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt;     ​5​
-==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#]]@/sys/fail/1898
+==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#]]@/sys/fail/1970
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​6​
 ==&gt;[html=&gt;[
     head=&gt;[
@@ -9450,113 +9400,13 @@ As such, REST resources can be enriched/typed to become active computational obj
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:11434&gt;     ​1​
-==&gt;'Ollama is running'
+==&gt;fail::[inst apply failure: fail[SocketChannelImpl&lt;204&gt;:(ConnectException) ← (ConnectException) ← (ClosedChannelException)]]@/sys/fail/1974
 mtron&gt; *&lt;http://localhost:11434/api/tags&gt;     ​2​
-==&gt;json::'{"models":[{"name":"qwen3.5:4b","model":"qwen3.5:4b","modified_at":"2026-06-28T00:25:31.583735-06:00","size":3389983735,"digest":"2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd","details":{"parent_model":"","format":"gguf","family":"qwen35","families":["qwen35"],"parameter_size":"4.7B","quantization_level":"Q4_K_M","context_length":262144,"embedding_length":2560},"capabilities":["vision","completion","tools","thinking"]},{"name":"dr.stynx:latest","model":"dr.stynx:latest","modified_at":"2026-06-13T12:19:21.4935225-06:00","size":17690513930,"digest":"8b8560aa375897345cc5213cc8b953ce0e77758527421aa087afa374d4f4b36d","details":{"parent_model":"danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth:latest","format":"gguf","family":"qwen3moe","families":["qwen3moe"],"parameter_size":"30.5B","quantization_level":"Q4_K_M","context_length":1048576,"embedding_length":2048},"capabilities":["completion","tools"]},{"name":"hengwen/DeepSeek-R1-Distill-Qwen-14B:q8_0","model":"hengwen/DeepSeek-R1-Distill-Qwen-14B:q8_0","modified_at":"2026-05-20T03:50:17.3003242-06:00","size":15701597480,"digest":"ed6b8c52bf980271969bffe42db30569937922207469ffa9bb0c30513a5ca8d2","details":{"parent_model":"/home/test/ollama/models/blobs/sha256-b6b2172e953e1cd9b32f6a061b1855b1751b365ab5c7b67c7bd4862480a48ac3","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"14.8B","quantization_level":"Q8_0","context_length":131072,"embedding_length":5120},"capabilities":["completion"]},{"name":"qwen2.5-coder:32b","model":"qwen2.5-coder:32b","modified_at":"2026-05-20T03:48:28.2625806-06:00","size":19851349898,"digest":"b92d6a0bd47ee79114298de0177bf920c05a706d12633950b3936778492bef41","details":{"parent_model":"","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"32.8B","quantization_level":"Q4_K_M","context_length":32768,"embedding_length":5120},"capabilities":["completion","tools","insert"]},{"name":"deepseek-r1:14b","model":"deepseek-r1:14b","modified_at":"2026-05-14T00:23:01.4598875-06:00","size":8988112209,"digest":"c333b7232bdb521236694ffbb5f5a6b11cc45d98e9142c73123b670fca400b09","details":{"parent_model":"","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"14.8B","quantization_level":"Q4_K_M","context_length":131072,"embedding_length":5120},"capabilities":["completion","thinking"]},{"name":"qwen2.5-coder:7b","model":"qwen2.5-coder:7b","modified_at":"2026-05-12T21:08:02.3143859-06:00","size":4683087561,"digest":"dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364","details":{"parent_model":"","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"7.6B","quantization_level":"Q4_K_M","context_length":32768,"embedding_length":3584},"capabilities":["completion","tools","insert"]},{"name":"qwen3-embedding:8b","model":"qwen3-embedding:8b","modified_at":"2026-05-10T15:16:25.3309793-06:00","size":4676805193,"digest":"64b933495768fbd3b87c20583d379728a07471e0c66733a9df87cd1901b3c44b","details":{"parent_model":"/Users/ollama/.ollama/models/blobs/sha256-3fcd3febec8b3fd64435204db75bf0dd73b91e8d0661e0331acfe7e7c3120b85","format":"gguf","family":"qwen3","families":["qwen3"],"parameter_size":"7.6B","quantization_level":"Q4_K_M","context_length":40960,"embedding_length":4096},"capabilities":["embedding"]},{"name":"batiai/qwen3.6-27b:iq3","model":"batiai/qwen3.6-27b:iq3","modified_at":"2026-05-10T01:44:06.5919578-06:00","size":11186372790,"digest":"a785b19cc583791ed62e5ed102a047056083bde4f9870a2d8ea6d3250f84638b","details":{"parent_model":"/usr/share/ollama/.ollama/models/blobs/sha256-d548ae2bfa257199e3240994d038693a4392941819934854772e6c95591f9d87","format":"gguf","family":"qwen35","families":["qwen35"],"parameter_size":"26.9B","quantization_level":"unknown","context_length":262144,"embedding_length":5120},"capabilities":["completion","tools","thinking"]},{"name":"qwen3.6:27b","model":"qwen3.6:27b","modified_at":"2026-05-09T21:07:13.4279469-06:00","size":17420432739,"digest":"a50eda8ed977ab48a12431878896b27ffd5cef552c17af3317d9623b939a7f1e","details":{"parent_model":"","format":"gguf","family":"qwen35","families":["qwen35"],"parameter_size":"27.8B","quantization_level":"Q4_K_M","context_length":262144,"embedding_length":5120},"capabilities":["vision","completion","tools","thinking"]},{"name":"qwen3.5:27b","model":"qwen3.5:27b","modified_at":"2026-05-03T16:06:35.5354596-06:00","size":17420432728,"digest":"7653528ba5cba4dd8e19da24aaddc7f4d0b5ecd93571c0825dfd4137958ec06e","details":{"parent_model":"","format":"gguf","family":"qwen35","families":["qwen35"],"parameter_size":"27.8B","quantization_level":"Q4_K_M","context_length":262144,"embedding_length":5120},"capabilities":["vision","completion","tools","thinking"]},{"name":"danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth:latest","model":"danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth:latest","modified_at":"2026-05-02T23:38:06.0644134-06:00","size":17690513537,"digest":"56720d55401ef206408d20f25505eda128d8e357e8c90435adbdd240f73f334c","details":{"parent_model":"","format":"gguf","family":"qwen3moe","families":["qwen3moe"],"parameter_size":"30.5B","quantization_level":"Q4_K_M","context_length":1048576,"embedding_length":2048},"capabilities":["completion","tools"]},{"name":"MeetSolanki/MeetAISmall:latest","model":"MeetSolanki/MeetAISmall:latest","modified_at":"2026-04-23T18:26:05.0225546-06:00","size":522654409,"digest":"f2122a60667ba6d277ecc10eb3406c41e53f81167d002d2de476ca4150be7972","details":{"parent_model":"qwen3:0.6b","format":"gguf","family":"qwen3","families":["qwen3"],"parameter_size":"751.63M","quantization_level":"Q4_K_M","context_length":40960,"embedding_length":1024},"capabilities":["completion","tools","thinking"]},{"name":"nebulamodules/nebula-small:latest","model":"nebulamodules/nebula-small:latest","modified_at":"2026-04-23T18:26:01.0975908-06:00","size":2620788570,"digest":"37fecda4b4c4c8ba75c8746f0f89afef9cbd0a57ce33dfec7684025d6b3ca333","details":{"parent_model":"qwen3:4b","format":"gguf","family":"qwen3","families":["qwen3"],"parameter_size":"4.0B","quantization_level":"Q4_K_M","context_length":40960,"embedding_length":2560},"capabilities":["completion","tools","thinking"]},{"name":"smollm:1.7b","model":"smollm:1.7b","modified_at":"2026-04-23T18:21:20.6643201-06:00","size":990741362,"digest":"95f6557a0f0f1e1d08ba0d426e50de0927dd2b0861a384b193802c551b298c28","details":{"parent_model":"","format":"gguf","family":"llama","families":["llama"],"parameter_size":"1.7B","quantization_level":"Q4_0","context_length":2048,"embedding_length":2048},"capabilities":["completion"]},{"name":"devstral-small-2:latest","model":"devstral-small-2:latest","modified_at":"2026-04-18T21:14:33.8707012-06:00","size":15177374099,"digest":"24277f07f62db8f9cb68e9dfc679ea1818a7fbac47a50eff0a701d3f645b63c8","details":{"parent_model":"","format":"gguf","family":"mistral3","families":["mistral3"],"parameter_size":"24.0B","quantization_level":"Q4_K_M","context_length":393216,"embedding_length":5120},"capabilities":["vision","completion","tools"]},{"name":"glm-4.7-flash:latest","model":"glm-4.7-flash:latest","modified_at":"2026-03-28T10:16:41.8924486-06:00","size":19019270852,"digest":"d1a8a26252f18b34301218d22abd2620a65b85ba4b78987842eb157e01321222","details":{"parent_model":"","format":"gguf","family":"glm4moelite","families":["glm4moelite"],"parameter_size":"29.9B","quantization_level":"Q4_K_M","context_length":202752,"embedding_length":2048},"capabilities":["completion","tools","thinking"]},{"name":"qwen3:8b","model":"qwen3:8b","modified_at":"2026-03-03T15:06:29.9259633-07:00","size":5225388164,"digest":"500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41","details":{"parent_model":"","format":"gguf","family":"qwen3","families":["qwen3"],"parameter_size":"8.2B","quantization_level":"Q4_K_M","context_length":40960,"embedding_length":4096},"capabilities":["completion","tools","thinking"]},{"name":"maternion/sweep-next-edit-1.5B:latest","model":"maternion/sweep-next-edit-1.5B:latest","modified_at":"2026-03-03T14:50:08.2074942-07:00","size":1537271675,"digest":"6a6bbfafb2cf6a24ad3bae58997a95f70799550b4d262e4f4cbcc16817e8c0df","details":{"parent_model":"/usr/share/ollama/.ollama/models/blobs/sha256-1321ea5e5d7529e60f9770c6a0b3a965f89542d16cf4ae51bab267f6a88150da","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"1.4B","quantization_level":"Q8_0","context_length":32768,"embedding_length":1536},"capabilities":["completion","tools"]},{"name":"tomasmcm/undi95-meta-llama-3.1-8b-claude:q5_K_M","model":"tomasmcm/undi95-meta-llama-3.1-8b-claude:q5_K_M","modified_at":"2026-02-27T13:35:04.7281519-07:00","size":5733002850,"digest":"284ae9e1633bc76204c639964ef01d6257136d60bc4f76025810bdbe82f00db2","details":{"parent_model":"/Users/tomasmcm/.ollama/models/blobs/sha256-0b74617f79db8400aa7459067f53547d0643bd7b7235437f3f14a19f12599699","format":"gguf","family":"llama","families":["llama"],"parameter_size":"8.0B","quantization_level":"Q5_K_M","context_length":131072,"embedding_length":4096},"capabilities":["completion","tools"]},{"name":"minimax-m2.5:cloud","model":"minimax-m2.5:cloud","remote_model":"minimax-m2.5","remote_host":"https://ollama.com:443","modified_at":"2026-02-27T12:51:12.1390208-07:00","size":337,"digest":"c0d5751c800fd16b7cd21fce68e99e0db6d489d7196794f9a46b97b2f97036f5","details":{"parent_model":"","format":"","family":"","families":null,"parameter_size":"","quantization_level":"","context_length":202752},"capabilities":["completion","tools","thinking"]},{"name":"qwen3-coder-next:latest","model":"qwen3-coder-next:latest","modified_at":"2026-02-07T23:26:00.5694139-07:00","size":51741611823,"digest":"ca06e9e4087c714d44355bf954099187890e63084b4a632b8e9956c4b9492074","details":{"parent_model":"","format":"gguf","family":"qwen3next","families":["qwen3next"],"parameter_size":"79.7B","quantization_level":"Q4_K_M","context_length":262144,"embedding_length":2048},"capabilities":["completion","tools"]},{"name":"qwen3:latest","model":"qwen3:latest","modified_at":"2025-11-25T18:24:39.7052749-07:00","size":5225388164,"digest":"500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41","details":{"parent_model":"","format":"gguf","family":"qwen3","families":["qwen3"],"parameter_size":"8.2B","quantization_level":"Q4_K_M","context_length":40960,"embedding_length":4096},"capabilities":["completion","tools","thinking"]},{"name":"deepcoder:latest","model":"deepcoder:latest","modified_at":"2025-11-18T16:09:56.9797731-07:00","size":8988113141,"digest":"12bdda054d2380ce5c86dcea8a033db5a018d799af359b953ac0ce0c739da9c7","details":{"parent_model":"","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"14.8B","quantization_level":"Q4_K_M","context_length":131072,"embedding_length":5120},"capabilities":["completion"]},{"name":"tinyllama:latest","model":"tinyllama:latest","modified_at":"2025-11-18T12:02:00.7121561-07:00","size":637700138,"digest":"2644915ede352ea7bdfaff0bfac0be74c719d5d5202acb63a6fb095b52f394a4","details":{"parent_model":"","format":"gguf","family":"llama","families":["llama"],"parameter_size":"1B","quantization_level":"Q4_0","context_length":2048,"embedding_length":2048},"capabilities":["completion"]},{"name":"ben1t0/tiny-llm:latest","model":"ben1t0/tiny-llm:latest","modified_at":"2025-11-18T03:40:58.4420944-07:00","size":5676399,"digest":"52b027121460505eb3ddcaa93b6bfff130e2f41d325d5f03ddd9ae354b42a21e","details":{"parent_model":"","format":"gguf","family":"llama","families":["llama"],"parameter_size":"4.62M","quantization_level":"Q8_0","context_length":2048,"embedding_length":64},"capabilities":["completion"]},{"name":"hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:latest","model":"hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:latest","modified_at":"2025-11-14T00:24:11.6136623-07:00","size":807696561,"digest":"042cf58aa32fa6ce631caff838fc9efd05313a629530756ccf59308eaa49b8aa","details":{"parent_model":"","format":"gguf","family":"llama","families":["llama"],"parameter_size":"1.24B","quantization_level":"Q4_K_M","context_length":131072,"embedding_length":2048},"capabilities":["completion","tools"]},{"name":"llama3-groq-tool-use:latest","model":"llama3-groq-tool-use:latest","modified_at":"2025-11-10T19:57:21.4196747-07:00","size":4661257688,"digest":"36211dad2b153f09fe2b0c5f3e4e82ee83d27db68e3a00006cd934dfdc5057a4","details":{"parent_model":"","format":"gguf","family":"llama","families":["llama"],"parameter_size":"8.0B","quantization_level":"Q4_0","context_length":8192,"embedding_length":4096},"capabilities":["completion","tools"]},{"name":"llava:latest","model":"llava:latest","modified_at":"2025-11-09T12:22:07.147987-07:00","size":4733363377,"digest":"8dd30f6b0cb19f555f2c7a7ebda861449ea2cc76bf1f44e262931f45fc81d081","details":{"parent_model":"","format":"gguf","family":"llama","families":["llama","clip"],"parameter_size":"7B","quantization_level":"Q4_0","context_length":32768,"embedding_length":4096},"capabilities":["completion","vision"]},{"name":"gpt-oss:latest","model":"gpt-oss:latest","modified_at":"2025-11-09T11:52:38.0566449-07:00","size":13793441244,"digest":"17052f91a42e97930aa6e28a6c6c06a983e6a58dbb00434885a0cf5313e376f7","details":{"parent_model":"","format":"gguf","family":"gptoss","families":["gptoss"],"parameter_size":"20.9B","quantization_level":"MXFP4","context_length":131072,"embedding_length":2880},"capabilities":["completion","tools","thinking"]}]}'
+==&gt;fail::[inst apply failure: fail[SocketChannelImpl&lt;204&gt;:(ConnectException) ← (ConnectException) ← (ClosedChannelException)]]@/sys/fail/1978
 mtron&gt; *&lt;http://localhost:11434/api/tags?mimeq=application/x-mtron&gt;     ​3​
-==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#]]@/sys/fail/1902
+==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#]]@/sys/fail/1982
 mtron&gt; *&lt;http://localhost:11434/api/tags&gt;.as(rec::T)     ​4​
-==&gt;[models=&gt;[[
-    name=&gt;&lt;qwen3.5:4b&gt;,
-    model=&gt;&lt;qwen3.5:4b&gt;,
-    modified_at=&gt;&lt;2026-06-28T00:25:31.583735-06:00&gt;,
-    size=&gt;3389983735,
-    digest=&gt;&lt;2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd&gt;,
-    details=&gt;[
-     format=&gt;gguf,
-     family=&gt;qwen35,
-     families=&gt;[qwen35],
-     parameter_size=&gt;&lt;4.7B&gt;,
-     quantization_level=&gt;Q4_K_M,
-     context_length=&gt;262144,
-     embedding_length=&gt;2560],
-    capabilities=&gt;[vision,completion,tools,thinking]],[
-    name=&gt;&lt;dr.stynx:latest&gt;,
-    model=&gt;&lt;dr.stynx:latest&gt;,
-    modified_at=&gt;&lt;2026-06-13T12:19:21.4935225-06:00&gt;,
-    size=&gt;17690513930,
-    digest=&gt;&lt;8b8560aa375897345cc5213cc8b953ce0e77758527421aa087afa374d4f4b36d&gt;,
-    details=&gt;[
-     parent_model=&gt;danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth:latest,
-     format=&gt;gguf,
-     family=&gt;qwen3moe,
-     families=&gt;[qwen3moe],
-     parameter_size=&gt;&lt;30.5B&gt;,
-     quantization_level=&gt;Q4_K_M,
-     context_length=&gt;1048576,
-     embedding_length=&gt;2048],
-    capabilities=&gt;[completion,tools]],[
-    name=&gt;hengwen/DeepSeek-R1-Distill-Qwen-14B:q8_0,
-    model=&gt;hengwen/DeepSeek-R1-Distill-Qwen-14B:q8_0,
-    modified_at=&gt;&lt;2026-05-20T03:50:17.3003242-06:00&gt;,
-    size=&gt;15701597480,
-    digest=&gt;ed6b8c52bf980271969bffe42db30569937922207469ffa9bb0c30513a5ca8d2,
-    details=&gt;[
-     parent_model=&gt;/home/test/ollama/models/blobs/sha256-b6b2172e953e1cd9b32f6a061b1855b1751b365ab5c7b67c7bd4862480a48ac3,
-     format=&gt;gguf,
-     family=&gt;qwen2,
-     families=&gt;[qwen2],
-     parameter_size=&gt;&lt;14.8B&gt;,
-     quantization_level=&gt;Q8_0,
-     context_length=&gt;131072,
-     embedding_length=&gt;5120],
-    capabilities=&gt;[completion]],[
-    name=&gt;&lt;qwen2.5-coder:32b&gt;,
-    model=&gt;&lt;qwen2.5-coder:32b&gt;,
-    modified_at=&gt;&lt;2026-05-20T03:48:28.2625806-06:00&gt;,
-    size=&gt;19851349898,
-    digest=&gt;b92d6a0bd47ee79114298de0177bf920c05a706d12633950b3936778492bef41,
-    details=&gt;[
-     format=&gt;gguf,
-     family=&gt;qwen2,
-     families=&gt;[qwen2],
-     parameter_size=&gt;&lt;32.8B&gt;,
-     quantization_level=&gt;Q4_K_M,
-     context_length=&gt;32768,
-     embedding_length=&gt;5120],
-    capabilities=&gt;[completion,tools,insert]],[
-    name=&gt;deepseek-r1:14b,
-    model=&gt;deepseek-r1:14b,
-    modified_at=&gt;&lt;2026-05-14T00:23:01.4598875-06:00&gt;,
-    size=&gt;8988112209,
-    digest=&gt;c333b7232bdb521236694ffbb5f5a6b11cc45d98e9142c73123b670fca400b09,
-    details=&gt;[
-     format=&gt;gguf,
-     family=&gt;qwen2,
-     families=&gt;[qwen2],
-     parameter_size=&gt;&lt;14.8B&gt;,
-     quantization_level=&gt;Q4_K_M,
-     context_length=&gt;131072,
-     embedding_length=&gt;5120],
-    capabilities=&gt;[completion,thinking]],[
-    name=&gt;&lt;qwen2.5-coder:7b&gt;,
-    model=&gt;&lt;qwen2.5-coder:7b&gt;,
-    modified_at=&gt;&lt;2026-05-12T21:08:02.3143859-06:00&gt;,
-    size=&gt;4683087561,
-    digest=&gt;dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364,
-    details=&gt;[
-     format=&gt;gguf,
-     family=&gt;qwen2,
-     families=&gt;[qwen2],
-     parameter_size=&gt;&lt;7.6B&gt;,
-     quantization_level=&gt;Q4_K_M,
-     context_length=&gt;32768,
-     embedding_length=&gt;3584],
-    capabilities=&gt;[completion,tools,insert]],[
-    name=&gt;qwen3-embedding:8b,
-    model=&gt;qwen3-embedding:8b,
-    modified_at=&gt;&lt;2026-05-10T15:16:25.3309793-06:00&gt;,
-    size=&gt;4676805193,
-    digest=&gt;&lt;64b933495768fbd3b87c20583d379728a07471e0c66733a9df87cd1901b3c44b&gt;,
-    details=&gt;[
-     parent_model=&gt;&lt;/Users/ollama/.ollama/models/blobs/sha256-3fcd3febec8b3fd64435204db75bf0dd73b91e8d0661e0331acfe7e7c3120b85&gt;,
-     format=&gt;gguf,
-     family=&gt;qwen3,
-     families=&gt;[qwen3],
-     parameter_size=&gt;&lt;7.6B&gt;,
-     quantization_level=&gt;Q4_K_M,
-     context_length=&gt;40960,
-   ...</code></pre>
+==&gt;fail::[inst apply failure: fail[SocketChannelImpl&lt;204&gt;:(ConnectException) ← (ConnectException) ← (ClosedChannelException)]]@/sys/fail/1986</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9627,7 +9477,7 @@ mtron&gt; */m/llm/inst/+?dom=model
             host    =&gt; &lt;http://localhost:11434&gt;,
             name    =&gt; &gt;&gt;id.as(uri::T)].as(model::T)
          .chat('are you there?')
-==&gt;fail::[inst apply failure: no active space supports pattern /0/data/1]@/sys/fail/1922</code></pre>
+==&gt;fail::[inst apply failure: no active space supports pattern /0/data/1]@/sys/fail/2006</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9947,22 +9797,7 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schem
                     root        =&gt; rec::T[?[animals   =&gt; animal{*}::T,
                                             equipment =&gt; equipment{*}::T]],
                     route       =&gt; [farm:=&gt;&lt;&gt;]]@/sys/space/farm
-==&gt;dcmntspace::[
-    pattern=&gt;farm:#,
-    host=&gt;mongodb://localhost:27017/farm,
-    schema=&gt;instset::[
-     pattern=&gt;/sys/space/farm/instset/#,
-     type=&gt;[animals::T],
-     q=&gt;[docq::[
-    pattern=&gt;docq,
-    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-     space=&gt;[super=&gt;!*/sys/space/sys]]@/sys/space/farm/instset,
-    root=&gt;rec::T,
-    route=&gt;[farm:=&gt;&lt;&gt;],
-    native=&gt;[connack=&gt;mongoclientimpl::[=&gt;]]]@/sys/space/farm</code></pre>
+==&gt;ERROR: unable to construct dcmntspace::T: fail::[inst apply failure: com.mongodb.MongoTimeoutException: Timed out while waiting for a server that matches ReadPreferenceServerSelector{readPreference=primary}. Client view of cluster state is {type=UNKNOWN, servers=[{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused}}]]@/sys/fail/98</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9976,11 +9811,11 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schem
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; farm:animals/1 -&gt; 'a chicken named trill'     ​1​
-==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T]@/sys/fail/94
+==&gt;fail::[inst apply failure: com.mongodb.MongoTimeoutException: Timed out while waiting for a server that matches ReadPreferenceServerSelector{readPreference=primary}. Client view of cluster state is {type=UNKNOWN, servers=[{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused}}]]@/sys/fail/102
 mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​2​
-==&gt;chicken::[name=&gt;'trill',age=&gt;7]
+==&gt;fail::[inst apply failure: com.mongodb.MongoTimeoutException: Timed out while waiting for a server that matches ReadPreferenceServerSelector{readPreference=primary}. Client view of cluster state is {type=UNKNOWN, servers=[{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused}}]]@/sys/fail/106
 mtron&gt; *farm:animals/1     ​3​
-==&gt;chicken::[name=&gt;'trill',age=&gt;7]</code></pre>
+==&gt;fail::[inst apply failure: com.mongodb.MongoTimeoutException: Timed out while waiting for a server that matches ReadPreferenceServerSelector{readPreference=primary}. Client view of cluster state is {type=UNKNOWN, servers=[{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused}}]]@/sys/fail/110</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -10008,11 +9843,11 @@ identity. metatron preserves type information transparently on the way in and re
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​1​
-==&gt;chicken::[name=&gt;'trill',age=&gt;7]
+==&gt;fail::[inst apply failure: com.mongodb.MongoTimeoutException: Timed out while waiting for a server that matches ReadPreferenceServerSelector{readPreference=primary}. Client view of cluster state is {type=UNKNOWN, servers=[{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused}}]]@/sys/fail/114
 mtron&gt; *farm:animals/1     ​2​
-==&gt;chicken::[name=&gt;'trill',age=&gt;7]
+==&gt;fail::[inst apply failure: com.mongodb.MongoTimeoutException: Timed out while waiting for a server that matches ReadPreferenceServerSelector{readPreference=primary}. Client view of cluster state is {type=UNKNOWN, servers=[{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused}}]]@/sys/fail/118
 mtron&gt; *farm:animals/1/name     ​3​
-==&gt;'trill'</code></pre>
+==&gt;fail::[inst apply failure: com.mongodb.MongoTimeoutException: Timed out while waiting for a server that matches ReadPreferenceServerSelector{readPreference=primary}. Client view of cluster state is {type=UNKNOWN, servers=[{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused}}]]@/sys/fail/122</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -10058,20 +9893,15 @@ mtron&gt; loc:barns/1 -&gt; [label=&gt;'old_red_barn',capacity=&gt;12]     ​2�
 mtron&gt; farm:animals/1 &gt;&gt;= [shelter=&gt;!*loc:barns/1]     ​3​
 ==&gt;[shelter=&gt;!*loc:barns/1]
 mtron&gt; *farm:animals/1     ​4​
-==&gt;chicken::[name=&gt;'trill',age=&gt;7]
+==&gt;fail::[inst apply failure: com.mongodb.MongoTimeoutException: Timed out while waiting for a server that matches ReadPreferenceServerSelector{readPreference=primary}. Client view of cluster state is {type=UNKNOWN, servers=[{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused}}]]@/sys/fail/126
 mtron&gt; *farm:animals/1/shelter     ​5​
+==&gt;fail::[inst apply failure: com.mongodb.MongoTimeoutException: Timed out while waiting for a server that matches ReadPreferenceServerSelector{readPreference=primary}. Client view of cluster state is {type=UNKNOWN, servers=[{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused}}]]@/sys/fail/130
 mtron&gt; farm:animals/2 -&gt; chicken::[name=&gt;'cluck',age=&gt;3,shelter=&gt;!*loc:barns/1]     ​6​
-==&gt;chicken::[
-    name=&gt;'cluck',
-    age=&gt;3,
-    shelter=&gt;!*loc:barns/1]
+==&gt;fail::[inst apply failure: com.mongodb.MongoTimeoutException: Timed out while waiting for a server that matches ReadPreferenceServerSelector{readPreference=primary}. Client view of cluster state is {type=UNKNOWN, servers=[{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused}}]]@/sys/fail/134
 mtron&gt; *farm:animals/2     ​7​
-==&gt;chicken::[
-    name=&gt;'cluck',
-    age=&gt;3,
-    shelter=&gt;!*loc:barns/1]
+==&gt;fail::[inst apply failure: com.mongodb.MongoTimeoutException: Timed out while waiting for a server that matches ReadPreferenceServerSelector{readPreference=primary}. Client view of cluster state is {type=UNKNOWN, servers=[{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused}}]]@/sys/fail/138
 mtron&gt; *farm:animals/2/shelter     ​8​
-==&gt;[label=&gt;'old_red_barn',capacity=&gt;12]</code></pre>
+==&gt;fail::[inst apply failure: com.mongodb.MongoTimeoutException: Timed out while waiting for a server that matches ReadPreferenceServerSelector{readPreference=primary}. Client view of cluster state is {type=UNKNOWN, servers=[{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused}}]]@/sys/fail/142</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -11003,16 +10833,16 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/env/+/.take(10)
-==&gt;/sys/env/GTK3_MODULES=&gt;'xapp-gtk3-module'
-==&gt;/sys/env/BUN_INSTALL=&gt;'/home/killswitch/.bun'
-==&gt;/sys/env/JAVA_HOME=&gt;'/home/killswitch/.sdkman/candidates/java/current'
-==&gt;/sys/env/QT_IM_MODULE=&gt;'ibus'
-==&gt;/sys/env/GNOME_DESKTOP_SESSION_ID=&gt;'this-is-deprecated'
-==&gt;/sys/env/PATH=&gt;'/home/killswitch/.local/bin:/home/killswitch/.bun/bin:/home/killswitch/.npm-global/bin:/usr:/opt/rocm-6.4.0/bin:/opt/rocm/bin:/home/killswitch/.opencode/bin:/home/killswitch/.sdkman/candidates/tornadovm/current/bin:/home/killswitch/software/miniconda3/bin:/home/killswitch/.sdkman/candidates/tornadovm/current/bin:/home/killswitch/.sdkman/candidates/maven/current/bin:/home/killswitch/.sdkman/candidates/jbang/current/bin:/home/killswitch/.sdkman/candidates/java/current/bin:/home/killswitch/.local/bin:/home/killswitch/.elan/bin:/home/killswitch/.cargo/bin:/home/killswitch/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/killswitch/.lmstudio/bin:/home/killswitch/software/ijhttp:/home/killswitch/.surrealdb:/home/killswitch/.lmstudio/bin:/home/killswitch/go/bin'
-==&gt;/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current'
-==&gt;/sys/env/USER=&gt;'killswitch'
-==&gt;/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system'
-==&gt;/sys/env/XDG_SEAT=&gt;'seat0'</code></pre>
+==&gt;/sys/env/LANGUAGE=&gt;'en_US:en'
+==&gt;/sys/env/HOME=&gt;'/work'
+==&gt;/sys/env/LC_ALL=&gt;'en_US.UTF-8'
+==&gt;/sys/env/MAVEN_PROJECTBASEDIR=&gt;'/work'
+==&gt;/sys/env/PATH=&gt;'/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+==&gt;/sys/env/JAVA_VERSION=&gt;'jdk-24.0.1+9'
+==&gt;/sys/env/HOSTNAME=&gt;'881db532e060'
+==&gt;/sys/env/OLDPWD=&gt;'/work'
+==&gt;/sys/env/LANG=&gt;'en_US.UTF-8'
+==&gt;/sys/env/JAVA_HOME=&gt;'/opt/java/openjdk'</code></pre>
 </div>
 </div>
 <h3 id="sec-boot-loader" class="discrete">Boot Loader</h3>

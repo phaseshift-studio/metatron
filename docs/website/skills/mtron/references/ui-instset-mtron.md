@@ -98,13 +98,13 @@ mtron> */m/mach/ui/widget?docq
      obj=>table_widget::T,
      dom=>'maybe an obj',
      rng=>'a table widget',
-     args=>[{?}metadata=>'a lst of rows of data behind the display',{?}row=>'a lst of poly table rows',{?}header=>'a lst of obj table headers'],
+     args=>[{?}header=>'a lst of obj table headers',{?}row=>'a lst of poly table rows',{?}metadata=>'a lst of rows of data behind the display'],
      desc=>'[structural] a tabular data widget'],
     tree_widget=>docs::[
      obj=>tree_widget::T,
      dom=>'maybe an obj',
      rng=>'a tree widget',
-     args=>[{?}expand=>'branch uris whose children are read regardless of max',{?}code=>'transform obj prior to insertion into tree (default _)',root=>'the root uri to traverse from',{?}flatten=>'fold single-folder chains into one path row (default false)',max=>'the max depth to traverse',{?}xref=>'xref=>[max=>N, code=><call>] cross-reference decoration'],
+     args=>[{?}code=>'transform obj prior to insertion into tree (default _)',{?}expand=>'branch uris whose children are read regardless of max',{?}xref=>'xref=>[max=>N, code=><call>] cross-reference decoration',max=>'the max depth to traverse',{?}flatten=>'fold single-folder chains into one path row (default false)',root=>'the root uri to traverse from'],
      desc=>'[structural] the root uri space is traversed to specified d...'],
     selector_widget=>docs::[
      obj=>selector_widget::T,
@@ -290,9 +290,13 @@ mtron> tree_widget::[root=>/m/mach/ui, max=>1].as?str<=widget(str::T)
 ```
 ```mtron
 mtron> menu_bar_widget::[height=>1,lines=>[label_line_widget::[body=>'File'],label_line_widget::[body=>'Edit']]].as?str<=widget(str::T)
-==>ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3248
+==>"""
+   File  Edit
+   """
 mtron> label_line_widget::[body=>'a label line'].as?str<=widget(str::T)
-==>ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3256
+==>"""
+   a label line
+   """
 ```
 ## style
 

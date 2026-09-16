@@ -28,33 +28,53 @@ entry per stdout line; a non-zero exit is a `fail::T`.
 
 ```mtron
 mtron> bash('ls')
-==>['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE',...(9 more)]
+==>['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE',...(8 more)]
 mtron> bash(cmd=>'whoami', timeout=>second::5.0)
-==>['killswitch']
+==>['ubuntu']
 ```
 Batch over a rec (indexed) or a lst (flat):
 
 ```mtron
 mtron> {"ls","whoami","df -h"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of result lsts --]
-==>['ls'=>['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE',...(9 more)]]
-==>['whoami'=>['killswitch']]
-==>['df -h'=>['Filesystem             Size  Used Avail Use% Mounted on','tmpfs                  6.1G  6.4M  6.1G   1% /run','efivarfs               128K   42K   82K  34% /sys/firmware/...','/dev/nvme1n1p2         916G  492G  377G  57% /','tmpfs                   31G  206M   31G   1% /dev/shm','tmpfs                  5.0M   20K  5.0M   1% /run/lock','tmpfs                   31G     0   31G   0% /run/qemu','/dev/nvme1n1p1         511M  6.2M  505M   2% /boot/efi','tmpfs                  6.1G  864K  6.1G   1% /run/user/1000','/dev/nvme0n1p2         932G  240G  692G  26% /media/hdd0',...(1 more)]]
+==>['ls'=>['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE',...(8 more)]]
+==>['whoami'=>['ubuntu']]
+==>['df -h'=>[
+    'Filesystem      Size  Used Avail Use% Mounted on',
+    'overlay         916G  493G  377G  57% /',
+    'tmpfs            64M     0   64M   0% /dev',
+    'shm              64M     0   64M   0% /dev/shm',
+    '/dev/nvme1n1p2  916G  493G  377G  57% /work',
+    'tmpfs            31G     0   31G   0% /proc/acpi',
+    'tmpfs            31G     0   31G   0% /proc/asound',
+    'tmpfs            31G     0   31G   0% /proc/scsi',
+    'tmpfs            31G     0   31G   0% /sys/devices/virtual/...',
+    'tmpfs            31G     0   31G   0% /sys/firmware']]
 mtron> ["ls","whoami","df -h"].mapp(-<[_ => bash(_)]).sum() [-- flatten to one lst --]
 ==>[
-    ['ls'=>['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE',...(9 more)]],
-    ['whoami'=>['killswitch']],
-    ['df -h'=>['Filesystem             Size  Used Avail Use% Mounted on','tmpfs                  6.1G  6.4M  6.1G   1% /run','efivarfs               128K   42K   82K  34% /sys/firmware/...','/dev/nvme1n1p2         916G  492G  377G  57% /','tmpfs                   31G  206M   31G   1% /dev/shm','tmpfs                  5.0M   20K  5.0M   1% /run/lock','tmpfs                   31G     0   31G   0% /run/qemu','/dev/nvme1n1p1         511M  6.2M  505M   2% /boot/efi','tmpfs                  6.1G  864K  6.1G   1% /run/user/1000','/dev/nvme0n1p2         932G  240G  692G  26% /media/hdd0',...(1 more)]]]
+    ['ls'=>['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE',...(8 more)]],
+    ['whoami'=>['ubuntu']],
+    ['df -h'=>[
+    'Filesystem      Size  Used Avail Use% Mounted on',
+    'overlay         916G  493G  377G  57% /',
+    'tmpfs            64M     0   64M   0% /dev',
+    'shm              64M     0   64M   0% /dev/shm',
+    '/dev/nvme1n1p2  916G  493G  377G  57% /work',
+    'tmpfs            31G     0   31G   0% /proc/acpi',
+    'tmpfs            31G     0   31G   0% /proc/asound',
+    'tmpfs            31G     0   31G   0% /proc/scsi',
+    'tmpfs            31G     0   31G   0% /sys/devices/virtual/...',
+    'tmpfs            31G     0   31G   0% /sys/firmware']]]
 ```
 Pipe a follow-up command over each result — `>>` drains the list, `${_}` binds the current element; `.mapp`
 maps explicitly (and, with a lambda, indexes by the current element):
 
 ```mtron
 mtron> bash('ls').>>.bash("stat -c 'U' ${_}")            [-- drain: owners coalesce to a multiset --]
-==>{19}['U']
+==>{18}['U']
 mtron> bash('ls').mapp(bash("stat -c 'U' ${_}"))         [-- map: one result lst per file --]
-==>[['U'],['U'],['U'],['U'],['U'],['U'],['U'],['U'],['U'],['U'],...(9 more)]
+==>[['U'],['U'],['U'],['U'],['U'],['U'],['U'],['U'],['U'],['U'],...(8 more)]
 mtron> bash('ls').mapp(-<[_=>bash("stat -c 'U' ${_}")])  [-- indexed map: file => owner --]
-==>[['AGENTS.md'=>['U']],['bin'=>['U']],['boot'=>['U']],['conf'=>['U']],['CONTRIBUTING.md'=>['U']],['dist'=>['U']],['docs'=>['U']],['dsh-plugins'=>['U']],['language.properties'=>['U']],['LICENSE'=>['U']],...(9 more)]
+==>[['AGENTS.md'=>['U']],['bin'=>['U']],['boot'=>['U']],['conf'=>['U']],['CONTRIBUTING.md'=>['U']],['dist'=>['U']],['docs'=>['U']],['dsh-plugins'=>['U']],['language.properties'=>['U']],['LICENSE'=>['U']],...(8 more)]
 ```
 ### security modulators (q-params)
 
@@ -109,109 +129,109 @@ Two recs are mounted under `/sys` at boot — not instructions, but read like an
 
 ```mtron
 mtron> */sys/thread/+.count()               [-- number of threads        --]
-==>124
+==>44
 mtron> */sys/thread/+.=?=[state=>run]       [-- number of active threads --]
 mtron> */sys/thread/+?docq                  [-- thread documentation     --]
 ==>docs::[
     obj=>[
      code=>inst?#{*}<=#{?}(#{*}::T),
-     source=>!*/sys/thread/b0425704,
      state=>stop,
-     time=>datetime::<//2026.09:16/00/26/26/640?tz=-0600>,
-     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/693fa631,
+     time=>datetime::<//2026.09:16/07/17/44/539?tz=Z>,
+     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/368435d2,
     desc=>'metatron-thread']
 ==>docs::[
     obj=>[
      code=>inst?#{*}<=#{?}(#{*}::T),
      state=>stop,
-     time=>datetime::<//2026.09:16/00/26/26/775?tz=-0600>,
-     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/daf15043,
+     time=>datetime::<//2026.09:16/07/17/44/534?tz=Z>,
+     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/c96ee48d,
     desc=>'metatron-thread']
 ==>docs::[
     obj=>[
      code=>inst?#{*}<=#{?}(#{*}::T),
      state=>stop,
-     time=>datetime::<//2026.09:16/00/26/26/622?tz=-0600>,
-     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/3ac5b547,
+     time=>datetime::<//2026.09:16/07/17/44/114?tz=Z>,
+     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/f9c2a9d2,
     desc=>'metatron-thread']
 ==>docs::[
     obj=>[
      code=>inst?#{*}<=#{?}(#{*}::T),
      state=>stop,
-     time=>datetime::<//2026.09:16/00/26/26/613?tz=-0600>,
-     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/ad5e53a2,
+     time=>datetime::<//2026.09:16/07/17/44/182?tz=Z>,
+     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/e6959b2f,
     desc=>'metatron-thread']
 ==>docs::[
     obj=>[
      code=>inst?#{*}<=#{?}(#{*}::T),
      state=>stop,
-     time=>datetime::<//2026.09:16/00/26/25/968?tz=-0600>,
-     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/f4e22347,
-    desc=>'metatron-thread']
-==>docs::[
-    obj=>[
-     code=>inst?#{*}<=#{?}(#{*}::T),
-     source=>!*/sys/thread/main,
-     state=>stop,
-     time=>datetime::<//2026.09:16/00/26/26/130?tz=-0600>,
-     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/ee4c2dc2,
+     time=>datetime::<//2026.09:16/07/17/44/343?tz=Z>,
+     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/71f4300f,
     desc=>'metatron-thread']
 ==>docs::[
     obj=>[
      code=>inst?#{*}<=#{?}(#{*}::T),
      state=>stop,
-     time=>datetime::<//2026.09:16/00/26/26/634?tz=-0600>,
-     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/7da7becf,
+     time=>datetime::<//2026.09:16/07/17/44/535?tz=Z>,
+     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/c238bfc8,
     desc=>'metatron-thread']
 ==>docs::[
     obj=>[
      code=>inst?#{*}<=#{?}(#{*}::T),
      state=>stop,
-     time=>datetime::<//2026.09:16/00/26/26/342?tz=-0600>,
-     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/5d2736cf,
-    desc=>'metatron-thread']
-==>docs::[
-    obj=>[
-     code=>inst?#{*}<=#{?}(#{*}::T),
-     state=>stop,
-     time=>datetime::<//2026.09:16/00/26/26/137?tz=-0600>,
-     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/19b4943d,
-    desc=>'metatron-thread']
-==>docs::[
-    obj=>[
-     code=>inst?#{*}<=#{?}(#{*}::T),
-     state=>stop,
-     time=>datetime::<//2026.09:16/00/26/26/783?tz=-0600>,
-     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/3a2bfdd5,
+     time=>datetime::<//2026.09:16/07/17/44/622?tz=Z>,
+     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/a4ef7960,
     desc=>'metatron-thread']
 ==>docs::[
     obj=>[
      code=>inst?#{*}<=#{?}(#{*}::T),
      source=>!*/sys/thread/main,
      state=>stop,
-     time=>datetime::<//2026.09:16/00/26/26/597?tz=-0600>,
-     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/2b3b4b90,
+     time=>datetime::<//2026.09:16/07/17/44/176?tz=Z>,
+     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/515572a0,
     desc=>'metatron-thread']
 ==>docs::[
     obj=>[
      code=>inst?#{*}<=#{?}(#{*}::T),
-     source=>!*/sys/thread/46e8101b,
+     source=>!*/sys/thread/main,
      state=>stop,
-     time=>datetime::<//2026.09:16/00/26/26/371?tz=-0600>,
-     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/bc62a275,
+     time=>datetime::<//2026.09:16/07/17/44/112?tz=Z>,
+     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/bc420aad,
+    desc=>'metatron-thread']
+==>docs::[
+    obj=>[
+     code=>inst?#{*}<=#{?}(#{*}::T),
+     source=>!*/sys/thread/main,
+     state=>stop,
+     time=>datetime::<//2026.09:16/07/17/44/346?tz=Z>,
+     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/13e60d9c,
+    desc=>'metatron-thread']
+==>docs::[
+    obj=>[
+     code=>inst?#{*}<=#{?}(#{*}::T),
+     source=>!*/sys/thread/main,
+     state=>stop,
+     time=>datetime::<//2026.09:16/07/17/44/087?tz=Z>,
+     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/7c484bad,
+    desc=>'metatron-thread']
+==>docs::[
+    obj=>[
+     code=>inst?#{*}<=#{?}(#{*}::T),
+     source=>!*/sys/thread/main,
+     state=>stop,
+     time=>datetime::<//2026.09:16/07/17/44/530?tz=Z>,
+     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/9166c4f6,
     desc=>'metatron-thread']
 ==>docs::[
     obj=>[
      code=>inst?#{*}<=#{?}(#{*}::T),
      state=>stop,
-     time=>datetime::<//2026.09:16/00/26/26/363?tz=-0600>,
-     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/d47ca50a,
+     time=>datetime::<//2026.09:16/07/17/44/344?tz=Z>,
+     runtime=>!inst?#{*}<=#{?}(#{*}::T)]@/sys/thread/506698b0,
     desc=>'metatron-thread']
 ==>docs::[
     obj=>[
      code=>inst?#{*}<=#{?}(#{*}::T),
      state=>stop,
-     time=>datetime::<//2026.09:16/00/26/25/984?tz=-0600>,
    ...
 ```
 # file system space (fsspace::T)
@@ -242,7 +262,7 @@ mtron> fsspace::[
       pattern=>lineq,
       post_read=>inst?#{*}<=#{?}(uri::T,#::T),
       pre_write=>inst?#{*}<=#{?}(uri::T,#::T)]],
-    route=>[mfs:=>/home/killswitch/software/metatron]]@/sys/space/fs/mfs
+    route=>[mfs:=>/home/ubuntu/software/metatron]]@/sys/space/fs/mfs
 ```
 - **`pattern`** — the URI pattern this space handles (`mfs:#` matches `<mfs:file.txt>`, `<mfs:sub/dir/file.md>`,
   etc.)
@@ -287,73 +307,10 @@ The `?mimeq=` query parameter on a file URI controls what the space returns:
 ```mtron
 mtron> [-- default: typed string (predicate-validated) --]
 mtron> *<mfs:docs/website/index.html>
-==>html::"""<!--
-     ~ Metatron: A Distributed Computing Language and Virtual Machine
-     ~  Copyright (C) 2025- PhaseShift Studio, LLC
-     ~  
-     ~ This program is free software: you can redistribute it and/or modify
-     ~ it under the terms of the GNU Affero General Public License as published by
-     ~ the Free Software Foundation, either version 3 of the License, or
-     ~ (at your option) any later version.
-     ~  
-     ~ This program is distributed in the hope that it will be useful,
-     ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-     ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-     ~ GNU Affero General Public License for more details.
-     ~
-     ~ You should have received a copy of the GNU Affero General Public License
-     ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
-     -->
-   
-   <!DOCTYPE html>
-   <html lang="en">
-   ...
 mtron> [-- explicit type tag (same as default for .html files) --]
 mtron> *<mfs:docs/website/index.html?mimeq=text/html>
-==>html::"""<!--
-     ~ Metatron: A Distributed Computing Language and Virtual Machine
-     ~  Copyright (C) 2025- PhaseShift Studio, LLC
-     ~  
-     ~ This program is free software: you can redistribute it and/or modify
-     ~ it under the terms of the GNU Affero General Public License as published by
-     ~ the Free Software Foundation, either version 3 of the License, or
-     ~ (at your option) any later version.
-     ~  
-     ~ This program is distributed in the hope that it will be useful,
-     ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-     ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-     ~ GNU Affero General Public License for more details.
-     ~
-     ~ You should have received a copy of the GNU Affero General Public License
-     ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
-     -->
-   
-   <!DOCTYPE html>
-   <html lang="en">
-   ...
 mtron> [-- structural parse via application/x-mtron --]
 mtron> *<mfs:docs/website/index.html?mimeq=application/x-mtron>
-==>[html=>[
-    head=>[
-     title=>'PhaseShift Studio',
-     out=>[[tag=>meta,charset=>'utf-8'],[
-      tag=>meta,
-      name=>'viewport',
-      content=>'width=device-width, initial-scale=1.0'],[
-      tag=>meta,
-      name=>'keywords',
-      content=>'metatron programming data graph database llm'],[
-      tag=>meta,
-      name=>'description',
-      content=>'Next Generation Data Technologies'],[
-      tag=>meta,
-      name=>'theme-color',
-      content=>'#ffffff'],[
-      tag=>link,
-      rel=>'apple-touch-icon',
-      sizes=>'114x114',
-      href=><images/apple-touch-icon.png>],[
-   ...
 ```
 `mimeq` is implemented in `QCollection.mimeQ()` as a space-level `postRead` query processor. It:
 
@@ -371,10 +328,6 @@ mtron> *<mfs:docs/website/index.html?mimeq=application/x-mtron>
 ```mtron
 mtron> [-- Read a file (returns typed string by default) --]
 mtron> *<mfs:README.md>
-==>markdown::"""# metatron
-   
-   <a href="http://metatron.phaseshift.studio"><img src="http://metatron.phaseshift.studio/images/metatron-character.png" width="200px"></a>
-   """
 ```
 ```mtron
 [-- Write a string to a file --]
@@ -386,25 +339,6 @@ mtron> *<mfs:README.md>
 ```mtron
 mtron> [-- Read markdown as a rec::T structure --]
 mtron> *<mfs:README.md?mimeq=application/x-mtron>
-==>[
-    type=>doc,
-    out=>[
-     [
-      type=>head,
-      level=>1,
-      text=>'metatron',
-      out=>[[type=>text,content=>'metatron']]],
-     [
-      type=>p,
-      text=>'<a href="http://metatron.phaseshift.studio"><img src="http:...',
-      out=>[
-       [
-        type=>html_inline,
-        html=>'<a href="http://metatron.phaseshift.studio">'],
-       [
-        type=>html_inline,
-        html=>'<img src="http://metatron.phaseshift.studio/images/metatron...'],
-       [type=>html_inline,html=>'</a>']]]]]
 mtron> [-- Read JSON, then walk into rec fields --]
 mtron> *<mfs:config.json?mimeq=application/x-mtron>/database/host
 ==>/database/host
@@ -417,7 +351,7 @@ are treated as `inst::T` and can be invoked directly:
 ```mtron
 mtron> *<mfs:script.sh>        [-- bytes::T if binary, str::T if text                    --]
 mtron> <mfs:script.sh>()       [-- execute (shell scripts, via application/x-mtron exec) --]
-==>fail::[unable to locate inst-f of mfs:script.sh()@<0>]@/sys/fail/1976
+==>fail::[unable to locate inst-f of mfs:script.sh()@<0>]@/sys/fail/2076
 ```
 ## pattern-based access
 
@@ -426,110 +360,8 @@ fsSpace supports wildcard patterns in reads:
 ```mtron
 mtron> [-- List all files in a directory --]
 mtron> *<mfs:+/>
-==>mfs:/LICENSE=>fail::[parse error at line 1, col 4:
-     GNU AFFERO GENERAL PUBLIC LICENSE
-            ...
-        ^
-     could not parse at ' ' — unclosed single-quote — missing closing '''?]
-==>mfs:/docs=>mfs:/docs
-==><mfs:/.agentbridge>=><mfs:/.agentbridge>
-==><mfs:/.gitignore>=>""".*
-   *.sqlite
-   opencode.json
-   !.metatron/
-   # mvnw reads .mvn/wrapper/maven-wrapper.properties at runtime — it must ship
-   # in clones, but `.*` above swallows the whole .mvn/ dir. Re-include it.
-   !.mvn/
-   !.mvn/wrapper/
-   !.mvn/wrapper/maven-wrapper.properties
-   # `.*` above also swallows the docker build context and new GitHub workflows.
-   !.dockerignore
-   !.github/
-   !.github/workflows/
-   !.github/workflows/docker.yml
-   target/
-   node_modules/
-   .metatron.history
-   *.iml
-   /.venv/
-   __pycache__/
-   *.pyc
-   *.pyo
-   # Compiled class file
-   *.class
-   
-   benchmark/*.json
-   .open*
-   .worktrees
-   
-   # Log file
-   *.log
-   
-   # BlueJ files
-   *.ctxt
-   
-   # Mobile Tools for Java (J2ME)
-   .mtj.tmp/
-   
-   # Package Files #
-   *.jar
-   *.war
-   *.nar
-   *.ear
-   *.zip
-   *.tar.gz
-   *.rar
-   
-   # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-   hs_err_pid*
-   replay_pid*
-   
-   .ai/
-   """
-==><mfs:/.github>=><mfs:/.github>
-==><mfs:/.classpath>=>"""<?xml version="1.0" encoding="UTF-8"?>
-   <classpath>
-   	<classpathentry kind="src" output="target/classes" path="src/main/java">
-   		<attributes>
-   			<attribute name="optional" value="true"/>
-   			<attribute name="maven.pomderived" value="true"/>
-   		</attributes>
-   	</classpathentry>
-   	<classpathentry excluding="**" kind="src" output="target/classes" path="src/main/resources">
-   		<attributes>
-   			<attribute name="maven.pomderived" value="true"/>
-   			<attribute name="optional" value="true"/>
-   		</attributes>
-   	</classpathentry>
-   	<classpathentry kind="src" output="target/test-classes" path="src/test/java">
-   		<attributes>
-   			<attribute name="optional" value="true"/>
-   			<attribute name="maven.pomderived" value="true"/>
-   			<attribute name="test" value="true"/>
-   		</attributes>
-   	</classpathentry>
-   	<classpathentry excluding="**" kind="src" output="target/test-classes" path="src/test/resources">
-   		<attributes>
-   			<attribute name="maven.pomderived" value="true"/>
-   			<attribute name="test" value="true"/>
-   			<attribute name="optional" value="true"/>
-   		</attributes>
-   	</classpathentry>
-   	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-21">
-   		<attributes>
-   			<attribute name="maven.pomderived" value="true"/>
-   		</attributes>
-   	</classpathentry>
-   	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
-   		<attributes>
-   			<attribute name="maven.pomderived" value="true"/>
-   		</attributes>
-   	</classpathentry>
-   	<classpathentry kind="src" path="target/generated-sources/annotations">
-   ...
 mtron> [-- Read all .txt files --]
 mtron> *<mfs:+/+>.where([name => -<'.'>>1.is('txt')])
-==>fail::[inst apply failure: java.io.UncheckedIOException: java.nio.file.AccessDeniedException: /backends]@/sys/fail/3022
 ```
 ## Line-Level Editing with `lineq`
 
@@ -539,14 +371,14 @@ edits without loading the entire file:
 ```mtron
 mtron> [-- Read lines 10-20 of a file --]
 mtron> *<mfs:src/main.java?lineq=10..20>
-==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "10..20"]@/sys/fail/3026
+==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "10..20"]@/sys/fail/2080
 mtron> [-- Replace lines 5-10 with new content --]
 mtron> <mfs:src/main.java?lineq=5..10> -> """
          public void newMethod() {
            // new implementation
          }
        """
-==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "5..10"]@/sys/fail/3030
+==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "5..10"]@/sys/fail/2084
 ```
 ### boot configuration example
 
@@ -568,7 +400,7 @@ mtron> fsspace::[
     route=>[local:=>/m/inst/thread(/src)]]@/sys/space/fs/src
 mtron> [-- Then use in expressions: --]
 mtron> *<local:Main.java?lineq=1..50>
-==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "1..50"]@/sys/fail/3034
+==>fail::[inst apply failure: java.lang.NumberFormatException: For input string: "1..50"]@/sys/fail/2088
 mtron> <local:index.html?mimeq=application/x-mtron>/html/head/title
 ==>ERROR: monad obj coefficient is greater than inst dom coefficient:
 	<local:index.html?mimeq=application/x-mtron> [{1} X=> {0}] start?rng=A{**}&dom=noobj{0}(/html/head/title){<j>}@<1>
@@ -582,12 +414,12 @@ mtron> [-- Read HTML, cast to rec, modify, cast back to html string, write --]
 mtron> <local:page.html> -> *<local:page.html?mimeq=application/x-mtron>
          .at(html/head/title -> 'New Title')
          .as(html::T)
-==>fail::[inst apply failure: 'New Title' [str::T] unable to convert uri::T]@/sys/fail/3072
+==>fail::[inst apply failure: 'New Title' [str::T] unable to convert uri::T]@/sys/fail/2126
 mtron> [-- Read JSON config, modify a value, write back --]
 mtron> <local:config.json> -> *<local:config.json?mimeq=application/x-mtron>
          .at(database/host -> 'new-host')
          .as(json::T)
-==>fail::[inst apply failure: 'new-host' [str::T] unable to convert uri::T]@/sys/fail/3108
+==>fail::[inst apply failure: 'new-host' [str::T] unable to convert uri::T]@/sys/fail/2162
 ```
 The `.as(html::T)` / `.as(json::T)` serialization passes through `ObjHTMLSerializer.write()` /
 `ObjJSONSerializer.write()` which handle both `str::T` (pass-through) and `rec::T` (structural render).

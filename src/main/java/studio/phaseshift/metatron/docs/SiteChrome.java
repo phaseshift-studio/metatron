@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.docs;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -71,9 +72,30 @@ public final class SiteChrome {
      * @param extraHead page-specific {@code <head>} content, or {@code null}/{@code ""}
      */
     public static String header(final String depth, final String title, final String extraHead) {
-        return rewrite(read("header.html"), depth)
-                .replace(TITLE_TOKEN, title)
-                .replace(EXTRA_HEAD_TOKEN, extraHead == null ? "" : extraHead);
+        String content = rewrite(read("header.html"), depth);
+
+        // Title: prefer the {{TITLE}} token; if the header lost it, replace whatever
+        // <title> is already present so the per-page title still lands.
+        if (content.contains(TITLE_TOKEN)) {
+            content = content.replace(TITLE_TOKEN, title);
+        } else {
+            content = content.replaceFirst("<title>.*?</title>",
+                    Matcher.quoteReplacement("<title>" + title + "</title>"));
+        }
+
+        // Extra <head> content: prefer the {{EXTRA_HEAD}} token; if it is absent, inject
+        // directly before </head> so page-specific CSS (e.g. instset_doc.css) is never
+        // silently dropped.
+        final String extra = extraHead == null ? "" : extraHead;
+        if (extra.isEmpty()) {
+            content = content.replace(EXTRA_HEAD_TOKEN, "");
+        } else if (content.contains(EXTRA_HEAD_TOKEN)) {
+            content = content.replace(EXTRA_HEAD_TOKEN, extra);
+        } else {
+            content = content.replace("</head>", extra + "\n</head>");
+        }
+
+        return content;
     }
 
     /**
