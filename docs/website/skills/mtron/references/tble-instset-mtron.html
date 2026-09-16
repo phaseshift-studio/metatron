@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>tble instruction set · PhaseShift Studio</title>
+    <title>PhaseShift Studio</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -108,7 +108,6 @@
         }
     </style>
     <script src="../../../js/metatron.js" type="text/javascript"></script>
-    
 </head>
 <body class="d-flex flex-column min-vh-100" spellcheck="false">
 <!------------------------------------------------------->
@@ -140,12 +139,12 @@
                     <li>
                         <div class="click-to-copy" title="click to copy">
                             <span class="badge bg-danger">only linux tested</span>
-                            <pre><code style="padding:25px;" class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
                         </div>
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code style="padding:25px;" class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -237,7 +236,6 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
                             </div>
                         </div>
                     </li>
@@ -268,15 +266,12 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/connecting-datasources.html">connecting-datasources</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference_mtron.html">language-reference_mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mtron-fsspace.html">mtron-fsspace</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
@@ -293,6 +288,7 @@
                             </div>
                         </div>
                     </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/robobot/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>robobot</a></li>
                 </ul>
             </li>
             <!-- SKILLS-MENU:END -->
@@ -380,8 +376,7 @@
         });
     })();
 </script>
-<main class="container my-4 flex-grow-1">
-    <div class="skill-doc mb-4">
+<main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">tble instruction set</h1>
         <small>The /m/tble instruction set and the tblespace::T it belongs to: a JDBC relational database mounted as a metatron space — tables that appear from the first rec write, typed rows, the rewrite family that pushes reads down into SQL, the key/value fall-through, auto_from foreign keys, and native sql(). TRIGGER: When connecting a database (SQLite, PostgreSQL, MariaDB, MySQL), writing or reading table rows in mtron, wondering whether a read was pushed down to SQL, mapping a row cell to a !* pointer, or asking what a table's schema is.</small><br/>
         <a href="tble-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>tble-instset-mtron.md</a>
@@ -498,9 +493,30 @@ keeps what SQL cannot say:</p>
     obj_tid=&gt;'/m/rec']
 ==&gt;[
     table_name=&gt;'person',
-    column_name=&gt;'name',
+    column_name=&gt;'skill',
     base_vid=&gt;'/m/str',
     obj_tid=&gt;'/m/str']
+==&gt;[
+    table_name=&gt;'award',
+    column_name=&gt;'$table',
+    base_vid=&gt;'/m/rec',
+    obj_tid=&gt;'/m/rec']
+==&gt;[
+    table_name=&gt;'award',
+    column_name=&gt;'trophy',
+    base_vid=&gt;'/m/str',
+    obj_tid=&gt;'/m/str']
+==&gt;[
+    table_name=&gt;'award',
+    column_name=&gt;'recipient',
+    base_vid=&gt;'/m/inst',
+    obj_tid=&gt;'/m/inst/auto_from',
+    ref_table=&gt;'person']
+==&gt;[
+    table_name=&gt;'note',
+    column_name=&gt;'$table',
+    base_vid=&gt;'/m/rec',
+    obj_tid=&gt;'/m/rec']
 ==&gt;[
     table_name=&gt;'person',
     column_name=&gt;'age',
@@ -508,7 +524,12 @@ keeps what SQL cannot say:</p>
     obj_tid=&gt;'/m/int']
 ==&gt;[
     table_name=&gt;'person',
-    column_name=&gt;'skill',
+    column_name=&gt;'name',
+    base_vid=&gt;'/m/str',
+    obj_tid=&gt;'/m/str{2}']
+==&gt;[
+    table_name=&gt;'note',
+    column_name=&gt;'body',
     base_vid=&gt;'/m/str',
     obj_tid=&gt;'/m/str']
 </code></pre>
@@ -520,6 +541,7 @@ reconstructs the lst rather than a string that looks like one.</p>
 ==&gt;[name=&gt;'marko',age=&gt;29]
 ==&gt;[name=&gt;'metis',age=&gt;41]
 ==&gt;[name=&gt;'grant',age=&gt;25]
+==&gt;[name=&gt;'vela',age=&gt;53]
 mtron&gt; *tbledoc:person/1              [-- one row --]
 ==&gt;[name=&gt;'marko',age=&gt;29]
 mtron&gt; *tbledoc:person/+/             [-- vid =&gt; row --]
@@ -527,15 +549,18 @@ mtron&gt; *tbledoc:person/+/             [-- vid =&gt; row --]
 ==&gt;tbledoc:person/1=&gt;[name=&gt;'marko',age=&gt;29]
 ==&gt;tbledoc:person/3=&gt;[name=&gt;'metis',age=&gt;41]
 ==&gt;tbledoc:person/2=&gt;[name=&gt;'grant',age=&gt;25]
+==&gt;tbledoc:person/5=&gt;[name=&gt;'vela',age=&gt;53]
 mtron&gt; *tbledoc:person/+/name         [-- one column, across rows --]
 ==&gt;'metis'
 ==&gt;'grant'
+==&gt;'vela'
 ==&gt;'marko'
 ==&gt;'xilo'
 mtron&gt; *tbledoc:person/1/name         [-- one field: the row is unrolled --]
 ==&gt;'marko'
 mtron&gt; *tbledoc:person/+/id           [-- the keys: they live in the vid, not in the body --]
 ==&gt;1
+==&gt;5
 ==&gt;2
 ==&gt;4
 ==&gt;3
@@ -550,6 +575,8 @@ matters.</p>
 ==&gt;41
 ==&gt;'grant'
 ==&gt;25
+==&gt;53
+==&gt;'vela'
 ==&gt;33
 ==&gt;29
 ==&gt;'graph'
@@ -560,6 +587,8 @@ mtron&gt; @tbledoc:person/+/+      [-- anchor: the same fields, each still addre
 ==&gt;41@tbledoc:person/3/age
 ==&gt;'grant'@tbledoc:person/2/name
 ==&gt;25@tbledoc:person/2/age
+==&gt;53@tbledoc:person/5/age
+==&gt;'vela'@tbledoc:person/5/name
 ==&gt;33@tbledoc:person/4/age
 ==&gt;29@tbledoc:person/1/age
 ==&gt;'graph'@tbledoc:person/4/skill
@@ -583,26 +612,29 @@ same expression over a <code>memspace</code> stays in mtron.</p>
 ==&gt;[name=&gt;'marko',age=&gt;29]@tbledoc:person/noobj
 ==&gt;[name=&gt;'grant',age=&gt;25]@tbledoc:person/noobj
 mtron&gt; *tbledoc:person/+.count()               [-- SELECT COUNT(*) FROM person --]
-==&gt;4
+==&gt;5
 mtron&gt; *tbledoc:person/+/age.sum()             [-- SELECT SUM(age) FROM person --]
-==&gt;128.0000
+==&gt;181.0000
 mtron&gt; *tbledoc:person/+/age.mean()            [-- SELECT AVG(age) FROM person --]
-==&gt;32.0000
+==&gt;36.2000
 mtron&gt; *tbledoc:person/+.==[name=&gt;_]           [-- SELECT name FROM person --]
 ==&gt;[name=&gt;'xilo']
 ==&gt;[name=&gt;'marko']
 ==&gt;[name=&gt;'metis']
 ==&gt;[name=&gt;'grant']
+==&gt;[name=&gt;'vela']
 mtron&gt; *tbledoc:person/+.order(select(age))    [-- ... ORDER BY age --]
 ==&gt;{2}[name=&gt;'grant',age=&gt;25]@tbledoc:person/noobj
 ==&gt;{2}[name=&gt;'marko',age=&gt;29]@tbledoc:person/noobj
 ==&gt;{2}[name=&gt;'xilo',age=&gt;33,skill=&gt;'graph']@tbledoc:person/noobj
 ==&gt;{2}[name=&gt;'metis',age=&gt;41]@tbledoc:person/noobj
+==&gt;{2}[name=&gt;'vela',age=&gt;53]@tbledoc:person/noobj
 mtron&gt; *tbledoc:person/+.dedup(select(name))   [-- SELECT DISTINCT name FROM person --]
 ==&gt;{2}'marko'
 ==&gt;{2}'grant'
 ==&gt;{2}'metis'
 ==&gt;{2}'xilo'
+==&gt;{2}'vela'
 mtron&gt; *tbledoc:person/+.take(2)               [-- ... LIMIT 2 --]
 ==&gt;{2}[name=&gt;'marko',age=&gt;29]@tbledoc:person/noobj
 ==&gt;{2}[name=&gt;'grant',age=&gt;25]@tbledoc:person/noobj
@@ -610,6 +642,7 @@ mtron&gt; *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
 ==&gt;{2}[name=&gt;'grant',age=&gt;25]@tbledoc:person/noobj
 ==&gt;{2}[name=&gt;'metis',age=&gt;41]@tbledoc:person/noobj
 ==&gt;{2}[name=&gt;'xilo',age=&gt;33,skill=&gt;'graph']@tbledoc:person/noobj
+==&gt;{2}[name=&gt;'vela',age=&gt;53]@tbledoc:person/noobj
 </code></pre>
 <table>
 <thead>
@@ -698,8 +731,9 @@ kinds may sit in one row.</p>
 <pre><code class="language-mtron">mtron&gt; */sys/space/tbledoc/schema/pattern      [-- where the discovered types are published --]
 ==&gt;/sys/space/tbledoc/instset/#
 mtron&gt; */sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
-==&gt;/sys/space/tbledoc/instset/person=&gt;rec::T[?[{?}name=&gt;str::T,{?}age=&gt;int::T,{?}skill=&gt;str::T,uri{?}::T=&gt;#::T]]@/sys/space/tbledoc/instset/person
 ==&gt;/sys/space/tbledoc/instset/award=&gt;rec::T[?[{?}trophy=&gt;str::T,recipient=&gt;isa(person/+/id).!*id(),uri{?}::T=&gt;#::T]]@/sys/space/tbledoc/instset/award
+==&gt;/sys/space/tbledoc/instset/note=&gt;rec::T[?[{?}body=&gt;str::T,uri{?}::T=&gt;#::T]]@/sys/space/tbledoc/instset/note
+==&gt;/sys/space/tbledoc/instset/person=&gt;rec::T[?[{?}name=&gt;str::T,{?}age=&gt;int::T,{?}skill=&gt;str::T,uri{?}::T=&gt;#::T]]@/sys/space/tbledoc/instset/person
 </code></pre>
 <p>Reading the schema is how you meet a table you have never seen: each entry is an <code>isa([{?}name=&gt;str::T,…])</code> refinement
 of <code>rec::T</code>, and a foreign-key column appears as <code>recipient=&gt;isa(person/+/id).!*id()</code> — the column <em>is</em> the pointer.
@@ -743,14 +777,30 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/2
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/18
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/4
+==&gt;[body=&gt;'another one']@tbledoc:note/20
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
-==&gt;1
-==&gt;3
+==&gt;12
+==&gt;17
+==&gt;11
+==&gt;15
+==&gt;19
 ==&gt;2
 ==&gt;4
+==&gt;6
+==&gt;8
+==&gt;1
+==&gt;13
+==&gt;16
+==&gt;3
+==&gt;10
+==&gt;14
+==&gt;18
+==&gt;20
+==&gt;5
+==&gt;7
+==&gt;9
 </code></pre>
 <h3>taking the space down</h3>
 <p>A space is a <strong>mount</strong>, not a copy. Writing <code>noobj</code> to its vid takes it down: the pattern stops routing, the JDBC
