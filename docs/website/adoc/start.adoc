@@ -30,9 +30,6 @@
 :noheader:
 :!header-footer:
 
-++++
-include::header.html[]
-++++
 
 
 [discrete]
@@ -262,6 +259,3 @@ Up to this point, there are currently 4 spaces maintained by metatron.
 <br><br>
 ++++
 
-++++
-include::footer.html[]
-++++

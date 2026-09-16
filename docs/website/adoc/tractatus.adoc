@@ -30,9 +30,6 @@
 :!header-footer:
 :!example-caption:
 
-++++
-include::header.html[]
-++++
 
 ++++
 <div class="container-xxl py-5">
@@ -330,6 +327,3 @@ include::card.adoc[]
 </div>
 ++++
 
-++++
-include::footer.html[]
-++++

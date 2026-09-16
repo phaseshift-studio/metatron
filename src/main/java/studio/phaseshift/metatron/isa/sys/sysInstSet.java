@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.io.File;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -45,8 +46,8 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.JREService;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Bool.*;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -122,24 +123,55 @@ public class sysInstSet extends AbstractInstSet {
                     .forEach(kv -> sysSpace.write(kv.getKey(), kv.getValue()),REC_TID,f("/sys/env"))
                }(),() -> { ThreadExecutor.instance() }())
      */
+    private static final int MAX_DIRECTORY_DEPTH = 50;
+    private static final int MAX_FILE_RESULTS = 50;
 
     public void setup() {
         this.jvm().putAll(Map.of(
                 uri(CONST), lst(ThreadExecutor.instance()),
                 uri(INST), lst(
+                        docWrap(instC(SYS_INST_TID.extend("find_file").dom(A.maybe()).rng(LST_TID), rec(
+                                        uri(NAME), STR_TYPE,
+                                        uri(ROOT).maybe(), URI_TYPE,
+                                        uri(f(REGEX_INST_TID.name()).maybe()), BOOL_TYPE,
+                                        uri(MAX).maybe(), INT_TYPE,
+                                        uri(DEPTH).maybe(), INT_TYPE), (lhs, inst) -> {
+                                    final boolean regex = inst.arg(REGEX_INST_TID.name(), 2).orElse(BOOL_FALSE).boolValue();
+                                    final Pattern pattern = regex ? Pattern.compile(inst.arg(NAME, 0).strValue()) : null;
+                                    try (final Stream<Obj> uris = start_(inst.arg(ROOT, 1).orElse(uri("<mfs:.>"))).repeat_(rshift_(), loop_().is_(gt_(inst.arg(DEPTH, 4).orElse(jnt(MAX_DIRECTORY_DEPTH)))), BOOL_TRUE).apply().stream()
+                                            .filter(p -> regex ? pattern.matcher(p.uriValue().toString()).find() : p.uriValue().toString().contains(inst.arg(NAME, 0).strValue()))
+                                            .limit(inst.arg(MAX, 3).orElse(jnt(MAX_FILE_RESULTS)).intValue().intValue())) {
+                                        return lst(uris);
+                                    } catch (final Exception e) {
+                                        LOG.status(DEBUG, "error finding files at %s", inst.arg(1).orElse(uri(".")));
+                                        return lst();
+                                    }
+                                }), "maybe an obj (optional)", "a lst of all files whose path matches str regex",
+                                Map.of(uri(NAME), "a regex or plain string to match file paths against",
+                                        uri(ROOT).maybe(), "the root directory for searching (default: current working directory -- <mfs:.>)",
+                                        uri(REGEX_INST_TID.name()).maybe(), "if the search string should be treated as a regex pattern (default: false)",
+                                        uri(MAX).maybe(), "the max number of results to return (default: 50)",
+                                        uri(DEPTH).maybe(), "the max depth to search directories (default: 50)"),
+                                "recursively search directory for named file by regex or partial string match"),
                         docWrap(instC(SYS_INST_TID.extend("read_file").dom(A.maybe()).rng(LST_TID), rec(
                                         uri(FILE), URI_TYPE,
                                         uri(MIN).maybe(), INT_TYPE,
                                         uri(MAX).maybe(), INT_TYPE), (lhs, inst) -> {
                                     final fURI file = inst.arg(FILE, 0).uriValue();
-                                    final int min = inst.arg(MIN, 1).orElse(jnt(-1)).intValue().intValue();
-                                    final int max = inst.arg(MAX, 2).orElse(jnt(-1)).intValue().intValue();
+                                    int min = inst.arg(MIN, 1).orElse(jnt(-1)).intValue().intValue();
+                                    if (min < 0) min = 0;
+                                    int max = inst.arg(MAX, 2).orElse(jnt(-1)).intValue().intValue();
+                                    if (max < 0) max = -1;
+                                    if (min > max)
+                                        throw MTronException.of("read_file min=%d exceeds max=%d", min, max);
                                     final Obj fileObj = Router.readFromSpace(file);
+                                    final int finalMin = min;
                                     if (fileObj.isStr()) {
                                         final List<String> startLines = new ArrayList<>(Arrays.asList(fileObj.strValue().split("\n")));
-                                        return min != -1 ? lst(IteratorUtil.indexedStream(startLines.subList(min, -1 == max ? startLines.size() : max).iterator()).map(pair -> lst(jnt(pair.get0() + min), str(pair.get1())))) :
-                                                lst(IteratorUtil.indexedStream(startLines.iterator()).map(pair -> lst(jnt(pair.get0()), str(pair.get1()))));
-
+                                        return lst(IteratorUtil.indexedStream(startLines
+                                                        .subList(Math.min(min, startLines.size() - 1), Math.min(startLines.size(), max))
+                                                        .iterator())
+                                                .map(pair -> lst(jnt(pair.get0() + finalMin), str(pair.get1()))));
                                     } else {
                                         throw MTronException.of("none str-based obj referenced: %s", file);
                                     }
@@ -260,7 +292,8 @@ public class sysInstSet extends AbstractInstSet {
                             final Scanner scanner = new Scanner(System.in);
                             final String input = scanner.nextLine();
                             return str(input);
-                        }), "maybe an obj", "a single line of input", Map.of(), "read a line of input from the running terminal"))));
+                        }), "maybe an obj", "a single line of input", Map.of(), "read a line of input from the running terminal"))))
+        ;
         super.setup();
     }
 }

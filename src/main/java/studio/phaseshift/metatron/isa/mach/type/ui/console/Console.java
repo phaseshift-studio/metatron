@@ -2120,15 +2120,18 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * the job's collector thread.
      */
     private void printBackgroundResult(final Machine mach, final FutureObj<Obj> future) {
-        this.backgroundJobs.remove(mach);
         final Obj result;
         try {
             result = future.get();
         } catch (final Exception e) {
+            this.backgroundJobs.remove(mach);
             LOG.none("{{-X-&|0}}");
             this.printResult(fail(e));
             return;
         }
+        // the job has halted — only now drop it from the tracking list, so
+        // :bg lists it for the whole time it is still running
+        this.backgroundJobs.remove(mach);
         LOG.none("{{-X-&|0}}\r[{{g}}result start{{/g}}:%s]\n", null == vidOf(mach) ? "?" : vidOf(mach).toString());
         this.printResult(result);
         LOG.none("[{{g}}result end{{/g}}:%s]\n", null == vidOf(mach) ? "?" : vidOf(mach).toString());

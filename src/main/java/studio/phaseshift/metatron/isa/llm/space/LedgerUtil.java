@@ -21,24 +21,17 @@ package studio.phaseshift.metatron.isa.llm.space;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -107,7 +100,9 @@ public final class LedgerUtil {
      */
     public static final String MISSCOPED = "misscoped";
 
-    /** The keys every sweep report carries, in report order. */
+    /**
+     * The keys every sweep report carries, in report order.
+     */
     private static final List<String> FINDINGS = List.of(DUPLICATE, ORPHAN, MISPLACED, MISSCOPED, ORPHAN_RESULT);
 
     /**
@@ -126,10 +121,10 @@ public final class LedgerUtil {
      *                    {@code message} collection is read
      * @param repair      when true, repair as well as report
      * @return a rec with one list of call ids per failure mode — {@link #DUPLICATE},
-     *         {@link #ORPHAN}, {@link #MISPLACED}, {@link #MISSCOPED},
-     *         {@link #ORPHAN_RESULT}.  Every key is always present (empty when that
-     *         mode found nothing), so a caller can count without inspecting the shape;
-     *         {@link #clean(Obj)} is the emptiness test.
+     * {@link #ORPHAN}, {@link #MISPLACED}, {@link #MISSCOPED},
+     * {@link #ORPHAN_RESULT}.  Every key is always present (empty when that
+     * mode found nothing), so a caller can count without inspecting the shape;
+     * {@link #clean(Obj)} is the emptiness test.
      */
     public static Rec sweep(final fURI messageRoot, final boolean repair) {
         return sweep(messageRoot, repair, false);
@@ -183,6 +178,11 @@ public final class LedgerUtil {
     public static fURI rootFor(final Obj session) {
         if (session.isUri())
             return SpaceChatSessionStore.memoryRootOf(session.uriValue());
+        if (session.testNominally(LLM_AGENT_TYPE)) {
+            final fURI furi = agent(session.asRec()).feature(LLM_MESSAGE_FEATURE_TID).orElse(rec()).at(SESSION).orElse(uri("")).uriValue();
+            if (!furi.isEmpty())
+                return furi;
+        }
         if (session.isRec()) {
             final Rec row = session.asRec();
             final fURI vid = row.vid();
@@ -350,12 +350,16 @@ public final class LedgerUtil {
                 uri(ORPHAN_RESULT), lst(orphanResults));
     }
 
-    /** Whether a message is a tool result — the tid that carries an answer. */
+    /**
+     * Whether a message is a tool result — the tid that carries an answer.
+     */
     private static boolean isToolResult(final Rec message) {
         return message.tid().equals(TOOL_RESULT_MESSAGE_TID);
     }
 
-    /** The tool call id a message joins on, which for a result is its {@code contents}. */
+    /**
+     * The tool call id a message joins on, which for a result is its {@code contents}.
+     */
     private static String callIdOf(final Rec message) {
         return Str.Helper.cleanString(message.at(uri(CONTENTS)));
     }
@@ -381,7 +385,9 @@ public final class LedgerUtil {
                 + (d > 1 && chatId.isInt() ? "\u0000" + chatId.intValue().intValue() : "");
     }
 
-    /** The depth that marks a message as belonging to no scope, below the idle depth 0. */
+    /**
+     * The depth that marks a message as belonging to no scope, below the idle depth 0.
+     */
     private static final int NO_DEPTH = Integer.MIN_VALUE;
 
     /**
@@ -464,7 +470,9 @@ public final class LedgerUtil {
         return -1;
     }
 
-    /** Delete a ledger row — a duplicate carries nothing of its own to lose. */
+    /**
+     * Delete a ledger row — a duplicate carries nothing of its own to lose.
+     */
     private static void remove(final Rec message) {
         final fURI vid = message.vid();
         if (null == vid || vid.isEmpty())

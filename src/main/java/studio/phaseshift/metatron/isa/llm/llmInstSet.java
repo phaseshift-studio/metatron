@@ -29,8 +29,8 @@ import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.vec.type.MVec;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -199,7 +199,6 @@ public class llmInstSet extends AbstractInstSet {
                                                   
                                                   The session transcript:
                                                   
-                                                  %s
                                                   """;
 
     /**
@@ -683,6 +682,12 @@ public class llmInstSet extends AbstractInstSet {
                                 "supports arbitrary instructions to be run at the different stages of the llm's lifecycle"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
+                                        .vid(LLM_TODO_FEATURE_TID)
+                                        .constructor(arg -> createStageLambdas(new ToDoFeature(arg.asRec().jvm(), LLM_TODO_FEATURE_TID, arg.vid())))
+                                        .create(),
+                                "persistent agent-owned todo list for cross-turn task tracking"),
+                        docWrap(Type.Builder.build()
+                                        .tid(LLM_FEATURE_TID)
                                         .vid(LLM_COMPACTION_FEATURE_TID)
                                         .isaPredicate(rec(
                                                 uri(MODEL).maybe().asUri(), LLM_MODEL_TYPE,
@@ -718,6 +723,12 @@ public class llmInstSet extends AbstractInstSet {
                                         uri("preserve").maybe(), "fields to carry forward across iterations"),
                                 "multi-pass reasoning loop with iteration control and polling",
                                 "loop_feature::[max_loop=>5,delay=>second::2]"),
+                        docWrap(Type.Builder.build()
+                                        .vid(REC_TID)
+                                        .tid(LLM_ISA_TID.extend("session_or_agent"))
+                                        .isaPredicate(union_(LLM_AGENT_TYPE, LLM_SESSION_TYPE).tryToInst())
+                                        .create(),
+                                "a session::T or agent::T union"),
                         // [parked stub] Ledger — out of the active roster during the
                         // channel refactor (skill/tool/message owners); un-comment to revive.
 //                         docWrap(Type.Builder.build()
@@ -798,25 +809,22 @@ public class llmInstSet extends AbstractInstSet {
                         // Deliberately manual: a ledger that needs this regularly means
                         // the write path is broken, which is worth finding out, not
                         // hiding behind a sweep on every boot.
-                        docWrap(instC(LLM_INST_TID.extend("sweep").dom(LLM_SESSION_TID.maybe()).rng(REC_TID),
-                                        rec(uri(SESSION).maybe().asUri(), T(LLM_SESSION_TID.maybe()),
+
+                        docWrap(instC(LLM_INST_TID.extend("sweep").dom(LLM_ISA_TID.extend("session_or_agent")).rng(REC_TID),
+                                        rec(uri("session_or_agent").maybe().asUri(), T(LLM_ISA_TID.extend("session_or_agent").maybe()),
                                                 uri("repair").maybe().asUri(), BOOL_TYPE,
                                                 uri("prune").maybe().asUri(), BOOL_TYPE),
                                         (lhs, inst) -> {
                                             // the session arrives as the lhs — anchored (@/usr/dr/session/1),
                                             // deref'd (*/usr/dr/session/1) — or handed in as arg 0
-                                            final Obj target = inst.arg(f(SESSION), 0).orElse(lhs);
+                                            final Obj target = inst.arg(f("session_or_agent"), 0).orElse(lhs);
                                             final boolean repair = inst.arg(f("repair"), 1).booleanCheck();
                                             final boolean prune = inst.arg(f("prune"), 2).booleanCheck();
-                                            try {
-                                                return LedgerUtil.sweep(LedgerUtil.rootFor(target), repair, prune);
-                                            } catch (final MTronException e) {
-                                                return fail("%s", e.getMessage());
-                                            }
+                                            return LedgerUtil.sweep(LedgerUtil.rootFor(target), repair, prune);
                                         }),
                                 "the session whose ledger is swept — a session::T row; defaults to the lhs",
                                 "a rec of call ids per failure mode — every key always present, so it can be counted without inspecting its shape",
-                                mutableMap(jnt(0), "the session to sweep; defaults to the lhs",
+                                mutableMap(jnt(0), "a session or agent to sweep; defaults to the lhs",
                                         jnt(1), "true to repair — drop the unanswered requests; no row is removed",
                                         jnt(2), "true to also DELETE what cannot be salvaged — duplicate messages and orphan results — which is the only way to clear those"),
                                 "fsck a chat ledger: [duplicate=>[call ids written twice], orphan=>[requests whose result is nowhere], misplaced=>[requests whose result is not next to them], misscoped=>[requests whose results stand next to them but are stamped into another scope, so the store's projection tears the group apart], orphan_result=>[results no request precedes]]. A provider requires the results of an assistant message's tool_calls to sit immediately after it, as the store projects that turn (one session, one depth, one chat id) — anything else breaks every later chat with insufficient tool messages following tool_calls message. repair restores validity without deleting anything: an unanswered request is dropped, and a misscoped result is moved into the scope of the request it answers; prune is the opt-in to deletion, and is separate because a duplicate's surviving copy may not carry the same text",
@@ -835,8 +843,8 @@ public class llmInstSet extends AbstractInstSet {
                                 "communicate with am llm enriched by tools, skills, etc. and receive response in particular format", // desc
                                 "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts/_?incrq)].chat('what is 4+2?',[answer=>int::T])"),
                         // SUMMARIZE INSTRUCTION — distill a session into claim::T recs
-                        docWrap(instC(LLM_INST_TID.extend("summary").dom(LLM_SESSION_TID.maybe()).rng(REC_TID), rec(
-                                                uri(SESSION).maybe().asUri(), T(LLM_SESSION_TID.maybe()),
+                        docWrap(instC(LLM_INST_TID.extend("summary").dom(LLM_ISA_TID.extend("session_or_agent")).rng(REC_TID), rec(
+                                                uri("session_or_agent").maybe().asUri(), T(LLM_ISA_TID.extend("session_or_agent").maybe()),
                                                 uri(MODEL).maybe().asUri(), choose_(rec(
                                                         isa_(LLM_MODEL_TYPE).tryToInst(), id_().tryToInst(),
                                                         isa_(LLM_SESSION_TYPE).tryToInst(), from_(rshift_(uri(AGENT)).mult_(uri(MODEL))).tryToInst()))
@@ -847,11 +855,11 @@ public class llmInstSet extends AbstractInstSet {
                                         (lhs, inst) -> {
                                             // The session may arrive as the lhs (fluent: @dr/session/1.summarize(_))
                                             // or as arg 0 (function form: summarize(@dr/session/1)).
-                                            final Rec session = inst.arg(f(SESSION), 0).orElse(lhs.asRec());
-                                            final fURI sessionVID = session.vid();
+                                            final Rec session = inst.arg(f("session_or_agent"), 0).orElse(lhs.asRec());
+                                            final fURI sessionVID = LedgerUtil.rootFor(session);
                                             if (null == sessionVID || sessionVID.isEmpty())
                                                 return fail("summarize requires an anchored session — use @dr/session/N.summarize()");
-                                            final fURI agentHome = session.at(AGENT).uriValue();
+                                            final fURI agentHome = session.testNominally(LLM_AGENT_TYPE) ? session.at(ROOT).uriValue() : session.at(AGENT).uriValue();
                                             // the argument rec — same vocabulary as the <<mtron:summarize>> block
                                             // (session/model are summary()-only keys; the block uses scope/kinds/concepts)
                                             final Rec config = rec(uri(SESSION), uri(sessionVID),
@@ -943,12 +951,13 @@ public class llmInstSet extends AbstractInstSet {
         // 2. build the distill digest — vid ==> text so the model can cite real vids
         final String digest = messages.stream()
                 .filter(pair -> !Str.Helper.cleanString(pair.second().asRec().at(TEXT)).isBlank())
-                .map(pair -> Str.Helper.cleanString(pair.first()) + "==>" + Str.Helper.cleanString(pair.second().asRec().at(TEXT).orElse(str(""))))
-                .collect(Collectors.joining("\n"));
+                .map(pair -> Graphitty.strip(Str.Helper.cleanString(pair.first()) + "==>" + Str.Helper.cleanString(pair.second().asRec().at(TEXT).orElse(str(""))))) // remove color coding annotations
+                .collect(Collectors.joining("\n"))
+                .replace("%", ""); // remove all string formatting meta-characters
         // 3. the model — from the agent home (matches <agent>/model)
         final mModel model = modelArg.isNoObj() ? mModel.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec()) : mModel.model(modelArg.asRec());
         // 4. distill via a mini-task
-        final ChatResult result = Agent.Helper.miniChat("session_summarizer", model(model.at(TIMEOUT, real(10.0, MATH_MINUTE_TID, null))), SUMMARIZE_PROMPT.formatted(digest));
+        final ChatResult result = Agent.Helper.miniChat("session_summarizer", model(model.at(TIMEOUT, real(10.0, MATH_MINUTE_TID, null))), SUMMARIZE_PROMPT + digest);
         // 5. parse the <<json:claim>> and <<json:loose_end>> watermarks into vids
         final List<Obj> claimVids = new ArrayList<>();
         final List<Obj> looseEndVids = new ArrayList<>();

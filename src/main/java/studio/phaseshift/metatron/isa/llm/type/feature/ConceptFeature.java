@@ -165,10 +165,9 @@ public class ConceptFeature extends AbstractFeature {
                                                                           """;
 
     private static final String CONCEPT_FEATURE_SYSTEM_TEMPLATE = """
+                                                                  ----
                                                                   The following concepts have recently been extracted.
-                                                                  
                                                                   %s
-                                                                  
                                                                   To review messages associated with concepts, use tool:
                                                                     %s(c1,c2,...)
                                                                   To see related adjacent concepts, use tool:
@@ -413,9 +412,7 @@ public class ConceptFeature extends AbstractFeature {
             // If the agent lacks it, this feature is debilitated — log and proceed.
             if (agent.hasFeature(LLM_SYSTEM_FEATURE_TID))
                 agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage(CONCEPT_FEATURE_SYSTEM_TEMPLATE
-                        .formatted(this.conceptRecommendations.stream().reduce("", (a, b) -> a + b + "\n"),
-                                MESSAGES_INST_TID,
-                                CONCEPTS_INST_TID));
+                        .formatted(this.conceptRecommendations, MESSAGES_INST_TID, CONCEPTS_INST_TID));
         }
         this.conceptRecommendations.clear();
         return noobj();

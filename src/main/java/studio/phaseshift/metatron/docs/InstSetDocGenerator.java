@@ -71,11 +71,9 @@ public class InstSetDocGenerator {
     private static final GraphittyLogger LOG = Graphitty.log(InstSetDocGenerator.class);
     private static ObjmtronSerializer SER;
 
-    private static final Path INCLUDES_PATH = Path.of("docs/website/includes");
     private static final Path CSS_PATH = Path.of("docs/website/css/instset_doc.css");
 
     private static final Pattern SHORTHAND_PAT = Pattern.compile("\\?(?:rng=([^&]+))?(?:&?dom=([^&]+))?");
-    private static final Pattern DOC_LINK_PAT = Pattern.compile("(href|src)=\"(?:\\./)?(images|css|lib|highlight|js)/");
 
     /**
      * Known instset VIDs, set before processing. Used by {@link #extractInstset(String)}.
@@ -380,14 +378,11 @@ public class InstSetDocGenerator {
                                        final boolean websiteTemplate, final String depth,
                                        final int buildNumber) {
         if (websiteTemplate) {
-            final String header = loadWebsiteHeader(depth);
-            final String footer = loadWebsiteFooter(depth);
+            final String header = SiteChrome.header(depth, esc(meta.name()) + " - metatron Instruction Set",
+                    "    <link rel=\"stylesheet\" href=\"" + depth + "/css/instset_doc.css\">");
+            final String footer = SiteChrome.footer(depth);
             if (!header.isEmpty() && !footer.isEmpty()) {
-                final String h = header.replace("</head>",
-                                "    <link rel=\"stylesheet\" href=\"" + depth + "/css/instset_doc.css\">\n</head>")
-                        .replaceAll("<title>.*?</title>",
-                                "<title>" + esc(meta.name()) + " - metatron Instruction Set</title>");
-                return h + bodyContent(meta, types, insts, rewrites, spaces, consts, buildNumber) + footer;
+                return header + bodyContent(meta, types, insts, rewrites, spaces, consts, buildNumber) + footer;
             }
         }
         return """
@@ -1346,13 +1341,11 @@ public class InstSetDocGenerator {
                                </div>""".formatted(cards.toString(), buildNumber);
 
         if (websiteTemplate) {
-            final String header = loadWebsiteHeader(depth);
-            final String footer = loadWebsiteFooter(depth);
+            final String header = SiteChrome.header(depth, "metatron instruction sets",
+                    "    <link rel=\"stylesheet\" href=\"" + depth + "/css/instset_doc.css\">");
+            final String footer = SiteChrome.footer(depth);
             if (!header.isEmpty() && !footer.isEmpty()) {
-                final String h = header.replace("</head>",
-                                "    <link rel=\"stylesheet\" href=\"" + depth + "/css/instset_doc.css\">\n</head>")
-                        .replaceAll("<title>.*?</title>", "<title>metatron instruction sets</title>");
-                return h + content + footer;
+                return header + content + footer;
             }
         }
 
@@ -1535,42 +1528,4 @@ public class InstSetDocGenerator {
                 .replace("\"", "&quot;").replace("'", "&#39;");
     }
 
-    // ========================================================================
-    // TEMPLATE LOADING
-    // ========================================================================
-
-    static String loadWebsiteHeader(final String depth) {
-        final Path p = INCLUDES_PATH.resolve("header.html");
-        if (!Files.exists(p)) return "";
-        try {
-            String content = Files.readString(p);
-            content = DOC_LINK_PAT.matcher(content).replaceAll("$1=\"" + depth + "/$2/");
-            content = content.replace("href=\"index.html\"", "href=\"" + depth + "/index.html\"")
-                    .replace("href=\"tractatus.html\"", "href=\"" + depth + "/tractatus.html\"")
-                    .replace("href=\"start.html\"", "href=\"" + depth + "/start.html\"")
-                    .replace("href=\"./instset/", "href=\"" + depth + "/instset/")
-                    .replace("href=\"./skills/", "href=\"" + depth + "/skills/")
-                    .replace("href=\"./articles/", "href=\"" + depth + "/articles/")
-                    .replace("location.href='./articles/", "location.href='" + depth + "/articles/")
-                    .replace("location.href='tractatus.html'", "location.href='" + depth + "/tractatus.html'")
-                    .replace("location.href='index.html'", "location.href='" + depth + "/index.html'")
-                    .replace("location.href='./instset/", "location.href='" + depth + "/instset/")
-                    .replace("location.href='./skills/", "location.href='" + depth + "/skills/");
-            return content;
-        } catch (final IOException e) {
-            return "";
-        }
-    }
-
-    static String loadWebsiteFooter(final String depth) {
-        final Path p = INCLUDES_PATH.resolve("footer.html");
-        if (!Files.exists(p)) return "";
-        try {
-            String content = Files.readString(p);
-            content = DOC_LINK_PAT.matcher(content).replaceAll("$1=\"" + depth + "/$2/");
-            return content;
-        } catch (final IOException e) {
-            return "";
-        }
-    }
 }

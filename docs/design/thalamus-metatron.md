@@ -566,7 +566,7 @@ non-examples (finished work, current-state observation, operator-queue defects, 
 **This required a `MTRON_BLOCK` fix in `Agent.java`:** the regex was `$`-end-anchored with a lazy
 `.+?`, which silently limited it to parsing **one** block per response (the last one). With two blocks (claim +
 loose_end) the second was never found. Removed the `$` anchor — verified with a standalone regex test that both blocks
-parse and both strip cleanly. Backward-compatible with the single-block consumers (`LoopFeature`, `LedgerFeature`); it
+parse and both strip cleanly. Backward-compatible with the single-block consumers (`LoopFeature`, `ToDoFeature`); it
 now enables a general multi-block
 `<<json:...>>` response protocol.
 

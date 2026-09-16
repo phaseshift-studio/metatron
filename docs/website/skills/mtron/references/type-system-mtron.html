@@ -108,6 +108,7 @@
         }
     </style>
     <script src="../../../js/metatron.js" type="text/javascript"></script>
+    
 </head>
 <body class="d-flex flex-column min-vh-100" spellcheck="false">
 <!------------------------------------------------------->
@@ -343,7 +344,7 @@
     </div>
     <div>
         <div class="d-flex pt-1 m-n1">
-            <a class="btn btn-lg-square btn-dark text-primary m-1" href="./console/index.html">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../../../console/index.html">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
         </div>
@@ -554,7 +555,7 @@ mtron&gt; [-- Constructor application: coerce to fit --]
 mtron&gt; 2.as(nat::T)          [-- nat::2 --]
 ==&gt;nat::2
 mtron&gt; -2.as(nat::T)         [-- nat::2  (constructor applied: abs) --]
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@/m/math/nat [structural]]@/sys/fail/256
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@/m/math/nat [structural]]@/sys/fail/2246
 </code></pre>
 <p>The <code>as()</code> instruction applies the constructor. If the predicate passes, the value is returned as-is. If not, the
 constructor runs. If the constructor's result passes the predicate, the transformed value is returned. Otherwise, it
@@ -595,7 +596,7 @@ mtron&gt; chicken -&gt; being::T@chicken
 ==&gt;being::T@chicken
 mtron&gt; [-- A human is NOT a chicken, despite identical structure --]
 mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T)
-==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal]]@/sys/fail/286
+==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal]]@/sys/fail/2250
 </code></pre>
 <p>This is the difference between <strong>experiential knowledge</strong> (structural — what can be observed) and <strong>authoritative
 knowledge</strong> (nominal — what has been declared).</p>
@@ -629,7 +630,7 @@ mtron&gt; /m/inst?#{*}&lt;=#{?}(#::T)
 ==&gt;fail::[unable to determine inst function:
    	noobj       =&gt; inst?rng=#{*}&amp;dom=#{?}(#::T)@&lt;0&gt;   | [inst]
    	noobj       =&gt; #{?}::T   |  \_dom
-   	noobj      X=&gt; [#::T]   |  \_args]@/sys/fail/296
+   	noobj      X=&gt; [#::T]   |  \_args]@/sys/fail/2254
 </code></pre>
 <h3>type checking and casting</h3>
 <h4><code>.test()</code> — predicate membership</h4>
@@ -653,28 +654,28 @@ returned as-is. Otherwise, the constructor transforms it:</p>
 mtron&gt; 2.as(nat::T)             [-- nat::2  (already fits) --]
 ==&gt;nat::2
 mtron&gt; -2.as(nat::T)            [-- nat::2  (constructor applied) --]
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@/m/math/nat [structural]]@/sys/fail/374
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@/m/math/nat [structural]]@/sys/fail/2274
 mtron&gt; [-- Without a constructor, .as() is a pure test --]
 mtron&gt; -2.as(int::T[?&gt;0])  [-- fails: no constructor to rescue --]
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural]]@/sys/fail/386
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural]]@/sys/fail/2278
 </code></pre>
 <p><code>.as()</code> is also used for nominal type casting:</p>
 <pre><code class="language-mtron">mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)    [-- ok: structurally a chicken --]
 ==&gt;chicken::[name=&gt;'fuzzy feet',age=&gt;2]
 mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T) [-- ERROR: nominally not a chicken --]
-==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal]]@/sys/fail/402
+==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal]]@/sys/fail/2282
 </code></pre>
 <h3>lowest common denominator</h3>
 <p>The most specific type that subsumes a set of types. Two types always have an LCD:</p>
 <pre><code class="language-mtron">mtron&gt; [-- mono with non-isa predicates: OR the constraints --]
 mtron&gt; int::T[?&gt;0] + int::T[?&lt;120]
-==&gt;fail::[inst apply failure: int::T[is(gt(0))] [type] unable to convert int::T]@/sys/fail/414
+==&gt;fail::[inst apply failure: int::T[is(gt(0))] [type] unable to convert int::T]@/sys/fail/2286
 mtron&gt; [-- rec with isa predicates: merge fields structurally --]
 mtron&gt; rec::T[?[age=&gt;int::T,name=&gt;str::T]]@person + rec::T[?[age=&gt;int::T]]@artifact
-==&gt;fail::[inst apply failure: unable to convert type to rec::T[Obj&lt;635&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]]@/sys/fail/426
+==&gt;fail::[inst apply failure: unable to convert type to rec::T[Obj&lt;636&gt;:class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]]@/sys/fail/2290
 mtron&gt; [-- Disjoint hierarchies: fall back to universal type --]
 mtron&gt; int::T + str::T
-==&gt;fail::[inst apply failure: int::T [int::T] unable to convert str::T]@/sys/fail/438
+==&gt;fail::[inst apply failure: int::T [int::T] unable to convert str::T]@/sys/fail/2294
 </code></pre>
 
     </div>

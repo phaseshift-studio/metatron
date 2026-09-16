@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatResult;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Set;
@@ -128,6 +129,10 @@ public interface Feature extends Rec {
     }
 
     default void onToolExecuted(final Agent agent, final Obj result) {
+    }
+
+    default <R extends Obj> R getRootObj(final Agent agent) {
+        return Router.readFromSpace(this.getRoot(agent)).as();
     }
 
     default fURI getRoot(final Agent agent) {

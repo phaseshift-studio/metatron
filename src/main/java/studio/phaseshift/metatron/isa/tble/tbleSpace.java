@@ -629,7 +629,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
                 // ── key-value path ──
                 return this.readFlat(aligned, pattern);
 
-            } catch (final Exception e) {
+            } catch (final Error | Exception e) {
                 throw MTronException.of(e);
             }
         };

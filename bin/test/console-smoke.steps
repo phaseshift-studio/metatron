@@ -57,3 +57,14 @@ WAIT cancel stream 15
 KEY q
 WAIT canceled 10
 ELAPSED cancel-key
+
+# --- :bg lists a detached job for its whole run (regression) ---
+MARK bglist
+SEND 1.sleep(second::8.0)
+SLEEP 2
+KEY alt+b
+SLEEP 1
+SEND :bg
+WAIT running 5
+SILENT bglist no detached jobs
+WAIT_SINCE bglist ==>1 20

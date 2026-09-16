@@ -35,9 +35,6 @@
 
 // include::macros.adoc[]
 
-++++
-include::header.html[]
-++++
 
 ++++
 <!--------------------->
@@ -329,6 +326,3 @@ rec::T[?[
 </div>
 ++++
 
-++++
-include::footer.html[]
-++++
