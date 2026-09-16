@@ -8,8 +8,15 @@ import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.util.CommonUtil;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -40,35 +47,54 @@ public class ChatFeature extends AbstractFeature {
         final String userMessage = agent.userMessage();
         if (null == userMessage || userMessage.isBlank())
             return noobj();
+        final List<String> languages = new ArrayList<>();
+        try (final Stream<String> temp = Files.list(Path.of("conf/nanorc"))
+                .filter(f -> f.getFileName().toString().endsWith(".nanorc"))
+                //.peek(f -> LOG.info("loading syntax highlighting language: %s", f))
+                .map(f -> f.getFileName().toString().split("\\.")[0])) {
+            languages.addAll(temp.toList());
+        } catch (final IOException e) {
+            LOG.error("unable to access conf/nanorc directory");
+        }
         if (agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
             agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage(
                     """
+                    you are an agent in the metatron (http://metatron.phaseshift.studio).
                     your underlying inference model is:
                     %s
-                    you are an agent in the metatron (http://metatron.phaseshift.studio).
+                    ----
                     you can control the metatron using the mtron language by either
                       1. calling an mtron eval tool
                       2. generating executable mtron code in your thoughts and responses.
                     any messages you produce containing templates of the form ${ code } will evaluate.
                     e.g. the text
                         the result you wanted is ${ 1.-<[+2,_]>-.sum() }
-                    becomes
+                    is read by the user as
                         the result you wanted is 4.
-                    """.formatted(this.at(MODEL)));
+                    ----
+                    your thoughts and responses may contain syntax highlighting markup.
+                      {{syntax:java}}
+                      public static void method() { }
+                      {{/syntax:java}}
+                    available languages include:
+                      %s
+                    """.formatted(CommonUtil.indent(this.at(MODEL).toString(), 2), languages));
         }
 
         try {
-            this.lastMessage = agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as()
-                    .addMessage(agent, MessageBuilder.build(USER_MESSAGE_TID)
-                            .text(Str.Helper.cleanString(str(userMessage).apply()))
-                            .contents(userMessage)
-                            .time()
-                            .session(agent.hasFeature(LLM_MESSAGE_FEATURE_TID)
-                                    ? agent.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION).uriValue()
-                                    : null)
-                            .depth(agent.chatDepth())
-                            .chatId(agent.chatId())
-                            .create());
+            if (agent.hasFeature(LLM_MESSAGE_FEATURE_TID)) {
+                this.lastMessage = agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as()
+                        .addMessage(agent, MessageBuilder.build(USER_MESSAGE_TID)
+                                .text(Str.Helper.cleanString(str(userMessage).apply()))
+                                .contents(userMessage)
+                                .time()
+                                .session(agent.hasFeature(LLM_MESSAGE_FEATURE_TID)
+                                        ? agent.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION).uriValue()
+                                        : null)
+                                .depth(agent.chatDepth())
+                                .chatId(agent.chatId())
+                                .create());
+            }
         } catch (final Exception e) {
             this.logger().warn("user message write failed: %s", e.getMessage());
         }

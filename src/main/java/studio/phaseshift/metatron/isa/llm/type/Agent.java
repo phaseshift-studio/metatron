@@ -60,7 +60,6 @@ import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -75,7 +74,6 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class Agent extends MRec {
 
     private final AtomicReference<Tuple.Pair<fURI, fURI>> currentHook = new AtomicReference<>(null);
-    final AtomicBoolean interrupt = new AtomicBoolean(false);
     final AtomicBoolean first = new AtomicBoolean(true);
     private static final int MAX_TOOL_CALLS = -1;
 
@@ -113,10 +111,7 @@ public class Agent extends MRec {
 
     public Agent(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(new ConcurrentHashMap<>(jvm), tid, vid);
-        this.at(INTERRUPT, instLambda((lhs, inst) -> {
-            this.interrupt.set(true);
-            return noobj();
-        }));
+        this.at(INTERRUPT, noobj(), MUTABLE);
         this.validateFeatures();
 
     }
@@ -189,6 +184,8 @@ public class Agent extends MRec {
     // ── Factory ────────────────────────────────────────────────────
 
     public static Agent agent(final Rec config) {
+        if (config instanceof Agent)
+            return (Agent) config;
         return new Agent(config.jvm(), LLM_AGENT_TID, config.vid());
     }
 
@@ -217,10 +214,12 @@ public class Agent extends MRec {
         public static ChatResult miniChat(final String agentName, final mModel model, final String prompt) {
             final Agent chatter = new Agent(mutableMap(
                     uri(NAME), str(agentName),
-                    uri(FEATURE), lst(new ChatFeature(mutableMap(
-                            uri(MODEL), model,
-                            uri(RESPONSE), rec(uri(TO), noobj())),
-                            LLM_CHAT_FEATURE_TID, null))), LLM_AGENT_TID, null);
+                    uri(ROOT), uri(f("/sys/tmp").extend(agentName)),
+                    uri(FEATURE), lst(
+                            new ChatFeature(mutableMap(
+                                    uri(MODEL), model,
+                                    uri(RESPONSE), rec(uri(TO), noobj())),
+                                    LLM_CHAT_FEATURE_TID, null))), LLM_AGENT_TID, null);
             //model.logger().status(DEBUG, "mini-task launched by %s over %s", agentName, model.llm());
             return chatter.chat(prompt);
         }
@@ -355,12 +354,12 @@ public class Agent extends MRec {
     public void interrupt() {
         if (this.at(ACTIVE).orElse(BOOL_FALSE).boolValue()) {
             this.pushMidChatMessage(rec(TEXT, str("agent interrupt: please return from thinking")));
-            this.interrupt.set(true);
+            this.at(INTERRUPT, BOOL_TRUE, MUTABLE);
         }
     }
 
     public boolean isInterrupted() {
-        return this.interrupt.get();
+        return this.at(INTERRUPT).booleanCheck();
     }
 
     /**
@@ -453,7 +452,7 @@ public class Agent extends MRec {
         this.currentDepth = counter.incrementAndGet();
         try {
             this.at(ACTIVE, BOOL_TRUE, MUTABLE);
-            this.interrupt.set(false);
+            this.at(INTERRUPT, noobj(), MUTABLE);
             if (this.first.getAndSet(false))
                 this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
             Router.global().stats().ioStats().incrBytesSent(message.getBytes().length);
@@ -527,11 +526,11 @@ public class Agent extends MRec {
                                 chat.at(uri(RESPONSE)),
                                 chat.at(uri(FORMAT)))).build();
                 // ── Phase 3: Stream — write events to result blackboard, dispatch hooks ──
-                LOG.debug("processed message: %s %s", this.userMessage, this.feature(LLM_CHAT_FEATURE_TID).asRec().at(FORMAT).orElse(rec(uri(FORMAT), uri("none"))));
+                //LOG.debug("processed message: %s %s", this.userMessage, this.feature(LLM_CHAT_FEATURE_TID).asRec().at(FORMAT).orElse(rec(uri(FORMAT), uri("none"))));
                 agent.chat(Str.Helper.stripString(str(this.userMessage)))
                         .onToolExecuted(tool -> {
-                            StatusLine.message(str("\uD83D\uDD28 on_tool_execute: %s(%s)".formatted(tool.request().name(), tool.request().arguments())));
-                            if (this.interrupt.get()) latch.countDown();
+                            StatusLine.message(str("\uD83D\uDD28 on_tool_execute: %s(%s) => %s".formatted(tool.request().name(), tool.request().arguments(), tool.result())));
+                            if (this.at(INTERRUPT).booleanCheck()) latch.countDown();
                             final Rec toolRec = rec(
                                     uri(NAME), str(tool.request().name()),
                                     uri(TOOL_ARGUMENTS), str(tool.request().arguments()),
@@ -543,7 +542,7 @@ public class Agent extends MRec {
                         .onPartialToolCall(partialToolCall -> {
                             StatusLine.message(str("\uD83E\uDDF0 on_partial_tool_call"));
                             orphanToolRequests.get().add(partialToolCall.id());
-                            if (this.interrupt.get()) {
+                            if (this.at(INTERRUPT).booleanCheck()) {
                                 latch.countDown();
                                 return;
                             }
@@ -551,7 +550,7 @@ public class Agent extends MRec {
                         })
                         .onPartialResponse(s -> {
                             StatusLine.message(str("\uD83D\uDCAC on_partial_response"));
-                            if (this.interrupt.get()) {
+                            if (this.at(INTERRUPT).booleanCheck()) {
                                 latch.countDown();
                                 return;
                             }
@@ -561,7 +560,7 @@ public class Agent extends MRec {
                         })
                         .onPartialThinking(t -> {
                             StatusLine.message(str("\uD83D\uDCAD on_partial_thinking"));
-                            if (this.interrupt.get()) {
+                            if (this.at(INTERRUPT).booleanCheck()) {
                                 latch.countDown();
                                 return;
                             }
@@ -583,7 +582,7 @@ public class Agent extends MRec {
                             latch.countDown();
                         }).onCompleteResponse(c -> {
                             StatusLine.message(str("\uD83D\uDCE6 on_complete_response"));
-                            if (this.interrupt.get()) {
+                            if (this.at(INTERRUPT).booleanCheck()) {
                                 latch.countDown();
                                 return;
                             }
@@ -622,7 +621,7 @@ public class Agent extends MRec {
                             latch.countDown();
                         }).start();
                 latch.await();
-                if (this.interrupt.get()) {
+                if (this.at(INTERRUPT).booleanCheck()) {
                     final fURI currentFeature = this.currentHook.get().get0();
                     final fURI currentStage = this.currentHook.get().get1();
                     final String warnMessage = "[" + currentFeature + "][" + currentStage + "]";
@@ -659,7 +658,7 @@ public class Agent extends MRec {
                 this.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().clearSystemMessages();
             counter.decrementAndGet();
             this.currentDepth = 0;
-            this.interrupt.set(false);
+            this.at(INTERRUPT, noobj(), MUTABLE);
             this.at(ACTIVE, BOOL_FALSE, MUTABLE);
         }
     }

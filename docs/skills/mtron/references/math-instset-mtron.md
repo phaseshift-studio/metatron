@@ -12,43 +12,43 @@ under `/m/math/+` and available via the standard type resolution system.
 
 ## types
 
-| vid             | tid             | description                 |
-|-----------------|-----------------|-----------------------------|
-| `datetime::T`   | `uri::T`        | calendar datetime URI       |
-| *************** | *************** | *************************** |
-| `time::T`       | `real::T`       | time unit base              |
-| `millis::T`     | `time::T`       | millisecond unit            |
-| `second::T`     | `time::T`       | second unit (1000 millis)   |
-| `minute::T`     | `time::T`       | minute unit (60 seconds)    |
-| `hour::T`       | `time::T`       | hour unit (60 minutes)      |
-| `day::T`        | `time::T`       | day unit (24 hours)         |
-| *************** | *************** | *************************** |
-| `datasize::T`   | `real::T`       | data size base              |
-| `bB::T`         | `datasize::T`   | byte unit                   |
-| `kB::T`         | `datasize::T`   | kilobyte (1024 bytes)       |
-| `mB::T`         | `datasize::T`   | megabyte (1024 kB)          |
-| `gB::T`         | `datasize::T`   | gigabyte (1024 mB)          |
-| `tB::T`         | `datasize::T`   | terabyte (1024 gB)          |
-| `pB::T`         | `datasize::T`   | petabyte (1024 tB)          |
-| *************** | *************** | *************************** |
-| `currency::T`   | `real::T`       | currency base               |
-| `usd::T`        | `currency::T`   | united states currency      |
-| `euro::T`       | `currency::T`   | european union currency     |
-| *************** | *************** | *************************** |
-| `metric::T`     | `real::T`       | metric distance base        |
-| `mm::T`         | `metric::T`     | millimeter unit             |
-| `cm::T`         | `metric::T`     | centimeter (10 mm)          |
-| `dm::T`         | `metric::T`     | decimeter (10 cm)           |
-| `meter::T`      | `metric::T`     | meter (100 cm)              |
-| `km::T`         | `metric::T`     | kilometer (1000 m)          |
-| *************** | *************** | *************************** |
-| `imperial::T`   | `real::T`       | imperial distance base      |
-| `inch::T`       | `imperial::T`   | inch (25.4 mm)              |
-| `foot::T`       | `imperial::T`   | foot (12 inches)            |
-| `yard::T`       | `imperial::T`   | yard (3 feet)               |
-| `mile::T`       | `imperial::T`   | mile (1760 yards)           |
+| vid           | tid           | description               |
+|---------------|---------------|---------------------------|
+| `datetime::T` | `uri::T`      | calendar datetime URI     |
+| **time**      |               |                           |
+| `time::T`     | `real::T`     | time unit base            |
+| `millis::T`   | `time::T`     | millisecond unit          |
+| `second::T`   | `time::T`     | second unit (1000 millis) |
+| `minute::T`   | `time::T`     | minute unit (60 seconds)  |
+| `hour::T`     | `time::T`     | hour unit (60 minutes)    |
+| `day::T`      | `time::T`     | day unit (24 hours)       |
+| **data size** |               |                           |
+| `datasize::T` | `real::T`     | data size base            |
+| `bB::T`       | `datasize::T` | byte unit                 |
+| `kB::T`       | `datasize::T` | kilobyte (1024 bytes)     |
+| `mB::T`       | `datasize::T` | megabyte (1024 kB)        |
+| `gB::T`       | `datasize::T` | gigabyte (1024 mB)        |
+| `tB::T`       | `datasize::T` | terabyte (1024 gB)        |
+| `pB::T`       | `datasize::T` | petabyte (1024 tB)        |
+| **currency**  |               |                           |
+| `currency::T` | `real::T`     | currency base             |
+| `usd::T`      | `currency::T` | united states currency    |
+| `euro::T`     | `currency::T` | european union currency   |
+| **metric**    |               |                           |
+| `metric::T`   | `real::T`     | metric distance base      |
+| `mm::T`       | `metric::T`   | millimeter unit           |
+| `cm::T`       | `metric::T`   | centimeter (10 mm)        |
+| `dm::T`       | `metric::T`   | decimeter (10 cm)         |
+| `meter::T`    | `metric::T`   | meter (100 cm)            |
+| `km::T`       | `metric::T`   | kilometer (1000 m)        |
+| **imperial**  |               |                           |
+| `imperial::T` | `real::T`     | imperial distance base    |
+| `inch::T`     | `imperial::T` | inch (25.4 mm)            |
+| `foot::T`     | `imperial::T` | foot (12 inches)          |
+| `yard::T`     | `imperial::T` | yard (3 feet)             |
+| `mile::T`     | `imperial::T` | mile (1760 yards)         |
 
-### dateTime (`/m/math/datetime`)
+### datetime::T (`/m/math/datetime`)
 
 #### structure
 
@@ -154,7 +154,7 @@ All standard uri operations apply: `==` (select), `=?=` (where), plus `>>=` (rec
 <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q=>[tz=>'+0000']]>>q>>tz
 ```
 
-### time (`/m/math/time`)
+### time::T (`/m/math/time`)
 
 `time::T` is a `real::T` refinement. The time unit types (`millis::T` … `day::T`) convert to each other via `.as()`; a
 conversion preserves the total millis, changing only the unit label.
@@ -239,7 +239,7 @@ minute::150.0.normalize()
 hour::72.0.normalize()
 ```
 
-### datasize (`/m/math/datasize`)
+### datasize::T (`/m/math/datasize`)
 
 `datasize::T` is a `real::T` refinement. The data size unit types (`bB::T` … `pB::T`) convert to each other via `.as()`
 at a 1024 (binary) base; a conversion preserves the total bytes, changing only the unit label.
@@ -300,13 +300,13 @@ note: relational operators on non-exact unit conversions are a known bug (see th
 
 `normalize()` cascades upward while the value reaches ~2× the next larger unit, until stable:
 
-| from | threshold | to   |
-|------|-----------|------|
-| bB   | ≥ 2048    | kB   |
-| kB   | ≥ 2048    | mB   |
-| mB   | ≥ 2048    | gB   |
-| gB   | ≥ 2048    | tB   |
-| tB   | ≥ 2048    | pB   |
+| from | threshold | to |
+|------|-----------|----|
+| bB   | ≥ 2048    | kB |
+| kB   | ≥ 2048    | mB |
+| mB   | ≥ 2048    | gB |
+| gB   | ≥ 2048    | tB |
+| tB   | ≥ 2048    | pB |
 
 ```mtron_pre
 [-- below threshold: unchanged --]
@@ -319,7 +319,7 @@ kB::2048.0.normalize()
 tB::2048.0.normalize()
 ```
 
-### metric (`/m/math/metric`)
+### metric::T (`/m/math/metric`)
 
 `metric::T` is a `real::T` refinement. The metric distance unit types (`mm::T` … `km::T`) convert to each other via
 `.as()` at decimal ratios (the base unit is the millimeter); a conversion preserves the total millimeters, changing
@@ -393,7 +393,7 @@ dm::25.0.normalize()
 meter::2500.0.normalize()
 ```
 
-### imperial (`/m/math/imperial`)
+### imperial::T (`/m/math/imperial`)
 
 `imperial::T` is a `real::T` refinement. The imperial distance unit types (`inch::T` … `mile::T`) convert to each other
 via `.as()` at exact ratios (the base unit is the inch); a conversion preserves the total inches, changing only the
@@ -466,14 +466,14 @@ yard::7200.0.normalize()
 
 ## instructions
 
-| instruction            | signature           | description             |
-|------------------------|---------------------|-------------------------|
-| `datetime_now()`       | `# → datetime::T`   | current system datetime |
-| `normalize` (time)     | `time::T → time::T` | auto-scale time unit    |
+| instruction            | signature                   | description             |
+|------------------------|-----------------------------|-------------------------|
+| `datetime_now()`       | `# → datetime::T`           | current system datetime |
+| `normalize` (time)     | `time::T → time::T`         | auto-scale time unit    |
 | `normalize` (data)     | `datasize::T → datasize::T` | auto-scale data unit    |
-| `cos`, `sin`, `tan`    | `real::T → real::T` | trig functions          |
-| `sqrt`, `pow`, `log`   | `real::T → real::T` | math functions          |
-| `abs`, `ceil`, `floor` | `real::T → real::T` | rounding functions      |
+| `cos`, `sin`, `tan`    | `real::T → real::T`         | trig functions          |
+| `sqrt`, `pow`, `log`   | `real::T → real::T`         | math functions          |
+| `abs`, `ceil`, `floor` | `real::T → real::T`         | rounding functions      |
 
 **************************************************************************
 

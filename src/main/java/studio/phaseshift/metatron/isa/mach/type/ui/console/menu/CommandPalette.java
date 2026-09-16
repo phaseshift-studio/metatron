@@ -74,7 +74,6 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public final class CommandPalette extends MRec {
 
     public static final fURI COMMAND_PALETTE_TID = UI_CONSOLE_TID.extend("command_palette");
-    private final GraphittyLogger LOG = Graphitty.log(this);
     private final Console console;
 
     /**
@@ -219,7 +218,7 @@ public final class CommandPalette extends MRec {
                 if (args.length > 1)
                     GraphittyLogger.setDefaultTargetPane(Integer.parseInt(args[1]));
             }
-            LOG.info("logger level: %s [target pane: %s]", LogObj.getSLF4J().toString().toLowerCase(), GraphittyLogger.getDefaultTargetPane());
+            this.console.logger().info("logger level: %s [target pane: %s]", LogObj.getSLF4J().toString().toLowerCase(), GraphittyLogger.getDefaultTargetPane());
             return noobj();
         }), MUTABLE);
 
@@ -235,7 +234,7 @@ public final class CommandPalette extends MRec {
                     }
                 });
             }
-            LOG.info("typer stages {{%s}}%s{{X}}", TypeCheck.colorLevel(), TypeCheck.getEnabled());
+            this.console.logger().info("typer stages {{%s}}%s{{X}}", TypeCheck.colorLevel(), TypeCheck.getEnabled());
             return noobj();
         }), MUTABLE);
 
@@ -264,13 +263,13 @@ public final class CommandPalette extends MRec {
             final String arg = lhs.isStr() ? lhs.strValue().trim() : "";
             if (arg.startsWith("stop")) {
                 final int stopped = console.stopBackgroundJobs();
-                LOG.info("stopped {{y}}%d{{X}} detached job%s", stopped, 1 == stopped ? "" : "s");
+                this.console.logger().info("stopped {{y}}%d{{X}} detached job%s", stopped, 1 == stopped ? "" : "s");
             } else if (console.backgroundJobVids().isEmpty()) {
-                LOG.info("no detached jobs — {{y}}<" + Hotkeys.DETACH_COMBO + ">{{X}} backgrounds whatever holds the console");
+                this.console.logger().info("no detached jobs — {{y}}<" + Hotkeys.DETACH_COMBO + ">{{X}} backgrounds whatever holds the console");
             } else {
                 console.backgroundJobVids().forEach(vid ->
-                        LOG.info("{{y}}%s{{X}} {{k}}running{{X}}", vid));
-                LOG.info("{{m}}:bg stop{{X}} stops them all");
+                        this.console.logger().info("{{y}}%s{{X}} {{k}}running{{X}}", vid));
+                this.console.logger().info("{{m}}:bg stop{{X}} stops them all");
             }
             return noobj();
         }), MUTABLE);
@@ -287,7 +286,7 @@ public final class CommandPalette extends MRec {
         this.at("justify", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             final boolean leftJustify = lhs.isStr() && lhs.strValue().equalsIgnoreCase("left");
             ((Highlighter) console.getReader().getHighlighter()).justify(leftJustify);
-            LOG.info("%s justifying nested polys", leftJustify ? "{{y}}left{{X}}" : "{{y}}right{{X}}");
+            this.console.logger().info("%s justifying nested polys", leftJustify ? "{{y}}left{{X}}" : "{{y}}right{{X}}");
             return noobj();
         }), MUTABLE);
 
@@ -304,7 +303,7 @@ public final class CommandPalette extends MRec {
                     : !Tracer.java_stack.enabled();
             if (newState) Tracer.enable(Tracer.java_stack);
             else Tracer.disable(Tracer.java_stack);
-            LOG.info("tracer {{%s}}%s{{X}}", newState ? "g" : "r", newState ? "ON" : "OFF");
+            this.console.logger().info("tracer {{%s}}%s{{X}}", newState ? "g" : "r", newState ? "ON" : "OFF");
             return noobj();
         }), MUTABLE);
 
@@ -315,7 +314,7 @@ public final class CommandPalette extends MRec {
                 final Console.Language newLang = Console.Language.valueOf(langName.toUpperCase());
                 console.setLanguage(newLang);
             } catch (IllegalArgumentException e) {
-                LOG.error("unknown language: {{r}}%s{{X}}. Available: mtron, gremlin, sql", langName);
+                this.console.logger().error("unknown language: {{r}}%s{{X}}. Available: mtron, gremlin, sql", langName);
             }
             return noobj();
         }), MUTABLE);
@@ -348,7 +347,7 @@ public final class CommandPalette extends MRec {
                 console.split(direction);
                 console.renderPanes();
             } catch (IllegalArgumentException e) {
-                LOG.error(e.getMessage());
+                this.console.logger().error(e.getMessage());
             }
             return noobj();
         }), MUTABLE);
@@ -368,7 +367,7 @@ public final class CommandPalette extends MRec {
         this.at("focus", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             final String arg = lhs.isStr() ? lhs.strValue() : "";
             if (arg.isEmpty()) {
-                LOG.info("panes: %s, active: {{y}}%d{{X}}",
+                this.console.logger().info("panes: %s, active: {{y}}%d{{X}}",
                         console.getAllPanes().stream().map(p -> String.valueOf(p.id())).toList(),
                         console.getActivePane().id());
             } else {
@@ -377,7 +376,7 @@ public final class CommandPalette extends MRec {
                     console.focusPane(paneId);
                     if (console.isSplitMode()) console.renderPanes();
                 } catch (NumberFormatException e) {
-                    LOG.error("invalid pane id: {{r}}%s{{X}}", arg);
+                    this.console.logger().error("invalid pane id: {{r}}%s{{X}}", arg);
                 }
             }
             return noobj();
@@ -386,10 +385,10 @@ public final class CommandPalette extends MRec {
         // ===== panes =====
         this.at("panes", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             final List<Pane> panes = console.getAllPanes();
-            LOG.info("{{y}}%d{{X}} pane(s):", panes.size());
+            this.console.logger().info("{{y}}%d{{X}} pane(s):", panes.size());
             for (final Pane p : panes) {
                 final String active = (p == console.getActivePane()) ? " {{g}}[active]{{X}}" : "";
-                LOG.info("  [{{y}}%d{{X}}] %s, %d lines%s",
+                this.console.logger().info("  [{{y}}%d{{X}}] %s, %d lines%s",
                         p.id(), p.language().name, p.outputBuffer().size(), active);
             }
             return noobj();
@@ -405,7 +404,7 @@ public final class CommandPalette extends MRec {
                     .filter(p -> p.id() == console.getActivePane().id())
                     .findFirst().orElse(null);
             if (pane == null) {
-                LOG.error("unable to find active pane: %d", console.getActivePane().id());
+                this.console.logger().error("unable to find active pane: %d", console.getActivePane().id());
             } else {
                 pane.unsubscribe();
                 pane.vid(subURI);
@@ -488,7 +487,7 @@ public final class CommandPalette extends MRec {
                 }
             }
             if (null == match)
-                LOG.error("no floating widget named {{r}}%s{{X}}", arg);
+                this.console.logger().error("no floating widget named {{r}}%s{{X}}", arg);
             else
                 console.focusWidget(match);
             return noobj();
@@ -499,16 +498,16 @@ public final class CommandPalette extends MRec {
             final List<studio.phaseshift.metatron.isa.mach.type.ui.Widget<?>> widgets = console.getFloatingWidgets();
             final studio.phaseshift.metatron.isa.mach.type.ui.Widget<?> active = console.getActiveWidget();
             final String activeKey = null == active ? null : FloatingSurface.widgetKey(active);
-            LOG.info("{{y}}%d{{X}} floating widget(s):", widgets.size());
+            this.console.logger().info("{{y}}%d{{X}} floating widget(s):", widgets.size());
             for (final studio.phaseshift.metatron.isa.mach.type.ui.Widget<?> w : widgets) {
                 final String key = FloatingSurface.widgetKey(w);
                 final String activeMark = key.equals(activeKey) ? " {{g}}[active]{{X}}" : "";
                 final String scrollInfo = console.getFloatingSurface().scrollInfo(w);
                 final String scrollMark = scrollInfo.isEmpty() ? "" : " {{m}}" + scrollInfo + "{{X}}";
-                LOG.info("  [%s] %s%s%s", key, w.getClass().getSimpleName(), scrollMark, activeMark);
+                this.console.logger().info("  [%s] %s%s%s", key, w.getClass().getSimpleName(), scrollMark, activeMark);
             }
             if (widgets.isEmpty())
-                LOG.info("  (none)");
+                this.console.logger().info("  (none)");
             return noobj();
         }), MUTABLE);
 
@@ -518,9 +517,9 @@ public final class CommandPalette extends MRec {
             if (arg.isEmpty()) {
                 final String info = console.activeWidgetScrollInfo();
                 if (info.isEmpty())
-                    LOG.info("focused floating widget has nothing off its viewport");
+                    this.console.logger().info("focused floating widget has nothing off its viewport");
                 else
-                    LOG.info("{{y}}%s{{X}}", info);
+                    this.console.logger().info("{{y}}%s{{X}}", info);
                 return noobj();
             }
             final String[] parts = arg.split("\\s+");
@@ -542,7 +541,7 @@ public final class CommandPalette extends MRec {
                     console.scrollActiveWidgetTo(row);
                 }
                 default ->
-                        LOG.error("{{r}}%s{{X}} is not a scroll action (up, down, pageup, pagedown, left, right, top, bottom, line N)",
+                        this.console.logger().error("{{r}}%s{{X}} is not a scroll action (up, down, pageup, pagedown, left, right, top, bottom, line N)",
                                 parts[0]);
             }
             return noobj();
@@ -553,14 +552,14 @@ public final class CommandPalette extends MRec {
             final org.jline.keymap.KeyMap<?> keyMap = console.getWidgets().getKeyMap();
             final long escCount = keyMap.getBoundKeys().entrySet().stream()
                     .filter(e -> e.getKey().startsWith("\033")).count();
-            LOG.info("{{y}}%d{{X}} escape-sequence bindings in the active keymap", escCount);
-            LOG.info("built-in shortcut keys ({{g}}builtin{{X}} = held by the console, reasserted each prompt):");
+            this.console.logger().info("{{y}}%d{{X}} escape-sequence bindings in the active keymap", escCount);
+            this.console.logger().info("built-in shortcut keys ({{g}}builtin{{X}} = held by the console, reasserted each prompt):");
             for (final String sequence : console.builtinKeySequences()) {
                 final Object bound = console.boundKeyHandler(sequence);
                 final Object ours = console.builtinKeyHandler(sequence);
                 final boolean oursActive = (null != ours) && (ours == bound);
                 final String label = this.builtinKeyLabels.getOrDefault(sequence, org.jline.keymap.KeyMap.display(sequence));
-                LOG.info("  %-8s -> %s %s", label, (null == bound) ? "(unbound)" : (oursActive ? "{{g}}builtin{{X}}" : "{{r}}shadowed{{X}}"), (oursActive || null == bound) ? "" : "; owner: " + bound);
+                this.console.logger().info("  %-8s -> %s %s", label, (null == bound) ? "(unbound)" : (oursActive ? "{{g}}builtin{{X}}" : "{{r}}shadowed{{X}}"), (oursActive || null == bound) ? "" : "; owner: " + bound);
             }
             return noobj();
         }), MUTABLE);
@@ -870,7 +869,7 @@ public final class CommandPalette extends MRec {
                     }
                 } catch (final Exception e) {
                     // a malformed event must never break the input loop
-                    LOG.error(e);
+                    this.console.logger().error(e);
                 }
                 return true;
             };
@@ -992,7 +991,7 @@ public final class CommandPalette extends MRec {
                     }
                 }
             } catch (final Exception e) {
-                LOG.error(e);
+                this.console.logger().error(e);
             }
             return true;
         }, key(Console.getTerminal(), InfoCmp.Capability.tab));

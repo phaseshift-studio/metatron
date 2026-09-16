@@ -113,7 +113,7 @@ maven build commands are attached to the `project::T` for each of access.
 
 ```mtron
 mtron> <mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/scratch)
-==>fail::[inst apply failure: java.lang.ClassCastException: class studio.phaseshift.metatron.isa.m.type.impl.MCode cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MCode and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/674
+==>fail::[inst apply failure: java.lang.ClassCastException: class studio.phaseshift.metatron.isa.m.type.impl.MCode cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MCode and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/248
 ```
 Now that the project is stored in space, build commands can be added and the project can be built.
 
@@ -138,14 +138,19 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
 mtron> */dev/scratch/command/mvn_clean
 ==>result{4}::[
     status=>success,
-    runtime=>millis::715.0000,
+    runtime=>millis::796.0000,
     command=>'mvn -f src/test/resources/scratch clean',
-    output=>!*/sys/tmp/3f9ae3de]
+    output=>!*/sys/tmp/ae3794f5]
 mtron> */dev/scratch/command/mvn_build>>output
+==>{4}'WARNING: A restricted method in java.lang.System has been called'
+==>{4}'WARNING: java.lang.System::load has been called by org.fusesource.jansi.internal.JansiLoader in an unnamed module (file:/usr/share/maven/lib/jansi-2.4.1.jar)'
+==>{4}'WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module'
+==>{4}'WARNING: Restricted methods will be blocked in a future release unless native access is enabled'
+==>{4}''
 ==>{4}'WARNING: A terminally deprecated method in sun.misc.Unsafe has been called'
-==>{4}'WARNING: sun.misc.Unsafe::staticFieldBase has been called by com.google.inject.internal.aop.HiddenClassDefiner (file:/home/killswitch/.sdkman/candidates/maven/current/lib/guice-5.1.0-classes.jar)'
-==>{4}'WARNING: Please consider reporting this to the maintainers of class com.google.inject.internal.aop.HiddenClassDefiner'
-==>{4}'WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release'
+==>{4}'WARNING: sun.misc.Unsafe::objectFieldOffset has been called by com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper (file:/usr/share/maven/lib/guava-33.2.1-jre.jar)'
+==>{4}'WARNING: Please consider reporting this to the maintainers of class com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper'
+==>{4}'WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release'
 ==>{4}'[INFO] Scanning for projects...'
 ==>{12}'[INFO] '
 ==>{4}'[INFO] --------------------< com.example.scratch:scratch >---------------------'
@@ -153,13 +158,13 @@ mtron> */dev/scratch/command/mvn_build>>output
 ==>{4}'[INFO]   from pom.xml'
 ==>{4}'[INFO] --------------------------------[ jar ]---------------------------------'
 ==>{4}'[INFO] --- resources:3.3.1:resources (default-resources) @ scratch ---'
-==>{4}'[INFO] skip non existing resourceDirectory /home/killswitch/software/metatron/src/test/resources/scratch/src/main/resources'
+==>{4}'[INFO] skip non existing resourceDirectory /work/src/test/resources/scratch/src/main/resources'
 ==>{4}'[INFO] --- compiler:3.13.0:compile (default-compile) @ scratch ---'
 ==>{4}'[INFO] Nothing to compile - all classes are up to date.'
 ==>{12}'[INFO] ------------------------------------------------------------------------'
 ==>{4}'[INFO] BUILD SUCCESS'
-==>{4}'[INFO] Total time:  0.236 s'
-==>{4}'[INFO] Finished at: 2026-09-13T14:48:00-06:00'
+==>{4}'[INFO] Total time:  0.270 s'
+==>{4}'[INFO] Finished at: 2026-09-15T18:35:40Z'
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.
 
@@ -414,13 +419,17 @@ itemized in the subsequent table.
 
 ```mtron
 mtron> @/dev/scratch/idx/Echo/method/speak >>= [body =>
-         -<'\n'.as(rec::T)>>=(
+         -<'
+'.as(rec::T)>>=(
          [?>2.?<4 => 'return "marko";'])>>.
-         >-?str<=str{*}('\n')].explain()
+         >-?str<=str{*}('
+')].explain()
 ==>"""
     op      dom      rng        args                                                                                                                     f    desc      c_dom  c_rng 
     at      A{?}::T  rec{*}::T  /dev/scratch/idx/Echo/method/speak                                                                                       <j>  standard  {?}    {*}   
-    update  A::T     B{*}::T    [body=>split('\n').as(rec::T).update([is(gt(2)).is(lt(4))=>'return "marko";']).rshift().merge?rng=str&dom=str{*}('\n')]  <j>  standard  {1}    {*}   
+    update  A::T     B{*}::T    [body=>split('
+').as(rec::T).update([is(gt(2)).is(lt(4))=>'return "marko";']).rshift().merge?rng=str&dom=str{*}('
+')]  <j>  standard  {1}    {*}   
    """
 ```
 **NOTE**: when working in the `console::T`, the the interactive `explain_tool::T` provides a much richer analysis of an

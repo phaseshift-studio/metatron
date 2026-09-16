@@ -168,7 +168,7 @@ whether to dig, not the harness.
 
 ### 2.5 Working scratchpad & episodic overlay
 
-- **`LedgerFeature`** — a persistent keyed k/v scratchpad at a space URI:
+- **`ToDoFeature`** — a persistent keyed k/v scratchpad at a space URI:
   read/write/search (a `search` inst defined *in mtron, in the space*) + archive/restore; key list injected via system
   message each turn. Never cleared across chats.
 - **`IterationFeature`** — overlays a linked iteration graph (`LLM_ITERATION_TYPE`:

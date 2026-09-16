@@ -202,7 +202,7 @@ public class MarkdownRunnerTest {
                 "references/*.md must get a sibling html");
         assertFalse(Files.exists(skillRoot.resolve("assets").resolve("README.html")),
                 "a stray non-skill .md must not be rendered to html");
-        // page chrome must link the website stylesheet (depth-rewritten by loadWebsiteHeader)
+        // page chrome must link the website stylesheet (depth-rewritten by SiteChrome)
         final String html = Files.readString(skillRoot.resolve("SKILL.html"));
         assertTrue(html.contains("css/metatron.css"), "page chrome must link the website stylesheet: " + html);
         assertEquals(0, MarkdownRunner.renderSiteHtml(skillsDir), "a second pass must write nothing (idempotent)");

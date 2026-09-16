@@ -293,10 +293,8 @@ public class MarkdownRunner {
         final Path htmlFile = mdFile.resolveSibling(mdName.substring(0, mdName.length() - ".md".length()) + ".html");
 
         final String depth = depth(websiteRoot, htmlFile);
-        final String header = InstSetDocGenerator.loadWebsiteHeader(depth)
-                .replace("<title>PhaseShift Studio</title>",
-                        "<title>" + fm.name() + " · PhaseShift Studio</title>");
-        final String footer = InstSetDocGenerator.loadWebsiteFooter(depth);
+        final String header = SiteChrome.header(depth, fm.name() + " · PhaseShift Studio", "");
+        final String footer = SiteChrome.footer(depth);
 
         final String body = HTMLMarkdownSerializer.toHTML(fm.body());
         final String bodyLinks = MD_HREF.matcher(body).replaceAll(mr ->

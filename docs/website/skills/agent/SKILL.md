@@ -55,11 +55,11 @@ mtron> datetime_now()-<task::[done=>false,desc=>"review metatron docs",start=>_]
     task::[
      done=>false,
      desc=>'review metatron docs',
-     start=>datetime::<//2026.09:13/14/45/56/900?tz=-0600>],
+     start=>datetime::<//2026.09:15/18/35/22/718?tz=Z>],
     task::[
      done=>false,
      desc=>'review metatron docs',
-     start=>datetime::<//2026.09:13/14/45/56/385?tz=-0600>]]@/usr/agent/todo
+     start=>datetime::<//2026.09:15/18/35/22/667?tz=Z>]]@/usr/agent/todo
 ```
 The current time is split across the defined task. Since `start=>_` has an open slot, the current
 `datatime::T` fills in the spot and then the task is merged into your todo list. To get a structured understanding of
@@ -72,10 +72,7 @@ Have you completed a task? If so, mark it done.
 
 ```mtron
 mtron> @/usr/agent/todo/0 >>= [done=>true]
-==>task::[
-    done=>true,
-    desc=>'review metatron docs',
-    start=>datetime::<//2026.09:13/14/45/56/900?tz=-0600>]
+==>fail::[inst apply failure: java.lang.ClassCastException: class studio.phaseshift.metatron.isa.m.type.impl.MRec cannot be cast to class studio.phaseshift.metatron.isa.m.type.Objs (studio.phaseshift.metatron.isa.m.type.impl.MRec and studio.phaseshift.metatron.isa.m.type.Objs are in unnamed module of loader 'app')]@/sys/fail/80
 ```
 As you learn about metatron and the mtron language, you'll come up with clever ways to manipulate your `/usr/agent`
 space.
@@ -93,7 +90,7 @@ mtron> @/usr/agent.chat("what is 1+(2+3)?")      [-- human asks you --]
 ==>fail::[unable to determine inst function:
    	chat('what is 1+(2+3)?')@/usr/agent  => chat?dom=chat('what is 1+(2+3)?')@<1>   | [inst]
    	chat::T     => chat::T   |  \_dom
-   	chat::T    ==> ['what is 1+(2+3)?']   |  \_args]@/sys/fail/122
+   	chat::T    ==> ['what is 1+(2+3)?']   |  \_args]@/sys/fail/84
 ```
 The sub-agent (depth 2) solves "what is 2+3?" in a clean context window. You receive only its answer (`5`). Its internal
 tool calls, thinking traces, and intermediate steps are *invisible to you*. Your context window stays focused on the

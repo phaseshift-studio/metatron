@@ -237,7 +237,9 @@ public class AsciiDocRunner {
         ////////////////////////////////////////////////////////////////////////////////////
 
 
-        // ── Copy supporting files (header.html, footer.html, images) ────
+        // ── Copy supporting files (images, etc.) ────
+        // (header.html/footer.html are NOT copied for the include:: mechanism
+        // anymore — SiteChrome reads them straight from docs/website/includes.)
         final Path includesDir = adocBaseDir.getParent().resolve("includes");
         final List<Path> supportDirs = new ArrayList<>();
         supportDirs.add(adocBaseDir);
@@ -255,29 +257,24 @@ public class AsciiDocRunner {
         }
 
         // ── Generate HTML ───────────────────────────────────────────────
-        // single-file: <dir>/<basename>.html   ·   book: <dir>/tractatus.html
+        // single-file: <dir>/<basename>.html · book: <dir>/{index,start,tractatus}.html.
+        // Each body fragment is wrapped with the shared SiteChrome header/footer, so
+        // the chrome comes from docs/website/includes/header.html + footer.html — the
+        // same source the markdown and instset runners use.
         if (htmlPath != null) {
-            final Path sourceAdoc = singleFile
-                    ? outputPath.resolve(inputPath.getFileName())
-                    : outputPath.resolve("tractatus.adoc");
-            final String baseName = inputPath.getFileName().toString();
-            final Path htmlOut = singleFile
-                    ? htmlPath.resolve(baseName.endsWith(".adoc") ? baseName.substring(0, baseName.length() - 5) + ".html" : baseName + ".html")
-                    : htmlPath.resolve("tractatus.html");
-            if (!Files.exists(sourceAdoc)) {
-                LOG.warn("[docs-runner] " + sourceAdoc.getFileName() + " not found — skipping HTML");
-            } else {
-                LOG.info("[docs-runner] " + sourceAdoc.getFileName() + " -> " + htmlOut);
-                try (final Asciidoctor asciidoctor = Asciidoctor.Factory.create()) {
-                    final String html = asciidoctor.convert(
-                            Files.readString(sourceAdoc),
-                            Options.builder()
-                                    .safe(SafeMode.UNSAFE)
-                                    .toFile(false)
-                                    .baseDir(outputPath.toFile())
-                                    .build());
-                    Files.writeString(htmlOut, html);
-                    LOG.info("[docs-runner] wrote " + htmlOut);
+            try (final Asciidoctor asciidoctor = Asciidoctor.Factory.create()) {
+                if (singleFile) {
+                    final String baseName = inputPath.getFileName().toString();
+                    final Path htmlOut = htmlPath.resolve(
+                            baseName.endsWith(".adoc")
+                                    ? baseName.substring(0, baseName.length() - ".adoc".length()) + ".html"
+                                    : baseName + ".html");
+                    renderChromePage(asciidoctor, outputPath.resolve(inputPath.getFileName()), htmlOut, outputPath);
+                } else {
+                    for (final String page : CHROME_PAGES) {
+                        renderChromePage(asciidoctor, outputPath.resolve(page + ".adoc"),
+                                htmlPath.resolve(page + ".html"), outputPath);
+                    }
                 }
             }
         }
@@ -287,11 +284,53 @@ public class AsciiDocRunner {
         System.exit(0);
     }
 
+    /**
+     * The standalone ("chrome") pages rendered in book mode: {@code index}
+     * (homepage), {@code start} (quick start), and {@code tractatus} (the
+     * super-page that {@code include::}s every section .adoc). Everything else is a
+     * section or template pulled into tractatus and is not rendered standalone.
+     */
+    private static final List<String> CHROME_PAGES = List.of("index", "start", "tractatus");
+
+    private static final Pattern TITLE_ATTR = Pattern.compile("^:title:\\s*(.+)$", Pattern.MULTILINE);
+
+    /**
+     * Render one .adoc to a full page: the Asciidoctor body fragment (no header/
+     * footer — the chrome comes from {@link SiteChrome}) wrapped with the shared
+     * website header/footer at depth 0 (top-level). The page title is the
+     * document's {@code :title:} attribute, falling back to the default.
+     */
+    private static void renderChromePage(final Asciidoctor asciidoctor, final Path sourceAdoc,
+                                         final Path htmlOut, final Path baseDir) throws IOException {
+        if (!Files.exists(sourceAdoc)) {
+            LOG.warn("[docs-runner] " + sourceAdoc.getFileName() + " not found — skipping HTML");
+            return;
+        }
+        final String adoc = Files.readString(sourceAdoc);
+        final String body = asciidoctor.convert(adoc, Options.builder()
+                .safe(SafeMode.UNSAFE)
+                .standalone(false)
+                .toFile(false)
+                .baseDir(baseDir.toFile())
+                .build());
+        final String page = SiteChrome.header("", titleOf(adoc), "") + body + SiteChrome.footer("");
+        Files.writeString(htmlOut, page);
+        LOG.info("[docs-runner] " + sourceAdoc.getFileName() + " -> " + htmlOut);
+    }
+
+    /**
+     * The document title from its {@code :title:} attribute ({@code :title: Quick
+     * Start — metatron}), or the default when absent.
+     */
+    private static String titleOf(final String adoc) {
+        final Matcher m = TITLE_ATTR.matcher(adoc);
+        return m.find() ? m.group(1).strip() : "PhaseShift Studio";
+    }
+
     private static final Pattern ADOC_INCLUDE = Pattern.compile("include::\\s*([\\w./-]+\\.adoc)");
 
     /// In single-file mode, collect the target plus every (transitively) included .adoc file so
-    /// `include::X.adoc[]` resolves when only that file is (re)built. Non-.adoc includes
-    /// (header.html, css, images) are handled by the usual support-file copy step.
+    /// `include::X.adoc[]` resolves when only that file is (re)built.
     private static Set<Path> collectAdocIncludes(final Path baseDir, final Path start) {
         final Set<Path> needed = new LinkedHashSet<>();
         final Deque<Path> pending = new ArrayDeque<>();

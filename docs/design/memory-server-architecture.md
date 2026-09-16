@@ -253,7 +253,7 @@ handlers (`mcp_mtron_wsHandler` + `mcp_httpHandler`), plus:
   matrix:
 
   | Verb | Semantics (implemented, 2026-08-29) |
-    |------|--------|
+      |------|--------|
   | `GET /path` (+`?+` branches, `?out=` rendering, qproc filters) | ✅ **read** — the default door |
   | `PUT /path` | ✅ **replace** — body (IN serializer, default `application/json`, and the raw string handed the mtron data grammar as a fallback) written via `Router.writeToSpace`. `403 read-only` gates it per-route |
   | `POST /path` | ✅ **replace** — alias of PUT, so mtron's `->` write idiom (which sends POST) works unchanged |
@@ -274,7 +274,7 @@ handlers (`mcp_mtron_wsHandler` + `mcp_httpHandler`), plus:
   identity, not the body) and auth. Response renderings are selected by the output MIME (`MIME.MIMEType.serializer()`):
 
   | `?out=` | Renderer | Status |
-    |---------|----------|--------|
+      |---------|----------|--------|
   | `text/plain` | the obj's `.toString()` | ✅ works |
   | `application/json` | `ObjJSONSerializer.web()` | ✅ works (pointers flattened to strings — parseable anywhere) |
   | `application/x-mtron` | `ObjmtronSerializer` | ✅ works (typed recs, live `!*` inst pointers) — but browsers download it as an octet stream: for programs, not tabs |
@@ -303,7 +303,7 @@ of `AGENTS.md`** (and a
 - Standing: use `remember` (MCP tool) for durable facts; `status()` for the full list.
 ```
 
-**What's needed:** one feature (`BriefFeature`, ~`LedgerFeature`-sized), the **M1 obj→document-structure intermediate
+**What's needed:** one feature (`BriefFeature`, ~`ToDoFeature`-sized), the **M1 obj→document-structure intermediate
 map** as its renderer (no new rendering path — `markdown::T` is the target shape, same map as
 `?out=text/markdown`), and a write rule: only touch the fenced section, preserve the harness's own file content (never
 rewrite a human-maintained

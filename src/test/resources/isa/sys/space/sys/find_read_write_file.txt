@@ -1,0 +1,7 @@
+The NVIDIA GeForce RTX 3090 is a high-end graphics card built on the Ampere architecture, released in September 2020 with a launch price of $1,499.  
+It features 24 GB of GDDR6X memory and 10,496 CUDA cores, offering performance comparable to previous-generation Titan-class cards while supporting NVLink for multi-GPU setups. 
+Originally criticized for its high cost relative to the RTX 3080, it has become a highly regarded option for AI development, local inference, 
+and professional creative workloads due to its large VRAM capacity and stable compute performance. 
+By 2026, the card's used market value has dropped significantly to approximately $800–$1,000, 
+making it one of the most cost-effective entry points for developers needing high-memory GPUs without the expense of datacenter 
+hardware like the A100 or H100.

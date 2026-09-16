@@ -108,6 +108,7 @@
         }
     </style>
     <script src="../../js/metatron.js" type="text/javascript"></script>
+    
 </head>
 <body class="d-flex flex-column min-vh-100" spellcheck="false">
 <!------------------------------------------------------->
@@ -343,7 +344,7 @@
     </div>
     <div>
         <div class="d-flex pt-1 m-n1">
-            <a class="btn btn-lg-square btn-dark text-primary m-1" href="./console/index.html">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../../console/index.html">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
         </div>
@@ -682,43 +683,65 @@ mtron&gt; */a/b?docq
 <code>?docq</code> of the things they cover -- start there before re-reading the prose.</p>
 <p><strong>Language &amp; types</strong></p>
 <ul>
-<li><a href="references/language-reference-mtron.html">Full Language Reference</a> -- types, operators, instruction sets, expression
-model.</li>
-<li><a href="references/type-system-mtron.html">Type System</a> -- vid/tid, nominal vs structural, pattern types.</li>
-<li><a href="references/math-instset-mtron.html">Math Instruction Set</a> -- <code>/m/math</code> constants, unit types, the <code>mathInstSet</code>.</li>
-<li><a href="references/sys-instset-mtron.html">System Instruction Set</a> -- <code>/m/sys</code> <code>bash</code>/<code>native</code>/<code>sleep</code>/<code>stdout</code>/<code>stdin</code>; the
-guarded shell.</li>
+<li><a href="references/language-reference-mtron.html">mtron language reference</a> -- the whole surface in 23 sections: mono/poly/call
+types, coefficients, arithmetic and strings, <code>*</code> dereference, <code>.as(type::T)</code> casting, map/filter/group, merge/split,
+<code>&gt;&gt;</code>/<code>&lt;&lt;</code>, the <code>|</code> barrier, <code>&gt;&gt;=</code> update, <code>!*</code>/<code>!@</code> auto-references, path ops, failure handling, and the expression
+evaluation model.</li>
+<li><a href="references/type-system-mtron.html">mtron type system</a> -- vid/tid, coefficients, the universal type, defining types,
+predicates (isa vs non-isa), nominal vs structural, refinement, pattern/generic types, casting, lowest common
+denominator.</li>
 </ul>
 <p><strong>Spaces &amp; data sources</strong></p>
 <ul>
-<li><a href="references/sys_instset_mtron.html">fsSpace</a> -- file system as space; MIME, <code>?mimeq</code>, file I/O.</li>
-<li><a href="references/connecting-datasources.html">Connecting Data Sources</a> -- the pattern + route model for external sources;
-<code>!*</code> references.</li>
-<li><a href="references/dckrspace-mtron.html">dckrSpace</a> -- Docker: containers, images, volumes, compose as a space.</li>
-<li><a href="references/web-instset-mtron.html">Web Instruction Set</a> -- <code>/m/web</code> protocol surfaces, MIME document types,
-route tables, and the conventions a mount follows; the server side of the web carriers.</li>
-<li><a href="references/web_instset_mtron.html">httpPage Fetching</a> -- HTTP pages, HTML parse trees, traversal.</li>
+<li><a href="references/sys-instset-mtron.html">sys instruction set + fsSpace</a> -- one file, two docs: <code>/m/sys</code> (the guarded <code>bash</code>
+and its security modulators, <code>sleep</code>/<code>stdout</code>/<code>stdin</code>, mounted state) and the full <code>fsspace::T</code> tour (configuration,
+MIME detection and the mime-to-tid map, <code>?mimeq</code> typed strings, file read/write, binary and structural reads,
+pattern-based access, <code>lineq</code> line-level editing).</li>
+<li><a href="references/math-instset-mtron.html">math instruction set</a> -- <code>/m/math</code>: the unit types (<code>time</code>, <code>datasize</code>,
+<code>currency</code>), the <code>datetime</code> uri and its construction/arithmetic, <code>normalize</code> and the trig/rounding instructions, and
+the <code>pi</code>/<code>e</code> constants.</li>
+<li><a href="references/web-instset-mtron.html">web instruction set</a> -- <code>/m/web</code>: the protocol surfaces and MIME document types,
+<code>route::T</code> mount tables and the literal-prefix rule, templated route values, mounting an obj, and what is not
+available yet.</li>
+<li><a href="references/tble-instset-mtron.html">tble instruction set</a> -- <code>/m/tble</code> and <code>tblespace::T</code>: a JDBC database as a space
+-- tables that appear from the first rec write, typed rows, the SQL rewrite family that pushes reads down into the
+backend, the key/value fall-through, <code>!*</code> foreign keys, and native <code>sql()</code>.</li>
+<li><a href="references/ui-instset-mtron.html">ui instruction set</a> -- <code>/m/mach/ui</code>: a widget as a rec whose state is its own
+map, <code>as?str&lt;=widget(str::T)</code> to render one inline anywhere a str fits, the <code>style::T</code> keys (border, width,
+anchor, <code>top</code>/<code>left</code>, the viewport), the anchor arithmetic and the pointer vocabulary (chevron to move, corner
+marker to reshape), and the three insts <code>display</code>/<code>nano</code>/<code>less</code>.</li>
+<li><a href="references/dckrspace-mtron.html">dckrSpace</a> -- Docker as a space: containers, images, volumes, networks, compose,
+remote hosts, and an end-to-end SQLite container + tbleSpace walkthrough.</li>
+<li><a href="references/connecting-datasources.html">Connecting Data Sources</a> -- the pattern + route model, discovering a space's
+prefixes from <code>*/sys/space/...</code>, <code>!*</code> lazy references, validation, and common failures.</li>
 </ul>
 <p><strong>Protocol &amp; services</strong></p>
 <ul>
-<li><a href="references/mcp-server-architecture.html">MCP Server Architecture</a> -- building MCP servers in mtron; tool registration.</li>
-<li><a href="references/mcp-server-notifications.html">MCP Server Notifications</a> -- server-to-client push via subq on a WebSocket
-space.</li>
-<li><a href="references/dsh-mtron.html">DSH Memory Bus</a> -- the first inter-harness memory adapter (DSH transcripts into a metatron
-agent tree).</li>
+<li><a href="references/mcp-server-architecture.html">MCP Server Architecture</a> -- building MCP servers in mtron: <code>mcp_wsHandler</code> /
+<code>mcp_mtron_wsHandler</code>, websocket routing, tool registration, <code>SpaceChatMemoryStore</code>, and the agent memory flow.</li>
+<li><a href="references/mcp-server-notifications.html">MCP Server Notifications</a> -- server-to-client push via a <code>?subq</code> subscription
+on a WebSocket space; boot integration and the development pitfalls.</li>
+<li><a href="references/dsh-mtron.html">DSH Memory Bus</a> -- the first inter-harness memory adapter: a DSH zstd JSONL transcript
+becomes typed message recs, loaded and written into a native metatron agent memory tree.</li>
 </ul>
 <p><strong>Practice</strong></p>
 <ul>
-<li><a href="references/answer-questions.html">Answering Questions</a> -- how to answer mtron/metatron questions and troubleshoot.</li>
-<li><a href="references/unsloth-training-mtron.html">Unsloth Training</a> -- fine-tuning an LLM on mtron; the training pipeline;
-<code>@Training</code> extraction.</li>
+<li><a href="references/unsloth-training-mtron.html">Unsloth Training</a> -- fine-tuning an LLM on mtron: dataset extraction via
+<code>@Training</code>, model selection, training, GGUF export, and Ollama/HuggingFace deployment.</li>
 </ul>
-<p><strong>Coming soon</strong> (the deep dives this entry doc points at but which are not yet split out):</p>
+<p><strong>Not yet split out</strong> (deep dives this entry doc points at, but which have no reference doc of their own):</p>
 <ul>
-<li><code>update</code> -- the full <code>&gt;&gt;=</code> update algebra: overlay, <code>+N</code> numeric add, <code>+[v]</code> set promotion, <code>none</code> delete; <code>@</code> anchor
-vs <code>*</code> clone; the HTTP PATCH door.</li>
-<li><code>qprocs</code> -- the <code>?q</code> family: <code>?docq</code>, <code>?incq</code> (auto-increment), <code>?subq</code> (pubsub), <code>?hasq</code>, <code>?statq</code> (address-level
-read/write heat), and how a qproc's data space is independent of the obj's.</li>
+<li><code>qprocs</code> -- the <code>?q</code> family as a whole: <code>?docq</code> (each instruction's own doc), <code>?incq</code> (auto-increment), <code>?hasq</code>,
+<code>?statq</code> (address-level read/write heat), <code>?subq</code> (pubsub), and the fact that a qproc's data space is independent of
+the obj's. Only two corners are written down today: <code>?subq</code> in
+<a href="references/mcp-server-notifications.html">MCP Server Notifications</a>, and <code>?mimeq</code>/<code>?lineq</code> in the fsSpace half of
+<a href="references/sys-instset-mtron.html">sys instruction set</a>.</li>
+<li>the rest of the <code>&gt;&gt;=</code> update algebra -- <code>+[v]</code> set promotion and the HTTP PATCH door. Overlay merge, <code>+N</code>, <code>none</code>
+delete, and anchor-vs-clone <em>are</em> covered (language reference section 14); the door is specified in
+<code>docs/design/memory-server-architecture.md</code>.</li>
+<li><code>httpPage</code> fetching -- the client side of the web carrier: <code>http://</code> dereference, HTML parse trees, traversal. The web
+doc's <em>see also</em> still points at a sibling <code>web_instset_mtron.md</code>, but that file is gone; the only surviving copy is
+a stale build artifact under <code>docs/website/skills/mtron/references/http-page-fetching.md</code>.</li>
 </ul>
 
     </div>

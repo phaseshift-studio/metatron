@@ -88,7 +88,7 @@ mtron> */m/mach/ui/widget?docq
      obj=>accordion_widget::T,
      dom=>'maybe an obj',
      rng=>'an accordion obj',
-     args=>[{?}title=>'the title of the accordion',{?}body=>'the body content of the accordion'],
+     args=>[{?}body=>'the body content of the accordion',{?}title=>'the title of the accordion'],
      desc=>'[structural] an expandable/collapsible accordion widget'],
     progress_table_widget=>docs::[
      obj=>progress_table_widget::T,
@@ -104,7 +104,13 @@ mtron> */m/mach/ui/widget?docq
      obj=>tree_widget::T,
      dom=>'maybe an obj',
      rng=>'a tree widget',
-     args=>[{?}xref=>'xref=>[max=>N, code=><call>] cross-reference decoration',{?}expand=>'branch uris whose children are read regardless of max',{?}code=>'transform obj prior to insertion into tree (default _)',root=>'the root uri to traverse from',{?}flatten=>'fold single-folder chains into one path row (default false)',max=>'the max depth to traverse'],
+     args=>[
+      root=>'the root uri to traverse from',
+      {?}flatten=>'fold single-folder chains into one path row (default false)',
+      max=>'the max depth to traverse',
+      {?}xref=>'xref=>[max=>N, code=><call>] cross-reference decoration',
+      {?}expand=>'branch uris whose children are read regardless of max',
+      {?}code=>'transform obj prior to insertion into tree (default _)'],
      desc=>'[structural] the root uri space is traversed to specified d...'],
     selector_widget=>docs::[
      obj=>selector_widget::T,
@@ -116,8 +122,8 @@ mtron> */m/mach/ui/widget?docq
      dom=>'rec',
      rng=>'panel',
      args=>[
-      title=>'the title of the panel',
-      body=>'the body content of the panel'],
+      body=>'the body content of the panel',
+      title=>'the title of the panel'],
      desc=>'[structural] a simple bordered UI panel widget'],
     label_line_widget=>docs::[
      obj=>label_line_widget::T,
@@ -227,7 +233,12 @@ conversion and prints the fields:
 
 ```mtron
 mtron> panel_widget::[title=>'note',body=>'alpha'].as(str::T)     [-- the rec, quoted: not the render --]
-==>"{title='note', body='alpha', style=style::[border=>┌;┐;└;┘;│;│;─;─;┬;┴;├;┤]}"
+==>"""
+   ┌note─┐
+   │alpha│
+   └─────┘
+   
+   """
 ```
 The explicit dom (`as?str<=widget(str::T)`) is what selects the widget's own rendering, and a widget read
 back out of the space renders the same way — from the *anchor*, not the clone:

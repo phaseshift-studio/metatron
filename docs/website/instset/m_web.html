@@ -108,7 +108,7 @@
         }
     </style>
     <script src="../js/metatron.js" type="text/javascript"></script>
-    <link rel="stylesheet" href="../css/instset_doc.css">
+        <link rel="stylesheet" href="../css/instset_doc.css">
 </head>
 <body class="d-flex flex-column min-vh-100" spellcheck="false">
 <!------------------------------------------------------->
@@ -344,7 +344,7 @@
     </div>
     <div>
         <div class="d-flex pt-1 m-n1">
-            <a class="btn btn-lg-square btn-dark text-primary m-1" href="./console/index.html">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../console/index.html">
                 <i class="bi bi-terminal text-primary"></i>
             </a>
         </div>
@@ -482,6 +482,7 @@
   rest::T,
   mtron::T,
   stream::T,
+  sse::T,
   protocol::T,
   mcp_client::T],
  inst=&gt;[
@@ -514,7 +515,7 @@
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">8</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">41</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">2</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">8</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">42</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">2</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -568,6 +569,9 @@
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__web__serializer" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">serializer</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__web__sse" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sse</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__web__stream" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">stream</span>
@@ -768,7 +772,7 @@
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">41</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">42</span></h3>
     <div class="card mb-3" id="__m__web__mime__css">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1041,7 +1045,7 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         </span>
         <small class="text-muted code">/m/web/mime</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@/m/web/mime</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@/m/web/mime</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] indicates the media type of the data as specified by RFC-9110</p>
@@ -1269,6 +1273,22 @@ webHelper.routeProblems(rec) reports entries that cannot be mounted</code></pre>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[nominal] </p>
+</div>
+</div><div class="card mb-3" id="__m__web__sse">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">sse::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__stream" class="instset-doc-small-code text-info code">/m/web/stream::T</a></span>
+        </span>
+        <small class="text-muted code">/m/web/sse</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">stream::T@/m/web/sse</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[nominal] </p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">sse::T refines stream::T; an mcp http GET opens an sse stream to push server notifications</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__web__stream">
     <div class="card-header d-flex justify-content-between align-items-center py-2">

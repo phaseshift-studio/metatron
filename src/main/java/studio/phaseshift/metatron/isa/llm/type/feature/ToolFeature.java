@@ -124,6 +124,12 @@ public class ToolFeature extends AbstractFeature {
         if (!this.mcpClients.isEmpty())
             this.addToolProvider(McpToolProvider.builder().mcpClients(this.mcpClients.stream().map(mcpClient::client).toList()).build());
         LOG.status(DEBUG, "registering %s tools", this.toolProvider.getTools().size());
+        if (agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
+            agent.feature(LLM_SYSTEM_FEATURE_TID)
+                    .<SystemFeature>as().addSystemMessage("""
+                                                          ----
+                                                          use list_tools() to see which tools you have access to.""");
+        }
         return noobj();
     }
 
