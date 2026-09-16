@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>PhaseShift Studio</title>
+    <title>ide · PhaseShift Studio</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -108,6 +108,7 @@
         }
     </style>
     <script src="../../js/metatron.js" type="text/javascript"></script>
+    
 </head>
 <body class="d-flex flex-column min-vh-100" spellcheck="false">
 <!------------------------------------------------------->
@@ -506,14 +507,19 @@ maven build commands are attached to the <code>project::T</code> for each of acc
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result{4}::[
     status=&gt;success,
-    runtime=&gt;millis::797.0000,
+    runtime=&gt;millis::783.0000,
     command=&gt;'mvn -f src/test/resources/scratch clean',
-    output=&gt;!*/sys/tmp/c78dc5bf]
+    output=&gt;!*/sys/tmp/69a6c7ba]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
+==&gt;{4}'WARNING: A restricted method in java.lang.System has been called'
+==&gt;{4}'WARNING: java.lang.System::load has been called by org.fusesource.jansi.internal.JansiLoader in an unnamed module (file:/usr/share/maven/lib/jansi-2.4.1.jar)'
+==&gt;{4}'WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module'
+==&gt;{4}'WARNING: Restricted methods will be blocked in a future release unless native access is enabled'
+==&gt;{4}''
 ==&gt;{4}'WARNING: A terminally deprecated method in sun.misc.Unsafe has been called'
-==&gt;{4}'WARNING: sun.misc.Unsafe::staticFieldBase has been called by com.google.inject.internal.aop.HiddenClassDefiner (file:/home/killswitch/.sdkman/candidates/maven/current/lib/guice-5.1.0-classes.jar)'
-==&gt;{4}'WARNING: Please consider reporting this to the maintainers of class com.google.inject.internal.aop.HiddenClassDefiner'
-==&gt;{4}'WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release'
+==&gt;{4}'WARNING: sun.misc.Unsafe::objectFieldOffset has been called by com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper (file:/usr/share/maven/lib/guava-33.2.1-jre.jar)'
+==&gt;{4}'WARNING: Please consider reporting this to the maintainers of class com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper'
+==&gt;{4}'WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release'
 ==&gt;{4}'[INFO] Scanning for projects...'
 ==&gt;{12}'[INFO] '
 ==&gt;{4}'[INFO] --------------------&lt; com.example.scratch:scratch &gt;---------------------'
@@ -521,13 +527,13 @@ mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 ==&gt;{4}'[INFO]   from pom.xml'
 ==&gt;{4}'[INFO] --------------------------------[ jar ]---------------------------------'
 ==&gt;{4}'[INFO] --- resources:3.3.1:resources (default-resources) @ scratch ---'
-==&gt;{4}'[INFO] skip non existing resourceDirectory /home/killswitch/software/metatron/src/test/resources/scratch/src/main/resources'
+==&gt;{4}'[INFO] skip non existing resourceDirectory /work/src/test/resources/scratch/src/main/resources'
 ==&gt;{4}'[INFO] --- compiler:3.13.0:compile (default-compile) @ scratch ---'
 ==&gt;{4}'[INFO] Nothing to compile - all classes are up to date.'
 ==&gt;{12}'[INFO] ------------------------------------------------------------------------'
 ==&gt;{4}'[INFO] BUILD SUCCESS'
-==&gt;{4}'[INFO] Total time:  0.286 s'
-==&gt;{4}'[INFO] Finished at: 2026-09-16T00:26:20-06:00'
+==&gt;{4}'[INFO] Total time:  0.247 s'
+==&gt;{4}'[INFO] Finished at: 2026-09-16T07:17:38Z'
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
 <pre><code class="language-mtron">mtron&gt; tree_widget::[root=&gt;/dev/scratch, max=&gt;3, xref=&gt;[=&gt;]].as?str&lt;=widget(str::T)

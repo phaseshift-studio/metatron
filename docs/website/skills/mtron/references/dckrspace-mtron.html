@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>PhaseShift Studio</title>
+    <title>dckrspace · PhaseShift Studio</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -108,6 +108,7 @@
         }
     </style>
     <script src="../../../js/metatron.js" type="text/javascript"></script>
+    
 </head>
 <body class="d-flex flex-column min-vh-100" spellcheck="false">
 <!------------------------------------------------------->
@@ -457,8 +458,7 @@ docker:compose/&lt;stack-name&gt;          -- compose config/stack
          environment =&gt; [NGINX_HOST =&gt; localhost],
          volumes     =&gt; ['myvol:/usr/share/nginx/html'],
          network     =&gt; mynet]
-==&gt;fail::[inst apply failure: exit 125: docker run -d --name web -p 8080:80 -p 443:443 -e NGINX_HOST=localhost -v myvol:/usr/share/nginx/html --network mynet nginx:alpine
-   ]@/sys/fail/458
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/466
 </code></pre>
 <p>Image pull happens automatically via <code>docker run</code>. Pull progress streams through the <code>progress_table::T</code> widget if
 configured.</p>
@@ -477,399 +477,37 @@ configured.</p>
 <h3>Reading Summary</h3>
 <h4>List all resources</h4>
 <pre><code class="language-mtron">mtron&gt; *docker:image/+.take(5)              [-- first 5 images (keyed by repository:tag) --]
-==&gt;[
-    containers=&gt;0,
-    created_at=&gt;datetime::&lt;//2026.08:13/13/16/08/000?tz=-0600&gt;,
-    created_since=&gt;&lt;4 weeks ago&gt;,
-    id=&gt;&lt;19d88319bea9&gt;,
-    repository=&gt;postgres,
-    size=&gt;mB::451.0000,
-    tag=&gt;&lt;16&gt;]
-==&gt;[
-    containers=&gt;1,
-    created_at=&gt;datetime::&lt;//2024.11:4/13/52/12/000?tz=-0700&gt;,
-    created_since=&gt;&lt;22 months ago&gt;,
-    id=&gt;&lt;35d26c822908&gt;,
-    repository=&gt;mariadb,
-    size=&gt;mB::405.0000,
-    tag=&gt;&lt;11.2&gt;,
-    container=&gt;[!*docker:container/vtest_a-a-1]]
-==&gt;[
-    containers=&gt;0,
-    created_at=&gt;datetime::&lt;//2026.05:19/17/28/38/000?tz=-0600&gt;,
-    created_since=&gt;&lt;3 months ago&gt;,
-    id=&gt;acc96c360f47,
-    repository=&gt;node,
-    size=&gt;mB::227.0000,
-    tag=&gt;&lt;22-slim&gt;]
-==&gt;[
-    containers=&gt;0,
-    created_at=&gt;datetime::&lt;//2025.12:2/14/30/17/000?tz=-0700&gt;,
-    created_since=&gt;&lt;9 months ago&gt;,
-    id=&gt;dd2395ffc43b,
-    repository=&gt;openjdk,
-    size=&gt;mB::617.0000,
-    tag=&gt;&lt;26-ea-26-jdk&gt;]
-==&gt;[
-    containers=&gt;0,
-    created_at=&gt;datetime::&lt;//2026.09:10/04/21/26/000?tz=-0600&gt;,
-    created_since=&gt;&lt;5 days ago&gt;,
-    id=&gt;&lt;73f31964d4a8&gt;,
-    repository=&gt;metatron,
-    size=&gt;mB::635.0000,
-    tag=&gt;dev]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/470
 mtron&gt; *docker:container/+                  [-- all containers                           --]
-==&gt;[ command=&gt;&quot;&quot;&quot;/sbin/tini -g -- sh -c 'sqlite3 /data/dr.sqlite \&quot;.database...&quot;&quot;&quot;,
-    created_at=&gt;datetime::&lt;//2026.08:6/13/44/53/000?tz=-0600&gt;,
-    id=&gt;&lt;92497c549f1fea0779b32c4c8c75c86a01277c198ac063d7a880dc90bea63d40&gt;,
-    image=&gt;!*docker:image/keinos/sqlite3:latest,
-    local_volumes=&gt;0,
-    mounts=&gt;&lt;/home/killswitch/.metatron&gt;,
-    names=&gt;dr_sqlite,
-    running_for=&gt;&lt;5 weeks ago&gt;,
-    size=&gt;bB::0.0000,
-    state=&gt;exited,
-    ...(2 more)]
-==&gt;[ command=&gt;&lt;/app/entrypoint.sh --help&gt;,
-    created_at=&gt;datetime::&lt;//2026.09:2/12/04/38/000?tz=-0600&gt;,
-    id=&gt;ceca8355aa92d350e2fe559146569f74206e2a31bce4bf26c5e2ea224109644b,
-    image=&gt;!*&lt;docker:image/ghcr.io/phaseshift-studio/metatron:latest&gt;,
-    labels=&gt;[
-     &lt;org.opencontainers.image.description&gt;=&gt;'a distributed data-oriented computing language and virtual ...',
-     &lt;org.opencontainers.image.licenses&gt;=&gt;&lt;AGPL-3.0&gt;,
-     &lt;org.opencontainers.image.source&gt;=&gt;&lt;https://github.com/phaseshift-studio/metatron&gt;,
-     &lt;org.opencontainers.image.title&gt;=&gt;metatron,
-     &lt;org.opencontainers.image.vendor&gt;=&gt;'PhaseShift Studio',
-     &lt;org.opencontainers.image.version&gt;=&gt;start(0.1000).minus(SNAPSHOT)],
-    local_volumes=&gt;0,
-    names=&gt;laughing_galileo,
-    running_for=&gt;&lt;13 days ago&gt;,
-    size=&gt;bB::0.0000,
-    state=&gt;exited,
-    ...(2 more)]
-==&gt;[ command=&gt;&lt;/app/entrypoint.sh [boot=&gt;&lt;boot/_D4.boot.mtron&gt;,log=&gt;info]&gt;,
-    created_at=&gt;datetime::&lt;//2026.09:2/19/02/53/000?tz=-0600&gt;,
-    id=&gt;&lt;54b670e5e380797fa5c5b4c58bebfb9ebfcc1fe548f882498f0a6610041234e4&gt;,
-    image=&gt;!*&lt;docker:image/ghcr.io/phaseshift-studio/metatron:main&gt;,
-    labels=&gt;[
-     &lt;org.opencontainers.image.description&gt;=&gt;'a distributed data-oriented computing language and virtual ...',
-     &lt;org.opencontainers.image.licenses&gt;=&gt;&lt;AGPL-3.0&gt;,
-     &lt;org.opencontainers.image.source&gt;=&gt;&lt;https://github.com/phaseshift-studio/metatron&gt;,
-     &lt;org.opencontainers.image.title&gt;=&gt;metatron,
-     &lt;org.opencontainers.image.vendor&gt;=&gt;'PhaseShift Studio',
-     &lt;org.opencontainers.image.version&gt;=&gt;start(0.1000).minus(SNAPSHOT)],
-    local_volumes=&gt;0,
-    mounts=&gt;/home/killswitch/software/metatron/boot,/home/killswitch/software/metatron,
-    names=&gt;D4,
-    running_for=&gt;&lt;13 days ago&gt;,
-    size=&gt;bB::0.0000,
-    ...(3 more)]
-==&gt;[ command=&gt;&lt;/usr/local/bin/mvn-entrypoint.sh sh -c 'java --enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/sun.nio.cs=ALL-UNNAMED -cp target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar studio.phaseshift.metatron.BootLoader '[boot=&gt;&lt;_probe/http-probe.resolved.mtron&gt;,log=&gt;debug]&gt;,
-    created_at=&gt;datetime::&lt;//2026.08:29/19/16/23/000?tz=-0600&gt;,
-    id=&gt;d0f09b6598e94e8c63b2ff38bde902b046aa71a83d30f9f6cf4949d0746c23ec,
-    image=&gt;!*docker:image/sha256:ab0c8388804566f72e7e67b12d9b4c0c2a91cff79ccb85420548656bc90dab83,
-    labels=&gt;[
-     &lt;org.opencontainers.image.description&gt;=&gt;'Apache Maven is a software project management and comprehen...',
-     &lt;org.opencontainers.image.ref.name&gt;=&gt;ubuntu,
-     &lt;org.opencontainers.image.source&gt;=&gt;&lt;https://github.com/carlossg/docker-maven&gt;,
-     &lt;org.opencontainers.image.title&gt;=&gt;'Apache Maven',
-     &lt;org.opencontainers.image.url&gt;=&gt;&lt;https://github.com/carlossg/docker-maven&gt;,
-     &lt;org.opencontainers.image.version&gt;=&gt;24.0400],
-    local_volumes=&gt;0,
-    mounts=&gt;/home/killswitch/software/metatron,
-    names=&gt;webprobe-630547,
-    running_for=&gt;&lt;2 weeks ago&gt;,
-    size=&gt;bB::0.0000,
-    ...(3 more)]
-==&gt;[ command=&gt;&lt;java --enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/sun.nio.cs=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow -jar /app/metatron.jar [boot=&gt;&lt;boot/boot.mtron&gt;,log=&gt;info]&gt;,
-    created_at=&gt;datetime::&lt;//2026.08:26/06/48/14/000?tz=-0600&gt;,
-    id=&gt;&lt;0c62cb4b1bc232db84bb98c8f7b58d9ab8d8d3a06f306deb4ea3e119745ed054&gt;,
-    image=&gt;!*docker:image/sha256:480de7fa4a90c026913580f891d726e50318e263781ee9f003b0e3aac5fea50b,
-    labels=&gt;[
-     &lt;org.opencontainers.image.description&gt;=&gt;'A distributed data-oriented computing language and virtual ...',
-     &lt;org.opencontainers.image.licenses&gt;=&gt;&lt;AGPL-3.0&gt;,
-     &lt;org.opencontainers.image.source&gt;=&gt;&lt;https://github.com/phaseshift-studio/metatron&gt;,
-     &lt;org.opencontainers.image.title&gt;=&gt;metatron,
-     &lt;org.opencontainers.image.vendor&gt;=&gt;'PhaseShift Studio',
-     &lt;org.opencontainers.image.version&gt;=&gt;start(0.1000).minus(SNAPSHOT)],
-    local_volumes=&gt;0,
-    names=&gt;admiring_lalande,
-    running_for=&gt;&lt;2 weeks ago&gt;,
-    size=&gt;bB::0.0000,
-    state=&gt;exited,
-    ...(2 more)]
-==&gt;[ command=&gt;&lt;docker-entrypoint.sh mariadbd&gt;,
-    created_at=&gt;datetime::&lt;//2026.09:2/02/36/13/000?tz=-0600&gt;,
-    id=&gt;&lt;8673b240288781fb2d0dddc76a2cf3cac3fce71bca6830f95e7ac8a75ea7c70d&gt;,
-    image=&gt;!*&lt;docker:image/mariadb:11.2&gt;,
-    labels=&gt;[  &lt;com.docker.compose.config-hash&gt;=&gt;c0d9b351c9f96fc5f6c650960fd4fee862d6ef67c0e79cbc28ddd1b365a63f81,
-     &lt;com.docker.compose.container-number&gt;=&gt;1,
-     &lt;com.docker.compose.image&gt;=&gt;sha256:35d26c822908fba9f7ff591a95e6abcd7e9c6a0b354af8cb0f4dbd6441dac0fb,
-     &lt;com.docker.compose.oneoff&gt;=&gt;False,
-     &lt;com.docker.compose.project.config_files&gt;=&gt;&lt;/tmp/metatron-docker/vtest_a/docker-compose.yml&gt;,
-     &lt;com.docker.compose.project.working_dir&gt;=&gt;/tmp/metatron-docker/vtest_a,
-     &lt;com.docker.compose.project&gt;=&gt;vtest_a,
-     &lt;com.docker.compose.service&gt;=&gt;a,
-     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;,
-     &lt;org.opencontainers.image.authors&gt;=&gt;'MariaDB Community',
-     ...(10 more)],
-    local_volumes=&gt;1,
-    names=&gt;vtest_a-a-1,
-    running_for=&gt;&lt;13 days ago&gt;,
-    size=&gt;bB::0.0000,
-    state=&gt;exited,
-    ...(3 more)]
-   ...
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/474
 mtron&gt; *docker:volume/+                     [-- all volumes                              --]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/b56d1026f908d3a4d8a840b85a3c897d41e584781c6aae7fde43f1bc0d1a3f59/_data,
-    name=&gt;b56d1026f908d3a4d8a840b85a3c897d41e584781c6aae7fde43f1bc0d1a3f59,
-    scope=&gt;local]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/b780bbf5a83db7463af32b8ee20a7ebeecfa949499d5acfcdfec8d0e2b19eea8/_data,
-    name=&gt;b780bbf5a83db7463af32b8ee20a7ebeecfa949499d5acfcdfec8d0e2b19eea8,
-    scope=&gt;local]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/585c8c78d99f10093ca27e1de2ceea340f61026b9b039a8be992edcbcd25a259/_data,
-    name=&gt;&lt;585c8c78d99f10093ca27e1de2ceea340f61026b9b039a8be992edcbcd25a259&gt;,
-    scope=&gt;local]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/4b55f5b2c0e56d658e7c291078459bb261e4cbd757b07030b166cc5ee3479c49/_data,
-    name=&gt;&lt;4b55f5b2c0e56d658e7c291078459bb261e4cbd757b07030b166cc5ee3479c49&gt;,
-    scope=&gt;local]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/c9597f1f46528a54161dafffdadf1f1a61e2728475e4014f9c108a791410331a/_data,
-    name=&gt;c9597f1f46528a54161dafffdadf1f1a61e2728475e4014f9c108a791410331a,
-    scope=&gt;local]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/75031acd765dadc2102706be8f612c7170bc4f6848cee8b0f7b4150ddde7c4ec/_data,
-    name=&gt;&lt;75031acd765dadc2102706be8f612c7170bc4f6848cee8b0f7b4150ddde7c4ec&gt;,
-    scope=&gt;local]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/cddc3a93669463bf127a4dd6ab682cf9af4ae96da5f20b2760c3372284a5aaa1/_data,
-    name=&gt;cddc3a93669463bf127a4dd6ab682cf9af4ae96da5f20b2760c3372284a5aaa1,
-    scope=&gt;local]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/7c3a17f1505e008a326fcb38f4f10361ff42c0ac284ca13c87f8a2bf9ff5f8d9/_data,
-    name=&gt;&lt;7c3a17f1505e008a326fcb38f4f10361ff42c0ac284ca13c87f8a2bf9ff5f8d9&gt;,
-    scope=&gt;local]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/c78a134e31ab93f90b8f2632cc767a78e8b755b1815822c1ae3e03d41391ea49/_data,
-    name=&gt;c78a134e31ab93f90b8f2632cc767a78e8b755b1815822c1ae3e03d41391ea49,
-    scope=&gt;local]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/4d4e411d7a6eb5e05c50cda6238f183d2dec5eeea8807648bcf429c142c9dafd/_data,
-    name=&gt;&lt;4d4e411d7a6eb5e05c50cda6238f183d2dec5eeea8807648bcf429c142c9dafd&gt;,
-    scope=&gt;local]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/7bdaf667ce61d7ef1b033726edfaec05a20f77c7bb42a5f1959578d383b4993c/_data,
-    name=&gt;&lt;7bdaf667ce61d7ef1b033726edfaec05a20f77c7bb42a5f1959578d383b4993c&gt;,
-    scope=&gt;local]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/9000b84a39160189684fa7149b69a58c888808f0c74e09f88cd7dc621db5fe67/_data,
-    name=&gt;&lt;9000b84a39160189684fa7149b69a58c888808f0c74e09f88cd7dc621db5fe67&gt;,
-    scope=&gt;local]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/43a4aaa45e7342b5869ca61a417800210e699e6f1af8689f0992118d3eb30365/_data,
-    name=&gt;&lt;43a4aaa45e7342b5869ca61a417800210e699e6f1af8689f0992118d3eb30365&gt;,
-    scope=&gt;local]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/f28b7ade1c140fc82c033f7e6c60860d460ae4467ed99b2a38436eb221596b95/_data,
-    name=&gt;f28b7ade1c140fc82c033f7e6c60860d460ae4467ed99b2a38436eb221596b95,
-    scope=&gt;local]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/6b5e0f05a976195281987a3e1e2f2c58ffc4068dfd93a0693bd82c647490e47b/_data,
-    name=&gt;&lt;6b5e0f05a976195281987a3e1e2f2c58ffc4068dfd93a0693bd82c647490e47b&gt;,
-    scope=&gt;local]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/0454140adc3aade618ce2082739cc046814093a4e10526d1d91698b5d2a8b7e5/_data,
-    name=&gt;&lt;0454140adc3aade618ce2082739cc046814093a4e10526d1d91698b5d2a8b7e5&gt;,
-    scope=&gt;local]
-==&gt;[
-    driver=&gt;local,
-    labels=&gt;[=&gt;],
-    mountpoint=&gt;/var/lib/docker/volumes/7dc192fc64c983d86ea8d6f53b782d8ee091a12f1db9713e0b64e4a5b6115b0f/_data,
-   ...
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/478
 mtron&gt; *docker:network/+                    [-- all networks                             --]
-==&gt;[
-    created_at=&gt;datetime::&lt;//2026.09:1/04/21/07/128?tz=+0000&gt;,
-    driver=&gt;bridge,
-    id=&gt;&lt;6fdda29a9628&gt;,
-    ipv4=&gt;true,
-    ipv6=&gt;false,
-    internal=&gt;false,
-    labels=&gt;[
-     &lt;com.docker.compose.project&gt;=&gt;l3c,
-     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;,
-     &lt;com.docker.compose.config-hash&gt;=&gt;df437304bb211fbfc4b353c55c6fef38b07f9ae28b57ebc6c8b7b315709a02af,
-     &lt;com.docker.compose.network&gt;=&gt;default],
-    name=&gt;l3c_default,
-    scope=&gt;local]
-==&gt;[
-    created_at=&gt;datetime::&lt;//2026.08:27/08/33/01/479?tz=+0000&gt;,
-    driver=&gt;bridge,
-    id=&gt;f1cc77f79643,
-    ipv4=&gt;true,
-    ipv6=&gt;false,
-    internal=&gt;false,
-    labels=&gt;[
-     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;,
-     &lt;com.docker.compose.config-hash&gt;=&gt;edf7769ebc38e22fe8be401f97ddeabc2328a412e6a2f42ed79e2e88fa012357,
-     &lt;com.docker.compose.network&gt;=&gt;default,
-     &lt;com.docker.compose.project&gt;=&gt;metatron_sqlite],
-    name=&gt;metatron_sqlite_default,
-    scope=&gt;local,
-    container=&gt;[!*docker:container/metatron_sqlite-sqlite-1]]
-==&gt;[
-    created_at=&gt;datetime::&lt;//2026.09:1/02/54/30/746?tz=+0000&gt;,
-    driver=&gt;bridge,
-    id=&gt;&lt;6b91b0807ad3&gt;,
-    ipv4=&gt;true,
-    ipv6=&gt;false,
-    internal=&gt;false,
-    labels=&gt;[
-     &lt;com.docker.compose.config-hash&gt;=&gt;&lt;5f7adf1ebe930f50f4b9b53587f874b985c6396c1cc34f221b76409b03e73c15&gt;,
-     &lt;com.docker.compose.network&gt;=&gt;default,
-     &lt;com.docker.compose.project&gt;=&gt;vtest_a,
-     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;],
-    name=&gt;vtest_a_default,
-    scope=&gt;local,
-    container=&gt;[!*docker:container/vtest_a-a-1]]
-==&gt;[
-    created_at=&gt;datetime::&lt;//2026.09:1/03/04/22/809?tz=+0000&gt;,
-    driver=&gt;bridge,
-    id=&gt;adbf60a6c0cd,
-    ipv4=&gt;true,
-    ipv6=&gt;false,
-    internal=&gt;false,
-    labels=&gt;[
-     &lt;com.docker.compose.network&gt;=&gt;default,
-     &lt;com.docker.compose.project&gt;=&gt;wtest_a,
-     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;,
-     &lt;com.docker.compose.config-hash&gt;=&gt;&lt;8b17a0c82f43430a8621208acc30c2772c02a8888c3002543e019dbc96184751&gt;],
-    name=&gt;wtest_a_default,
-    scope=&gt;local]
-==&gt;[
-    created_at=&gt;datetime::&lt;//2026.08:6/14/12/04/985?tz=+0000&gt;,
-    driver=&gt;bridge,
-    id=&gt;&lt;04cebb297272&gt;,
-    ipv4=&gt;true,
-    ipv6=&gt;false,
-    internal=&gt;false,
-    labels=&gt;[
-     &lt;com.docker.compose.project&gt;=&gt;dr_sqlite,
-     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;,
-     &lt;com.docker.compose.config-hash&gt;=&gt;&lt;454211c5597511dbc4de2c2d7054ec34854741b9a0a3020c77fa2de25572c260&gt;,
-     &lt;com.docker.compose.network&gt;=&gt;default],
-    name=&gt;dr_sqlite_default,
-    scope=&gt;local,
-    container=&gt;[!*docker:container/dr_sqlite-sqlite-1]]
-==&gt;[
-    created_at=&gt;datetime::&lt;//2026.08:6/14/09/25/425?tz=+0000&gt;,
-    driver=&gt;bridge,
-    id=&gt;&lt;12f02ba20a4f&gt;,
-    ipv4=&gt;true,
-    ipv6=&gt;false,
-    internal=&gt;false,
-    labels=&gt;[
-     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;,
-     &lt;com.docker.compose.config-hash&gt;=&gt;b82bc38b085051212ab2999d5d8a56646d5a2f6cd18fb5f3cbf5d7d6624c75fc,
-     &lt;com.docker.compose.network&gt;=&gt;default,
-     &lt;com.docker.compose.project&gt;=&gt;dr],
-    name=&gt;dr_default,
-    scope=&gt;local,
-    container=&gt;[!*docker:container/dr-sqlite-1]]
-==&gt;[
-    created_at=&gt;datetime::&lt;//2026.08:6/13/53/33/644?tz=+0000&gt;,
-    driver=&gt;bridge,
-    id=&gt;&lt;357c897ce4c7&gt;,
-    ipv4=&gt;true,
-    ipv6=&gt;false,
-    internal=&gt;false,
-    labels=&gt;[
-     &lt;com.docker.compose.config-hash&gt;=&gt;dcfdb94ed5044fb11e16ff38ab584fd0bda75806da995978e02547c50430328a,
-     &lt;com.docker.compose.network&gt;=&gt;default,
-     &lt;com.docker.compose.project&gt;=&gt;test_sqlite,
-     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;],
-   ...
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/482
 </code></pre>
 <h4>Inspect a resource</h4>
 <pre><code class="language-mtron">mtron&gt; *docker:image/nginx:alpine           [-- full image rec --]
-==&gt;[
-    containers=&gt;1,
-    created_at=&gt;datetime::&lt;//2026.07:15/17/57/33/000?tz=-0600&gt;,
-    created_since=&gt;&lt;2 months ago&gt;,
-    id=&gt;f0ba77f796e5,
-    repository=&gt;nginx,
-    size=&gt;mB::62.4000,
-    tag=&gt;alpine,
-    container=&gt;[!*docker:container/web]]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/486
 mtron&gt; *docker:container/web                [-- full container rec --]
-==&gt;[ command=&gt;&lt;/docker-entrypoint.sh nginx -g 'daemon off;&gt;,
-    created_at=&gt;datetime::&lt;//2026.09:16/00/26/30/000?tz=-0600&gt;,
-    id=&gt;c23ac5d27b0e71d5f9a4ecddb7c2b6a939e9c090578304031c9db86386f8421f,
-    image=&gt;!*docker:image/nginx:alpine,
-    labels=&gt;[maintainer=&gt;'NGINX Docker Maintainers &lt;docker-maint@nginx.com&gt;'],
-    local_volumes=&gt;1,
-    names=&gt;web,
-    running_for=&gt;&lt;3 seconds ago&gt;,
-    size=&gt;bB::0.0000,
-    state=&gt;created,
-    ...(3 more)]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/490
 mtron&gt; *docker:image/nginx:alpine/size      [-- specific field --]
-==&gt;mB::62.4000
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/494
 mtron&gt; *docker:container/web/state          [-- container state (running, exited, ...) --]
-==&gt;created
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/498
 </code></pre>
 <h4>Graph navigation</h4>
 <pre><code class="language-mtron">mtron&gt; *docker:container/web/image           [-- uri ref to the container's image             --]
-==&gt;[
-    containers=&gt;1,
-    created_at=&gt;datetime::&lt;//2026.07:15/17/57/33/000?tz=-0600&gt;,
-    created_since=&gt;&lt;2 months ago&gt;,
-    id=&gt;f0ba77f796e5,
-    repository=&gt;nginx,
-    size=&gt;mB::62.4000,
-    tag=&gt;alpine,
-    container=&gt;[!*docker:container/web]]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/502
 mtron&gt; *docker:image/nginx:alpine/containers [-- list of container refs using this image      --]
-==&gt;1
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/506
 mtron&gt; *docker:container/web/networks        [-- uri ref to the container's network           --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/510
 mtron&gt; *docker:network/bridge/containers     [-- list of container refs on this network       --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/514
 mtron&gt; *docker:container/web/mounts          [-- list of volume refs mounted on the container --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/518
 mtron&gt; *docker:volume/data/containers        [-- list of container refs using this volume     --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/522
 </code></pre>
 <p>The <code>image</code>, <code>networks</code>, and <code>mounts</code> fields on containers are <strong>uri refs</strong>. The <code>containers</code>
 field on images/networks/volumes is a <strong>lst of uri refs</strong>. This allows for graph navigation without accessing a single
@@ -882,32 +520,27 @@ their referent upon access.</p>
 <p>Images are read-only from Docker Hub. The space auto-discovers images from
 <code>docker image ls</code> and from containers' image references.</p>
 <pre><code class="language-mtron">mtron&gt; *docker:image/nginx:alpine/id          [-- Docker hash (f7949ff70415) --]
-==&gt;f0ba77f796e5
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/526
 mtron&gt; *docker:image/nginx:alpine/size        [-- mB::142.0 --]
-==&gt;mB::62.4000
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/530
 mtron&gt; *docker:image/nginx:alpine/repository  [-- nginx --]
-==&gt;nginx
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/534
 mtron&gt; *docker:image/nginx:alpine/tag         [-- alpine --]
-==&gt;alpine
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/538
 </code></pre>
 <h3>Writing — Volumes</h3>
 <h4>Create a volume</h4>
 <pre><code class="language-mtron">mtron&gt; docker:volume/myvol -&gt; [driver =&gt; local]
-==&gt;fail::[inst apply failure: fail[ProcessBuilder&lt;1065&gt;:(NullPointerException)]]@/sys/fail/462
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/542
 </code></pre>
 <h4>Remove a volume</h4>
 <pre><code class="language-mtron">mtron&gt; docker:volume/myvol -&gt; noobj
-==&gt;[
-    driver=&gt;local,
-    mountpoint=&gt;/var/lib/docker/volumes/myvol/_data,
-    name=&gt;myvol,
-    scope=&gt;local]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/546
 </code></pre>
 <h3>Writing — Networks</h3>
 <h4>Create a network</h4>
 <pre><code class="language-mtron">mtron&gt; docker:network/mynet -&gt; [driver =&gt; bridge]
-==&gt;fail::[inst apply failure: exit 1: docker network create mynet -d bridge
-   ]@/sys/fail/464
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/550
 </code></pre>
 <h4>Remove a network</h4>
 <pre><code class="language-mtron">mtron&gt; docker:network/mynet -&gt; noobj
@@ -926,22 +559,25 @@ mtron&gt; *docker:image/nginx:alpine/tag         [-- alpine --]
            ]
          ]
        ]
-==&gt;[services=&gt;[
-    web=&gt;[
-     image=&gt;'nginx:alpine',
-     ports=&gt;[&lt;8080:80&gt;]],
-    db=&gt;[
-     image=&gt;'postgres:16',
-     environment=&gt;[POSTGRES_PASSWORD=&gt;secret]]]]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/554
 </code></pre>
 <p>Compose YAML is generated to <code>/tmp/metatron-docker/&lt;name&gt;/docker-compose.yml</code> and
 <code>docker compose up -d</code> is executed. Progress streams through the widget.</p>
 <h4>Stop a stack</h4>
 <pre><code class="language-mtron">mtron&gt; docker:compose/my-stack -&gt; noobj     [-- docker compose down + cleanup --]
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/558
 </code></pre>
 <h4>Read compose config</h4>
 <pre><code class="language-mtron">mtron&gt; *docker:compose/my-stack/services/web/image    [-- nginx:alpine --]
+==&gt;'nginx:alpine'
 mtron&gt; *docker:compose/my-stack/services              [-- all services --]
+==&gt;[
+    web=&gt;[
+     image=&gt;'nginx:alpine',
+     ports=&gt;[&lt;8080:80&gt;]],
+    db=&gt;[
+     image=&gt;'postgres:16',
+     environment=&gt;[POSTGRES_PASSWORD=&gt;secret]]]
 </code></pre>
 <h3>Remote Docker Hosts</h3>
 <p>Connect to a remote Docker daemon by specifying <code>host</code> in the boot config:</p>
@@ -973,8 +609,7 @@ tbleSpace — all from mtron.</p>
          command =&gt; ['sh', '-c', 'sqlite3 /data/mydb.sqlite &quot;.databases&quot; &amp;&amp; chmod 777 /data /data/mydb.sqlite'],
          volumes =&gt; ['/tmp/mtron-dbs:/data']
        ]
-==&gt;fail::[inst apply failure: exit 125: docker run -d --name sqlite --user root -v /tmp/mtron-dbs:/data keinos/sqlite3:latest sh -c sqlite3 /data/mydb.sqlite &quot;.databases&quot; &amp;&amp; chmod 777 /data /data/mydb.sqlite
-   ]@/sys/fail/466
+==&gt;fail::[inst apply failure: docker cli not found: Cannot run program &quot;docker&quot;: error=2, No such file or directory]@/sys/fail/562
 </code></pre>
 <p>The bind mount <code>'/tmp/mtron-dbs:/data'</code> maps the host directory into the container. The user <code>root</code> is necessary for
 command permissions.</p>
@@ -984,48 +619,41 @@ command permissions.</p>
                    table   =&gt; [,],
                    route   =&gt; [mydb: =&gt; &lt;&gt;],
                    driver  =&gt; &lt;org.sqlite.JDBC&gt;]@/sys/space/mydb
-==&gt;tblespace::[
-    pattern=&gt;mydb:#,
-    host=&gt;&lt;sqlite:/tmp/mtron-dbs/mydb.sqlite&gt;,
-    table=&gt;[,],
-    route=&gt;[mydb:=&gt;&lt;&gt;],
-    driver=&gt;&lt;org.sqlite.JDBC&gt;]@/sys/space/mydb
+==&gt;ERROR: unable to construct tblespace::T: fail::[inst apply failure: [SQLITE_CANTOPEN] Unable to open the database file (unable to open database file)[DB&lt;1182&gt;:[SQLITE_CANTOPEN] Unable to open the database file (unable to open database file)]]@/sys/fail/570
 </code></pre>
 <h4>Step 3: Create tables and insert data</h4>
 <pre><code class="language-mtron">mtron&gt; [-- insert tble rows --]
 mtron&gt; mydb:people/1 -&gt; [name=&gt;'marko',role=&gt;architect]
-==&gt;[name=&gt;'marko',role=&gt;architect]
+==&gt;fail::[inst apply failure: no active space supports pattern mydb:people/1]@/sys/fail/574
 mtron&gt; mydb:people/2 -&gt; [name=&gt;'stynx',role=&gt;developer]
-==&gt;[name=&gt;'stynx',role=&gt;developer]
+==&gt;fail::[inst apply failure: no active space supports pattern mydb:people/2]@/sys/fail/578
 mtron&gt; mydb:people/3 -&gt; [name=&gt;'metis',role=&gt;oracle]
-==&gt;[name=&gt;'metis',role=&gt;oracle]
+==&gt;fail::[inst apply failure: no active space supports pattern mydb:people/3]@/sys/fail/582
 </code></pre>
 <h4>Step 4: Query from mtron</h4>
 <pre><code class="language-mtron">mtron&gt; *mydb:people/+                                           [-- all rows              --]
-==&gt;[name=&gt;'marko',role=&gt;architect]
-==&gt;[name=&gt;'metis',role=&gt;oracle]
-==&gt;[name=&gt;'stynx',role=&gt;developer]
+==&gt;fail::[inst apply failure: no active space supports pattern mydb:people/+]@/sys/fail/586
 mtron&gt; *mydb:people/+/                                          [-- all rows keyed by uri --]
-==&gt;mydb:people/1=&gt;[name=&gt;'marko',role=&gt;architect]
-==&gt;mydb:people/3=&gt;[name=&gt;'metis',role=&gt;oracle]
-==&gt;mydb:people/2=&gt;[name=&gt;'stynx',role=&gt;developer]
+==&gt;fail::[inst apply failure: no active space supports pattern mydb:people/+/]@/sys/fail/590
 mtron&gt; *mydb:people/+/name                                      [-- all names             --]
-==&gt;'stynx'
-==&gt;'marko'
-==&gt;'metis'
+==&gt;fail::[inst apply failure: no active space supports pattern mydb:people/+/name]@/sys/fail/594
 mtron&gt; *mydb:people/+.=?=[role=&gt;developer]==[name=&gt;_]           [-- all developer names   --]
-==&gt;[name=&gt;'stynx']
+==&gt;fail::[inst apply failure: no active space supports pattern mydb:people/+]@/sys/fail/634
 mtron&gt; *mydb:people/+.=?=[role=&gt;developer]==[name=&gt;_].explain() [-- sql rewrite usage     --]
 ==&gt;&quot;&quot;&quot;
-    op         dom      rng      args                           f    desc    c_dom  c_rng 
-    sql_where  #{*}::T  #{*}::T  people/+,&quot;role = 'developer'&quot;  &lt;j&gt;  gather  {*}    {*}   
-    select     #::T     #::T     [name=&gt;id()]                   &lt;?&gt;  mapper  {1}    {1}   
+    op      dom      rng      args               f    desc      c_dom  c_rng 
+    from    #{?}::T  #{*}::T  mydb:people/+      &lt;j&gt;  standard  {?}    {*}   
+    where   #::T     #::T     [role=&gt;developer]  &lt;?&gt;  mapper    {1}    {1}   
+    select  #::T     #::T     [name=&gt;id()]       &lt;?&gt;  mapper    {1}    {1}   
    &quot;&quot;&quot;
 mtron&gt; *mydb:people/+.count()                                   [-- number of rows        --]
-==&gt;3
+==&gt;1
 mtron&gt; *mydb:people/+.count().explain()                         [-- sql rewrite usage     --]
-==&gt;fail::[args do not match inst args:
-   	[X=&gt;/m/tble/inst/rewrite/sql_count?int&lt;=#{0}(people/+)]]@/sys/fail/470
+==&gt;&quot;&quot;&quot;
+    op     dom      rng      args           f    desc      c_dom  c_rng 
+    from   #{?}::T  #{*}::T  mydb:people/+  &lt;j&gt;  standard  {?}    {*}   
+    count  #{*}::T  int::T                  &lt;j&gt;  reducer   {*}    {1}   
+   &quot;&quot;&quot;
 </code></pre>
 <h4>Step 5: The container sees the same data</h4>
 <p>The Docker container has the database mounted at <code>/data/mydb.sqlite</code>. Any process inside the container can read and

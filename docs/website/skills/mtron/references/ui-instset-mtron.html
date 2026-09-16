@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>PhaseShift Studio</title>
+    <title>ui instruction set · PhaseShift Studio</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -108,6 +108,7 @@
         }
     </style>
     <script src="../../../js/metatron.js" type="text/javascript"></script>
+    
 </head>
 <body class="d-flex flex-column min-vh-100" spellcheck="false">
 <!------------------------------------------------------->
@@ -463,13 +464,13 @@ the same declarations the type checker uses:</p>
      obj=&gt;table_widget::T,
      dom=&gt;'maybe an obj',
      rng=&gt;'a table widget',
-     args=&gt;[{?}metadata=&gt;'a lst of rows of data behind the display',{?}row=&gt;'a lst of poly table rows',{?}header=&gt;'a lst of obj table headers'],
+     args=&gt;[{?}header=&gt;'a lst of obj table headers',{?}row=&gt;'a lst of poly table rows',{?}metadata=&gt;'a lst of rows of data behind the display'],
      desc=&gt;'[structural] a tabular data widget'],
     tree_widget=&gt;docs::[
      obj=&gt;tree_widget::T,
      dom=&gt;'maybe an obj',
      rng=&gt;'a tree widget',
-     args=&gt;[{?}expand=&gt;'branch uris whose children are read regardless of max',{?}code=&gt;'transform obj prior to insertion into tree (default _)',root=&gt;'the root uri to traverse from',{?}flatten=&gt;'fold single-folder chains into one path row (default false)',max=&gt;'the max depth to traverse',{?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration'],
+     args=&gt;[{?}code=&gt;'transform obj prior to insertion into tree (default _)',{?}expand=&gt;'branch uris whose children are read regardless of max',{?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration',max=&gt;'the max depth to traverse',{?}flatten=&gt;'fold single-folder chains into one path row (default false)',root=&gt;'the root uri to traverse from'],
      desc=&gt;'[structural] the root uri space is traversed to specified d...'],
     selector_widget=&gt;docs::[
      obj=&gt;selector_widget::T,
@@ -640,9 +641,13 @@ mtron&gt; accordion_widget::[title=&gt;'notes',body=&gt;&quot;l01\nl02\nl03&quot
    &quot;&quot;&quot;
 </code></pre>
 <pre><code class="language-mtron">mtron&gt; menu_bar_widget::[height=&gt;1,lines=&gt;[label_line_widget::[body=&gt;'File'],label_line_widget::[body=&gt;'Edit']]].as?str&lt;=widget(str::T)
-==&gt;ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3248
+==&gt;&quot;&quot;&quot;
+   File  Edit
+   &quot;&quot;&quot;
 mtron&gt; label_line_widget::[body=&gt;'a label line'].as?str&lt;=widget(str::T)
-==&gt;ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3256
+==&gt;&quot;&quot;&quot;
+   a label line
+   &quot;&quot;&quot;
 </code></pre>
 <h3>style</h3>
 <p><code>style::T</code> is a rec of presentation keys. The ones that change what you see:</p>
