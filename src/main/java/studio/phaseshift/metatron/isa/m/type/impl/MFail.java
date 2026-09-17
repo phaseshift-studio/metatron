@@ -54,7 +54,7 @@ public class MFail extends MObj implements Fail {
         if (o.isFail())
             return o.as();
         else
-            return fail("expected fail: %s", o.toCleanString());
+            return new MFail(new RuntimeException("expected fail: %s".formatted(o.toCleanString())), FAIL_TID, null);
     }
 
     @Override

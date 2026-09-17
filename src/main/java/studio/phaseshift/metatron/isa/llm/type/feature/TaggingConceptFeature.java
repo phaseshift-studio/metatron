@@ -46,17 +46,18 @@ public final class TaggingConceptFeature extends AbstractConceptFeature {
         return CONCEPT_EXTRACTOR_TAG_SYSTEM_MESSAGE;
     }
 
-private static final String CONCEPT_EXTRACTOR_TAG_SYSTEM_MESSAGE = """
-                                                                       In any of your responses, you can tag important concepts using a <<concept:>>-block:
-                                                                       For instance, an agent may write:
-                                                                       
-                                                                       "Increasing the size of the <<concept:context windows>> is one way to increase an agent's
-                                                                       <<concept:intelligence>>. However, another way is to provide better <<concept:indexing>> and
-                                                                       <<concept:searching>> capabilities for existing <<concept:memory systems>>."
-                                                                       
-                                                                       Behind the scenes, these tags will form a growing co-location graph that will allow
-                                                                       for the automatic insertion of relevant historic memories the agent can choose
-                                                                       to review. For instance, given the above, the next system message may write:
-                                                                       """;
+    private static final String CONCEPT_EXTRACTOR_TAG_SYSTEM_MESSAGE =
+            """
+            In any of your responses, you can tag important concepts using a <<concept:>>-block:
+            For instance, an agent may write:
+            
+            "Increasing the size of the <<concept:context windows>> is one way to increase an agent's
+            <<concept:intelligence>>. However, another way is to provide better <<concept:indexing>> and
+            <<concept:searching>> capabilities for existing <<concept:memory systems>>."
+            
+            Behind the scenes, these tags will form a growing co-location graph that will allow
+            for the automatic insertion of relevant historic memories the agent can choose
+            to review. For instance, given the above, the next system message may write:
+            """;
 
 }

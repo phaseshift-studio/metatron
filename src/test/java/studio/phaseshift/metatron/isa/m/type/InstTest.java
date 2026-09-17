@@ -189,12 +189,13 @@ public class InstTest extends AbstractObjTest {
      * Interesting cases: chains that cross type boundaries (int→str, str→int, lst→int).
      */
     @Training(
-            value = "when an obj is applied to a call, the call evaluates and outputs a result",
-            map1 = {0, 1, 2},
-            map2 = {0, 1, 3},
-            mapDesc = {
-                    "when the <<lhs>> obj is applied to the <<rhs>> call, what is the result?",
-                    "when the <<lhs>> obj is resolved against the <<rhs>> call, what is the rng of the resolved call?"})
+            instruction = "when the {{{lhs}}} obj is applied to the {{{chain}}} call, what is the result?",
+            input = "{{{lhs}}}.{{{chain}}}",
+            output = "{{{expectedValue}}}")
+    @Training(
+            instruction = "when the {{{lhs}}} obj is resolved against the {{{chain}}} call, what is the rng of the resolved call?",
+            input = "{{{lhs}}}.{{{chain}}}",
+            output = "{{{expectedRng}}}")
     @ParameterizedTest
     @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
             // lhs           % chain                          % expected result  % expected rng type
@@ -250,9 +251,8 @@ public class InstTest extends AbstractObjTest {
     }
 
     @Training(
-            value = "inst A is a refinement of inst B if A's rng and dom are refinements of B's rng and dom and its tid path matches B's tid path",
-            map1 = {0, 1, 2},
-            mapDesc = {"is the <<lhs>> inst a refinement of the <<rhs>> inst?"})
+            instruction = "inst A is a refinement of inst B if A's rng and dom are refinements of B's rng and dom and its tid path matches B's tid path: is the {{{instA}}} inst a refinement of the {{{instB}}} inst?",
+            output = "{{{aSubB}}}")
     @ParameterizedTest
     @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
             "plus?int<=int(int::T)                     %       plus?#<=#(#::T)                            % true",

@@ -942,6 +942,7 @@
                             <arg>--add-opens=java.base/java.util.concurrent=ALL-UNNAMED</arg>
                             <arg>--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED</arg>
                             <arg>--add-opens=java.base/java.net=ALL-UNNAMED</arg>
+                            <arg>-parameters</arg>
                             <!--<arg>-XDlogback.configurationFile=file:./conf/logback.xml</arg>-->
                         </compilerArgs>
                     </configuration>

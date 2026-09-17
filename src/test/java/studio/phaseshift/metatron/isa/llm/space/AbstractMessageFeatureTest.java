@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.space.ToolPairGate;
+import studio.phaseshift.metatron.isa.llm.type.feature.AbstractMessageFeature;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -60,7 +61,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * message whose tool requests were never answered — and can write the missing
  * results on request.
  */
-public class LedgerUtilTest extends AbstractMetatronTest {
+public class AbstractMessageFeatureTest extends AbstractMetatronTest {
 
     private static final AtomicInteger ROOTS = new AtomicInteger();
     private static final String CALL_ID = "call_probe_7";
@@ -77,15 +78,15 @@ public class LedgerUtilTest extends AbstractMetatronTest {
         final fURI root = freshRoot();
         writeAiRequest(root, CALL_ID);
         writeToolResult(root, CALL_ID);
-        assertTrue(LedgerUtil.clean(LedgerUtil.sweep(root, false)),
-                "a request with its result is not a finding: " + LedgerUtil.sweep(root, false));
+        assertTrue(AbstractMessageFeature.clean(AbstractMessageFeature.sweep(root, false)),
+                "a request with its result is not a finding: " + AbstractMessageFeature.sweep(root, false));
     }
 
     @Test
     public void testAnUnansweredRequestIsReported() {
         final fURI root = freshRoot();
         writeAiRequest(root, CALL_ID);
-        final List<String> findings = ids(LedgerUtil.sweep(root, false), LedgerUtil.ORPHAN);
+        final List<String> findings = ids(AbstractMessageFeature.sweep(root, false), AbstractMessageFeature.ORPHAN);
         assertEquals(List.of(CALL_ID), findings,
                 "the unanswered request is reported under orphan, by call id: " + findings);
     }
@@ -95,7 +96,7 @@ public class LedgerUtilTest extends AbstractMetatronTest {
         final fURI root = freshRoot();
         writeAiRequest(root, CALL_ID);
         writeToolResult(root, "call_some_other_probe");
-        final List<String> findings = ids(LedgerUtil.sweep(root, false), LedgerUtil.ORPHAN);
+        final List<String> findings = ids(AbstractMessageFeature.sweep(root, false), AbstractMessageFeature.ORPHAN);
         assertEquals(List.of(CALL_ID), findings,
                 "only the id with no result is unanswered — findings: " + findings);
     }
@@ -104,10 +105,10 @@ public class LedgerUtilTest extends AbstractMetatronTest {
     public void testRepairDropsTheRequestAndLeavesAValidLedger() {
         final fURI root = freshRoot();
         writeAiRequest(root, CALL_ID);
-        assertEquals(List.of(CALL_ID), ids(LedgerUtil.sweep(root, true), LedgerUtil.ORPHAN),
+        assertEquals(List.of(CALL_ID), ids(AbstractMessageFeature.sweep(root, true), AbstractMessageFeature.ORPHAN),
                 "the repair still reports what it fixed");
-        assertTrue(LedgerUtil.clean(LedgerUtil.sweep(root, false)),
-                "and a second sweep finds nothing: " + LedgerUtil.sweep(root, false));
+        assertTrue(AbstractMessageFeature.clean(AbstractMessageFeature.sweep(root, false)),
+                "and a second sweep finds nothing: " + AbstractMessageFeature.sweep(root, false));
         assertTrue(requests(root).isEmpty(),
                 "the unanswered request is gone from its message — a provider needs the answer to sit "
                         + "immediately after the ask, and nothing can be appended next to a written message");
@@ -124,7 +125,7 @@ public class LedgerUtilTest extends AbstractMetatronTest {
         writeAiRequest(root, CALL_ID);
         writeUnrelatedMessage(root);
         writeToolResult(root, CALL_ID);
-        assertEquals(List.of(CALL_ID), ids(LedgerUtil.sweep(root, false), LedgerUtil.MISPLACED),
+        assertEquals(List.of(CALL_ID), ids(AbstractMessageFeature.sweep(root, false), AbstractMessageFeature.MISPLACED),
                 "the request is reported as misplaced — its result exists, but not next to it");
     }
 
@@ -139,14 +140,14 @@ public class LedgerUtilTest extends AbstractMetatronTest {
         writeAiRequest(root, CALL_ID);
         writeUnrelatedMessage(root);
         writeToolResult(root, CALL_ID);
-        final Obj findings = LedgerUtil.sweep(root, true); // repair, explicitly without prune
-        assertEquals(List.of(CALL_ID), ids(findings, LedgerUtil.MISPLACED), "the request it dropped");
-        assertEquals(List.of(CALL_ID), ids(LedgerUtil.sweep(root, false), LedgerUtil.ORPHAN_RESULT),
+        final Obj findings = AbstractMessageFeature.sweep(root, true); // repair, explicitly without prune
+        assertEquals(List.of(CALL_ID), ids(findings, AbstractMessageFeature.MISPLACED), "the request it dropped");
+        assertEquals(List.of(CALL_ID), ids(AbstractMessageFeature.sweep(root, false), AbstractMessageFeature.ORPHAN_RESULT),
                 "the stranded result is still there — repair removes no row");
-        assertEquals(List.of(CALL_ID), ids(LedgerUtil.sweep(root, true, true), LedgerUtil.ORPHAN_RESULT),
+        assertEquals(List.of(CALL_ID), ids(AbstractMessageFeature.sweep(root, true, true), AbstractMessageFeature.ORPHAN_RESULT),
                 "and prune is what removes it");
-        assertTrue(LedgerUtil.clean(LedgerUtil.sweep(root, false)),
-                "leaving a valid ledger: " + LedgerUtil.sweep(root, false));
+        assertTrue(AbstractMessageFeature.clean(AbstractMessageFeature.sweep(root, false)),
+                "leaving a valid ledger: " + AbstractMessageFeature.sweep(root, false));
     }
 
     /**
@@ -161,11 +162,11 @@ public class LedgerUtilTest extends AbstractMetatronTest {
         writeAiRequest(root, CALL_ID);
         writeToolResult(root, CALL_ID);
         writeAiRequest(root, CALL_ID); // the same requests, a second time
-        assertEquals(List.of(CALL_ID), ids(LedgerUtil.sweep(root, false), LedgerUtil.DUPLICATE),
+        assertEquals(List.of(CALL_ID), ids(AbstractMessageFeature.sweep(root, false), AbstractMessageFeature.DUPLICATE),
                 "recognised as a duplicate rather than a missing result");
-        LedgerUtil.sweep(root, true); // repair, explicitly without prune
-        assertTrue(LedgerUtil.clean(LedgerUtil.sweep(root, false)),
-                "the repair leaves a valid ledger, got: " + LedgerUtil.sweep(root, false));
+        AbstractMessageFeature.sweep(root, true); // repair, explicitly without prune
+        assertTrue(AbstractMessageFeature.clean(AbstractMessageFeature.sweep(root, false)),
+                "the repair leaves a valid ledger, got: " + AbstractMessageFeature.sweep(root, false));
         assertEquals(3L, messageCount(root),
                 "and removes no row — the duplicate keeps its prose, it just stops asking for results it cannot get");
     }
@@ -176,10 +177,10 @@ public class LedgerUtilTest extends AbstractMetatronTest {
         writeAiRequest(root, CALL_ID);
         writeToolResult(root, CALL_ID);
         writeAiRequest(root, CALL_ID);
-        assertEquals(List.of(CALL_ID), ids(LedgerUtil.sweep(root, true, true), LedgerUtil.DUPLICATE),
+        assertEquals(List.of(CALL_ID), ids(AbstractMessageFeature.sweep(root, true, true), AbstractMessageFeature.DUPLICATE),
                 "the duplicate is reported");
         assertEquals(2L, messageCount(root), "and pruned — only the complete group remains");
-        assertTrue(LedgerUtil.clean(LedgerUtil.sweep(root, false)), "leaving a valid ledger");
+        assertTrue(AbstractMessageFeature.clean(AbstractMessageFeature.sweep(root, false)), "leaving a valid ledger");
     }
 
     /**
@@ -192,13 +193,13 @@ public class LedgerUtilTest extends AbstractMetatronTest {
     public void testFindingsNameTheMessageByItsLedgerVid() {
         final fURI root = freshRoot();
         writeAiRequest(root, CALL_ID);
-        assertEquals(List.of(CALL_ID), ids(LedgerUtil.sweep(root, false), LedgerUtil.ORPHAN),
+        assertEquals(List.of(CALL_ID), ids(AbstractMessageFeature.sweep(root, false), AbstractMessageFeature.ORPHAN),
                 "the unanswered request is the finding");
     }
 
     @Test
     public void testAnEmptyLedgerIsClean() {
-        assertTrue(LedgerUtil.clean(LedgerUtil.sweep(freshRoot(), false)), "nothing written, nothing to repair");
+        assertTrue(AbstractMessageFeature.clean(AbstractMessageFeature.sweep(freshRoot(), false)), "nothing written, nothing to repair");
     }
 
     // ── fixture ────────────────────────────────────────────────────
@@ -257,9 +258,9 @@ public class LedgerUtilTest extends AbstractMetatronTest {
                 + "[agent=>/usr/test/ledger99,user=>/usr/test/ann,algorithm=>[policy=>'window']]").apply();
         final Obj target = ObjmtronSerializer.parse(session.trim()).apply();
         if ("<ERROR>".equals(expected))
-            assertThrows(MTronException.class, () -> LedgerUtil.rootFor(target), why);
+            assertThrows(MTronException.class, () -> AbstractMessageFeature.rootFor(target), why);
         else
-            assertEquals(f(expected), LedgerUtil.rootFor(target), why);
+            assertEquals(f(expected), AbstractMessageFeature.rootFor(target), why);
     }
 
     /**
@@ -277,7 +278,7 @@ public class LedgerUtilTest extends AbstractMetatronTest {
         ObjmtronSerializer.parse("/usr/test/ledger12/session/1 -> "
                 + "[agent=>/usr/test/ledger12,user=>/usr/test/ann,algorithm=>[policy=>'window']]").apply();
         writeAiRequestAt(f("/usr/test/ledger12/message/1"), CALL_ID);
-        assertEquals(List.of(CALL_ID), ids(ObjmtronSerializer.parse(sweep).apply(), LedgerUtil.ORPHAN), why);
+        assertEquals(List.of(CALL_ID), ids(ObjmtronSerializer.parse(sweep).apply(), AbstractMessageFeature.ORPHAN), why);
     }
 
     /**
@@ -300,15 +301,15 @@ public class LedgerUtilTest extends AbstractMetatronTest {
         writeScopedAiRequest(root, session, CALL_ID);
         writeScopedToolResult(root, session, CALL_ID, 0); // the depth the agent had drifted to
 
-        final Obj findings = LedgerUtil.sweep(root, false);
-        assertEquals(List.of(CALL_ID), ids(findings, LedgerUtil.MISSCOPED), "the tear is its own finding");
-        assertEquals(List.of(), ids(findings, LedgerUtil.MISPLACED), "it is not a result that landed in the wrong place");
-        assertEquals(List.of(), ids(findings, LedgerUtil.ORPHAN_RESULT), "nor an orphan result — it has a home");
+        final Obj findings = AbstractMessageFeature.sweep(root, false);
+        assertEquals(List.of(CALL_ID), ids(findings, AbstractMessageFeature.MISSCOPED), "the tear is its own finding");
+        assertEquals(List.of(), ids(findings, AbstractMessageFeature.MISPLACED), "it is not a result that landed in the wrong place");
+        assertEquals(List.of(), ids(findings, AbstractMessageFeature.ORPHAN_RESULT), "nor an orphan result — it has a home");
 
-        LedgerUtil.sweep(root, true);
+        AbstractMessageFeature.sweep(root, true);
 
-        assertTrue(LedgerUtil.clean(LedgerUtil.sweep(root, false)),
-                "the repair leaves a valid ledger, got: " + LedgerUtil.sweep(root, false));
+        assertTrue(AbstractMessageFeature.clean(AbstractMessageFeature.sweep(root, false)),
+                "the repair leaves a valid ledger, got: " + AbstractMessageFeature.sweep(root, false));
         assertEquals(2L, messageCount(root), "and drops nothing: the result was moved, not discarded");
         final Rec result = Router.readFromSpace(root.extend(MESSAGE).extend("+/")).stream()
                 .map(Obj::asRel)

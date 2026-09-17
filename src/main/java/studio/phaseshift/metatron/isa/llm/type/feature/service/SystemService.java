@@ -11,7 +11,7 @@ public interface SystemService {
      *
      * @param text the contribution to add
      */
-    void addSystemMessage(String text);
+    void addSystemMessage(final String text);
 
     /**
      * The assembled system message — every contribution joined for the current turn.

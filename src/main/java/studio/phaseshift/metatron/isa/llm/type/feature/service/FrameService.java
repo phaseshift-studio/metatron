@@ -43,7 +43,7 @@ public interface FrameService {
      * @param frame the frame to push (its argument already set)
      * @return the pushed frame, now addressed
      */
-    Frame push(Frame frame);
+    Frame push(final Frame frame);
 
     /**
      * Mark the top frame complete and return it — never deleted, it just stops being top.
@@ -59,7 +59,7 @@ public interface FrameService {
      * @param key the relative path into the frame's locals/core
      * @return the value, or noobj when no frame in the chain carries it
      */
-    Obj at(fURI key);
+    Obj at(final fURI key);
 
     /**
      * Write a locals key into the current frame — a flat write to {@code <frame>/<key>}
@@ -68,7 +68,7 @@ public interface FrameService {
      * @param key   the relative path into the frame's locals
      * @param value the value to store
      */
-    void locals(fURI key, Obj value);
+    void locals(final fURI key, final Obj value);
 
     /**
      * The caller frame's URI — the return address.

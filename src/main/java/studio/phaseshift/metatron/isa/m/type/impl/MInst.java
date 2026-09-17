@@ -91,6 +91,23 @@ public class MInst extends MObj implements Inst {
         return instC(M_ISA_INST_TID.dom(dom).rng(rng), lst(T(ALL.maybeSome())), f);
     }
 
+    /**
+     * A lambda whose domain is the lhs alone — the {@code inst} argument is simply ignored, so an
+     * arm that does not need the instruction itself is written {@code in -> ...} instead of
+     * {@code (in, ignored) -> ...}.
+     */
+    public static Inst instLambda(final Function<Obj, Obj> f) {
+        return instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), f);
+    }
+
+    public static Inst instLambda(final Lst args, final Function<Obj, Obj> f) {
+        return instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), args, f);
+    }
+
+    public static Inst instLambda(final fURI dom, final fURI rng, final Function<Obj, Obj> f) {
+        return instC(M_ISA_INST_TID.dom(dom).rng(rng), lst(T(ALL.maybeSome())), f);
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(this.tid, this.vid);

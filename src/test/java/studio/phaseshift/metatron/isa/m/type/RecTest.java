@@ -69,9 +69,9 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     }
 
     @Training(
-            value = "a rec is a set of key/value pairs. the rshift (sugar'd >>) inst maps a rec to values based on the provided argument keys.",
-            map1 = {0, 1, 2},
-            mapDesc = {"when the <<lhs>> rec is rshifted by the <<rhs>> key, what is the result?"})
+            instruction = "when the {{{rec}}} rec is rshifted by the {{{key}}} key, what is the result?",
+            input = "{{{rec}}}>>{{{key}}}",
+            output = "{{{value}}}")
     @ParameterizedTest
     @CsvSource(value = {
             // rec                                 % key                  % value
@@ -111,9 +111,8 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     }
 
     @Training(
-            value = "rec A isa (sugar'd ?) match to rec B, if rec B subsumes the key/values of rec A",
-            map1 = {0, 1, 2},
-            mapDesc = {"does the <<rhs>> rec match the <<lhs>> rec?"})
+            instruction = "does the {{{recB}}} rec match the {{{recA}}} rec?",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @CsvSource(value = {
             // rec                                 % key                                        % value
