@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.llm;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.llm.space.LedgerUtil;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
@@ -843,7 +842,7 @@ public class llmInstSet extends AbstractInstSet {
                                             final Obj target = inst.arg(f("session_or_agent"), 0).orElse(lhs);
                                             final boolean repair = inst.arg(f("repair"), 1).booleanCheck();
                                             final boolean prune = inst.arg(f("prune"), 2).booleanCheck();
-                                            return LedgerUtil.sweep(LedgerUtil.rootFor(target), repair, prune);
+                                            return AbstractMessageFeature.sweep(AbstractMessageFeature.rootFor(target), repair, prune);
                                         }),
                                 "the session whose ledger is swept — a session::T row; defaults to the lhs",
                                 "a rec of call ids per failure mode — every key always present, so it can be counted without inspecting its shape",
@@ -866,7 +865,7 @@ public class llmInstSet extends AbstractInstSet {
                                 "communicate with am llm enriched by tools, skills, etc. and receive response in particular format", // desc
                                 "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts/_?incrq)].chat('what is 4+2?',[answer=>int::T])"),
                         // SUMMARIZE INSTRUCTION — distill a session into claim::T recs
-                        docWrap(instC(LLM_INST_TID.extend("summary").dom(LLM_ISA_TID.extend("session_or_agent")).rng(REC_TID), rec(
+                        docWrap(instC(LLM_INST_TID.extend("summary").dom(LLM_ISA_TID.extend("session_or_agent").maybe()).rng(REC_TID), rec(
                                                 uri("session_or_agent").maybe().asUri(), T(LLM_ISA_TID.extend("session_or_agent").maybe()),
                                                 uri(MODEL).maybe().asUri(), choose_(rec(
                                                         isa_(LLM_MODEL_TYPE).tryToInst(), id_().tryToInst(),
@@ -876,22 +875,21 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(KIND).maybe().asUri(), LST_TYPE,
                                                 uri(CONCEPT).maybe().asUri(), LST_TYPE),
                                         (lhs, inst) -> {
-                                            // The session may arrive as the lhs (fluent: @dr/session/1.summarize(_))
+                                            // The session_or_agent may arrive as the lhs (fluent: @dr/session/1.summarize(_))
                                             // or as arg 0 (function form: summarize(@dr/session/1)).
-                                            final Rec session = inst.arg(f("session_or_agent"), 0).orElse(lhs.asRec());
-                                            final fURI sessionVID = LedgerUtil.rootFor(session);
-                                            if (null == sessionVID || sessionVID.isEmpty())
+                                            final Obj sessionOrAgent = inst.arg(f("session_or_agent"), 0).orElse(lhs);
+                                            final AbstractMessageFeature.SessionAddress address = AbstractMessageFeature.addressOf(sessionOrAgent);
+                                            if (null == address.sessionVID() || address.sessionVID().isEmpty())
                                                 return fail("summarize requires an anchored session — use @dr/session/N.summarize()");
-                                            final fURI agentHome = session.testNominally(LLM_AGENT_TYPE) ? session.at(ROOT).uriValue() : session.at(AGENT).uriValue();
                                             // the argument rec — same vocabulary as the <<mtron:summarize>> block
                                             // (session/model are summary()-only keys; the block uses scope/kinds/concepts)
-                                            final Rec config = rec(uri(SESSION), uri(sessionVID),
+                                            final Rec config = rec(uri(SESSION), uri(address.sessionVID()),
                                                     uri(MODEL), inst.arg(f(MODEL), 1),
                                                     uri(SCOPE), inst.arg(f(SCOPE), 2),
                                                     uri(KIND), inst.arg(f(KIND), 3),
                                                     uri(CONCEPT), inst.arg(f(CONCEPT), 4),
-                                                    uri(TO), uri(agentHome));
-                                            return SummarizeFeature.summarizeSession(agentHome, sessionVID, config);
+                                                    uri(TO), uri(address.agentHome()));
+                                            return SummarizeFeature.summarizeSession(address.agentHome(), address.sessionVID(), config);
                                         }),
                                 "a session to distill",
                                 "the applied constraints rec — [session, model, scope, kind, concept, to, claim=>[vids], loose_end=>[vids]]",
@@ -899,27 +897,25 @@ public class llmInstSet extends AbstractInstSet {
                                 "distill a session's message ledger into claim::T and loose_end::T recs via a mini-task — the same call as the <<mtron:summarize>> block (they share the argument rec::T vocabulary: session, model, scope, kind, concept, to)",
                                 "@dr/session/1.summarize(_)  [-- fluent --]  |  summarize(@dr/session/1)  [-- function --]"),
                         // COMPACT INSTRUCTION — compact a session's ledger into a resume sentinel
-                        docWrap(instC(LLM_INST_TID.extend("compact").dom(LLM_AGENT_TID.maybe()).rng(REC_TID), rec(
-                                                uri(AGENT).maybe().asUri(), LLM_AGENT_TYPE,
+                        docWrap(instC(LLM_INST_TID.extend("compact").dom(LLM_ISA_TID.extend("session_or_agent").maybe()).rng(REC_TID), rec(
+                                                uri("session_or_agent").maybe().asUri(), T(LLM_ISA_TID.extend("session_or_agent").maybe()),
                                                 uri(MODEL).maybe().asUri(), LLM_MODEL_TYPE,
                                                 uri(PROMPT).maybe().asUri(), STR_TYPE),
                                         (lhs, inst) -> {
-                                            // The agent may arrive as the lhs (fluent: @dr.compact())
+                                            // The session_or_agent may arrive as the lhs (fluent: @dr.compact())
                                             // or as arg 0 (function form: compact(@dr)).
-                                            final Rec agentRec = inst.arg(f(AGENT), 0).orElse(lhs.asRec());
-                                            final Agent a = agent(agentRec);
-                                            if (a.service(MessageService.class).isEmpty())
-                                                return fail("compact requires the agent to have a session feature");
-                                            final fURI agentHome = a.at(ROOT).uriValue();
-                                            final fURI sessionVID = a.service(MessageService.class).get().sessionVID();
+                                            final Obj sessionOrAgent = inst.arg(f("session_or_agent"), 0).orElse(lhs);
+                                            final AbstractMessageFeature.SessionAddress address = AbstractMessageFeature.addressOf(sessionOrAgent);
+                                            if (null == address.sessionVID() || address.sessionVID().isEmpty())
+                                                return fail("compact requires an anchored agent or session — use @dr.compact() or compact(@dr)");
                                             final Rec config = rec(uri(MODEL), inst.arg(f(MODEL), 1),
                                                     uri(PROMPT), inst.arg(f(PROMPT), 2),
-                                                    uri(TO), uri(agentHome));
-                                            return CompactionFeature.compactSession(agentHome, sessionVID, config);
+                                                    uri(TO), uri(address.agentHome()));
+                                            return CompactionFeature.compactSession(address.agentHome(), address.sessionVID(), config);
                                         }),
-                                "an agent to compact",
+                                "a session or agent to compact",
                                 "the applied constraints rec — [to, compaction=>vid, in, out, compression]",
-                                mutableMap(jnt(0), "the agent to compact (defaults to the lhs)",
+                                mutableMap(jnt(0), "the session or agent to compact (defaults to the lhs)",
                                         jnt(1), "the summarizer model (default: the agent home model)",
                                         jnt(2), "the summarizer prompt template"),
                                 "compact a session's message ledger into a resume summary sentinel — the same call as the <<mtron:compaction>> block (they share the argument rec::T vocabulary: agent, model, prompt)",

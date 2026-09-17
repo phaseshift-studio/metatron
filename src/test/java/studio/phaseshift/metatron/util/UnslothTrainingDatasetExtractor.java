@@ -7,7 +7,6 @@ import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.q.QProcIntegrationTest;
 import studio.phaseshift.metatron.furi.q.TypeQTest;
 import studio.phaseshift.metatron.isa.Sugar;
-import studio.phaseshift.metatron.isa.grph.TinkerGrphSpaceTest;
 import studio.phaseshift.metatron.isa.llm.llmInstSetTest;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mInstSetTest;
@@ -18,12 +17,14 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.machInstSetTest;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.math.mathInstSetTest;
+import studio.phaseshift.metatron.isa.sys.sysInstSetTest;
 import studio.phaseshift.metatron.isa.vec.vecInstSetTest;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializerTest;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,7 +62,7 @@ public class UnslothTrainingDatasetExtractor {
                 QProcIntegrationTest.class.getCanonicalName(),
                 TypeQTest.class.getCanonicalName(),
                 //dcmntSpaceTest.class.getCanonicalName(),
-                TinkerGrphSpaceTest.class.getCanonicalName(),
+                //TinkerGrphSpaceTest.class.getCanonicalName(),
                 llmInstSetTest.class.getCanonicalName(),
                 mInstSetTest.class.getCanonicalName(),
                 mParserTest.class.getCanonicalName(),
@@ -86,6 +87,7 @@ public class UnslothTrainingDatasetExtractor {
                 //ScoringInstResolverTest.class.getCanonicalName(),
                 //ObjJavaSerializerTest.class.getCanonicalName(),
                 //ObjSQLSerializerTest.class.getCanonicalName(),
+                sysInstSetTest.class.getCanonicalName(),
                 machInstSetTest.class.getCanonicalName(),
                 //fsSpaceTest.class.getCanonicalName(),
                 mathInstSetTest.class.getCanonicalName(),
@@ -135,6 +137,9 @@ public class UnslothTrainingDatasetExtractor {
 
         // ── Meta-knowledge entries about mtron ──
         addMetaKnowledge(dataset);
+
+        // ── Declarative knowledge from the language reference docs ──
+        addReferenceKnowledge(dataset);
 
         String outputPath = Paths.get(System.getProperty("user.dir") + "/.metatron/skills/mtron/assets", "mtron_training_dataset.jsonl").toString();
         writeJsonl(dataset, outputPath);
@@ -307,6 +312,75 @@ public class UnslothTrainingDatasetExtractor {
         } catch (Exception e) {
             LOG.warn("  Could not extract sugars: %s", e.getMessage());
         }
+    }
+
+    /**
+     * Adds declarative knowledge entries generated from the mtron reference markdown
+     * docs — one entry per top-level ({@code ##}) section, framed as a question whose
+     * answer is the (cleaned) section body. This gives the model verbal knowledge of
+     * the language, complementing the procedural expression→result entries.
+     */
+    private static void addReferenceKnowledge(List<Training.Entry> dataset) {
+        final String INSTR = "Answer this question about the mtron language and metatron virtual machine accurately and concisely.";
+        final String[] QUESTIONS = {
+                "What is %s in mtron?",
+                "Explain the mtron concept: %s.",
+                "Tell me about %s in mtron.",
+                "Define %s as used in mtron."
+        };
+        final List<String> files = List.of(
+                "docs/website/skills/mtron/references/language-reference-mtron.md",
+                "docs/website/skills/mtron/references/type-system-mtron.md",
+                "docs/website/skills/mtron/references/tble-instset-mtron.md",
+                "docs/website/skills/mtron/references/math-instset-mtron.md",
+                "docs/website/skills/mtron/references/sys-instset-mtron.md",
+                "docs/website/skills/mtron/references/web-instset-mtron.md",
+                "docs/website/skills/mtron/SKILL.md"
+        );
+        int count = 0;
+        for (final String file : files) {
+            final String md;
+            try {
+                md = Files.readString(Paths.get(System.getProperty("user.dir"), file));
+            } catch (final IOException e) {
+                LOG.warn("  Could not read reference file %s: %s", file, e.getMessage());
+                continue;
+            }
+            // Split on top-level (##) sections. Element 0 is the frontmatter + H1 + intro — skip it.
+            final String[] sections = md.split("(?m)^## ");
+            for (int i = 1; i < sections.length; i++) {
+                final String[] parts = sections[i].split("\n", 2);
+                if (parts.length < 2) continue;
+                final String title = cleanReferenceTitle(parts[0]);
+                if (title.equalsIgnoreCase("references")) continue;  // skip the SKILL.md index section
+                final String body = cleanReferenceBody(parts[1]);
+                if (title.isEmpty() || body.isEmpty()) continue;
+                final String question = String.format(QUESTIONS[count % QUESTIONS.length], title);
+                dataset.add(new Training.Entry(INSTR, question, body, null));
+                count++;
+            }
+        }
+        LOG.info("  Reference knowledge entries generated: %d", count);
+    }
+
+    /** Strips a leading "N. " section number and markdown from a section title. */
+    private static String cleanReferenceTitle(String title) {
+        String t = title.trim().replaceFirst("^\\d+\\.\\s*", "");
+        t = t.replace("**", "").replace("`", "");
+        return t.trim();
+    }
+
+    /** Cleans a section body: drops fences, sub-header markers, bold, links, and trailing rules. */
+    private static String cleanReferenceBody(String body) {
+        String b = body;
+        b = b.replaceFirst("(?s)\\s*---\\s*$", "");            // trailing horizontal rule
+        b = b.replaceAll("```[a-zA-Z_]*\\s*", "");             // code fence markers (keep code)
+        b = b.replaceAll("(?m)^.*[\\u2500-\\u257F\\u22EE-\\u22F1].*\\R?", "");  // drop ASCII-art diagram lines
+        b = b.replaceAll("(?m)^#{3,4}\\s*", "");               // ### / #### sub-header markers
+        b = b.replaceAll("\\[([^\\]]+)\\]\\([^)]*\\)", "$1");  // markdown links -> text
+        b = b.replace("**", "").replace("__", "");             // bold
+        b = b.replace("`", "");                                // inline code delimiters
+        return b.trim();
     }
 
     private static ClassStats extractFromClass(Class<?> clazz, List<Training.Entry> dataset, Set<String> ignoreTestMethods) {

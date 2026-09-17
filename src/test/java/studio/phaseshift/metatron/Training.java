@@ -28,14 +28,12 @@ import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.lang.reflect.Parameter;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.DESC;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
@@ -44,27 +42,50 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 
 /**
- * Marks a {@code @ParameterizedTest} method for multi-column training data extraction.
+ * Marks a {@code @ParameterizedTest} method for template-based training data extraction.
  * <p>
- * Each CSV row can produce multiple training entries via {@code map1/map2/map3}
- * column-pair mappings. The static {@link Extractor#from(Method, CsvSource)} method
- * handles both annotated and fallback (two-column) methods.
+ * Each of {@code instruction}, {@code input}, and {@code output} is a template in which a
+ * {@code {{{param}}}} hole is replaced by that column's row value (only when the hole's
+ * content matches a method parameter name; anything else is emitted verbatim). Repeat the
+ * annotation to emit multiple entries per CSV row. The static
+ * {@link Extractor#from(Method, CsvSource)} method handles both annotated and fallback
+ * (two-column) methods.
+ * <p>
+ * Per the original Stanford Alpaca format:
+ * <p>
+ * instruction — the task/directive: what to do. It's the verb, and it's usually generic/reusable across many examples.
+ * input — the material/context: what to do it to. It's the object — the specific instance data. Optional (empty for self-contained tasks).
+ * output — the answer.
+ * The cleanest mental model: instruction is the operation, input is the operand.
+ * <p>
+ * Concrete Alpaca examples:
+ * <p>
+ * json
+ * Copy
+ * { "instruction": "Translate the following sentence to French.", "input": "The weather is nice.", "output": "Le temps est beau." }
+ * { "instruction": "Summarize the passage.",                 "input": "<long text>",       "output": "<summary>" }
+ * { "instruction": "Answer the question.",                   "input": "What is 2+2?",     "output": "4" }
+ * { "instruction": "Give three tips for healthy eating.",    "input": "",                 "output": "1. …" }
+ * Note the pattern: the same instruction ("Translate…", "Summarize…") is reused across many different inputs — that stable/generic instruction is what lets the model learn "for this kind of task, map input → output".
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
+@Repeatable(Training.Trainings.class)
 public @interface Training {
 
-    String value();
+    String instruction() default "";
 
-    String[] mapDesc();
+    String input() default "";
 
-    int[] map1() default {-1};
+    String output();
 
-    int[] map2() default {-1};
-
-    int[] map3() default {-1};
+    @Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface Trainings {
+        Training[] value();
+    }
 
     // ── Companion logic ──────────────────────────────────────────────────────
 
@@ -88,29 +109,6 @@ public @interface Training {
                     .replace("\n", "\\n")
                     .replace("\r", "\\r")
                     .replace("\t", "\\t") + "\"";
-        }
-    }
-
-    /**
-     * A column-mapping run: which CSV columns form the lhs/rhs pair.
-     */
-    record Run(String desc, String mapDesc, int lhs, int rhs, int other) {
-        public static List<Run> runs(final Training training) {
-            final List<Run> runs = new ArrayList<>();
-            if (training.map1()[0] != -1) {
-                runs.add(new Run(training.value(), training.mapDesc()[0], training.map1()[0], training.map1()[1], training.map1().length == 3 ? training.map1()[2] : -1));
-            }
-            if (training.map2()[0] != -1) {
-                runs.add(new Run(training.value(), training.mapDesc()[1], training.map2()[0], training.map2()[1], training.map2().length == 3 ? training.map2()[2] : -1));
-            }
-            if (training.map3()[0] != -1) {
-                runs.add(new Run(training.value(), training.mapDesc()[2], training.map3()[0], training.map3()[1], training.map3().length == 3 ? training.map3()[2] : -1));
-            }
-            return runs;
-        }
-
-        public boolean has3rd() {
-            return this.other != -1;
         }
     }
 
@@ -146,28 +144,18 @@ public @interface Training {
             final String methodKey = method.getDeclaringClass().getSimpleName() + "." + method.getName();
             final String delimiter = String.valueOf(csv.delimiter());
 
-            if (method.isAnnotationPresent(Training.class)) {
-                // ── Annotated: use explicit column mappings ──
-                final Training training = method.getAnnotation(Training.class);
-                for (final Run run : Run.runs(training)) {
+            final Training[] trainings = method.getAnnotationsByType(Training.class);
+            if (trainings.length > 0) {
+                // ── Annotated: render instruction/input/output templates against the row's columns ──
+                final Map<String, Integer> paramToCol = paramNameToColumn(method);
+                for (final Training training : trainings) {
                     for (final String row : csv.value()) {
                         final String[] parts = row.split(java.util.regex.Pattern.quote(delimiter));
-                        final String opCtx = extractOperatorContext(clean(parts[run.lhs()].trim()));
-                        if (run.has3rd()) {
-                            entries.add(new Entry(
-                                    run.desc() + ": " + run.mapDesc() + (opCtx.isEmpty() ? "" : " " + opCtx),
-                                    "<<lhs>> " + clean(parts[run.lhs()].trim()) + " <<rhs>> " + clean(parts[run.rhs()].trim()),
-                                    clean(parts[2].trim()),
-                                    methodKey
-                            ));
-                        } else {
-                            entries.add(new Entry(
-                                    run.desc() + ": " + run.mapDesc() + (opCtx.isEmpty() ? "" : " " + opCtx),
-                                    clean(parts[run.lhs()].trim()),
-                                    clean(parts[run.rhs()].trim()),
-                                    methodKey
-                            ));
-                        }
+                        entries.add(new Entry(
+                                render(training.instruction(), parts, paramToCol),
+                                render(training.input(), parts, paramToCol),
+                                render(training.output(), parts, paramToCol),
+                                methodKey));
                     }
                 }
             } else {
@@ -208,6 +196,38 @@ public @interface Training {
             return template.replace("%s", input);
         }
 
+        private static final Pattern TEMPLATE_HOLE = Pattern.compile("\\{\\{\\{([^{}]+)\\}\\}\\}");
+
+        /**
+         * Maps each method parameter name to its column index (requires {@code -parameters}).
+         */
+        private static Map<String, Integer> paramNameToColumn(final Method method) {
+            final Map<String, Integer> map = new HashMap<>();
+            final Parameter[] params = method.getParameters();
+            for (int i = 0; i < params.length; i++) {
+                map.put(params[i].getName(), i);
+            }
+            return map;
+        }
+
+        /**
+         * Renders a template by replacing {@code {{{name}}}} holes whose content matches a
+         * parameter name with that column's value; any other {@code {{{...}}}} is left verbatim.
+         */
+        private static String render(final String template, final String[] parts, final Map<String, Integer> paramToCol) {
+            if (template == null || template.isEmpty()) return "";
+            final Matcher m = TEMPLATE_HOLE.matcher(template);
+            final StringBuilder sb = new StringBuilder();
+            while (m.find()) {
+                final String name = m.group(1).trim();
+                final Integer col = paramToCol.get(name);
+                final String replacement = (col != null && col < parts.length) ? parts[col].trim() : m.group(0);
+                m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+            }
+            m.appendTail(sb);
+            return sb.toString();
+        }
+
         private static String clean(String s) {
             if (s == null) return "";
             return s.replace("\\", "\\\\")
@@ -225,7 +245,7 @@ public @interface Training {
         private static String extractOperatorContext(String expression) {
             if (expression == null || expression.isBlank()) return "";
             try {
-                final Obj obj = ObjmtronSerializer.parse(expression);
+                final Obj obj = ObjmtronSerializer.parse(expression.replace("\\\\", "\\"));
                 if (!obj.isCall()) return "";
                 // Resolve instruction types: resolveCode for Code chains, unresolved for Inst
                 List<Inst> insts;

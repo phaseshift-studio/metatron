@@ -23,6 +23,9 @@ import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.ThinkService;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -42,9 +45,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.ThinkService;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -130,23 +130,14 @@ public class MidChatFeature extends AbstractFeature {
         return Set.of(LLM_SKILL_SERVICE_TID, LLM_MESSAGE_SERVICE_TID);
     }
 
-    /**
-     * Register this feature's skill with the SkillFeature gateway — the gateway is
-     * the owner of the skill channel; this feature is a contributor.
-     */
-    private void registerSkill(final Agent agent) {
-        if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
-            return;
-        agent.requireService(SkillService.class).addSkill(mSkill.of(rec(mutableMap(
-                uri(NAME), uri(LLM_MIDCHAT_FEATURE_TID.name()),
-                uri(DESC), str("speak to the user mid-iteration, and hear them back inside your next tool result"),
-                uri(CONTENT), str(WatermarkUtil.instructions(WatermarkUtil.codec(this, WATERMARK_CODEC),
-                        WatermarkUtil.key(this, WATERMARK_KEY), MIDCHAT_INSTRUCTIONS))))));
-    }
-
     @Override
     public Obj onBeforeChat(final Agent agent) {
-        this.registerSkill(agent);
+        agent.requireService(SkillService.class)
+                .addSkill(mSkill.of(rec(mutableMap(
+                        uri(NAME), uri(LLM_MIDCHAT_FEATURE_TID.name()),
+                        uri(DESC), str("speak to the user mid-iteration, and hear them back inside your next tool result"),
+                        uri(CONTENT), str(WatermarkUtil.instructions(WatermarkUtil.codec(this, WATERMARK_CODEC),
+                                WatermarkUtil.key(this, WATERMARK_KEY), MIDCHAT_INSTRUCTIONS))))));
         this.surfaceWatermarkRejections(agent);
         this.hold.setLength(0);
         return noobj();
@@ -181,7 +172,7 @@ public class MidChatFeature extends AbstractFeature {
         final StringBuilder rebuilt = new StringBuilder();
         int cursor = 0;
         for (final WatermarkUtil.Hit hit : scan.hits()) {
-            if (!this.isMine(hit))
+            if (!hit.key().equals(WatermarkUtil.key(this, WATERMARK_KEY)))
                 continue; // another feature's tag is another feature's to harvest
             rebuilt.append(visible, cursor, hit.start());
             rebuilt.append(this.relay(agent, hit));
@@ -189,13 +180,6 @@ public class MidChatFeature extends AbstractFeature {
         }
         rebuilt.append(visible.substring(cursor));
         return str(rebuilt.toString());
-    }
-
-    /**
-     * Whether a watermark carries this feature's key — the tag is the address.
-     */
-    private boolean isMine(final WatermarkUtil.Hit hit) {
-        return hit.key().equals(WatermarkUtil.key(this, WATERMARK_KEY));
     }
 
     @Override

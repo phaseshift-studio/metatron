@@ -1041,14 +1041,17 @@ public class mInstSetTest extends AbstractInstSetTest {
     }
 
     @Training(
-            value = "compiler rewrite and evaluation",
-            mapDesc = {
-                    "lhs rewrites to rhs",
-                    "lhs evaluates to rhs",
-                    "lhs evaluates to rhs"},
-            map1 = {0, 1},
-            map2 = {0, 2},
-            map3 = {1, 2})
+            instruction = "what does the expression {{{code}}} rewrite to?",
+            input = "{{{code}}}",
+            output = "{{{expected}}}")
+    @Training(
+            instruction = "what does the expression {{{code}}} evaluate to?",
+            input = "{{{code}}}",
+            output = "{{{expectedResult}}}")
+    @Training(
+            instruction = "what does the rewritten expression {{{expected}}} evaluate to?",
+            input = "{{{expected}}}",
+            output = "{{{expectedResult}}}")
     @ParameterizedTest
     @CsvSource(value = {
             // map_nest_rewrite tests
@@ -1174,9 +1177,10 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeRewrite(LOG, code, expected, expectedResult, false);
     }
 
-    @Training(value = "explain instruction",
-            mapDesc = {"lhs evaluates to rhs"},
-            map1 = {0, 1})
+    @Training(
+            instruction = "what does the mtron expression {{{code}}} evaluate to?",
+            input = "{{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @CsvSource(value = {
             "map(1.plus(2).explain()).type()                     % str::T      % explain returns str type",

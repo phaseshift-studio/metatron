@@ -14,7 +14,7 @@ public interface SkillService {
      *
      * @param skill the skill to register
      */
-    void addSkill(mSkill skill);
+    void addSkill(final mSkill skill);
 
     /**
      * The registered skills.

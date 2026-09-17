@@ -790,7 +790,7 @@ public class FloatingSurface {
         final int width = Math.max(1, slot.targetWidth);
         // clamp so the WHOLE box stays on the terminal — a corner dragged past
         // the edge pins the box there instead of writing past the screen
-        final int placedRow = Math.min(Math.max(1, row), Math.max(1, termHeight - height + 1));
+        final int placedRow = Math.min(Math.max(1, row), Math.max(1, widgetAreaHeight(termHeight) - height + 1));
         final int placedCol = Math.min(Math.max(1, col), Math.max(1, termWidth - width + 1));
         final int offsetRow = slot.offsetRowFor(placedRow, termHeight, height);
         final int offsetCol = slot.offsetColFor(placedCol, termWidth, width);
@@ -866,11 +866,21 @@ public class FloatingSurface {
 
     /**
      * Clamp a height to {@link #MIN_HEIGHT} and, when the terminal reports a
-     * sane size, to the terminal height.
+     * sane size, to the widget area (every row but the status line).
      */
     private static int clampHeight(final int height, final int termHeight) {
         final int h = Math.max(MIN_HEIGHT, height);
-        return termHeight > 1 ? Math.min(h, termHeight) : h;
+        return termHeight > 1 ? Math.min(h, widgetAreaHeight(termHeight)) : h;
+    }
+
+    /**
+     * The terminal rows a floating widget may occupy: every row but the last,
+     * which the status line owns.  A headless or single-row terminal is left
+     * alone so tests and non-interactive runs don't collapse every widget to
+     * nothing.
+     */
+    private static int widgetAreaHeight(final int termHeight) {
+        return termHeight > 1 ? termHeight - 1 : termHeight;
     }
 
     /**
@@ -1477,7 +1487,7 @@ public class FloatingSurface {
             // at the edge instead of writing past the terminal (which wraps or
             // scrolls the far side and leaks raw {{...}} codes).
             this.lastRow = Math.min(Math.max(1, rowFor(this.offsetRow, termHeight, height)),
-                    Math.max(1, termHeight - height + 1));
+                    Math.max(1, widgetAreaHeight(termHeight) - height + 1));
             this.lastCol = Math.min(Math.max(1, colFor(this.offsetCol, termWidth, width)),
                     Math.max(1, termWidth - width + 1));
         }

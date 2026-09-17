@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.llm.type.feature.AbstractMessageFeature;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
 
 import java.io.File;
@@ -51,7 +52,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
  * space backend, but it is gated on a reachable model, so without one it skips and
  * the store's read path goes untested.  This one always runs, which is the point:
  * the difference between a {@code memSpace} and a tble store is what hid two
- * defects in {@link LedgerUtil} until it was run against real data.
+ * defects in {@link AbstractMessageFeature} until it was run against real data.
  */
 public class SqliteLedgerIntegrationTest extends AbstractMetatronTest {
 

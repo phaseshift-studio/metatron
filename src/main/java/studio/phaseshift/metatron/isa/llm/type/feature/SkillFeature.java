@@ -4,6 +4,9 @@ import dev.langchain4j.skills.Skill;
 import dev.langchain4j.skills.Skills;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.ToolService;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.Lst;
@@ -28,9 +31,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.ToolService;
 
 /**
  * The gateway of the agent's skill channel.
@@ -86,7 +86,9 @@ public class SkillFeature extends AbstractFeature implements SkillService {
      * @param skill the skill to register
      */
     public void addSkill(final mSkill skill) {
-        this.skillRegistry.put(key(skill), skill);
+        final Obj name = skill.at(uri(NAME));
+        final fURI key = name.isNoObj() ? skill.tid().extend(name.toCleanString()) : name.uriValue();
+        this.skillRegistry.put(key, skill);
     }
 
     /**
@@ -152,12 +154,5 @@ public class SkillFeature extends AbstractFeature implements SkillService {
             throw MTronException.of("unable to setup skills: %s", e);
         }
         return noobj();
-    }
-
-    private static fURI key(final mSkill skill) {
-        final Obj name = skill.at(uri(NAME));
-        if (!name.isNoObj())
-            return name.uriValue();
-        return skill.tid().extend(name.toCleanString());
     }
 }

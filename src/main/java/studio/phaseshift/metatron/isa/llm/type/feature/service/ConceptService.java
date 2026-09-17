@@ -20,7 +20,7 @@ public interface ConceptService {
      * @param blocking if true and extraction is async, block until it finishes
      * @return the set of concept uris persisted
      */
-    Set<fURI> processConcepts(Agent agent, String text, boolean blocking);
+    Set<fURI> processConcepts(final Agent agent, final String text, final boolean blocking);
 
     /**
      * The concept namespace root for the given agent — every concept uri hangs off it.
@@ -28,5 +28,5 @@ public interface ConceptService {
      * @param agent the agent whose root to resolve
      * @return the concept root uri
      */
-    fURI root(Agent agent);
+    fURI root(final Agent agent);
 }

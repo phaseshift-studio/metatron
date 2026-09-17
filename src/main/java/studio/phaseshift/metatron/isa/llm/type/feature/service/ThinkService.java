@@ -14,5 +14,5 @@ public interface ThinkService {
      * @param agent the agent whose thought channel to write
      * @param text  the thought fragment to append
      */
-    void append(Agent agent, Str text);
+    void append(final Agent agent, final Str text);
 }

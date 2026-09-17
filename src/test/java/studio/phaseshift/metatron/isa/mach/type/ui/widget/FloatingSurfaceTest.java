@@ -133,9 +133,9 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         final FloatingSurface.Slot slot = FloatingSurface.Slot.anchored(
                 FloatingSurface.Anchor.BOTTOM_LEFT, 40, 0, 0);
         slot.resolve(TERM_HEIGHT, TERM_WIDTH, 10);
-        // lastRow = 40 - 10 + 1 = 31 → widget occupies rows 31–40
-        assertEquals(TERM_HEIGHT - 10 + 1, slot.lastRow,
-                "bottom-left flush: widget bottom should be flush with terminal bottom");
+        // lastRow = 40 - 10 = 30 → widget occupies rows 30–39, leaving row 40 (the status line)
+        assertEquals(TERM_HEIGHT - 10, slot.lastRow,
+                "bottom-left flush: widget bottom stops above the status line");
         assertEquals(1, slot.lastCol);
     }
 
@@ -144,9 +144,9 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         final FloatingSurface.Slot slot = FloatingSurface.Slot.anchored(
                 FloatingSurface.Anchor.BOTTOM_LEFT, 40, 0, 0);
         slot.resolve(TERM_HEIGHT, TERM_WIDTH, 2);
-        // lastRow = 40 - 2 + 1 = 39 → widget occupies rows 39–40
-        assertEquals(TERM_HEIGHT - 2 + 1, slot.lastRow,
-                "bottom-left flush: short widget stays flush with bottom");
+        // lastRow = 40 - 2 = 38 → widget occupies rows 38–39, leaving row 40 (the status line)
+        assertEquals(TERM_HEIGHT - 2, slot.lastRow,
+                "bottom-left flush: short widget stays above the status line");
         assertEquals(1, slot.lastCol);
     }
 
@@ -155,7 +155,7 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         final FloatingSurface.Slot slot = FloatingSurface.Slot.anchored(
                 FloatingSurface.Anchor.BOTTOM_RIGHT, 40, 0, 0);
         slot.resolve(TERM_HEIGHT, TERM_WIDTH, 5);
-        assertEquals(TERM_HEIGHT - 5 + 1, slot.lastRow, "bottom-right: flush with bottom");
+        assertEquals(TERM_HEIGHT - 5, slot.lastRow, "bottom-right: stops above the status line");
         assertEquals(TERM_WIDTH - 40 + 1, slot.lastCol, "bottom-right: flush with right");
     }
 
@@ -188,9 +188,10 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
                 FloatingSurface.Anchor.BOTTOM_LEFT, 40, -3, 0);
         slot.resolve(TERM_HEIGHT, TERM_WIDTH, 5);
         // negative top pushes DOWN past the bottom edge — pinned so the box's
-        // bottom edge stops at the terminal's last row (40): lastRow = 40 - 5 + 1 = 36
-        assertEquals(TERM_HEIGHT - 5 + 1, slot.lastRow,
-                "bottom-left top=-3: negative top pushes DOWN, pinned at the bottom edge");
+        // bottom edge stops one row above the terminal's last row, leaving the
+        // status line (40): lastRow = 40 - 5 = 35
+        assertEquals(TERM_HEIGHT - 5, slot.lastRow,
+                "bottom-left top=-3: negative top pushes DOWN, pinned above the status line");
     }
 
     @Test
@@ -214,13 +215,27 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         final FloatingSurface.Slot slot = FloatingSurface.Slot.anchored(
                 FloatingSurface.Anchor.BOTTOM_LEFT, 40, 0, 0);
         slot.resolve(TERM_HEIGHT, TERM_WIDTH, 2);   // collapsed, 2 rows
-        final int collapsedRow = slot.lastRow;       // 39
+        final int collapsedRow = slot.lastRow;       // 38
         slot.resolve(TERM_HEIGHT, TERM_WIDTH, 10);  // expanded, 10 rows
-        final int expandedRow = slot.lastRow;        // 31
+        final int expandedRow = slot.lastRow;        // 30
         assertTrue(expandedRow < collapsedRow,
                 "bottom-left: expanded widget should start at a smaller row number (higher on screen)");
-        assertEquals(TERM_HEIGHT - 10 + 1, expandedRow,
-                "bottom-left expanded: should be flush with terminal bottom");
+        assertEquals(TERM_HEIGHT - 10, expandedRow,
+                "bottom-left expanded: should stop above the status line");
+    }
+
+    @ParameterizedTest()
+    @CsvSource(value = {
+            "2  % the short widget's bottom edge",
+            "5  % the flush widget's bottom edge",
+            "10 % the tall widget's bottom edge",
+    }, delimiter = '%')
+    void shouldKeepTheBottomEdgeOffTheStatusLine(final int height, final String description) {
+        final FloatingSurface.Slot slot = FloatingSurface.Slot.anchored(
+                FloatingSurface.Anchor.BOTTOM_LEFT, 40, 0, 0);
+        slot.resolve(TERM_HEIGHT, TERM_WIDTH, height);
+        assertEquals(TERM_HEIGHT - 1, slot.lastRow + height - 1,
+                description + " stops one row above the terminal's last row (the status line)");
     }
 
     // ── Slot.resolve — middle anchor, vertically+horizontally centered ──
@@ -670,7 +685,7 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         final FloatingSurface.Placement placement = surface_.placement(widget);
         // the whole box stays on the terminal: the top-left is held so the box's
         // far (bottom-right) edge stops at the terminal edge, never past it
-        assertEquals(Math.min(Math.max(1, row), Math.max(1, term.getHeight() - placement.height() + 1)),
+        assertEquals(Math.min(Math.max(1, row), Math.max(1, term.getHeight() - placement.height())),
                 origin.row(), description + " (row)");
         assertEquals(Math.min(Math.max(1, col), Math.max(1, term.getWidth() - placement.width() + 1)),
                 origin.col(), description + " (col)");
@@ -734,8 +749,8 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         final FloatingSurface.Placement placement = surface_.placement(widget);
         assertEquals(Math.min(Math.max(10, width), term.getWidth()), placement.width(),
                 description + " (width, floored at MIN_WIDTH and capped at the terminal)");
-        assertEquals(Math.min(Math.max(3, height), term.getHeight()), placement.height(),
-                description + " (height, floored at MIN_HEIGHT and capped at the terminal)");
+        assertEquals(Math.min(Math.max(3, height), term.getHeight() - 1), placement.height(),
+                description + " (height, floored at MIN_HEIGHT and capped above the status line)");
         term.close();
     }
 

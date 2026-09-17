@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 
 import java.util.Set;
@@ -100,6 +101,10 @@ public class RealTest extends AbstractAlgebraTest<Real> {
     }
 
     @ParameterizedTest
+    @Training(
+            instruction = "ordering a real{*}::T stream yields a lst[real{*}]::T: when the {{{input}}} stream is applied to the {{{code}}} instruction, what is the result?",
+            input = "{{{input}}}.{{{code}}}",
+            output = "{{{expected}}}")
     @CsvSource(value = {
             "{1.1,2.2,3.3,4.4}                   %order()       %[1.1,2.2,3.3,4.4]",
             "{2.2,3.3,4.4,1.1}                   %order()       %[1.1,2.2,3.3,4.4]",

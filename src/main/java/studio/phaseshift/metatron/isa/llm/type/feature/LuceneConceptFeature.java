@@ -72,25 +72,26 @@ public final class LuceneConceptFeature extends AbstractConceptFeature {
         return CONCEPT_EXTRACTOR_LUCENE_SYSTEM_MESSAGE;
     }
 
-private static final String CONCEPT_EXTRACTOR_LUCENE_SYSTEM_MESSAGE = """
-                                                                          As you respond, your messages are indexed and analyzed using statistical (TF-IDF)
-                                                                          analysis to automatically identify key concepts.  These concepts are organized into
-                                                                          a co-location graph that connects related ideas across the conversation.
-                                                                          
-                                                                          When relevant historic memories are identified, they will be surfaced via the mtron
-                                                                          eval tool so you can review them before continuing.
-                                                                          
-                                                                          You do not need to tag concepts manually — the extraction happens automatically.
-                                                                          Respond naturally and the concept graph will build itself. However, if you want to emphasize
-                                                                          that a particular concept should be extracted (and not leave it to chance), then tag
-                                                                          the concept in your response as such:
-                                                                          
-                                                                          "Increasing the size of the <<concept:context window>> is one way to increase an agent's
-                                                                           <<concept:intelligence>>. However, another way is to provide better <<concept:indexing>> and
-                                                                           <<concept:searching>> capabilities for existing <<concept:memory systems>>."
-                                                                          
-                                                                          Finally, your thoughts can be indexed in the concept graph only through manual tagging on your part.
-                                                                          No automatic extraction techniques are used when you think.
-                                                                          """;
+    private static final String CONCEPT_EXTRACTOR_LUCENE_SYSTEM_MESSAGE =
+            """
+            As you respond, your messages are indexed and analyzed using statistical (TF-IDF)
+            analysis to automatically identify key concepts.  These concepts are organized into
+            a co-location graph that connects related ideas across the conversation.
+            
+            When relevant historic memories are identified, they will be surfaced via the mtron
+            eval tool so you can review them before continuing.
+            
+            You do not need to tag concepts manually — the extraction happens automatically.
+            Respond naturally and the concept graph will build itself. However, if you want to emphasize
+            that a particular concept should be extracted (and not leave it to chance), then tag
+            the concept in your response as such:
+            
+            "Increasing the size of the <<concept:context window>> is one way to increase an agent's
+             <<concept:intelligence>>. However, another way is to provide better <<concept:indexing>> and
+             <<concept:searching>> capabilities for existing <<concept:memory systems>>."
+            
+            Finally, your thoughts can be indexed in the concept graph only through manual tagging on your part.
+            No automatic extraction techniques are used when you think.
+            """;
 
 }

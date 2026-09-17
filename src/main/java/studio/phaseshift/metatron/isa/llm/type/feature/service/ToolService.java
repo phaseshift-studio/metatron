@@ -15,7 +15,7 @@ public interface ToolService {
      *
      * @param tool the tool to register
      */
-    void addTool(mTool tool);
+    void addTool(final mTool tool);
 
     /**
      * The registered tools.
@@ -36,5 +36,5 @@ public interface ToolService {
      *
      * @param toolProvider the provider to register
      */
-    void addToolProvider(ToolProvider toolProvider);
+    void addToolProvider(final ToolProvider toolProvider);
 }

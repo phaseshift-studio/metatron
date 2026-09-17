@@ -254,9 +254,9 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
     // ===================================================================
 
     @Training(
-            value = "the simple JSON encoding of mtron objs is lossy",
-            map1 = {0, 1},
-            mapDesc = {"the mtron expression <<lhs>> serializes to the simple (lossy) JSON <<rhs>>"})
+            instruction = "what does the mtron expression {{{mtron}}} serialize to as simple (lossy) JSON?",
+            input = "{{{mtron}}}",
+            output = "{{{expectedJson}}}")
     @ParameterizedTest
     @CsvSource(quoteCharacter = '~', delimiter = '%', value = {
             "[1,2,3]                            % [1,2,3]                     % lst serializes as a plain array",

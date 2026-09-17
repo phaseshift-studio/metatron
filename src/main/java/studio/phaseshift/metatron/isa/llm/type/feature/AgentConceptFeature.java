@@ -67,15 +67,15 @@ public final class AgentConceptFeature extends AbstractConceptFeature {
                            "An agent's context window can be indexed like a database."
                         It should be rewritten as:
                            "An agent's <<concept:context window>> can be <<concept:indexed>> like a <<concept:database>>.
-
+                        
                         IMPORTANT:
                           1. Do not wrap common words nor stop words.
                           2. Do not remove spaces (e.g. context window should not be mapped to contextwindow).
                         Finally, it's better to have fewer, highly specific concepts then many general concepts.
                         Thus, if the text has no significant concepts, then simply return the text as is, no changes needed.
-
+                        
                         The text to rewrite is:
-
+                        
                         """ + text);
                 LOG.debug("agent translation: %s", result);
                 final Matcher matcher = CONCEPT_PATTERN.matcher(Str.Helper.cleanString(result));
@@ -99,16 +99,17 @@ public final class AgentConceptFeature extends AbstractConceptFeature {
         return CONCEPT_EXTRACTOR_AGENT_SYSTEM_MESSAGE;
     }
 
-private static final String CONCEPT_EXTRACTOR_AGENT_SYSTEM_MESSAGE = """
-                                                                         As you respond, a separate analysis agent running behind the scenes automatically
-                                                                         extracts key concepts from your output using a language model.  These concepts are
-                                                                         organized into a co-location graph that connects related ideas across the conversation.
-                                                                         
-                                                                         When relevant historic memories are identified, they will be surfaced via the mtron
-                                                                         eval tool so you can review them before continuing.
-                                                                         
-                                                                         You do not need to tag concepts manually — the extraction happens automatically.
-                                                                         Respond naturally and the concept graph will build itself.
-                                                                         """;
+    private static final String CONCEPT_EXTRACTOR_AGENT_SYSTEM_MESSAGE =
+            """
+            As you respond, a separate analysis agent running behind the scenes automatically
+            extracts key concepts from your output using a language model.  These concepts are
+            organized into a co-location graph that connects related ideas across the conversation.
+            
+            When relevant historic memories are identified, they will be surfaced via the mtron
+            eval tool so you can review them before continuing.
+            
+            You do not need to tag concepts manually — the extraction happens automatically.
+            Respond naturally and the concept graph will build itself.
+            """;
 
 }

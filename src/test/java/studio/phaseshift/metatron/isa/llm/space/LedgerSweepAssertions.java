@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.llm.space;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
+import studio.phaseshift.metatron.isa.llm.type.feature.AbstractMessageFeature;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -47,7 +48,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * is reachable) and by a sqlite-backed ledger test that has no model dependency at
  * all — so at least one of them always runs.
  *
- * <p>Why this exists at all: {@link LedgerUtilTest} uses a {@code memSpace}, and the
+ * <p>Why this exists at all: {@link AbstractMessageFeatureTest} uses a {@code memSpace}, and the
  * read path differs by backend.  Running against a real store is what caught the
  * value read back from a tble space not carrying its own vid (it lives on the rel)
  * — which silently broke the ledger-id sort, and with it every adjacency comparison,
@@ -73,7 +74,7 @@ final class LedgerSweepAssertions {
      * and assert the sweep finds exactly the broken one, locates it by a real vid,
      * repairs it without deleting anything, and prunes only when asked.
      *
-     * <p>Driven through {@link LedgerUtil#sweepSession} deliberately: that is the
+     * <p>Driven through {@link AbstractMessageFeature#sweepSession} deliberately: that is the
      * production entry point — it derives the ledger root from the session the way
      * the store does — so this exercises the derivation too.
      */
@@ -84,38 +85,38 @@ final class LedgerSweepAssertions {
         // a request with its result immediately after it is what the gate writes
         Router.writeToSpace(ledger, aiRequest(HEALTHY_CALL));
         Router.writeToSpace(ledger, toolResult(HEALTHY_CALL));
-        assertTrue(LedgerUtil.clean(LedgerUtil.sweepSession(sessionVID, false, false)),
-                "a request followed immediately by its result is clean, got: " + LedgerUtil.sweepSession(sessionVID, false, false));
+        assertTrue(AbstractMessageFeature.clean(AbstractMessageFeature.sweepSession(sessionVID, false, false)),
+                "a request followed immediately by its result is clean, got: " + AbstractMessageFeature.sweepSession(sessionVID, false, false));
 
         // an answer that never arrived
         Router.writeToSpace(ledger, aiRequest(ORPHAN_CALL));
-        final List<String> findings = ids(LedgerUtil.sweepSession(sessionVID, false, false), LedgerUtil.ORPHAN);
+        final List<String> findings = ids(AbstractMessageFeature.sweepSession(sessionVID, false, false), AbstractMessageFeature.ORPHAN);
         assertEquals(List.of(ORPHAN_CALL), findings, "the unanswered request is the only finding, got: " + findings);
 
         // and the repair must actually write, not report and no-op
-        LedgerUtil.sweepSession(sessionVID, true, false);
-        assertTrue(LedgerUtil.clean(LedgerUtil.sweepSession(sessionVID, false, false)),
-                "the repair leaves a valid ledger, got: " + LedgerUtil.sweepSession(sessionVID, false, false));
+        AbstractMessageFeature.sweepSession(sessionVID, true, false);
+        assertTrue(AbstractMessageFeature.clean(AbstractMessageFeature.sweepSession(sessionVID, false, false)),
+                "the repair leaves a valid ledger, got: " + AbstractMessageFeature.sweepSession(sessionVID, false, false));
 
         // the shape the drstynx ledger actually holds: the same complete group
         // written a second time.  The gate's dedup memory (PUBLISHED) is in-JVM, so
         // a restart lets a re-offered group be published again — and the second copy
         // takes no results, because the first consumed them.
         Router.writeToSpace(ledger, aiRequest(HEALTHY_CALL));
-        assertEquals(List.of(HEALTHY_CALL), ids(LedgerUtil.sweepSession(sessionVID, false, false), LedgerUtil.DUPLICATE),
+        assertEquals(List.of(HEALTHY_CALL), ids(AbstractMessageFeature.sweepSession(sessionVID, false, false), AbstractMessageFeature.DUPLICATE),
                 "the second copy is reported as a duplicate, not as a missing result");
 
         // repair is non-destructive: the duplicate becomes valid where it stands
         final long before = messageCount(memoryRoot);
-        LedgerUtil.sweepSession(sessionVID, true, false);
-        assertTrue(LedgerUtil.clean(LedgerUtil.sweepSession(sessionVID, false, false)),
-                "the repair leaves a valid ledger, got: " + LedgerUtil.sweepSession(sessionVID, false, false));
+        AbstractMessageFeature.sweepSession(sessionVID, true, false);
+        assertTrue(AbstractMessageFeature.clean(AbstractMessageFeature.sweepSession(sessionVID, false, false)),
+                "the repair leaves a valid ledger, got: " + AbstractMessageFeature.sweepSession(sessionVID, false, false));
         assertEquals(before, messageCount(memoryRoot),
                 "and deletes nothing — the duplicate keeps its prose, it just stops asking for answers it cannot get");
 
         // prune is the explicit opt-in to deleting it
         Router.writeToSpace(ledger, aiRequest(HEALTHY_CALL));
-        assertEquals(List.of(HEALTHY_CALL), ids(LedgerUtil.sweepSession(sessionVID, true, true), LedgerUtil.DUPLICATE),
+        assertEquals(List.of(HEALTHY_CALL), ids(AbstractMessageFeature.sweepSession(sessionVID, true, true), AbstractMessageFeature.DUPLICATE),
                 "the duplicate is reported");
         assertEquals(before, messageCount(memoryRoot), "and pruned — back to the size it was before");
     }
