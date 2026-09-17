@@ -1,7 +1,8 @@
 # Console widget-pointer test — the pointer's gesture vocabulary on a real
 # console: a click focuses the widget under it, a click on an accordion header
 # (its [-]/[+] glyph included) folds it, and a click on terminal with no widget
-# under it drops the focus AND hands the mouse back to the terminal.
+# under it drops the focus (the pointer stays armed, so the very next click
+# re-focuses — no alt+w re-entry).
 #
 #   bin/metatron-console --from classes --steps bin/test/console-widget-mouse.steps
 #
@@ -73,7 +74,7 @@ RAW b"\x1b[<0\x3b10\x3b2m"
 SLEEP 1
 WAIT_SINCE expand │ one 10
 
-# --- click terminal with no widget under it: unfocus + hand the mouse back ---
+# --- click terminal with no widget under it: unfocus (pointer stays armed) ---
 MARK blur
 RAW b"\x1b[<0\x3b70\x3b30M"
 RAW b"\x1b[<0\x3b70\x3b30m"
@@ -85,12 +86,18 @@ SLEEP 1
 WAIT_SINCE blur 1 floating widget
 SILENT blur [active] 3
 
-# --- the pointer is the terminal's now, so the keyboard re-arms it ---
-MARK rearm
-KEY alt+w
-WAIT_SINCE rearm ▶ 10
-MARK click2
-RAW b"\x1b[<0\x3b10\x3b2M"
-RAW b"\x1b[<0\x3b10\x3b2m"
+# --- click the widget body again: it re-focuses directly, no alt+w re-entry ---
+MARK refocus
+RAW b"\x1b[<0\x3b5\x3b4M"
+RAW b"\x1b[<0\x3b5\x3b4m"
 SLEEP 1
-WAIT_SINCE click2 notes [+] 10
+WAIT_SINCE refocus ▶ 10
+
+# --- wheel over empty terminal: the wheel follows the pointer, so an empty
+# --- cell hands the pointer back — focus drops (the marker goes) and the
+# --- terminal gets its own mouse again for its scrollback ---
+MARK wheel
+RAW b"\x1b[<64\x3b70\x3b30M"
+SLEEP 1
+SLEEP 1
+SILENT wheel ▶ 3

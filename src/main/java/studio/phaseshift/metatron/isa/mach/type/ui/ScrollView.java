@@ -68,8 +68,18 @@ public final class ScrollView {
      * @param viewport visible rows (chrome included)
      */
     public static int maxY(final int content, final int chrome, final int viewport) {
-        final int body = Math.max(0, content - clampChrome(chrome, content));
-        final int visible = Math.max(0, viewport - clampChrome(chrome, content));
+        return maxY(content, chrome, 0, viewport);
+    }
+
+    /**
+     * As {@link #maxY(int, int, int)} but also preserving {@code footer} pinned
+     * trailing rows (the bottom border) — the body scrolls between them.
+     */
+    public static int maxY(final int content, final int chrome, final int footer, final int viewport) {
+        final int pinned = clampChrome(chrome, content);
+        final int trailing = clampChrome(footer, Math.max(0, content - pinned));
+        final int body = Math.max(0, content - pinned - trailing);
+        final int visible = Math.max(0, viewport - pinned - trailing);
         return Math.max(0, body - visible);
     }
 
@@ -103,16 +113,31 @@ public final class ScrollView {
      */
     public static List<String> windowVertically(final List<String> lines, final int chrome,
                                                 final int offset, final int viewport) {
+        return windowVertically(lines, chrome, 0, offset, viewport);
+    }
+
+    /**
+     * As {@link #windowVertically(List, int, int, int)} but also pinning the
+     * last {@code footer} rows (the bottom border) at the viewport's bottom, so
+     * scrolling never overwrites them.
+     */
+    public static List<String> windowVertically(final List<String> lines, final int chrome, final int footer,
+                                                final int offset, final int viewport) {
         if (null == lines || lines.isEmpty()) return List.of();
         if (viewport <= 0 || viewport >= lines.size()) return List.copyOf(lines);
         final int pinned = clampChrome(chrome, lines.size());
-        final int visibleBody = Math.max(0, viewport - pinned);
-        if (visibleBody >= lines.size() - pinned) return List.copyOf(lines);
-        final int from = pinned + Math.max(0, Math.min(offset, maxY(lines.size(), pinned, viewport)));
+        final int trailing = clampChrome(footer, Math.max(0, lines.size() - pinned));
+        final int bodySlots = viewport - pinned - trailing;
+        if (bodySlots >= lines.size() - pinned - trailing) return List.copyOf(lines);
+        final int from = pinned + Math.max(0, Math.min(offset,
+                maxY(lines.size(), pinned, trailing, viewport)));
         final List<String> window = new ArrayList<>(viewport);
+        final int bodyEnd = lines.size() - trailing;
         for (int i = 0; i < pinned; i++)
             window.add(lines.get(i));
-        for (int i = from; i < lines.size() && window.size() < viewport; i++)
+        for (int i = from; i < bodyEnd && window.size() < viewport - trailing; i++)
+            window.add(lines.get(i));
+        for (int i = bodyEnd; i < lines.size(); i++)
             window.add(lines.get(i));
         return window;
     }

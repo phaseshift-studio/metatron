@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
@@ -179,9 +180,12 @@ public final class LedgerUtil {
         if (session.isUri())
             return SpaceChatSessionStore.memoryRootOf(session.uriValue());
         if (session.testNominally(LLM_AGENT_TYPE)) {
-            final fURI furi = agent(session.asRec()).feature(LLM_MESSAGE_FEATURE_TID).orElse(rec()).at(SESSION).orElse(uri("")).uriValue();
-            if (!furi.isEmpty())
-                return furi;
+            final MessageService message = agent(session.asRec()).service(MessageService.class).orElse(null);
+            if (null != message) {
+                final fURI furi = message.sessionVID();
+                if (null != furi && !furi.isEmpty())
+                    return furi;
+            }
         }
         if (session.isRec()) {
             final Rec row = session.asRec();

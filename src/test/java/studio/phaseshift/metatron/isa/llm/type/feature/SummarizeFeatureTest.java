@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
@@ -58,8 +58,8 @@ public class SummarizeFeatureTest extends AbstractFeatureTest {
         return new SummarizeFeature(mutableMap(uri(ROOT), uri("/usr/test/sum")), LLM_SUMMARIZE_FEATURE_TID, null);
     }
 
-    private static ChatResult chatResultWithSummarizeBlock() {
-        return ChatResult.chatResult()
+    private static ChatFrame chatResultWithSummarizeBlock() {
+        return ChatFrame.chatFrame()
                 .put(CHAT, str("I've queued a summarization over the last two days."))
                 .put(USER, str("test prompt"))
                 .put(TIME, real(42.0, MATH_MILLIS_TID, null))
@@ -94,7 +94,7 @@ public class SummarizeFeatureTest extends AbstractFeatureTest {
     @Test
     public void testBlockDispatchQueuesTask() {
         final SummarizeFeature summarize = summarize();
-        final MessageFeature session = new MessageFeature(mutableMap(uri(SESSION), uri("/usr/test/session/1")), LLM_MESSAGE_FEATURE_TID, null);
+        final WindowMessageFeature session = new WindowMessageFeature(mutableMap(uri(SESSION), uri("/usr/test/session/1")), LLM_WINDOW_MESSAGE_FEATURE_TID, null);
         final Agent agent = agentWith(summarize, session);
         summarize.onCompleteResponse(agent, chatResultWithSummarizeBlock());
         assertNotNull(summarize.summaryTask.get(), "a summarize block should queue a background task");
@@ -131,12 +131,11 @@ public class SummarizeFeatureTest extends AbstractFeatureTest {
         Router.writeToSpace(concept, rec(uri(MESSAGE), lst(auto_from_(uri("/usr/test/message/28")).tryToInst())).selfVID(concept));
 
         final SummarizeFeature summarize = summarize();
-        // agent carries a plain concept_feature rec (root => /usr/test/concept) —
-        // a real ConceptFeature needs the stopword resource not on the test classpath
+        // agent carries a real tagging concept feature (root => /usr/test/concept)
         final Map<Obj, Obj> agentMap = new LinkedHashMap<>();
         agentMap.put(uri(NAME), str("test-agent"));
         agentMap.put(uri(ROOT), uri(TEST_AGENT_ROOT.toString()));
-        agentMap.put(uri(FEATURE), lst(summarize, rec(uri(ROOT), uri("/usr/test/concept")).tid(LLM_CONCEPT_FEATURE_TID),
+        agentMap.put(uri(FEATURE), lst(summarize, new TaggingConceptFeature(mutableMap(uri(ROOT), uri("/usr/test/concept")), LLM_TAGGING_CONCEPT_FEATURE_TID, null),
                 new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null),
                 new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null)));
         final Agent agent = Agent.agent(rec(agentMap, LLM_AGENT_TID, null));

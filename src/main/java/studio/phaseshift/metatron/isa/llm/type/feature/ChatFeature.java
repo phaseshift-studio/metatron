@@ -3,7 +3,10 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.ChatService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
 import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -16,6 +19,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -26,7 +30,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-public class ChatFeature extends AbstractFeature {
+public class ChatFeature extends AbstractFeature implements ChatService {
+    public static final fURI FEATURE_TID = studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_FEATURE_TID;
+
+    @Override
+    public Set<fURI> offers() {
+        return Set.of(LLM_CHAT_SERVICE_TID);
+    }
+
 
     protected Rec lastMessage = rec0();
 
@@ -57,7 +68,7 @@ public class ChatFeature extends AbstractFeature {
             LOG.error("unable to access conf/nanorc directory");
         }
         if (agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
-            agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage(
+            agent.requireService(SystemService.class).addSystemMessage(
                     """
                     you are an agent in the metatron (http://metatron.phaseshift.studio).
                     your underlying inference model is:
@@ -73,24 +84,22 @@ public class ChatFeature extends AbstractFeature {
                         the result you wanted is 4.
                     ----
                     your thoughts and responses may contain syntax highlighting markup.
-                      {{syntax:java}}
+                      \\{{syntax:java}}
                       public static void method() { }
-                      {{/syntax:java}}
+                      \\{{/syntax:java}}
                     available languages include:
                       %s
                     """.formatted(CommonUtil.indent(this.at(MODEL).toString(), 2), languages));
         }
 
         try {
-            if (agent.hasFeature(LLM_MESSAGE_FEATURE_TID)) {
-                this.lastMessage = agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as()
+            if (agent.service(MessageService.class).isPresent()) {
+                this.lastMessage = agent.requireService(MessageService.class)
                         .addMessage(agent, MessageBuilder.build(USER_MESSAGE_TID)
                                 .text(Str.Helper.cleanString(str(userMessage).apply()))
                                 .contents(userMessage)
                                 .time()
-                                .session(agent.hasFeature(LLM_MESSAGE_FEATURE_TID)
-                                        ? agent.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION).uriValue()
-                                        : null)
+                                .session(agent.sessionVID())
                                 .depth(agent.chatDepth())
                                 .chatId(agent.chatId())
                                 .create());
@@ -107,7 +116,7 @@ public class ChatFeature extends AbstractFeature {
     }
 
     @Override
-    public void onCompleteResponse(final Agent agent, final ChatResult result) {
+    public void onCompleteResponse(final Agent agent, final ChatFrame result) {
         agent.feature(LLM_CHAT_FEATURE_TID).asRec().at(f(RESPONSE).extend("complete")).apply(result);
     }
 
@@ -141,7 +150,7 @@ public class ChatFeature extends AbstractFeature {
 
     // @Override
     // public Set<fURI> requires() {
-    //       return Set.of(LLM_SKILL_FEATURE_TID);
+    //       return Set.of(LLM_SKILL_SERVICE_TID);
     //  }
 
     /**
@@ -155,7 +164,7 @@ public class ChatFeature extends AbstractFeature {
     /*public void registerSkill(final Agent agent) {
         if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
             return;
-        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(mutableMap(
+        agent.requireService(SkillService.class).addSkill(mSkill.of(rec(mutableMap(
                 uri(NAME), uri(LLM_CHAT_FEATURE_TID.name()),
                 uri(DESC), str("chat with the agent"),
                 uri(CONTENT), str("""

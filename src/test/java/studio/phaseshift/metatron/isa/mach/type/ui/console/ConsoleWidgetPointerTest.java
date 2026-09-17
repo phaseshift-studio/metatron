@@ -123,21 +123,36 @@ public class ConsoleWidgetPointerTest extends AbstractMetatronTest {
         assertFalse(this.console.clickAt(30, 80), "empty terminal consumes nothing");
         assertNull(this.console.getActiveWidget(),
                 "a click on terminal with no widget under it drops the focus");
-        assertTrue(this.console.pointerDismissed(),
-                "and hands the mouse back to the terminal (its wheel, its selection)");
+
+        // the pointer stays armed while a widget is on screen, so the very next
+        // click re-focuses it — no alt+w re-entry (native selection is via Shift+drag)
+        assertFalse(this.console.clickAt(4, 2), "the body click is still the console's");
+        assertSame(this.notes, this.console.getActiveWidget(),
+                "and it re-focuses the widget without alt+w");
+    }
+
+    @Test
+    public void shouldReleaseThePointerAndDropTheFocus() {
+        this.console.clickAt(4, 2);
+        assertSame(this.notes, this.console.getActiveWidget(), "the widget is focused");
+
+        this.console.releasePointer();
+        assertNull(this.console.getActiveWidget(),
+                "a wheel over empty terminal releases the pointer and detaches the focus");
     }
 
     @ParameterizedTest()
     @CsvSource(value = {
             "true  % false % 1 % true  % a focused widget owns the pointer",
-            "false % false % 1 % true  % widgets on screen own it until waved off",
-            "false % true  % 1 % false % waved off: the terminal gets its mouse back",
+            "false % false % 1 % true  % widgets on screen own the pointer",
             "false % false % 0 % false % nothing on screen: the terminal keeps its mouse",
-            "true  % true  % 0 % true  % a focus outranks a stale dismissal",
+            "true  % false % 0 % true  % a focus outranks a widget not yet drawn",
+            "false % true  % 1 % false % a release hands the pointer back to the terminal",
+            "true  % true  % 1 % false % a release outranks even a focused widget",
     }, delimiter = '%')
-    void testPointerOwnership(final boolean focused, final boolean dismissed, final int widgets,
+    void testPointerOwnership(final boolean focused, final boolean released, final int widgets,
                               final boolean wanted, final String description) {
-        assertEquals(wanted, Console.pointerWanted(focused, dismissed, widgets), description);
+        assertEquals(wanted, Console.pointerWanted(focused, released, widgets), description);
     }
 
     @ParameterizedTest()
@@ -249,6 +264,9 @@ public class ConsoleWidgetPointerTest extends AbstractMetatronTest {
                 "the box grew by the pointer's column delta");
         assertEquals(before.height() + 4, surface.placement(this.notes).height(),
                 "and by its row delta");
+        assertEquals(before.width() + 6, this.notes.getStyle().width(),
+                "the style width re-shapes DURING the drag (the content wraps to it), "
+                        + "not only on release — otherwise a horizontal resize reads as a move");
 
         this.console.mouseReleased(corner[0] + 4, corner[1] + 6);
         assertFalse(this.console.dragging(), "the release ends the gesture");

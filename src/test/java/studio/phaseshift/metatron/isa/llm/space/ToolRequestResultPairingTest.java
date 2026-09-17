@@ -31,7 +31,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.feature.MessageFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.WindowMessageFeature;
 import studio.phaseshift.metatron.isa.llm.type.feature.ToolFeature;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -111,9 +111,9 @@ public class ToolRequestResultPairingTest extends AbstractMetatronTest {
      */
     private static Agent pairingAgent(final String scenario, final ToolFeature toolFeature) {
         final Rec algorithm = rec(mutableMap(uri(NAME), uri("message_window"), uri(MAX), jnt(50)));
-        final MessageFeature messageFeature = new MessageFeature(mutableMap(
+        final WindowMessageFeature messageFeature = new WindowMessageFeature(mutableMap(
                 uri(SESSION), uri(sessionVID(scenario).toString()),
-                uri(ALGORITHM), algorithm), LLM_MESSAGE_FEATURE_TID, null);
+                uri(ALGORITHM), algorithm), LLM_WINDOW_MESSAGE_FEATURE_TID, null);
         final List<Obj> features = new ArrayList<>();
         features.add(messageFeature);
         if (null != toolFeature)
@@ -134,12 +134,13 @@ public class ToolRequestResultPairingTest extends AbstractMetatronTest {
 
     /**
      * The store LC4j drives — built exactly as a chat builds it
-     * ({@code MessageFeature.onBeforeChat} creates the session and the store,
+     * ({@code AbstractMessageFeature.onBeforeChat} creates the session and the store,
      * and the tool channel resolves the same instance to close a turn), so the
      * rig exercises production wiring rather than a stand-in.
      */
     private static SpaceChatSessionStore store(final Agent agent) {
-        final MessageFeature messageFeature = agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as();
+        final WindowMessageFeature messageFeature = agent.feature(LLM_WINDOW_MESSAGE_FEATURE_TID).<WindowMessageFeature>as();
+        messageFeature.advanceChatId(agent);
         messageFeature.onBeforeChat(agent);
         return messageFeature.store();
     }

@@ -27,6 +27,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.io.IOException;
 import java.util.List;
@@ -186,9 +187,10 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         final FloatingSurface.Slot slot = FloatingSurface.Slot.anchored(
                 FloatingSurface.Anchor.BOTTOM_LEFT, 40, -3, 0);
         slot.resolve(TERM_HEIGHT, TERM_WIDTH, 5);
-        // lastRow = 40 - 5 + 1 - (-3) = 39 (extends below bottom)
-        assertEquals(TERM_HEIGHT - 5 + 1 + 3, slot.lastRow,
-                "bottom-left top=-3: negative top pushes DOWN (past bottom edge)");
+        // negative top pushes DOWN past the bottom edge — pinned so the box's
+        // bottom edge stops at the terminal's last row (40): lastRow = 40 - 5 + 1 = 36
+        assertEquals(TERM_HEIGHT - 5 + 1, slot.lastRow,
+                "bottom-left top=-3: negative top pushes DOWN, pinned at the bottom edge");
     }
 
     @Test
@@ -199,9 +201,10 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         // lastRow = 40 - 6 + 1 - 2 = 33 (2-row margin from bottom)
         assertEquals(TERM_HEIGHT - 6 + 1 - 2, slot.lastRow,
                 "bottom-right top=2: 2-row margin from bottom edge");
-        // lastCol = 120 - 40 + 1 + 5 = 86 (pushed right by 5)
-        assertEquals(TERM_WIDTH - 40 + 1 + 5, slot.lastCol,
-                "bottom-right left=5: pushed right (away from left edge)");
+        // left=5 pushes right past the right edge — pinned so the box's right
+        // edge stops at the terminal: lastCol = 120 - 40 + 1 = 81
+        assertEquals(TERM_WIDTH - 40 + 1, slot.lastCol,
+                "bottom-right left=5: pushed right, pinned at the right edge");
     }
 
     @Test
@@ -649,8 +652,8 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "-100 % -100 % dragged off the top-left, the handle is held at the corner",
-            "9999 % 9999 % dragged past the bottom-right, the handle is held on screen",
+            "-100 % -100 % dragged off the top-left, the box is held at the corner",
+            "9999 % 9999 % dragged past the bottom-right, the box is held fully on screen",
     }, delimiter = '%')
     public void testDraggingClampsSoTheHandleStaysReachable(final int row, final int col,
                                                             final String description) throws Exception {
@@ -664,8 +667,13 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         assertTrue(surface_.placeAt(widget, row, col), description);
         surface_.renderNow();
         final FloatingSurface.Cell origin = surface_.origin(widget);
-        assertEquals(Math.min(Math.max(1, row), term.getHeight()), origin.row(), description + " (row)");
-        assertEquals(Math.min(Math.max(1, col), term.getWidth()), origin.col(), description + " (col)");
+        final FloatingSurface.Placement placement = surface_.placement(widget);
+        // the whole box stays on the terminal: the top-left is held so the box's
+        // far (bottom-right) edge stops at the terminal edge, never past it
+        assertEquals(Math.min(Math.max(1, row), Math.max(1, term.getHeight() - placement.height() + 1)),
+                origin.row(), description + " (row)");
+        assertEquals(Math.min(Math.max(1, col), Math.max(1, term.getWidth() - placement.width() + 1)),
+                origin.col(), description + " (col)");
         term.close();
     }
 
@@ -781,6 +789,92 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         assertNull(surface_.placement(widget), "a fixed slot has no anchor to offset from");
         assertFalse(surface_.placeAt(widget, 10, 10), "and cannot be moved by a drag");
         term.close();
+    }
+
+    @Test
+    public void shouldBlankTheStaleRightEdgeWhenShrinkingInPlace() throws Exception {
+        final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        final Terminal term = TerminalBuilder.builder().dumb(true)
+                .size(new org.jline.terminal.Size(40, 120))
+                .streams(new java.io.ByteArrayInputStream(new byte[0]), out).build();
+        final FloatingSurface surface_ = new FloatingSurface(term);
+        final AccordionWidget widget = new AccordionWidget("shrink me", "");
+        widget.style().width(40).applyStyle();
+        surface_.add(widget, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);   // lastCol = 1 always
+        surface_.renderNow();
+        final String firstPass = out.toString(java.nio.charset.StandardCharsets.UTF_8);
+
+        // TOP_LEFT keeps lastCol pinned at 1, so this is the in-place (sameCol)
+        // erase path: the stale tail is [31, 40], not the leading [1, 10].  The
+        // erase must position its cursor at the stale region's start, column 31
+        // (the old right border lives at column 40).
+        surface_.resizeTo(widget, 30, 3);
+        surface_.renderNow();
+        final String shrinkPass = out.toString(java.nio.charset.StandardCharsets.UTF_8)
+                .substring(firstPass.length());
+
+        assertTrue(shrinkPass.contains("\033[2;31H"),
+                "the in-place shrink must blank the stale right edge, not the new box's left edge: "
+                        + shrinkPass.replace("\033", "<ESC>"));
+        term.close();
+    }
+
+    @Test
+    public void shouldKeepTheBoxOnScreenWhenGrownPastTheTerminal() throws Exception {
+        final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        final Terminal term = dragTerminal(out);   // 120 cols x 40 rows
+        final FloatingSurface surface_ = new FloatingSurface(term);
+        final AccordionWidget widget = new AccordionWidget("grow me", "one\ntwo\n{{r}}red{{X}} 50%");
+        surface_.add(widget, FloatingSurface.Anchor.TOP_MIDDLE, 40, 0, 0);
+        surface_.renderNow();
+
+        surface_.resizeTo(widget, 500, 500);
+        surface_.renderNow();
+        final String grown = out.toString(java.nio.charset.StandardCharsets.UTF_8);
+
+        // every cursor-position must land inside the terminal — a write past the
+        // edge wraps/scrolls and corrupts the far side
+        final java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("\\033\\[(\\d+);(\\d+)H").matcher(grown);
+        while (m.find()) {
+            final int row = Integer.parseInt(m.group(1));
+            final int col = Integer.parseInt(m.group(2));
+            assertTrue(row >= 1 && row <= term.getHeight() && col >= 1 && col <= term.getWidth(),
+                    "out-of-bounds write " + row + ";" + col + " in: " + grown.replace("\033", "<ESC>"));
+        }
+        term.close();
+    }
+
+    @Test
+    public void shouldNotCorruptWhenASyntaxBlockIsClippedByTheViewport() throws Exception {
+        final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        final Terminal term = dragTerminal(out);
+        final FloatingSurface surface_ = new FloatingSurface(term);
+        final AccordionWidget widget = new AccordionWidget("audit",
+                "one\ntwo\n{{syntax:java}}public class X {\n}\n{{/syntax:java}}\nthree\nfour");
+        widget.style().height(4).applyStyle();   // clip so the block is split
+        surface_.add(widget, FloatingSurface.Anchor.BOTTOM_RIGHT, 40, 0, 0);
+        surface_.renderNow();
+        final String output = out.toString(java.nio.charset.StandardCharsets.UTF_8);
+        assertFalse(output.contains("{{"),
+                "no raw Graphitty codes may leak when a syntax block is clipped: "
+                        + output.replace("\033", "<ESC>"));
+        term.close();
+    }
+
+    @Test
+    public void shouldTolerateUnmatchedSyntaxAndRuleTags() {
+        // the viewport can clip a {{syntax:…}} block (or a {{c}}…{{/c}} wrap) so
+        // the open tag is gone but the close remains — the render must degrade
+        // to plain text, never throw and never leak raw {{…}} codes
+        assertDoesNotThrow(() -> Graphitty.string("{{/syntax:java}}"),
+                "a stray syntax close must not throw");
+        assertDoesNotThrow(() -> Graphitty.string("{{syntax:java}}code"),
+                "a dangling syntax open must not throw");
+        assertDoesNotThrow(() -> Graphitty.string("{{/c}}text"),
+                "a stray color-rule close must not throw");
+        assertEquals("text", Graphitty.string("{{/syntax:java}}text"),
+                "a stray syntax close is dropped, not echoed");
     }
 
     @Test
@@ -937,7 +1031,7 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
     @ParameterizedTest()
     @CsvSource(value = {
             "-30 % L01 % L30 % scrolling back reveals the first line and drops the last",
-            "-5  % L26 % L01 % a five row scroll back stops five rows into the text",
+            "-5  % L25 % L01 % a five row scroll back stops five rows into the text (the bottom border stays pinned)",
     }, delimiter = '%')
     void testScrollBackRevealsTextThatLeftTheViewport(final int dy, final String visible,
                                                       final String hidden, final String description) throws Exception {

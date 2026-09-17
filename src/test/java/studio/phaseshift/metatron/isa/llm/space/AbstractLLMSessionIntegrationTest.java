@@ -212,7 +212,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     public void testWindowEnforcement() {
         // Write session with tight window before first chat
         final int smallMax = 3;
-        Router.writeToSpace(sessionVID(), MessageFeature.createSession(
+        Router.writeToSpace(sessionVID(), AbstractMessageFeature.createSession(
                 "test-agent", "test-user", "message_window", smallMax).selfVID(sessionVID()));
 
         // Build agent with matching small max
@@ -225,7 +225,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
             agent.chat("Say 'turn" + i + "' and nothing else.");
         }
 
-        final List<ChatMessage> windowed = agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as().memory().messages();
+        final List<ChatMessage> windowed = agent.feature(LLM_WINDOW_MESSAGE_FEATURE_TID).<WindowMessageFeature>as().memory().messages();
         assertTrue(windowed.size() <= smallMax,
                 "window max=" + smallMax + ": expected <= " + smallMax
                         + " messages, got " + windowed.size());
@@ -418,7 +418,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
                 SESSION, uri(sessionVID()),
                 uri("mem"), auto_at_(sessionVID()).tryToInst(),
                 uri(ALGORITHM), rec(mutableMap(uri(NAME), uri("message_window"), uri(MAX), jnt(max))));
-        final MessageFeature session = new MessageFeature(sessionConfig.jvm(), LLM_MESSAGE_FEATURE_TID, null);
+        final WindowMessageFeature session = new WindowMessageFeature(sessionConfig.jvm(), LLM_WINDOW_MESSAGE_FEATURE_TID, null);
         final SystemFeature system = new SystemFeature(mutableMap(uri("base"), str("you are a helpful assistant")), LLM_SYSTEM_FEATURE_TID, null);
         final SkillFeature skill = new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null);
         final ToolFeature tool = new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null);

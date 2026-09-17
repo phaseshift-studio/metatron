@@ -621,14 +621,14 @@ console thread — `focusWidget` renders fire-and-forget.  (It used to `renderNo
 stalled the reader thread on a full pass for every focus and every click; that stall is what
 made the pointer feel heavy.)
 
-**Who owns the pointer** — `Console.pointerWanted(focused, dismissed, widgets)` (pure, tested):
+**Who owns the pointer** — `Console.pointerWanted(focused, released, widgets)` (pure, tested):
 
 - a widget is **focused** → the widgets own the mouse (scroll, affordances, moving the focus);
-- widgets are **on screen and not dismissed** → they own it, so a cold click can focus one;
-- the user **pointed at empty terminal** → `pointerDismissed`, the terminal gets its own mouse
-  back (wheel scrolls it, drag-selection works) until a widget is focused or a *new* widget
-  arrives (`drawnWidgetCount()` growing — the same widgets merely redrawing does not re-arm,
-  which is what makes waving the pointer off stick);
+- widgets are **on screen and not released** → they own it, so a cold click can focus one;
+- the user **wheeled over empty terminal** (nothing under the pointer, nothing focused) →
+  `Console.releasePointer()` drops the focus and hands the pointer back, so the terminal gets its
+  own mouse again — the wheel scrolls the terminal's scrollback and drag-selection works — until
+  the next prompt or a widget is re-focused via `alt+w`;
 - **nothing on screen** → the terminal's mouse, always.
 
 The enable/disable sequences are the console's own, not jline's:
@@ -643,7 +643,8 @@ Two callers keep the mode honest:
 
 - `Console.prepareForInput()` re-asserts it **once per prompt** (forced) — jline releases
   tracking at the end of every `readLine`, so the flag alone would leave the pointer dead from
-  the second prompt on.
+  the second prompt on.  It also clears the release, so a new prompt re-arms the pointer after a
+  wheel handed it back to the terminal.
 - the hotkey watcher's idle tick reconciles **only on a change**, so a widget floated while the
   user sat at the prompt becomes clickable within a tick — and only while the prompt owns the
   terminal.  While a job holds the console the mouse stays off, so its bytes can never be

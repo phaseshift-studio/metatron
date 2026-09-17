@@ -667,7 +667,9 @@ public class FloatingSurface {
      * slot's target width (placement, clipping, and — for widgets that shape
      * content by it, e.g. the {@code AccordionWidget} body wrap — the
      * rendered box).  A height delta adjusts the effective height cap.
-     * Both are clamped to sane minima and, for width, the terminal width.
+     * Both are clamped to sane minima and, when the terminal reports a sane
+     * size, to the terminal — the same clamping {@link #resizeTo} applies, the
+     * two methods sharing one write path.
      *
      * <p>Which edge actually moves is decided by the slot's anchor at render
      * time — a bottom-anchored widget's top edge is what rises when its
@@ -685,40 +687,14 @@ public class FloatingSurface {
      */
     public boolean nudge(final Widget<?> widget, final int widthDelta, final int heightDelta) {
         final Slot slot = slot(widget);
-        if (null == slot) return false;
-        if (widthDelta != 0) {
-            final int termWidth = this.terminal.getWidth();
-            int w = slot.targetWidth + widthDelta;
-            // Clamp to the terminal width only when it is a sane value — a
-            // 0/1 (unconfigured) width must not collapse every resize to
-            // the lower bound.
-            if (termWidth > 1)
-                w = Math.min(w, termWidth);
-            slot.targetWidth = Math.max(MIN_WIDTH, w);
-            // Widgets that shape content by style width pick up the new
-            // width immediately; content-driven widgets ignore it, in which
-            // case the slot still governs placement and clipping.
-            try {
-                final var style = widget.getStyle();
-                if (null != style)
-                    style.width(slot.targetWidth);
-            } catch (final Exception ignored) {
-                // a headless or mid-rehydration widget may not accept it
-            }
-        }
-        if (heightDelta != 0) {
-            int natural = 0;
-            try {
-                natural = widget.height();
-            } catch (final Exception ignored) {
-                // headless widget — fall back to MIN_HEIGHT below
-            }
-            final int current = slot.heightCap > 0 ? slot.heightCap
-                    : (natural > 0 ? natural : MIN_HEIGHT);
-            slot.heightCap = Math.max(MIN_HEIGHT, current + heightDelta);
-        }
-        render();
-        return true;
+        if (null == slot || !slot.isAnchored()) return false;
+        final int newWidth = widthDelta == 0
+                ? slot.targetWidth
+                : clampWidth(slot.targetWidth + widthDelta, this.terminal.getWidth());
+        final int newHeight = heightDelta == 0
+                ? slot.heightCap
+                : clampHeight(effectiveHeightCap(widget, slot) + heightDelta, this.terminal.getHeight());
+        return applyResize(widget, slot, newWidth, newHeight);
     }
 
     // -----------------------------------------------------------------
@@ -811,10 +787,13 @@ public class FloatingSurface {
         final int termHeight = Math.max(1, this.terminal.getHeight());
         final int termWidth = Math.max(1, this.terminal.getWidth());
         final int height = Math.max(1, slot.prevHeight > 0 ? slot.prevHeight : slot.heightCap);
-        final int placedRow = Math.min(Math.max(1, row), termHeight);
-        final int placedCol = Math.min(Math.max(1, col), termWidth);
+        final int width = Math.max(1, slot.targetWidth);
+        // clamp so the WHOLE box stays on the terminal — a corner dragged past
+        // the edge pins the box there instead of writing past the screen
+        final int placedRow = Math.min(Math.max(1, row), Math.max(1, termHeight - height + 1));
+        final int placedCol = Math.min(Math.max(1, col), Math.max(1, termWidth - width + 1));
         final int offsetRow = slot.offsetRowFor(placedRow, termHeight, height);
-        final int offsetCol = slot.offsetColFor(placedCol, termWidth, Math.max(1, slot.targetWidth));
+        final int offsetCol = slot.offsetColFor(placedCol, termWidth, width);
         if (offsetRow == slot.offsetRow && offsetCol == slot.offsetCol) return true;
         slot.offsetRow = offsetRow;
         slot.offsetCol = offsetCol;
@@ -823,30 +802,90 @@ public class FloatingSurface {
     }
 
     /**
-     * Resize an anchored widget's box — the mouse counterpart of {@link #nudge}, which
-     * is the same two slot fields moved by a key step instead of by a pointer delta.
-     * Clamped to the lower bounds (a resize can never demolish a widget) and to the
-     * terminal (it cannot outgrow it), keeping {@code nudge}'s convention that the
-     * anchor pins one edge and the free edge does the moving.
+     * Resize an anchored widget's box to an absolute width and height — the
+     * mouse counterpart of {@link #nudge}, which is the same two slot fields
+     * moved by a key step instead of by a pointer delta.  Both share one write
+     * path ({@code applyResize}).  Clamped to the lower bounds (a resize can
+     * never demolish a widget) and, when the terminal reports a sane size, to
+     * the terminal, keeping {@code nudge}'s convention that the anchor pins one
+     * edge and the free edge does the moving.
      *
-     * <p>As with a move, the size goes to the slot during the gesture — the slot is the
-     * authority for a floating widget's geometry once it has lived here — and only the
-     * release writes the style.
+     * <p>As with a move, the size goes to the slot during the gesture — the slot
+     * is the authority for a floating widget's geometry once it has lived here —
+     * and only the release parks it in the rec for durability.
      *
      * @return true when the widget is an anchored float and the size was applied
      */
     public boolean resizeTo(final Widget<?> widget, final int width, final int height) {
         final Slot slot = slot(widget);
         if (null == slot || !slot.isAnchored()) return false;
-        final int termWidth = Math.max(1, this.terminal.getWidth());
-        final int termHeight = Math.max(1, this.terminal.getHeight());
-        final int newWidth = Math.min(Math.max(MIN_WIDTH, width), Math.max(MIN_WIDTH, termWidth));
-        final int newHeight = Math.min(Math.max(MIN_HEIGHT, height), Math.max(MIN_HEIGHT, termHeight));
+        return applyResize(widget, slot,
+                clampWidth(width, this.terminal.getWidth()),
+                clampHeight(height, this.terminal.getHeight()));
+    }
+
+    /**
+     * Write an absolute width/height onto the slot and re-shape the widget to
+     * match.  The single write path behind both the keyboard resize
+     * ({@link #nudge}) and the pointer resize ({@link #resizeTo}); the two
+     * differ only in how they arrive at the absolute box — a delta from the
+     * current one vs. a box the pointer already measured.
+     */
+    private boolean applyResize(final Widget<?> widget, final Slot slot,
+                                final int newWidth, final int newHeight) {
         if (newWidth == slot.targetWidth && newHeight == slot.heightCap) return true;
         slot.targetWidth = newWidth;
         slot.heightCap = newHeight;
+        // Widgets that shape content by style dimensions must re-shape as the
+        // box resizes: width (an accordion wraps its body to it) so a horizontal
+        // resize does not read as a move, and height (the box pads its body to
+        // it) so a vertical resize grows the box rather than only clipping it.
+        // The release still parks both in the rec for durability.
+        try {
+            final var style = widget.getStyle();
+            if (null != style) {
+                style.width(newWidth);
+                style.height(newHeight);
+            }
+        } catch (final Exception ignored) {
+            // a headless or mid-rehydration widget may not accept it
+        }
         this.render();
         return true;
+    }
+
+    /**
+     * Clamp a width to {@link #MIN_WIDTH} and, when the terminal reports a sane
+     * size, to the terminal width.  A 0/1 (unconfigured) terminal must not
+     * collapse every resize to the lower bound.
+     */
+    private static int clampWidth(final int width, final int termWidth) {
+        final int w = Math.max(MIN_WIDTH, width);
+        return termWidth > 1 ? Math.min(w, termWidth) : w;
+    }
+
+    /**
+     * Clamp a height to {@link #MIN_HEIGHT} and, when the terminal reports a
+     * sane size, to the terminal height.
+     */
+    private static int clampHeight(final int height, final int termHeight) {
+        final int h = Math.max(MIN_HEIGHT, height);
+        return termHeight > 1 ? Math.min(h, termHeight) : h;
+    }
+
+    /**
+     * The height a resize starts from: the slot's cap when it has one, else the
+     * widget's natural height (or {@link #MIN_HEIGHT} for a headless widget).
+     */
+    private static int effectiveHeightCap(final Widget<?> widget, final Slot slot) {
+        if (slot.heightCap > 0) return slot.heightCap;
+        int natural = 0;
+        try {
+            natural = widget.height();
+        } catch (final Exception ignored) {
+            // headless widget — fall back to MIN_HEIGHT below
+        }
+        return natural > 0 ? natural : MIN_HEIGHT;
     }
 
     /**
@@ -1042,9 +1081,8 @@ public class FloatingSurface {
 
     /**
      * How many pinned widgets have a drawn region right now.  The console uses
-     * the count (not just emptiness) to tell "a widget arrived" from "the same
-     * widgets redrew", so a pointer the user waved off is not handed back to
-     * them by an unrelated refresh.
+     * the count to know whether anything is on screen for the pointer to act
+     * on (see {@link #hasPointerTargets} and {@code Console.pointerWanted}).
      */
     public int drawnWidgetCount() {
         int drawn = 0;
@@ -1130,10 +1168,11 @@ public class FloatingSurface {
         final int heightCap = slot.heightCap > 0 ? slot.heightCap : widget.getStyle().height();
         final int viewport = Math.min(heightCap > 0 ? heightCap : content.length, maxViewport);
         final int chrome = Math.min(Math.max(0, widget.chromeLines()), content.length);
+        final int footer = Math.min(Math.max(0, widget.footerLines()), Math.max(0, content.length - chrome));
         final int axes = widget.getStyle().scrollAxes();
         final boolean scrollableY = (axes & Stylable.SCROLL_Y) != 0;
         final boolean scrollableX = (axes & Stylable.SCROLL_X) != 0;
-        final int maxScrollY = scrollableY ? ScrollView.maxY(content.length, chrome, viewport) : 0;
+        final int maxScrollY = scrollableY ? ScrollView.maxY(content.length, chrome, footer, viewport) : 0;
 
         // follow = show the newest content.  Once the reader scrolls back the
         // viewport holds its ABSOLUTE row, so text appended below grows the
@@ -1146,7 +1185,7 @@ public class FloatingSurface {
         slot.scrollY = offsetY;
 
         final List<String> windowed = content.length > viewport
-                ? ScrollView.windowVertically(java.util.Arrays.asList(content), chrome, offsetY, viewport)
+                ? ScrollView.windowVertically(java.util.Arrays.asList(content), chrome, footer, offsetY, viewport)
                 : java.util.Arrays.asList(content);
         String[] lines = windowed.toArray(new String[0]);
         final int effectiveHeight = lines.length;
@@ -1239,7 +1278,11 @@ public class FloatingSurface {
                         covered = writtenWidth(lines[newIndex], maxWidth);
                 }
                 if (covered >= oldPrevWidth) continue;
-                sb.append("\033[").append(row).append(";").append(oldLastCol).append("H");
+                // The stale cells are the tail the new line does not cover:
+                // columns [oldLastCol + covered, oldLastCol + oldPrevWidth).
+                // Blanking from oldLastCol would eat the new content's leading
+                // cells and leave the old right edge behind as a ghost trail.
+                sb.append("\033[").append(row).append(";").append(oldLastCol + covered).append("H");
                 sb.append(" ".repeat(Math.max(0, oldPrevWidth - covered)));
             }
         }
@@ -1427,8 +1470,16 @@ public class FloatingSurface {
          */
         void resolve(final int termHeight, final int termWidth, final int widgetHeight) {
             if (this.anchor == null) return;
-            this.lastRow = rowFor(this.offsetRow, termHeight, widgetHeight);
-            this.lastCol = colFor(this.offsetCol, termWidth, this.targetWidth);
+            final int height = Math.max(1, widgetHeight);
+            final int width = Math.max(1, this.targetWidth);
+            // Clamp the box's top-left so the whole box stays on the terminal —
+            // a drag or resize that would push an edge past the screen pins it
+            // at the edge instead of writing past the terminal (which wraps or
+            // scrolls the far side and leaks raw {{...}} codes).
+            this.lastRow = Math.min(Math.max(1, rowFor(this.offsetRow, termHeight, height)),
+                    Math.max(1, termHeight - height + 1));
+            this.lastCol = Math.min(Math.max(1, colFor(this.offsetCol, termWidth, width)),
+                    Math.max(1, termWidth - width + 1));
         }
 
         /** The terminal row this widget's top edge lands on for the given row offset. */

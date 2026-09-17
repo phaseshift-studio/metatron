@@ -9,6 +9,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.Map;
 
@@ -63,6 +64,36 @@ public class AccordionWidgetTest extends AbstractMetatronTest {
         assertTrue(r.contains("Hi"));
         new Console(rec(), f("/sys/console")); // TODO: move to AbstractWidgetTest and force all widgets to test run()
         a.run();
+    }
+
+    @Test
+    public void shouldPadBodyToTheStyleHeightWhenTallerThanItsContent() {
+        final AccordionWidget a = new AccordionWidget("notes", "one\ntwo");
+        a.expand();
+        assertEquals(4, a.format().split("\n", -1).length, "natural height: title + 2 body + border");
+        a.style().height(8).applyStyle();
+        assertEquals(8, a.format().split("\n", -1).length,
+                "an explicit height grows the box past its content — a resize that only clips reads as locked");
+    }
+
+    @Test
+    public void shouldCollapseToTheHeaderEvenAfterAResize() {
+        final AccordionWidget a = new AccordionWidget("notes", "one\ntwo");
+        a.expand();
+        a.style().height(8).applyStyle();   // resized tall
+        assertEquals(8, a.format().split("\n", -1).length, "expanded: padded to the height");
+        a.collapse();
+        assertEquals(2, a.format().split("\n", -1).length,
+                "collapsed: shrinks to just the header — no residual height padding");
+    }
+
+    @Test
+    public void shouldRespectTheStyleWidth() {
+        final AccordionWidget a = new AccordionWidget("notes", "one");
+        a.expand();
+        a.style().width(40).applyStyle();
+        assertEquals(40, Graphitty.viewLength(a.format().split("\n", -1)[0]),
+                "an explicit width makes the box that wide — padding, not a content-sized box with a gap");
     }
 
     @Test

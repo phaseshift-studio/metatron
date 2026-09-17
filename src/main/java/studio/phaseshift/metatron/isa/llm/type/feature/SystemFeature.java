@@ -3,21 +3,24 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.BASE;
 import static studio.phaseshift.metatron.Tokens.SESSION;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MESSAGE_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_SERVICE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.SYSTEM_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 
 /**
  * The system-message contract for the agent — the single owner of system-message
@@ -53,7 +56,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * contributor's message; the composition happens when {@code Agent.chat()} builds the
  * service.
  */
-public class SystemFeature extends AbstractFeature {
+public class SystemFeature extends AbstractFeature implements SystemService {
+    public static final fURI FEATURE_TID = studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
+
+    @Override
+    public Set<fURI> offers() {
+        return Set.of(LLM_SYSTEM_SERVICE_TID);
+    }
+
 
     private static final String DEFAULT_SYSTEM_MESSAGE =
             """
@@ -169,16 +179,16 @@ public class SystemFeature extends AbstractFeature {
     @Override
     public Obj onBeforeChat(final Agent agent) {
         final String text = this.systemMessage();
-        if (text.isBlank() || !agent.hasFeature(LLM_MESSAGE_FEATURE_TID))
+        if (text.isBlank() || agent.service(MessageService.class).isEmpty())
             return noobj();
 
         final String lastText = this.at(uri(LAST)).orElse(str("")).strValue();
         if (text.equals(lastText))
             return noobj();
 
-        final fURI sessionVID = agent.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION).uriValue();
+        final fURI sessionVID = agent.service(MessageService.class).map(MessageService::sessionVID).orElse(null);
         try {
-            agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as()
+            agent.requireService(MessageService.class)
                     .addMessage(agent, MessageBuilder.build(SYSTEM_MESSAGE_TID)
                             .text(text)
                             .time()
@@ -200,7 +210,7 @@ public class SystemFeature extends AbstractFeature {
      * {@code onCompleteResponse} nor {@code onError}).
      */
     @Override
-    public void onCompleteResponse(final Agent agent, final ChatResult result) {
+    public void onCompleteResponse(final Agent agent, final ChatFrame result) {
         this.clearSystemMessages();
     }
 

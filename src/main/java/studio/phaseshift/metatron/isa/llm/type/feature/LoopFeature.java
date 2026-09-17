@@ -3,7 +3,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -19,11 +19,13 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_LOOP_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_SERVICE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
 
 /**
  * Enables an agent to self-direct a multi-pass reasoning loop.
@@ -39,6 +41,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * LoopFeature reads it here and kicks off the next iteration.
  */
 public class LoopFeature extends AbstractFeature {
+    public static final fURI FEATURE_TID = studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_LOOP_FEATURE_TID;
+
 
     /**
      * This feature's watermark identity.  Declared on the config rec as
@@ -96,7 +100,7 @@ public class LoopFeature extends AbstractFeature {
 
     @Override
     public Set<fURI> requires() {
-        return Set.of(LLM_SKILL_FEATURE_TID);
+        return Set.of(LLM_SKILL_SERVICE_TID);
     }
 
     /**
@@ -112,7 +116,7 @@ public class LoopFeature extends AbstractFeature {
                 LOOP_FEATURE_INSTRUCTIONS
                         .replace("%%%1", this.maxLoops > 0 ? this.maxLoops + "" : "<no limit>")
                         .replace("%%%2", this.maxTimeMillis > 0 ? this.maxTimeMillis + "" : "<no limit>"));
-        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(
+        agent.requireService(SkillService.class).addSkill(mSkill.of(rec(
                 uri(NAME), uri(LLM_LOOP_FEATURE_TID.name()),
                 uri(DESC), str("multi-pass reasoning loop with iteration control and polling support"),
                 uri(CONTENT), str(instructions))));
@@ -134,7 +138,7 @@ public class LoopFeature extends AbstractFeature {
     }
 
     @Override
-    public void onCompleteResponse(final Agent agent, final ChatResult result) {
+    public void onCompleteResponse(final Agent agent, final ChatFrame result) {
         // Record this iteration from the result (chat/time are monos inline on it).
         this.iterations.add(rec(
                 uri("iteration"), jnt(this.loopCount + 1),
@@ -187,7 +191,7 @@ public class LoopFeature extends AbstractFeature {
      * attach a reference to them on the chat_result.  Re-persisted on every
      * iteration, so the last row carries the full loop history.
      */
-    private void persist(final Agent agent, final ChatResult result) {
+    private void persist(final Agent agent, final ChatFrame result) {
         try {
             final Obj written = Router.writeToSpace(this.getRoot(agent).extend("_").addQ(INCRQ),
                     rec(uri("iterations"), lst(this.iterations.stream().map(r -> (Obj) r).toList())));

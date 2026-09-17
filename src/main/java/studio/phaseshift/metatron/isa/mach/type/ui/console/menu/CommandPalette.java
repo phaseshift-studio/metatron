@@ -146,6 +146,9 @@ public final class CommandPalette extends MRec {
                     .addRow(List.of(kc("<alt>+,") + "/" + kc("<alt>+."), "scroll focused widget left/right"))
                     .addRow(List.of(kc("<wheel>") + "/" + kc("<alt>+0"), "scroll focused widget"))
                     .addRow(List.of(kc("<click>"), "focus widget; click empty terminal to unfocus"))
+                    .addRow(List.of(kc("<drag>"), "select terminal text (row by row)"))
+                    .addRow(List.of(kc("<shift>+<drag>"), "select terminal text while a widget holds the mouse"))
+                    .addRow(List.of(kc("<ctrl>+<shift>+<drag>"), "column/block select terminal text (like an IDE)"))
                     .addRow(List.of(cc(":widgets") + "  " + cc(":focus-widget [off]"), "list floating widgets / clear (or set) the focus"))
                     //.addRow(List.of(cc(":scroll [up|down|pageup|pagedown|left|right|top|bottom] [n]"), "move (or report) the focused widget's viewport"))
                     .addRow(List.of(cc(":keymap"), "who currently owns the builtin shortcut keys (builtin vs shadowed)"))
@@ -831,9 +834,8 @@ public final class CommandPalette extends MRec {
         // -------------------------------------------------------
         // Mouse wheel — scrolls the widget under the pointer (or the focused
         // one) while terminal mouse tracking is on.  The console turns tracking
-        // on exactly while a focused widget has content off its viewport (see
-        // Console.syncWidgetMouseTracking), so ordinary text selection is
-        // untouched the rest of the time.
+        // on while any widget is on screen (see Console.syncWidgetMouseTracking),
+        // so a click can always focus — or re-focus — a widget.
         // -------------------------------------------------------
         {
             final Widget mouse = () -> {
@@ -849,12 +851,17 @@ public final class CommandPalette extends MRec {
                     final FloatingSurface surface = console.getFloatingSurface();
                     final var hovered = surface.widgetAt(row, col);
                     if (event.getType() == org.jline.terminal.MouseEvent.Type.Wheel) {
-                        final var target = null != hovered ? hovered : console.getActiveWidget();
-                        if (null != target) {
+                        // the wheel follows the pointer: over a widget it
+                        // scrolls that widget, over empty terminal it hands the
+                        // pointer back so the wheel scrolls the terminal's own
+                        // scrollback (re-armed on the next prompt or alt+w)
+                        if (null != hovered) {
                             final int step = event.getButton() == org.jline.terminal.MouseEvent.Button.WheelUp
                                     ? -MOUSE_WHEEL_ROWS : MOUSE_WHEEL_ROWS;
-                            surface.scroll(target, 0, step);
-                            if (console.getActiveWidget() != target) console.focusWidget(target);
+                            surface.scroll(hovered, 0, step);
+                            if (console.getActiveWidget() != hovered) console.focusWidget(hovered);
+                        } else {
+                            console.releasePointer();
                         }
                     } else if (event.getType() == org.jline.terminal.MouseEvent.Type.Pressed) {
                         // A press on the focused widget's chevron takes hold of it to

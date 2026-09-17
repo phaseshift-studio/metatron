@@ -111,7 +111,7 @@ public class AgentTest extends AbstractMetatronTest {
                                 uri(ALGORITHM), rec(mutableMap(
                                         uri(MAX), jnt(15)
                                 ))
-                        )))).tid(LLM_MESSAGE_FEATURE_TID),
+                        )))).tid(LLM_WINDOW_MESSAGE_FEATURE_TID),
                 rec(mutableMap(uri(MODEL), rec(mutableMap(
                         uri(LLM), uri("qwen3:8b"),
                         uri(PROTOCOL), uri(PROVIDER_NAME),
@@ -136,7 +136,7 @@ public class AgentTest extends AbstractMetatronTest {
         assertFalse(agent.feature(LLM_SKILL_FEATURE_TID).isNoObj());
         assertFalse(agent.feature(LLM_NOTE_FEATURE_TID).isNoObj());
         assertFalse(agent.feature(LLM_CHAT_FEATURE_TID).isNoObj());
-        assertFalse(agent.feature(LLM_MESSAGE_FEATURE_TID).isNoObj());
+        assertFalse(agent.feature(LLM_WINDOW_MESSAGE_FEATURE_TID).isNoObj());
     }
 
     @Test
@@ -424,7 +424,7 @@ public class AgentTest extends AbstractMetatronTest {
         // onCompleteResponse clears
         system.addSystemMessage("context");
         assertFalse(system.getSystemMessages().isEmpty(), "message pending before completion");
-        system.onCompleteResponse(a, ChatResult.chatResult());
+        system.onCompleteResponse(a, ChatFrame.chatFrame());
         assertTrue(system.getSystemMessages().isEmpty(), "onCompleteResponse must clear system messages");
 
         // onError clears (safety — a failed chat must not leak context)
@@ -435,9 +435,9 @@ public class AgentTest extends AbstractMetatronTest {
     }
 
     @Test
-    public void testChatResultShape() {
+    public void testChatFrameShape() {
         // Agent.chat() builds a chat_result with monos inline (chat, user, time).
-        final ChatResult result = ChatResult.chatResult()
+        final ChatFrame result = ChatFrame.chatFrame()
                 .put("chat", str("bare response"))
                 .put("user", str("test prompt"))
                 .put("time", real(100.0, MATH_MILLIS_TID, null));
@@ -448,9 +448,9 @@ public class AgentTest extends AbstractMetatronTest {
     }
 
     @Test
-    public void testChatResultRefHelper() {
+    public void testChatFrameRefHelper() {
         // Feature outputs are attached as !* auto_from refs, not copied.
-        final ChatResult result = ChatResult.chatResult()
+        final ChatFrame result = ChatFrame.chatFrame()
                 .put("chat", str("response"))
                 .putRef("cost", f("/usr/test/cost/1"));
         // atDirect — at() would auto-resolve the ref; we want the raw inst.

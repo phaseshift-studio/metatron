@@ -367,8 +367,12 @@ public class Graphitty {
                                 this.closeSyntax();
                                 continue;   // the end tag closes the block here and is not a rule of its own
                             }
-                            throw MTronException.of("unmatched syntax wrap: %s != %s",
-                                    rule, "/" + SYNTAX_RULE_PREFIX + this.syntaxLanguage);
+                            // A close for a different language — the viewport
+                            // clipped the block's open and this close belongs to
+                            // an earlier block.  Flush what we captured and drop
+                            // the stray rather than failing the render.
+                            this.closeSyntax();
+                            continue;
                         }
                         this.flushSyntax(true);
                     } else if (rule.indexOf(SYNTAX_RULE_PREFIX) >= 0) {
@@ -382,15 +386,22 @@ public class Graphitty {
                                 .forEach(rulePiece -> {
                                     if (rulePiece.charAt(0) == '/') {
                                         final String closeRule = rulePiece.substring(1);
+                                        // A close whose open is gone is a stray, not an error: a
+                                        // widget's content is windowed through a viewport, so the
+                                        // open half of a wrap (or a {{syntax:…}} block) can be
+                                        // clipped away while its close survives.  Drop the stray
+                                        // instead of failing the whole render.
+                                        if (this.rewriteStack.isEmpty())
+                                            return;
                                         final String openRule = this.rewriteStack.pop();
-                                        if (!openRule.equals(closeRule))
-                                            throw MTronException.of("unmatched rule wrap: %s != %s [buffer: %s]", openRule, closeRule, buffer.replace("{{", "").replace("}}", ""));
-                                        else {
-                                            String reset = this.rewriteStack.isEmpty() ? null : this.rewrites.get(this.rewriteStack.peek());
-                                            reset = null == reset ? this.rewrites.get("X") : reset.replace("\033[", "\033[0;");
-                                            if (null != reset)
-                                                this.parseDSL(reset);
+                                        if (!openRule.equals(closeRule)) {
+                                            this.rewriteStack.push(openRule);
+                                            return;
                                         }
+                                        String reset = this.rewriteStack.isEmpty() ? null : this.rewrites.get(this.rewriteStack.peek());
+                                        reset = null == reset ? this.rewrites.get("X") : reset.replace("\033[", "\033[0;");
+                                        if (null != reset)
+                                            this.parseDSL(reset);
                                     } else {
                                         // {{:beer:}} → GitHub shortcode → Unicode emoji.  Emitted as
                                         // whole-string UTF-8 (emoji are surrogate pairs in Java, so

@@ -348,7 +348,7 @@ public final class WatermarkUtil {
      * ask {@link #has(Obj, String)} whether the model addressed the key at all
      * and {@link #failed(Obj, String)} whether it did so badly.  A consumer that
      * wants "the call's argument rec, or an empty one" should read
-     * {@link studio.phaseshift.metatron.isa.llm.type.ChatResult#watermark(String)},
+     * {@link studio.phaseshift.metatron.isa.llm.type.ChatFrame#watermark(String)},
      * which resolves all four cases.
      */
     public static Obj get(final Obj watermarks, final String key) {

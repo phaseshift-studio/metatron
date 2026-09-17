@@ -496,7 +496,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         // The widget set may have changed since the last prompt, and jline
         // releases mouse tracking at the end of every readLine — so the mode is
         // re-asserted here, once per prompt (the watcher tick only reacts to a
-        // change, so nothing chatters in between).
+        // change, so nothing chatters in between).  A new prompt also re-arms
+        // the pointer if a wheel released it to the terminal.
+        this.pointerReleased = false;
         this.syncWidgetMouseTracking(true);
         if (this.splitMode && this.activePane != null) {
             // Disable AUTO_FRESH_LINE in split mode - it interferes with cursor positioning
@@ -807,16 +809,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     private volatile boolean widgetMouseTracking = false;
 
     /**
-     * True once the user has pointed AWAY from the widgets (a click on empty
-     * terminal): the mouse is the terminal's again until something asks for it
-     * — a widget being focused, or a new widget arriving.
+     * When true the pointer has been handed back to the terminal (mouse tracking
+     * disabled) so the wheel scrolls the terminal's own scrollback.  Re-armed on
+     * the next prompt or when a widget is focused via {@code alt}+{@code w}.
      */
-    private volatile boolean pointerDismissed = false;
-
-    /**
-     * Drawn-widget count at the last pointer sync (see {@link #pointerDismissed}).
-     */
-    private volatile int pointerWidgets = 0;
+    private volatile boolean pointerReleased = false;
 
     /**
      * @return true when the console's floating surface has at least one pinned widget
@@ -916,8 +913,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         } else {
             this.activeWidgetKey = FloatingSurface.widgetKey(widget);
             getFloatingSurface().setFocusKey(this.activeWidgetKey);
+            // re-arming a widget re-arms the pointer, so a wheel released to
+            // the terminal is handed back to the widgets
+            this.pointerReleased = false;
         }
-        if (null != widget) this.pointerDismissed = false;   // the pointer is wanted again
         // fire-and-forget: a click must never stall the console thread on a
         // render, and the pointer decision only needs the focus itself
         getFloatingSurface().render();
@@ -1127,10 +1126,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     public boolean clickAt(final int row, final int col) {
         final Widget<?> hit = getFloatingSurface().widgetAt(row, col);
         if (null == hit) {
-            // Empty terminal — including the prompt area: put the widgets down
-            // and hand the mouse back to the terminal (its own wheel and
-            // drag-selection), which is what a pointer waving "not you" means.
-            this.pointerDismissed = true;
+            // Empty terminal — including the prompt area: nothing owns the
+            // user's attention, so the focus is dropped.  The pointer stays
+            // armed, though — while a widget is on screen the next click can
+            // still focus one (no alt+w re-entry).  Use Shift+drag for native
+            // terminal text selection while the widgets hold the mouse.
             if (null != getActiveWidget()) focusWidget(null);
             else syncWidgetMouseTracking();
             return false;
@@ -1331,14 +1331,12 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             "\033[?1000l\033[?1002l\033[?1003l\033[?1005l\033[?1006l\033[?1015l\033[?1016l";
 
     /**
-     * Turn terminal mouse tracking on or off to match the focus.
+     * Turn terminal mouse tracking on or off to match what is on screen.
      *
-     * <p>The pointer belongs to the widgets exactly while one of them is
-     * focused: that is what makes it available for scrolling, for working a
-     * widget's affordances and for moving the focus between widgets — and it is
-     * what gives the terminal its own mouse back the moment the focus is
-     * cleared (clicking off a widget, {@code :focus-widget off}), so the wheel
-     * scrolls the terminal again and drag-selection works again.
+     * <p>The pointer belongs to the widgets while any of them is on screen
+     * (or one is focused): that is what lets a cold click focus a widget,
+     * and a click after unfocusing re-focus one.  Only with nothing pinned
+     * does the terminal get its own mouse back (wheel, drag-selection).
      *
      * <p>Called only when the prompt owns the terminal (the console's watcher
      * thread, and the console thread itself): while a job holds the console the
@@ -1357,16 +1355,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     public void syncWidgetMouseTracking(final boolean force) {
         final Terminal term = getTerminal();
         if (null == term || !term.hasMouseSupport()) return;
-        // A new widget arriving re-arms the pointer: it is asking to be worked
-        // with.  The same widgets merely redrawing does not (the count is
-        // unchanged), so waving the mouse away sticks.
         final int widgets = getFloatingSurface().drawnWidgetCount();
-        if (widgets > this.pointerWidgets) this.pointerDismissed = false;
-        this.pointerWidgets = widgets;
         // a drag holds the pointer whatever else changes — the gesture is not over
         // until the button comes up
         final boolean wanted = this.dragging()
-                || pointerWanted(null != getActiveWidget(), this.pointerDismissed, widgets);
+                || pointerWanted(null != getActiveWidget(), this.pointerReleased, widgets);
         if (wanted == this.widgetMouseTracking && !force) return;
         try {
             // only the enable is worth re-asserting (jline turns it off again at
@@ -1391,24 +1384,34 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     /**
-     * Who owns the pointer: the widgets while one of them is focused, or while
-     * widgets are on screen and the user has not waved the pointer off them.
-     * With nothing on screen — or after a click on empty terminal — the terminal
-     * keeps its own mouse (wheel, drag-selection).
-     *
-     * @param focused   a widget currently holds the focus
-     * @param dismissed the user pointed away from the widgets (see {@link #clickAt})
-     * @param widgets   widgets with a drawn region on screen
+     * Hand the pointer back to the terminal (disable mouse tracking) so the
+     * wheel scrolls the terminal's own scrollback.  Triggered by a wheel over
+     * empty terminal with nothing focused; re-armed on the next prompt or when
+     * a widget is focused via {@code alt}+{@code w}.
      */
-    static boolean pointerWanted(final boolean focused, final boolean dismissed, final int widgets) {
-        return focused || (!dismissed && widgets > 0);
+    public void releasePointer() {
+        this.pointerReleased = true;
+        // drop the focus too, so the widgets read as fully detached from the
+        // pointer and the focus marker disappears with the re-render
+        this.focusWidget(null);
     }
 
     /**
-     * True when the user has pointed away from the widgets (the terminal owns the mouse).
+     * Who owns the pointer: the widgets while one of them is focused, or while
+     * any widget is on screen and the pointer has not been released.  A wheel
+     * over empty terminal releases the pointer ({@link #releasePointer()}), so
+     * the terminal keeps its own mouse (wheel scrollback, drag-selection) until
+     * the next prompt or a widget is re-focused via {@code alt}+{@code w}.  A
+     * pinned widget otherwise keeps the pointer armed so a click can always
+     * focus (or re-focus) one.  Native text selection is still available via
+     * Shift+drag.
+     *
+     * @param focused a widget currently holds the focus
+     * @param released the pointer was handed back to the terminal
+     * @param widgets  widgets with a drawn region on screen
      */
-    public boolean pointerDismissed() {
-        return this.pointerDismissed;
+    static boolean pointerWanted(final boolean focused, final boolean released, final int widgets) {
+        return !released && (focused || widgets > 0);
     }
 
     /**

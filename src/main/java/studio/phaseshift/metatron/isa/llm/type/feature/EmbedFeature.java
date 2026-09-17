@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -41,11 +41,15 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.vec.vecInstSet.VEC_EMBEDDING_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class EmbedFeature extends AbstractFeature {
+    public static final fURI FEATURE_TID = studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_EMBED_FEATURE_TID;
+
 
     public EmbedFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -82,7 +86,7 @@ public class EmbedFeature extends AbstractFeature {
 
     @Override
     public Set<fURI> requires() {
-        return Set.of(LLM_SKILL_FEATURE_TID);
+        return Set.of(LLM_SKILL_SERVICE_TID);
     }
 
     /**
@@ -95,7 +99,7 @@ public class EmbedFeature extends AbstractFeature {
             return;
         final String instructions = WatermarkUtil.instructions(WATERMARK_CODEC, WatermarkUtil.key(this, WATERMARK_KEY),
                 EMBED_FEATURE_INSTRUCTIONS.formatted(this.getRoot(agent), this.at(MODEL)));
-        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(
+        agent.requireService(SkillService.class).addSkill(mSkill.of(rec(
                 uri(NAME), uri(LLM_EMBED_FEATURE_TID.name()),
                 uri(DESC), str("embed chat results into a vector space for later similarity retrieval"),
                 uri(CONTENT), str(instructions))));
@@ -114,7 +118,7 @@ public class EmbedFeature extends AbstractFeature {
     }
 
     @Override
-    public void onCompleteResponse(final Agent agent, final ChatResult result) {
+    public void onCompleteResponse(final Agent agent, final ChatFrame result) {
         // A <<mtron:embed>> watermark is a deferred embed() call; with none, the
         // feature still embeds the result using its own configured defaults.
         // That is the existing behaviour (the guard below cannot fire, since
@@ -130,9 +134,9 @@ public class EmbedFeature extends AbstractFeature {
         final Rec embedding = rec(mutableMap(
                 uri(OBJ), result,
                 uri(EMBED), vector,
-                uri(META), agent.hasFeature(LLM_MESSAGE_FEATURE_TID) ?
-                        rec(SESSION, agent.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION)) :
-                        noobj()), VEC_EMBEDDING_TID, null);
+                uri(META), agent.service(MessageService.class)
+                        .<Obj>map(m -> rec(SESSION, uri(m.sessionVID())))
+                        .orElse(noobj())), VEC_EMBEDDING_TID, null);
         final Obj complete = Router.writeToSpace(writeLocation, embedding);
         result.put(EMBED, complete.hasVID() ? auto_from_(complete.vid()) : noobj());
     }

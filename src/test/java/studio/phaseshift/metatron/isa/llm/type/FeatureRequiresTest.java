@@ -24,7 +24,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * {@link Feature#requires()} — features declare the full feature tids they
+ * {@link Feature#requires()} — features declare the service tids they
  * need, and the agent (the integrator of features) validates the composition
  * at construction: a missing dependency is a composition error with the
  * canonical message, not a "debilitated" feature discovered mid-chat.
@@ -43,7 +43,7 @@ public class FeatureRequiresTest extends AbstractMetatronTest {
 
         @Override
         public Set<fURI> requires() {
-            return Set.of(LLM_SYSTEM_FEATURE_TID);
+            return Set.of(LLM_SYSTEM_SERVICE_TID);
         }
     }
 
@@ -82,8 +82,8 @@ public class FeatureRequiresTest extends AbstractMetatronTest {
                                 new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null))),
                 LLM_AGENT_TID, null));
         assertTrue(agent.hasFeature(LLM_CHAT_FEATURE_TID), "the attached feature resolves");
-        assertFalse(agent.hasFeature(LLM_MESSAGE_FEATURE_TID), "an unattached sibling must not resolve");
-        assertTrue(agent.feature(LLM_MESSAGE_FEATURE_TID).isNoObj(), "feature(unattached tid) is noobj");
+        assertFalse(agent.hasFeature(LLM_WINDOW_MESSAGE_FEATURE_TID), "an unattached sibling must not resolve");
+        assertTrue(agent.feature(LLM_WINDOW_MESSAGE_FEATURE_TID).isNoObj(), "feature(unattached tid) is noobj");
         assertEquals(LLM_CHAT_FEATURE_TID, agent.feature(LLM_CHAT_FEATURE_TID).tid(), "the attached feature's tid is exact");
     }
 

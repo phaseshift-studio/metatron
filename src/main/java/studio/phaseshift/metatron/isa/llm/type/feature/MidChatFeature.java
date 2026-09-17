@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -42,6 +42,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.ThinkService;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -79,6 +82,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * remark and keep a turn's own narration out of its own context.
  */
 public class MidChatFeature extends AbstractFeature {
+    public static final fURI FEATURE_TID = studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MIDCHAT_FEATURE_TID;
+
 
     /**
      * This feature's watermark identity.  Declared on the config rec as
@@ -122,7 +127,7 @@ public class MidChatFeature extends AbstractFeature {
 
     @Override
     public Set<fURI> requires() {
-        return Set.of(LLM_SKILL_FEATURE_TID, LLM_MESSAGE_FEATURE_TID);
+        return Set.of(LLM_SKILL_SERVICE_TID, LLM_MESSAGE_SERVICE_TID);
     }
 
     /**
@@ -132,7 +137,7 @@ public class MidChatFeature extends AbstractFeature {
     private void registerSkill(final Agent agent) {
         if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
             return;
-        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(mutableMap(
+        agent.requireService(SkillService.class).addSkill(mSkill.of(rec(mutableMap(
                 uri(NAME), uri(LLM_MIDCHAT_FEATURE_TID.name()),
                 uri(DESC), str("speak to the user mid-iteration, and hear them back inside your next tool result"),
                 uri(CONTENT), str(WatermarkUtil.instructions(WatermarkUtil.codec(this, WATERMARK_CODEC),
@@ -194,7 +199,7 @@ public class MidChatFeature extends AbstractFeature {
     }
 
     @Override
-    public void onCompleteResponse(final Agent agent, final ChatResult result) {
+    public void onCompleteResponse(final Agent agent, final ChatFrame result) {
         // whatever the stream never settled is not a watermark — an opener with no
         // closer costs one signal, and holding it past the turn would leak it into
         // the next one
@@ -218,7 +223,7 @@ public class MidChatFeature extends AbstractFeature {
         if (text.isBlank())
             return "";
         StatusLine.message(str("\uD83D\uDCAC %s".formatted(text)));
-        agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as()
+        agent.requireService(MessageService.class)
                 .addMessage(agent, MessageBuilder.build(AI_MESSAGE_TID)
                         .sub(AI_MIDCHAT_TID)
                         .text(text)
@@ -294,7 +299,7 @@ public class MidChatFeature extends AbstractFeature {
         final String listing = pending.elements()
                 .map(message -> "\n" + Str.Helper.cleanString(message.asRec().at(uri(MESSAGE))))
                 .collect(Collectors.joining());
-        agent.feature(LLM_THINK_FEATURE_TID).<ThinkFeature>as()
+        agent.requireService(ThinkService.class)
                 .append(agent, str("\n{{r}}%s\n{{y}}pending messages{{/y}}:%s\n{{r}}%s\n".formatted("-".repeat(10), listing, "-".repeat(10))));
     }
 
@@ -322,7 +327,7 @@ public class MidChatFeature extends AbstractFeature {
      * message, which is why a long mid-iteration conversation left nothing behind.
      */
     private void publishInbound(final Agent agent, final Lst messages) {
-        messages.elements().forEach(message -> agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as()
+        messages.elements().forEach(message -> agent.requireService(MessageService.class)
                 .addMessage(agent, MessageBuilder.build(USER_MESSAGE_TID)
                         .sub(USER_MIDCHAT_TID)
                         .text(message.asRec().at(uri(MESSAGE)).strValue())

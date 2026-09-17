@@ -31,6 +31,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_CLIENT_TYPE;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.ToolService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 
 /**
  * The gatekeeper of the agent's tool channel.
@@ -47,7 +50,14 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_CLIENT_TYPE;
  * forwards each skill's tools here → this feature projects the registry
  * onto the agent's LC4j tool bag.</p>
  */
-public class ToolFeature extends AbstractFeature {
+public class ToolFeature extends AbstractFeature implements ToolService {
+    public static final fURI FEATURE_TID = studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_FEATURE_TID;
+
+    @Override
+    public Set<fURI> offers() {
+        return Set.of(LLM_TOOL_SERVICE_TID);
+    }
+
 
     /**
      * The registered tools — canonical mTool elements, upserted by name.
@@ -96,7 +106,7 @@ public class ToolFeature extends AbstractFeature {
     public Obj onBeforeChat(final Agent agent) {
         this.toolProvider.agent(agent);
         this.addTool(mTool.tool(docWrapDocs(instC(f("list_tools").dom(NOOBJ.zero()).rng(LST_TID), lst(),
-                        (lhs, inst) -> lst(agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().tools())),
+                        (lhs, inst) -> lst(agent.requireService(ToolService.class).tools())),
                 "no domain",
                 "a lst of tools",
                 Map.of(),
@@ -121,12 +131,13 @@ public class ToolFeature extends AbstractFeature {
             });
         }
         // ── 2. project the registry onto the agent's LC4j tool bag ──
-        if (!this.mcpClients.isEmpty())
+        if (!this.mcpClients.isEmpty()) {
             this.addToolProvider(McpToolProvider.builder().mcpClients(this.mcpClients.stream().map(mcpClient::client).toList()).build());
+            //this.mcpClients.clear();
+        }
         LOG.status(DEBUG, "registering %s tools", this.toolProvider.getTools().size());
         if (agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
-            agent.feature(LLM_SYSTEM_FEATURE_TID)
-                    .<SystemFeature>as().addSystemMessage("""
+            agent.requireService(SystemService.class).addSystemMessage("""
                                                           ----
                                                           use list_tools() to see which tools you have access to.""");
         }
@@ -139,9 +150,9 @@ public class ToolFeature extends AbstractFeature {
      * has no session (nothing of its is persisted, so nothing pairs either).
      */
     private static SpaceChatSessionStore ledger(final Agent agent) {
-        if (!agent.hasFeature(LLM_MESSAGE_FEATURE_TID))
+        if (agent.service(MessageService.class).isEmpty())
             return null;
-        return agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as().store();
+        return agent.requireService(MessageService.class).store();
     }
 
     /**
@@ -210,7 +221,7 @@ public class ToolFeature extends AbstractFeature {
                             .text(resultText)
                             .contents(toolCallId)
                             .time()
-                            .session(agent.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION).uriValue())
+                            .session(agent.sessionVID())
                             .depth(agent.chatDepth())
                             .chatId(agent.chatId());
                     // Retrieve the raw Obj stashed by mTool before LC4j forced it to a string

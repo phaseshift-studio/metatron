@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -42,7 +42,7 @@ public class ThinkFeatureTest extends AbstractFeatureTest {
 
     @Test
     public void testLifecycleAttachesThinkRef() {
-        final ChatResult result = runLifecycle(feature());
+        final ChatFrame result = runLifecycle(feature());
         assertFalse(result.at(uri("think")).isNoObj(), "chat_result should carry a think ref");
     }
 

@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -225,25 +225,25 @@ public class WatermarkUtilTest extends AbstractMetatronTest {
     }
 
     @Test
-    void testChatResultResolvesTheFourWatermarkCases() {
-        assertTrue(ChatResult.chatResult().watermark("loop").isNoObj(), "not addressed reads noobj");
+    void testChatFrameResolvesTheFourWatermarkCases() {
+        assertTrue(ChatFrame.chatFrame().watermark("loop").isNoObj(), "not addressed reads noobj");
 
-        final ChatResult empty = ChatResult.chatResult()
+        final ChatFrame empty = ChatFrame.chatFrame()
                 .put(WATERMARK, WatermarkUtil.scan("<<mtron:loop>><</mtron:loop>>").list());
         assertTrue(empty.watermark("loop").isRec(), "an empty body is a zero-arg call, not an absent one");
         assertTrue(empty.watermark("loop").asRec().isEmpty(), "and reads as an empty argument rec");
 
-        final ChatResult decoded = ChatResult.chatResult()
+        final ChatFrame decoded = ChatFrame.chatFrame()
                 .put(WATERMARK, WatermarkUtil.scan("<<mtron:loop>>[prompt=>go]<</mtron:loop>>").list());
         assertEquals("go", Str.Helper.cleanString(decoded.watermark("loop").asRec().at(uri(PROMPT))),
                 "a decoded body is handed back as the call's argument rec");
 
-        final ChatResult broken = ChatResult.chatResult()
+        final ChatFrame broken = ChatFrame.chatFrame()
                 .put(WATERMARK, WatermarkUtil.scan("<<mtron:loop>>I am on it<</mtron:loop>>").list());
         assertTrue(broken.watermark("loop").isNoObj(), "an undecodable body leaves no argument to act on");
         assertTrue(WatermarkUtil.failed(broken.watermarks(), "loop").isRec(), "though the failure is still recorded");
 
-        assertTrue(ChatResult.chatResult().watermarks().isEmpty(), "a chat_result with no watermarks reads empty");
+        assertTrue(ChatFrame.chatFrame().watermarks().isEmpty(), "a chat_result with no watermarks reads empty");
     }
 
     @Test
