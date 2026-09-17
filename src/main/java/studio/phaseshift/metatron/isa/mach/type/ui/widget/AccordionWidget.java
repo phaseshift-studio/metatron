@@ -287,6 +287,10 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
 
         // Width: use floatWidth from style if set, else compute from content
         final int floatW = style.width();
+        // Height: an explicit style height grows the box past its content (the
+        // body is padded with blank rows), so a vertical resize enlarges the
+        // box instead of only ever clipping it.
+        final int floatH = style.height();
         final List<String> displayLines = floatW > 0 ? displayLines(body, style) : new ArrayList<>(body);
         final long __p2 = System.nanoTime();
         if (Boolean.getBoolean("metatron.render.trace"))
@@ -294,7 +298,10 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
                     + "ms body=" + (__p2 - __p1) / 1_000_000 + "ms lines=" + displayLines.size());
         final int bodyWidth = displayLines.stream().map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
         final int titleW = Highlighter.visualLength(title) + Highlighter.visualLength(ind) + 3;
-        final int width = floatW > 0 ? Math.max(titleW, Math.min(Math.max(1, floatW - 2), bodyWidth + 3))
+        // Width: an explicit style width makes the box that wide — the body and
+        // title pad to it — so the box fills its footprint instead of leaving a
+        // blank gap and, for a right/middle anchor, sliding instead of resizing.
+        final int width = floatW > 0 ? Math.max(titleW, floatW - 2)
                 : Math.max(titleW, bodyWidth + 3);
 
         final Border border = style.border() == Border.none ? Border.continuous : style.border();
@@ -311,17 +318,37 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
                         .repeat(" ", Math.max(0, width - Highlighter.visualLength(line) - 1))
                         .append(Widget.X).append(border.rightSide()).append(Widget.X).append("\n");
             }
+            // a style height taller than the content pads the body with blank
+            // rows — the box grows to the cap instead of only ever clipping
+            for (int h = displayLines.size() + 2; h < floatH; h++)
+                appendBlankBodyLine(sb, border, style, width);
             sb.append(Widget.X).append(border.bottomLeftCorner())
                     .append(border.bottomSide().repeat(width))
                     .append(border.bottomRightCorner()).append(Widget.X);
         } else {
             buildTitleBar(sb, border, title, ind, width);
             sb.append("\n");
+            // collapsed (or empty): the box is just its header + bottom border —
+            // no height padding, so collapsing after a resize shrinks the border
+            // back to a sliver instead of leaving a big empty box
             sb.append(Widget.X).append(border.bottomLeftCorner())
                     .append(border.bottomSide().repeat(width))
                     .append(border.bottomRightCorner()).append(Widget.X);
         }
         return sb.toString();
+    }
+
+    /**
+     * A blank body row, drawn with the box's own borders and foreground so a
+     * height-padded body keeps its box — {@code width} columns of nothing
+     * between the left and right sides.
+     */
+    private void appendBlankBodyLine(final StringBuilder sb, final Border border,
+                                     final Style<AccordionWidget> style, final int width) {
+        sb.append(Widget.X).append(border.leftSide()).append(Widget.X)
+                .append(style.foreground()).append(" ")
+                .repeat(" ", Math.max(0, width - 1))
+                .append(Widget.X).append(border.rightSide()).append(Widget.X).append("\n");
     }
 
     private void buildTitleBar(final StringBuilder sb, final Border border,

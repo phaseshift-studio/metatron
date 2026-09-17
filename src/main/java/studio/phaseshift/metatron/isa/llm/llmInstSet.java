@@ -25,11 +25,13 @@ import studio.phaseshift.metatron.isa.llm.space.LedgerUtil;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.vec.type.MVec;
 
 import java.lang.reflect.Method;
@@ -59,8 +61,7 @@ import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -81,23 +82,26 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_AGENT_TID = LLM_ISA_TID.extend(AGENT);
     public static final fURI LLM_INST_TID = LLM_ISA_TID.extend(INST);
     public static final fURI LLM_CHAT_RESULT_TID = LLM_ISA_TID.extend("chat_result");
+    public static final fURI LLM_FRAME_TID = LLM_ISA_TID.extend("frame");
     public static final fURI LLM_WATERMARK_TID = LLM_ISA_TID.extend(WATERMARK);
     public static final fURI LLM_FEATURE_TID = LLM_ISA_TID.extend(FEATURE);
     public static final fURI LLM_SPACE_TID = LLM_ISA_TID.extend(SPACE);
     public static final fURI LLM_TOOL_TID = LLM_ISA_TID.extend(TOOL);
+    public static final fURI LLM_CONCEPT_TID = LLM_ISA_TID.extend(CONCEPT);
+    public static final fURI LLM_TODO_TID = LLM_ISA_TID.extend(TODO);
     public static final fURI LLM_SESSION_TID = LLM_ISA_TID.extend(SESSION);
     public static final fURI LLM_ITERATION_TID = LLM_ISA_TID.extend(ITERATION);
     public static final fURI LLM_CLAIM_TID = LLM_ISA_TID.extend("claim");
     public static final fURI LLM_LOOSE_END_TID = LLM_ISA_TID.extend("loose_end");
     public static final fURI LLM_SKILL_TID = LLM_ISA_TID.extend(SKILL);
-    public static final fURI MESSAGE_TID = LLM_ISA_TID.extend(MESSAGE);
-    public static final fURI AI_MESSAGE_TID = MESSAGE_TID.extend(AI);
-    public static final fURI USER_MESSAGE_TID = MESSAGE_TID.extend(USER);
-    public static final fURI SYSTEM_MESSAGE_TID = MESSAGE_TID.extend(SYSTEM);
-    public static final fURI TOOL_REQUEST_MESSAGE_TID = MESSAGE_TID.extend("tool_request");
-    public static final fURI TOOL_RESULT_MESSAGE_TID = MESSAGE_TID.extend("tool_result");
-    public static final fURI THINKING_MESSAGE_TID = MESSAGE_TID.extend("thinking");
-    public static final fURI COMPACTION_MESSAGE_TID = MESSAGE_TID.extend("compaction");
+    public static final fURI LLM_MESSAGE_TID = LLM_ISA_TID.extend(MESSAGE);
+    public static final fURI AI_MESSAGE_TID = LLM_MESSAGE_TID.extend(AI);
+    public static final fURI USER_MESSAGE_TID = LLM_MESSAGE_TID.extend(USER);
+    public static final fURI SYSTEM_MESSAGE_TID = LLM_MESSAGE_TID.extend(SYSTEM);
+    public static final fURI TOOL_REQUEST_MESSAGE_TID = LLM_MESSAGE_TID.extend("tool_request");
+    public static final fURI TOOL_RESULT_MESSAGE_TID = LLM_MESSAGE_TID.extend("tool_result");
+    public static final fURI THINKING_MESSAGE_TID = LLM_MESSAGE_TID.extend("thinking");
+    public static final fURI COMPACTION_MESSAGE_TID = LLM_MESSAGE_TID.extend("compaction");
     /**
      * The mid-chat subtype: an ordinary {@code user_message} or {@code ai_message}
      * that belongs to a mid-iteration exchange rather than to a real turn.
@@ -113,17 +117,21 @@ public class llmInstSet extends AbstractInstSet {
     //public static final fURI MCP_TOOL_TID = LLM_ISA_TID.extend("mcp");
     // public static Obj MTRON_EVAL_TOOL = mModel.Helper.mtronInstToolSpecification(ObjType.insts().stream().filter(i -> i.tid().equals(EVAL_INST_TID)).findFirst().orElse(null));    
     public static final fURI LLM_CHAT_FEATURE_TID = LLM_FEATURE_TID.extend("chat_feature");
-    public static final fURI LLM_MESSAGE_FEATURE_TID = LLM_FEATURE_TID.extend("message_feature");
+    public static final fURI LLM_TOKEN_MESSAGE_FEATURE_TID = LLM_FEATURE_TID.extend("token_message_feature");
+    public static final fURI LLM_WINDOW_MESSAGE_FEATURE_TID = LLM_FEATURE_TID.extend("window_message_feature");
+    public static final fURI LLM_PERSISTED_FRAME_FEATURE_TID = LLM_FEATURE_TID.extend("persisted_frame_feature");
+    public static final fURI LLM_TRANSIENT_FRAME_FEATURE_TID = LLM_FEATURE_TID.extend("transient_frame_feature");
     public static final fURI LLM_TOOL_FEATURE_TID = LLM_FEATURE_TID.extend("tool_feature");
     public static final fURI LLM_SYSTEM_FEATURE_TID = LLM_FEATURE_TID.extend("system_feature");
     public static final fURI LLM_NOTE_FEATURE_TID = LLM_FEATURE_TID.extend("note_feature");
     public static final fURI LLM_RECALL_FEATURE_TID = LLM_FEATURE_TID.extend("recall_feature");
     public static final fURI LLM_EMBED_FEATURE_TID = LLM_FEATURE_TID.extend("embed_feature");
-    //public static final fURI LLM_MESSAGE_FEATURE_TID = f(LLM_MESSAGE_FEATURE_TID_STRING);
     public static final fURI LLM_SKILL_FEATURE_TID = LLM_FEATURE_TID.extend("skill_feature");
     public static final fURI LLM_TODO_FEATURE_TID = LLM_FEATURE_TID.extend("todo_feature");
     public static final fURI LLM_THINK_FEATURE_TID = LLM_FEATURE_TID.extend("think_feature");
-    public static final fURI LLM_CONCEPT_FEATURE_TID = LLM_FEATURE_TID.extend("concept_feature");
+    public static final fURI LLM_TAGGING_CONCEPT_FEATURE_TID = LLM_FEATURE_TID.extend("tagging_concept_feature");
+    public static final fURI LLM_AGENT_CONCEPT_FEATURE_TID = LLM_FEATURE_TID.extend("agent_concept_feature");
+    public static final fURI LLM_LUCENE_CONCEPT_FEATURE_TID = LLM_FEATURE_TID.extend("lucene_concept_feature");
     public static final fURI LLM_COMPACTION_FEATURE_TID = LLM_FEATURE_TID.extend("compaction_feature");
     public static final fURI LLM_LAMBDA_FEATURE_TID = LLM_FEATURE_TID.extend("lambda_feature");
     public static final fURI LLM_COMMENT_FEATURE_TID = LLM_FEATURE_TID.extend("comment_feature");
@@ -134,6 +142,18 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_LEDGER_FEATURE_TID = LLM_FEATURE_TID.extend("ledger_feature");
     public static final fURI LLM_MIDCHAT_FEATURE_TID = LLM_FEATURE_TID.extend("midchat_feature");
     public static final fURI LLM_ITERATION_FEATURE_TID = LLM_FEATURE_TID.extend("iteration_feature");
+    /// ///////////////////////
+    // service tids — the capability registry vocabulary (a feature offers/requires/uses these;
+    // non-features can offer them too, so they are distinct from feature tids)
+    public static final fURI LLM_SERVICE_TID = LLM_ISA_TID.extend("service");
+    public static final fURI LLM_TOOL_SERVICE_TID = LLM_SERVICE_TID.extend("tool");
+    public static final fURI LLM_SKILL_SERVICE_TID = LLM_SERVICE_TID.extend("skill");
+    public static final fURI LLM_SYSTEM_SERVICE_TID = LLM_SERVICE_TID.extend("system");
+    public static final fURI LLM_MESSAGE_SERVICE_TID = LLM_SERVICE_TID.extend("message");
+    public static final fURI LLM_CONCEPT_SERVICE_TID = LLM_SERVICE_TID.extend("concept_extraction");
+    public static final fURI LLM_CHAT_SERVICE_TID = LLM_SERVICE_TID.extend("chat");
+    public static final fURI LLM_THINK_SERVICE_TID = LLM_SERVICE_TID.extend("think");
+    public static final fURI LLM_FRAME_SERVICE_TID = LLM_SERVICE_TID.extend("frame");
     //public static final fURI LLM_SKILL_FEATU
 
     public static Type LLM_MODEL_TYPE;
@@ -144,6 +164,7 @@ public class llmInstSet extends AbstractInstSet {
     public static Type LLM_SKILL_TYPE;
     public static Type LLM_SESSION_TYPE;
     public static Type LLM_ITERATION_TYPE;
+    public static Type LLM_CONCEPT_TYPE;
     public static Type LLM_CLAIM_TYPE;
     public static Type LLM_LOOSE_END_TYPE;
     public static Type LLM_MESSAGE_TYPE;
@@ -151,79 +172,12 @@ public class llmInstSet extends AbstractInstSet {
     public static Type LLM_TOOL_REQUEST_MESSAGE_TYPE;
     public static Type LLM_THINKING_MESSAGE_TYPE;
     public static Type LLM_COMPACTION_MESSAGE_TYPE;
-    public static Type LLM_NOTES_TYPE;
+    public static Type LLM_TODO_TYPE;
     public static Type LLM_TOOL_TYPE;
     public static Type LLM_CHAT_RESULT_TYPE;
     public static Type LLM_WATERMARK_TYPE;
     public static ObjFactory LLM_OBJ_FACTORY = MObjFactory.of().addExtension(MVec.class, x -> lst(x.jvm().stream().toList()));
     public static Type LLM_FEATURE_TYPE;
-
-    /**
-     * Distill prompt for {@code summarize()}: asks the model to emit one or more
-     * {@code <<json:claim>>} watermarks, each containing a single claim rec shaped like
-     * {@code [text=>'...', kind=>decision|problem|solution|observation]}.  The watermarks
-     * are scanned by {@link WatermarkUtil} into the
-     * ChatResult's {@code watermark} lst and anchored by {@code summarize()} as
-     * {@code claim::T} at {@code <agent>/claim/}.
-     * The {@code source} (message vids) is stamped by the inst, not the model — the
-     * model never sees message vids, only the digest text.
-     */
-    public static final String SUMMARIZE_PROMPT = """
-                                                  You are distilling a past metatron session into claims and loose ends. A claim is a terse
-                                                  proposition (1-3 sentences) capturing a decision, problem, solution, or observation — what
-                                                  a future agent would need to understand what happened and why. A loose end is an OPEN
-                                                  continuation point a DIFFERENT session could pick up cold — work that is still owed.
-                                                  
-                                                  Output exactly TWO json blocks. The first is a JSON array of claim objects, the second a
-                                                  JSON array of loose end objects:
-                                                  
-                                                  <<json:claim>>[{"text":"...","kind":"decision","source":[...]},{"text":"...","kind":"problem"}]<</json:claim>>
-                                                  <<json:loose_end>>[{"title":"...","desc":"...","status":"open"}]<</json:loose_end>>
-                                                  
-                                                  Rules for claims:
-                                                  1. kind is one of: decision, problem, solution, observation.
-                                                  2. source is a list of messages (by vid) that inspired you to create the claim.
-                                                    - ["/example/message/1","/example/message/5"]
-                                                  3. A decision without a rationale is not worth recording — say why in the text.
-                                                  4. Prefer specific over general; if nothing significant happened, emit an empty array: <<json:claim>>[]<</json:claim>>
-                                                  
-                                                  Rules for loose ends:
-                                                  4. The cold test: could a session with no access to this transcript act on it? If reading it
-                                                     requires knowing what happened here, it is not a loose end. Most sessions justify 0-2; if
-                                                     you are writing a third, you are recording rather than continuing.
-                                                  5. These do NOT earn a loose end: something this session finished; a current-state observation;
-                                                     a defect the operator should queue; a restatement of a decision (that is already a claim).
-                                                  6. If nothing is left open, emit an empty array: <<json:loose_end>>[]<</json:loose_end>>
-                                                  
-                                                  Do NOT emit session ids, timestamps, source refs, or ids — those are stamped from the record.
-                                                  
-                                                  The session transcript:
-                                                  
-                                                  """;
-
-    /**
-     * Distill prompt for {@code compact()}: asks the model to write a
-     * continuation summary that replaces the conversation history in a future
-     * context window.  The summary becomes the {@code text} of the
-     * {@code compaction_message::T} sentinel — the model never sees the raw
-     * transcript again, only the resume summary.
-     */
-    public static final String COMPACT_PROMPT = """
-                                                You have been working on the task described above but have not yet completed it.
-                                                Write a continuation summary that will allow you (or another instance of yourself) to resume work efficiently
-                                                in a future context window where the conversation history will be replaced with this summary.
-                                                
-                                                Your summary should be structured, concise, and actionable. Include:
-                                                1. **Task Overview**: The user's core request, success criteria, and constraints.
-                                                2. **Current State**: What has been completed, current progress, and any pending steps.
-                                                3. **Key Details**: User preferences, domain-specific details, or promises made to the user.
-                                                
-                                                Write in a way that enables immediate resumption of the task.
-                                                
-                                                ## Conversation:
-                                                %s
-                                                """;
-
 
     public llmInstSet() {
         super(mutableMap(uri(PATTERN), uri(LLM_ISA_TID.extend(ALL))), INSTSET_TID, LLM_ISA_TID);
@@ -231,6 +185,11 @@ public class llmInstSet extends AbstractInstSet {
 
     @Override
     public void setup() {
+        // llm types reference mathInstSet.DATETIME_TYPE, which is only populated by
+        // mathInstSet.setup(). The ServiceLoader order that loads inst sets is not a
+        // stable contract, so ensure math is set up first rather than assuming it.
+        if (null == DATETIME_TYPE)
+            InstSet.importInstSet(MATH_ISA_TID);
         this.jvm().putAll(mutableMap(
                 uri(TYPE), lst(
                         LLM_MODEL_TYPE = docWrap(Type.Builder.build()
@@ -310,6 +269,38 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(TIME), "creation timestamp"),
                                 "an iteration groups the messages of a single chat turn within a session and links to prev/next iterations"),
                         //////////////////////////////////////////////////
+                        docWrap(LLM_CONCEPT_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_CONCEPT_TID)
+                                        .isaPredicate(rec(
+                                                uri(NAME), STR_TYPE,
+                                                uri(CONCEPT).maybe(), lst(T(LLM_CONCEPT_TID.maybeSome())).maybe(),
+                                                uri(MESSAGE).maybe(), lst(T(LLM_MESSAGE_TID.maybeSome())).maybe()))
+                                        .create(), "", "", Map.of(
+                                        uri(NAME), "the concept name",
+                                        uri(CONCEPT).maybe(), "a lst of related concepts",
+                                        uri(MESSAGE).maybe(), "a lst of related messages"),
+                                """
+                                a concept related to other concepts and messages.
+                                """),
+                        docWrap(LLM_TODO_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_TODO_TID)
+                                        .isaPredicate(rec(
+                                                uri(TEXT), STR_TYPE,
+                                                uri(STATUS).maybe(), isa_(union_(uri("open"), uri("in_progress"), uri("blocked"), uri("done"))).else_(uri("open")),
+                                                uri(TIME).maybe(), isa_(DATETIME_TYPE).else_(instB(MATH_DATETIME_NOW_TID, lst())),
+                                                uri(CONCEPT).maybe(), lst(T(LLM_CONCEPT_TID.maybeSome())),
+                                                uri(MESSAGE).maybe(), lst(T(LLM_MESSAGE_TID.maybeSome()))))
+                                        .create(), "", "", Map.of(
+                                        uri(TEXT), "the todo information",
+                                        uri(STATUS).maybe(), "current status of todo (default: open)",
+                                        uri(TIME).maybe(), "datetime of todo creation (default: datetime_now())",
+                                        uri(CONCEPT).maybe(), "concepts associated with todo",
+                                        uri(MESSAGE).maybe(), "messages associated with todo"),
+                                """
+                                a todo item links to concepts and messages and is used to keep track of task to accomplish
+                                """),
                         // CLAIM — a distilled proposition with provenance
                         docWrap(LLM_CLAIM_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
@@ -370,7 +361,7 @@ public class llmInstSet extends AbstractInstSet {
                                         "\ttime=>datetime::<//2026.08:25/15/48/02/251?tz=+0000>]"),
                         // LLM_MESSAGE_TYPE defined below after all message sub-types
                         docWrap(LLM_SYSTEM_MESSAGE_TYPE = Type.Builder.build()
-                                        .tid(MESSAGE_TID)
+                                        .tid(LLM_MESSAGE_TID)
                                         .vid(SYSTEM_MESSAGE_TID)
                                         .isaPredicate(rec(uri(TEXT), STR_TYPE))
                                         //   uri(SIZE), DATA_SIZE_TYPE))
@@ -416,7 +407,7 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(ERROR).maybe(), "a fail chain if errors occurred"),
                                 "a response message from a chat interaction"),
                         docWrap(LLM_USER_MESSAGE_TYPE = Type.Builder.build()
-                                        .tid(MESSAGE_TID)
+                                        .tid(LLM_MESSAGE_TID)
                                         .vid(USER_MESSAGE_TID)
                                         .isaPredicate(rec(
                                                 uri(NAME).maybe().asUri(), STR_TYPE,
@@ -430,7 +421,7 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(CONTENTS).maybe(), "the message contents"
                                         /*  uri(SIZE), "the data size of the message content"*/), "a user message"),
                         docWrap(LLM_TOOL_REQUEST_MESSAGE_TYPE = Type.Builder.build()
-                                        .tid(MESSAGE_TID)
+                                        .tid(LLM_MESSAGE_TID)
                                         .vid(TOOL_REQUEST_MESSAGE_TID)
                                         .isaPredicate(rec(
                                                 uri(NAME), URI_TYPE,
@@ -445,7 +436,7 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(CONTENTS).maybe(), "the tool execution request id"),
                                 "a tool execution request — nested inside an ai message's tool_requests list"),
                         docWrap(LLM_AI_MESSAGE_TYPE = Type.Builder.build()
-                                        .tid(MESSAGE_TID)
+                                        .tid(LLM_MESSAGE_TID)
                                         .vid(AI_MESSAGE_TID)
                                         .isaPredicate(rec(
                                                 uri(TEXT).maybe().asUri(), STR_TYPE,
@@ -457,7 +448,7 @@ public class llmInstSet extends AbstractInstSet {
                                         uri("attributes"), "extra provider metadata is stored as top-level fields on the rec"),
                                 "an ai/assistant message"),
                         docWrap(LLM_TOOL_RESULT_MESSAGE_TYPE = Type.Builder.build()
-                                        .tid(MESSAGE_TID)
+                                        .tid(LLM_MESSAGE_TID)
                                         .vid(TOOL_RESULT_MESSAGE_TID)
                                         .isaPredicate(rec(
                                                 uri(NAME), URI_TYPE,
@@ -474,7 +465,7 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(ID).maybe(), "correlation id matching the tool execution request"),
                                 "a tool execution result message"),
                         docWrap(LLM_THINKING_MESSAGE_TYPE = Type.Builder.build()
-                                        .tid(MESSAGE_TID)
+                                        .tid(LLM_MESSAGE_TID)
                                         .vid(THINKING_MESSAGE_TID)
                                         .isaPredicate(rec(
                                                 uri(TEXT), STR_TYPE))
@@ -483,7 +474,7 @@ public class llmInstSet extends AbstractInstSet {
                                 Map.of(uri(TEXT), "the model's internal reasoning text"),
                                 "a thinking/reasoning trace message — stored in the ledger but excluded from the LC4j chat window"),
                         docWrap(LLM_COMPACTION_MESSAGE_TYPE = Type.Builder.build()
-                                        .tid(MESSAGE_TID)
+                                        .tid(LLM_MESSAGE_TID)
                                         .vid(COMPACTION_MESSAGE_TID)
                                         .isaPredicate(rec(
                                                 uri(TEXT), STR_TYPE,
@@ -499,7 +490,7 @@ public class llmInstSet extends AbstractInstSet {
                                 "a compaction represents a stop point for message retrieval and provides a summary of all previous messages"),
                         docWrap(LLM_MESSAGE_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
-                                        .vid(MESSAGE_TID)
+                                        .vid(LLM_MESSAGE_TID)
                                         .isaPredicate(rec(uri(SESSION).maybe().asUri(), URI_TYPE))
                                         .create(),
                                 null, null,
@@ -590,9 +581,25 @@ public class llmInstSet extends AbstractInstSet {
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
-                                .vid(LLM_MESSAGE_FEATURE_TID)
+                                .vid(LLM_TOKEN_MESSAGE_FEATURE_TID)
                                 .isaPredicate(rec(SESSION, URI_TYPE))
-                                .constructor(arg -> createStageLambdas(new MessageFeature(arg.asRec().jvm(), LLM_MESSAGE_FEATURE_TID, arg.vid())))
+                                .constructor(arg -> createStageLambdas(new TokenMessageFeature(arg.asRec().jvm(), LLM_TOKEN_MESSAGE_FEATURE_TID, arg.vid())))
+                                .create(),
+                        Type.Builder.build()
+                                .tid(LLM_FEATURE_TID)
+                                .vid(LLM_WINDOW_MESSAGE_FEATURE_TID)
+                                .isaPredicate(rec(SESSION, URI_TYPE))
+                                .constructor(arg -> createStageLambdas(new WindowMessageFeature(arg.asRec().jvm(), LLM_WINDOW_MESSAGE_FEATURE_TID, arg.vid())))
+                                .create(),
+                        Type.Builder.build()
+                                .tid(LLM_FEATURE_TID)
+                                .vid(LLM_PERSISTED_FRAME_FEATURE_TID)
+                                .constructor(arg -> createStageLambdas(new PersistedFrameFeature(arg.asRec().jvm(), LLM_PERSISTED_FRAME_FEATURE_TID, arg.vid())))
+                                .create(),
+                        Type.Builder.build()
+                                .tid(LLM_FEATURE_TID)
+                                .vid(LLM_TRANSIENT_FRAME_FEATURE_TID)
+                                .constructor(arg -> createStageLambdas(new TransientFrameFeature(arg.asRec().jvm(), LLM_TRANSIENT_FRAME_FEATURE_TID, arg.vid())))
                                 .create(),
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
@@ -641,12 +648,28 @@ public class llmInstSet extends AbstractInstSet {
                                 "the mid-chat channel: relays what the model says to the user mid-iteration, and carries what the user says back through the tool result of the call it answered"),
                         docWrap(Type.Builder.build()
                                         .tid(LLM_FEATURE_TID)
-                                        .vid(LLM_CONCEPT_FEATURE_TID)
-                                        .constructor(arg -> createStageLambdas(new ConceptFeature(arg.asRec().jvm(), LLM_CONCEPT_FEATURE_TID, arg.vid())))
+                                        .vid(LLM_TAGGING_CONCEPT_FEATURE_TID)
+                                        .constructor(arg -> createStageLambdas(new TaggingConceptFeature(arg.asRec().jvm(), LLM_TAGGING_CONCEPT_FEATURE_TID, arg.vid())))
                                         .create(),
                                 null, null,
                                 mutableMap(),
-                                "extracts and normalizes concepts from the agent response and thinking stream"),
+                                "extracts concepts from the agent response and thinking stream by parsing inline <<concept:>> tags"),
+                        docWrap(Type.Builder.build()
+                                        .tid(LLM_FEATURE_TID)
+                                        .vid(LLM_AGENT_CONCEPT_FEATURE_TID)
+                                        .constructor(arg -> createStageLambdas(new AgentConceptFeature(arg.asRec().jvm(), LLM_AGENT_CONCEPT_FEATURE_TID, arg.vid())))
+                                        .create(),
+                                null, null,
+                                mutableMap(),
+                                "extracts concepts from the agent response and thinking stream via a translator LLM"),
+                        docWrap(Type.Builder.build()
+                                        .tid(LLM_FEATURE_TID)
+                                        .vid(LLM_LUCENE_CONCEPT_FEATURE_TID)
+                                        .constructor(arg -> createStageLambdas(new LuceneConceptFeature(arg.asRec().jvm(), LLM_LUCENE_CONCEPT_FEATURE_TID, arg.vid())))
+                                        .create(),
+                                null, null,
+                                mutableMap(),
+                                "extracts concepts from the agent response and thinking stream by TF-IDF over a Lucene message index"),
                         // [parked stub] Comment — out of the active roster during the
                         // channel refactor (skill/tool/message owners); un-comment to revive.
 //                         docWrap(Type.Builder.build()
@@ -711,8 +734,8 @@ public class llmInstSet extends AbstractInstSet {
                                         .vid(LLM_LOOP_FEATURE_TID)
                                         .isaPredicate(rec(
                                                 uri("max_loop").maybe().asUri(), INT_TYPE,
-                                                uri("max_time").maybe().asUri(), ALL_TYPE,
-                                                uri("delay").maybe().asUri(), ALL_TYPE,
+                                                uri("max_time").maybe().asUri(), TIME_TYPE,
+                                                uri("delay").maybe().asUri(), TIME_TYPE,
                                                 uri("preserve").maybe().asUri(), LST_TYPE))
                                         .constructor(arg -> createStageLambdas(new LoopFeature(arg.asRec().jvm(), LLM_LOOP_FEATURE_TID, arg.vid())))
                                         .create(),
@@ -810,7 +833,7 @@ public class llmInstSet extends AbstractInstSet {
                         // the write path is broken, which is worth finding out, not
                         // hiding behind a sweep on every boot.
 
-                        docWrap(instC(LLM_INST_TID.extend("sweep").dom(LLM_ISA_TID.extend("session_or_agent")).rng(REC_TID),
+                        docWrap(instC(LLM_INST_TID.extend("sweep").dom(LLM_ISA_TID.extend("session_or_agent").maybe()).rng(REC_TID),
                                         rec(uri("session_or_agent").maybe().asUri(), T(LLM_ISA_TID.extend("session_or_agent").maybe()),
                                                 uri("repair").maybe().asUri(), BOOL_TYPE,
                                                 uri("prune").maybe().asUri(), BOOL_TYPE),
@@ -868,7 +891,7 @@ public class llmInstSet extends AbstractInstSet {
                                                     uri(KIND), inst.arg(f(KIND), 3),
                                                     uri(CONCEPT), inst.arg(f(CONCEPT), 4),
                                                     uri(TO), uri(agentHome));
-                                            return summarizeSession(agentHome, sessionVID, config);
+                                            return SummarizeFeature.summarizeSession(agentHome, sessionVID, config);
                                         }),
                                 "a session to distill",
                                 "the applied constraints rec — [session, model, scope, kind, concept, to, claim=>[vids], loose_end=>[vids]]",
@@ -885,14 +908,14 @@ public class llmInstSet extends AbstractInstSet {
                                             // or as arg 0 (function form: compact(@dr)).
                                             final Rec agentRec = inst.arg(f(AGENT), 0).orElse(lhs.asRec());
                                             final Agent a = agent(agentRec);
-                                            if (!a.hasFeature(LLM_MESSAGE_FEATURE_TID))
+                                            if (a.service(MessageService.class).isEmpty())
                                                 return fail("compact requires the agent to have a session feature");
                                             final fURI agentHome = a.at(ROOT).uriValue();
-                                            final fURI sessionVID = a.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION).uriValue();
+                                            final fURI sessionVID = a.service(MessageService.class).get().sessionVID();
                                             final Rec config = rec(uri(MODEL), inst.arg(f(MODEL), 1),
                                                     uri(PROMPT), inst.arg(f(PROMPT), 2),
                                                     uri(TO), uri(agentHome));
-                                            return compactSession(agentHome, sessionVID, config);
+                                            return CompactionFeature.compactSession(agentHome, sessionVID, config);
                                         }),
                                 "an agent to compact",
                                 "the applied constraints rec — [to, compaction=>vid, in, out, compression]",
@@ -903,258 +926,6 @@ public class llmInstSet extends AbstractInstSet {
                                 "@dr.compact()  [-- fluent --]  |  compact(@dr)  [-- function --]"))));
         docWrap(this, "large language model think and reason within the metatron");
         super.setup();
-    }
-
-    /**
-     * Distill a session's message ledger into claim::T and loose_end::T recs
-     * via a mini-task, appending them under the config's {@code output} base.
-     * Shared by the {@code summary} inst and the SummarizeFeature's background
-     * thread — the config rec has the same vocabulary as the
-     * {@code <<mtron:summarize>>} block (session, model, scope, kinds,
-     * concepts, output), so the block is simply a deferred summary() call.
-     *
-     * @param agentHome  the agent root — the model rec is resolved from
-     *                   {@code <agentHome>/model} when the config's model is noobj
-     * @param sessionVID the session whose ledger messages are distilled
-     * @param config     the argument/block rec — {@code scope} filters the
-     *                   message set (a time::T duration or datetime::T cutoff);
-     *                   {@code kind} and {@code concept} are recall hints
-     *                   echoed back for the follow-on briefing; {@code to} is
-     *                   the anchor base (default: the agent home)
-     * @return the applied-constraints rec — the resolved
-     * [session, model, scope, kind, concept, to] plus the written
-     * claim/ and loose_end/ vids; a fail::T on error
-     */
-    public static Obj summarizeSession(final fURI agentHome, final fURI sessionVID, final Rec config) {
-        final Obj modelArg = config.at(uri(MODEL));
-        final Obj scope = config.at(uri(SCOPE));
-        final Obj kinds = config.at(uri(KIND));
-        final Obj concepts = config.at(uri(CONCEPT));
-        final Obj output = config.at(uri(TO));
-        final fURI outputBase = output.isNoObj() ? agentHome : output.uriValue();
-        // 1. collect this session's messages from the ledger as rels
-        //    (vid => rec) — the rel key IS the message vid (branch read)
-        final fURI messagesLocation = agentHome.extend(MESSAGE).extend("+/");
-        final List<Rel> messages = Router.readFromSpace(messagesLocation)
-                .stream()
-                .map(Obj::asRel)
-                .filter(pair -> !pair.second().tid().equals(LLM_TOOL_RESULT_MESSAGE_TYPE.vid()))
-                .filter(pair -> {
-                    final Obj sessionUri = pair.second().asRec().at(SESSION);
-                    return sessionUri.isUri() && sessionUri.uriValue().equals(sessionVID);
-                })
-                .filter(pair -> withinScope(pair.second().asRec(), scope))
-                .sorted(Comparator.comparing(pair -> Integer.parseInt(pair.first().uriValue().name())))
-                .toList();
-        if (messages.isEmpty())
-            return fail("no messages found for session %s at %s", sessionVID, messagesLocation);
-        // 2. build the distill digest — vid ==> text so the model can cite real vids
-        final String digest = messages.stream()
-                .filter(pair -> !Str.Helper.cleanString(pair.second().asRec().at(TEXT)).isBlank())
-                .map(pair -> Graphitty.strip(Str.Helper.cleanString(pair.first()) + "==>" + Str.Helper.cleanString(pair.second().asRec().at(TEXT).orElse(str(""))))) // remove color coding annotations
-                .collect(Collectors.joining("\n"))
-                .replace("%", ""); // remove all string formatting meta-characters
-        // 3. the model — from the agent home (matches <agent>/model)
-        final mModel model = modelArg.isNoObj() ? mModel.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec()) : mModel.model(modelArg.asRec());
-        // 4. distill via a mini-task
-        final ChatResult result = Agent.Helper.miniChat("session_summarizer", model(model.at(TIMEOUT, real(10.0, MATH_MINUTE_TID, null))), SUMMARIZE_PROMPT + digest);
-        // 5. parse the <<json:claim>> and <<json:loose_end>> watermarks into vids
-        final List<Obj> claimVids = new ArrayList<>();
-        final List<Obj> looseEndVids = new ArrayList<>();
-        // claims first: a loose end refers to the claims distilled in this same pass
-        for (final String keyStr : List.of("claim", "loose_end")) {
-            final Obj body = result.watermark(keyStr);
-            if (!body.isNoObj()) {
-                final Lst bodyLst = body.isLst() ? body.asLst() : lst(body);
-                for (final Obj bodyObj : bodyLst.elements().toList()) {
-                    Rec rec = bodyObj.asRec();
-                    if (keyStr.equals("claim")) {
-                        // JSON parses kind as a string ("observation") — coerce to a uri
-                        // as claim::T expects (kind => union of uris)
-                        final Obj kind = rec.at(uri(KIND));
-                        if (kind.isStr())
-                            rec.at(uri(KIND), uri(kind.strValue()), MUTABLE);
-                        // source: lst of !* auto_from refs to the message vids — the same
-                        // storage form concept uses for its {uri} collections (tble
-                        // round-trips lst fine; objs/coefficient collections do not)
-                        final Lst source = rec.at(uri(SOURCE)).orElse(lst());
-                        if (!source.isEmpty()) {
-                            rec.at(uri(SOURCE), lst(source.elements()
-                                    .map(s -> (Obj) auto_from_(uri(Str.Helper.cleanString(s))).tryToInst())
-                                    .toList()), MUTABLE);
-                        }
-                        rec = rec.tid(LLM_CLAIM_TID);
-                        final fURI vid = Router.writeToSpace(outputBase.extend("claim").extend("_").addQ(INCRQ), rec).vid();
-                        claimVids.add(uri(vid));
-                    } else if (keyStr.equals("loose_end")) {
-                        // JSON parses status as a string ("open") — coerce to a uri
-                        // as loose_end::T expects (status => union of uris)
-                        final Obj status = rec.at(uri(STATUS));
-                        if (status.isStr())
-                            rec.at(uri(STATUS), uri(status.strValue()), MUTABLE);
-                        // source: lst of !* auto_from refs to the message vids — same as claims
-                        final Lst source = rec.at(uri(SOURCE)).orElse(lst());
-                        if (!source.isEmpty()) {
-                            rec.at(uri(SOURCE), lst(source.elements()
-                                    .map(s -> (Obj) auto_from_(uri(Str.Helper.cleanString(s))).tryToInst())
-                                    .toList()), MUTABLE);
-                        }
-                        // claim: !* auto_from refs to the claims distilled in this same
-                        // pass — the loose end's justifying propositions
-                        if (!claimVids.isEmpty())
-                            rec.at(uri("claim"), lst(claimVids.stream()
-                                    .map(v -> (Obj) auto_from_(v.uriValue()).tryToInst())
-                                    .toList()), MUTABLE);
-                        // time is stamped by the inst, not the model
-                        rec.at(uri(TIME), nowDatetime(), MUTABLE);
-                        rec = rec.tid(LLM_LOOSE_END_TID);
-                        final fURI vid = Router.writeToSpace(outputBase.extend("loose_end").extend("_").addQ(INCRQ), rec).vid();
-                        looseEndVids.add(uri(vid));
-                    }
-                }
-            }
-        }
-        // 6. the applied constraints — the config echoed back with defaults resolved
-        return rec(uri(SESSION), uri(sessionVID),
-                uri(MODEL), model,
-                uri(SCOPE), scope,
-                uri(KIND), kinds,
-                uri(CONCEPT), concepts,
-                uri(TO), uri(outputBase),
-                uri("claim"), lst(claimVids),
-                uri("loose_end"), lst(looseEndVids));
-    }
-
-    /**
-     * Compact a session's message ledger into a single {@code compaction_message::T}
-     * sentinel whose {@code text} is a resume summary, stamped with the token
-     * compression stats ({@code in}, {@code out}, {@code compression}).  The
-     * trailing few messages are re-appended after the sentinel so the immediate
-     * context is not lost in the summary.  Shared by the {@code compact} inst and
-     * the CompactionFeature's background thread — the config rec has the same
-     * vocabulary as the {@code <<mtron:compaction>>} block (agent, model, prompt).
-     *
-     * @param agentHome  the agent root — the model rec is resolved from
-     *                   {@code <agentHome>/model} when the config's model is noobj
-     * @param sessionVID the session whose ledger messages are compacted
-     * @param config     the argument/block rec — {@code model} and {@code prompt}
-     *                   override the summarizer's model and prompt template
-     * @return the applied-constraints rec — the resolved [to, compaction=>vid]
-     * plus the [in, out, compression] stats; a fail::T on error
-     */
-    public static Obj compactSession(final fURI agentHome, final fURI sessionVID, final Rec config) {
-        final Obj modelArg = config.at(uri(MODEL));
-        final Obj promptArg = config.at(uri(PROMPT));
-        final Obj output = config.at(uri(TO));
-        final fURI outputBase = output.isNoObj() ? agentHome : output.uriValue();
-        // 1. collect this session's messages from the ledger, oldest -> newest
-        final fURI messagesLocation = agentHome.extend(MESSAGE).extend("+/");
-        final List<Rel> messages = Router.readFromSpace(messagesLocation)
-                .stream()
-                .map(Obj::asRel)
-                .filter(pair -> !pair.second().tid().equals(LLM_TOOL_RESULT_MESSAGE_TYPE.vid()))
-                .filter(pair -> {
-                    final Obj sessionUri = pair.second().asRec().at(SESSION);
-                    return sessionUri.isUri() && sessionUri.uriValue().equals(sessionVID);
-                })
-                .sorted(Comparator.comparing(pair -> Integer.parseInt(pair.first().uriValue().name())))
-                .toList();
-        if (messages.isEmpty())
-            return fail("no messages found for session %s at %s", sessionVID, messagesLocation);
-        // 2. build the conversation digest — text only, so the model sees content not vids
-        final String digest = messages.stream()
-                .map(pair -> Str.Helper.cleanString(pair.second().asRec().at(TEXT).orElse(str(""))))
-                .filter(s -> !s.isBlank())
-                .collect(Collectors.joining("\n-----\n"));
-        // 3. the summarizer model (agent home model when not given) and prompt
-        final mModel model = modelArg.isNoObj()
-                ? mModel.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec())
-                : mModel.model(modelArg.asRec());
-        final String prompt = promptArg.isNoObj() ? COMPACT_PROMPT : promptArg.strValue();
-        // 4. distill via a mini-task
-        final ChatResult result = Agent.Helper.miniChat("session_compactor", model(model.at(TIMEOUT, real(5.0, MATH_MINUTE_TID, null))), prompt.formatted(digest));
-        final String summary = Str.Helper.cleanString(result.at(CHAT).orElse(str("")));
-        // 5. write the sentinel + pair-safe recent-tail
-        final Rec sentinel = writeCompaction(agentHome, sessionVID, messages, digest, summary);
-        return rec(uri(TO), uri(outputBase),
-                uri("compaction"), uri(sentinel.vid()),
-                uri(IN), sentinel.at(uri(IN)),
-                uri(OUT), sentinel.at(uri(OUT)),
-                uri(COMPRESSION), sentinel.at(uri(COMPRESSION)));
-    }
-
-    /**
-     * Write the compaction sentinel — its {@code text} is the resume summary,
-     * stamped with {@code in}/{@code out}/{@code compression} token stats — then
-     * re-append the recent-tail after it, pair-safe (a {@code tool_result} is
-     * never orphaned from its {@code ai} message).  Extracted from
-     * {@link #compactSession} so the write-path is testable without an LLM
-     * round-trip.
-     *
-     * @param agentHome  the agent root — the sentinel/tail write under {@code <agentHome>/message/}
-     * @param sessionVID the session the sentinel belongs to
-     * @param messages   the session's messages, oldest -> newest, as ledger rels
-     * @param digest     the conversation digest (drives the {@code in} token stat)
-     * @param summary    the resume summary (the sentinel's {@code text})
-     * @return the written sentinel rec (text + in/out/compression + session/depth)
-     */
-    public static Rec writeCompaction(final fURI agentHome, final fURI sessionVID, final List<Rel> messages, final String digest, final String summary) {
-        final MessageFeature.DefaultTokenCountEstimator estimator = MessageFeature.DefaultTokenCountEstimator.singleton();
-        final int tokensIn = estimator.estimateTokenCountInText(digest);
-        final int tokensOut = estimator.estimateTokenCountInText(summary);
-        final double compression = tokensIn == 0 ? 0.0 : 1.0 - ((double) tokensOut / (double) tokensIn);
-        final fURI writePath = agentHome.extend(MESSAGE).extend("_").addQ(INCRQ);
-        final Rec sentinel = MessageBuilder.build(COMPACTION_MESSAGE_TID)
-                .text(summary)
-                .time()
-                .session(sessionVID)
-                .depth(1)
-                .put(IN, jnt(tokensIn))
-                .put(OUT, jnt(tokensOut))
-                .put(COMPRESSION, real(compression))
-                .create(writePath);
-        final int SPILL_OVER = 5; // recent-tail — keep the immediate context raw, not just in the summary
-        // only re-append the conversational kinds — system/thinking/compaction
-        // are metatron-world records (SystemFeature re-writes the system message
-        // each turn), and a system message in the tail would break the model's
-        // "system message must be at the beginning" invariant
-        final List<Rel> conversational = messages.stream()
-                .filter(pair -> {
-                    final fURI tid = pair.second().tid();
-                    return tid.equals(USER_MESSAGE_TID) || tid.equals(AI_MESSAGE_TID) || tid.equals(TOOL_RESULT_MESSAGE_TID);
-                })
-                .toList();
-        int skip = Math.max(0, conversational.size() - SPILL_OVER);
-        // pull in more (never fewer) messages so the tail never starts on an
-        // orphaned tool_result or an ai message without its user message
-        skip = SpaceChatSessionStore.adjustSkipToPreservePairs(conversational, skip);
-        for (int i = skip; i < conversational.size(); i++) {
-            final Rec tail = conversational.get(i).second().asRec();
-            MessageBuilder.build(tail.tid()).copy(tail.jvm()).create(writePath);
-        }
-        return sentinel;
-    }
-
-    /**
-     * Scope filter: keep messages whose {@code time} is at or after the cutoff
-     * implied by {@code scope} — a time::T duration (relative to now) or an
-     * absolute datetime::T.  Noobj (or an unrecognized shape) means no filter.
-     */
-    private static boolean withinScope(final Rec message, final Obj scope) {
-        if (scope.isNoObj())
-            return true;
-        final Obj time = message.at(uri(TIME));
-        if (time.isNoObj() || !time.isUri())
-            return true;
-        final long cutoff;
-        if (scope.test(DATETIME_TYPE)) {
-            cutoff = datetimeToMillis(scope.asUri());
-        } else if (scope.test(TIME_TYPE)) {
-            cutoff = System.currentTimeMillis() - scope.tid(MATH_MILLIS_TID).realValue().longValue();
-        } else {
-            return true; // unrecognized scope — don't filter
-        }
-        return datetimeToMillis(time.asUri()) >= cutoff;
     }
 
     /**
@@ -1248,9 +1019,9 @@ public class llmInstSet extends AbstractInstSet {
             new StageDef(ON_TOOL_RESULT, "onToolResult", new Class<?>[]{Agent.class, Obj.class, String.class},
                     f -> instLambda(ALL.maybe(), ALL.maybe(), (agent, i) ->
                             f.onToolResult((Agent) agent, i.arg(0), Str.Helper.cleanString(i.arg(1))))),
-            new StageDef(ON_COMPLETE_RESPONSE, "onCompleteResponse", new Class<?>[]{Agent.class, ChatResult.class},
+            new StageDef(ON_COMPLETE_RESPONSE, "onCompleteResponse", new Class<?>[]{Agent.class, ChatFrame.class},
                     f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, i) -> {
-                        f.onCompleteResponse((Agent) agent, (ChatResult) i.arg(0));
+                        f.onCompleteResponse((Agent) agent, (ChatFrame) i.arg(0));
                         return noobj();
                     })),
             new StageDef(ON_ERROR, "onError", new Class<?>[]{Agent.class, Fail.class},

@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -33,7 +33,7 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MESSAGE_FEATURE_TID;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -56,6 +56,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * final totals to space at {@code root/in}, {@code root/out}, {@code root/total}.
  */
 public class CostFeature extends AbstractFeature {
+    public static final fURI FEATURE_TID = studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_COST_FEATURE_TID;
+
 
     private final fURI currencyTID;
     private final CostCalculator calculator;
@@ -79,7 +81,7 @@ public class CostFeature extends AbstractFeature {
         // Create calculator and store on Agent; LLMFactory will pick it up
         Router.readFromSpace(this.getRoot(agent).extend("+")).stream().filter(x -> x.asRec().has(SESSION)).filter(x -> x.asRec().at(SESSION).uriValue().equals(this.sessionVID)).findFirst().orElse(rec());
         this.calculator.setCost(this.at(f(COST).extend(IN)).orElse(real(0.0)).realValue(), this.at(f(COST).extend(IN)).orElse(real(0.0)).realValue());
-        this.sessionVID = agent.feature(LLM_MESSAGE_FEATURE_TID).orElse(rec()).at(SESSION).orElse(uri("")).uriValue();
+        this.sessionVID = agent.service(MessageService.class).map(MessageService::sessionVID).orElse(f(""));
     }
 
     public CostCalculator getCalculator() {
@@ -88,7 +90,7 @@ public class CostFeature extends AbstractFeature {
 
 
     @Override
-    public void onCompleteResponse(final Agent agent, final ChatResult result) {
+    public void onCompleteResponse(final Agent agent, final ChatFrame result) {
         final Cost cost = persistCost(agent);
         result.putRef("cost", this.lastCost);
         LOG.debug("running cost: %s => %s", cost, this.at(TO));

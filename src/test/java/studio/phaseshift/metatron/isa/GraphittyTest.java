@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa;
 
 import org.jline.jansi.Ansi;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -32,9 +33,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.Map;
 
 import static org.jline.jansi.Ansi.ansi;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class GraphittyTest extends AbstractMetatronTest {
 
@@ -137,6 +136,25 @@ public class GraphittyTest extends AbstractMetatronTest {
     }
 
     /**
+     * A single leading backslash renders a tag literally: the escape consumes the
+     * first brace, leaving a lone brace that cannot open a tag, so the tag text and
+     * its closing braces fall through untouched.  One backslash is enough — the
+     * fully-escaped form is the same result with more noise.  The escape is per-tag,
+     * not a line-wide verbatim mode: a following real tag still fires.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "\\{{g}}            % {{g}}            % a color rule",
+            "\\{{blah}}         % {{blah}}         % a rule the parser does not know",
+            "\\{{syntax:java}}  % {{syntax:java}}  % a syntax open tag",
+            "\\{{/syntax:java}} % {{/syntax:java}} % a syntax end tag",
+            "\\{{[r]&y}}        % {{[r]&y}}        % a chained background+foreground rule",
+    }, delimiter = '%')
+    void testSingleBackslashShowsTagVerbatim(final String code, final String expected, final String desc) {
+        assertEquals(expected, Graphitty.string(code), desc);
+    }
+
+    /**
      * A widget draws its border and colours THROUGH the lines of a block it renders, so a
      * block's markup is interleaved with its code: the decoration must still apply (it is
      * markup like any other) while the code is colorized as code.  This is the shape a
@@ -187,6 +205,7 @@ public class GraphittyTest extends AbstractMetatronTest {
      * every other unmatched rule wrap is.
      */
     @Test
+    @Disabled("now lenient so console doesn't get corrupted on widget resizing")
     void testMismatchedSyntaxEndTagIsRejected() {
         final MTronException e = assertThrows(MTronException.class,
                 () -> Graphitty.string("{{syntax:java}}int x = 42;{{/syntax:sql}}"));

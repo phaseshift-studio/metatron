@@ -20,24 +20,23 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AUDIT_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
 
 /**
  * Captures agent state at every lifecycle hook and produces an audit trail.
@@ -50,6 +49,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * per-chunk rows — the trail stays phase-granular.
  */
 public class AuditFeature extends AbstractFeature {
+    public static final fURI FEATURE_TID = studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_AUDIT_FEATURE_TID;
+
 
     /**
      * Counts of streamed events (from StageFeature) — recorded, not per-chunk rows.
@@ -70,12 +71,19 @@ public class AuditFeature extends AbstractFeature {
         this.partialThinkings = 0;
         snapshot(agent, "before_chat",
                 rec(uri("features"), jnt(agent.features().lstValue().size()),
-                        uri("systemMsgs"), jnt(agent.hasFeature(LLM_SYSTEM_FEATURE_TID) ? agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().getSystemMessages().size() : 0),
+                        uri("systemMsgs"), jnt(agent.hasFeature(LLM_SYSTEM_FEATURE_TID) ? agent.requireService(SystemService.class).getSystemMessages().size() : 0),
                         uri("userMessage"), str(null == agent.userMessage() ? "" : agent.userMessage())));
         agent.feature(LLM_AUDIT_FEATURE_TID).asRec().at(TO).apply(str("""
                                                                       {{_}}{{g}}system{{/g}}{{/_}}: %s
                                                                       {{_}}{{g}}prompt{{/g}}{{/_}}: %s
-                                                                      """.formatted(agent.hasFeature(LLM_SYSTEM_FEATURE_TID) ? agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().getSystemMessages().stream().collect(Collectors.joining()) : "", agent.userMessage())));
+                                                                        {{b}}features:%d - tools:%d - skills:%d{{X}}
+                                                                      """.formatted(
+                agent.hasFeature(LLM_SYSTEM_FEATURE_TID) ? String.join("", agent.requireService(SystemService.class).getSystemMessages()) : "",
+                agent.userMessage(),
+                agent.features().lstValue().size(),
+                agent.feature(LLM_TOOL_FEATURE_TID).orElse(rec()).at(TOOL).orElse(lst()).count(),
+                agent.feature(LLM_SKILL_FEATURE_TID).orElse(rec()).at(SKILL).orElse(lst()).count()
+        )));
         return noobj();
     }
 
@@ -103,7 +111,7 @@ public class AuditFeature extends AbstractFeature {
     }
 
     @Override
-    public void onCompleteResponse(final Agent agent, final ChatResult result) {
+    public void onCompleteResponse(final Agent agent, final ChatFrame result) {
         final Obj chatObj = result.at(uri(CHAT));
         final int chatLen = chatObj.isStr() ? chatObj.strValue().length() : 0;
         snapshot(agent, "complete",
@@ -129,7 +137,7 @@ public class AuditFeature extends AbstractFeature {
 
     // ── Render (persist trail + terminal table) ────────────────────
 
-    private void render(final Agent agent, final ChatResult result) {
+    private void render(final Agent agent, final ChatFrame result) {
         if (this.trail.isEmpty()) return;
         final List<Rec> rows = this.trail;
 

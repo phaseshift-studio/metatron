@@ -170,7 +170,7 @@ public class MidChatChannelTest extends AbstractMetatronTest {
                         uri(NAME), str("test-agent"),
                         uri(ROOT), uri(address.toString()),
                         uri(FEATURE), lst(
-                                new MessageFeature(mutableMap(uri(SESSION), uri("/test/usr/agent/session/1")), LLM_MESSAGE_FEATURE_TID, null),
+                                new WindowMessageFeature(mutableMap(uri(SESSION), uri("/test/usr/agent/session/1")), LLM_WINDOW_MESSAGE_FEATURE_TID, null),
                                 new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null),
                                 new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null), mid)),
                 LLM_AGENT_TID, address);
@@ -238,7 +238,7 @@ public class MidChatChannelTest extends AbstractMetatronTest {
                         uri(NAME), str("test-agent"),
                         uri(ROOT), uri(address.toString()),
                         uri(FEATURE), lst(
-                                new MessageFeature(mutableMap(uri(SESSION), uri("/test/usr/agent/session/1")), LLM_MESSAGE_FEATURE_TID, null),
+                                new WindowMessageFeature(mutableMap(uri(SESSION), uri("/test/usr/agent/session/1")), LLM_WINDOW_MESSAGE_FEATURE_TID, null),
                                 new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null),
                                 new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null),
                                 midchatThroughItsType(address))),
@@ -302,7 +302,7 @@ public class MidChatChannelTest extends AbstractMetatronTest {
         map.put(uri(NAME), str("test-agent"));
         map.put(uri(ROOT), uri(root.toString()));
         map.put(uri(FEATURE), lst(
-                new MessageFeature(mutableMap(uri(SESSION), uri("/usr/test/agent/session/1")), LLM_MESSAGE_FEATURE_TID, null),
+                new WindowMessageFeature(mutableMap(uri(SESSION), uri("/usr/test/agent/session/1")), LLM_WINDOW_MESSAGE_FEATURE_TID, null),
                 new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null),
                 new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null),
                 new ThinkFeature(mutableMap(), LLM_THINK_FEATURE_TID, null), mid));

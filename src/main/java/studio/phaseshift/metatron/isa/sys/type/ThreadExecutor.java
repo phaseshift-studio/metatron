@@ -40,8 +40,10 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -93,6 +95,10 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
         if (null == EXECUTOR || EXECUTOR.isShutdown())
             EXECUTOR = THREAD_POOL_SUPPLIER.get();
         return EXECUTOR;
+    }
+
+    public Rec summary() {
+        return rec(uri(RUN), jnt(this.at(RUN).asPoly().count()), uri(STOP), jnt(this.at(STOP).asPoly().count()));
     }
 
     @Override

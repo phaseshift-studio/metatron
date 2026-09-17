@@ -125,6 +125,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final String MATH_MILE_STRING = "/m/math/imperial/mile";
     /// ///////////////////////
     public static final fURI MATH_DATETIME_TID = MATH_ISA_TID.extend("datetime");
+    public static final fURI MATH_DATETIME_NOW_TID = MATH_INST_TID.extend("datetime_now");
     /// ///////////////////////
     public static final fURI MATH_CURRENCY_TID = f("/m/math/currency");
     public static final fURI MATH_USD_TID = MATH_CURRENCY_TID.extend("usd");
@@ -943,7 +944,7 @@ public class mathInstSet extends AbstractInstSet {
                                     };
                                 }).create(), "a mile of distance (1760 yards)")),
                 uri(INST), lst(
-                        instC(MATH_INST_TID.extend("datetime_now").dom(ALL.maybe()).rng(MATH_DATETIME_TID), lst(), (lhs, inst) -> nowDatetime()),
+                        instC(MATH_DATETIME_NOW_TID.dom(ALL.maybe()).rng(MATH_DATETIME_TID), lst(), (lhs, inst) -> nowDatetime()),
                         // datetime arithmetic: datetime + time -> datetime, datetime - time -> datetime,
                         // datetime - datetime -> millis::T
                         instC(PLUS_INST_TID.dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(TIME_TYPE), (lhs, inst) -> {

@@ -331,7 +331,7 @@ public class TypeTest extends AbstractMetatronTest {
             "nat::T              | str::T                                     | false",
             "nat::T              | bignat::T                                  | false",
             //"bignat::T           | nat::T                                     | true",
-            //"bignat::T           | int::T                                     | true",
+            "bignat::T           | int::T                                     | true",
             "int::T              | bignat::T                                  | false",
             "int::T              | 0                                          | false",
             "0                   | int::T                                     | true",
@@ -374,6 +374,7 @@ public class TypeTest extends AbstractMetatronTest {
             "/m/int::T | /m/int::T | true",
             "/m/int::T | nat::T    | false",
             "nat::T    | /m/int::T | true",
+            "nat::T    | int::T | true",
             "nat::T    | nat::T    | true",
             //"bignat::T | nat::T    | true",
             "bignat::T | int::T | true",
@@ -552,7 +553,8 @@ public class TypeTest extends AbstractMetatronTest {
             "agenat  % nat::T[?<125]@agenat                     % agenat::150                                      % false",
             "agenat  % .                                        % int::2.as(agenat::T)                             % true",
             "agenat  % .                                        % int::2.as(agenat::T).as(int::T).as(agenat::T)    % true",
-            //   "agenat  % .                                        % int::2.as(agenat::T).as(int::T).as(agenat::T).as(int::T)  % false",
+            "agenat  % .                                        % int::2.as(agenat::T).as(int::T).as(agenat::T).as(int::T)  % true",
+            "agenat  % .                                        % int::2.as(agenat::T).as(int::T).as(agenat::T).mult(-10)  % false",
             "agenat  % .                                        % int::2.as(nat::T).as(agenat::T)                  % true",
             ".       % .                                        % agenat::-1                                       % false",
             ".       % .                                        % agenat::200                                      % false",
@@ -642,7 +644,9 @@ public class TypeTest extends AbstractMetatronTest {
             "*marko.as(something::T)                              | <ERROR>", // non-existent types are nominal
             "*marko.as(rec::T)                                    | [name=>'marko',age=>29]",
             "*marko.as(rec::T).as(something::T)                   | something::[name=>'marko',age=>29]",
-            // "*marko.as(rec::T).as(A::T)                           | <ERROR>", // values shouldn't type generic?
+            "*marko.as(rec::T).as(A::T)                           | <ERROR>", // values shouldn't type generic?
+            "*marko.as(A::T)                                      | <ERROR>", // values shouldn't type generic?
+            "true.as(A::T)                                        | <ERROR>", // values shouldn't type generic?
             "*marko.as(rec::T).as(something::T).as(chicken::T)    | <ERROR>",
     }, delimiter = '|')
     public void testNominalTyping(final String code, final String expected) {

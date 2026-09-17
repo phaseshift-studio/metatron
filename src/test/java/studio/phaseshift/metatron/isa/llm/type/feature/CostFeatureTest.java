@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
@@ -75,7 +75,7 @@ public class CostFeatureTest extends AbstractFeatureTest {
 
     @Test
     public void testLifecycleAttachesCostRef() {
-        final ChatResult result = runLifecycle(feature());
+        final ChatFrame result = runLifecycle(feature());
         assertFalse(result.at(uri("cost")).isNoObj(), "chat_result should carry a cost ref");
     }
 

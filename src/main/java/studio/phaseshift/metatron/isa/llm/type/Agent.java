@@ -24,13 +24,19 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.PartialThinking;
+import dev.langchain4j.model.chat.response.PartialToolCall;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
+import dev.langchain4j.service.tool.ToolExecution;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.mToolProvider;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.FrameService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -95,7 +101,7 @@ public class Agent extends MRec {
     /**
      * The chat_result::T being assembled for the current chat — features mutate it in onCompleteResponse.
      */
-    private ChatResult currentResult;
+    private ChatFrame currentResult;
 
     public void setCurrentChatId(final int chatId) {
         this.currentChatId = chatId;
@@ -126,23 +132,28 @@ public class Agent extends MRec {
      * transitive computation.
      */
     private void validateFeatures() {
-        final Set<fURI> attached = new HashSet<>();
+        // union of service tids offered by every attached feature — a dependency is
+        // satisfiable when some provider declares the service, whatever its class.
+        final Set<fURI> offered = new HashSet<>();
         for (final Obj f : this.features().elements().toList())
-            if (!f.isNoObj())
-                attached.add(f.typeId());
+            if (f instanceof Feature feature)
+                offered.addAll(feature.offers());
         for (final Obj f : this.features().elements().toList()) {
             if (!(f instanceof Feature feature) || feature.requires().isEmpty())
                 continue;
             for (final fURI required : feature.requires())
-                if (!attached.contains(required))
-                    throw MTronException.of("{{b}}%s{{X}} requires {{b}}%s{{X}} to function properly", f.typeId(), required);
+                if (!offered.contains(required))
+                    throw MTronException.of("{{b}}%s{{X}} requires service {{b}}%s{{X}} to function properly", f.typeId(), required);
         }
     }
 
     // ── User message ───────────────────────────────────────────────
 
     public String userMessage() {
-        return this.userMessage;
+        // the frame is the source of truth when a provider is attached — the prompt stamped at push
+        return null != this.currentResult && null != this.currentResult.prompt()
+                ? this.currentResult.prompt()
+                : this.userMessage;
     }
 
     public void userMessage(final String msg) {
@@ -160,25 +171,23 @@ public class Agent extends MRec {
 
     /**
      * Returns the execution identifier for the current chat call
-     * (monotonic counter per session).  Set by {@code SessionFeature.onBeforeChat}.
+     * (monotonic counter per session).  Set by {@code advanceChatId} in the pre-chat phase;
+     * the pushed frame's {@code chat_id} is the source of truth once it exists.
      */
     public int chatId() {
+        if (null != this.currentResult) {
+            final int frameChatId = this.currentResult.chatId();
+            if (frameChatId > 0)
+                return frameChatId;
+        }
         return this.currentChatId;
     }
 
     /**
-     * Resolve the session VID from this agent's {@code session_feature} config.
+     * Resolve the session VID from this agent's message service (whatever provider is attached).
      */
     public fURI sessionVID() {
-        if (this.hasFeature(LLM_MESSAGE_FEATURE_TID)) {
-            final Obj sessionFeature = this.feature(LLM_MESSAGE_FEATURE_TID);
-            if (!sessionFeature.isNoObj() && sessionFeature.isRec()) {
-                final Obj sessionField = sessionFeature.asRec().at(uri(SESSION));
-                if (sessionField.isUri())
-                    return sessionField.uriValue();
-            }
-        }
-        return null;
+        return this.service(MessageService.class).map(MessageService::sessionVID).orElse(null);
     }
 
     // ── Factory ────────────────────────────────────────────────────
@@ -201,7 +210,7 @@ public class Agent extends MRec {
 
         /**
          * Direct a dedicated translator agent (a single {@link ChatFeature} over the
-         * given model) to perform a one-off task and return its {@link ChatResult}.
+         * given model) to perform a one-off task and return its {@link ChatFrame}.
          * <p>
          * The translator agent is constructed fresh per call and executes synchronously —
          * threading is the caller's concern.  If an async (or fire-and-forget) invocation
@@ -209,9 +218,9 @@ public class Agent extends MRec {
          *
          * @param model  the {@code model::T} the translator agent should use
          * @param prompt the task instruction sent to the translator agent
-         * @return the resulting {@code chat_result::T} as a {@link ChatResult}
+         * @return the resulting {@code chat_result::T} as a {@link ChatFrame}
          */
-        public static ChatResult miniChat(final String agentName, final mModel model, final String prompt) {
+        public static ChatFrame miniChat(final String agentName, final mModel model, final String prompt) {
             final Agent chatter = new Agent(mutableMap(
                     uri(NAME), str(agentName),
                     uri(ROOT), uri(f("/sys/tmp").extend(agentName)),
@@ -236,6 +245,47 @@ public class Agent extends MRec {
 
     public Obj feature(final fURI featureTid) {
         return objs(this.features().elements().filter(f -> f.typeId().equals(featureTid)));
+    }
+
+    /**
+     * Typed veil over {@link #feature(fURI)}: look the feature up by its class (class -> tid
+     * via {@link Feature.Helper#tid}) and wrap the matched rec back into the Java class, so
+     * callers never touch a raw {@code .as()} cast.
+     */
+    public <F extends Feature> Optional<F> feature(final Class<F> type) {
+        final Obj found = objs(this.features().elements().filter(f -> f.typeId().equals(Feature.Helper.tid(type))));
+        return found.isNoObj() ? Optional.empty() : Optional.of(Rec.wrap(found, type));
+    }
+
+    public <F extends Feature> boolean hasFeature(final Class<F> type) {
+        return this.features().elements().anyMatch(f -> f.typeId().equals(Feature.Helper.tid(type)));
+    }
+
+    public <F extends Feature> F require(final Class<F> type) {
+        return this.feature(type).orElseThrow(() -> MTronException.of("agent has no %s feature", type.getSimpleName()));
+    }
+
+    /**
+     * Service lookup by interface — find any feature providing the given capability,
+     * decoupled from the concrete feature class.  {@code instanceof}-based: whichever
+     * attached feature implements the service is returned, whatever its class.
+     */
+    public <S> Optional<S> service(final Class<S> type) {
+        return this.features().elements().filter(type::isInstance).map(type::cast).findFirst();
+    }
+
+    public <S> S requireService(final Class<S> type) {
+        return this.service(type).orElseThrow(() -> MTronException.of("agent has no %s service", type.getSimpleName()));
+    }
+
+    /**
+     * Service lookup by tid — find any feature offering the given service tid.
+     * {@code offers()}-based: whichever attached feature declares the service tid
+     * is returned, decoupled from the concrete feature class.  Non-feature providers
+     * register the same tids elsewhere in the space, so this is one lookup of many.
+     */
+    public Obj service(final fURI serviceTid) {
+        return objs(this.features().elements().filter(f -> f instanceof Feature feature && feature.offers().contains(serviceTid)));
     }
 
     public Lst features() {
@@ -352,14 +402,12 @@ public class Agent extends MRec {
     }
 
     public void interrupt() {
-        if (this.at(ACTIVE).orElse(BOOL_FALSE).boolValue()) {
-            this.pushMidChatMessage(rec(TEXT, str("agent interrupt: please return from thinking")));
-            this.at(INTERRUPT, BOOL_TRUE, MUTABLE);
-        }
+        this.pushMidChatMessage(rec(TEXT, str("agent interrupt: please return from thinking")));
+        this.at(INTERRUPT, BOOL_TRUE, MUTABLE);
     }
 
     public boolean isInterrupted() {
-        return this.at(INTERRUPT).booleanCheck();
+        return this.load().asRec().at(INTERRUPT).booleanCheck();
     }
 
     /**
@@ -385,7 +433,7 @@ public class Agent extends MRec {
             return;
         }
         final Uri now = mathInstSet.nowDatetime();
-        this.feature(LLM_MIDCHAT_FEATURE_TID).<MidChatFeature>as().push(this, message
+        this.require(MidChatFeature.class).push(this, message
                 .at(TIME, now)
                 .at(RUNTIME, ObjmtronSerializer.parse("!math:datetime_now().minus(%s).normalize()".formatted(now))));
     }
@@ -395,9 +443,7 @@ public class Agent extends MRec {
      * the agent's door onto its subspace.
      */
     public Lst popMidChatMessages() {
-        return this.hasFeature(LLM_MIDCHAT_FEATURE_TID)
-                ? this.feature(LLM_MIDCHAT_FEATURE_TID).<MidChatFeature>as().drain(this)
-                : lst();
+        return this.feature(MidChatFeature.class).map(f -> f.drain(this)).orElse(lst());
     }
 
     /**
@@ -420,10 +466,8 @@ public class Agent extends MRec {
     private void closeChannels(final AtomicReference<Set<String>> orphanToolRequests) {
         final boolean interrupted = Thread.interrupted(); // clears the flag
         try {
-            if (this.hasFeature(LLM_TOOL_FEATURE_TID))
-                this.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().handleOrphanToolRequests(this, orphanToolRequests.get());
-            if (this.hasFeature(LLM_MIDCHAT_FEATURE_TID))
-                this.feature(LLM_MIDCHAT_FEATURE_TID).<MidChatFeature>as().handleOrphanMidChatMessages(this);
+            this.feature(ToolFeature.class).ifPresent(f -> f.handleOrphanToolRequests(this, orphanToolRequests.get()));
+            this.feature(MidChatFeature.class).ifPresent(f -> f.handleOrphanMidChatMessages(this));
         } finally {
             if (interrupted)
                 Thread.currentThread().interrupt();
@@ -433,15 +477,16 @@ public class Agent extends MRec {
 
     // ── Chat ───────────────────────────────────────────────────────
 
-    public ChatResult chat(final String message) {
+    public ChatFrame chat(final String message) {
         return this.chat(message, noobjRec());
     }
 
-    public ChatResult chat(final String message, final Rec responseFormat) {
+    public ChatFrame chat(final String message, final Rec responseFormat) {
+        this.load();
         if (this.at(ACTIVE).booleanCheck() && this.hasFeature(LLM_MIDCHAT_FEATURE_TID)) {
-            final MidChatFeature midchat = this.feature(LLM_MIDCHAT_FEATURE_TID).as();
+            final MidChatFeature midchat = this.require(MidChatFeature.class);
             midchat.push(this, rec(MESSAGE, str(message), METADATA, responseFormat));
-            return ChatResult.chatResult()
+            return ChatFrame.chatFrame()
                     .put(CHAT, str("added to message stack"))
                     .put("current_stack", midchat.pendingMessages(this));
         }
@@ -449,13 +494,10 @@ public class Agent extends MRec {
         final String depthKey = sessionVid != null ? sessionVid.toString() : this.tid().toString();
         final AtomicInteger counter = depthMap.computeIfAbsent(depthKey, k -> new AtomicInteger(0));
         final AtomicReference<Set<String>> orphanToolRequests = new AtomicReference<>(new HashSet<>());
+        final FrameService frameService = this.service(FrameService.class).orElse(null);
         this.currentDepth = counter.incrementAndGet();
         try {
-            this.at(ACTIVE, BOOL_TRUE, MUTABLE);
-            this.at(INTERRUPT, noobj(), MUTABLE);
-            if (this.first.getAndSet(false))
-                this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
-            Router.global().stats().ioStats().incrBytesSent(message.getBytes().length);
+            this.beginTurn(message);
             final CountDownLatch latch = new CountDownLatch(1);
             final AtomicReference<MTronException> isError = new AtomicReference<>();
             final long startNanos = System.nanoTime();
@@ -463,12 +505,20 @@ public class Agent extends MRec {
                 if (message.isBlank())
                     throw MTronException.of("no message provided: %s", this.vid());
 
-                // ── Phase 1: onBeforeChat — features prepare per-chat state ──
+                // ── onBeforeChat — features prepare per-chat state ──
                 // Dispatch in contributor→Skill→Tool→consumer order regardless of the
                 // stored feature-list order, so the gatekeepers compose from a fully
                 // registered registry and System's write-on-change sees the final text.
                 final List<Obj> features = this.orderedFeatures();
                 this.userMessage = message;
+
+                // ── pre-chat: advance the turn id + push the frame BEFORE onBeforeChat, so the
+                //    frame is the activation record features read (prompt/chat_id/depth) ──
+                this.service(MessageService.class).ifPresent(ms -> ms.advanceChatId(this));
+                if (frameService instanceof AbstractFrameFeature frameFeature) {
+                    frameFeature.prepare(this);
+                    this.currentResult = (ChatFrame) frameService.push(ChatFrame.chatFrame().prompt(message));
+                }
 
                 for (final Obj feat : features) {
                     final Obj result = feat instanceof Feature ?
@@ -476,152 +526,24 @@ public class Agent extends MRec {
                             feat.asPoly().at(uri(ON_BEFORE_CHAT)).apply(this);
                     if (!result.isNoObj()) {
                         LOG.info("feature short-circuited: %s", result);
-                        return ChatResult.chatResult().put(CHAT, result);
+                        return ChatFrame.chatFrame().put(CHAT, result);
                     }
                 }
                 this.feature(LLM_CHAT_FEATURE_TID).ifPresent(chat -> chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE));
-                // ── Phase 2: Build LC4j service from Agent's own JVM state ──
-                final AiServices<AgentServices> service = AiServices.builder(AgentServices.class)
-                        .maxToolCallingRoundTrips(MAX_TOOL_CALLS)
-                        .storeRetrievedContentInChatMemory(true)
-                        .toolProvider(this.hasFeature(LLM_TOOL_FEATURE_TID) ? this.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().getToolProvider() : new mToolProvider())
-                        .toolExecutionErrorHandler((error, context) -> {
-                            if (this.has(TOOL) && this.feature(LLM_TOOL_FEATURE_TID).asRec().has(ON_ERROR)) {
-                                this.feature(LLM_TOOL_FEATURE_TID).asRec().at(ON_ERROR).asInst().args(lst(this, fail(error)));
-                            } else {
-                                LOG.error(error);
-                            }
-                            return new ToolErrorHandlerResult(error.getMessage());
-                        }).toolArgumentsErrorHandler((error, context) ->
-                                new ToolErrorHandlerResult("""
-                                                           provided arguments do not match tool schema: %s
-                                                           """.formatted(error)))
-                        .hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.toolExecutionResultMessage(
-                                toolExecutionRequest,
-                                """
-                                %s tool does not exist. use list_tools() to see available tools.
-                                """.formatted(toolExecutionRequest.name())));
-                //////////////////////////////////////////////////////////////////////////////////
-                // ADD ANOTHER FEATURE HOOK -- onSetup
-                final Obj chatFeature = this.feature(LLM_CHAT_FEATURE_TID);
-                if (chatFeature.isNoObj())
-                    throw MTronException.of("agent has no chat feature: %s", this.vidOrTid());
-                final Rec chat = chatFeature.asRec();
-                if (this.hasFeature(LLM_MESSAGE_FEATURE_TID))
-                    MessageFeature.buildSession(this, service);
-                //////////////////////////////////////////////////////////////////////////////////
-                // The single system-message channel: SystemFeature owns the contributions
-                // (features add via agent.feature(SYSTEM).<SystemFeature>as().addSystemMessage
-                // during onBeforeChat, Phase 1) and composes the text here at build time.
-                // Capture it now — AFTER all onBeforeChat hooks ran — then append to the
-                // model's base system prompt.  SystemFeature.clearSystemMessages() runs in
-                // the finally below after this chat completes.
-                final String systemText = this.hasFeature(LLM_SYSTEM_FEATURE_TID)
-                        ? this.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().systemMessage()
-                        : "";
-                final AgentServices agent = service
-                        .systemMessageTransformer(current -> current + systemText)
-                        .streamingChatModel(LLMFactory.createChatInteraction(this,
-                                chat.at(uri(MODEL)),
-                                chat.at(uri(RESPONSE)),
-                                chat.at(uri(FORMAT)))).build();
-                // ── Phase 3: Stream — write events to result blackboard, dispatch hooks ──
-                //LOG.debug("processed message: %s %s", this.userMessage, this.feature(LLM_CHAT_FEATURE_TID).asRec().at(FORMAT).orElse(rec(uri(FORMAT), uri("none"))));
-                agent.chat(Str.Helper.stripString(str(this.userMessage)))
-                        .onToolExecuted(tool -> {
-                            StatusLine.message(str("\uD83D\uDD28 on_tool_execute: %s(%s) => %s".formatted(tool.request().name(), tool.request().arguments(), tool.result())));
-                            if (this.at(INTERRUPT).booleanCheck()) latch.countDown();
-                            final Rec toolRec = rec(
-                                    uri(NAME), str(tool.request().name()),
-                                    uri(TOOL_ARGUMENTS), str(tool.request().arguments()),
-                                    uri(RESULT), str(tool.result() != null ? tool.result() : ""),
-                                    uri(CONTENTS), str(tool.request().id()));
-                            features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_TOOL_EXECUTED, toolRec));
-                            orphanToolRequests.get().remove(tool.request().id());
-                        })
-                        .onPartialToolCall(partialToolCall -> {
-                            StatusLine.message(str("\uD83E\uDDF0 on_partial_tool_call"));
-                            orphanToolRequests.get().add(partialToolCall.id());
-                            if (this.at(INTERRUPT).booleanCheck()) {
-                                latch.countDown();
-                                return;
-                            }
-                            features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_TOOL_CALL));
-                        })
-                        .onPartialResponse(s -> {
-                            StatusLine.message(str("\uD83D\uDCAC on_partial_response"));
-                            if (this.at(INTERRUPT).booleanCheck()) {
-                                latch.countDown();
-                                return;
-                            }
-                            Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
-                            //response.append(s);
-                            features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_RESPONSE, str(s)));
-                        })
-                        .onPartialThinking(t -> {
-                            StatusLine.message(str("\uD83D\uDCAD on_partial_thinking"));
-                            if (this.at(INTERRUPT).booleanCheck()) {
-                                latch.countDown();
-                                return;
-                            }
-                            Router.global().stats().ioStats().incrBytesRecv(t.text().getBytes().length);
-                            // thinking is the one stage this class does not dispatch:
-                            // ThinkFeature owns it, seeds the thought with the chunk,
-                            // applies it, and cascades it through the other features
-                            if (this.hasFeature(LLM_THINK_FEATURE_TID))
-                                this.feature(LLM_THINK_FEATURE_TID).<ThinkFeature>as()
-                                        .onPartialThinking(this, str(t.text()));
-                        })
-                        .onError(e -> {
-                            final fURI currentFeature = this.currentHook.get().get0();
-                            final fURI currentStage = this.currentHook.get().get1();
-                            final String errorMessage = "[" + currentFeature + "][" + currentStage + "]";
-                            LOG.error("%s: %s", errorMessage, e);
-                            isError.set(MTronException.of("%s: %s", errorMessage, e));
-                            features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_ERROR));
-                            latch.countDown();
-                        }).onCompleteResponse(c -> {
-                            StatusLine.message(str("\uD83D\uDCE6 on_complete_response"));
-                            if (this.at(INTERRUPT).booleanCheck()) {
-                                latch.countDown();
-                                return;
-                            }
-                            final String fullText = null == c.aiMessage().text() ? "" : c.aiMessage().text();
-                            Router.global().stats().ioStats().incrBytesRecv(fullText.getBytes().length);
-                            // Parse response format if requested
-                            final boolean formatted = !responseFormat.isNoObj();
-                            final Obj chatObj;
-                            // A formatted response is a structured rec end to end — there is
-                            // no text channel for a watermark to ride in.
-                            final WatermarkUtil.Scan scan = formatted ? null : WatermarkUtil.scan(fullText);
-                            if (formatted) {
-                                chatObj = ObjJSONSerializer.simple().inputBytes(fullText);
-                            } else {
-                                // Scan the watermarks out of the response: what the model
-                                // addressed to a feature lands on the result, and the markup
-                                // is stripped from what the user sees — and, because the chat
-                                // is persisted, from what the ledger keeps.
-                                chatObj = str(scan.visible());
-                            }
-                            // Build the chat_result — monos inline (chat, user, time), the
-                            // watermarks the model emitted as an ordered watermark::T lst;
-                            // feature outputs are attached by the features themselves in
-                            // their onCompleteResponse.
-                            final long elapsed = (System.nanoTime() - startNanos) / 1_000_000;
-                            final ChatResult result = ChatResult.chatResult()
-                                    .put(CHAT, chatObj.apply(this))
-                                    .put(USER, str(this.userMessage))
-                                    .put(TIME, mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)));
-                            if (null != scan && !scan.isEmpty())
-                                result.put(WATERMARK, scan.list());
-                            this.currentResult = result;
-                            this.logger().none("\n");
-                            features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_COMPLETE_RESPONSE, result));
-                            // Signal the waiting thread after all hooks have mutated the result
-                            latch.countDown();
-                        }).start();
+
+                final AgentServices agent = this.buildService(features, responseFormat);
+
+                // ── the stream — each callback is a lifecycle stage ──
+                agent.chat(Str.Helper.stripString(str(this.userMessage())))
+                        .onToolExecuted(tool -> this.onToolExecuted(tool, features, orphanToolRequests, latch))
+                        .onPartialToolCall(p -> this.onPartialToolCall(p, features, orphanToolRequests, latch))
+                        .onPartialResponse(s -> this.onPartialResponse(s, features, latch))
+                        .onPartialThinking(t -> this.onPartialThinking(t, latch))
+                        .onError(e -> this.onError(e, features, isError, latch))
+                        .onCompleteResponse(c -> this.onCompleteResponse(c, responseFormat, features, startNanos, latch))
+                        .start();
                 latch.await();
-                if (this.at(INTERRUPT).booleanCheck()) {
+                if (this.isInterrupted()) {
                     final fURI currentFeature = this.currentHook.get().get0();
                     final fURI currentStage = this.currentHook.get().get1();
                     final String warnMessage = "[" + currentFeature + "][" + currentStage + "]";
@@ -634,34 +556,210 @@ public class Agent extends MRec {
                 // close the channels before re-arming this thread's interrupt flag
                 this.closeChannels(orphanToolRequests);
                 Thread.currentThread().interrupt();
-                return ChatResult.chatResult()
+                return ChatFrame.chatFrame()
                         .put(STOP, BOOL_TRUE)
                         .put(TIME, nowDatetime())
                         .put(ERROR, fail(e).caught());
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }
-            // ── Phase 4: persist + return the chat_result ──
-            final ChatResult result = this.currentResult;
-            this.currentResult = null;
-            this.currentHook.set(null);
-            return null != result ? Router.writeToSpace(this.at(ROOT).uriValue().extend(LLM_CHAT_RESULT_TID.name()).extend("_").addQ(INCRQ), result).as() : ChatResult.chatResult();
+            // ── onCompleteResponse already assembled the result — persist + return ──
+            return this.persistResult(frameService);
         } finally {
-            // both channels close with the chat: a tool request the loop never
-            // answered gets a lost result and its parked ai message is published as
-            // a group, and a mid-chat message still queued is written rather than
-            // dropped
-            this.closeChannels(orphanToolRequests);
-            // SystemFeature owns the per-chat system-message state — clear it so the
-            // next chat re-surfaces its own system context.
-            if (this.hasFeature(LLM_SYSTEM_FEATURE_TID))
-                this.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().clearSystemMessages();
-            counter.decrementAndGet();
-            this.currentDepth = 0;
-            this.at(INTERRUPT, noobj(), MUTABLE);
-            this.at(ACTIVE, BOOL_FALSE, MUTABLE);
+            this.closeTurn(orphanToolRequests, counter);
         }
     }
+
+    // ── Lifecycle stages (the chat() run-loop, one method per stage) ──
+
+    /**
+     * Open the turn: mark active, clear any pending interrupt, run the one-time
+     * {@code onAgentCtor} dispatch, and count the outbound bytes.
+     */
+    private void beginTurn(final String message) {
+        this.at(ACTIVE, BOOL_TRUE, MUTABLE);
+        this.at(INTERRUPT, noobj(), MUTABLE);
+        if (this.first.getAndSet(false))
+            this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
+        Router.global().stats().ioStats().incrBytesSent(message.getBytes().length);
+    }
+
+    /**
+     * Build the LC4j service from the agent's own state (Phase 2) — the tool/skill/error
+     * wiring, the session, the system-message channel, and the streaming chat model.
+     */
+    private AgentServices buildService(final List<Obj> features, final Rec responseFormat) {
+        final AiServices<AgentServices> service = AiServices.builder(AgentServices.class)
+                .maxToolCallingRoundTrips(MAX_TOOL_CALLS)
+                .storeRetrievedContentInChatMemory(true)
+                .toolProvider(this.feature(ToolFeature.class).map(ToolFeature::getToolProvider).orElseGet(mToolProvider::new))
+                .toolExecutionErrorHandler((error, context) -> {
+                    if (this.has(TOOL) && this.feature(LLM_TOOL_FEATURE_TID).asRec().has(ON_ERROR)) {
+                        this.feature(LLM_TOOL_FEATURE_TID).asRec().at(ON_ERROR).asInst().args(lst(this, fail(error)));
+                    } else {
+                        LOG.error(error);
+                    }
+                    return new ToolErrorHandlerResult(error.getMessage());
+                }).toolArgumentsErrorHandler((error, context) ->
+                        new ToolErrorHandlerResult("""
+                                                   provided arguments do not match tool schema: %s
+                                                   """.formatted(error)))
+                .hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.toolExecutionResultMessage(
+                        toolExecutionRequest,
+                        """
+                        %s tool does not exist. use list_tools() to see available tools.
+                        """.formatted(toolExecutionRequest.name())));
+        final Obj chatFeature = this.feature(LLM_CHAT_FEATURE_TID);
+        if (chatFeature.isNoObj())
+            throw MTronException.of("agent has no chat feature: %s", this.vidOrTid());
+        final Rec chat = chatFeature.asRec();
+        if (this.service(MessageService.class).isPresent())
+            AbstractMessageFeature.buildSession(this, service);
+        // The single system-message channel: SystemFeature owns the contributions and composes
+        // the text here at build time (after every onBeforeChat hook ran).
+        final String systemText = this.feature(SystemFeature.class).map(SystemFeature::systemMessage).orElse("");
+        return service
+                .systemMessageTransformer(current -> current + systemText)
+                .streamingChatModel(LLMFactory.createChatInteraction(this,
+                        chat.at(uri(MODEL)),
+                        chat.at(uri(RESPONSE)),
+                        chat.at(uri(FORMAT)))).build();
+    }
+
+    private void onToolExecuted(final ToolExecution tool, final List<Obj> features,
+                                final AtomicReference<Set<String>> orphanToolRequests, final CountDownLatch latch) {
+        StatusLine.message(str("\uD83D\uDD28 on_tool_execute: %s(%s) => %s".formatted(tool.request().name(), tool.request().arguments(), tool.result())));
+        if (this.isInterrupted()) latch.countDown();
+        final Rec toolRec = rec(
+                uri(NAME), str(tool.request().name()),
+                uri(TOOL_ARGUMENTS), str(tool.request().arguments()),
+                uri(RESULT), str(tool.result() != null ? tool.result() : ""),
+                uri(CONTENTS), str(tool.request().id()));
+        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_TOOL_EXECUTED, toolRec));
+        orphanToolRequests.get().remove(tool.request().id());
+    }
+
+    private void onPartialToolCall(final PartialToolCall partialToolCall, final List<Obj> features,
+                                   final AtomicReference<Set<String>> orphanToolRequests, final CountDownLatch latch) {
+        StatusLine.message(str("\uD83E\uDDF0 on_partial_tool_call"));
+        orphanToolRequests.get().add(partialToolCall.id());
+        if (this.isInterrupted()) {
+            latch.countDown();
+            return;
+        }
+        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_TOOL_CALL));
+    }
+
+    private void onPartialResponse(final String s, final List<Obj> features, final CountDownLatch latch) {
+        StatusLine.message(str("\uD83D\uDCAC on_partial_response"));
+        if (this.isInterrupted()) {
+            latch.countDown();
+            return;
+        }
+        Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
+        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_RESPONSE, str(s)));
+    }
+
+    private void onPartialThinking(final PartialThinking t, final CountDownLatch latch) {
+        StatusLine.message(str("\uD83D\uDCAD on_partial_thinking"));
+        if (this.isInterrupted()) {
+            latch.countDown();
+            return;
+        }
+        Router.global().stats().ioStats().incrBytesRecv(t.text().getBytes().length);
+        // thinking is the one stage this class does not dispatch: ThinkFeature owns it, seeds the
+        // thought with the chunk, applies it, and cascades it through the other features
+        this.feature(ThinkFeature.class)
+                .ifPresent(f -> f.onPartialThinking(this, str(t.text())));
+    }
+
+    private void onError(final Throwable e, final List<Obj> features,
+                         final AtomicReference<MTronException> isError, final CountDownLatch latch) {
+        final fURI currentFeature = this.currentHook.get().get0();
+        final fURI currentStage = this.currentHook.get().get1();
+        final String errorMessage = "[" + currentFeature + "][" + currentStage + "]";
+        LOG.error("%s: %s", errorMessage, e);
+        isError.set(MTronException.of("%s: %s", errorMessage, e));
+        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_ERROR));
+        latch.countDown();
+    }
+
+    private void onCompleteResponse(final ChatResponse c, final Rec responseFormat, final List<Obj> features,
+                                    final long startNanos, final CountDownLatch latch) {
+        StatusLine.message(str("\uD83D\uDCE6 on_complete_response"));
+        if (this.isInterrupted()) {
+            latch.countDown();
+            return;
+        }
+        final String fullText = null == c.aiMessage().text() ? "" : c.aiMessage().text();
+        Router.global().stats().ioStats().incrBytesRecv(fullText.getBytes().length);
+        // Parse response format if requested
+        final boolean formatted = !responseFormat.isNoObj();
+        final Obj chatObj;
+        // A formatted response is a structured rec end to end — there is no text channel for a
+        // watermark to ride in.
+        final WatermarkUtil.Scan scan = formatted ? null : WatermarkUtil.scan(fullText);
+        if (formatted) {
+            chatObj = ObjJSONSerializer.simple().inputBytes(fullText);
+        } else {
+            // Scan the watermarks out of the response: what the model addressed to a feature lands
+            // on the result, and the markup is stripped from what the user sees — and, because the
+            // chat is persisted, from what the ledger keeps.
+            chatObj = str(scan.visible());
+        }
+        // Build the chat_result — monos inline (chat, user, time), the watermarks the model
+        // emitted as an ordered watermark::T lst; feature outputs are attached by the features
+        // themselves in their onCompleteResponse.
+        final long elapsed = (System.nanoTime() - startNanos) / 1_000_000;
+        // The result is the frame itself when a frame provider is attached (pushed at chat() entry
+        // with the prompt); otherwise build a standalone ChatFrame here.  Either way the monos
+        // (chat, user, time) and the watermarks are written onto it, and the features attach their
+        // outputs to the same rec.
+        final ChatFrame result = null != this.currentResult
+                ? this.currentResult
+                : ChatFrame.chatFrame().prompt(this.userMessage());
+        result.put(CHAT, chatObj.apply(this))
+                .put(USER, str(this.userMessage()))
+                .put(TIME, mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)));
+        if (null != scan && !scan.isEmpty())
+            result.put(WATERMARK, scan.list());
+        this.currentResult = result;
+        this.logger().none("\n");
+        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_COMPLETE_RESPONSE, result));
+        // Signal the waiting thread after all hooks have mutated the result
+        latch.countDown();
+    }
+
+    private ChatFrame persistResult(final FrameService frameService) {
+        final ChatFrame result = this.currentResult;
+        this.currentResult = null;
+        this.currentHook.set(null);
+        if (null != frameService) {
+            // the frame was pushed at chat() entry with only the prompt; write the assembled result
+            // back into the frame URI, then pop — pop marks it complete and returns the answered frame
+            final fURI frameURI = frameService.current();
+            if (null != frameURI && null != result)
+                Router.writeToSpace(frameURI, result);
+            final Frame popped = frameService.pop();
+            return null != popped ? (ChatFrame) popped : (null != result ? result : ChatFrame.chatFrame());
+        }
+        // no frame provider — persist the legacy chat_result ledger and return it
+        return null != result ? Router.writeToSpace(this.at(ROOT).uriValue().extend(LLM_CHAT_RESULT_TID.name()).extend("_").addQ(INCRQ), result).as() : ChatFrame.chatFrame();
+    }
+
+    private void closeTurn(final AtomicReference<Set<String>> orphanToolRequests, final AtomicInteger counter) {
+        // both channels close with the chat: a tool request the loop never answered gets a lost
+        // result and its parked ai message is published as a group, and a mid-chat message still
+        // queued is written rather than dropped
+        this.closeChannels(orphanToolRequests);
+        // SystemFeature owns the per-chat system-message state — clear it so the next chat
+        // re-surfaces its own system context.
+        this.feature(SystemFeature.class).ifPresent(SystemFeature::clearSystemMessages);
+        counter.decrementAndGet();
+        this.currentDepth = 0;
+        this.at(ACTIVE, BOOL_FALSE, MUTABLE);
+    }
+
 
     // ── Embed ──────────────────────────────────────────────────────
 

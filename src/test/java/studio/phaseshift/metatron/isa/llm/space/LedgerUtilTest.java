@@ -271,7 +271,7 @@ public class LedgerUtilTest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "@/usr/test/ledger12/session/1.sweep()            % the fluent form, on an anchored session",
-            "sweep(session=>@/usr/test/ledger12/session/1)    % the function form, session handed in as an arg",
+            "sweep(@/usr/test/ledger12/session/1)    % the function form, session handed in as arg 0",
     }, delimiter = '%')
     public void testAnInstructionSweepsASessionsLedger(final String sweep, final String why) {
         ObjmtronSerializer.parse("/usr/test/ledger12/session/1 -> "

@@ -35,7 +35,6 @@ import java.util.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MUTABLE;
@@ -139,7 +138,7 @@ public class mcpMessageServer {
         final Map<Obj, Obj> newConfig = mutableMap();
         newConfig.putAll(config);
         final Rec tools = rec(mutableMap());
-        final Inst addMessage = docWrap(instC(vid.extend("add_message").dom(ALL.maybe()).rng(MESSAGE_TID), rec(
+        final Inst addMessage = docWrap(instC(vid.extend("add_message").dom(ALL.maybe()).rng(LLM_MESSAGE_TID), rec(
                 ROOT, URI_TYPE,
                 KIND, union_(uri(USER), uri(AI), uri(SYSTEM), uri("thinking"), uri("tool_result"), uri("compaction")).tryToInst(),
                 TEXT, STR_TYPE,

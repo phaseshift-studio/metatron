@@ -21,16 +21,15 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.service.tool.ToolExecutor;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.AbstractMetatronTest;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.type.AbstractAgentTest;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
@@ -42,48 +41,25 @@ import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.incrQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * Base class for all feature tests.  Provides the free structural/behavioral
- * tests every feature must satisfy, plus a standard lifecycle loop that
- * exercises all hooks in production order.
+ * Base class for all feature tests.  Extends {@link AbstractAgentTest}, so the agent free tests
+ * (well-formed, features list, offer resolution) run automatically; then adds the free
+ * structural/behavioral tests every feature must satisfy, plus a standard lifecycle loop that
+ * exercises every hook in production order.
  *
- * <p>A subclass supplies the feature under test via {@link #feature()} (with a
- * realistic config — e.g. a {@code root} under the shared {@code /usr/test}
- * memSpace for persisting features) and adds feature-specific assertions,
- * typically against the {@link ChatResult} returned by {@link #runLifecycle}.
- * The free tests run automatically for every subclass: structure, active(),
- * skill() shape, onBeforeChat short-circuit, the full lifecycle, the error
- * path, and requires() resolution.
+ * <p>A subclass supplies the feature under test via {@link #feature()} (with a realistic config —
+ * e.g. a {@code root} under the shared {@code /usr/test} memSpace for persisting features) and adds
+ * feature-specific assertions, typically against the {@link ChatFrame} returned by
+ * {@link #runLifecycle}.
  */
-public abstract class AbstractFeatureTest extends AbstractMetatronTest {
-
-    /**
-     * Shared memSpace under which feature roots live, mounted once per test class.
-     */
-    protected static final fURI TEST_SPACE = f("/usr/test");
-    protected static final fURI TEST_AGENT_ROOT = TEST_SPACE.extend("agent");
-
-    @BeforeAll
-    public static void mountFeatureTestSpace() {
-        InstSet.importInstSet(f("/m/llm"));
-        InstSet.importInstSet(MATH_ISA_TID);
-        memSpace.of(f("/usr/test/#"), f("/sys/space/usr/test")).addQ(incrQ());
-    }
+public abstract class AbstractFeatureTest extends AbstractAgentTest {
 
     // ── Subclass contract ──────────────────────────────────────────
 
@@ -92,8 +68,18 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
      */
     protected abstract <F extends Feature> F feature();
 
+    @SuppressWarnings("unchecked")
     public <F extends Feature> F feature(final Rec config) {
-        return this.feature().jvm(config.jvm()).as();
+        return (F) this.feature().jvm(config.jvm()).as();
+    }
+
+    /**
+     * An agent carrying the feature under test — the {@link AbstractAgentTest} contract, so the
+     * agent free tests run against the feature's home agent.
+     */
+    @Override
+    protected Agent agent() {
+        return agentWith(feature());
     }
 
     // ── Free tests (run for every feature) ─────────────────────────
@@ -111,6 +97,14 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
     @Test
     public void featureHasJvm() {
         assertNotNull(feature().jvm(), "feature JVM must not be null");
+    }
+
+    @Test
+    public void offersRequiresUsesAreDeclared() {
+        final Feature f = feature();
+        assertNotNull(f.offers(), "offers() must return a set");
+        assertNotNull(f.requires(), "requires() must return a set");
+        assertNotNull(f.uses(), "uses() must return a set");
     }
 
     @Test
@@ -171,23 +165,38 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
             return;
         // Hard requires are validated (and enforced) at agent construction, so
         // a carrying agent that exists here must already resolve every one.
+        // requires() speaks service tids, so resolve against offers(), not feature tids.
         final Agent a = agentWith(f);
         for (final fURI req : reqs)
-            assertTrue(a.hasFeature(req), "required feature %s not present".formatted(req));
+            assertFalse(a.service(req).isNoObj(), "required service %s not provided".formatted(req));
+    }
+
+    /**
+     * Every prefix of the lifecycle runs against a fresh agent without throwing.  The stages are
+     * the {@link Feature.Stage} enumeration — the canonical hook list, one row per stage — and
+     * each row runs the pipeline in declaration order up to and including that stage, so a later
+     * stage sees the state its predecessors built (the hooks are a pipeline, not independent).
+     */
+    @ParameterizedTest
+    @EnumSource(Feature.Stage.class)
+    public void lifecyclePrefixDoesNotThrow(final Feature.Stage stage) {
+        final AbstractFeature f = feature();
+        final Agent a = agentWith(f);
+        assertDoesNotThrow(() -> runLifecycleThrough(stage, f, a), "lifecycle through %s must not throw".formatted(stage));
     }
 
     // ── The lifecycle loop ─────────────────────────────────────────
 
     /**
-     * Run every lifecycle hook in production order against a fresh agent and
-     * return the {@link ChatResult} the feature was given at completion, so
-     * feature tests can assert what the feature attached to it.
+     * Run every lifecycle hook in production order against a fresh agent and return the
+     * {@link ChatFrame} the feature was given at completion, so feature tests can assert what the
+     * feature attached to it.
      */
-    protected ChatResult runLifecycle(final AbstractFeature feature) {
+    protected ChatFrame runLifecycle(final AbstractFeature feature) {
         return runLifecycle(feature, agentWith(feature));
     }
 
-    protected ChatResult runLifecycle(final AbstractFeature feature, final Agent agent) {
+    protected ChatFrame runLifecycle(final AbstractFeature feature, final Agent agent) {
         feature.onAgentCtor(agent);
         assertTrue(feature.onBeforeChat(agent).isNoObj(), "onBeforeChat must not short-circuit");
         feature.onPartialResponse(agent, str("chunk 1"));
@@ -197,7 +206,7 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
         feature.onPartialToolCall(agent, tool);
         feature.beforeToolExecution(agent, tool);
         feature.onToolExecuted(agent, toolResult("my_tool", "ok"));
-        final ChatResult result = chatResultOf("final response", "test prompt");
+        final ChatFrame result = chatResultOf("final response", "test prompt");
         feature.onCompleteResponse(agent, result);
         return result;
     }
@@ -209,92 +218,12 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
         feature.onError(agent, fail(MTronException.of("test failure")));
     }
 
-    // ── Helpers ────────────────────────────────────────────────────
-
-    /**
-     * An agent with no features — for skill/structural probes.
-     */
-    protected static Agent agentDummy() {
-        return agentWith();
-    }
-
-    /**
-     * An agent carrying the given features, with a {@code root} pointing at
-     * the shared test memSpace so persisting features work during the loop.
-     */
-    protected static Agent agentWith(final AbstractFeature... features) {
-        return agentWith("test-agent", null, features);
-    }
-
-    /**
-     * An agent with a name/desc and the given features.
-     */
-    protected static Agent agentWith(final String name, final String desc, final AbstractFeature... features) {
-        final Map<Obj, Obj> map = new LinkedHashMap<>();
-        map.put(uri(NAME), str(name));
-        if (null != desc)
-            map.put(uri(DESC), str(desc));
-        map.put(uri(ROOT), uri(TEST_AGENT_ROOT.toString()));
-        final List<Obj> featureObjs = new ArrayList<>();
-        for (final AbstractFeature f : features) {
-            if (!f.isNoObj())
-                featureObjs.add(f);
-        }
-        featureObjs.addAll(gatekeepersFor(features));
-        map.put(uri(FEATURE), lst(featureObjs));
-        return Agent.agent(rec(map, LLM_AGENT_TID, null));
-    }
-
-    /**
-     * The gateway features the given feature set requires — gatekeepers last
-     * in hook order, and the tool gateway after the skill gateway (tool
-     * forwarding happens in the skill gateway's {@code onBeforeChat}).
-     */
-    private static List<Obj> gatekeepersFor(final AbstractFeature... features) {
-        final Set<fURI> needs = new LinkedHashSet<>();
-        for (final AbstractFeature f : features)
-            needs.addAll(f.requires());
-        if (needs.contains(LLM_SKILL_FEATURE_TID))
-            needs.add(LLM_TOOL_FEATURE_TID);
-        final List<Obj> gate = new ArrayList<>();
-        if (needs.contains(LLM_SKILL_FEATURE_TID) && !hasTid(LLM_SKILL_FEATURE_TID, features))
-            gate.add(new SkillFeature(new LinkedHashMap<Obj, Obj>(), LLM_SKILL_FEATURE_TID, null));
-        if (needs.contains(LLM_TOOL_FEATURE_TID) && !hasTid(LLM_TOOL_FEATURE_TID, features))
-            gate.add(new ToolFeature(new LinkedHashMap<Obj, Obj>(), LLM_TOOL_FEATURE_TID, null));
-        return gate;
-    }
-
-    private static boolean hasTid(final fURI tid, final AbstractFeature... features) {
-        for (final AbstractFeature f : features)
-            if (tid.equals(f.tid()))
-                return true;
-        return false;
-    }
-
-    /**
-     * A standard chat_result with monos inline, as Agent.chat builds it.
-     */
-    protected static ChatResult chatResultOf(final String chat, final String user) {
-        return ChatResult.chatResult()
-                .put("chat", str(chat))
-                .put("user", str(user))
-                .put("time", real(42.0, MATH_MILLIS_TID, null));
-    }
-
-    protected static Inst toolCall() {
-        return instLambda((lhs, inst) -> noobj());
-    }
-
-    protected static Rec toolResult(final String name, final String result) {
-        return rec(uri(NAME), str(name), uri(RESULT), str(result));
-    }
-
     // ── Tool-through-the-stack rigging ──────────────────────────────
 
     /**
      * Locate a tool registered into the agent's {@link ToolFeature} by
-     * {@code feature.onBeforeChat(agent)}, matched by regex against its
-     * flattened tid (e.g. {@code "bash"} matches {@code /m/llm/.../bash}).
+     * {@code feature.onBeforeChat(agent)}, matched by regex against its flattened tid (e.g.
+     * {@code "bash"} matches {@code /m/llm/.../bash}).
      */
     protected static Inst findTool(final Agent agent, final AbstractFeature feature, final String toolNameRegex) {
         feature.onBeforeChat(agent);
@@ -309,17 +238,16 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
     }
 
     /**
-     * Invoke a registered tool through the <em>full</em> {@code mTool} spec/executor
-     * stack — the same path LC4j uses when an agent calls a tool — rather than
-     * applying the inst directly. Arguments are round-tripped through JSON and
-     * parsed schema-aware against the tool's declared arg types (exactly as
-     * {@link studio.phaseshift.metatron.isa.llm.mToolExecutor} does), so a
-     * {@code uri}/{@code code}/{@code inst}/{@code str} argument arrives as its
-     * declared type instead of a guessed string.
+     * Invoke a registered tool through the <em>full</em> {@code mTool} spec/executor stack — the
+     * same path LC4j uses when an agent calls a tool — rather than applying the inst directly.
+     * Arguments are round-tripped through JSON and parsed schema-aware against the tool's declared
+     * arg types (exactly as {@link studio.phaseshift.metatron.isa.llm.mToolExecutor} does), so a
+     * {@code uri}/{@code code}/{@code inst}/{@code str} argument arrives as its declared type
+     * instead of a guessed string.
      * <p>
-     * Returns the raw {@link Obj} result (recovered from the executor's result
-     * stash), so callers can assert on {@code fail::T} and typed results exactly
-     * as production code sees them — not a lossy JSON re-parse.
+     * Returns the raw {@link Obj} result (recovered from the executor's result stash), so callers
+     * can assert on {@code fail::T} and typed results exactly as production code sees them — not a
+     * lossy JSON re-parse.
      */
     protected static Obj runToolThroughStack(final Agent agent, final AbstractFeature feature,
                                              final String toolNameRegex, final Rec arguments) {
@@ -338,7 +266,7 @@ public abstract class AbstractFeatureTest extends AbstractMetatronTest {
         return null == raw ? str(specExec.get0().name() + " returned no stashed result") : raw;
     }
 
-    private void assertValidResult(final ChatResult result) {
+    private void assertValidResult(final ChatFrame result) {
         assertNotNull(result, "lifecycle must produce a chat_result");
         assertTrue(result.isRec(), "chat_result must be a rec");
         assertEquals(LLM_CHAT_RESULT_TID, result.tid(), "chat_result must have the chat_result tid");

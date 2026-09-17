@@ -194,7 +194,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             return obj;
         return objs(this, obj);
     }
-
+ 
     @Override
     Rec self(final Object jvm, final fURI tid, final fURI vid);
 

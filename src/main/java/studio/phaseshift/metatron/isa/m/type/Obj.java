@@ -1035,6 +1035,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         public static void objTypeCheck(final Obj obj) {
             if (Router.loaded() && null != obj.jvm() && !obj.isType() && !obj.isNoObj() && !obj.isCall() && !obj.isInstSet() && !ObjFactory.Helper.baseTID(obj).test(obj.type().baseTypeID().basePath()))
                 throw MTronException.of("%s [%s] is not a %s".formatted(obj, obj.jvm().getClass().getSimpleName().toLowerCase(), obj.type()));
+            if (!obj.isType() && obj.tid().isGeneric())
+                throw MTronException.of("%s value can not be typed generic %s::T", obj.jvm(), obj.tid());
             if (TypeCheck.type_pred.enabled()) {
                 if (Router.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.test(obj.type())) {
                     if (obj.isPoly()) {

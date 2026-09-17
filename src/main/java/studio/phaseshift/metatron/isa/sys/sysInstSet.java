@@ -130,6 +130,7 @@ public class sysInstSet extends AbstractInstSet {
         this.jvm().putAll(Map.of(
                 uri(CONST), lst(ThreadExecutor.instance()),
                 uri(INST), lst(
+                        docWrap(instC(SYS_INST_TID.extend("sys_stat").dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) -> ThreadExecutor.instance().summary()), "a summary of thread counts"),
                         docWrap(instC(SYS_INST_TID.extend("find_file").dom(A.maybe()).rng(LST_TID), rec(
                                         uri(NAME), STR_TYPE,
                                         uri(ROOT).maybe(), URI_TYPE,

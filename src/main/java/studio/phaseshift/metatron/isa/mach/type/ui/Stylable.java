@@ -100,6 +100,21 @@ public interface Stylable<T extends Stylable<T>> {
         return 0;
     }
 
+    /**
+     * Number of structural chrome lines at the BOTTOM of the widget that should
+     * be preserved when a height cap is applied — the trailing mirror of
+     * {@link #chromeLines()} (the bottom border row), so the body scrolls
+     * between the two pinned edges instead of overwriting the bottom border.
+     */
+    default int footerLines() {
+        final Style<T> s = this.getStyle();
+        if (s != null) {
+            final Border b = s.border();
+            if (b != null && b != Border.none) return 1;
+        }
+        return 0;
+    }
+
     class Style<T extends Stylable<T>> extends MRec {
         public T stylable;
 

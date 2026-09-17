@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
@@ -42,11 +43,24 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.ConceptService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
+import studio.phaseshift.metatron.isa.llm.type.mModel;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import static studio.phaseshift.metatron.isa.llm.type.mModel.model;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class SummarizeFeature extends AbstractFeature {
+    public static final fURI FEATURE_TID = studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SUMMARIZE_FEATURE_TID;
+
 
     /**
      * The background distill currently running, if any.  Queued in
@@ -62,7 +76,13 @@ public class SummarizeFeature extends AbstractFeature {
 
     @Override
     public Set<fURI> requires() {
-        return Set.of(LLM_SKILL_FEATURE_TID);
+        return Set.of(LLM_SKILL_SERVICE_TID);
+    }
+
+    @Override
+    public Set<fURI> uses() {
+        // concept enrichment is opportunistic — the briefing still works without it
+        return Set.of(LLM_CONCEPT_SERVICE_TID);
     }
 
     /**
@@ -111,24 +131,24 @@ public class SummarizeFeature extends AbstractFeature {
             return;
         final String instructions = WatermarkUtil.instructions(WATERMARK_CODEC,
                 WatermarkUtil.key(this, WATERMARK_KEY), SUMMARIZE_INSTRUCTIONS);
-        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(mutableMap(
+        agent.requireService(SkillService.class).addSkill(mSkill.of(rec(mutableMap(
                 uri(NAME), uri(LLM_SUMMARIZE_FEATURE_TID.name()),
                 uri(DESC), str("summarize a session into claims and loose ends, recalling them on demand"),
                 uri(CONTENT), str(instructions)))));
     }
 
     @Override
-    public void onCompleteResponse(final Agent agent, final ChatResult result) {
+    public void onCompleteResponse(final Agent agent, final ChatFrame result) {
         this.noteWatermarkFailure(result, WATERMARK_CODEC, WATERMARK_KEY);
         final Obj signal = result.watermark(WatermarkUtil.key(this, WATERMARK_KEY));
         if (signal.isNoObj())
             return;
         final Rec block = signal.asRec();
-        if (!agent.hasFeature(LLM_MESSAGE_FEATURE_TID)) {
+        if (agent.service(MessageService.class).isEmpty()) {
             LOG.warn("summarize requires the session feature");
             return;
         }
-        final fURI sessionVID = agent.feature(LLM_MESSAGE_FEATURE_TID).asRec().at(SESSION).uriValue();
+        final fURI sessionVID = agent.service(MessageService.class).map(MessageService::sessionVID).orElse(null);
         if (null == sessionVID || sessionVID.isEmpty()) {
             LOG.warn("summarize requires an anchored session");
             return;
@@ -162,7 +182,7 @@ public class SummarizeFeature extends AbstractFeature {
         // always-on loose-end reminder
         final Obj looseEnds = Router.readFromSpace(outputBase.extend("loose_end").extend("+"));
         if (!looseEnds.isNoObj() && agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
-            agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage("""
+            agent.requireService(SystemService.class).addSystemMessage("""
                                                                                        An analysis of the last summarization identified the following loose ends:
                                                                                        
                                                                                        %s
@@ -177,7 +197,7 @@ public class SummarizeFeature extends AbstractFeature {
                 if (!applied.isNoObj() && !applied.isFail() && agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
                     final Obj briefing = this.buildBriefing(agent, applied.asRec());
                     if (!briefing.isNoObj())
-                        agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage(ObjmtronSerializer.compact().write(briefing));
+                        agent.requireService(SystemService.class).addSystemMessage(ObjmtronSerializer.compact().write(briefing));
                 }
             } catch (final Exception e) {
                 LOG.warn("summarize briefing unavailable: %s", e.getMessage());
@@ -223,11 +243,11 @@ public class SummarizeFeature extends AbstractFeature {
         final fURI outputBase = out.isNoObj() ? this.outputBase(agent) : out.uriValue();
         final Lst kinds = applied.at(uri(KIND)).orElse(lst0()).asLst();
         final Lst concepts = applied.at(uri(CONCEPT)).orElse(lst0()).asLst();
-        // concept → message uris (ConceptFeature root; each concept rec's
+        // concept → message uris (the concept service's root; each concept rec's
         // message field holds !* refs to the ledger messages that used it)
         final Set<fURI> conceptMessages = new HashSet<>();
-        if (!concepts.isEmpty() && agent.hasFeature(LLM_CONCEPT_FEATURE_TID)) {
-            final fURI conceptRoot = agent.feature(LLM_CONCEPT_FEATURE_TID).asRec().at(ROOT).uriValue();
+        if (!concepts.isEmpty() && agent.service(ConceptService.class).isPresent()) {
+            final fURI conceptRoot = agent.service(ConceptService.class).get().root(agent);
             for (final Obj concept : concepts.elements().toList()) {
                 final fURI conceptURI = concept.isUri()
                         ? concept.uriValue()
@@ -273,4 +293,189 @@ public class SummarizeFeature extends AbstractFeature {
         final Lst source = claimRec.at(uri(SOURCE)).orElse(lst0());
         return source.elements().anyMatch(ref -> ref.isInst() && conceptMessages.contains(ref.asInst().arg(0).uriValue()));
     }
+/**
+     * Distill prompt for {@code summarize()}: asks the model to emit one or more
+     * {@code <<json:claim>>} watermarks, each containing a single claim rec shaped like
+     * {@code [text=>'...', kind=>decision|problem|solution|observation]}.  The watermarks
+     * are scanned by {@link WatermarkUtil} into the
+     * ChatFrame's {@code watermark} lst and anchored by {@code summarize()} as
+     * {@code claim::T} at {@code <agent>/claim/}.
+     * The {@code source} (message vids) is stamped by the inst, not the model — the
+     * model never sees message vids, only the digest text.
+     */
+    private static final String SUMMARIZE_PROMPT = """
+                                                  You are distilling a past metatron session into claims and loose ends. A claim is a terse
+                                                  proposition (1-3 sentences) capturing a decision, problem, solution, or observation — what
+                                                  a future agent would need to understand what happened and why. A loose end is an OPEN
+                                                  continuation point a DIFFERENT session could pick up cold — work that is still owed.
+                                                  
+                                                  Output exactly TWO json blocks. The first is a JSON array of claim objects, the second a
+                                                  JSON array of loose end objects:
+                                                  
+                                                  <<json:claim>>[{"text":"...","kind":"decision","source":[...]},{"text":"...","kind":"problem"}]<</json:claim>>
+                                                  <<json:loose_end>>[{"title":"...","desc":"...","status":"open"}]<</json:loose_end>>
+                                                  
+                                                  Rules for claims:
+                                                  1. kind is one of: decision, problem, solution, observation.
+                                                  2. source is a list of messages (by vid) that inspired you to create the claim.
+                                                    - ["/example/message/1","/example/message/5"]
+                                                  3. A decision without a rationale is not worth recording — say why in the text.
+                                                  4. Prefer specific over general; if nothing significant happened, emit an empty array: <<json:claim>>[]<</json:claim>>
+                                                  
+                                                  Rules for loose ends:
+                                                  4. The cold test: could a session with no access to this transcript act on it? If reading it
+                                                     requires knowing what happened here, it is not a loose end. Most sessions justify 0-2; if
+                                                     you are writing a third, you are recording rather than continuing.
+                                                  5. These do NOT earn a loose end: something this session finished; a current-state observation;
+                                                     a defect the operator should queue; a restatement of a decision (that is already a claim).
+                                                  6. If nothing is left open, emit an empty array: <<json:loose_end>>[]<</json:loose_end>>
+                                                  
+                                                  Do NOT emit session ids, timestamps, source refs, or ids — those are stamped from the record.
+                                                  
+                                                  The session transcript:
+                                                  
+                                                  """;
+
+    /**
+     * Distill a session's message ledger into claim::T and loose_end::T recs
+     * via a mini-task, appending them under the config's {@code output} base.
+     * Shared by the {@code summary} inst and the SummarizeFeature's background
+     * thread — the config rec has the same vocabulary as the
+     * {@code <<mtron:summarize>>} block (session, model, scope, kinds,
+     * concepts, output), so the block is simply a deferred summary() call.
+     *
+     * @param agentHome  the agent root — the model rec is resolved from
+     *                   {@code <agentHome>/model} when the config's model is noobj
+     * @param sessionVID the session whose ledger messages are distilled
+     * @param config     the argument/block rec — {@code scope} filters the
+     *                   message set (a time::T duration or datetime::T cutoff);
+     *                   {@code kind} and {@code concept} are recall hints
+     *                   echoed back for the follow-on briefing; {@code to} is
+     *                   the anchor base (default: the agent home)
+     * @return the applied-constraints rec — the resolved
+     * [session, model, scope, kind, concept, to] plus the written
+     * claim/ and loose_end/ vids; a fail::T on error
+     */
+    public static Obj summarizeSession(final fURI agentHome, final fURI sessionVID, final Rec config) {
+        final Obj modelArg = config.at(uri(MODEL));
+        final Obj scope = config.at(uri(SCOPE));
+        final Obj kinds = config.at(uri(KIND));
+        final Obj concepts = config.at(uri(CONCEPT));
+        final Obj output = config.at(uri(TO));
+        final fURI outputBase = output.isNoObj() ? agentHome : output.uriValue();
+        // 1. collect this session's messages from the ledger as rels
+        //    (vid => rec) — the rel key IS the message vid (branch read)
+        final fURI messagesLocation = agentHome.extend(MESSAGE).extend("+/");
+        final List<Rel> messages = Router.readFromSpace(messagesLocation)
+                .stream()
+                .map(Obj::asRel)
+                .filter(pair -> !pair.second().tid().equals(LLM_TOOL_RESULT_MESSAGE_TYPE.vid()))
+                .filter(pair -> {
+                    final Obj sessionUri = pair.second().asRec().at(SESSION);
+                    return sessionUri.isUri() && sessionUri.uriValue().equals(sessionVID);
+                })
+                .filter(pair -> withinScope(pair.second().asRec(), scope))
+                .sorted(Comparator.comparing(pair -> Integer.parseInt(pair.first().uriValue().name())))
+                .toList();
+        if (messages.isEmpty())
+            return fail("no messages found for session %s at %s", sessionVID, messagesLocation);
+        // 2. build the distill digest — vid ==> text so the model can cite real vids
+        final String digest = messages.stream()
+                .filter(pair -> !Str.Helper.cleanString(pair.second().asRec().at(TEXT)).isBlank())
+                .map(pair -> Graphitty.strip(Str.Helper.cleanString(pair.first()) + "==>" + Str.Helper.cleanString(pair.second().asRec().at(TEXT).orElse(str(""))))) // remove color coding annotations
+                .collect(Collectors.joining("\n"))
+                .replace("%", ""); // remove all string formatting meta-characters
+        // 3. the model — from the agent home (matches <agent>/model)
+        final mModel model = modelArg.isNoObj() ? mModel.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec()) : mModel.model(modelArg.asRec());
+        // 4. distill via a mini-task
+        final ChatFrame result = Agent.Helper.miniChat("session_summarizer", model(model.at(TIMEOUT, real(10.0, MATH_MINUTE_TID, null))), SUMMARIZE_PROMPT + digest);
+        // 5. parse the <<json:claim>> and <<json:loose_end>> watermarks into vids
+        final List<Obj> claimVids = new ArrayList<>();
+        final List<Obj> looseEndVids = new ArrayList<>();
+        // claims first: a loose end refers to the claims distilled in this same pass
+        for (final String keyStr : List.of("claim", "loose_end")) {
+            final Obj body = result.watermark(keyStr);
+            if (!body.isNoObj()) {
+                final Lst bodyLst = body.isLst() ? body.asLst() : lst(body);
+                for (final Obj bodyObj : bodyLst.elements().toList()) {
+                    Rec rec = bodyObj.asRec();
+                    if (keyStr.equals("claim")) {
+                        // JSON parses kind as a string ("observation") — coerce to a uri
+                        // as claim::T expects (kind => union of uris)
+                        final Obj kind = rec.at(uri(KIND));
+                        if (kind.isStr())
+                            rec.at(uri(KIND), uri(kind.strValue()), MUTABLE);
+                        // source: lst of !* auto_from refs to the message vids — the same
+                        // storage form concept uses for its {uri} collections (tble
+                        // round-trips lst fine; objs/coefficient collections do not)
+                        final Lst source = rec.at(uri(SOURCE)).orElse(lst());
+                        if (!source.isEmpty()) {
+                            rec.at(uri(SOURCE), lst(source.elements()
+                                    .map(s -> (Obj) auto_from_(uri(Str.Helper.cleanString(s))).tryToInst())
+                                    .toList()), MUTABLE);
+                        }
+                        rec = rec.tid(LLM_CLAIM_TID);
+                        final fURI vid = Router.writeToSpace(outputBase.extend("claim").extend("_").addQ(INCRQ), rec).vid();
+                        claimVids.add(uri(vid));
+                    } else if (keyStr.equals("loose_end")) {
+                        // JSON parses status as a string ("open") — coerce to a uri
+                        // as loose_end::T expects (status => union of uris)
+                        final Obj status = rec.at(uri(STATUS));
+                        if (status.isStr())
+                            rec.at(uri(STATUS), uri(status.strValue()), MUTABLE);
+                        // source: lst of !* auto_from refs to the message vids — same as claims
+                        final Lst source = rec.at(uri(SOURCE)).orElse(lst());
+                        if (!source.isEmpty()) {
+                            rec.at(uri(SOURCE), lst(source.elements()
+                                    .map(s -> (Obj) auto_from_(uri(Str.Helper.cleanString(s))).tryToInst())
+                                    .toList()), MUTABLE);
+                        }
+                        // claim: !* auto_from refs to the claims distilled in this same
+                        // pass — the loose end's justifying propositions
+                        if (!claimVids.isEmpty())
+                            rec.at(uri("claim"), lst(claimVids.stream()
+                                    .map(v -> (Obj) auto_from_(v.uriValue()).tryToInst())
+                                    .toList()), MUTABLE);
+                        // time is stamped by the inst, not the model
+                        rec.at(uri(TIME), nowDatetime(), MUTABLE);
+                        rec = rec.tid(LLM_LOOSE_END_TID);
+                        final fURI vid = Router.writeToSpace(outputBase.extend("loose_end").extend("_").addQ(INCRQ), rec).vid();
+                        looseEndVids.add(uri(vid));
+                    }
+                }
+            }
+        }
+        // 6. the applied constraints — the config echoed back with defaults resolved
+        return rec(uri(SESSION), uri(sessionVID),
+                uri(MODEL), model,
+                uri(SCOPE), scope,
+                uri(KIND), kinds,
+                uri(CONCEPT), concepts,
+                uri(TO), uri(outputBase),
+                uri("claim"), lst(claimVids),
+                uri("loose_end"), lst(looseEndVids));
+    }
+
+    /**
+     * Scope filter: keep messages whose {@code time} is at or after the cutoff
+     * implied by {@code scope} — a time::T duration (relative to now) or an
+     * absolute datetime::T.  Noobj (or an unrecognized shape) means no filter.
+     */
+    private static boolean withinScope(final Rec message, final Obj scope) {
+        if (scope.isNoObj())
+            return true;
+        final Obj time = message.at(uri(TIME));
+        if (time.isNoObj() || !time.isUri())
+            return true;
+        final long cutoff;
+        if (scope.test(DATETIME_TYPE)) {
+            cutoff = datetimeToMillis(scope.asUri());
+        } else if (scope.test(TIME_TYPE)) {
+            cutoff = System.currentTimeMillis() - scope.tid(MATH_MILLIS_TID).realValue().longValue();
+        } else {
+            return true; // unrecognized scope — don't filter
+        }
+        return datetimeToMillis(time.asUri()) >= cutoff;
+    }
+
 }

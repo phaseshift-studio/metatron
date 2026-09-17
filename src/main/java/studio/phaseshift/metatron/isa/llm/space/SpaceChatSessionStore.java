@@ -36,6 +36,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
@@ -520,15 +521,9 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         if (null == this.agent)
             return 150; // no agent — the bus path never sizes from session policy
         try {
-            final Obj sessFeature = this.agent.feature(LLM_MESSAGE_FEATURE_TID);
-            if (!sessFeature.isNoObj()) {
-                final Obj algo = sessFeature.asRec().at(ALGORITHM);
-                if (!algo.isNoObj() && algo.isRec()) {
-                    final Obj maxVal = algo.asRec().at(MAX);
-                    if (!maxVal.isNoObj() && maxVal.isInt())
-                        return Math.max(50, maxVal.intValue().intValue() * STORE_WINDOW_FACTOR);
-                }
-            }
+            final MessageService message = this.agent.service(MessageService.class).orElse(null);
+            if (null != message)
+                return Math.max(50, message.max() * STORE_WINDOW_FACTOR);
         } catch (final Exception e) {
             LOG.debug("could not read max messages from session config: %s", e.getMessage());
         }

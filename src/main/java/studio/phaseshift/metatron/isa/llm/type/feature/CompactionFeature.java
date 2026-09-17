@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -42,11 +42,31 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
+import studio.phaseshift.metatron.isa.llm.MessageBuilder;
+import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
+import studio.phaseshift.metatron.isa.llm.type.mModel;
+import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.stream.Collectors;
+import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
+import static studio.phaseshift.metatron.isa.llm.type.mModel.model;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class CompactionFeature extends AbstractFeature {
+    public static final fURI FEATURE_TID = studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_COMPACTION_FEATURE_TID;
+
 
     /**
      * The background compaction currently running, if any.  Queued in
@@ -63,7 +83,7 @@ public class CompactionFeature extends AbstractFeature {
 
     @Override
     public Set<fURI> requires() {
-        return Set.of(LLM_SKILL_FEATURE_TID, LLM_MESSAGE_FEATURE_TID);
+        return Set.of(LLM_SKILL_SERVICE_TID, LLM_MESSAGE_SERVICE_TID);
     }
 
     /**
@@ -100,7 +120,7 @@ public class CompactionFeature extends AbstractFeature {
             return;
         final String instructions = WatermarkUtil.instructions(WATERMARK_CODEC,
                 WatermarkUtil.key(this, WATERMARK_KEY), COMPACTION_INSTRUCTIONS);
-        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(mutableMap(
+        agent.requireService(SkillService.class).addSkill(mSkill.of(rec(mutableMap(
                 uri(NAME), uri(LLM_COMPACTION_FEATURE_TID.name()),
                 uri(DESC), str("compact the conversation history into a resume summary when the context grows large"),
                 uri(CONTENT), str(instructions)))));
@@ -121,10 +141,10 @@ public class CompactionFeature extends AbstractFeature {
      * (LC4j has no compaction message type).
      */
     private void surfaceResumeSummary(final Agent agent) {
-        if (!agent.hasFeature(LLM_MESSAGE_FEATURE_TID) || !agent.hasFeature(LLM_SYSTEM_FEATURE_TID))
+        if (agent.service(MessageService.class).isEmpty() || !agent.hasFeature(LLM_SYSTEM_FEATURE_TID))
             return;
-        final MessageFeature messageFeature = agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as();
-        final fURI sessionVID = messageFeature.at(SESSION).uriValue();
+        final MessageService messageFeature = agent.requireService(MessageService.class);
+        final fURI sessionVID = messageFeature.sessionVID();
         if (null == sessionVID || null == messageFeature.store())
             return;
         final List<Rec> window = messageFeature.store().query(sessionVID).stopAt(COMPACTION_MESSAGE_TID).apply();
@@ -133,7 +153,7 @@ public class CompactionFeature extends AbstractFeature {
         final String summary = Str.Helper.cleanString(window.get(0).at(TEXT).orElse(str("")));
         if (summary.isBlank())
             return;
-        agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage("""
+        agent.requireService(SystemService.class).addSystemMessage("""
                                                                                    resume summary from a prior compaction:
                                                                                    
                                                                                    %s
@@ -141,18 +161,18 @@ public class CompactionFeature extends AbstractFeature {
     }
 
     @Override
-    public void onCompleteResponse(final Agent agent, final ChatResult result) {
+    public void onCompleteResponse(final Agent agent, final ChatFrame result) {
         // 1. detect the <<mtron:compaction>> watermark the model emitted
         this.noteWatermarkFailure(result, WATERMARK_CODEC, WATERMARK_KEY);
         final Obj signal = result.watermark(WatermarkUtil.key(this, WATERMARK_KEY));
         Rec block = signal.isNoObj() ? null : signal.asRec();
-        if (!agent.hasFeature(LLM_MESSAGE_FEATURE_TID)) {
+        if (agent.service(MessageService.class).isEmpty()) {
             if (null != block)
                 LOG.warn("compaction requires the session feature");
             return;
         }
-        final MessageFeature messageFeature = agent.feature(LLM_MESSAGE_FEATURE_TID).<MessageFeature>as();
-        final fURI sessionVID = messageFeature.at(SESSION).uriValue();
+        final MessageService messageFeature = agent.requireService(MessageService.class);
+        final fURI sessionVID = messageFeature.sessionVID();
         if (null == sessionVID || sessionVID.isEmpty()) {
             if (null != block)
                 LOG.warn("compaction requires an anchored session");
@@ -198,12 +218,12 @@ public class CompactionFeature extends AbstractFeature {
      * estimated token count of the sentinel-stopped window divided by the
      * model's context window size.  Disabled when the context size is unknown.
      */
-    private boolean shouldAutoCompact(final MessageFeature messageFeature, final fURI sessionVID) {
+    private boolean shouldAutoCompact(final MessageService messageFeature, final fURI sessionVID) {
         final double threshold = this.at(THRESHOLD).orElse(real(0.8)).realValue();
         final int contextWindow = this.resolveContextWindow();
         if (contextWindow <= 0)
             return false;
-        final MessageFeature.DefaultTokenCountEstimator estimator = MessageFeature.DefaultTokenCountEstimator.singleton();
+        final AbstractMessageFeature.DefaultTokenCountEstimator estimator = AbstractMessageFeature.DefaultTokenCountEstimator.singleton();
         final int payloadTokens = messageFeature.store().query(sessionVID).stopAt(COMPACTION_MESSAGE_TID).apply()
                 .stream().mapToInt(r -> estimator.estimateTokenCountInText(Str.Helper.cleanString(r.at(TEXT).orElse(str(""))))).sum();
         return ((double) payloadTokens / (double) contextWindow) >= threshold;
@@ -226,4 +246,143 @@ public class CompactionFeature extends AbstractFeature {
         }
         return 0;
     }
+/**
+     * Distill prompt for {@code compact()}: asks the model to write a
+     * continuation summary that replaces the conversation history in a future
+     * context window.  The summary becomes the {@code text} of the
+     * {@code compaction_message::T} sentinel — the model never sees the raw
+     * transcript again, only the resume summary.
+     */
+    private static final String COMPACT_PROMPT = """
+                                                You have been working on the task described above but have not yet completed it.
+                                                Write a continuation summary that will allow you (or another instance of yourself) to resume work efficiently
+                                                in a future context window where the conversation history will be replaced with this summary.
+                                                
+                                                Your summary should be structured, concise, and actionable. Include:
+                                                1. **Task Overview**: The user's core request, success criteria, and constraints.
+                                                2. **Current State**: What has been completed, current progress, and any pending steps.
+                                                3. **Key Details**: User preferences, domain-specific details, or promises made to the user.
+                                                
+                                                Write in a way that enables immediate resumption of the task.
+                                                
+                                                ## Conversation:
+                                                %s
+                                                """;
+
+
+
+/**
+     * Compact a session's message ledger into a single {@code compaction_message::T}
+     * sentinel whose {@code text} is a resume summary, stamped with the token
+     * compression stats ({@code in}, {@code out}, {@code compression}).  The
+     * trailing few messages are re-appended after the sentinel so the immediate
+     * context is not lost in the summary.  Shared by the {@code compact} inst and
+     * the CompactionFeature's background thread — the config rec has the same
+     * vocabulary as the {@code <<mtron:compaction>>} block (agent, model, prompt).
+     *
+     * @param agentHome  the agent root — the model rec is resolved from
+     *                   {@code <agentHome>/model} when the config's model is noobj
+     * @param sessionVID the session whose ledger messages are compacted
+     * @param config     the argument/block rec — {@code model} and {@code prompt}
+     *                   override the summarizer's model and prompt template
+     * @return the applied-constraints rec — the resolved [to, compaction=>vid]
+     * plus the [in, out, compression] stats; a fail::T on error
+     */
+    public static Obj compactSession(final fURI agentHome, final fURI sessionVID, final Rec config) {
+        final GraphittyLogger LOG = Graphitty.log(CompactionFeature.class);
+        final Obj modelArg = config.at(uri(MODEL));
+        final Obj promptArg = config.at(uri(PROMPT));
+        final Obj output = config.at(uri(TO));
+        final fURI outputBase = output.isNoObj() ? agentHome : output.uriValue();
+        // 1. collect this session's messages from the ledger, oldest -> newest
+        LOG.status(DEBUG, "\uD83D\uDCE9 gathering messages for compaction");
+        final fURI messagesLocation = agentHome.extend(MESSAGE).extend("+/");
+        final List<Rel> messages = Router.readFromSpace(messagesLocation)
+                .stream()
+                .map(Obj::asRel)
+                .filter(pair -> !pair.second().tid().equals(LLM_TOOL_RESULT_MESSAGE_TYPE.vid()))
+                .filter(pair -> {
+                    final Obj sessionUri = pair.second().asRec().at(SESSION);
+                    return sessionUri.isUri() && sessionUri.uriValue().equals(sessionVID);
+                })
+                .sorted(Comparator.comparing(pair -> Integer.parseInt(pair.first().uriValue().name())))
+                .toList();
+        LOG.status(DEBUG, "\uD83D\uDCE9 gathered %d messages for compaction", messages.size());
+        if (messages.isEmpty())
+            return fail("no messages found for session %s at %s", sessionVID, messagesLocation);
+        // 2. build the conversation digest — text only, so the model sees content not vids
+        final String digest = messages.stream()
+                .map(pair -> Str.Helper.cleanString(pair.second().asRec().at(TEXT).orElse(str(""))))
+                .filter(s -> !s.isBlank())
+                .collect(Collectors.joining("\n-----\n"));
+        // 3. the summarizer model (agent home model when not given) and prompt
+        final mModel model = modelArg.isNoObj()
+                ? mModel.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec())
+                : mModel.model(modelArg.asRec());
+        final String prompt = promptArg.isNoObj() ? COMPACT_PROMPT : promptArg.strValue();
+        // 4. distill via a mini-task
+        LOG.status(DEBUG, "\uD83D\uDDDC\uFE0F prompting agent to derive compaction sentinel", messages.size());
+        final ChatFrame result = Agent.Helper.miniChat("session_compactor", model(model.at(TIMEOUT, real(5.0, MATH_MINUTE_TID, null))), prompt.formatted(digest));
+        final String summary = Str.Helper.cleanString(result.at(CHAT).orElse(str("")));
+        // 5. write the sentinel + pair-safe recent-tail
+        final Rec sentinel = writeCompaction(agentHome, sessionVID, messages, digest, summary);
+        return rec(uri(TO), uri(outputBase),
+                uri("compaction"), uri(sentinel.vid()),
+                uri(IN), sentinel.at(uri(IN)),
+                uri(OUT), sentinel.at(uri(OUT)),
+                uri(COMPRESSION), sentinel.at(uri(COMPRESSION)));
+    }
+
+    /**
+     * Write the compaction sentinel — its {@code text} is the resume summary,
+     * stamped with {@code in}/{@code out}/{@code compression} token stats — then
+     * re-append the recent-tail after it, pair-safe (a {@code tool_result} is
+     * never orphaned from its {@code ai} message).  Extracted from
+     * {@link #compactSession} so the write-path is testable without an LLM
+     * round-trip.
+     *
+     * @param agentHome  the agent root — the sentinel/tail write under {@code <agentHome>/message/}
+     * @param sessionVID the session the sentinel belongs to
+     * @param messages   the session's messages, oldest -> newest, as ledger rels
+     * @param digest     the conversation digest (drives the {@code in} token stat)
+     * @param summary    the resume summary (the sentinel's {@code text})
+     * @return the written sentinel rec (text + in/out/compression + session/depth)
+     */
+    public static Rec writeCompaction(final fURI agentHome, final fURI sessionVID, final List<Rel> messages, final String digest, final String summary) {
+        final AbstractMessageFeature.DefaultTokenCountEstimator estimator = AbstractMessageFeature.DefaultTokenCountEstimator.singleton();
+        final int tokensIn = estimator.estimateTokenCountInText(digest);
+        final int tokensOut = estimator.estimateTokenCountInText(summary);
+        final double compression = tokensIn == 0 ? 0.0 : 1.0 - ((double) tokensOut / (double) tokensIn);
+        final fURI writePath = agentHome.extend(MESSAGE).extend("_").addQ(INCRQ);
+        final Rec sentinel = MessageBuilder.build(COMPACTION_MESSAGE_TID)
+                .text(summary)
+                .time()
+                .session(sessionVID)
+                .depth(1)
+                .put(IN, jnt(tokensIn))
+                .put(OUT, jnt(tokensOut))
+                .put(COMPRESSION, real(compression))
+                .create(writePath);
+        final int SPILL_OVER = 5; // recent-tail — keep the immediate context raw, not just in the summary
+        // only re-append the conversational kinds — system/thinking/compaction
+        // are metatron-world records (SystemFeature re-writes the system message
+        // each turn), and a system message in the tail would break the model's
+        // "system message must be at the beginning" invariant
+        final List<Rel> conversational = messages.stream()
+                .filter(pair -> {
+                    final fURI tid = pair.second().tid();
+                    return tid.equals(USER_MESSAGE_TID) || tid.equals(AI_MESSAGE_TID) || tid.equals(TOOL_RESULT_MESSAGE_TID);
+                })
+                .toList();
+        int skip = Math.max(0, conversational.size() - SPILL_OVER);
+        // pull in more (never fewer) messages so the tail never starts on an
+        // orphaned tool_result or an ai message without its user message
+        skip = SpaceChatSessionStore.adjustSkipToPreservePairs(conversational, skip);
+        for (int i = skip; i < conversational.size(); i++) {
+            final Rec tail = conversational.get(i).second().asRec();
+            MessageBuilder.build(tail.tid()).copy(tail.jvm()).create(writePath);
+        }
+        return sentinel;
+    }
+
 }

@@ -155,6 +155,16 @@ public class mcpClient extends MRec implements AutoCloseable {
         return this.client;
     }
 
+    @Override
+    public boolean equals(final Object other) {
+        return other instanceof mcpClient && ((mcpClient) other).client.listTools().equals(this.client.listTools());
+    }
+
+    @Override
+    public int hashCode() {
+        return this.client.listTools().hashCode();
+    }
+
     /**
      * Close the underlying MCP transport. The client opens its connection eagerly (on
      * construction, via {@code listTools()}), so a caller that never closes it leaks a live

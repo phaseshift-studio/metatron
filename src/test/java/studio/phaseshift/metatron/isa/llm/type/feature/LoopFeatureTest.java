@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
@@ -53,7 +53,7 @@ public class LoopFeatureTest extends AbstractFeatureTest {
 
     @Test
     public void testLifecycleAttachesLoopResultsRef() {
-        final ChatResult result = runLifecycle(feature());
+        final ChatFrame result = runLifecycle(feature());
         assertFalse(result.at(uri("loop_results")).isNoObj(), "chat_result should carry a loop_results ref");
     }
 
@@ -84,7 +84,7 @@ public class LoopFeatureTest extends AbstractFeatureTest {
         final LoopFeature loop = feature();
         final SystemFeature system = new SystemFeature(mutableMap(), LLM_SYSTEM_FEATURE_TID, null);
         final Agent agent = agentWith(system, loop);
-        final ChatResult result = ChatResult.chatResult()
+        final ChatFrame result = ChatFrame.chatFrame()
                 .put(CHAT, str("acknowledged"))
                 .put(WATERMARK, WatermarkUtil.scan("<<mtron:loop>>I am on it<</mtron:loop>>").list());
         loop.onCompleteResponse(agent, result);
@@ -98,7 +98,7 @@ public class LoopFeatureTest extends AbstractFeatureTest {
         final LoopFeature loop = feature();
         final SystemFeature system = new SystemFeature(mutableMap(), LLM_SYSTEM_FEATURE_TID, null);
         final Agent agent = agentWith(system, loop);
-        loop.onCompleteResponse(agent, ChatResult.chatResult().put(CHAT, str("no watermark here")));
+        loop.onCompleteResponse(agent, ChatFrame.chatFrame().put(CHAT, str("no watermark here")));
         loop.onBeforeChat(agent);
         assertFalse(system.systemMessage().contains("was not applied"),
                 "a chat with no watermark yields no complaint, got: " + system.systemMessage());

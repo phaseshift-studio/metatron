@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
@@ -43,6 +43,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -58,7 +60,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * messages written during that turn.
  * <p>
  * This feature is purely an overlay — it reads message VIDs from
- * {@link MessageFeature}'s {@link SpaceChatSessionStore} but never modifies
+ * {@link AbstractMessageFeature}'s {@link SpaceChatSessionStore} but never modifies
  * the message schema.  Deleting iterations has no effect on messages.
  *
  * <h3>URI topology</h3>
@@ -107,10 +109,10 @@ public class IterationFeature extends AbstractFeature {
     @Override
     public Obj onBeforeChat(final Agent agent) {
         this.registerSkill(agent);
-        if (!agent.hasFeature(LLM_MESSAGE_FEATURE_TID)) return noobj();
+        if (agent.service(MessageService.class).isEmpty()) return noobj();
         try {
-            final MessageFeature messageFeature = agent.feature(LLM_MESSAGE_FEATURE_TID).as();
-            final fURI sessionVID = messageFeature.at(SESSION).uriValue();
+            final MessageService messageFeature = agent.requireService(MessageService.class);
+            final fURI sessionVID = messageFeature.sessionVID();
             final Rec iteration = createIteration(sessionVID);
             this.iterationVid = iteration.vid();
             LOG.debug("created iteration %s for session %s", iteration.vid(), sessionVID);
@@ -126,10 +128,10 @@ public class IterationFeature extends AbstractFeature {
      * persisted by {@link SpaceChatSessionStore#updateMessages}.
      */
     @Override
-    public void onCompleteResponse(final Agent agent, final ChatResult result) {
-        if (!agent.hasFeature(LLM_MESSAGE_FEATURE_TID)) return;
+    public void onCompleteResponse(final Agent agent, final ChatFrame result) {
+        if (agent.service(MessageService.class).isEmpty()) return;
         try {
-            final MessageFeature messageFeature = agent.feature(LLM_MESSAGE_FEATURE_TID).as();
+            final MessageService messageFeature = agent.requireService(MessageService.class);
             final SpaceChatSessionStore store = messageFeature.store();
             if (store == null) return;
 
@@ -164,7 +166,7 @@ public class IterationFeature extends AbstractFeature {
     public void registerSkill(final Agent agent) {
         if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
             return;
-        agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().addSkill(mSkill.of(rec(
+        agent.requireService(SkillService.class).addSkill(mSkill.of(rec(
                 uri(NAME), uri(ITERATION),
                 uri(DESC), str("Iteration graph overlay with prev/next linked-list navigation"),
                 uri(TOOL), lst(

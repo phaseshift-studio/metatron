@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -41,6 +41,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class LambdaFeature extends AbstractFeature {
+    public static final fURI FEATURE_TID = studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_LAMBDA_FEATURE_TID;
+
 
     public LambdaFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -141,7 +143,7 @@ public class LambdaFeature extends AbstractFeature {
     // ── Completion ───────────────────────────────────────────────
 
     @Override
-    public void onCompleteResponse(final Agent agent, final ChatResult result) {
+    public void onCompleteResponse(final Agent agent, final ChatFrame result) {
         this.computeLambda(f("on_complete_response"), agent, result);
     }
 

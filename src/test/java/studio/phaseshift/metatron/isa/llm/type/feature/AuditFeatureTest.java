@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
@@ -40,7 +40,7 @@ public class AuditFeatureTest extends AbstractFeatureTest {
 
     @Test
     public void testLifecycleAttachesAuditRef() {
-        final ChatResult result = runLifecycle(feature());
+        final ChatFrame result = runLifecycle(feature());
         assertFalse(result.at(uri("audit")).isNoObj(), "chat_result should carry an audit ref");
     }
 

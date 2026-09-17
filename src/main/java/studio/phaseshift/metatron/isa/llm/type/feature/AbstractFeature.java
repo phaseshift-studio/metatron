@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.m.type.Bool;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -37,6 +37,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.ACTIVE;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -84,34 +85,14 @@ public abstract class AbstractFeature extends MRec implements Feature {
     }
 
     // ========================================================================
-    // Cross-feature requirements
+    // Cross-feature dependencies
     // ========================================================================
-
-    /**
-     * Standard message for a feature that requires another feature on the agent.
-     * Cross-feature communication is via {@code agent.feature(FEATURE).<T>as()}, which
-     * requires the target feature to be present.  This is the canonical phrasing for
-     * "feature X requires feature Y" — used by all features so the message is uniform.
-     */
-    protected MTronException missingFeatureException(final fURI required) {
-        return MTronException.of("%s requires the agent to have a %s feature", this.tid(), required);
-    }
-
-    /**
-     * Check whether the agent has the required feature.  If absent, log a warning and
-     * return {@code false} — the calling feature proceeds in a <b>debilitated</b> state
-     * (it cannot do the cross-feature work, but should not crash the chat).
-     *
-     * @param agent    the agent
-     * @param required the feature key to check (e.g. {@code SYSTEM})
-     * @return {@code true} if the feature is present, {@code false} if absent (debilitated)
-     */
-    protected boolean requireFeature(final Agent agent, final fURI required) {
-        if (agent.hasFeature(required))
-            return true;
-        LOG.warn("%s", this.missingFeatureException(required).getMessage());
-        return false;
-    }
+    //
+    // Hard vs soft is declared on the type, not checked here:
+    //   requires() — hard: validated at agent construction; access via agent.require(Class)
+    //                (guaranteed present, or construction already failed).
+    //   uses()     — soft: optional enrichment; access via agent.feature(Class) and check
+    //                isPresent() — absent means degraded, not broken.
 
     // ========================================================================
     // Watermark feedback
@@ -137,7 +118,7 @@ public abstract class AbstractFeature extends MRec implements Feature {
      * @param codec      this feature's declared codec, for the marker in the report
      * @param defaultKey this feature's watermark key, unless its config declares one
      */
-    protected void noteWatermarkFailure(final ChatResult result, final String codec, final String defaultKey) {
+    protected void noteWatermarkFailure(final ChatFrame result, final String codec, final String defaultKey) {
         final String key = WatermarkUtil.key(this, defaultKey);
         final Obj rejected = WatermarkUtil.failed(result.watermarks(), key);
         if (rejected.isRec())
@@ -153,7 +134,7 @@ public abstract class AbstractFeature extends MRec implements Feature {
     protected void surfaceWatermarkRejections(final Agent agent) {
         if (this.watermarkRejections.isEmpty() || !agent.hasFeature(LLM_SYSTEM_FEATURE_TID))
             return;
-        agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as().addSystemMessage("""
+        agent.requireService(SystemService.class).addSystemMessage("""
                                                                                    the watermark instructions you were given were not followed:
                                                                                    
                                                                                    %s

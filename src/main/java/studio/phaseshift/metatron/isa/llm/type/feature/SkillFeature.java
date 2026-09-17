@@ -28,6 +28,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.ToolService;
 
 /**
  * The gateway of the agent's skill channel.
@@ -44,7 +47,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * registers and projects them — skill content stays here, inst registration
  * stays there.</p>
  */
-public class SkillFeature extends AbstractFeature {
+public class SkillFeature extends AbstractFeature implements SkillService {
+    public static final fURI FEATURE_TID = studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
+
+    @Override
+    public Set<fURI> offers() {
+        return Set.of(LLM_SKILL_SERVICE_TID);
+    }
+
 
     /**
      * The registered skills — mSkill elements, upserted by name.
@@ -57,7 +67,14 @@ public class SkillFeature extends AbstractFeature {
 
     @Override
     public Set<fURI> requires() {
-        return Set.of(LLM_TOOL_FEATURE_TID);
+        return Set.of(LLM_TOOL_SERVICE_TID);
+    }
+
+    @Override
+    public Set<fURI> uses() {
+        // the skill table it emits rides the system-message channel; without it, skills are
+        // still forwarded as tools (degraded — no "activate_skill" prompt)
+        return Set.of(LLM_SYSTEM_SERVICE_TID);
     }
 
     /**
@@ -83,8 +100,8 @@ public class SkillFeature extends AbstractFeature {
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
-        agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().addTool(mTool.tool(docWrapDocs(instC(f("list_skills").dom(NOOBJ.zero()).rng(LST_TID), lst(),
-                        (lhs, inst) -> lst(agent.feature(LLM_SKILL_FEATURE_TID).<SkillFeature>as().skillRegistry.values().stream().map(mSkill::toSkill).toList().stream().map(s -> (Obj) lst(str(s.name()), str(s.description()))).toList())),
+        agent.requireService(ToolService.class).addTool(mTool.tool(docWrapDocs(instC(f("list_skills").dom(NOOBJ.zero()).rng(LST_TID), lst(),
+                        (lhs, inst) -> lst(this.skillRegistry.values().stream().map(mSkill::toSkill).toList().stream().map(s -> (Obj) lst(str(s.name()), str(s.description()))).toList())),
                 "no domain",
                 "a lst[lst[str,str]] of skills",
                 Map.of(),
@@ -101,7 +118,7 @@ public class SkillFeature extends AbstractFeature {
 
         // ── 1. forward each skill's tools to the tool gateway (the single composition point) ──
         if (agent.hasFeature(LLM_TOOL_FEATURE_TID)) {
-            final ToolFeature toolFeature = agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as();
+            final ToolService toolFeature = agent.requireService(ToolService.class);
             this.skillRegistry.values().forEach(skill -> skill.tools().elements().forEach(t -> {
                 try {
                     toolFeature.addTool(mTool.tool(t));
@@ -117,13 +134,13 @@ public class SkillFeature extends AbstractFeature {
 
         try {
             final Skills skills = new Skills.Builder().skills(allSkills).build();
-            agent.feature(LLM_TOOL_FEATURE_TID).<ToolFeature>as().addToolProvider(skills.toolProvider());
-            // Cross-feature communication: SystemFeature owns the system-message channel.
-            // If the agent lacks it, this feature is debilitated — log and proceed.
-            if (this.requireFeature(agent, LLM_SYSTEM_FEATURE_TID)) {
+            agent.requireService(ToolService.class).addToolProvider(skills.toolProvider());
+            // SystemFeature owns the system-message channel (a soft `uses` collaboration —
+            // absent means no skill table prompt, but skills are still forwarded as tools).
+            if (agent.hasFeature(SystemFeature.class)) {
                 try (final TableWidget table = new TableWidget(List.of("name", "description")).style().border(Border.continuous).applyStyle()) {
                     allSkills.forEach(s -> table.addRow(List.of(s.name(), s.description())));
-                    agent.feature(LLM_SYSTEM_FEATURE_TID).<SystemFeature>as()
+                    agent.requireService(SystemService.class)
                             .addSystemMessage("""
                                               ----
                                               use activate_skill() tool to load any of the following skills:

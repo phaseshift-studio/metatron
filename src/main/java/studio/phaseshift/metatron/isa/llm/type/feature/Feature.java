@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.ChatResult;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
@@ -183,7 +183,7 @@ public interface Feature extends Rec {
      * result is persisted to the chat feature's root space by Agent after all
      * hooks have run.
      */
-    default void onCompleteResponse(final Agent agent, final ChatResult result) {
+    default void onCompleteResponse(final Agent agent, final ChatFrame result) {
     }
 
     // ── Error ────────────────────────────────────────────────────
@@ -192,16 +192,60 @@ public interface Feature extends Rec {
     }
 
     /**
-     * The full feature tids this feature requires to function properly —
-     * they must be attached to the same agent.  The agent is the integrator
-     * of features: it validates these at construction time, and a missing
-     * dependency is a composition error (a canonical
-     * {@code MTronException}), not a "debilitated" feature discovered
-     * mid-chat.  Features needing an *optional* collaboration keep their
-     * own runtime check and simply do not declare it here.
+     * The service tids this feature requires to function properly — a provider of each
+     * must be attached to the same agent.  The agent is the integrator of features: it
+     * validates these against the union of every attached feature's {@link #offers()} at
+     * construction time, and a missing dependency is a composition error (a canonical
+     * {@code MTronException}), not a "debilitated" feature discovered mid-chat.  Features
+     * needing an *optional* collaboration keep their own runtime check and simply do not
+     * declare it here.
      */
     default Set<fURI> requires() {
         return Set.of();
+    }
+
+    /**
+     * The service tids this feature collaborates with opportunistically — it works without
+     * them, but in a degraded (less rich) state.  Unlike {@link #requires()}, these are NOT
+     * validated at construction; access them via {@code agent.service(tid)} and check
+     * {@code isPresent()} — the collaboration may be absent.
+     */
+    default Set<fURI> uses() {
+        return Set.of();
+    }
+
+    /**
+     * The service tids this feature provides — its capabilities, looked up by consumers via
+     * {@code agent.service(tid)}.  Anything (feature or not) can offer a service tid.
+     */
+    default Set<fURI> offers() {
+        return Set.of();
+    }
+
+    /**
+     * The single Class -> feature tid association.  A feature class declares its tid
+     * once as {@code public static final fURI FEATURE_TID = LLM_<x>_FEATURE_TID;}; this
+     * reads it and caches per class.  There is no parallel Java registry — the tid on
+     * the class is the same one stamped on every instance at construction.
+     */
+    final class Helper {
+        private Helper() {
+        }
+
+        private static final ClassValue<fURI> TID_CACHE = new ClassValue<>() {
+            @Override
+            protected fURI computeValue(final Class<?> type) {
+                try {
+                    return (fURI) type.getField("FEATURE_TID").get(null);
+                } catch (final Exception e) {
+                    throw MTronException.of("feature class has no FEATURE_TID field: %s", type.getName());
+                }
+            }
+        };
+
+        public static fURI tid(final Class<? extends Feature> type) {
+            return TID_CACHE.get(type);
+        }
     }
 }
     

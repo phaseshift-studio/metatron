@@ -95,21 +95,6 @@ httpspace::[host     => !*<boot/args/external/web/http>,
                          /message   => mcp_message,
                          /          => mfs:docs/website/]]@/sys/space/web/http;   
 
-[==
-json::"""
-{
-  "mcpServers": {
-    "codegraph": {
-      "command": "codegraph",
-      "args": [
-        "serve",
-        "--mcp"
-      ]
-    }
-  }
-}
-"""@codegraph.as(mcp_client::T);
-==]
 
         [=====================]
         [======= DOCKER ======]
@@ -142,7 +127,7 @@ dckrspace::[host     => <unix:///var/run/docker.sock>,
 tblespace::[pattern    => </usr/dr/#>,
             host       => <sqlite:/home/killswitch/software/metatron/.metatron/skills/drstynx/assets/drstynx.sqlite>,
             driver     => <org.sqlite.JDBC>,
-            table      => [,],
+            table      => [frame],
             q          => [incrq::[=>],subq::[=>],mimeq::[=>]],
             route      => [/usr/dr/ => <>]]@</sys/space/usr/dr>;
 tblespace::[pattern    => </usr/dsh/#>,
@@ -277,18 +262,18 @@ scratch
         [======================]
 [== if the llm session already exists, continue, else create it ==]    
 [== <drdb:llm_session>.mult(print('\n what session number?: ').stdin().as(uri::T)).to(session_vid) ==]
-model::[
+[==model::[
   provider => deepseek,
   protocol => openai,
   host     => <https://api.deepseek.com>,
   api_key  => !*</sys/env/DEEPSEEK_API_KEY>,
   llm      => <deepseek-v4-pro> 
-]@/usr/dr/model;
+]@/usr/dr/model;==]
 human -> model::[llm=>'human:latest'];
-[==model::[provider     => ollama,
+model::[provider     => ollama,
         protocol     => ollama,
         host         => <http://ginger.local:11434>,
-        llm          => <qwen3.8:27b>]@/usr/dr/model;==]
+        llm          => <qwen3.8:27b>]@/usr/dr/model;
 /usr/dr/agent -> |!*dr;
 [-- tag::asciidoc_tag[] --]
 agent::[
@@ -296,7 +281,7 @@ agent::[
  desc     => 'the agent dr.stynx is here to be of use in the metatron',
  root     => !*boot/args/internal/agent_home,
  feature  => [
-  message_feature::::[on_agent_ctor => inst(a=>agent::T){ *</usr/dr/session/1>.else(
+  window_message_feature::::[on_agent_ctor => inst(a=>agent::T){ *</usr/dr/session/1>.else(
                                          session::[agent     => !*boot/args/internal/agent_home,
                                                    user      => !*boot/args/internal/user_home,
                                                    name      => 'general chat',
@@ -307,16 +292,15 @@ agent::[
                                                                        protocol     => ollama,
                                                                        host         => <http://ginger.local:11434>,
                                                                        llm          => <qwen3.8:27b>])),
-                      response      => [complete => print("{{y}}{{:horse:}}${>>chat}")]],
+                      response      => [complete => print("{{y}}{{:horse:}} ${>>chat}")]],
   think_feature::::::[on_agent_ctor => inst(a=>agent::T){
                                           accordion_widget::[title => "thoughts", 
                                                              body  => "",
                                                              style => style::[
                                                                anchor=>top_middle,
                                                                right=>10,
-                                                               top=>2,
-                                                               height=>40,
-                                                               width=>95]]@<think_widget> },
+                                                               width=>100,
+                                                               top=>2]]@<think_widget> },
                      on_before_chat => inst(){ @<think_widget> >>= [body=>""] },
                      think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
   midchat_feature:::::[root         => /usr/dr],
@@ -327,15 +311,12 @@ agent::[
   skill_feature:::::::[skill         => [ <mfs:.metatron/skills/metatron>, 
                                          <mfs:.metatron/skills/mtron>,
                                          <mfs:.metatron/skills/ide>]],
-  concept_feature::::[root           => /usr/dr/concept,
-                      extractor      => lucene],
-  audit_feature::::::[on_agent_ctor  => inst(a=>agent::T) {   
+  lucene_concept_feature::::[root => /usr/dr/concept],
+  audit_feature::::::[on_before_chat  => inst(a=>agent::T) {   
                                          accordion_widget::[title  => "audit",
                                                             body   => "",
                                                             style  => style::[
                                                               anchor=>bottom_right,
-                                                              width =>65,
-                                                              height=>45,
                                                               left  =>-2,
                                                               top   =>5,
                                                               foreground =>"{{y}}"]]@<audit_widget> },
@@ -352,12 +333,24 @@ agent::[
   system_feature:::::[              => ],
   tool_feature:::::::[tool          => [!*gremlin,
                                         !*sql,
-                                        !*codegraph,
+                                        !(map(json::"""
+                                        {
+                                          "mcpServers": {
+                                            "codegraph": {
+                                              "command": "codegraph",
+                                              "args": [
+                                                "serve",
+                                                "<--mcp>"
+                                              ]
+                                            }
+                                          }
+                                        }
+                                        """@codegraph).as(mcp_client::T)),
                                         !*find_file,
                                         !*read_file,
                                         !*edit_file,
                                         !*bash?reject=['\brm\b','\bgit\b'],
-                                        !*eval,[--mcp_client::[host=><http://localhost:8777/mcp>],--]
+                                        mcp_client::[host=><http://localhost:8777/mcp>],
                                         forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
   cost_feature:::::::[root          => /usr/dr/cost,
                       to            => inst(in_cost=>real::T,out_cost=>real::T,total_cost=>real::T){ 

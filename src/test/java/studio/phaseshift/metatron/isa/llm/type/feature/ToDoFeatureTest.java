@@ -62,7 +62,7 @@ public class ToDoFeatureTest extends AbstractFeatureTest {
     public void testLedgerSkillWellFormed() {
         final ToDoFeature todoFeature = feature();
         final SkillFeature skillFeature = new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null);
-        final Agent agent = agentWith(todoFeature, skillFeature);
+        final Agent agent = agentWith(todoFeature, skillFeature, new TaggingConceptFeature(mutableMap(), LLM_TAGGING_CONCEPT_FEATURE_TID, null));
         todoFeature.onBeforeChat(agent);
         final Rec skill = skillFeature.skills().at(0).asRec();
         assertEquals("todo_feature", skill.at(uri(NAME)).uriValue().name(), "skill name should be 'todo_feature'");
