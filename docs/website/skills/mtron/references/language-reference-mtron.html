@@ -237,6 +237,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
                             </div>
                         </div>
                     </li>
@@ -280,6 +281,9 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant">Modelfile.mtron-qwen-14b-assistant</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant-thinking">Modelfile.mtron-qwen-14b-assistant-thinking</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
                                 <div class="skill-resource-group">assets</div>
@@ -779,6 +783,9 @@ mtron&gt; [1,2]@a &gt;&gt;= [_,+4]                      [-- [1,6]@a  (second ele
 mtron&gt; [a=&gt;1,b=&gt;2] &gt;&gt;= [b=&gt;none]               [-- [a=&gt;1]  (remove field b) --]
 ==&gt;[a=&gt;1]
 mtron&gt; @&lt;people/+&gt;.&gt;&gt;= [name=&gt;&quot;Micky Mouse&quot;]   [-- wildcard update --]
+==&gt;[name=&gt;'Micky Mouse',role=&gt;architect]
+==&gt;[name=&gt;'Micky Mouse',role=&gt;developer]
+==&gt;[name=&gt;'Micky Mouse',role=&gt;oracle]
 </code></pre>
 <p><code>@</code> means &quot;anchor the write-back to the VID&quot; (persist).  <code>*</code> means &quot;anonymous copy&quot; (no write-back):</p>
 <pre><code class="language-mtron">mtron&gt; @a/b/c&gt;&gt;= +10      [-- modifies *a/b/c and writes back --]

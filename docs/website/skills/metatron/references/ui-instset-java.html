@@ -237,6 +237,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
                             </div>
                         </div>
                     </li>
@@ -280,6 +281,9 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant">Modelfile.mtron-qwen-14b-assistant</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant-thinking">Modelfile.mtron-qwen-14b-assistant-thinking</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
                                 <div class="skill-resource-group">assets</div>
@@ -949,14 +953,14 @@ widget also acted, the affordance (the surface coalesces the two), and it never 
 console thread — <code>focusWidget</code> renders fire-and-forget.  (It used to <code>renderNow()</code>, which
 stalled the reader thread on a full pass for every focus and every click; that stall is what
 made the pointer feel heavy.)</p>
-<p><strong>Who owns the pointer</strong> — <code>Console.pointerWanted(focused, dismissed, widgets)</code> (pure, tested):</p>
+<p><strong>Who owns the pointer</strong> — <code>Console.pointerWanted(focused, released, widgets)</code> (pure, tested):</p>
 <ul>
 <li>a widget is <strong>focused</strong> → the widgets own the mouse (scroll, affordances, moving the focus);</li>
-<li>widgets are <strong>on screen and not dismissed</strong> → they own it, so a cold click can focus one;</li>
-<li>the user <strong>pointed at empty terminal</strong> → <code>pointerDismissed</code>, the terminal gets its own mouse
-back (wheel scrolls it, drag-selection works) until a widget is focused or a <em>new</em> widget
-arrives (<code>drawnWidgetCount()</code> growing — the same widgets merely redrawing does not re-arm,
-which is what makes waving the pointer off stick);</li>
+<li>widgets are <strong>on screen and not released</strong> → they own it, so a cold click can focus one;</li>
+<li>the user <strong>wheeled over empty terminal</strong> (nothing under the pointer, nothing focused) →
+<code>Console.releasePointer()</code> drops the focus and hands the pointer back, so the terminal gets its
+own mouse again — the wheel scrolls the terminal's scrollback and drag-selection works — until
+the next prompt or a widget is re-focused via <code>alt+w</code>;</li>
 <li><strong>nothing on screen</strong> → the terminal's mouse, always.</li>
 </ul>
 <p>The enable/disable sequences are the console's own, not jline's:
@@ -970,7 +974,8 @@ focuses on a click while its three-cell <code>[-]</code> target cannot be hit.</
 <ul>
 <li><code>Console.prepareForInput()</code> re-asserts it <strong>once per prompt</strong> (forced) — jline releases
 tracking at the end of every <code>readLine</code>, so the flag alone would leave the pointer dead from
-the second prompt on.</li>
+the second prompt on.  It also clears the release, so a new prompt re-arms the pointer after a
+wheel handed it back to the terminal.</li>
 <li>the hotkey watcher's idle tick reconciles <strong>only on a change</strong>, so a widget floated while the
 user sat at the prompt becomes clickable within a tick — and only while the prompt owns the
 terminal.  While a job holds the console the mouse stays off, so its bytes can never be

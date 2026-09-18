@@ -237,6 +237,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
                             </div>
                         </div>
                     </li>
@@ -280,6 +281,9 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant">Modelfile.mtron-qwen-14b-assistant</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant-thinking">Modelfile.mtron-qwen-14b-assistant-thinking</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
                                 <div class="skill-resource-group">assets</div>
@@ -454,7 +458,7 @@ the same declarations the type checker uses:</p>
      obj=&gt;accordion_widget::T,
      dom=&gt;'maybe an obj',
      rng=&gt;'an accordion obj',
-     args=&gt;[{?}title=&gt;'the title of the accordion',{?}body=&gt;'the body content of the accordion'],
+     args=&gt;[{?}body=&gt;'the body content of the accordion',{?}title=&gt;'the title of the accordion'],
      desc=&gt;'[structural] an expandable/collapsible accordion widget'],
     progress_table_widget=&gt;docs::[
      obj=&gt;progress_table_widget::T,
@@ -470,7 +474,7 @@ the same declarations the type checker uses:</p>
      obj=&gt;tree_widget::T,
      dom=&gt;'maybe an obj',
      rng=&gt;'a tree widget',
-     args=&gt;[{?}code=&gt;'transform obj prior to insertion into tree (default _)',{?}expand=&gt;'branch uris whose children are read regardless of max',{?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration',max=&gt;'the max depth to traverse',{?}flatten=&gt;'fold single-folder chains into one path row (default false)',root=&gt;'the root uri to traverse from'],
+     args=&gt;[{?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration',max=&gt;'the max depth to traverse',{?}flatten=&gt;'fold single-folder chains into one path row (default false)',root=&gt;'the root uri to traverse from',{?}code=&gt;'transform obj prior to insertion into tree (default _)',{?}expand=&gt;'branch uris whose children are read regardless of max'],
      desc=&gt;'[structural] the root uri space is traversed to specified d...'],
     selector_widget=&gt;docs::[
      obj=&gt;selector_widget::T,
@@ -482,8 +486,8 @@ the same declarations the type checker uses:</p>
      dom=&gt;'rec',
      rng=&gt;'panel',
      args=&gt;[
-      title=&gt;'the title of the panel',
-      body=&gt;'the body content of the panel'],
+      body=&gt;'the body content of the panel',
+      title=&gt;'the title of the panel'],
      desc=&gt;'[structural] a simple bordered UI panel widget'],
     label_line_widget=&gt;docs::[
      obj=&gt;label_line_widget::T,
@@ -555,9 +559,9 @@ console is showing:</p>
     body=&gt;'alpha
 beta',
     style=&gt;style::[border=&gt;┌;┐;└;┘;│;│;─;─;┬;┴;├;┤]]@/usr/uidoc/panel
-mtron&gt; */usr/uidoc/panel/title                [-- one key --]
+mtron&gt; */usr/uidoc/panel/title
 ==&gt;'note'
-mtron&gt; */usr/uidoc/panel/body                 [-- another --]
+mtron&gt; */usr/uidoc/panel/body
 ==&gt;'alpha\nbeta'
 </code></pre>
 <p>The style is a key like any other, so a widget's look is set by writing one:</p>
@@ -571,23 +575,13 @@ mtron&gt; */usr/uidoc/panel/style
 ==&gt;style::[border=&gt;┌;┐;└;┘;│;│;─;─;┬;┴;├;┤]
 </code></pre>
 <h3>rendering a widget inline</h3>
-<p>A widget renders wherever a str fits, by casting it through the widget's own <code>as</code> inst:</p>
+<p>A widget renders wherever a <code>str::T</code> fits, by casting it through the widget's own <code>as?str&lt;=widget</code> inst:</p>
 <pre><code class="language-mtron">mtron&gt; panel_widget::[title=&gt;'note',body=&gt;&quot;alpha\nbeta\ngamma&quot;].as?str&lt;=widget(str::T)
 ==&gt;&quot;&quot;&quot;
    ┌note─┐
    │alpha│
    │beta │
    │gamma│
-   └─────┘
-   
-   &quot;&quot;&quot;
-</code></pre>
-<p><strong><code>as(str::T)</code> is not this.</strong> A widget <em>is</em> a rec, so the plain cast resolves to the rec-to-str
-conversion and prints the fields:</p>
-<pre><code class="language-mtron">mtron&gt; panel_widget::[title=&gt;'note',body=&gt;'alpha'].as(str::T)     [-- the rec, quoted: not the render --]
-==&gt;&quot;&quot;&quot;
-   ┌note─┐
-   │alpha│
    └─────┘
    
    &quot;&quot;&quot;
@@ -641,13 +635,9 @@ mtron&gt; accordion_widget::[title=&gt;'notes',body=&gt;&quot;l01\nl02\nl03&quot
    &quot;&quot;&quot;
 </code></pre>
 <pre><code class="language-mtron">mtron&gt; menu_bar_widget::[height=&gt;1,lines=&gt;[label_line_widget::[body=&gt;'File'],label_line_widget::[body=&gt;'Edit']]].as?str&lt;=widget(str::T)
-==&gt;&quot;&quot;&quot;
-   File  Edit
-   &quot;&quot;&quot;
+==&gt;ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3206
 mtron&gt; label_line_widget::[body=&gt;'a label line'].as?str&lt;=widget(str::T)
-==&gt;&quot;&quot;&quot;
-   a label line
-   &quot;&quot;&quot;
+==&gt;ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3214
 </code></pre>
 <h3>style</h3>
 <p><code>style::T</code> is a rec of presentation keys. The ones that change what you see:</p>
@@ -752,7 +742,7 @@ dies inside it, and <code>less</code> blocks on stdin. That is why the blocks ab
     [-- fail:: inst apply failure: NullPointerException: Console.getTerminal() is null --]
 </code></pre>
 <ul>
-<li><strong><code>*</code> does not render — the anchor does.</strong> <code>@/usr/uidoc/panel.as?str&lt;=widget(str::T)</code> renders the
+<li><strong><code>*/uri</code> does not render — the anchor does.</strong> <code>@/usr/uidoc/panel.as?str&lt;=widget(str::T)</code> renders the
 widget the store holds; the clone form (<code>*/usr/uidoc/panel.as?str&lt;=widget(str::T)</code>) produces nothing,
 because the dereferenced rec no longer satisfies the inst's dom. Anchor the read.</li>
 <li><strong>A height cap is not visible in a plain render</strong> — the viewport belongs to the surface (see <em>style</em>).</li>
