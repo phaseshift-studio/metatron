@@ -44,7 +44,6 @@ mtron> tree_widget::[root=>/m/mach/ui, max=>2].as?str<=widget(str::T)
        └─ tree_widget
    """
 ```
-
 ## the space these examples use
 
 The docs runner is **headless**: no terminal, no console. Everything below that *renders* is `mtron_pre`
@@ -76,7 +75,6 @@ mtron> */m/mach/ui/widget/tree_widget        [-- root and max required; code/fla
      {?}xref=>rec::T,
      {?}expand=>uri{*}::T]][ctor?tree_widget<=#{?}(#{*}::T)]@/m/mach/ui/widget/tree_widget
 ```
-
 `*/m/mach/ui/widget?docq` is the catalog — one entry per widget type, each with its args, its dom/rng and
 its own example. It is the fastest way to answer "what can I put in this thing", and it is generated from
 the same declarations the type checker uses:
@@ -90,7 +88,7 @@ mtron> */m/mach/ui/widget?docq
      obj=>accordion_widget::T,
      dom=>'maybe an obj',
      rng=>'an accordion obj',
-     args=>[{?}title=>'the title of the accordion',{?}body=>'the body content of the accordion'],
+     args=>[{?}body=>'the body content of the accordion',{?}title=>'the title of the accordion'],
      desc=>'[structural] an expandable/collapsible accordion widget'],
     progress_table_widget=>docs::[
      obj=>progress_table_widget::T,
@@ -106,7 +104,7 @@ mtron> */m/mach/ui/widget?docq
      obj=>tree_widget::T,
      dom=>'maybe an obj',
      rng=>'a tree widget',
-     args=>[{?}code=>'transform obj prior to insertion into tree (default _)',{?}expand=>'branch uris whose children are read regardless of max',{?}xref=>'xref=>[max=>N, code=><call>] cross-reference decoration',max=>'the max depth to traverse',{?}flatten=>'fold single-folder chains into one path row (default false)',root=>'the root uri to traverse from'],
+     args=>[{?}xref=>'xref=>[max=>N, code=><call>] cross-reference decoration',max=>'the max depth to traverse',{?}flatten=>'fold single-folder chains into one path row (default false)',root=>'the root uri to traverse from',{?}code=>'transform obj prior to insertion into tree (default _)',{?}expand=>'branch uris whose children are read regardless of max'],
      desc=>'[structural] the root uri space is traversed to specified d...'],
     selector_widget=>docs::[
      obj=>selector_widget::T,
@@ -118,8 +116,8 @@ mtron> */m/mach/ui/widget?docq
      dom=>'rec',
      rng=>'panel',
      args=>[
-      title=>'the title of the panel',
-      body=>'the body content of the panel'],
+      body=>'the body content of the panel',
+      title=>'the title of the panel'],
      desc=>'[structural] a simple bordered UI panel widget'],
     label_line_widget=>docs::[
      obj=>label_line_widget::T,
@@ -129,7 +127,6 @@ mtron> */m/mach/ui/widget?docq
      desc=>'[structural] a single-line text label widget'],
     ...(4 more)]
 ```
-
 | widget type                | keys it reads                                                 |
 |----------------------------|---------------------------------------------------------------|
 | `accordion_widget::T`      | `title`, `body`                                               |
@@ -180,7 +177,6 @@ l03
 l04',
     title=>'notes']
 ```
-
 ## a widget is a rec — state lives in the map
 
 Construct it, anchor it, read it back: the map *is* the widget, and the space is the map when it has a vid.
@@ -194,12 +190,11 @@ mtron> panel_widget::[title=>'note',body=>"alpha\nbeta"]@/usr/uidoc/panel
     body=>'alpha
 beta',
     style=>style::[border=>┌;┐;└;┘;│;│;─;─;┬;┴;├;┤]]@/usr/uidoc/panel
-mtron> */usr/uidoc/panel/title                [-- one key --]
+mtron> */usr/uidoc/panel/title
 ==>'note'
-mtron> */usr/uidoc/panel/body                 [-- another --]
+mtron> */usr/uidoc/panel/body
 ==>'alpha\nbeta'
 ```
-
 The style is a key like any other, so a widget's look is set by writing one:
 
 ```mtron
@@ -212,10 +207,9 @@ beta',
 mtron> */usr/uidoc/panel/style
 ==>style::[border=>┌;┐;└;┘;│;│;─;─;┬;┴;├;┤]
 ```
-
 ## rendering a widget inline
 
-A widget renders wherever a str fits, by casting it through the widget's own `as` inst:
+A widget renders wherever a `str::T` fits, by casting it through the widget's own `as?str<=widget` inst:
 
 ```mtron
 mtron> panel_widget::[title=>'note',body=>"alpha\nbeta\ngamma"].as?str<=widget(str::T)
@@ -228,20 +222,6 @@ mtron> panel_widget::[title=>'note',body=>"alpha\nbeta\ngamma"].as?str<=widget(s
    
    """
 ```
-
-**`as(str::T)` is not this.** A widget *is* a rec, so the plain cast resolves to the rec-to-str
-conversion and prints the fields:
-
-```mtron
-mtron> panel_widget::[title=>'note',body=>'alpha'].as(str::T)     [-- the rec, quoted: not the render --]
-==>"""
-   ┌note─┐
-   │alpha│
-   └─────┘
-   
-   """
-```
-
 The explicit dom (`as?str<=widget(str::T)`) is what selects the widget's own rendering, and a widget read
 back out of the space renders the same way — from the *anchor*, not the clone:
 
@@ -255,7 +235,6 @@ mtron> @/usr/uidoc/panel.as?str<=widget(str::T)
    
    """
 ```
-
 ### the gallery
 
 ```mtron
@@ -277,7 +256,6 @@ mtron> accordion_widget::[title=>'notes',body=>"l01\nl02\nl03"].as?str<=widget(s
    └───────────┘
    """
 ```
-
 ```mtron
 mtron> table_widget::[header=>['name','qty'],row=>[['alpha','3'],['beta','12']]].as?str<=widget(str::T)
 ==>"""
@@ -288,7 +266,6 @@ mtron> table_widget::[header=>['name','qty'],row=>[['alpha','3'],['beta','12']]]
                
    """
 ```
-
 ```mtron
 mtron> tree_widget::[root=>/m/mach/ui, max=>1].as?str<=widget(str::T)
 ==>"""
@@ -299,18 +276,12 @@ mtron> tree_widget::[root=>/m/mach/ui, max=>1].as?str<=widget(str::T)
    └─ widget
    """
 ```
-
 ```mtron
 mtron> menu_bar_widget::[height=>1,lines=>[label_line_widget::[body=>'File'],label_line_widget::[body=>'Edit']]].as?str<=widget(str::T)
-==>"""
-   File  Edit
-   """
+==>ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3206
 mtron> label_line_widget::[body=>'a label line'].as?str<=widget(str::T)
-==>"""
-   a label line
-   """
+==>ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3214
 ```
-
 ## style
 
 `style::T` is a rec of presentation keys. The ones that change what you see:
@@ -338,7 +309,6 @@ mtron> panel_widget::[title=>'note',body=>'alpha beta gamma delta epsilon zeta',
    
    """
 ```
-
 Height is a **viewport** instruction: `format()` draws the whole body and the surface shows a window of
 it, so a height cap in a plain render changes nothing (the same render with the cap draws every line):
 
@@ -354,7 +324,6 @@ mtron> panel_widget::[title=>'note',body=>"l01\nl02\nl03\nl04\nl05",style=>[heig
    └────┘
    ...
 ```
-
 ## anchoring, and the pointer
 
 An anchored widget (`style => [anchor=>…]`) is pinned to a corner and then offset from it. Which cell that
@@ -420,7 +389,7 @@ panel_widget::[title=>'note',body=>'alpha'].display()
     [-- fail:: inst apply failure: NullPointerException: Console.getTerminal() is null --]
 ```
 
-* **`*` does not render — the anchor does.** `@/usr/uidoc/panel.as?str<=widget(str::T)` renders the
+* **`*/uri` does not render — the anchor does.** `@/usr/uidoc/panel.as?str<=widget(str::T)` renders the
   widget the store holds; the clone form (`*/usr/uidoc/panel.as?str<=widget(str::T)`) produces nothing,
   because the dereferenced rec no longer satisfies the inst's dom. Anchor the read.
 * **A height cap is not visible in a plain render** — the viewport belongs to the surface (see *style*).
