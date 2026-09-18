@@ -2,12 +2,13 @@
 
 ## Status: ✅ WORKING
 
-**Date**: March 24, 2026
-**Solution**: Custom JSON-RPC dispatcher using `ObjSimpleJSONSerializer`
+**Date**: March 24, 2026 **Solution**: Custom JSON-RPC dispatcher using `ObjSimpleJSONSerializer`
 
 ## Problem Summary
 
-The MCP Java SDK 1.1.0 has a known bug (GitHub Issue #509) where tool handlers registered with the SDK are never invoked when `tools/call` requests arrive. The SDK successfully:
+The MCP Java SDK 1.1.0 has a known bug (GitHub Issue #509) where tool handlers registered with the SDK are never invoked
+when `tools/call` requests arrive. The SDK successfully:
+
 - ✅ Creates sessions
 - ✅ Handles `initialize` requests
 - ✅ Parses `tools/call` requests
@@ -15,27 +16,29 @@ The MCP Java SDK 1.1.0 has a known bug (GitHub Issue #509) where tool handlers r
 
 ## Solution Architecture
 
-We implemented a **custom JSON-RPC 2.0 tool dispatcher** that bypasses the buggy SDK tool invocation layer while still using the SDK for protocol compliance and session management.
+We implemented a **custom JSON-RPC 2.0 tool dispatcher** that bypasses the buggy SDK tool invocation layer while still
+using the SDK for protocol compliance and session management.
 
 ### Key Components
 
-1. **`JsonRpcToolDispatcher`** (`src/main/java/studio/phaseshift/metatron/isa/mach/type/net/mcp/JsonRpcToolDispatcher.java`)
-   - Custom JSON-RPC 2.0 parser using Metatron's `ObjSimpleJSONSerializer`
-   - Maintains registry of tool handlers
-   - Manually routes `tools/call` requests to handlers
-   - Constructs proper JSON-RPC responses
+1. **`JsonRpcToolDispatcher`**
+   (`src/main/java/studio/phaseshift/metatron/isa/mach/type/net/mcp/JsonRpcToolDispatcher.java`)
+    - Custom JSON-RPC 2.0 parser using Metatron's `ObjSimpleJSONSerializer`
+    - Maintains registry of tool handlers
+    - Manually routes `tools/call` requests to handlers
+    - Constructs proper JSON-RPC responses
 
 2. **`McpWebSocketTransport`** (modified)
-   - Intercepts incoming messages
-   - Checks if message is a `tools/call` request
-   - Routes to custom dispatcher if yes, SDK if no
+    - Intercepts incoming messages
+    - Checks if message is a `tools/call` request
+    - Routes to custom dispatcher if yes, SDK if no
 
 3. **`MetatronMcpServer`** (modified)
-   - Registers tools with both SDK (for `tools/list`) and custom dispatcher (for actual invocation)
-   - Provides tool implementations for: `evaluate_code`, `get_system_info`, `list_instructions`
+    - Registers tools with both SDK (for `tools/list`) and custom dispatcher (for actual invocation)
+    - Provides tool implementations for: `evaluate_code`, `get_system_info`, `list_instructions`
 
 4. **`McpWebSocketTransportProvider`** (modified)
-   - Passes dispatcher reference to transports
+    - Passes dispatcher reference to transports
 
 ### Message Flow
 
@@ -66,6 +69,7 @@ McpWebSocketTransport.handleIncomingMessage()
 ### JSON-RPC 2.0 Parsing
 
 The dispatcher uses `ObjSimpleJSONSerializer` to:
+
 1. Parse incoming JSON-RPC request to Metatron `Obj` types
 2. Extract `method`, `params`, `id` fields
 3. Extract tool `name` and `arguments` from params
@@ -74,6 +78,7 @@ The dispatcher uses `ObjSimpleJSONSerializer` to:
 ### Response Construction
 
 Responses are built by:
+
 1. Invoking the tool handler with arguments
 2. Getting `McpSchema.CallToolResult` from handler
 3. Converting to JSON structure with `result.content` array
@@ -83,6 +88,7 @@ Responses are built by:
 ### Error Handling
 
 Standard JSON-RPC 2.0 error codes:
+
 - `-32700`: Parse error (invalid JSON)
 - `-32600`: Invalid Request
 - `-32601`: Method not found (tool not registered)
@@ -108,11 +114,13 @@ All MCP tool tests now pass:
 ## Available MCP Tools
 
 ### 1. evaluate_code
-**Description**: Evaluate Metatron code and return the result
-**Parameters**:
+
+**Description**: Evaluate Metatron code and return the result **Parameters**:
+
 - `code` (string, required): The Metatron code to execute
 
 **Example**:
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -128,10 +136,11 @@ All MCP tool tests now pass:
 ```
 
 ### 2. get_system_info
-**Description**: Get information about the Metatron system
-**Parameters**: None
+
+**Description**: Get information about the Metatron system **Parameters**: None
 
 **Example**:
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -145,11 +154,13 @@ All MCP tool tests now pass:
 ```
 
 ### 3. list_instructions
-**Description**: List available Metatron instruction types
-**Parameters**:
+
+**Description**: List available Metatron instruction types **Parameters**:
+
 - `filter` (string, optional): Filter to search for specific instructions
 
 **Example**:
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -167,6 +178,7 @@ All MCP tool tests now pass:
 ## Connection Information
 
 ### WebSocket Endpoint
+
 The MCP server runs on the same WebSocket endpoint as the native Metatron protocol:
 
 ```
@@ -174,18 +186,23 @@ ws://localhost:<port>
 ```
 
 The port is dynamically assigned when MServer starts. Check the logs for:
+
 ```
 [INFO] [/sys/router/server] starting mtrOn node ws://localhost:<port>
 ```
 
 ### Protocol Detection
+
 The server automatically detects which protocol to use:
+
 - **MCP**: Messages containing `"jsonrpc": "2.0"`
 - **Native**: Binary Obj serialization messages
 
 ### MCP Handshake
+
 1. Connect to WebSocket
 2. Send `initialize` request:
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -201,6 +218,7 @@ The server automatically detects which protocol to use:
   }
 }
 ```
+
 3. Receive `initialize` response with server capabilities
 4. Call tools using `tools/call` method
 
@@ -209,6 +227,7 @@ The server automatically detects which protocol to use:
 To add a new MCP tool:
 
 1. **Register with dispatcher** in `MetatronMcpServer.registerToolsWithDispatcher()`:
+
 ```java
 toolDispatcher.registerTool(
     McpSchema.Tool.builder()
@@ -231,6 +250,7 @@ toolDispatcher.registerTool(
 ```
 
 2. **Register with SDK** (for `tools/list` support) in `MetatronMcpServer.buildMcpServer()`:
+
 ```java
 .tools(McpServerFeatures.AsyncToolSpecification.builder()
     .tool(McpSchema.Tool.builder()
@@ -248,6 +268,7 @@ toolDispatcher.registerTool(
 ```
 
 3. **Create JSON schema** for input validation:
+
 ```java
 private String createMyToolSchemaJson() {
     return """
@@ -278,6 +299,7 @@ private String createMyToolSchemaJson() {
 ## Future Improvements
 
 When MCP Java SDK is fixed (version 1.1.1+):
+
 1. Remove custom dispatcher
 2. Use SDK's built-in tool invocation
 3. Keep the dual-registration pattern for backward compatibility
@@ -289,8 +311,8 @@ When MCP Java SDK is fixed (version 1.1.1+):
 - **MCP Java SDK**: https://github.com/modelcontextprotocol/java-sdk
 - **SDK Bug Report**: GitHub Issue #509 (StdioServerTransport tool handler bug)
 - **Metatron JSON Serializers**:
-  - `ObjSimpleJSONSerializer.java`
-  - `ObjJSONSerializer.java`
+    - `ObjSimpleJSONSerializer.java`
+    - `ObjJSONSerializer.java`
 
 ## Log Evidence of Success
 

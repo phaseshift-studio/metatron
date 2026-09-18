@@ -4,6 +4,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -17,15 +18,12 @@ import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_LOOP_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_FEATURE_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_SERVICE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
 
 /**
  * Enables an agent to self-direct a multi-pass reasoning loop.
@@ -54,27 +52,29 @@ public class LoopFeature extends AbstractFeature {
     static final String WATERMARK_CODEC = "mtron";
 
     protected static final
-    String LOOP_FEATURE_INSTRUCTIONS = """
-                                       You can operate in a multi-pass reasoning loop.
-                                       When a task requires multiple rounds of tool use, verification,
-                                       or information gathering, append the `<<mtron:loop>>` watermark
-                                       to your response. For example:
-                                       
-                                           <<mtron:loop>>
-                                               [prompt=>"instructions for your next pass",
-                                                label=>"research",
-                                                delay=>second::10.0]
-                                           <</mtron:loop>>
-                                       
-                                       The `prompt` becomes your next user message — be precise.
-                                       The `label` and `delay` are optional.
-                                       `delay` accepts any time::T (millis, second, minute, hour).
-                                       The delay between iterations can be used for polling or rate-limited workflows.
-                                       
-                                       When the task is complete, respond normally without the <<mtron:loop>> watermark.
-                                       
-                                       You are constrained to %%%1 max loops and %%%2 maximum time.
-                                       """;
+    String LOOP_FEATURE_INSTRUCTIONS =
+            """
+            ---[loop_feature]---
+            you can operate in a multi-pass reasoning loop.
+            When a task requires multiple rounds of tool use, verification,
+            or information gathering, append the `<<mtron:loop>>` watermark
+            to your response. For example:
+            
+                <<mtron:loop>>
+                    [prompt=>"instructions for your next pass",
+                     label=>"research",
+                     delay=>second::10.0]
+                <</mtron:loop>>
+            
+            the `prompt` becomes your next user message — be precise.
+            The `label` and `delay` are optional.
+            `delay` accepts any time::T (millis, second, minute, hour).
+            The delay between iterations can be used for polling or rate-limited workflows.
+            
+            when the task is complete, respond normally without the <<mtron:loop>> watermark.
+            
+            you are constrained to %%%1 max loops and %%%2 maximum time.
+            """;
 
     final int maxLoops;
     final long maxTimeMillis;

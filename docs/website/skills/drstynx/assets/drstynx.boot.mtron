@@ -166,7 +166,7 @@ vecspace::[pattern     => embed:#,
  chat_result => inst?lst[real]<=#{?}(doc=>#::T){ *dr/feature/+.filter(tid().has(embed)).>>model.embed(*doc) }
  [------------------------------------^--]                                  
                           ]]]@/sys/space/vec/embed;
-grphspace::[pattern   => h:#,
+[==grphspace::[pattern   => h:#,
              host     => !*<boot/args/external/knowgraph>,
              q        => [incrq::[=>],subq::[=>]],
              schema   => noobj,
@@ -176,15 +176,15 @@ grphspace::[pattern   => h:#,
                <serializer.config.ioRegistries>           => [<org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry>],
                <gremlin.remote.remoteConnectionClass>     => <org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection>,
                <gremlin.remote.remoteTraversalSourceName> => g],
-             route    => [h: => <>]]@</sys/space/grph/kg>;
+             route    => [h: => <>]]@</sys/space/grph/kg>;==]
 
- grphspace::[pattern  => g:#,
+[==grphspace::[pattern  => g:#,
              q        => [incrq::[=>],subq::[=>]],
              schema   => noobj,
              config   => [
                dataset         => <org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN>,
                <gremlin.graph> => <org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph>],
-             route    => [g:   => <>]]@</sys/space/grph/local>;
+             route    => [g:   => <>]]@</sys/space/grph/local>;==]
         [======================]
         [========= IDE ========]
         [======================]     
@@ -268,12 +268,12 @@ scratch
   host     => <https://api.deepseek.com>,
   api_key  => !*</sys/env/DEEPSEEK_API_KEY>,
   llm      => <deepseek-v4-pro> 
-]@/usr/dr/model;==]
+]@/usr/dr/model;
 human -> model::[llm=>'human:latest'];
 model::[provider     => ollama,
         protocol     => ollama,
         host         => <http://ginger.local:11434>,
-        llm          => <qwen3.8:27b>]@/usr/dr/model;
+        llm          => <mtron-qwen3.8-27b:latest>]@/usr/dr/model;==]
 /usr/dr/agent -> |!*dr;
 [-- tag::asciidoc_tag[] --]
 agent::[

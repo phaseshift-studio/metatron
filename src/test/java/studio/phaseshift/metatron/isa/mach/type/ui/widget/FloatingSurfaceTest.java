@@ -325,12 +325,22 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
 
     @BeforeEach
     public void setUp() throws IOException {
-        terminal = TerminalBuilder.builder().dumb(true).build();
+        // Capture the terminal's output instead of letting a fire-and-forget
+        // render leak the widget's border glyphs into the test console — the
+        // setUp surface is used for API/nudge tests that never read it back.
+        terminal = TerminalBuilder.builder().dumb(true)
+                .streams(new java.io.ByteArrayInputStream(new byte[0]), new java.io.ByteArrayOutputStream())
+                .build();
         surface = new FloatingSurface(terminal);
     }
 
     @AfterEach
     public void tearDown() throws IOException {
+        // Stop the render thread before the terminal closes — a queued pass that
+        // lands after close writes into a dead stream (and logs about it).
+        if (surface != null) {
+            surface.shutdown();
+        }
         if (terminal != null) {
             terminal.close();
         }
@@ -392,6 +402,45 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
     public void shouldRenderEmptySurfaceWithoutError() {
         // render() on an empty surface should be a no-op
         assertDoesNotThrow(() -> surface.render());
+    }
+
+    @Test
+    public void shouldStopTheRenderThreadQuietlyWhenTheTerminalCloses() throws Exception {
+        final java.io.ByteArrayOutputStream err = new java.io.ByteArrayOutputStream();
+        final java.io.PrintStream originalErr = System.err;
+        System.setErr(new java.io.PrintStream(err));
+        try {
+            final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            final Terminal term = TerminalBuilder.builder().dumb(true)
+                    .size(new org.jline.terminal.Size(40, 120))
+                    .streams(new java.io.ByteArrayInputStream(new byte[0]), out).build();
+            final FloatingSurface surface_ = new FloatingSurface(term);
+            surface_.add(new AccordionWidget("quick", "one"), FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+            // close first: a fire-and-forget pass queued after the close lands on a
+            // dead stream — the daemon must stop quietly, not report a fault
+            term.close();
+            surface_.render();
+            Thread.sleep(300);
+            assertFalse(err.toString(java.nio.charset.StandardCharsets.UTF_8).contains("task threw"),
+                    "a closed terminal is teardown, not a fault: " + err.toString(java.nio.charset.StandardCharsets.UTF_8));
+        } finally {
+            System.setErr(originalErr);
+        }
+    }
+
+    @Test
+    public void shouldPreserveAnEscapedFenceInTheBody() throws Exception {
+        final CapturingSurface capturing = new CapturingSurface();
+        final AccordionWidget widget = new AccordionWidget("notes", "\\```java\nint x = 42;\n\\```");
+        widget.expand();
+        capturing.surface.add(widget, FloatingSurface.Anchor.TOP_LEFT, 40, 0, 0);
+        capturing.surface.renderNow();
+        final String pass = capturing.pass();
+        // the escaped fence stays literal text — its markers are visible, not consumed
+        // by a second Graphitty pass re-reading them as a block
+        assertTrue(pass.contains("```java"), "the escaped open fence stays literal: " + printable(pass));
+        assertTrue(pass.contains("int x = 42;"), "the code line is still plain text: " + printable(pass));
+        capturing.close();
     }
 
     @Test

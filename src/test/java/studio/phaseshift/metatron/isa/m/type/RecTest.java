@@ -367,6 +367,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
         AbstractMetatronTest.checkEquality(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), s4, true);
     }
 
+    @Training.SkipTraining(reason = "too complicated to express easily")
     @ParameterizedTest
     @CsvSource(value = {
             // MUTABLE set: mutate original in-place
@@ -385,6 +386,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
         assertEquals(jnt(expectedVal), original.at(uri(key)), "MUTABLE should mutate original");
     }
 
+    @Training.SkipTraining(reason = "too complicated to express easily")
     @ParameterizedTest
     @CsvSource(value = {
             // IMMUTABLE delete: return new rec, original untouched
@@ -398,11 +400,14 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
         assertNotSame(original, clone, "IMMUTABLE delete should return new reference");
         assertEquals(expectedOrigCount, original.count());
         assertEquals(expectedCloneCount, clone.count());
-        assertTrue(original.at(uri(key)).equals(original.at(uri(key))), "original should still have key");
+        assertTrue(original.has(uri(key)), "original should still have key");
         assertTrue(clone.at(uri(key)).isNoObj(), "clone should not have deleted key");
+        assertNotEquals(original.at(key), (Obj) clone.at(key), "original and clone have different keys");
+        assertNotEquals(original, clone, "original and clone have different keys");
     }
 
     @ParameterizedTest
+    @Training(instruction = "when {{{key}}} is removed from {{{recStr}}, what is the result?", output = "{{{expectedCount}}}")
     @CsvSource(value = {
             // MUTABLE delete: remove from original in-place
             "[a=>10,b=>20,c=>30]  % b   % 2",     // delete middle
@@ -419,26 +424,45 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     }
 
     @ParameterizedTest
+    @Training(instruction = "does the mtron expression {{{code}}} yield a result?", output = "{{{matches}}}")
     @CsvSource(value = {
-            "[a=>1,b=>2].where([a=>?>0])                              % true",
-            "[a=>1,b=>2].where([a=>?>1])                              % false",
-            "[a=>1,b=>2].where([a=>?>0,b=>?>1])                       % true",
-            "[a=>1,b=>2].where([a=>?>0]).where([b=>?>2])              % false",
-            "[a=>1,b=>2].where([a=>?>0,b=>?>2])                       % false",
-            "[a=>1,b=>2].where([a=>?>0,b=>?>0])                       % true",
-            "[a=>1,b=>2].where([a=>?>0,b=>?>0,c=>?>0])                % false",
-            "[=>].where([a=>?>0])                                     % false",
+            "[a=>1,b=>2].isa([a=>?>0])                              % true",
+            "[a=>1,b=>2].isa([a=>?>1])                              % false",
+            "[a=>1,b=>2].isa([a=>?>0,b=>?>1])                       % true",
+            "[a=>1,b=>2].isa([a=>?>0]).isa([b=>?>2])                % false",
+            "[a=>1,b=>2].isa([a=>?>0,b=>?>2])                       % false",
+            "[a=>1,b=>2].isa([a=>?>0,b=>?>0])                       % true",
+            "[a=>1,b=>2].isa([a=>?>0,b=>?>0,c=>?>0])                % false",
+            "[=>].isa([a=>?>0])                                     % false",
             /// ///////////////////////////////////////////////////////
-            "[a=>1,b=>2].where([a=>?>0])                            % true",
-            "[a=>1,b=>2].where([a=>?>1])                            % false",
-            "[a=>1,b=>2].where([a=>?>0,b=>?>1])                     % true",
-            "[a=>1,b=>2].where([a=>?>0,b=>?>2])                     % false",
-            "[a=>1,b=>2].where([a=>?>0,b=>?>0])                     % true",
-            "[a=>1,b=>2].where([a=>?>0,b=>?>0,c=>?>0])              % false",
-            "[a=>[b=>1,c=>2]].where([a=>isa(rec::T)])               % true",
-            "[a=>[b=>1,c=>2]].where([a=>isa(lst::T)])               % false",
+            "[a=>1,b=>2].isa([a=>?>0])                            % true",
+            "[a=>1,b=>2].isa([a=>?>1])                            % false",
+            "[a=>1,b=>2].isa([a=>?>0,b=>?>1])                     % true",
+            "[a=>1,b=>2].isa([a=>?>0,b=>?>2])                     % false",
+            "[a=>1,b=>2].isa([a=>?>0,b=>?>0])                     % true",
+            "[a=>1,b=>2].isa([a=>?>0,b=>?>0,c=>?>0])              % false",
+            "[a=>[b=>1,c=>2]].isa([a=>isa(rec::T)])               % true",
+            "[a=>[b=>1,c=>2]].isa([a=>isa(lst::T)])               % false",
+            ////////////////////////////////////////////////////////////
+            "[a=>1,b=>2]?[a=>?>0]                                 % true",
+            "[a=>1,b=>2]?[a=>?>1]                                 % false",
+            "[a=>1,b=>2]?[a=>?>0,b=>?>1]                          % true",
+            "[a=>1,b=>2]?[a=>?>0]?[b=>?>2]                        % false",
+            "[a=>1,b=>2]?[a=>?>0,b=>?>2]                          % false",
+            "[a=>1,b=>2]?[a=>?>0,b=>?>0]                          % true",
+            "[a=>1,b=>2]?[a=>?>0,b=>?>0,c=>?>0]                   % false",
+            "[=>]?[a=>?>0]                                        % false",
+            /// ///////////////////////////////////////////////////////
+            "[a=>1,b=>2]?[a=>?>0]                            % true",
+            "[a=>1,b=>2]?[a=>?>1]                            % false",
+            "[a=>1,b=>2]?[a=>?>0,b=>?>1]                     % true",
+            "[a=>1,b=>2]?[a=>?>0,b=>?>2]                     % false",
+            "[a=>1,b=>2]?[a=>?>0,b=>?>0]                     % true",
+            "[a=>1,b=>2]?[a=>?>0,b=>?>0,c=>?>0]              % false",
+            "[a=>[b=>1,c=>2]]?[a=>rec::T]                    % true",
+            "[a=>[b=>1,c=>2]]?[a=>lst::T]                    % false",
     }, delimiter = '%', quoteCharacter = '~')
-    public void testHas(final String code, final boolean matches) {
+    public void testIsA(final String code, final boolean matches) {
         final Obj codeObj = ObjmtronSerializer.parse(code);
         LOG.debug("testing has %s [expected:%s]", codeObj, matches);
         if (matches)
@@ -448,6 +472,8 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     }
 
     @ParameterizedTest
+    @Training(instruction = "does {{{a}}} match {{{b}}}?", output = "{{{matches}}}")
+    @Training(instruction = "what is the result of {{{a}}}.is({{{b}}})?", output = "{{{matches}}}")
     @CsvSource(value = {
             "a                                                  % a                       % true",
             "1                                                  % 1.0                     % false",
@@ -527,6 +553,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     }
 
     @ParameterizedTest
+    @Training(instruction = "given {{{@TestData}}}, what is the result of the mtron expression {{{code}}}?", output = "{{{expected}}}")
     @TestData(value = {
             "x -> [address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"]",
             "y -> [address/home/city=>\"santa fe\",address/work/city=>\"santa fe\"]"})
@@ -558,6 +585,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     }
 
     @ParameterizedTest
+    @Training(instruction = "given {{{@TestData}}}, what is the result of the mtron expression {{{code}}}?", output = "{{{expected}}}")
     @TestData(value = {
             "x -> [a => [b => {!*y,!*z}]]",
             "y -> [c => [d => [1,2,3]]]",
@@ -593,6 +621,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     }
 
     @ParameterizedTest
+    @Training(instruction = "does {{{record}}} match {{{type}}}?", output = "{{{matches}}}")
     @CsvSource(value = {
             "[a=>1,b=>2,c=>3]                            % rec::T                       % true",
             //"[a=>1]                                      % rec[uri=>int]::T             % true",
@@ -612,6 +641,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
 
     @ParameterizedTest
     @TestData(value = {"xyz -> [x=>[y=>1,z=>2]]@xyz"})
+    @Training(instruction = "given {{{@TestData}}}, what is the result of {{{original}}}>>={{{update}}}?", output = "{{{expected}}}")
     @CsvSource(value = {
             "[a=>1,b=>2]                            % [a=>3]                %  [a=>3,b=>2]",
             "[a=>1,b=>2]                            % [a=>+3]               %  [a=>4,b=>2]",
@@ -648,7 +678,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
 
     // ── + (PLUS) ── structural merge, never computes ──
 
-    @ParameterizedTest(name = "[{index}] + : {0}  =>  {1}")
+    @ParameterizedTest
     @CsvSource(value = {
             // overlap: same-key same-type → Objs
             "[a=>1] + [a=>2]                                   % [a=>{1,2}]",
@@ -697,7 +727,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     // drops LHS-only keys, drops RHS-only keys, returns noobj when nothing matches.
     // RHS values that are instructions compute against the LHS value.
 
-    @ParameterizedTest(name = "[{index}] == : {0}  =>  {1}")
+    @ParameterizedTest
     @CsvSource(value = {
             // literal match → value replaced with RHS value
             "[a=>1] == [a=>1]                                  % [a=>1]",
@@ -783,7 +813,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
 
     // ── >- (MERGE) ── coalesces Objs into a poly, returns Objs if not coalescable
 
-    @ParameterizedTest(name = "[{index}] >- : {0}  =>  {1}")
+    @ParameterizedTest
     @CsvSource(value = {
             // merge coalesces objs — the result is an Objs, not an Lst
             "{1,2} >-                                         % {1,2}",
@@ -799,7 +829,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
 
     // ── -< (SPLIT) ──
 
-    @ParameterizedTest(name = "[{index}] -< : {0}  =>  {1}")
+    @ParameterizedTest
     @CsvSource(value = {
             // split applies branches independently
             "[a=>1,b=>2]-<[>>a,>>b]                            % [1,2]",
@@ -830,7 +860,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
 
     // ── =?= (WHERE) ──
 
-    @ParameterizedTest(name = "[{index}] =?= : {0}  =>  {1}")
+    @ParameterizedTest
     @CsvSource(value = {
             // filter: keeps matching
             "[a=>1,b=>2] =?= [a=>1]                             % [a=>1,b=>2]",
@@ -848,7 +878,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
 
     // ── Combo operators ──
 
-    @ParameterizedTest(name = "[{index}] combo : {0}  =>  {1}")
+    @ParameterizedTest
     @CsvSource(value = {
             // =?= filter then >>= update
             "[a=>1,b=>2] =?= [a=>1] >>= [a=>+10]               % [a=>11,b=>2]",
@@ -869,6 +899,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     // reads the whole rec back and compares. Deeper nesting + mixed data types.
 
     @ParameterizedTest
+    @Training(instruction = "when {{{state}}} has been defined and then {{{update}}} is called, what is the result of the {{{fetch}}} dereference?", output = "{{{expected}}}")
     @CsvSource(value = {
             // state                     % update           % fetch % expected
             "[l=>[1,2,3]]@x             % @x/l >>= [9,8]   % *x    % [l=>[9,8]]@x",
@@ -885,6 +916,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     }
 
     @ParameterizedTest
+    @Training(instruction = "when {{{state}}} has been defined and then {{{update}}} is called, what is the result of the {{{fetch}}} dereference?", output = "{{{expected}}}")
     @CsvSource(value = {
             // state                       % update                 % fetch % expected
             "[l=>[1,[1,2,3],3]]@x          % @x/l/1 >>= +[11,22,33] % *x    % [l=>[1,[1,2,3,11,22,33],3]]@x",
@@ -899,6 +931,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     }
 
     @ParameterizedTest
+    @Training(instruction = "when {{{state}}} has been defined and then {{{update}}} is called, what is the result of the {{{fetch}}} dereference?", output = "{{{expected}}}")
     @CsvSource(value = {
             // state                       % update                % fetch % expected
             "[m=>[[1,2,3]]]@y              % @y/m/0/1 >>= +9       % *y    % [m=>[[1,11,3]]]@y",
@@ -914,6 +947,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     }
 
     @ParameterizedTest
+    @Training(instruction = "when {{{state}}} has been defined and then {{{update}}} is called, what is the result of the {{{fetch}}} dereference?", output = "{{{expected}}}")
     @CsvSource(value = {
             // state                       % update                    % fetch % expected
             "[m=>[[1,2,3]]]@z              % @z/m >>= [0=>[9,8]]       % *z    % [m=>[[9,8]]]@z",
@@ -929,6 +963,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     }
 
     @ParameterizedTest
+    @Training(instruction = "when {{{state}}} has been defined, what is the result of {{{update}}}?", output = "{{{expected}}}")
     @CsvSource(value = {
             // state                       % update                  % expected
             "[l=>[1,[1,2,3],3]]@r          % @r/l/1 >>= +[11,22,33]  % [1,2,3,11,22,33]",

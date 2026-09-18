@@ -2,7 +2,8 @@
 
 ## Problem Statement
 
-The issue `0 + a != a` for relations stems from a fundamental type system mismatch between the Ring algebraic structure and how Relations work in Metatron.
+The issue `0 + a != a` for relations stems from a fundamental type system mismatch between the Ring algebraic structure
+and how Relations work in Metatron.
 
 ## Root Cause
 
@@ -19,23 +20,24 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Ring.O<Rel> {
 ```
 
 **The Problem:**
+
 - `Ring.O<Rel>` requires `plus(Rel) : Rel` (returns a Rel)
 - But `objs(this, rhs)` returns:
-  - A single `Obj` if the collection has 1 element (see MObjs.java:150)
-  - An `Objs` collection if there are 2+ elements
+    - A single `Obj` if the collection has 1 element (see MObjs.java:150)
+    - An `Objs` collection if there are 2+ elements
 - `Objs` is NOT a `Rel`, so casting fails when adding two different relations
 
 ### Why This Happens
 
 1. **Identity case works**: `zero().plus(a)`
-   - `zero()` is `(noobj=>noobj)`
-   - Early return: `if (this.isZero()) return rhs;` ✅
-   - Returns the original `Rel`, no Objs created
+    - `zero()` is `(noobj=>noobj)`
+    - Early return: `if (this.isZero()) return rhs;` ✅
+    - Returns the original `Rel`, no Objs created
 
 2. **Non-identity case fails**: `a.plus(b)` where `a != b`
-   - Creates `objs(a, b)` which is an `Objs` collection
-   - Tries to cast `Objs` to `Rel` ❌
-   - `ClassCastException: MObjs cannot be cast to Rel`
+    - Creates `objs(a, b)` which is an `Objs` collection
+    - Tries to cast `Objs` to `Rel` ❌
+    - `ClassCastException: MObjs cannot be cast to Rel`
 
 ## Current Implementation
 
@@ -55,10 +57,12 @@ default Rel plus(final Rel rhs) {
 ## Test Results
 
 ✅ **testPlusMonoid** - PASSES (3/3 tests)
+
 - Tests only the identity cases: `0 + 0`, `0 + a`, `a + 0`
 - All handled by early returns, no Objs created
 
 ❌ **testPlusGroup** - FAILS (0/8 tests, 8 errors)
+
 - Tests like `a + b`, `a + (-a)`, etc.
 - All fail with `ClassCastException` when creating Objs
 
@@ -67,16 +71,17 @@ default Rel plus(final Rel rhs) {
 Relations don't form a traditional **Ring** because:
 
 1. **Multiplication (composition)** is well-defined: `Rel × Rel → Rel`
-   - `(a=>b) × (b=>c) = (a=>c)` ✅
+    - `(a=>b) × (b=>c) = (a=>c)` ✅
 
 2. **Addition** is NOT well-defined in the Ring sense: `Rel + Rel → Objs` (not Rel!)
-   - `(a=>b) + (c=>d) = {(a=>b), (c=>d)}` which is an `Objs`, not a `Rel`
+    - `(a=>b) + (c=>d) = {(a=>b), (c=>d)}` which is an `Objs`, not a `Rel`
 
 This is more like a **Semiring** or **Stream Ring** where addition creates collections.
 
 ## Possible Solutions
 
 ### Option 1: Change Return Type (Breaking Change)
+
 Change `plus()` to return `Obj` instead of `Rel`:
 
 ```java
@@ -93,6 +98,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Ring.O<Rel> {
 **Problem**: This breaks the `Ring.O<Rel>` interface contract which requires `plus(Rel) : Rel`.
 
 ### Option 2: Don't Implement Ring (Current Recommendation)
+
 Relations should implement `MultMonoid` and `PlusMonoid` separately, but NOT `Ring`:
 
 ```java
@@ -106,6 +112,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>,
 **Problem**: Still has the same type issue with `PlusMonoid.O<Rel>` requiring `plus(Rel) : Rel`.
 
 ### Option 3: Make Plus Delegate to Instruction System (Original Approach)
+
 Keep `plus()` as a method that delegates to the instruction system, which handles the type conversion:
 
 ```java
@@ -141,10 +148,13 @@ instC(PLUS_INST_TID.dom(REL_TID).rng(REL_TID.maybeSome()), lst(T(REL_TID.maybeSo
 })
 ```
 
-**Problem**: The instruction system returns `Obj`, which then gets cast to `Rel` in the `plus()` method, causing the same ClassCastException.
+**Problem**: The instruction system returns `Obj`, which then gets cast to `Rel` in the `plus()` method, causing the
+same ClassCastException.
 
 ### Option 4: Special Rel+Rel Semantics (Recommended)
-Make `plus()` for relations have special semantics where adding two relations creates a **coefficient-weighted relation**:
+
+Make `plus()` for relations have special semantics where adding two relations creates a **coefficient-weighted
+relation**:
 
 ```java
 @Override
@@ -169,6 +179,7 @@ default Rel plus(final Rel rhs) {
 ```
 
 This makes Relations form a proper Ring where:
+
 - `(a=>b) + (a=>b) = {2}(a=>b)` (coefficient addition)
 - `(a=>b) + (c=>d)` is undefined (throws exception)
 
@@ -178,13 +189,15 @@ This makes Relations form a proper Ring where:
 
 1. Relations form a **Multiplicative Monoid** (composition works perfectly)
 2. Relations have **limited additive structure**:
-   - Identity: `0 + a = a` ✅
-   - Same relation: `a + a = {2}a` ✅
-   - Different relations: undefined (throw exception)
+    - Identity: `0 + a = a` ✅
+    - Same relation: `a + a = {2}a` ✅
+    - Different relations: undefined (throw exception)
 
-This makes the type system consistent while acknowledging that Relations don't form a full Ring in the traditional sense.
+This makes the type system consistent while acknowledging that Relations don't form a full Ring in the traditional
+sense.
 
-The **Objs collection** is what provides the full additive structure for combining different relations, and that's accessed through the instruction system or direct `objs()` calls.
+The **Objs collection** is what provides the full additive structure for combining different relations, and that's
+accessed through the instruction system or direct `objs()` calls.
 
 ## Status
 

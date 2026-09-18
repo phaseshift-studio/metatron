@@ -898,6 +898,7 @@ public class mInstSet extends AbstractInstSet {
                 Sugar.prefix("@", List.of(AT_INST_TID), 1),
                 Sugar.prefix("|", List.of(BLOCK_INST_TID), 1),
                 Sugar.wrap("_/", "\\_", List.of(WITHIN_INST_TID), 1),
+                Sugar.wrap("=", "=>", List.of(AS_INST_TID), 1),
                 Sugar.prefix("_", List.of(ID_INST_TID), 0),
                 Sugar.prefix("* ", List.of(MULT_INST_TID), 1),
                 Sugar.prefix("*", List.of(FROM_INST_TID), 1),

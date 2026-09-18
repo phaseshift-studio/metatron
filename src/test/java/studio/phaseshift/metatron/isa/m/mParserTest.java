@@ -87,6 +87,14 @@ public class mParserTest extends AbstractMetatronTest {
     }
 
     @Test
+    public void testTParse() {
+        assertEquals(uri("T"), ObjmtronSerializer.parse("T"));
+        assertEquals(uri("T"), ObjmtronSerializer.parse("<T>"));
+        assertEquals(uri("TEST"), ObjmtronSerializer.parse("TEST"));
+        assertEquals(uri("TEST"), ObjmtronSerializer.parse("<TEST>"));
+    }
+
+    @Test
     public void testRealParse() {
         assertEquals(real(1234.23), ObjmtronSerializer.parse("1234.23"));
     }

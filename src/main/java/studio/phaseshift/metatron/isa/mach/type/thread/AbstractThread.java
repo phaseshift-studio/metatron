@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.type.thread;
 
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -263,7 +264,7 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
         boolean running = this.state().equals(uri(RUN));
         this.stop();
         if (!running)
-            this.logger().info("closing at %s", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+            this.logger().info("closing at %s", mathInstSet.nowDatetime());
     }
 
     public void stop() {

@@ -21,6 +21,10 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.ChatService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.ConceptService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -53,10 +57,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread.virtual;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.ConceptService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.ChatService;
 
 /**
  * The shared concept-feature substrate: distills text into concept uris, persists them
@@ -85,16 +85,17 @@ public abstract class AbstractConceptFeature extends AbstractFeature implements 
     protected static final TextUtil.StopWordSet GLOBAL_STOP_WORD_SET = TextUtil.StopWordSet.ALL;
     protected static final Pattern CONCEPT_PATTERN = Pattern.compile("<<concept:([^>]+)>>");
 
-private static final String CONCEPT_FEATURE_SYSTEM_TEMPLATE = """
-                                                                  ----
-                                                                  The following concepts have recently been extracted.
-                                                                  %s
-                                                                  To review messages associated with concepts, use tool:
-                                                                    %s(c1,c2,...)
-                                                                  To see related adjacent concepts, use tool:
-                                                                    %s(c1,c2,...)
-                                                                  Both tools can take 1 or more concept arguments.
-                                                                  """;
+    private static final String CONCEPT_FEATURE_SYSTEM_TEMPLATE =
+            """
+            ----[concept_feature]----
+            The following concepts have recently been extracted.
+            %s
+            To review messages associated with concepts, use tool:
+              %s(c1,c2,...)
+            To see related adjacent concepts, use tool:
+              %s(c1,c2,...)
+            Both tools can take 1 or more concept arguments.
+            """;
 
 
     private final Set<String> conceptRecommendations = new HashSet<>();

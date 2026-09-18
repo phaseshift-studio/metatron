@@ -170,10 +170,12 @@ public class FloatingSurface {
     private int resizeMarkerRow = 0;
     private int resizeMarkerCol = 0;
 
-    /** The focus marker character, drawn in the focused widget's top-left cell. */
-    private static final String FOCUS_MARKER = "▶";
-    /** The resize marker, drawn in the focused widget's bottom-right cell. */
-    private static final String RESIZE_MARKER = "◢";
+    /** The focus marker character, drawn in the focused widget's top-left cell,
+     *  pre-rendered ({{y}}…{{X}}) so the composed buffer needs no second Graphitty pass. */
+    private static final String FOCUS_MARKER = Graphitty.string("{{y}}▶{{X}}");
+    /** The resize marker, drawn in the focused widget's bottom-right cell,
+     *  pre-rendered ({{y}}…{{X}}) so the composed buffer needs no second Graphitty pass. */
+    private static final String RESIZE_MARKER = Graphitty.string("{{y}}◢{{X}}");
 
     /** Lower bounds for {@link #nudge} — resize can never demolish a widget. */
     private static final int MIN_WIDTH = 10;
@@ -192,6 +194,14 @@ public class FloatingSurface {
                 } catch (final InterruptedException e) {
                     if (!running) break;
                 } catch (final Throwable t) {
+                    // A closed terminal is the normal teardown path — the terminal
+                    // went away while the daemon still had a queued write, and
+                    // nothing this thread writes will land anymore.  Stop quietly:
+                    // the message is noise, not a fault.
+                    if (isClosedTerminal(t)) {
+                        this.running = false;
+                        break;
+                    }
                     // Never let the render thread die — an uncaught exception
                     // would silently kill the daemon and stall every caller
                     // blocked in submitAndWait.
@@ -541,12 +551,14 @@ public class FloatingSurface {
 
         sb.append("\033[u"); // restore cursor
 
-        // Process {{X}} codes → ANSI, then write directly (bypass bridge)
-        final String processed = Graphitty.string(sb.toString());
+        // The buffer is already fully rendered: renderWidget resolved each widget's
+        // format() through Graphitty (line-preserving), and the markers above are
+        // pre-rendered.  A second Graphitty pass here would re-read the literal ```
+        // or {{…}} that escaped widget text produced as fresh markup and break it.
         if (RENDER_TRACE)
             System.err.println("[render] pass took " + (System.nanoTime() - __t0) / 1_000_000 + "ms");
         synchronized (this.terminal) {
-            this.terminal.writer().print(processed);
+            this.terminal.writer().print(sb.toString());
             this.terminal.writer().flush();
         }
     }
@@ -558,6 +570,20 @@ public class FloatingSurface {
     public void shutdown() {
         this.running = false;
         this.renderThread.interrupt();
+    }
+
+    /**
+     * True when {@code t} is (or wraps) the signal that the terminal is closed —
+     * the expected result of a test (or the console) closing the terminal while the
+     * render thread still has a queued write.  Nothing further can be written, so the
+     * thread should stop quietly rather than report it as a fault.
+     */
+    private static boolean isClosedTerminal(final Throwable t) {
+        for (Throwable c = t; c != null; c = c.getCause()) {
+            final String message = c.getMessage();
+            if (null != message && message.contains("has been closed")) return true;
+        }
+        return false;
     }
 
     /**
@@ -1159,7 +1185,12 @@ public class FloatingSurface {
                               final Slot slot, final int termWidth, final int termHeight,
                               final int scroll) {
         final long __f0 = RENDER_TRACE ? System.nanoTime() : 0;
-        final String formatted = widget.format();
+        // Resolve the widget's Graphitty text HERE — while the format() newlines are
+        // still real — rather than in the cursor-code buffer assembled below (lines
+        // joined by ANSI cursor codes), where a multi-line block (a ``` fence, a
+        // {{syntax:…}} block) would lose its newline context and swallow the inter-line
+        // codes.  Graphitty.string is line-preserving, so the line count is unchanged.
+        final String formatted = Graphitty.string(widget.format());
         final long __f1 = RENDER_TRACE ? System.nanoTime() : 0;
         final String[] content = formatted.split("\n", -1);
         if (RENDER_TRACE)
@@ -1322,7 +1353,7 @@ public class FloatingSurface {
             this.markerRow = slot.lastRow;
             this.markerCol = slot.lastCol;
             sb.append("\033[").append(slot.lastRow).append(";").append(slot.lastCol).append("H");
-            sb.append("{{y}}").append(FOCUS_MARKER).append("{{X}}");
+            sb.append(FOCUS_MARKER);
             // The resize handle rides in the box's bottom-right cell — the corner a
             // mouse reaches for to reshape it.  A box drawn one cell wide and one tall
             // would put it on top of the chevron, so that degenerate case gets no
@@ -1333,7 +1364,7 @@ public class FloatingSurface {
                 this.resizeMarkerRow = handleRow;
                 this.resizeMarkerCol = handleCol;
                 sb.append("\033[").append(handleRow).append(";").append(handleCol).append("H");
-                sb.append("{{y}}").append(RESIZE_MARKER).append("{{X}}");
+                sb.append(RESIZE_MARKER);
             }
         }
 

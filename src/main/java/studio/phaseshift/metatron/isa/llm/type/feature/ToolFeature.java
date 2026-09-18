@@ -8,6 +8,9 @@ import studio.phaseshift.metatron.isa.llm.mToolProvider;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.space.ToolPairGate;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.ToolService;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.llm.type.mcp.mcpClient;
 import studio.phaseshift.metatron.isa.m.type.Lst;
@@ -31,9 +34,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_CLIENT_TYPE;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.ToolService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 
 /**
  * The gatekeeper of the agent's tool channel.
@@ -137,9 +137,18 @@ public class ToolFeature extends AbstractFeature implements ToolService {
         }
         LOG.status(DEBUG, "registering %s tools", this.toolProvider.getTools().size());
         if (agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
-            agent.requireService(SystemService.class).addSystemMessage("""
-                                                          ----
-                                                          use list_tools() to see which tools you have access to.""");
+            agent.requireService(SystemService.class).addSystemMessage(
+                    """
+                    ---[tool_feature]---
+                    you can control the metatron using the mtron language by either
+                      1. calling an mtron eval tool
+                      2. generating executable mtron code in your thoughts and responses.
+                    any messages you produce containing templates of the form ${ code } will evaluate.
+                    e.g. the text
+                        the result you wanted is ${ 1.-<[+2,_]>-.sum() }
+                    is read by the user as
+                        the result you wanted is 4.
+                    """);
         }
         return noobj();
     }

@@ -131,7 +131,8 @@ public class Highlighter implements org.jline.reader.Highlighter {
      */
     private static boolean containsSyntaxTag(final String line) {
         return line.contains("{{" + Graphitty.SYNTAX_RULE_PREFIX)
-                || line.contains("{{/" + Graphitty.SYNTAX_RULE_PREFIX);
+                || line.contains("{{/" + Graphitty.SYNTAX_RULE_PREFIX)
+                || Graphitty.isFenceLine(line);
     }
 
     /**
@@ -387,13 +388,21 @@ public class Highlighter implements org.jline.reader.Highlighter {
                 final String serialized = this.serializer.write((Obj) object);
                 if (containsBoxDrawing(serialized))
                     return this.preserveBoxDrawing(serialized);
+                // Graphitty markup ({{…}} tags, ``` fences) resolves to ANSI in one pass
+                // and is returned verbatim — the AttributedString round-trip
+                // (highlight → toAnsi) treats the escapes as plain text and drops the
+                // color, which is why a ``` fence serialized as an Obj rendered uncolored.
+                if (null != this.graphitty
+                        && (this.GRAPHITTY_PATTERN.matcher(serialized).find() || Graphitty.hasFence(serialized)))
+                    return this.graphitty.writeToString(serialized);
                 final AttributedString styled = this.highlight(null, serialized);
                 return this.terminal != null ? styled.toAnsi(this.terminal) : styled.toAnsi();
             } else {
                 final String str = object.toString();
                 if (containsBoxDrawing(str))
                     return this.preserveBoxDrawing(str);
-                return null != this.graphitty && this.GRAPHITTY_PATTERN.matcher(str).find()
+                return null != this.graphitty
+                        && (this.GRAPHITTY_PATTERN.matcher(str).find() || Graphitty.hasFence(str))
                         ? this.graphitty.writeToString(str)
                         : this.highlight(null, str).toAnsi();
             }
@@ -411,7 +420,8 @@ public class Highlighter implements org.jline.reader.Highlighter {
      * Graphitty markup) rather than passing it through the ANSI converter.
      */
     private String preserveBoxDrawing(final String string) {
-        return null != this.graphitty && this.GRAPHITTY_PATTERN.matcher(string).find()
+        return null != this.graphitty
+                && (this.GRAPHITTY_PATTERN.matcher(string).find() || Graphitty.hasFence(string))
                 ? this.graphitty.writeToString(string)
                 : string;
     }
@@ -430,8 +440,11 @@ public class Highlighter implements org.jline.reader.Highlighter {
             return this.syntaxHighlighter.highlight(buffer);
         } else {
             final Matcher matcher = this.GRAPHITTY_PATTERN.matcher(buffer);
-            if (matcher.find()) {
-                return new AttributedString(this.graphitty.writeToString(buffer));
+            if (matcher.find() || Graphitty.hasFence(buffer)) {
+                // writeToString emits ANSI; parse it back into styles so the caller's
+                // toAnsi() re-emits the color — a plain AttributedString would treat
+                // the escapes as text and drop them.
+                return AttributedString.fromAnsi(this.graphitty.writeToString(buffer));
             } else {
                 return this.syntaxHighlighter.highlight(buffer);
             }

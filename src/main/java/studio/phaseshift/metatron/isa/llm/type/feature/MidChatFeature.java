@@ -97,22 +97,24 @@ public class MidChatFeature extends AbstractFeature {
     static final String WATERMARK_KEY = "midchat";
     static final String WATERMARK_CODEC = "txt";
 
-    private static final String MIDCHAT_INSTRUCTIONS = """
-                                                       While you are working — thinking, calling tools, iterating — you can say
-                                                       something to the user without ending your turn. Tag your thought text:
-                                                       
-                                                           <<txt:midchat>>
-                                                           still tracing the argument routing; two calls in and it looks like the optional dom slot
-                                                           <</txt:midchat>>
-                                                       
-                                                       The remark is relayed to the user as you produce it, and removed from what you
-                                                       emit. Use it for progress, for a question that blocks you, or for a result worth
-                                                       reporting before the turn ends.
-                                                       
-                                                       Anything the user sends back while you work arrives inside your next tool result
-                                                       under a pending_messages field. Treat those as speaking for the user, and treat
-                                                       them as taking priority over your current objective.
-                                                       """;
+    private static final String MIDCHAT_INSTRUCTIONS =
+            """
+            ---[midchat_feature]---
+            while you are working — thinking, calling tools, iterating — you can say
+            something to the user without ending your turn. Tag your thought text:
+            
+                <<txt:midchat>>
+                still tracing the argument routing; two calls in and it looks like the optional dom slot
+                <</txt:midchat>>
+            
+            the remark is relayed to the user as you produce it, and removed from what you
+            emit. Use it for progress, for a question that blocks you, or for a result worth
+            reporting before the turn ends.
+            
+            anything the user sends back while you work arrives inside your next tool result
+            under a pending_messages field. Treat those as speaking for the user, and treat
+            them as taking priority over your current objective.
+            """;
 
     /**
      * Thought text that may still become a watermark — the streaming carry buffer.

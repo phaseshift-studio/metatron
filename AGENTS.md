@@ -218,44 +218,57 @@ starting point for your own scenario (`--steps my.steps`).
 void testConstQ(String uri, String initial, String mutate, String desc) { ...}
 ```
 
-### `@Training` — Multi-Map CSV Mappings
+### `@Training` — Template-Based Training Data
 
-The `@Training` annotation enables a single `@CsvSource` row to produce multiple training data entries by mapping
-different column pairs as lhs→rhs (expression→result). This is used by `UnslothTrainingDatasetExtractor` to generate LLM
-fine-tuning data.
-
-**When to use:** a test method that evaluates the same expression under different mappings (e.g., parsed vs rendered,
-code vs value, mtron vs JSON).
+The `@Training` annotation turns a `@ParameterizedTest` + `@CsvSource` method into LLM fine-tuning data for
+`UnslothTrainingDatasetExtractor`. It is `@Repeatable`; each of `instruction`, `input`, and `output` is a template
+whose `{{{param}}}` holes are replaced by that column's row value. A hole substitutes only when its content is an
+exact match for a method parameter name (needs the `-parameters` compiler flag); anything else (e.g. an mtron
+`{{{expr}}}` template) is emitted verbatim.
 
 ```java
 @Training(
-        value = "Evaluate this mtron expression",      // description prefix
-        mapDesc = {"lhs evaluates to rhs", "mtron evaluates to JSON"}, // per-map descriptions
-        map1 = {0, 1},   // columns 0→lhs, 1→rhs  (first mapping)
-        map2 = {2, 3}    // columns 2→lhs, 3→rhs  (second mapping)
-)
+        instruction = "when the {{{rec}}} rec is rshifted by the {{{key}}} key, what is the result?",
+        input = "{{{rec}}}>>{{{key}}}",
+        output = "{{{value}}}")
+@ParameterizedTest
+@CsvSource(value = {
+        "[a=>b]   % c   % noobj",
+        "[a=>b]   % a   % b",
+}, delimiter = '%')
+void testKeyValue(String rec, String key, String value) { ... }
 ```
 
-Each CSV row with `delimiter='%'` produces one entry per active map (`map1`, `map2`, `map3`). A map is active when its
-first element is not `-1` (the default). With `map1={0,1}` and
-`map2={2,3}`, a row like `a%1%b%2%comment` generates:
+Each CSV row emits one `{instruction, input, output}` entry. Repeat the annotation to emit several entries per row.
+Methods with no `@Training` fall back to a two-column `expression → result` mapping (`?docq` operator context is
+woven into the instruction).
 
-```jsonld
-{
-  "instruction": "Evaluate this mtron expression: lhs evaluates to rhs",
-  "input": "a",
-  "output": "1"
-}
-{
-  "instruction": "Evaluate this mtron expression: mtron evaluates to JSON",
-  "input": "b",
-  "output": "2"
-}
+**`{{{@TestData}}}` accessor** — when the method carries `@TestData`, the hole `{{{@TestData}}}` is replaced by
+the annotation's `value()` strings joined with newlines, so an entry can cite its preloaded setup data:
+
+```java
+@Training(instruction = "given {{{@TestData}}}, what is the result of the mtron expression {{{code}}}?",
+          output = "{{{expected}}}")
+@TestData(value = {
+        "x -> [address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"]",
+        "y -> [address/home/city=>\"santa fe\",address/work/city=>\"santa fe\"]"})
+@CsvSource(value = {
+        "[a=>1,b=>2,c=>3].select([a=>_,b=>_])   % [a=>1,b=>2]",
+}, delimiter = '%')
+void testSelect(String code, String expected) { ... }
 ```
 
-Up to three maps (`map1`, `map2`, `map3`) are supported. See `UnslothTrainingDatasetExtractor`
-for the extraction logic and `.metatron/skills/mtron/references/unsloth-training-mtron.md`
-for the full training pipeline.
+Rendering throws `MTronException("attempting to access non-existent @TestData")` if the method has no `@TestData`.
+
+**`@Training.SkipTraining(reason)`** — nested annotation. When present on a method, the extractor emits no entries
+for it; use it for tests that don't map cleanly to `expression → result`:
+
+```java
+@Training.SkipTraining(reason = "too complicated to express easily")
+```
+
+See `UnslothTrainingDatasetExtractor` for the extraction logic and
+`.metatron/skills/mtron/references/unsloth-training-mtron.md` for the full training pipeline.
 
 - **Leverage static helpers** from `AbstractMetatronTest` for assertion logic:
     - `checkCodeParseApply(LOG, code, expected)` — parse + apply mtron, assert result

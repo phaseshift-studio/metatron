@@ -444,7 +444,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     public void write(final Object object) {
-        Graphitty.out(terminal.output(), object instanceof Obj ? this.serializer.write((Obj) object) : ((Highlighter) this.reader.getHighlighter()).write(object));
+        // The string is Graphitty markup (a prompt, a serialized result) — resolve it
+        // with Graphitty directly.  Routing it through the reader's highlighter first
+        // (which runs the mtron syntax with graphitty disabled) would interleave ANSI
+        // into a ``` fence or {{…}} and stop Graphitty from seeing it.
+        Graphitty.out(terminal.output(), object instanceof Obj ? this.serializer.write((Obj) object) : object.toString());
     }
 
     public static Terminal getTerminal() {

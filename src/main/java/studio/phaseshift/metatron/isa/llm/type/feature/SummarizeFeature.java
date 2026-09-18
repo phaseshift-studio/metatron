@@ -22,38 +22,38 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.ConceptService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
+import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.llm.type.mModel.model;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.ConceptService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
-import studio.phaseshift.metatron.isa.llm.type.mModel;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import static studio.phaseshift.metatron.isa.llm.type.mModel.model;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -99,32 +99,34 @@ public class SummarizeFeature extends AbstractFeature {
     static final String WATERMARK_KEY = "summarize";
     static final String WATERMARK_CODEC = "mtron";
 
-    private static final String SUMMARIZE_INSTRUCTIONS = """
-                                                         When a session becomes overly complex or you need to recall decisions, problems, and observations
-                                                         from your past, append a `<<mtron:summarize>>` watermark to your response — a deferred `summary()`
-                                                         call, where the watermark body is the same argument rec `summary()` takes:
-                                                         
-                                                             <<mtron:summarize>>
-                                                             [scope=>day::2.0, kind=>[problem, decision], concept=>["AgentExtractor"]]
-                                                             <</mtron:summarize>>
-                                                         
-                                                         The summarization runs in the background — acknowledge that recall is queued and respond normally.
-                                                         On the next chat, a structured briefing is injected into your system context:
-                                                         
-                                                             [claim=>[[text=>"a claim",location=>!*/usr/dr/claim/3],...],
-                                                              loose_end=>[[text=>"an open thread",location=>!*/usr/dr/loose_end/1],...]]
-                                                         
-                                                         The `location` fields are mtron deref pointers — follow them (e.g. `*<location>` or
-                                                         `*<location>/source`) to dig into the underlying records.
-                                                         
-                                                         Config (all optional):
-                                                           scope     — only summarize messages since this time (a time::T like hour::48.0 or day::2.0,
-                                                                       or an absolute datetime::T). Default: all messages.
-                                                           kind      — focus the follow-on briefing on claims of this kind (decision, problem,
-                                                                       solution, observation). Default: all kinds.
-                                                           concept   — focus the follow-on briefing on claims whose source messages touch this
-                                                                       concept. Default: no concept filter.
-                                                         """;
+    private static final String SUMMARIZE_INSTRUCTIONS =
+            """
+            ---[summarize_feature]---
+            when a session becomes overly complex or you need to recall decisions, problems, and observations
+            from your past, append a `<<mtron:summarize>>` watermark to your response — a deferred `summary()`
+            call, where the watermark body is the same argument rec `summary()` takes:
+            
+                <<mtron:summarize>>
+                [scope=>day::2.0, kind=>[problem, decision], concept=>["AgentExtractor"]]
+                <</mtron:summarize>>
+            
+            the summarization runs in the background — acknowledge that recall is queued and respond normally.
+            On the next chat, a structured briefing is injected into your system context:
+            
+                [claim=>[[text=>"a claim",location=>!*/usr/dr/claim/3],...],
+                 loose_end=>[[text=>"an open thread",location=>!*/usr/dr/loose_end/1],...]]
+            
+            the `location` fields are mtron deref pointers — follow them (e.g. `*<location>` or
+            `*<location>/source`) to dig into the underlying records.
+            
+            config (all optional):
+              scope     — only summarize messages since this time (a time::T like hour::48.0 or day::2.0,
+                          or an absolute datetime::T). Default: all messages.
+              kind      — focus the follow-on briefing on claims of this kind (decision, problem,
+                          solution, observation). Default: all kinds.
+              concept   — focus the follow-on briefing on claims whose source messages touch this
+                          concept. Default: no concept filter.
+            """;
 
     public void registerSkill(final Agent agent) {
         if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
@@ -183,10 +185,10 @@ public class SummarizeFeature extends AbstractFeature {
         final Obj looseEnds = Router.readFromSpace(outputBase.extend("loose_end").extend("+"));
         if (!looseEnds.isNoObj() && agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
             agent.requireService(SystemService.class).addSystemMessage("""
-                                                                                       An analysis of the last summarization identified the following loose ends:
-                                                                                       
-                                                                                       %s
-                                                                                       """.formatted(String.join("\n", looseEnds.stream().map(Str.Helper::cleanString).toList())));
+                                                                       An analysis of the last summarization identified the following loose ends:
+                                                                       
+                                                                       %s
+                                                                       """.formatted(String.join("\n", looseEnds.stream().map(Str.Helper::cleanString).toList())));
         }
         // gated recall briefing — once the queued summarization has completed,
         // the applied-constraints rec returned by summary() drives the briefing
@@ -293,7 +295,8 @@ public class SummarizeFeature extends AbstractFeature {
         final Lst source = claimRec.at(uri(SOURCE)).orElse(lst0());
         return source.elements().anyMatch(ref -> ref.isInst() && conceptMessages.contains(ref.asInst().arg(0).uriValue()));
     }
-/**
+
+    /**
      * Distill prompt for {@code summarize()}: asks the model to emit one or more
      * {@code <<json:claim>>} watermarks, each containing a single claim rec shaped like
      * {@code [text=>'...', kind=>decision|problem|solution|observation]}.  The watermarks
@@ -304,37 +307,37 @@ public class SummarizeFeature extends AbstractFeature {
      * model never sees message vids, only the digest text.
      */
     private static final String SUMMARIZE_PROMPT = """
-                                                  You are distilling a past metatron session into claims and loose ends. A claim is a terse
-                                                  proposition (1-3 sentences) capturing a decision, problem, solution, or observation — what
-                                                  a future agent would need to understand what happened and why. A loose end is an OPEN
-                                                  continuation point a DIFFERENT session could pick up cold — work that is still owed.
-                                                  
-                                                  Output exactly TWO json blocks. The first is a JSON array of claim objects, the second a
-                                                  JSON array of loose end objects:
-                                                  
-                                                  <<json:claim>>[{"text":"...","kind":"decision","source":[...]},{"text":"...","kind":"problem"}]<</json:claim>>
-                                                  <<json:loose_end>>[{"title":"...","desc":"...","status":"open"}]<</json:loose_end>>
-                                                  
-                                                  Rules for claims:
-                                                  1. kind is one of: decision, problem, solution, observation.
-                                                  2. source is a list of messages (by vid) that inspired you to create the claim.
-                                                    - ["/example/message/1","/example/message/5"]
-                                                  3. A decision without a rationale is not worth recording — say why in the text.
-                                                  4. Prefer specific over general; if nothing significant happened, emit an empty array: <<json:claim>>[]<</json:claim>>
-                                                  
-                                                  Rules for loose ends:
-                                                  4. The cold test: could a session with no access to this transcript act on it? If reading it
-                                                     requires knowing what happened here, it is not a loose end. Most sessions justify 0-2; if
-                                                     you are writing a third, you are recording rather than continuing.
-                                                  5. These do NOT earn a loose end: something this session finished; a current-state observation;
-                                                     a defect the operator should queue; a restatement of a decision (that is already a claim).
-                                                  6. If nothing is left open, emit an empty array: <<json:loose_end>>[]<</json:loose_end>>
-                                                  
-                                                  Do NOT emit session ids, timestamps, source refs, or ids — those are stamped from the record.
-                                                  
-                                                  The session transcript:
-                                                  
-                                                  """;
+                                                   You are distilling a past metatron session into claims and loose ends. A claim is a terse
+                                                   proposition (1-3 sentences) capturing a decision, problem, solution, or observation — what
+                                                   a future agent would need to understand what happened and why. A loose end is an OPEN
+                                                   continuation point a DIFFERENT session could pick up cold — work that is still owed.
+                                                   
+                                                   Output exactly TWO json blocks. The first is a JSON array of claim objects, the second a
+                                                   JSON array of loose end objects:
+                                                   
+                                                   <<json:claim>>[{"text":"...","kind":"decision","source":[...]},{"text":"...","kind":"problem"}]<</json:claim>>
+                                                   <<json:loose_end>>[{"title":"...","desc":"...","status":"open"}]<</json:loose_end>>
+                                                   
+                                                   Rules for claims:
+                                                   1. kind is one of: decision, problem, solution, observation.
+                                                   2. source is a list of messages (by vid) that inspired you to create the claim.
+                                                     - ["/example/message/1","/example/message/5"]
+                                                   3. A decision without a rationale is not worth recording — say why in the text.
+                                                   4. Prefer specific over general; if nothing significant happened, emit an empty array: <<json:claim>>[]<</json:claim>>
+                                                   
+                                                   Rules for loose ends:
+                                                   4. The cold test: could a session with no access to this transcript act on it? If reading it
+                                                      requires knowing what happened here, it is not a loose end. Most sessions justify 0-2; if
+                                                      you are writing a third, you are recording rather than continuing.
+                                                   5. These do NOT earn a loose end: something this session finished; a current-state observation;
+                                                      a defect the operator should queue; a restatement of a decision (that is already a claim).
+                                                   6. If nothing is left open, emit an empty array: <<json:loose_end>>[]<</json:loose_end>>
+                                                   
+                                                   Do NOT emit session ids, timestamps, source refs, or ids — those are stamped from the record.
+                                                   
+                                                   The session transcript:
+                                                   
+                                                   """;
 
     /**
      * Distill a session's message ledger into claim::T and loose_end::T recs

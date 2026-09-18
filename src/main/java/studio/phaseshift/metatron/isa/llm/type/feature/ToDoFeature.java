@@ -2,6 +2,10 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.ChatService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.ConceptService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
@@ -29,10 +33,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.ConceptService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.ChatService;
 
 /**
  * A persistent scratchpad the agent owns across the entire session.
@@ -73,6 +73,7 @@ public class ToDoFeature extends AbstractFeature {
                 uri(NAME), uri(LLM_TODO_FEATURE_TID.name()),
                 uri(DESC), str("persistent agent-owned todo list for cross-turn task tracking"),
                 uri(CONTENT), str("""
+                                  ---[todo_feature]---
                                   the following tools allow you to create and maintain a todo list: get_todo, add_todo, remove_todo.
                                   todo::T is defined:
                                   %s

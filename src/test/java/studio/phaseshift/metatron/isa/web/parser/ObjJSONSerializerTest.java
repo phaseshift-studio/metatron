@@ -255,7 +255,6 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
 
     @Training(
             instruction = "what does the mtron expression {{{mtron}}} serialize to as simple (lossy) JSON?",
-            input = "{{{mtron}}}",
             output = "{{{expectedJson}}}")
     @ParameterizedTest
     @CsvSource(quoteCharacter = '~', delimiter = '%', value = {

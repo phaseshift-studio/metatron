@@ -19,47 +19,46 @@
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
+import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
+import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.llm.type.mModel.model;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MINUTE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
-import studio.phaseshift.metatron.isa.llm.MessageBuilder;
-import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
-import studio.phaseshift.metatron.isa.llm.type.mModel;
-import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.stream.Collectors;
-import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
-import static studio.phaseshift.metatron.isa.llm.type.mModel.model;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -154,10 +153,10 @@ public class CompactionFeature extends AbstractFeature {
         if (summary.isBlank())
             return;
         agent.requireService(SystemService.class).addSystemMessage("""
-                                                                                   resume summary from a prior compaction:
-                                                                                   
-                                                                                   %s
-                                                                                   """.formatted(summary));
+                                                                   resume summary from a prior compaction:
+                                                                   
+                                                                   %s
+                                                                   """.formatted(summary));
     }
 
     @Override
@@ -223,7 +222,7 @@ public class CompactionFeature extends AbstractFeature {
         final int contextWindow = this.resolveContextWindow();
         if (contextWindow <= 0)
             return false;
-        final AbstractMessageFeature.DefaultTokenCountEstimator estimator = AbstractMessageFeature.DefaultTokenCountEstimator.singleton();
+        final TokenMessageFeature.DefaultTokenCountEstimator estimator = TokenMessageFeature.DefaultTokenCountEstimator.singleton();
         final int payloadTokens = messageFeature.store().query(sessionVID).stopAt(COMPACTION_MESSAGE_TID).apply()
                 .stream().mapToInt(r -> estimator.estimateTokenCountInText(Str.Helper.cleanString(r.at(TEXT).orElse(str(""))))).sum();
         return ((double) payloadTokens / (double) contextWindow) >= threshold;
@@ -246,7 +245,8 @@ public class CompactionFeature extends AbstractFeature {
         }
         return 0;
     }
-/**
+
+    /**
      * Distill prompt for {@code compact()}: asks the model to write a
      * continuation summary that replaces the conversation history in a future
      * context window.  The summary becomes the {@code text} of the
@@ -254,24 +254,23 @@ public class CompactionFeature extends AbstractFeature {
      * transcript again, only the resume summary.
      */
     private static final String COMPACT_PROMPT = """
-                                                You have been working on the task described above but have not yet completed it.
-                                                Write a continuation summary that will allow you (or another instance of yourself) to resume work efficiently
-                                                in a future context window where the conversation history will be replaced with this summary.
-                                                
-                                                Your summary should be structured, concise, and actionable. Include:
-                                                1. **Task Overview**: The user's core request, success criteria, and constraints.
-                                                2. **Current State**: What has been completed, current progress, and any pending steps.
-                                                3. **Key Details**: User preferences, domain-specific details, or promises made to the user.
-                                                
-                                                Write in a way that enables immediate resumption of the task.
-                                                
-                                                ## Conversation:
-                                                %s
-                                                """;
+                                                 You have been working on the task described above but have not yet completed it.
+                                                 Write a continuation summary that will allow you (or another instance of yourself) to resume work efficiently
+                                                 in a future context window where the conversation history will be replaced with this summary.
+                                                 
+                                                 Your summary should be structured, concise, and actionable. Include:
+                                                 1. **Task Overview**: The user's core request, success criteria, and constraints.
+                                                 2. **Current State**: What has been completed, current progress, and any pending steps.
+                                                 3. **Key Details**: User preferences, domain-specific details, or promises made to the user.
+                                                 
+                                                 Write in a way that enables immediate resumption of the task.
+                                                 
+                                                 ## Conversation:
+                                                 %s
+                                                 """;
 
 
-
-/**
+    /**
      * Compact a session's message ledger into a single {@code compaction_message::T}
      * sentinel whose {@code text} is a resume summary, stamped with the token
      * compression stats ({@code in}, {@code out}, {@code compression}).  The
@@ -349,7 +348,7 @@ public class CompactionFeature extends AbstractFeature {
      * @return the written sentinel rec (text + in/out/compression + session/depth)
      */
     public static Rec writeCompaction(final fURI agentHome, final fURI sessionVID, final List<Rel> messages, final String digest, final String summary) {
-        final AbstractMessageFeature.DefaultTokenCountEstimator estimator = AbstractMessageFeature.DefaultTokenCountEstimator.singleton();
+        final TokenMessageFeature.DefaultTokenCountEstimator estimator = TokenMessageFeature.DefaultTokenCountEstimator.singleton();
         final int tokensIn = estimator.estimateTokenCountInText(digest);
         final int tokensOut = estimator.estimateTokenCountInText(summary);
         final double compression = tokensIn == 0 ? 0.0 : 1.0 - ((double) tokensOut / (double) tokensIn);

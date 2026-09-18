@@ -752,7 +752,7 @@ dies inside it, and <code>less</code> blocks on stdin. That is why the blocks ab
     [-- fail:: inst apply failure: NullPointerException: Console.getTerminal() is null --]
 </code></pre>
 <ul>
-<li><strong><code>*/uri</code> does not render — the anchor does.</strong> <code>@/usr/uidoc/panel.as?str&lt;=widget(str::T)</code> renders the
+<li><strong><code>*</code> does not render — the anchor does.</strong> <code>@/usr/uidoc/panel.as?str&lt;=widget(str::T)</code> renders the
 widget the store holds; the clone form (<code>*/usr/uidoc/panel.as?str&lt;=widget(str::T)</code>) produces nothing,
 because the dereferenced rec no longer satisfies the inst's dom. Anchor the read.</li>
 <li><strong>A height cap is not visible in a plain render</strong> — the viewport belongs to the surface (see <em>style</em>).</li>

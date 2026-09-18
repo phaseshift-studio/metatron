@@ -19,16 +19,13 @@
 package studio.phaseshift.metatron.isa.mach;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.space.clstrSpace;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -37,15 +34,9 @@ import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.util.CommonUtil;
-import studio.phaseshift.metatron.util.ImageUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -61,19 +52,12 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjFactory.M_FACTORY_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.FS_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.makeFile;
-import static studio.phaseshift.metatron.isa.mach.io.space.serial.serialSpace.SERIAL_SPACE_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -95,44 +79,15 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI RING_ONE_TID = MACH_INST_TID.extend("ring").extend("const").extend("one");
     public static final fURI RING_BINARY = MACH_INST_TID.extend("ring").extend("op").extend("+");
     public static final fURI WHICH_INST_TID = MACH_INST_TID.extend("which");
-
     public static final fURI CLSTR_SPACE_TID = MACH_ISA_TID.extend("clstrspace");
     public static Type CLSTR_SPACE_TYPE;
-
-    public static final fURI ROUTER_TID = MACH_ISA_TID.extend("router");
-    public static final fURI MACH_SPACE_TID = MACH_ISA_TID.extend("space");
-    public static final fURI FILE_TID = MACH_ISA_TID.extend("file");
-    public static final String FILE_TID_STRING = "/m/mach/file";
-    public static final fURI IMAGE_TID = FILE_TID.extend("image");
-    public static final fURI Q_TID = MACH_SPACE_TID.extend("q");
     public static final fURI FACTORY_TID = MACH_ISA_TID.extend("factory");
-    public static final fURI REWRITE_INST_TID = MACH_INST_TID.extend("rewrite");
-    public static final Rec SPACE_CONFIG = rec(uri(Tokens.PATTERN), T(URI_TID));
-
     public static final fURI THREAD_EXECUTOR_TID = MACH_ISA_TID.extend("thread_executor");
 
-
-    /*public static final Type SPACE_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(SPACE_TID)
-            .create();*/
     public static final Type FACTORY_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(FACTORY_TID)
             .create();
-    public static final Type ROUTER_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(ROUTER_TID)
-            .create();
-    public static final Type FILE_TYPE = Type.Builder.build()
-            .tid(URI_TID)
-            .vid(FILE_TID)
-            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(FILE_TID),
-                    lst(T(URI_TID)),
-                    (lhs, inst) -> makeFile(Path.of(inst.arg(0).uriValue().basePath().toString())))).create();
-    public static final Type IMAGE_FILE_TYPE = Type.Builder.build()
-            .tid(FILE_TID)
-            .vid(IMAGE_TID).create();
 
     /// //////////////////////////////////////////////////////////////////////
     public static Type THREAD_EXECUTOR_TYPE;
@@ -168,12 +123,7 @@ public class machInstSet extends AbstractInstSet {
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(MACH_ISA_TID.extend(ALL)),
                 uri(TYPE), lst(
-                        ROUTER_TYPE,
                         SPACE_TYPE,
-                        FS_SPACE_TYPE,
-                        SERIAL_SPACE_TYPE,
-                        FILE_TYPE,
-                        IMAGE_FILE_TYPE,
                         FACTORY_TYPE,
                         M_FACTORY_TYPE,
                         /////////////////////////
@@ -242,48 +192,7 @@ public class machInstSet extends AbstractInstSet {
                             else
                                 return monad;
                         }),
-                        instC(REWRITE_INST_TID.dom(ALL.maybe()).rng(f("rec[short=>uri,long=>uri]")), lst(URI_TYPE), (lhs, inst) -> rec(
-                                uri(SHORT), uri(Router.global().redirect(inst.arg(0).uriValue(), false)),
-                                uri(LONG), uri(Router.global().redirect(inst.arg(0).uriValue(), true)))),
-                        instC(MACH_INST_TID.extend("close").dom(ROUTER_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-                            if (lhs instanceof Router)
-                                return Stream.of(noobj()).peek(o -> System.exit(0)).iterator().next();
-                            CommonUtil.close(lhs);
-                            return noobj();
-                        }),
                         /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                        /*instC(RSHIFT_INST_TID.dom(FILE_TID).rng(FILE_TID.maybeSome()), lst(isa_(URI_TYPE).else_(uri("#"))), (lhs, inst) -> {
-                            final File file = fsSpace.staticObjToFile(lhs);
-                            if (file.isDirectory()) {
-                                if (f(file.getName()).test(inst.arg(0).orElse(uri("#")).uriValue())) { // TODO: need to recurse on name if it has path segments
-                                    if (null == file.listFiles()) return noobj();
-                                    final fsSpace space = Router.global().getSpace(lhs.uriValue());
-                                    return objs(Arrays.stream(Objects.requireNonNull(file.listFiles()))
-                                            //.peek(ff -> LOG.info("reading file %s", f(f(ff.getName()).name())))
-                                            .map(ff -> makeFile(ff.toPath()))
-                                            .map(ff -> uri(space.redirect(ff.uriValue().noQ(), true), ff.uriValue().isBranch() ? DIR_TID : FILE_TID)));
-                                }
-                            }
-                            return noobj();
-                        }),*/
-                        instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID), else_(real(1.0d))),
-                                (lhs, inst) -> str(ImageUtil.convertToAscii(lhs.bytesValue(), inst.arg(1).realValue())).tid(IMAGE_TID)),
-                        // instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> makeFile(Path.of(lhs.uriValue().toString())).vid(lhs.vid())),
-                        instC(AS_INST_TID.dom(FILE_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
-                            try {
-                                final File file = fsSpace.staticObjToFile(lhs);
-                                LOG.debug("translating file to bytes: %s", file);
-                                final byte[] data;
-                                try (final FileInputStream fis = new FileInputStream(file)) {
-                                    data = fis.readAllBytes();
-                                } catch (final IOException e) {
-                                    throw MTronException.of(e);
-                                }
-                                return bytes(ByteBuffer.wrap(data));
-                            } catch (final Exception e) {
-                                throw MTronException.of(e);
-                            }
-                        }),
                         instC(RING_ZERO_TID.dom(A).rng(A), lst(), (lhs, inst) -> ((PlusMonoid.O<?>) lhs).zero()),
                         instC(RING_ONE_TID.dom(A).rng(A), lst(), (lhs, inst) -> ((MultMonoid.O<?>) lhs).one()),
                         // instC(RING_BINARY.dom(A).rng(ALL.dom(A).rng(A)), lst(), (lhs, inst) -> instB(mtronInstSet.INST_TID.extend(inst.tid().name()), lst(lhs.type())).resolve(lhs)),

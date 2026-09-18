@@ -26,6 +26,7 @@ import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -36,7 +37,6 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
@@ -139,7 +139,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
 
     /**
      * Session-scoped ledger rels of every message kind, sorted oldest →
-     * newest by ledger id.  The shared read core of {@link #Query}
+     * the newest by ledger id.  The shared read core of {@link SpaceChatSessionStore.Query}
      * (and, through it, {@link #busWindow} and {@link #getMessages}):
      * scope only — session, depth, and — for depth &gt; 1 — chat id —
      * with no kind filtering.

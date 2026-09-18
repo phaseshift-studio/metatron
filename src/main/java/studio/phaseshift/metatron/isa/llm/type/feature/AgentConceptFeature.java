@@ -101,15 +101,16 @@ public final class AgentConceptFeature extends AbstractConceptFeature {
 
     private static final String CONCEPT_EXTRACTOR_AGENT_SYSTEM_MESSAGE =
             """
-            As you respond, a separate analysis agent running behind the scenes automatically
+            ---[agent_concept_feature]---
+            as you respond, a separate analysis agent running behind the scenes automatically
             extracts key concepts from your output using a language model.  These concepts are
             organized into a co-location graph that connects related ideas across the conversation.
             
-            When relevant historic memories are identified, they will be surfaced via the mtron
+            when relevant historic memories are identified, they will be surfaced via the mtron
             eval tool so you can review them before continuing.
             
-            You do not need to tag concepts manually — the extraction happens automatically.
-            Respond naturally and the concept graph will build itself.
+            you do not need to tag concepts manually — the extraction happens automatically.
+            respond naturally and the concept graph will build itself.
             """;
 
 }

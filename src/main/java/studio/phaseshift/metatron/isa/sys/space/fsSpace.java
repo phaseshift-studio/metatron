@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.io.space.fs;
+package studio.phaseshift.metatron.isa.sys.space;
 
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -38,8 +38,10 @@ import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
 import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -52,7 +54,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.MIMEQ_PATTERN;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -60,22 +61,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.FS_SPACE_TID;
 
 public class fsSpace extends AbstractSpace<FileSystem> {
 
     private static final Uri NOOBJ_URI = uri(f(""), URI_TID.zero(), null);
-    public static final fURI FS_SPACE_TID = MACH_ISA_TID.extend("space").extend("fsspace");
-    public static final Type FS_SPACE_TYPE = Type.Builder.build()
-            .tid(SPACE_TID)
-            .vid(FS_SPACE_TID)
-            .isaPredicate(rec(
-                    uri(PATTERN), URI_TYPE,
-                    uri(ROUTE), rec(URI_TYPE, URI_TYPE),
-                    uri(SCRIPT).maybe(), rec(URI_TYPE, URI_TYPE)))
-            .constructor(
-                    instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(FS_SPACE_TID), lst(REC_TYPE),
-                            (lhs, inst) -> fsSpace.of(FileSystems.getDefault(), inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 
     public static fsSpace of(final FileSystem sjvm, final Rec config, final fURI vid) {
         return new fsSpace(sjvm, config.jvm(), vid);

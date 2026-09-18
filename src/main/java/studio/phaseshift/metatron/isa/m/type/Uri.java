@@ -53,7 +53,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
 
     Type URI_TYPE = Type.Builder.build().tid(URI_TID).vid(URI_TID).create();
 
-    public static Uri uri0() {
+    static Uri uri0() {
         return uri("").zero();
     }
 
@@ -68,7 +68,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
         return this.uriValue().compareTo(other.uriValue());
     }
 
-    default Obj at(final Obj key) {
+    /*default Obj at(final Obj key) {
         final fURI k = key.uriValue();
         if (k.equals(f(SCHEME)))
             return uri(this.uriValue().scheme());
@@ -90,7 +90,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
             return rec(this.uriValue().qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), ObjmtronSerializer.single().read(kv.getValue()))));
         else
             throw MTronException.of("unknown uri component: %s", k);
-    }
+    }*/
 
     default Uri jvm(final fURI jvm) {
         return this.clone(jvm, this.tid(), this.vid());

@@ -46,6 +46,9 @@ public class Graphitty {
      * language as the open tag.
      */
     public static final String SYNTAX_RULE_PREFIX = "syntax:";
+    /** The markdown code-fence marker: {@code ```lang} … {@code ```} is a second
+     * spelling of {@code {{syntax:lang}}} … {@code {{/syntax:lang}}}. */
+    public static final String FENCE = "```";
     public static final Map<String, String> CURSOR_REWRITES = new LinkedHashMap<>();
     private static final Graphitty GRAPHITTY_STDOUT = new Graphitty(System.out);
 
@@ -133,6 +136,10 @@ public class Graphitty {
 
     /** Set once markup split a block into pieces, so the block is no longer one text. */
     private boolean syntaxFragmented;
+
+    /** True when the block being captured was opened by a markdown fence (```), so its
+     * close is a bare {@code ```} line rather than a {@code {{/syntax:…}}} tag. */
+    private boolean syntaxFence;
 
     /**
      * {@link #parseDSL} recursion depth (a rule rewrite re-enters it).  A block
@@ -292,7 +299,7 @@ public class Graphitty {
     private static boolean needsParsing(final String string) {
         for (int i = 0; i < string.length(); i++) {
             final char c = string.charAt(i);
-            if (c == '{' || c == '\u001b' || c > 126) return true;
+            if (c == '{' || c == '\u001b' || c > 126 || c == '`') return true;
         }
         return false;
     }
@@ -301,11 +308,66 @@ public class Graphitty {
         return strip(string).length();
     }
 
+    /**
+     * True when {@code line} carries a markdown code fence ({@code ```} anywhere in the
+     * line) — the line is (part of) a block delimiter, measured and rendered by the pass
+     * that sees the whole body, never as a line of code on its own.
+     */
+    public static boolean isFenceLine(final String line) {
+        return null != line && line.contains(FENCE);
+    }
+
+    /**
+     * True when {@code string} carries a markdown code fence, so a caller that routes
+     * markup through {@link #string(String)} can decide to do so.
+     */
+    public static boolean hasFence(final String string) {
+        return null != string && string.contains(FENCE);
+    }
+
     private void parseDSL(final String buffer) {
         this.parseDepth++;
         try {
             final int bufferLength = buffer.length();
             for (int i = 0; i < bufferLength; i++) {
+                // A markdown code fence (```) is a second spelling of the
+                // {{syntax:…}} block: ```lang opens, a ``` closes.  It is a token
+                // like {{…}}, found anywhere in the stream, so a widget's border
+                // markup can precede it and the close can share a line with code.
+                // The markers are dropped but their lines are NOT: a fence is
+                // line-preserving like every other rule, so the rendered text keeps
+                // the input's line count (the marker becomes an empty line).  Inside
+                // a {{syntax:…}} block a fence is just code, so it falls through and
+                // is emitted verbatim.
+                if (buffer.charAt(i) == '`' && i + 2 < bufferLength
+                        && buffer.charAt(i + 1) == '`' && buffer.charAt(i + 2) == '`') {
+                    final boolean closing = null != this.syntaxBlock && this.syntaxFence;
+                    final boolean opening = null == this.syntaxBlock;
+                    if (opening) {
+                        // open: the language is the first word after the fence.  Only the
+                        // marker and its token are consumed — never the newline that ends
+                        // the line — so a fence is line-preserving like every other rule
+                        // (the marker becomes an empty line) and can sit in a floating
+                        // widget's cursor-code buffer (no '\n') without swallowing it.
+                        int end = i + FENCE.length();
+                        while (end < bufferLength && (buffer.charAt(end) == ' ' || buffer.charAt(end) == '\t'))
+                            end++;
+                        final int tokenStart = end;
+                        while (end < bufferLength && !Character.isWhitespace(buffer.charAt(end)))
+                            end++;
+                        this.openFence(buffer.substring(tokenStart, end));
+                        i = end - 1;
+                        continue;
+                    }
+                    if (closing) {
+                        // close: consume only the marker.  The newline that follows is the
+                        // code's own, so it is left for the normal pass — a close fence
+                        // becomes an empty line rather than collapsing the one before it.
+                        this.closeSyntax();
+                        i = i + FENCE.length() - 1;
+                        continue;
+                    }
+                }
                 if (buffer.charAt(i) > 126) {
                     // Characters above ASCII 126 are not Graphitty control codes
                     // ({}, {{}}, \n, \t are all <= 126).  Write them as UTF-8 so
@@ -332,6 +394,12 @@ public class Graphitty {
                         i++;
                     } else if ('}' == j) {
                         this.print("}");
+                        i++;
+                    } else if ('`' == j) {
+                        // a backslash before a backtick shows a literal backtick, so
+                        // \```java renders as text rather than opening a fence — the
+                        // same single backslash that makes \{{syntax:java}} literal
+                        this.print("`");
                         i++;
                     } else {
                         this.emit(buffer.charAt(i));
@@ -462,7 +530,17 @@ public class Graphitty {
      * inside the block, which is how a widget draws its border through one.
      */
     private void openSyntax(final String language) {
+        this.openSyntax(language, false);
+    }
+
+    /** Open a block whose delimiter is the markdown fence ({@code ``` … ```}). */
+    private void openFence(final String language) {
+        this.openSyntax(language, true);
+    }
+
+    private void openSyntax(final String language, final boolean fence) {
         this.syntaxLanguage = language.trim();
+        this.syntaxFence = fence;
         this.syntaxBlock = new StringBuilder();
         // stateful: a block's text can reach us in pieces (a widget decorates its rows),
         // and jline's multi-line rule state — a comment opened on an earlier line — must
@@ -514,6 +592,7 @@ public class Graphitty {
         final boolean fragmented = this.syntaxFragmented;
         this.syntaxSession = null;
         this.syntaxFragmented = false;
+        this.syntaxFence = false;
         if (!this.ansiOn) {
             this.flushSyntax(false);
             this.syntaxBlock = null;
