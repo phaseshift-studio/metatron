@@ -24,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
@@ -314,6 +315,7 @@ public class mathInstSetTest extends AbstractInstSetTest {
     }
 
     @ParameterizedTest
+    @Training.SkipTraining(reason = "too complicated -- requires reasoning on the compiler's behavior")
     @CsvSource(value = {
             // Time unit as() conversions - verifies resolver picks correct as?X<=Y instruction
             "millis::1000.0.as(second::T)   | *second   | true",
@@ -536,7 +538,8 @@ public class mathInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-    @ParameterizedTest(name = "[{index}] {0} => {1}")
+    @ParameterizedTest()
+    @Training(instruction = "what is the human readable form of {{{datetime}}}?", output = "{{{expected}}}")
     @CsvSource(value = {
             // Winter date, negative offset
             "datetime::<//2024.12:25/09/00/00/000?tz=-0500>   % Wednesday, December 25, 2024 09:00:00 AM -05:00",
@@ -589,9 +592,9 @@ public class mathInstSetTest extends AbstractInstSetTest {
             // Record → URI → datetime round-trip (fixed Rec→URI q field handling)
             "[host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T).as(str::T)    % 'Wednesday, December 25, 2024 09:00:00 AM -05:00'",
             "[host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(datetime::T).as(uri::T)    % <//2024.12:25/09/00/00/000?tz=-0500>",
-            // Where (=?=) filter
-            "<//2024.12:25/09/00/00/000?tz=-0500>=?=[port=>25]                     % <//2024.12:25/09/00/00/000?tz=-0500>",
-            "<//2024.12:25/09/00/00/000?tz=-0500>=?=[port=>26]                     % noobj",
+            // isa filter
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)?[port=>25].as(uri::T)           % <//2024.12:25/09/00/00/000?tz=-0500>",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)?[port=>26].as(uri::T)           % noobj",
             // Predicate rejects invalid datetimes
             "<//99.99:99/99/99/99/999?tz=X>.matches(datetime::T)                    % false",
             "<//2024.13:25/09/00/00/000?tz=-0500>.matches(datetime::T)              % false",

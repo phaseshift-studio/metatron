@@ -11,10 +11,10 @@ import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
+import studio.phaseshift.metatron.isa.sys.space.fsSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -143,11 +143,12 @@ public class SkillFeature extends AbstractFeature implements SkillService {
                 try (final TableWidget table = new TableWidget(List.of("name", "description")).style().border(Border.continuous).applyStyle()) {
                     allSkills.forEach(s -> table.addRow(List.of(s.name(), s.description())));
                     agent.requireService(SystemService.class)
-                            .addSystemMessage("""
-                                              ----
-                                              use activate_skill() tool to load any of the following skills:
-                                              %s
-                                              """.formatted(Graphitty.strip(table.format())));
+                            .addSystemMessage(
+                                    """
+                                    ---[skill_feature]---
+                                    use activate_skill() tool to load any of the following skills:
+                                    %s
+                                    """.formatted(Graphitty.strip(table.format())));
                 }
             }
         } catch (final Exception e) {

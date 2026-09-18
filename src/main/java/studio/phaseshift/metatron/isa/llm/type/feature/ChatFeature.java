@@ -70,23 +70,15 @@ public class ChatFeature extends AbstractFeature implements ChatService {
         if (agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
             agent.requireService(SystemService.class).addSystemMessage(
                     """
+                    ---[chat_feature]---
                     you are an agent in the metatron (http://metatron.phaseshift.studio).
                     your underlying inference model is:
                     %s
-                    ----
-                    you can control the metatron using the mtron language by either
-                      1. calling an mtron eval tool
-                      2. generating executable mtron code in your thoughts and responses.
-                    any messages you produce containing templates of the form ${ code } will evaluate.
-                    e.g. the text
-                        the result you wanted is ${ 1.-<[+2,_]>-.sum() }
-                    is read by the user as
-                        the result you wanted is 4.
-                    ----
-                    your thoughts and responses may contain syntax highlighting markup.
-                      \\{{syntax:java}}
+                    ---[syntax_feature]---
+                    your thoughts and responses can be syntax highlighted using triple backtick markup.
+                      \\```java
                       public static void method() { }
-                      \\{{/syntax:java}}
+                      \\```
                     available languages include:
                       %s
                     """.formatted(CommonUtil.indent(this.at(MODEL).toString(), 2), languages));

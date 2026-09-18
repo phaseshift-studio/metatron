@@ -2,13 +2,16 @@
 
 ## Overview
 
-The Metatron MCP (Model Context Protocol) Server enables AI assistants to interact with Metatron programmatically. It exposes Metatron's capabilities through a standardized JSON-RPC interface that AI models can use to execute code, query system state, and explore available instructions.
+The Metatron MCP (Model Context Protocol) Server enables AI assistants to interact with Metatron programmatically. It
+exposes Metatron's capabilities through a standardized JSON-RPC interface that AI models can use to execute code, query
+system state, and explore available instructions.
 
 ## Architecture
 
 The MCP server is **fully integrated** with MServer's WebSocket infrastructure:
 
-- **Dual Protocol Support**: MServer automatically detects and routes both native Metatron protocol and MCP JSON-RPC messages
+- **Dual Protocol Support**: MServer automatically detects and routes both native Metatron protocol and MCP JSON-RPC
+  messages
 - **Session Management**: Each WebSocket client can have an MCP session for AI interactions
 - **No Separate Port**: MCP runs on the same WebSocket port as native Metatron communication
 - **Transparent Integration**: Existing Metatron clients are unaffected
@@ -26,6 +29,7 @@ ws://localhost:8080
 ### Protocol Detection
 
 MServer automatically detects MCP messages by checking for JSON-RPC format:
+
 - Messages starting with `{` and containing `"jsonrpc"` are routed to MCP
 - All other messages are handled as native Metatron protocol
 
@@ -81,6 +85,7 @@ MServer automatically detects MCP messages by checking for JSON-RPC format:
 Execute Metatron code and return the result.
 
 **Request:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -96,6 +101,7 @@ Execute Metatron code and return the result.
 ```
 
 **Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -113,6 +119,7 @@ Execute Metatron code and return the result.
 ```
 
 **How it works:**
+
 1. Code is read via `Router.global().read(code)`
 2. Result is evaluated via `codeObj.apply()`
 3. Result is converted to string and returned
@@ -122,6 +129,7 @@ Execute Metatron code and return the result.
 Query Metatron system state including router information and server status.
 
 **Request:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -135,6 +143,7 @@ Query Metatron system state including router information and server status.
 ```
 
 **Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -156,6 +165,7 @@ Query Metatron system state including router information and server status.
 List available Metatron instruction types.
 
 **Request:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -171,6 +181,7 @@ List available Metatron instruction types.
 ```
 
 **Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -243,7 +254,8 @@ Or use a custom MCP client that connects to the WebSocket endpoint.
 
 ### Making MServer a Space
 
-As noted by the user, a future enhancement is to make MServer (and its protocols including MCP) a Space. This would enable:
+As noted by the user, a future enhancement is to make MServer (and its protocols including MCP) a Space. This would
+enable:
 
 - **Configuration via Metatron**: Configure MCP server settings from within Metatron
 - **Dynamic Tool Registration**: Add/remove tools at runtime
@@ -277,23 +289,21 @@ As noted by the user, a future enhancement is to make MServer (and its protocols
 
 ### Connection Issues
 
-**Problem**: Client can't connect
-**Solution**: Ensure MServer is running and Router is loaded
+**Problem**: Client can't connect **Solution**: Ensure MServer is running and Router is loaded
 
 ### Protocol Detection Issues
 
-**Problem**: MCP messages treated as native protocol
-**Solution**: Ensure messages are valid JSON starting with `{` and contain `"jsonrpc": "2.0"`
+**Problem**: MCP messages treated as native protocol **Solution**: Ensure messages are valid JSON starting with `{` and
+contain `"jsonrpc": "2.0"`
 
 ### Tool Execution Errors
 
-**Problem**: `evaluate_code` returns errors
-**Solution**: Check that code is valid Metatron syntax and Router is properly initialized
+**Problem**: `evaluate_code` returns errors **Solution**: Check that code is valid Metatron syntax and Router is
+properly initialized
 
 ### Session Not Found
 
-**Problem**: Session errors after reconnection
-**Solution**: Re-initialize with `initialize` request after reconnecting
+**Problem**: Session errors after reconnection **Solution**: Re-initialize with `initialize` request after reconnecting
 
 ## Example: Complete Interaction
 

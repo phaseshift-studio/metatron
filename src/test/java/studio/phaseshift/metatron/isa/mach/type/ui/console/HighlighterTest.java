@@ -166,6 +166,8 @@ public class HighlighterTest extends AbstractMetatronTest {
             "java       % {{syntax:java}}",
             "java       % {{/syntax:java}}",
             "cobol      % {{b}}bold{{X}}",
+            "java       % ```java",
+            "java       % ```",
     }, delimiter = '%')
     void testLinesThatBelongToALargerPassAreHandedBack(final String language, final String line) {
         assertEquals(line, Highlighter.highlightLine(language, line),
@@ -195,5 +197,50 @@ public class HighlighterTest extends AbstractMetatronTest {
         final String line = Highlighter.highlightLine("java", "int x = 42;");
         assertTrue(line.contains("\u001B[33m42"),
                 "conf/nanorc/java.nanorc colors the literal (" + line.replace("\u001B", "\\e") + ")");
+    }
+
+    /**
+     * A markdown fence routes the string through Graphitty — the same pass that renders
+     * {@code {{syntax:…}}} blocks — so its code is colorized from the nanorc file rather
+     * than left to the mtron highlighter, and it measures as it renders.
+     */
+    @Test
+    void testFormatRoutesAMarkdownFenceThroughGraphitty() {
+        final String highlighted = Highlighter.format("```java\nint x = 42;\n```");
+        assertTrue(highlighted.contains("\u001B["),
+                "the fence block is colorized (" + highlighted.replace("\u001B", "\\e") + ")");
+        assertEquals("\nint x = 42;\n", Highlighter.unformat(highlighted), "the fence measures as its code");
+    }
+
+    /**
+     * A ``` fence serialized as an Obj (the REPL result path) must keep its color —
+     * the Obj branch routes Graphitty markup to {@code writeToString} verbatim rather
+     * than through the AttributedString round-trip that drops the escapes.
+     */
+    @Test
+    void testFormatObjWithFenceKeepsItsColor() {
+        final studio.phaseshift.metatron.isa.m.type.Obj strObj =
+                studio.phaseshift.metatron.isa.m.type.impl.MStr.str("\n```java\npublic static void main();\n```\n");
+        final String highlighted = Highlighter.format(strObj);
+        assertTrue(highlighted.contains("\u001B["),
+                "the fence block keeps its color through the Obj path: " + highlighted.replace("\u001B", "\\e"));
+        assertTrue(Highlighter.unformat(highlighted).contains("public static void main();"),
+                "the code text is still there: " + Highlighter.unformat(highlighted));
+    }
+
+    /**
+     * The standard console result path (not split mode) writes the serialized result
+     * through Graphitty directly, not through the reader's mtron highlighter — a fence
+     * must stay colorized after the serialization round-trip.
+     */
+    @Test
+    void testSerializedFenceColorizesThroughGraphitty() {
+        final studio.phaseshift.metatron.isa.m.type.Obj strObj =
+                studio.phaseshift.metatron.isa.m.type.impl.MStr.str("\n```java\npublic static void main();\n```\n");
+        final String serialized = new studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer().write(strObj);
+        final String rendered = studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.string(serialized);
+        assertTrue(rendered.contains("\u001B["),
+                "serialization + Graphitty keeps the fence color (the standard result path): "
+                        + rendered.replace("\u001B", "\\e"));
     }
 }

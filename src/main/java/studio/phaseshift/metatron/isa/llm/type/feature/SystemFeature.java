@@ -4,6 +4,8 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
@@ -13,14 +15,11 @@ import java.util.Map;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.BASE;
-import static studio.phaseshift.metatron.Tokens.SESSION;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_SERVICE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.SYSTEM_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 
 /**
  * The system-message contract for the agent — the single owner of system-message
@@ -67,6 +66,7 @@ public class SystemFeature extends AbstractFeature implements SystemService {
 
     private static final String DEFAULT_SYSTEM_MESSAGE =
             """
+            ---[system_feature]---
             you are an ai agent in metatron (http://metatron.phaseshift.studio).
             """;
     

@@ -22,11 +22,14 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.Map;
 import java.util.Set;
@@ -41,8 +44,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.vec.vecInstSet.VEC_EMBEDDING_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -65,24 +66,25 @@ public class EmbedFeature extends AbstractFeature {
     static final String WATERMARK_CODEC = "mtron";
 
     protected static final
-    String EMBED_FEATURE_INSTRUCTIONS = """
-                                        You can choose to have the current chat result vectorized using an embedding model
-                                        and stored in space (presumably a vector space). To accomplish this, add
-                                        the following watermark to your response:
-                                        
-                                            <<mtron:embed>>
-                                                [root  => /usr/agent/chat_result,
-                                                 model => model::[provider => ollama,
-                                                                  protocol => ollama,
-                                                                  host     => <http://localhost:11434>,
-                                                                  llm      => <qwen3-embedding:4b>]]
-                                            <</mtron:embed>>
-                                        
-                                        If no root is provided, then the embed_feature::T root will be used: %s
-                                        If no model is provided, then the embedding model associated with the embed_feature::T will be used:
-                                        
-                                        %s
-                                        """;
+    String EMBED_FEATURE_INSTRUCTIONS =
+            """
+            ---[embed_feature]---
+            you can choose to have the current chat result vectorized using an embedding model
+            and stored in space (presumably a vector space). To accomplish this, add
+            the following watermark to your response:
+            
+                <<mtron:embed>>
+                    [root  => /usr/agent/chat_result,
+                     model => model::[provider => ollama,
+                                      protocol => ollama,
+                                      host     => <http://localhost:11434>,
+                                      llm      => <qwen3-embedding:4b>]]
+                <</mtron:embed>>
+            
+            if no root is provided, then the embed_feature::T root will be used: %s
+            if no model is provided, then the embedding model associated with the embed_feature::T will be used:
+            %s
+            """;
 
     @Override
     public Set<fURI> requires() {
@@ -98,7 +100,7 @@ public class EmbedFeature extends AbstractFeature {
         if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
             return;
         final String instructions = WatermarkUtil.instructions(WATERMARK_CODEC, WatermarkUtil.key(this, WATERMARK_KEY),
-                EMBED_FEATURE_INSTRUCTIONS.formatted(this.getRoot(agent), this.at(MODEL)));
+                EMBED_FEATURE_INSTRUCTIONS.formatted(this.getRoot(agent), CommonUtil.indent(this.at(MODEL).toString(), 2)));
         agent.requireService(SkillService.class).addSkill(mSkill.of(rec(
                 uri(NAME), uri(LLM_EMBED_FEATURE_TID.name()),
                 uri(DESC), str("embed chat results into a vector space for later similarity retrieval"),

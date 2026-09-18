@@ -18,9 +18,7 @@
 
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
-import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.memory.ChatMemory;
-import dev.langchain4j.model.TokenCountEstimator;
 import dev.langchain4j.service.AiServices;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -39,7 +37,6 @@ import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -250,33 +247,6 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
             throw MTronException.of("unable to setup session: %s", e);
         }
         return noobj();
-    }
-
-    /**
-     * A character-count token estimator — the default for token-windowed memory.
-     */
-    public static class DefaultTokenCountEstimator implements TokenCountEstimator {
-
-        private static final DefaultTokenCountEstimator INSTANCE = new DefaultTokenCountEstimator();
-
-        @Override
-        public int estimateTokenCountInText(final String text) {
-            return Math.round(((float) text.length()) / 4.0f);
-        }
-
-        @Override
-        public int estimateTokenCountInMessage(final ChatMessage message) {
-            return this.estimateTokenCountInText(message.toString());
-        }
-
-        @Override
-        public int estimateTokenCountInMessages(final Iterable<ChatMessage> messages) {
-            return IteratorUtil.stream(messages).mapToInt(this::estimateTokenCountInMessage).sum();
-        }
-
-        public static DefaultTokenCountEstimator singleton() {
-            return INSTANCE;
-        }
     }
 
     // ── Ledger fsck + session resolution (the ledger capability this feature owns) ──

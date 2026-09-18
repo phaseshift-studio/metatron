@@ -26,16 +26,16 @@ here.
 
 ## 1. Building blocks (existing, verified live)
 
-| Piece | Where | Role |
-|---|---|---|
-| `web:java::T` | `webInstSet` | MIME-validated `str::T` refinement — `*<file>.as(web:java::T)` derefs and tags |
-| `ide:java::T` | `ideInstSet` | the coarse Java schema as a `rec::T` refinement (classes/members/header/body/footer) |
-| `ide:project::T` | `ideInstSet` | project descriptor (root, name, build/test palettes, `code`) |
-| `ide:result::T` + `cs_command` + `CommandRunner` | `ideInstSet` | run a command → standardized `status`/`runtime`/`output` outcome |
-| `ObjJavaIDESerializer` | `ide/parser` | lossless TreeSitter coarse parse (read) and byte-exact write |
-| as-paths (bidirectional entry) | `ideInstSet` | `as?ide:java<=web:java` (parse) and `as?ide:java<=rec` (re-tag) |
-| project walk | `ideInstSet` (~line 148) | `as?ide:project<=uri` — semi-implemented; `<src/>.as(project::T)` builds the project clone |
-| `lineq` / `subq` / `lockq` | `QCollection` | edit granularity / observation / advisory concurrency control |
+| Piece                                            | Where                    | Role                                                                                       |
+|--------------------------------------------------|--------------------------|--------------------------------------------------------------------------------------------|
+| `web:java::T`                                    | `webInstSet`             | MIME-validated `str::T` refinement — `*<file>.as(web:java::T)` derefs and tags             |
+| `ide:java::T`                                    | `ideInstSet`             | the coarse Java schema as a `rec::T` refinement (classes/members/header/body/footer)       |
+| `ide:project::T`                                 | `ideInstSet`             | project descriptor (root, name, build/test palettes, `code`)                               |
+| `ide:result::T` + `cs_command` + `CommandRunner` | `ideInstSet`             | run a command → standardized `status`/`runtime`/`output` outcome                           |
+| `ObjJavaIDESerializer`                           | `ide/parser`             | lossless TreeSitter coarse parse (read) and byte-exact write                               |
+| as-paths (bidirectional entry)                   | `ideInstSet`             | `as?ide:java<=web:java` (parse) and `as?ide:java<=rec` (re-tag)                            |
+| project walk                                     | `ideInstSet` (~line 148) | `as?ide:project<=uri` — semi-implemented; `<src/>.as(project::T)` builds the project clone |
+| `lineq` / `subq` / `lockq`                       | `QCollection`            | edit granularity / observation / advisory concurrency control                              |
 
 ---
 
@@ -63,8 +63,8 @@ PAIR TREE (immutable, project space)              DISK (single source of truth)
 ```
 
 Five components: **pair tree** (immutable view definitions), **materializer**
-(lazy disk→rec→buffer), **`location`** (self-provenance stamped onto the rec),
-**buffer** (per-file working copy), **autosave sub** (Java, the single
+(lazy disk→rec→buffer), **`location`** (self-provenance stamped onto the rec), **buffer** (per-file working copy),
+**autosave sub** (Java, the single
 write-through choke point).
 
 ---
@@ -81,9 +81,9 @@ One node per project file, under the agent home (e.g. `/usr/dev/src/…`):
 
 - Element 0: the file's URI (`loc`).
 - Element 1: the **materializer** — an auto-applied inst, decoded:
-  1. `loc .- <[_, as(ide:java::T)]>` — thread the file through a two-way view: raw file and coarse rec;
-  2. `.map([>>0, >>1 >>= [location => >>0]])` — stamp `location` (the file uri) onto the rec;
-  3. `.to(/usr/dev * >>0)` — persist the result at the buffer path derived from the file (`/usr/dev` + path).
+    1. `loc .- <[_, as(ide:java::T)]>` — thread the file through a two-way view: raw file and coarse rec;
+    2. `.map([>>0, >>1 >>= [location => >>0]])` — stamp `location` (the file uri) onto the rec;
+    3. `.to(/usr/dev * >>0)` — persist the result at the buffer path derived from the file (`/usr/dev` + path).
 
 Rules:
 
@@ -148,16 +148,16 @@ references the shadow root.
 
 ## 5. Design decisions (and why)
 
-| Decision | Why |
-|---|---|
-| Disk = source of truth; reads always re-derive | Single source; no stale shadow; revert is one deref |
-| Pair tree immutable (add/remove only) | The tree is a *view definition*, not a copy — cannot drift |
-| `location` stamped onto the rec | Self-provenant: identity travels with content; the sub needs zero lookup, zero config |
-| Autosave sub in Java, key type of ideInstSet | Fast hot path; one typed, docq-able registration; one choke point for audit/reparse later |
-| Materializer is readable mtron (pair element) | The mechanism self-documents; an agent reading a node sees exactly what deref does |
-| `to()` (detached) not `at()` (anchored) in the materializer | Deliberate reference semantics for the buffer persist step |
-| Per-file buffers (path derived from `location`) | No "current file" register; deterministic, guessable, sub covers the tree in one registration |
-| Sub on the buffer, **not** the pair tree | Simpler than watching the view layer; no re-link/no-op dance |
+| Decision                                                    | Why                                                                                                                  |
+|-------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| Disk = source of truth; reads always re-derive              | Single source; no stale shadow; revert is one deref                                                                  |
+| Pair tree immutable (add/remove only)                       | The tree is a *view definition*, not a copy — cannot drift                                                           |
+| `location` stamped onto the rec                             | Self-provenant: identity travels with content; the sub needs zero lookup, zero config                                |
+| Autosave sub in Java, key type of ideInstSet                | Fast hot path; one typed, docq-able registration; one choke point for audit/reparse later                            |
+| Materializer is readable mtron (pair element)               | The mechanism self-documents; an agent reading a node sees exactly what deref does                                   |
+| `to()` (detached) not `at()` (anchored) in the materializer | Deliberate reference semantics for the buffer persist step                                                           |
+| Per-file buffers (path derived from `location`)             | No "current file" register; deterministic, guessable, sub covers the tree in one registration                        |
+| Sub on the buffer, **not** the pair tree                    | Simpler than watching the view layer; no re-link/no-op dance                                                         |
 | Bidirectional types exist; write direction is the sub's job | `as?ide:java<=web:java` and `as?ide:java<=rec` are in place; the Java sub does the coarse→source conversion directly |
 
 ---
@@ -171,8 +171,8 @@ references the shadow root.
   Convention: **agents read through the shadow tree, never direct `*<file>`** —
   this also avoids racing the async flush.
 - **Async flush window:** the sub runs via `applyAsync` — disk lags the buffer by a tick.
-- **Concurrency:** `lockq` over the buffer root; per-agent buffer homes
-  (`/usr/{agent}/dev`) when agents run in parallel.
+- **Concurrency:** `lockq` over the buffer root; per-agent buffer homes (`/usr/{agent}/dev`) when agents run in
+  parallel.
 - **Non-Java files:** same pair shape; element 1 carries another (or no) `as()` encoding;
   the reader appends the encoding at read time.
 

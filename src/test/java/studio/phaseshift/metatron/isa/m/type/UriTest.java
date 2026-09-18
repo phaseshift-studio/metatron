@@ -307,21 +307,22 @@ public class UriTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "<http://dev.local:8080/v1/search?q=metatron&debug=true>==[host=><prod.net>,port=>443,path=>[api,v2],q=>[debug=>false]] % <http://prod.net:443/api/v2?q=metatron&debug=false>",
-            "<http://api.local/v1/user/marko?auth=true&debug=true>==[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>false]]               % <http://api.local/v1/profile/marko?debug=false&auth=true>",
-            "<http://api.local/v1/user/marko?auth=true&debug=true>==[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>false,_=>xyz]]        % <http://api.local/v1/profile/marko?debug=false&auth=xyz>",
-            "<http://api.local/v1/user/marko?auth=true&debug=true>==[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>false,_=>none]]       % <http://api.local/v1/profile/marko?debug=false>"
+            "<http://dev.local:8080/v1/search?q=metatron&debug=true>as(rec::T)>>=[host=><prod.net>,port=>443,path=>[api,v2],q=>[debug=>false]].as(uri::T)    % <http://prod.net:443/api/v2?q=metatron&debug=false>",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>.as(rec::T)>>=[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>false]].as(uri::T)                 % <http://api.local/v1/profile/marko?debug=false&auth=true>",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>.as(rec::T)>>=[path=>-<[>>0,>>1,profile,>>3],q=>[auth=>xyz,debug=>false]].as(uri::T)       % <http://api.local/v1/profile/marko?debug=false&auth=xyz>",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>.as(rec::T)>>=[path=>-<[>>0,>>1,profile,>>3],q=>[auth=>none,debug=>false]].as(uri::T)      % <http://api.local/v1/profile/marko?debug=false>"
     }, delimiter = '%', quoteCharacter = '~')
     public void testSelect(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    // a/b/c.~rec~>
     @ParameterizedTest
     @CsvSource(value = {
-            "<http://dev.local:8080/v1/search?q=metatron&debug=true>=?=[host=>_,port=>_,path=>_,q=>_]                                % <http://dev.local:8080/v1/search?q=metatron&debug=true>",
-            "<http://api.local/v1/user/marko?auth=true&debug=true>=?=[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>is(not(_))]]          % noobj",
-            "<http://api.local/v1/user/marko?auth=true&debug=true>=?=[path=>-<[>>0,>>1,>>2,>>3],q=>[debug=>?_,_=>?_]]                % <http://api.local/v1/user/marko?auth=true&debug=true>",
-            "<http://api.local/v1/user/marko?auth=true&debug=true>=?=[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>false,_=>none]]       % noobj"
+            "<http://dev.local:8080/v1/search?q=metatron&debug=true>.as(rec::T)?[host=>_,port=>_,path=>_,q=>_].as(uri::T)                                % <http://dev.local:8080/v1/search?q=metatron&debug=true>",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>.as(rec::T)?[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>is(not(_))]].as(uri::T)          % noobj",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>.as(rec::T)?[path=>-<[>>0,>>1,>>2,>>3],q=>[debug=>?_,_=>?_]].as(uri::T)                % <http://api.local/v1/user/marko?auth=true&debug=true>",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>.as(rec::T)?[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>false,_=>none]].as(uri::T)       % noobj"
     }, delimiter = '%', quoteCharacter = '~')
     public void testWhere(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

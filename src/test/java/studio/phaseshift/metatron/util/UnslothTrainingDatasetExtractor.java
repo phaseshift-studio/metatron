@@ -2,7 +2,6 @@ package studio.phaseshift.metatron.util;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.q.QProcIntegrationTest;
 import studio.phaseshift.metatron.furi.q.TypeQTest;
@@ -50,6 +49,16 @@ public class UnslothTrainingDatasetExtractor {
 
     // Tracks how many times each rename key was applied during extraction
     private static final Map<String, Integer> RENAME_COUNT = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * Directive prepended to every entry's {@code instruction} field (a system-style prefix).
+     * Empty by default — the model is trained as a general mtron/metatron assistant, and the
+     * assistant persona is supplied at inference time via the system prompt rather than baked
+     * into the training data. Override at runtime with {@code -Dmtron.training.directive="..."}.
+     */
+    private static final String INSTRUCTION_DIRECTIVE = System.getProperty(
+            "mtron.training.directive", ""
+    );
 
     public static void main(String[] args) {
         // The target test classes to extract from
@@ -393,7 +402,7 @@ public class UnslothTrainingDatasetExtractor {
 
         for (Method method : clazz.getDeclaredMethods()) {
             totalMethods++;
-            if (method.isAnnotationPresent(ParameterizedTest.class) && !method.isAnnotationPresent(TestData.class)) {
+            if (method.isAnnotationPresent(ParameterizedTest.class)) {
                 ptCount++;
                 final String methodKey = simpleName + "." + method.getName();
                 if (ignoreTestMethods.contains(methodKey)) {
@@ -422,7 +431,10 @@ public class UnslothTrainingDatasetExtractor {
                     // writer.write("# " + entry.sourceMethod() + "\n");
                     lastSourceMethod = entry.sourceMethod();
                 }
-                writer.write(entry.toJson() + "\n");
+                final String instruction = INSTRUCTION_DIRECTIVE.isEmpty()
+                        ? entry.instruction()
+                        : INSTRUCTION_DIRECTIVE + "\n\n" + entry.instruction();
+                writer.write(new Training.Entry(instruction, entry.input(), entry.output(), entry.sourceMethod()).toJson() + "\n");
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -25,6 +25,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractDataPathSpaceTest;
 import studio.phaseshift.metatron.SkipRegexTest;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.IncrQTest;
@@ -159,6 +160,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
      */
     @Override
     @ParameterizedTest
+    @Training.SkipTraining
     @CsvSource(value = {
             "*<$$/instset/+>       % collection",    // wildcard collection → every result is a Type
             "*<db:users/+>.take(1) % entry",         // specific collection + wildcard entry → first is instance

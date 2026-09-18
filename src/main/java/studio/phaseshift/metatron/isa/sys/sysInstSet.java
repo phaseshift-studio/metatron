@@ -20,21 +20,27 @@ package studio.phaseshift.metatron.isa.sys;
 
 import org.buildobjects.process.ProcBuilder;
 import org.buildobjects.process.ProcResult;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Real;
-import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.sys.space.fsSpace;
+import studio.phaseshift.metatron.isa.sys.space.serialSpace;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.ImageUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -49,8 +55,10 @@ import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.*;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -58,6 +66,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.sys.space.fsSpace.makeFile;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -87,23 +96,42 @@ public class sysInstSet extends AbstractInstSet {
     public static final fURI SYS_ISA_TID = M_ISA_TID.extend("sys");
     public static final fURI SYS_INST_TID = SYS_ISA_TID.extend("inst");
     public static final fURI SYS_BASH_INST_TID = SYS_INST_TID.extend("bash");
-
-    /*public static final Type FILE_TYPE = Type.Builder.build()
+    public static final fURI ROUTER_TID = SYS_ISA_TID.extend("router");
+    public static final fURI SYS_SPACE_TID = SYS_ISA_TID.extend("space");
+    public static final fURI FS_SPACE_TID = SYS_SPACE_TID.extend("fsspace");
+    public static final fURI SERIAL_SPACE_TID = SYS_SPACE_TID.extend("serialspace");
+    public static final fURI FILE_TID = SYS_ISA_TID.extend("file");
+    public static final fURI DIR_TID = SYS_ISA_TID.extend("dir");
+    public static final fURI IMAGE_TID = FILE_TID.extend("image");
+    public static final Type ROUTER_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(ROUTER_TID)
+            .create();
+    public static final Type FILE_TYPE = Type.Builder.build()
             .tid(URI_TID)
             .vid(FILE_TID)
-            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(FILE_TID),
-                    lst(T(URI_TID)),
-                    (lhs, inst) -> makeFile(Path.of(inst.arg(0).uriValue().basePath().toString())))).create();
+            .constructor(lhs -> makeFile(Path.of(lhs.uriValue().basePath().toString())))
+            .create();
+    public static final Type IMAGE_FILE_TYPE = Type.Builder.build()
+            .tid(FILE_TID)
+            .vid(IMAGE_TID).create();
     public static final Type DIR_TYPE = Type.Builder.build()
             .tid(URI_TID)
             .vid(DIR_TID)
             //.predicate((uri, x) -> fsSpace.resolveFile(uri.as()).isDirectory() ? uri : noobj())
-            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(DIR_TID.maybe()),
-                    lst(T(URI_TID)),
-                    (lhs, inst) -> inst.arg(0).uriValue().isBranch() ? makeFile(Path.of(inst.arg(0).uriValue().basePath().toString())) : noobj())).create();
-    public static final Type IMAGE_FILE_TYPE = Type.Builder.build()
-            .tid(FILE_TID)
-            .vid(IMAGE_TID).create();*/
+            .constructor(obj -> obj.uriValue().isBranch() ? makeFile(Path.of(obj.uriValue().basePath().toString())) : noobj())
+            .create();
+    public static final Type FS_SPACE_TYPE = Type.Builder.build()
+            .tid(SPACE_TID)
+            .vid(FS_SPACE_TID)
+            .isaPredicate(rec(uri(SCRIPT).maybe().asUri(), rec(URI_TYPE, URI_TYPE)))
+            .constructor(obj -> fsSpace.of(FileSystems.getDefault(), obj.asRec(), obj.vid()))
+            .create();
+    public static final Type SERIAL_SPACE_TYPE = Type.Builder.build()
+            .tid(SPACE_TID)
+            .vid(SERIAL_SPACE_TID)
+            .constructor(obj -> serialSpace.of(obj.asRec(), obj.vid()))
+            .create();
 
     private static final Real DEFAULT_TIMEOUT = real(20.0, MATH_SECOND_TID, null);
 
@@ -129,7 +157,41 @@ public class sysInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(Map.of(
                 uri(CONST), lst(ThreadExecutor.instance()),
+                uri(TYPE), lst(
+                        FS_SPACE_TYPE,
+                        SERIAL_SPACE_TYPE,
+                        DIR_TYPE,
+                        FILE_TYPE,
+                        IMAGE_FILE_TYPE),
                 uri(INST), lst(
+                        instC(AS_INST_TID.dom(URI_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
+                            try {
+                                final File file = fsSpace.staticObjToFile(lhs);
+                                LOG.debug("translating file to bytes: %s", file);
+                                final byte[] data;
+                                try (final FileInputStream fis = new FileInputStream(file)) {
+                                    data = fis.readAllBytes();
+                                } catch (final IOException e) {
+                                    throw MTronException.of(e);
+                                }
+                                return bytes(ByteBuffer.wrap(data));
+                            } catch (final Exception e) {
+                                throw MTronException.of(e);
+                            }
+                        }),
+                        instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID), else_(real(1.0d))),
+                                (lhs, inst) -> str(ImageUtil.convertToAscii(lhs.bytesValue(), inst.arg(1).realValue())).tid(IMAGE_TID)),
+                        instC(SYS_INST_TID.extend("close").dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+                            if (lhs instanceof Router)
+                                return Stream.of(noobj()).peek(o -> System.exit(0)).iterator().next();
+                            CommonUtil.close(lhs);
+                            if (lhs.isNoObj())
+                                BootLoader.close();
+                            return noobj();
+                        }),
+                        instC(SYS_INST_TID.extend("redirect").dom(ALL.maybe()).rng(f("rec[short=>uri,long=>uri]")), lst(URI_TYPE), (lhs, inst) -> rec(
+                                uri(SHORT), uri(Router.global().redirect(inst.arg(0).uriValue(), false)),
+                                uri(LONG), uri(Router.global().redirect(inst.arg(0).uriValue(), true)))),
                         docWrap(instC(SYS_INST_TID.extend("sys_stat").dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) -> ThreadExecutor.instance().summary()), "a summary of thread counts"),
                         docWrap(instC(SYS_INST_TID.extend("find_file").dom(A.maybe()).rng(LST_TID), rec(
                                         uri(NAME), STR_TYPE,

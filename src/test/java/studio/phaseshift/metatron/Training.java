@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.annotation.*;
 import java.lang.reflect.Method;
@@ -80,6 +81,14 @@ public @interface Training {
     String input() default "";
 
     String output();
+
+    String TEST_DATA_ACCESSOR = "@TestData";
+
+    @Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface SkipTraining {
+        String reason() default "";
+    }
 
     @Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)
@@ -140,11 +149,15 @@ public @interface Training {
          * Produces training entries from a test method.
          */
         public static List<Entry> from(Method method, CsvSource csv) {
+            // skill training entry extraction if explicitly stated
+            if (method.isAnnotationPresent(Training.SkipTraining.class))
+                return List.of();
             final List<Entry> entries = new ArrayList<>();
             final String methodKey = method.getDeclaringClass().getSimpleName() + "." + method.getName();
             final String delimiter = String.valueOf(csv.delimiter());
 
             final Training[] trainings = method.getAnnotationsByType(Training.class);
+            final String testData = method.isAnnotationPresent(TestData.class) ? String.join("\n", method.getAnnotation(TestData.class).value()) : null;
             if (trainings.length > 0) {
                 // ── Annotated: render instruction/input/output templates against the row's columns ──
                 final Map<String, Integer> paramToCol = paramNameToColumn(method);
@@ -152,9 +165,9 @@ public @interface Training {
                     for (final String row : csv.value()) {
                         final String[] parts = row.split(java.util.regex.Pattern.quote(delimiter));
                         entries.add(new Entry(
-                                render(training.instruction(), parts, paramToCol),
-                                render(training.input(), parts, paramToCol),
-                                render(training.output(), parts, paramToCol),
+                                render(training.instruction(), parts, paramToCol, testData),
+                                render(training.input(), parts, paramToCol, testData),
+                                render(training.output(), parts, paramToCol, testData),
                                 methodKey));
                     }
                 }
@@ -207,6 +220,8 @@ public @interface Training {
             for (int i = 0; i < params.length; i++) {
                 map.put(params[i].getName(), i);
             }
+            if (method.isAnnotationPresent(TestData.class))
+                map.put(TEST_DATA_ACCESSOR, -1);
             return map;
         }
 
@@ -214,15 +229,21 @@ public @interface Training {
          * Renders a template by replacing {@code {{{name}}}} holes whose content matches a
          * parameter name with that column's value; any other {@code {{{...}}}} is left verbatim.
          */
-        private static String render(final String template, final String[] parts, final Map<String, Integer> paramToCol) {
+        private static String render(final String template, final String[] parts, final Map<String, Integer> paramToCol, final String testData) {
             if (template == null || template.isEmpty()) return "";
             final Matcher m = TEMPLATE_HOLE.matcher(template);
             final StringBuilder sb = new StringBuilder();
             while (m.find()) {
                 final String name = m.group(1).trim();
-                final Integer col = paramToCol.get(name);
-                final String replacement = (col != null && col < parts.length) ? parts[col].trim() : m.group(0);
-                m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+                if (name.equals(TEST_DATA_ACCESSOR)) {
+                    if (null == testData || null == paramToCol.get(TEST_DATA_ACCESSOR))
+                        throw MTronException.of("attempting to access non-existent @TestData: %s", template);
+                    m.appendReplacement(sb, Matcher.quoteReplacement(testData));
+                } else {
+                    final Integer col = paramToCol.get(name);
+                    final String replacement = (col != null && col < parts.length) ? parts[col].trim() : m.group(0);
+                    m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+                }
             }
             m.appendTail(sb);
             return sb.toString();

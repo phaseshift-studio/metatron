@@ -6,15 +6,15 @@ for writing website docs. Lives in the repo (next to the docs it builds), **outs
 
 ## What it does
 
-| You right-click… | It runs (via the pre-built uber-jar) | You get |
-|---|---|---|
-| `docs/skills/**/*.md` | `MarkdownRunner <file> -o .metatron/skills/<sub> --html` (single-file + chained site-html pass) | the **processed** markdown opened in the editor **and** the rendered sibling `.html` opened in the browser |
-| `docs/website/adoc/*.adoc` | `AsciiDocRunner docs/website/adoc … --single-boot` (the adoc tree is one book) | **`docs/website/tractatus.html`** opened in the browser |
+| You right-click…           | It runs (via the pre-built uber-jar)                                                            | You get                                                                                                    |
+|----------------------------|-------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| `docs/skills/**/*.md`      | `MarkdownRunner <file> -o .metatron/skills/<sub> --html` (single-file + chained site-html pass) | the **processed** markdown opened in the editor **and** the rendered sibling `.html` opened in the browser |
+| `docs/website/adoc/*.adoc` | `AsciiDocRunner docs/website/adoc … --single-boot` (the adoc tree is one book)                  | **`docs/website/tractatus.html`** opened in the browser                                                    |
 
 - **md** is a true single-file build (`MarkdownRunner` has a `singleFile` mode) — the file you clicked is the
   only file processed. `--html` then runs `MarkdownRunner`'s site-html pass (body conversion via
-  `HTMLMarkdownSerializer`) in the same VM run, so the final markdown
-  (`docs/skills/**` → `.metatron/skills/**`) *and* the rendered website HTML (sibling `.html`, same page chrome
+  `HTMLMarkdownSerializer`) in the same VM run, so the final markdown (`docs/skills/**` → `.metatron/skills/**`) *and*
+  the rendered website HTML (sibling `.html`, same page chrome
   as `bin/metatron-docker build docs`) both come out of one right-click.
 - **adoc** is a *book*: `tractatus.adoc` `include::`s the chapters, and the one viewable artifact is the
   single mega-page `tractatus.html`. So an adoc build rebuilds the bundle (with `--single-boot` to amortize the

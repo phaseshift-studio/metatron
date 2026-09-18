@@ -92,8 +92,8 @@ console is showing:
 
 ```mtron_pre
 panel_widget::[title=>'note',body=>"alpha\nbeta"]@/usr/uidoc/panel
-*/usr/uidoc/panel/title                [-- one key --]
-*/usr/uidoc/panel/body                 [-- another --]
+*/usr/uidoc/panel/title                                       
+*/usr/uidoc/panel/body
 ```
 
 The style is a key like any other, so a widget's look is set by writing one:
@@ -105,17 +105,10 @@ The style is a key like any other, so a widget's look is set by writing one:
 
 ## rendering a widget inline
 
-A widget renders wherever a str fits, by casting it through the widget's own `as` inst:
+A widget renders wherever a `str::T` fits, by casting it through the widget's own `as?str<=widget` inst:
 
 ```mtron_pre
 panel_widget::[title=>'note',body=>"alpha\nbeta\ngamma"].as?str<=widget(str::T)
-```
-
-**`as(str::T)` is not this.** A widget *is* a rec, so the plain cast resolves to the rec-to-str
-conversion and prints the fields:
-
-```mtron_pre
-panel_widget::[title=>'note',body=>'alpha'].as(str::T)     [-- the rec, quoted: not the render --]
 ```
 
 The explicit dom (`as?str<=widget(str::T)`) is what selects the widget's own rendering, and a widget read

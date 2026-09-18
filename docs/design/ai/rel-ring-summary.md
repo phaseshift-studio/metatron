@@ -2,33 +2,39 @@
 
 ## Overview
 
-Relations (`Rel`) implement `Ring.O<Rel>`, giving them full ring algebraic structure with composition, identities, and path multiplicities.
+Relations (`Rel`) implement `Ring.O<Rel>`, giving them full ring algebraic structure with composition, identities, and
+path multiplicities.
 
 ## Ring Operations
 
-| Operation | Syntax | Semantics | Example |
-|-----------|--------|-----------|---------|
-| **Multiplication** | `r1.mult(r2)` | Relation composition | `(a=>b).mult((b=>c)) = (a=>c)` |
-| **One** | `r.one()` | Identity relation | `(a=>b).one() = (id()=>id())` |
-| **Addition** | `r1.plus(r2)` | Combine relations | `(a=>b).plus((c=>d)) = {(a=>b),(c=>d)}` |
-| **Zero** | `r.zero()` | Zero relation | `(a=>b).zero() = (noobj=>noobj)` |
-| **Negation** | `r.neg()` | Swap domain/range | `(a=>b).neg() = (b=>a)` |
+| Operation          | Syntax        | Semantics            | Example                                 |
+|--------------------|---------------|----------------------|-----------------------------------------|
+| **Multiplication** | `r1.mult(r2)` | Relation composition | `(a=>b).mult((b=>c)) = (a=>c)`          |
+| **One**            | `r.one()`     | Identity relation    | `(a=>b).one() = (id()=>id())`           |
+| **Addition**       | `r1.plus(r2)` | Combine relations    | `(a=>b).plus((c=>d)) = {(a=>b),(c=>d)}` |
+| **Zero**           | `r.zero()`    | Zero relation        | `(a=>b).zero() = (noobj=>noobj)`        |
+| **Negation**       | `r.neg()`     | Swap domain/range    | `(a=>b).neg() = (b=>a)`                 |
 
 ## Key Semantics
 
 ### 1. Multiplication = Composition
+
 When relations are composable (range of first matches domain of second):
+
 ```
 (a=>b) × (b=>c) = (a=>c)
 ```
 
 When not composable:
+
 ```
 (a=>b) × (c=>d) = (noobj=>noobj)
 ```
 
 ### 2. Coefficient Multiplication (Path Multiplicities)
+
 **Critical**: When composing paths, coefficients multiply:
+
 ```
 {3}(1=>2) × {4}(2=>3) = {12}(1=>3)
 ```
@@ -38,23 +44,29 @@ When not composable:
 This is **stream ring theory** - coefficients represent path multiplicities in graph traversal.
 
 ### 3. Distributive Multiplication Over Collections
+
 Multiplication distributes over Objs collections:
+
 ```
 r × {r1, r2, r3} = {r × r1, r × r2, r × r3}
 ```
 
 **Example - Tree/Graph Exploration**:
+
 ```mtron
 (a=>b) × {(b=>c), (b=>d)} × {(d=>e), (c=>e)}
 ```
+
 This explores all paths from `a` to `e` through intermediate nodes, with dead paths represented as `(noobj=>noobj)`.
 
 ### 4. Active Identities
+
 - `(id()=>id())` is an **active identity** (instruction, not passive value)
 - Satisfies identity axioms through runtime evaluation
 - Demonstrates **verification-forced reification** principle
 
 ### 5. Zero as Dead Paths
+
 - `(noobj=>noobj)` represents non-composable/dead paths
 - Acts as absorbing element: `r × zero = zero`
 
@@ -96,17 +108,17 @@ This explores all paths from `a` to `e` through intermediate nodes, with dead pa
 ## Files Modified
 
 1. **`src/main/java/studio/phaseshift/metatron/isa/m/type/Rel.java`**
-   - Implements `Ring.O<Rel>` interface
-   - Ring operations: `mult()`, `one()`, `zero()`, `neg()`, `plus()`
-   - Predicates: `isOne()`, `isZero()`
-   - Instruction set entries for all operations
-   - **Distributive multiplication** over Objs collections
+    - Implements `Ring.O<Rel>` interface
+    - Ring operations: `mult()`, `one()`, `zero()`, `neg()`, `plus()`
+    - Predicates: `isOne()`, `isZero()`
+    - Instruction set entries for all operations
+    - **Distributive multiplication** over Objs collections
 
 2. **`src/test/java/studio/phaseshift/metatron/isa/m/type/RelTest.java`**
-   - 19 test methods
-   - 157+ test cases covering all Ring operations
-   - Tests for distributive multiplication
-   - Ring axiom verification
+    - 19 test methods
+    - 157+ test cases covering all Ring operations
+    - Tests for distributive multiplication
+    - Ring axiom verification
 
 ## Theoretical Significance
 
@@ -119,7 +131,8 @@ This explores all paths from `a` to `e` through intermediate nodes, with dead pa
 
 ## Known Limitations
 
-- **Double negation timeout**: `neg().neg()` causes compiler timeout due to known bug with back-to-back identical instructions
+- **Double negation timeout**: `neg().neg()` causes compiler timeout due to known bug with back-to-back identical
+  instructions
 - Workaround: Avoid chaining identical instructions in tests
 
 ## Quick Reference

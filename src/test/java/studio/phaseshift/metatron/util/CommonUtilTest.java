@@ -24,10 +24,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.sys.space.fsSpace;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,7 +45,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.FS_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.FS_SPACE_TYPE;
 
 /**
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -372,8 +372,8 @@ public class CommonUtilTest extends AbstractMetatronTest {
         // `console::[...]` was glued into the preceding one and the parse died.
         final String source = "agent::[feature => [body => \"\", style => 1]]@<dr>; console::[header => 1]@/usr/marko/console";
         assertEquals(List.of(
-                "agent::[feature => [body => \"\", style => 1]]@<dr>",
-                "console::[header => 1]@/usr/marko/console"),
+                        "agent::[feature => [body => \"\", style => 1]]@<dr>",
+                        "console::[header => 1]@/usr/marko/console"),
                 CommonUtil.splitOnNonQuotedSequence(source, ';', false));
     }
 }

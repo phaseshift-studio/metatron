@@ -194,14 +194,14 @@ public class RelTest extends AbstractAlgebraTest<Rel> {
             "(a=>1).select((_=>plus(10)))                                  % (a=>11)",
             "(2=>1).select((mult(4)=>plus(5)))                             % (8=>6)",
             "(1=>(2=>3)).select((mult(4)=>(_=>plus(10))))                  % (4=>(2=>13))",
-            "1=>2=>3.select((mult(4)=>(_=>plus(10)))).where((_=>(_=>14))) % (4=>(2=>14))",
-            "1=>2=>3.select((mult(4)=>(_=>plus(10)))).where((_=>(_=>13))) % noobj",
+            "1=>2=>3.select((mult(4)=>(_=>plus(10)))).isa((_=>(_=>14)))    % (4=>(2=>14))",
+            "1=>2=>3.select((mult(4)=>(_=>plus(10)))).isa((_=>(_=>13)))    % noobj",
             "(a=>b).select((a=>_))                                         % (a=>b)",
             "(a=>b).select((c=>_))                                         % noobj",
             "(a=>b).select((_=>b))                                         % (a=>b)",
             "(a=>b).select((_=>c))                                         % noobj",
     }, delimiter = '%')
-    public void testRelSelectWhere(final String code, final String expected) {
+    public void testRelSelectIsA(final String code, final String expected) {
         AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
     }
 
