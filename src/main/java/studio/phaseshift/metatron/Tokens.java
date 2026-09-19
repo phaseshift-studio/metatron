@@ -20,18 +20,49 @@ package studio.phaseshift.metatron;
 
 import studio.phaseshift.metatron.furi.fURI;
 
+import java.util.Set;
+
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public final class Tokens {
-
-
     private Tokens() {
         // do nothing
     }
 
+    // furi tokens
+    public static final fURI M_ISA_TID = f("/m");
+    public static final fURI SPACE_TID = M_ISA_TID.extend("space");
+    public static final fURI M_ISA_INST_TID = M_ISA_TID.extend("inst");
+    public static final fURI M_ISA_REWRITE_TID = M_ISA_INST_TID.extend("rewrite");
+    public static final fURI INST_PRED_TID = M_ISA_INST_TID.extend("pred").rng(ALL.maybe());
+    public static final fURI INSTSET_TID = M_ISA_TID.extend("instset");
+    public static final fURI REC_TID = M_ISA_TID.extend("rec");
+    public static final fURI OBJS_TID = M_ISA_TID.extend("objs");
+    public static final fURI TYPE_TID = M_ISA_TID.extend("type");
+    public static final fURI CODE_TID = M_ISA_TID.extend("code");
+    public static final fURI NOOBJ_TID = f("noobj");
+    public static final fURI BOOL_TID = M_ISA_TID.extend("bool");
+    public static final fURI REL_TID = M_ISA_TID.extend("rel");
+    public static final fURI LST_TID = M_ISA_TID.extend("lst");
+    public static final fURI BYTES_TID = M_ISA_TID.extend("bytes");
+    public static final fURI URI_TID = M_ISA_TID.extend("uri");
+    public static final fURI AUTHORITY_TID = URI_TID.extend("authority");
+    public static final fURI STR_TID = M_ISA_TID.extend("str");
+    public static final fURI REAL_TID = M_ISA_TID.extend("real");
+    public static final fURI INT_TID = M_ISA_TID.extend("int");
+    public static final fURI FAIL_TID = M_ISA_TID.extend("fail");
+    public static final Set<fURI> BASE_TYPES = Set.of(
+            FAIL_TID, BOOL_TID, BYTES_TID, INT_TID, REAL_TID,
+            STR_TID, URI_TID, REL_TID,
+            LST_TID, REC_TID, M_ISA_INST_TID,
+            CODE_TID, OBJS_TID, NOOBJ_TID);
+    public static final fURI ALL_STAR = ALL.maybeSome();
+
+    /// / string tokens
     public static final String MTRON = "mtron";
     public static final String METATRON = "metatron";
     public static final String MTRON_ID = "mid_";
@@ -50,6 +81,8 @@ public final class Tokens {
     public static final String PROJECT = "project";
     public static final String DATA = "data";
     public static final String TO = "to";
+    public static final String OPEN = "open";
+    public static final String CLOSED = "closed";
     public static final String CONCEPT = "concept";
     public static final String MESSAGE_STACK = "message_stack";
     public static final String PENDING_MESSAGES = "pending_messages";
@@ -208,6 +241,8 @@ public final class Tokens {
     public static final String CLOSE = "close";
     public static final String TABLE = "table";
     public static final String CTOR = "ctor";
+    /// ////////////////////////////////////////////////////////
+    public static final fURI INST_CTOR_TID = M_ISA_INST_TID.extend(CTOR).dom(ALL.maybe());
     public static final String SPARQL = "sparql";
     public static final String COLLECTION = "collection";
     public static final String REFERENCE = "reference";

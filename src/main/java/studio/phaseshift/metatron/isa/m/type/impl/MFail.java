@@ -27,8 +27,8 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Objects;
 
+import static studio.phaseshift.metatron.Tokens.FAIL_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.FAIL_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

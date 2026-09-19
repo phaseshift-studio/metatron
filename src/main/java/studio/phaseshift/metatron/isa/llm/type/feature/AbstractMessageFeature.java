@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 import studio.phaseshift.metatron.isa.llm.type.feature.service.ToolService;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -146,7 +147,7 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
             service.chatMemory(agent.requireService(MessageService.class).memory()).storeRetrievedContentInChatMemory(true);
         if (agent.hasFeature(LLM_TOOL_FEATURE_TID)) {
             final ToolService toolFeature = agent.requireService(ToolService.class);
-            toolFeature.addTool(mTool.tool(instC(f("add_message").dom(ALL.maybe()).rng(LLM_MESSAGE_TID), lst(REC_TYPE), (lhs, inst) -> {
+            toolFeature.addTool(mTool.tool(instC(f("add_message").dom(ALL.maybe()).rng(LLM_MESSAGE_TID), lst(mInstSet.REC_TYPE), (lhs, inst) -> {
                 return agent.requireService(MessageService.class).addMessage(agent, inst.arg(0).asRec());
             })));
         }

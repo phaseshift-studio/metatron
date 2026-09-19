@@ -507,7 +507,7 @@ native pushdown).</p>
 <tr><td><code>sql_offset</code></td><td><code>from(uri).skip(n)</code></td><td><code>SELECT * FROM table OFFSET n</code></td></tr>
 <tr><td><code>sql_offset_limit</code></td><td><code>sql_offset.take(m)</code></td><td><code>SELECT * FROM table LIMIT m OFFSET n</code></td></tr>
 <tr><td><code>sql_has</code></td><td><code>from(uri).has()</code></td><td><code>SELECT EXISTS(SELECT 1 FROM table LIMIT 1)</code></td></tr>
-<tr><td><code>sql_where</code></td><td><code>from(uri).where(pred)</code></td><td><code>SELECT * FROM table WHERE conditions</code></td></tr>
+<tr><td><code>sql_where</code></td><td><code>from(uri).isa(pred)</code></td><td><code>SELECT * FROM table WHERE conditions</code></td></tr>
 <tr><td><code>sql_where_count</code></td><td><code>sql_where.count()</code></td><td><code>SELECT COUNT(*) FROM table WHERE conditions</code></td></tr>
 <tr><td><code>sql_where_limit</code></td><td><code>sql_where.take(n)</code></td><td><code>SELECT * FROM table WHERE conditions LIMIT n</code></td></tr>
 <tr><td><code>sql_where_offset</code></td><td><code>sql_where.skip(n)</code></td><td><code>SELECT * FROM table WHERE conditions OFFSET n</code></td></tr>
@@ -526,9 +526,9 @@ native pushdown).</p>
 <li><code>sql_offset_limit</code>: <code>sql_offset(uri, 100).take(10)</code> → <code>sql_offset_limit(uri, 100, 10)</code></li>
 </ol>
 <p>Result: a single <code>SELECT * FROM table LIMIT 10 OFFSET 100</code>.</p>
-<p>A more complex chain — <code>from(uri).where(pred).skip(n).take(m)</code> fires three rewrites:</p>
+<p>A more complex chain — <code>from(uri).isa(pred).skip(n).take(m)</code> fires three rewrites:</p>
 <ol>
-<li><code>sql_where</code>: <code>from(uri).where(pred)</code> → <code>sql_where(uri, pred)</code></li>
+<li><code>sql_where</code>: <code>from(uri).isa(pred)</code> → <code>sql_where(uri, pred)</code></li>
 <li><code>sql_where_offset</code>: <code>sql_where(uri, pred).skip(n)</code> → <code>sql_where_offset(uri, pred, n)</code></li>
 <li><code>sql_where_offset_limit</code>: <code>sql_where_offset(uri, pred, n).take(m)</code> → <code>sql_where_offset_limit(uri, pred, n, m)</code></li>
 </ol>
@@ -773,7 +773,7 @@ columns differently from their target tables to avoid the convention match entir
 <ul>
 <li><code>rewrite-system-java.md</code> — RewriteBuilder, Rewriter, Code.rewrite () loop</li>
 <li><code>type-system-java.md</code> — Type interface, MType, Fluent API</li>
-<li><code>mtron-skill-reference.md</code> — mtron expression syntax (from, skip, take, where, count)</li>
+<li><code>mtron-skill-reference.md</code> — mtron expression syntax (from, skip, take, isa, count)</li>
 </ul>
 
     </div>

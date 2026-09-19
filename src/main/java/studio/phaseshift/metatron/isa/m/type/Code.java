@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -32,15 +33,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import static studio.phaseshift.metatron.Tokens.MONAD;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public interface Code extends Call {
-
-    Type CODE_TYPE = Type.Builder.build().tid(CODE_TID).vid(CODE_TID).create();
 
     @Override
     Code clone(final Object jvm, final fURI tid, final fURI vid);
@@ -160,7 +158,7 @@ public interface Code extends Call {
         }
 
         public static Set<Inst> insts() {
-            return new LinkedHashSet<>(List.of(instC(AS_INST_TID.dom(CODE_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asCode().codeValue().stream().map(Obj::<Obj>as).toList()).c(c -> c.mult(lhs.c())))));
+            return new LinkedHashSet<>(List.of(instC(AS_INST_TID.dom(Tokens.CODE_TID).rng(Tokens.LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asCode().codeValue().stream().map(Obj::<Obj>as).toList()).c(c -> c.mult(lhs.c())))));
         }
 
     }

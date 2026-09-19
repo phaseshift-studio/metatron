@@ -52,19 +52,12 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.type.Bool.*;
-import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -876,6 +869,74 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return obj.isType() ? obj.asType() : obj.type();
         }
 
+        /**
+         * Address-only refinement check: is {@code otherTid} on the nominal
+         * refinement chain of a type named {@code vid} whose parent is {@code tid}
+         * (vid -> tid -> ... -> base)?  Never constructs a {@link Type} nor applies
+         * a predicate, so it is the recursion-free middle ground between the
+         * type-constructing {@link Type#isRefinementOf(Type)} walk and the
+         * too-lenient {@link Obj#test(Obj)}.
+         */
+        public static boolean isRefinementOfTid(final fURI vid, final fURI tid, final fURI otherTid) {
+            if (null == otherTid)
+                return false;
+            // node 1: the type's own vid
+            if (null != vid && vid.basePath().equals(otherTid.basePath()))
+                return true;
+            // base type (vid == tid): the chain is just {vid}, already checked above
+            if (null == tid || (null != vid && vid.basePath().equals(tid.basePath())))
+                return false;
+            // node 2+: walk the nominal chain from the parent tid
+            fURI current = tid;
+            while (null != current) {
+                if (current.basePath().equals(otherTid.basePath()))
+                    return true;
+                current = vidToTid(current);
+            }
+            return false;
+        }
+
+        /**
+         * Address-only parent-tid lookup: resolves the {@link InstSet} registry
+         * ({@link InstSet#vidToTid(fURI)}) — a pre-built fURI {@code vid -> tid}
+         * edge — without touching Objs, constructing a {@link Type}, or applying a
+         * predicate.  This is what keeps {@link #isRefinementOfTid} in the fURI
+         * domain and therefore predicate-blind (and more lenient).
+         */
+        private static fURI vidToTid(final fURI vid) {
+            if (null == vid || !Router.loaded())
+                return null;
+            try {
+                final Space space = Router.global().getSpaceFor(vid);
+                return space instanceof InstSet is ? is.vidToTid(vid) : null;
+            } catch (final RuntimeException e) {
+                return null;
+            }
+        }
+
+        /**
+         * The type-preserving {@code isa} filter — {@code dom(A).rng(A.maybe())}
+         * with a generic argument type, mirroring {@code where}.  The generic
+         * {@code A} domain carries a ONE coefficient, so {@code isa} resolves as a
+         * pointwise map/filter rather than a gather (an unbounded domain would
+         * aggregate the whole upstream pipeline before applying).
+         */
+        public static Set<Inst> isaInsts() {
+            return Set.of(
+                    isaOf(INT_TID), isaOf(REC_TID), isaOf(REL_TID), isaOf(BOOL_TID),
+                    isaOf(LST_TID), isaOf(URI_TID), isaOf(STR_TID), isaOf(REAL_TID),
+                    isaOf(BYTES_TID), isaOf(CODE_TID), isaOf(M_ISA_INST_TID));
+        }
+
+        private static Inst isaOf(final fURI tid) {
+            return instC(ISA_INST_TID.dom(tid).rng(tid.maybe()), lst(T(ALL.any())), (lhs, inst) -> lhs.test(inst.arg(0)) ? lhs : noobj());
+        }
+        
+        /*public static Set<Inst> isaInsts() {
+            return Set.of(
+                    instC(ISA_INST_TID.dom(A).rng(A.maybe()), lst(T(B)), (lhs, inst) -> inst.arg(0).isObjCall() ? (inst.arg(0).apply(lhs).isNoObj() ? noobj() : lhs) : (lhs.test(inst.arg(0)) ? lhs : noobj())));
+        }*/
+
         public static boolean isAuto(final Obj obj) {
             return obj.isObjCall() && obj.asCall().insts().getFirst().tid().basePath().toString().startsWith("auto");
         }
@@ -1304,15 +1365,15 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any obj", "the lhs obj if arg is true", Map.of(jnt(0), "filter lhs if false"), "filters the lhs obj"), // TODO: generics are not working for some reason
                     //   docWrap(instC(ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(ALL_TYPE), (lhs, inst) -> lhs.test(inst.arg(0)) ? lhs : noobj()),
                     //        "an obj to match", "the unaltered obj if arg matches", Map.of(jnt(0), "filter lhs if doesn't match arg"), "a filter function \\(f(x)\\to \\{\\emptyset \\cup x\\}\\)"),
-                    docWrap(instC(ISA_INST_TID.dom(ALL).rng(ALL.maybe()), lst(ALL_TYPE), (lhs, inst) -> lhs.test(inst.arg(0)) ? lhs : noobj()),
-                            "an obj to match", "the unaltered obj if arg matches", Map.of(jnt(0), "filter lhs if doesn't match arg"), "a filter function \\(f(x)\\to \\{\\emptyset \\cup x\\}\\)"),
+                    // docWrap(instC(ISA_INST_TID.dom(ALL).rng(ALL.maybe()), lst(ALL_TYPE), (lhs, inst) -> lhs.test(inst.arg(0)) ? lhs : noobj()),
+                    //         "an obj to match", "the unaltered obj if arg matches", Map.of(jnt(0), "filter lhs if doesn't match arg"), "a filter function \\(f(x)\\to \\{\\emptyset \\cup x\\}\\)"),
                     docWrap(instC(SORTA_INST_TID.dom(ALL).rng(ALL.maybe()), lst(ALL_TYPE), (lhs, inst) -> lhs.testNominally(inst.arg(0)) ? lhs : noobj()),
                             "an obj to match taxonomically", "the unaltered obj if arg matches", Map.of(jnt(0), "filter lhs if doesn't match arg"), "checks whether the obj is nominally the arg type or a refinement of the arg type"),
                     instC(MATCHES_INST_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(lhs.test(inst.arg(0)))),
                     docWrap(instC(BLOCK_INST_TID.dom(A.maybe()).rng(B.some()), lst(T(B.some())), (lhs, inst) -> inst.arg(0)),
                             "maybe an obj", "the arg without an applied lhs", Map.of(jnt(0), "the unapplied rhs"), "the lhs obj is halted and the arg is the rhs obj"),
                     instC(SPLIT_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))),
-                    instC(SPLIT_INST_TID.dom(ALL.dom(ALL).rng(ALL)).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(inst.arg(0).stream().map(o -> o.apply(lhs).c(lhs.c().mult(o.c()))).collect(new CommonUtil.LstCollector()))),
+                    instC(SPLIT_INST_TID.dom(ALL).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(inst.arg(0).stream().map(o -> o.apply(lhs).c(lhs.c().mult(o.c()))).collect(new CommonUtil.LstCollector()))),
                     docWrap(instC(CHOOSE_INST_TID.dom(ALL).rng(REL_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as).map(e -> e.<Rel>jvm(Tuple.Pair.with(e.first().apply(lhs), e.second()))).filter(e -> !e.first().isNoObj()).findFirst().map(e -> e.<Obj>jvm(Tuple.Pair.with(e.first(), e.second().apply(lhs)))).orElse(noobj())),
                             "any obj", "the split as an objs", Map.of(jnt(0), "the branches"), "a branching function f(x):g(a)->a',g(b)->b',..."),
                     /**

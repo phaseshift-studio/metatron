@@ -303,7 +303,6 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                         .filter(e -> !e.isNoObj()));
             else if (lhs.isPoly() && (rhs.isPoly() || rhs.isObjCall()))
                 result = updatePolyRecursion(lhs.as(), rhs, operation).vid(lhs.vid());
-
             else
                 result = rhs.apply(lhs).vid(lhs.vid());
             return result;

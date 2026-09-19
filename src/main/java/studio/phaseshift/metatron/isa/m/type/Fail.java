@@ -21,16 +21,15 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.CAUSE_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REIFY_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-
-import studio.phaseshift.metatron.isa.m.type.impl.MFail;
-
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -43,7 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public interface Fail extends Obj, PlusMonoid<Fail> {
 
-    Type FAIL_TYPE = Type.Builder.build().tid(FAIL_TID).vid(FAIL_TID).create();
+    Type FAIL_TYPE = Type.Builder.build().tid(Tokens.FAIL_TID).vid(Tokens.FAIL_TID).create();
 
     @Override
     Fail clone(final Object jvm, final fURI tid, final fURI vid);
@@ -109,10 +108,10 @@ public interface Fail extends Obj, PlusMonoid<Fail> {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(CAUSE_INST_TID.dom(FAIL_TID).rng(FAIL_TID.maybe()), lst(), (lhs, x) -> lhs.<Fail>as().cause().map(z -> (Obj) z).orElse(noobj())), // necessary cause of type casting
+                    instC(CAUSE_INST_TID.dom(Tokens.FAIL_TID).rng(Tokens.FAIL_TID.maybe()), lst(), (lhs, x) -> lhs.<Fail>as().cause().map(z -> (Obj) z).orElse(noobj())), // necessary cause of type casting
                     // the mtron execution path at access time (clip in flow, unroll here)
-                    instC(M_ISA_INST_TID.extend("path").dom(FAIL_TID).rng(STR_TID), lst(), (lhs, x) -> str(MFail.path())),
-                    instC(REIFY_INST_TID.dom(FAIL_TID).rng(REC_TID), lst(), (lhs, x) -> {
+                    instC(Tokens.M_ISA_INST_TID.extend("path").dom(Tokens.FAIL_TID).rng(Tokens.STR_TID), lst(), (lhs, x) -> str(MFail.path())),
+                    instC(REIFY_INST_TID.dom(Tokens.FAIL_TID).rng(Tokens.REC_TID), lst(), (lhs, x) -> {
                         final StackTraceElement[] element = lhs.<Fail>as().jvm().getStackTrace();
                         final Map<Obj, Obj> throwable = new LinkedHashMap<>();
                         throwable.put(uri(Tokens.MESSAGE), str(lhs.<Fail>as().jvm().getMessage()));

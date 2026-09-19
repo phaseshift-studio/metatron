@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Real;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.REAL_TID;
+import static studio.phaseshift.metatron.Tokens.REAL_TID;
 
 
 public class MReal extends MObj implements Real {
@@ -31,7 +31,7 @@ public class MReal extends MObj implements Real {
     }
 
     public static Real real(final Double jvm) {
-        return new MReal(jvm, REAL_TID,null);
+        return new MReal(jvm, REAL_TID, null);
     }
 
     public static Real real(final Float jvm) {
@@ -39,15 +39,15 @@ public class MReal extends MObj implements Real {
     }
 
     public static Real real(final Double jvm, final fURI tid, final fURI vid) {
-       return null == tid ? new MReal(jvm, REAL_TID, vid) : MObj.of(jvm, tid, vid, Real.class);
+        return null == tid ? new MReal(jvm, REAL_TID, vid) : MObj.of(jvm, tid, vid, Real.class);
     }
 
     public static Real real(final Float jvm, final fURI tid, final fURI vid) {
         return real(jvm.doubleValue(), tid, vid);
     }
-     
+
     public static Real of(final double jvm) {
-        return new MReal(jvm, REAL_TID,null);
+        return new MReal(jvm, REAL_TID, null);
     }
 
     @Override

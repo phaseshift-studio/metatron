@@ -24,6 +24,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.petitparser.context.Context;
 import org.petitparser.parser.Parser;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
@@ -62,14 +63,14 @@ public class mParserTest extends AbstractMetatronTest {
 
     @Test
     public void testBoolParse() {
-        assertEquals(BOOL_TID, m_bool().parse("true").<Obj>get().tid());
+        assertEquals(Tokens.BOOL_TID, m_bool().parse("true").<Obj>get().tid());
         assertEquals(bool(true), ObjmtronSerializer.parse("true"));
         assertEquals(bool(false), ObjmtronSerializer.parse("false"));
     }
 
     @Test
     public void testBytesParse() {
-        assertEquals(BYTES_TID, m_bytes().parse("0xabc123").<Bytes>get().tid());
+        assertEquals(Tokens.BYTES_TID, m_bytes().parse("0xabc123").<Bytes>get().tid());
         assertArrayEquals(HexFormat.of().parseHex("abc123"), m_bytes().parse("0xabc123").<Bytes>get().jvm().array());
     }
 

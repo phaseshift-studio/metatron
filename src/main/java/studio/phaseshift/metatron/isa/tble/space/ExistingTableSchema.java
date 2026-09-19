@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.tble.space;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -39,8 +40,9 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.sql.*;
 import java.util.*;
 
+import static studio.phaseshift.metatron.Tokens.REC_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -778,16 +780,16 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      * string round-trips correctly through {@link fURI.Singleton#f(String)}.
      */
     private static String baseVidForValue(final Obj value) {
-        if (value.isBool()) return BOOL_TID.toString();
-        if (value.isInt()) return INT_TID.toString();
-        if (value.isReal()) return REAL_TID.toString();
-        if (value.isStr()) return STR_TID.toString();
-        if (value.isUri()) return URI_TID.toString();
+        if (value.isBool()) return Tokens.BOOL_TID.toString();
+        if (value.isInt()) return Tokens.INT_TID.toString();
+        if (value.isReal()) return Tokens.REAL_TID.toString();
+        if (value.isStr()) return Tokens.STR_TID.toString();
+        if (value.isUri()) return Tokens.URI_TID.toString();
         if (value.isRec()) return REC_TID.toString();
-        if (value.isLst()) return LST_TID.toString();
+        if (value.isLst()) return Tokens.LST_TID.toString();
         if (value.isInst()) return M_ISA_INST_TID.toString();
-        if (value.isCode()) return CODE_TID.toString();
-        if (value.isRel()) return REL_TID.toString();
+        if (value.isCode()) return Tokens.CODE_TID.toString();
+        if (value.isRel()) return Tokens.REL_TID.toString();
         return REC_TID.toString();
     }
 
@@ -1566,7 +1568,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 }
                 // FK column: INTEGER base, ref_table populated
                 persistColumnType(conn, tbl, colName.toLowerCase(),
-                        INT_TID.toString(), val.tid().toString(), refTable);
+                        Tokens.INT_TID.toString(), val.tid().toString(), refTable);
             } else {
                 persistColumnType(conn, tbl, colName.toLowerCase(),
                         baseVidForValue(val), val.tid().toString(), null);

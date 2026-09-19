@@ -24,19 +24,19 @@ import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.BaseQ;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -69,7 +69,7 @@ public class dcmntIncrQ extends BaseQ {
                         M_ISA_INST_TID
                                 .dom(ALL.maybe())
                                 .rng(ALL.maybeSome()),
-                        lst(studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE,
+                        lst(mInstSet.URI_TYPE,
                                 T(ALL)),
                         (lhs, inst) -> {
                             final fURI vid = inst.arg(0).uriValue();

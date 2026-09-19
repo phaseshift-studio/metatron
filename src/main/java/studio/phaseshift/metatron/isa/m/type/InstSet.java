@@ -37,9 +37,9 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -88,6 +88,17 @@ public interface InstSet extends Space {
     Set<Inst> insts();
 
     Set<Inst> rewrites();
+
+    /**
+     * The address→tid edge of this instset: given a vid, return the tid of the
+     * obj stored at that vid — for a type, its refinement (parent); for a
+     * constant, inst, or rewrite, the obj's own type.  Returns {@code null}
+     * when the vid is unknown or a base type (vid == tid).  Address-only; does
+     * not construct a {@link Type}.
+     */
+    default fURI vidToTid(final fURI vid) {
+        return null;
+    }
 
     class Helper {
 

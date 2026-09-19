@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
+import static studio.phaseshift.metatron.Tokens.LST_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
 
 public class MLst extends MObj implements Lst {

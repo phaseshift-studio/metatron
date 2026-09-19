@@ -24,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
@@ -39,8 +40,9 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.FAIL_TID;
+import static studio.phaseshift.metatron.Tokens.INT_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -54,7 +56,7 @@ public class TypeTest extends AbstractMetatronTest {
     //@Disabled
     public void testTypeCoefficientTypedCoefficient() {
         Type a = T(INT_TID.maybe()).maybeSome();
-        Type b = T(Tuple.Pair.with(null, null), INT_TID.maybe(), TYPE_TID.maybeSome());
+        Type b = T(Tuple.Pair.with(null, null), INT_TID.maybe(), Tokens.TYPE_TID.maybeSome());
         //KType c = TT(INT_TYPE.maybe().asType()).c(cInt.of(2, 77)).as();
         Object d = jnt(2).c(cInt.of(4, 6)).vid();
         LOG.warn("\n%s\n%s\n%s", a, b, d);
@@ -746,12 +748,16 @@ public class TypeTest extends AbstractMetatronTest {
             "person   -> being::T[?[name=>str::T]]",
             "mortal   -> person::T[?[age=>?<120]]",
             "immortal -> being::T[?[alias=>str{2,3}::T]]",
-            "team     -> rec::T[?[flag=>?str::T.-<''>-.count().?=2, member=>being{+}::T]]"})
+            "team     -> rec::T[?[flag=>?str::T.split?lst<=('')>-.count().?=2, member=>being{+}::T]]"})
     @CsvSource(value = {
             "[age=>2]                                                            % rec::T                % true",
             "[age=>2]                                                            % lst::T                % false",
             "[age=>2]                                                            % being::T              % true",
             "[age=>'2']                                                          % being::T              % false",
+            "{mortal::[age=>2],mortal::[age=>3]}                                 % rec{2}::T             % true",
+            "{mortal::[age=>2],mortal::[age=>3]}                                 % being{2}::T           % true",
+            "mortal::[age=>2]                                                    % being::T              % true",
+            "being::[age=>2]                                                     % being::T              % true",
             "[name=>'marko',age=>29]                                             % person::T             % true",
             "[name=>'marko',age=>121]                                            % mortal::T             % false",
             "[name=>'marko',age=>120]                                            % mortal::T             % false",
@@ -762,8 +768,12 @@ public class TypeTest extends AbstractMetatronTest {
             "[name=>'marko',age=>120,alias=>{'m','mar','mr'}]                    % immortal::T           % true",
             "[name=>'marko',age=>120,alias=>{'m','mar','mr','mmm'}]              % immortal::T           % false",
             "[name=>'marko',age=>29,alias=>{'m','mar','mr','mmm'}]               % person::T             % true",
-            "[name=>'marko',age=>29,alias=>{'m','mar','mr','mmm'}]               % rec::T             % true",
+            "[name=>'marko',age=>29,alias=>{'m','mar','mr','mmm'}]               % rec::T                % true",
             "[flag=>'us',member=>{}]                                             % team::T               % false",
+            "[flag=>'us',member=>being::[age=>29]]                               % team::T               % true",
+            "[flag=>'us',member=>mortal::[age=>29]]                              % team::T               % true",
+            "[flag=>'us',member=>[age=>29]]                                      % team::T               % true",
+            "[flag=>'us',member=>{being::[age=>29],being::[age=>34]}]            % rec::T                % true",
             "[flag=>'us',member=>{being::[age=>29],being::[age=>34]}]            % team::T               % true",
             "[flag=>'us',member=>{being::[age=>29],mortal::[age=>134]}]          % team::T               % false",
             "[flag=>'us',member=>{being::[age=>29],person::[name=>'a',age=>35]}] % team::T               % true",
@@ -782,7 +792,7 @@ public class TypeTest extends AbstractMetatronTest {
             final Obj typeObj = ObjmtronSerializer.parse(type);
             if (matches) {
                 try {
-                    assertTrue(instanceObj.test(typeObj));
+                    assertTrue(instanceObj.test(typeObj), "%s is not a %s".formatted(instanceObj, typeObj));
                     instanceObj.as(typeObj.asType());
                 } catch (Exception e) {
                     fail(e);

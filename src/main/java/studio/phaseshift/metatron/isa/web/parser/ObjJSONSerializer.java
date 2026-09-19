@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.web.parser;
 
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
@@ -40,11 +41,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
-import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -295,15 +292,15 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
             if (bid != null && T(bid).isRefinementOf(REC_TYPE) &&
                     !ja.isEmpty() && ja.asList().stream().allMatch(e -> e.isJsonArray() && e.getAsJsonArray().size() == 2)) {
                 obj = ja.asList().stream().map(e -> rel(read(e.getAsJsonArray().get(0), null), read(e.getAsJsonArray().get(1), null))).collect(new CommonUtil.RecCollector(bid, vid));
-            } else if (ja.size() == 2 && bid != null && TYPE_TID.equals(bid.basePath())) {
+            } else if (ja.size() == 2 && bid != null && Tokens.TYPE_TID.equals(bid.basePath())) {
                 final fURI typeName = null != rawTid ? rawTid : tid;
                 final Obj parsed = ObjmtronSerializer.parse(typeName.toString() + "::T");
                 obj = parsed.isObjCall() ? ((Call) parsed).tryToInst() : parsed;
             } else {
                 List<Obj> list = new ArrayList<>();
                 for (var j : ja) list.add(read(j, null));
-                final boolean isLst = (bid != null && LST_TID.equals(bid.basePath()))
-                        || (bid == null && tid != null && LST_TID.equals(tid.basePath()));
+                final boolean isLst = (bid != null && Tokens.LST_TID.equals(bid.basePath()))
+                        || (bid == null && tid != null && Tokens.LST_TID.equals(tid.basePath()));
                 if (isLst) {
                     obj = lst(list, tid, null);
                 } else if (tid != null || bid != null) {
@@ -318,7 +315,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
             for (var entry : jo.entrySet()) {
                 map.put(uri(f(entry.getKey())), this.read(entry.getValue(), this.schemaTid(entry.getKey())));
             }
-            obj = rec(map, tid == null ? REC_TID : tid, null);
+            obj = rec(map, tid == null ? Tokens.REC_TID : tid, null);
         }
 
         if (obj == null) return noobj();
@@ -366,9 +363,9 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
             if (bidStr.isEmpty() || bidStr.equals("#"))
                 envelope.add(BID_KEY, new JsonPrimitive(bidStr));
             else if (obj.isLst())
-                envelope.add(BID_KEY, new JsonPrimitive(LST_TID.toString()));
+                envelope.add(BID_KEY, new JsonPrimitive(Tokens.LST_TID.toString()));
             else if (obj.isObjs())
-                envelope.add(BID_KEY, new JsonPrimitive(OBJS_TID.toString()));
+                envelope.add(BID_KEY, new JsonPrimitive(Tokens.OBJS_TID.toString()));
             envelope.add(TID_KEY, new JsonPrimitive(obj.tid().big().toString()));
             envelope.add(VALUE_KEY, element);
             if (obj.vid() != null) envelope.add(VID_KEY, new JsonPrimitive(obj.vid().toString()));

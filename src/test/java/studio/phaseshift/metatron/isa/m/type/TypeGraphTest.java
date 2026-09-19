@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
@@ -35,6 +36,7 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
@@ -43,13 +45,15 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
  * writes, no spurious invalidation on unrelated writes, and the router
  * rebind clearing a stale registry.
  */
+@Isolated
 public class TypeGraphTest extends AbstractMetatronTest {
 
     private static final fURI PROBE = f("/m/tgraphProbe");
 
     @BeforeAll
     public static void setup() {
-        InstSet.importInstSet(f("/m/math"), f("math"));
+        InstSet.importInstSet(MATH_ISA_TID, f("math"));
+        TypeGraph.global();
     }
 
     @AfterEach

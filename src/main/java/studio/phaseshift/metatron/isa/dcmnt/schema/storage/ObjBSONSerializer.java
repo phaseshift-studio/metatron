@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -43,7 +43,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -403,7 +403,7 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
     public BsonDocument writeInst(final Inst inst) {
         final fURI baseTid = inst.tid().basePath();
         if (baseTid.equals(mInstSet.AUTO_FROM_INST_TID) ||
-            baseTid.equals(mInstSet.AUTO_AT_INST_TID)) {
+                baseTid.equals(mInstSet.AUTO_AT_INST_TID)) {
             // Serialize auto_from / auto_at as a MongoDB DBRef.
             // Intra-space:  $ref: "collection",     $id: value  (native MongoDB footprint)
             // Cross-space: $ref: "scheme:collection", $id: value  (scheme prefixed in $ref)
@@ -412,7 +412,7 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
             final String id = segs.getLast();
             final String collection;
             if (this.localScheme != null && refURI.hasScheme() &&
-                !refURI.scheme().equals(this.localScheme)) {
+                    !refURI.scheme().equals(this.localScheme)) {
                 // Cross-space: g:V/1 → $ref: "g:V"
                 collection = refURI.scheme() + ":" + segs.getFirst();
             } else {

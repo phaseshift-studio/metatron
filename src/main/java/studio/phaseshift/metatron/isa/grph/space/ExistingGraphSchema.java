@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,18 +22,12 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSo
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
-import org.apache.tinkerpop.gremlin.structure.Graph;
 import studio.phaseshift.metatron.furi.fURI;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.grph.io.ObjTP3Serializer;
-
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TID;
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.VRTX_TID;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -42,14 +36,13 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TID;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TID;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.VRTX_TID;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -74,11 +67,11 @@ public class ExistingGraphSchema {
 
     // ---- records ------------------------------------------------------------
 
-    public enum ElementType { VERTEX, EDGE }
+    public enum ElementType {VERTEX, EDGE}
 
     public record LabelMetadata(String dbName, String label, ElementType elementType,
-                                 List<PropertyMetadata> properties,
-                                 List<EdgeDirectionMetadata> edgeDirections) {
+                                List<PropertyMetadata> properties,
+                                List<EdgeDirectionMetadata> edgeDirections) {
     }
 
     public record PropertyMetadata(String path, Class<?> javaType, double probability) {
@@ -162,7 +155,8 @@ public class ExistingGraphSchema {
                             uri(TYPE), lst(types.stream().map(t -> (Obj) t).toList())
                     ),
                     INSTSET_TID, instSetVid
-            ) {};
+            ) {
+            };
             Router.global().addSpace(instSet);
             instSet.setup();
             this.space.at(uri(SCHEMA), instSet, MUTABLE);
@@ -186,8 +180,8 @@ public class ExistingGraphSchema {
     // ---- property type inference --------------------------------------------
 
     private List<PropertyMetadata> inferPropertyTypes(final GraphTraversalSource g,
-                                                       final String label,
-                                                       final ElementType type) {
+                                                      final String label,
+                                                      final ElementType type) {
         final Map<String, Map<Class<?>, Integer>> typeCounts = new LinkedHashMap<>();
         int elementCount = 0;
         final Iterator<? extends Element> elements = type == ElementType.VERTEX
@@ -242,7 +236,7 @@ public class ExistingGraphSchema {
     // ---- reference / edge direction detection -------------------------------
 
     private List<EdgeDirectionMetadata> discoverReferences(final GraphTraversalSource g,
-                                                            final String edgeLabel) {
+                                                           final String edgeLabel) {
         final Map<String, Integer> outLabels = new LinkedHashMap<>();
         final Map<String, Integer> inLabels = new LinkedHashMap<>();
         final Iterator<Edge> edges = g.E().hasLabel(edgeLabel).limit(this.sampleSize);
@@ -324,7 +318,8 @@ public class ExistingGraphSchema {
                             uri(TYPE), lst(List.of((Obj) vType, (Obj) eType, (Obj) type))
                     ),
                     INSTSET_TID, instSetVid
-            ) {};
+            ) {
+            };
             Router.global().addSpace(instSet);
             instSet.setup();
             this.space.at(uri(SCHEMA), instSet, MUTABLE);

@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.llm.mToolExecutor;
 import studio.phaseshift.metatron.isa.llm.parser.JsonSchemaGenerator;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -49,7 +50,6 @@ import static studio.phaseshift.metatron.furi.q.QCollection.Docs.doc;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_TID;
 import static studio.phaseshift.metatron.isa.llm.parser.JsonSchemaGenerator.objToSchema;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -208,7 +208,7 @@ public class mTool extends MRec {
         final QCollection.Docs doc = found.isNoObj() ? doc(inst,
                 inst.dom().tid().toString(),
                 inst.rng().tid().toString(),
-                instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(
+                instB(AS_INST_TID, lst(mInstSet.REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(
                         Rel::first,
                         e -> e.second().tid().toString()
                 )),

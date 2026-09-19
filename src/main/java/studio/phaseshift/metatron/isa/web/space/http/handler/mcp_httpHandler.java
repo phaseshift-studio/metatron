@@ -20,14 +20,15 @@ package studio.phaseshift.metatron.isa.web.space.http.handler;
 
 import com.sun.net.httpserver.HttpExchange;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.space.http.HttpRec;
 import studio.phaseshift.metatron.isa.web.space.http.SseStream;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
+import studio.phaseshift.metatron.isa.web.webInstSet;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -36,18 +37,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import studio.phaseshift.metatron.isa.web.webInstSet;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_SUB_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -87,7 +82,9 @@ public class mcp_httpHandler extends HttpRec {
     // Transport-agnostic protocol handler (composition)
     private final mcpServer mcp;
 
-    /** Interval between SSE heartbeats — keeps the stream alive past idle proxies/timeouts. */
+    /**
+     * Interval between SSE heartbeats — keeps the stream alive past idle proxies/timeouts.
+     */
     private static final long HEARTBEAT_MS = 15_000L;
 
     // Session registry: sessionId → session metadata
@@ -183,16 +180,16 @@ public class mcp_httpHandler extends HttpRec {
             // 2 — live push: wake on each notification the server writes to its outbox
             Router.global().write(outbox.extend("#").addQ(SUBQ),
                     rec(mutableMap(
-                            uri(TARGET), uri(outbox.extend("#")),
-                            uri(CODE), instC(f("mcp_sse_push").dom(LST_TID).rng(NOOBJ_TID.zero()), lst(),
-                                    (lhs, inst) -> {
-                                        try {
-                                            sse.send("message", this.JSON.write(lhs.asLst().at(1)).toString());
-                                        } catch (final IOException e) {
-                                            // client gone — the heartbeat loop below notices and closes
-                                        }
-                                        return noobj();
-                                    })),
+                                    uri(TARGET), uri(outbox.extend("#")),
+                                    uri(CODE), instC(f("mcp_sse_push").dom(LST_TID).rng(NOOBJ_TID.zero()), lst(),
+                                            (lhs, inst) -> {
+                                                try {
+                                                    sse.send("message", this.JSON.write(lhs.asLst().at(1)).toString());
+                                                } catch (final IOException e) {
+                                                    // client gone — the heartbeat loop below notices and closes
+                                                }
+                                                return noobj();
+                                            })),
                             SUBQ_SUB_TID, null));
             // 3 — hold the stream open, heartbeat until the client disconnects
             while (!sse.isClosed()) {

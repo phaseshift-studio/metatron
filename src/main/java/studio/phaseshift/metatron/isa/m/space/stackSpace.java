@@ -18,12 +18,12 @@
 
 package studio.phaseshift.metatron.isa.m.space;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -35,14 +35,12 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Stack;
 
-import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Inst.ARGS_FURI;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -54,7 +52,7 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
     public static final Type STACK_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)
             .vid(STACK_SPACE_TID)
-            .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(STACK_SPACE_TID),  // constructor
+            .constructor(instC(Tokens.M_ISA_INST_TID.dom(ALL.maybe()).rng(STACK_SPACE_TID),  // constructor
                     lst(isa_(rec(uri(PATTERN), URI_TYPE)).tryToInst()), (lhs, inst) -> {
                         //final Space space = new stackSpace(inst.arg(0).asRec().at(PATTERN).uriValue());
                         //outer.global().addSpace(space);

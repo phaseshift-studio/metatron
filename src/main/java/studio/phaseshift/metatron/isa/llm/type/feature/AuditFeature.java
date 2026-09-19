@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
@@ -36,7 +37,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
 
 /**
  * Captures agent state at every lifecycle hook and produces an audit trail.
@@ -69,16 +69,20 @@ public class AuditFeature extends AbstractFeature {
         this.trail.clear();
         this.partialResponses = 0;
         this.partialThinkings = 0;
+      /*  Router.writeToSpace(agent.getDataPath(this.getRoot(agent)).extend("on_before_chat"), rec(uri("features"), jnt(agent.features().lstValue().size()),
+                uri("systemMsgs"), jnt(agent.hasFeature(LLM_SYSTEM_FEATURE_TID) ? agent.requireService(SystemService.class).getSystemMessages().size() : 0),
+                uri("userMessage"), str(null == agent.userMessage() ? "" : agent.userMessage())));*/
         snapshot(agent, "before_chat",
                 rec(uri("features"), jnt(agent.features().lstValue().size()),
                         uri("systemMsgs"), jnt(agent.hasFeature(LLM_SYSTEM_FEATURE_TID) ? agent.requireService(SystemService.class).getSystemMessages().size() : 0),
                         uri("userMessage"), str(null == agent.userMessage() ? "" : agent.userMessage())));
+        final String promptText = agent.hasFeature(LLM_SYSTEM_FEATURE_TID) ? String.join("", agent.requireService(SystemService.class).getSystemMessages()) : "";
         agent.feature(LLM_AUDIT_FEATURE_TID).asRec().at(TO).apply(str("""
-                                                                      {{_}}{{g}}system{{/g}}{{/_}}: %s
+                                                                      {{_}}{{g}}system{{/g}}{{/_}}:\n%s
                                                                       {{_}}{{g}}prompt{{/g}}{{/_}}: %s
                                                                         {{b}}features:%d - tools:%d - skills:%d{{X}}
                                                                       """.formatted(
-                agent.hasFeature(LLM_SYSTEM_FEATURE_TID) ? String.join("", agent.requireService(SystemService.class).getSystemMessages()) : "",
+                promptText.replaceAll("---\\[([^\\-]*)]---", "{{c}}---[{{m}}$1{{/m}}]---{{/c}}"),
                 agent.userMessage(),
                 agent.features().lstValue().size(),
                 agent.feature(LLM_TOOL_FEATURE_TID).orElse(rec()).at(TOOL).orElse(lst()).count(),
@@ -106,6 +110,7 @@ public class AuditFeature extends AbstractFeature {
 
     @Override
     public void onToolExecuted(final Agent agent, final Obj result) {
+        // Router.writeToSpace(agent.getDataPath(this.getRoot(agent)).extend("on_tool_executed"), result);
         snapshot(agent, "tool_exec",
                 result.isNoObj() ? rec() : result.asRec());
     }
@@ -114,6 +119,9 @@ public class AuditFeature extends AbstractFeature {
     public void onCompleteResponse(final Agent agent, final ChatFrame result) {
         final Obj chatObj = result.at(uri(CHAT));
         final int chatLen = chatObj.isStr() ? chatObj.strValue().length() : 0;
+       /* Router.writeToSpace(agent.getDataPath(this.getRoot(agent)).extend("on_complete_response"), rec(uri("chatLen"), jnt(chatLen),
+                uri("partialResponses"), jnt(this.partialResponses),
+                uri("partialThinkings"), jnt(this.partialThinkings)));*/
         snapshot(agent, "complete",
                 rec(uri("chatLen"), jnt(chatLen),
                         uri("partialResponses"), jnt(this.partialResponses),
@@ -123,6 +131,7 @@ public class AuditFeature extends AbstractFeature {
 
     @Override
     public void onError(final Agent agent, final Fail fail) {
+        //Router.writeToSpace(agent.getDataPath(this.getRoot(agent)).extend("on_error"),fail.isNoObj() ? rec() : rec(uri("message"), fail));
         snapshot(agent, "error",
                 fail.isNoObj() ? rec() : rec(uri("message"), fail));
     }

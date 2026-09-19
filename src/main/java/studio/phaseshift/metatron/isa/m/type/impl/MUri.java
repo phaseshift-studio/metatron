@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -29,12 +29,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static studio.phaseshift.metatron.Tokens.URI_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 
 public class MUri extends MObj implements Uri {
 
-    private static final Uri EMPTY_URI = new MUri(f(""), URI_TID, null);
+    private static Uri EMPTY_URI = null;
 
     /**
      * Memoized parsed template expressions.
@@ -91,19 +91,21 @@ public class MUri extends MObj implements Uri {
     }
 
     public static Uri uri(final String jvm) {
-        return uri(f(jvm), URI_TID,null);
+        return uri(f(jvm), URI_TID, null);
     }
 
     public static Uri uri() {
+        if (null == EMPTY_URI)
+            EMPTY_URI = new MUri(f(""), URI_TID, null);
         return EMPTY_URI;
     }
 
     public static Uri uri(final fURI jvm) {
-        return uri(jvm, URI_TID,null);
+        return uri(jvm, URI_TID, null);
     }
 
     public static Uri uri(final fURI jvm, final fURI tid) {
-        return uri(jvm, tid,null);
+        return uri(jvm, tid, null);
     }
 
     public static Uri uri(final fURI jvm, final fURI tid, final fURI vid) {
@@ -111,7 +113,7 @@ public class MUri extends MObj implements Uri {
     }
 
     public static Uri uri(final String jvm, final fURI tid) {
-        return uri(f(jvm), tid,null);
+        return uri(f(jvm), tid, null);
     }
 
     @Override

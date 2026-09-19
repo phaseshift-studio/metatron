@@ -35,11 +35,9 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
-import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.ObjFactory.LOG;
 import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.autoToggle;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -52,7 +50,6 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
 
-    Type REC_TYPE = Type.Builder.build().tid(REC_TID).vid(REC_TID).create();
     Rec EMPTY_REC = rec(immutableMap());
     Rec NOOBJ_REC = rec(immutableMap()).c(cInt.ZERO()).asRec();
 
@@ -194,7 +191,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             return obj;
         return objs(this, obj);
     }
- 
+
     @Override
     Rec self(final Object jvm, final fURI tid, final fURI vid);
 

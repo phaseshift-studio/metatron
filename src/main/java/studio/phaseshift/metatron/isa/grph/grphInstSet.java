@@ -64,8 +64,8 @@ import static studio.phaseshift.metatron.isa.grph.space.schema.modernSchema.MODE
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -372,7 +372,7 @@ public class grphInstSet extends AbstractInstSet {
                                 }
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's limit()-barrier for vrtx/edge collections"),
 
-                        // Optimize: from(V/+).where([field=>value]) → g.V().has(field, predicate)
+                        // Optimize: from(V/+).isa([field=>value]) → g.V().has(field, predicate)
                         docWrap(CommonRewrites.whereRewrite(
                                 grphSpace.class,
                                 GRPH_REWRITE_TID.extend("gremlin_where").dom(GRPH_SPACE_TID).rng(VRTX_TID.maybeSome()),

@@ -47,14 +47,8 @@ import static studio.phaseshift.metatron.isa.llm.type.mcp.mcpMessageServer.MCP_M
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -281,19 +275,24 @@ public class llmInstSet extends AbstractInstSet {
                                         .vid(LLM_TODO_TID)
                                         .isaPredicate(rec(
                                                 uri(TEXT), STR_TYPE,
-                                                uri(STATUS).maybe(), isa_(union_(uri("open"), uri("in_progress"), uri("blocked"), uri("done"))).else_(uri("open")),
+                                                uri(STATUS).maybe(), isa_(union_(uri(OPEN), uri(RUN), uri(BLOCK), uri(CLOSE))).else_(uri(OPEN)),
                                                 uri(TIME).maybe(), isa_(DATETIME_TYPE).else_(instB(MATH_DATETIME_NOW_TID, lst())),
                                                 uri(CONCEPT).maybe(), lst(T(LLM_CONCEPT_TID.maybeSome())),
-                                                uri(MESSAGE).maybe(), lst(T(LLM_MESSAGE_TID.maybeSome()))))
+                                                uri(MESSAGE).maybe(), lst(T(LLM_MESSAGE_TID.maybeSome())),
+                                                uri(REFERENCE).maybe(), LST_TYPE))
                                         .create(), "", "", Map.of(
                                         uri(TEXT), "the todo information",
                                         uri(STATUS).maybe(), "current status of todo (default: open)",
                                         uri(TIME).maybe(), "datetime of todo creation (default: datetime_now())",
                                         uri(CONCEPT).maybe(), "concepts associated with todo",
-                                        uri(MESSAGE).maybe(), "messages associated with todo"),
+                                        uri(MESSAGE).maybe(), "messages associated with todo",
+                                        uri(REFERENCE).maybe(), "artifacts associated with todo"),
                                 """
-                                a todo item links to concepts and messages and is used to keep track of task to accomplish
-                                """),
+                                a todo represents a task to be completed.
+                                links to concepts and messages are automatically attached to the todo at creation.
+                                reference to artifacts in metatron can be attached.
+                                """,
+                                "@/agent/todo/1 >>= [reference => +[!*/project/src,!*/project/test]] [-- adding references to a todo --]"),
                         // CLAIM — a distilled proposition with provenance
                         docWrap(LLM_CLAIM_TYPE = Type.Builder.build()
                                         .tid(REC_TID)

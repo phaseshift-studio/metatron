@@ -32,12 +32,12 @@ import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractDataPathSpace;
-import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.dcmnt.schema.domain.CollectionSchemaInstSet;
 import studio.phaseshift.metatron.isa.dcmnt.schema.domain.ExistingCollectionSchema;
 import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -59,7 +59,6 @@ import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_PATTERN;
 import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.COLLECTION_TID;
 import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.DCMNT_SPACE_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -210,7 +209,7 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
         // Open world assumption: rec::T is the floor — undeclared collections are allowed.
         // Uses jvm().putIfAbsent() (raw map access) to avoid triggering !* auto instructions
         // that at() would cause; preserves any user-provided root in the config.
-        this.jvm().putIfAbsent(uri(ROOT), Rec.REC_TYPE);
+        this.jvm().putIfAbsent(uri(ROOT), mInstSet.REC_TYPE);
         LOG.info("using document database {{b}}%s{{X}}", this.databaseName);
 
         // Initialize subscription query for change streams

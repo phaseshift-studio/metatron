@@ -88,7 +88,7 @@ mtron> */m/mach/ui/widget?docq
      obj=>accordion_widget::T,
      dom=>'maybe an obj',
      rng=>'an accordion obj',
-     args=>[{?}body=>'the body content of the accordion',{?}title=>'the title of the accordion'],
+     args=>[{?}title=>'the title of the accordion',{?}body=>'the body content of the accordion'],
      desc=>'[structural] an expandable/collapsible accordion widget'],
     progress_table_widget=>docs::[
      obj=>progress_table_widget::T,
@@ -98,13 +98,19 @@ mtron> */m/mach/ui/widget?docq
      obj=>table_widget::T,
      dom=>'maybe an obj',
      rng=>'a table widget',
-     args=>[{?}header=>'a lst of obj table headers',{?}row=>'a lst of poly table rows',{?}metadata=>'a lst of rows of data behind the display'],
+     args=>[{?}row=>'a lst of poly table rows',{?}metadata=>'a lst of rows of data behind the display',{?}header=>'a lst of obj table headers'],
      desc=>'[structural] a tabular data widget'],
     tree_widget=>docs::[
      obj=>tree_widget::T,
      dom=>'maybe an obj',
      rng=>'a tree widget',
-     args=>[{?}xref=>'xref=>[max=>N, code=><call>] cross-reference decoration',max=>'the max depth to traverse',{?}flatten=>'fold single-folder chains into one path row (default false)',root=>'the root uri to traverse from',{?}code=>'transform obj prior to insertion into tree (default _)',{?}expand=>'branch uris whose children are read regardless of max'],
+     args=>[
+      root=>'the root uri to traverse from',
+      {?}code=>'transform obj prior to insertion into tree (default _)',
+      {?}expand=>'branch uris whose children are read regardless of max',
+      {?}xref=>'xref=>[max=>N, code=><call>] cross-reference decoration',
+      max=>'the max depth to traverse',
+      {?}flatten=>'fold single-folder chains into one path row (default false)'],
      desc=>'[structural] the root uri space is traversed to specified d...'],
     selector_widget=>docs::[
      obj=>selector_widget::T,
@@ -116,8 +122,8 @@ mtron> */m/mach/ui/widget?docq
      dom=>'rec',
      rng=>'panel',
      args=>[
-      body=>'the body content of the panel',
-      title=>'the title of the panel'],
+      title=>'the title of the panel',
+      body=>'the body content of the panel'],
      desc=>'[structural] a simple bordered UI panel widget'],
     label_line_widget=>docs::[
      obj=>label_line_widget::T,
@@ -278,9 +284,9 @@ mtron> tree_widget::[root=>/m/mach/ui, max=>1].as?str<=widget(str::T)
 ```
 ```mtron
 mtron> menu_bar_widget::[height=>1,lines=>[label_line_widget::[body=>'File'],label_line_widget::[body=>'Edit']]].as?str<=widget(str::T)
-==>ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3206
+==>ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3440
 mtron> label_line_widget::[body=>'a label line'].as?str<=widget(str::T)
-==>ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3214
+==>ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3448
 ```
 ## style
 

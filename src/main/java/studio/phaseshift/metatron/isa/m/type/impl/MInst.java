@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type.impl;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -34,7 +35,7 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class MInst extends MObj implements Inst {
     public MInst(final Triplet<Poly, Inst.f, Obj> jvm, final fURI tid, final fURI vid) {
-        super(jvm, null == tid ? M_ISA_INST_TID : tid, vid);
+        super(jvm, null == tid ? Tokens.M_ISA_INST_TID : tid, vid);
         //if (this.tid().name().equals("inst"))
         //    this.selfTID(this.tid().dom(ALL.maybe()).rng(ALL.maybeSome()));
     }
@@ -84,11 +85,11 @@ public class MInst extends MObj implements Inst {
     }
 
     public static Inst instLambda(final Lst args, final BiFunction<Obj, Inst, Obj> f) {
-        return instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), args, f);
+        return instC(Tokens.M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), args, f);
     }
 
     public static Inst instLambda(final fURI dom, final fURI rng, final BiFunction<Obj, Inst, Obj> f) {
-        return instC(M_ISA_INST_TID.dom(dom).rng(rng), lst(T(ALL.maybeSome())), f);
+        return instC(Tokens.M_ISA_INST_TID.dom(dom).rng(rng), lst(T(ALL.maybeSome())), f);
     }
 
     /**
@@ -97,15 +98,15 @@ public class MInst extends MObj implements Inst {
      * {@code (in, ignored) -> ...}.
      */
     public static Inst instLambda(final Function<Obj, Obj> f) {
-        return instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), f);
+        return instC(Tokens.M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), f);
     }
 
     public static Inst instLambda(final Lst args, final Function<Obj, Obj> f) {
-        return instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), args, f);
+        return instC(Tokens.M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), args, f);
     }
 
     public static Inst instLambda(final fURI dom, final fURI rng, final Function<Obj, Obj> f) {
-        return instC(M_ISA_INST_TID.dom(dom).rng(rng), lst(T(ALL.maybeSome())), f);
+        return instC(Tokens.M_ISA_INST_TID.dom(dom).rng(rng), lst(T(ALL.maybeSome())), f);
     }
 
     @Override

@@ -239,41 +239,41 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
             "*/g/V/+=?=(>>name.?='marko')>>age                                     % 29",
             "*/g/V/+=?=(>>name.?='marko')>>{age,name}                              % {'marko',29}",
             "*/g/V/+.?person::[name=>'marko',age=>_].count()                       % 1",
-            "*/g/V/+.where([name=>'marko'])>>name                                        % \"marko\"",
-            "*/g/V/+.where([name=>'marko'])>>age                                         % 29",
-            "*/g/V/+.where([age=>?<30]).count()                                    % 2",
+            "*/g/V/+.isa([name=>'marko'])>>name                                        % \"marko\"",
+            "*/g/V/+.isa([name=>'marko'])>>age                                         % 29",
+            "*/g/V/+.isa([age=>?<30]).count()                                    % 2",
             // ── outE (vertex → edges) via property lookup ──
-            "*/g/V/+.where([name=>'marko']).outE().count()                           % 3",
-            "*/g/V/+.where([name=>'marko']).outE(knows).count()                       % 2",
-            "*/g/V/+.where([name=>'marko']).outE(created).count()                     % 1",
-            "*/g/V/+.where([name=>'marko']).outE(nonexistent).count()                 % 0",
+            "*/g/V/+.isa([name=>'marko']).outE().count()                           % 3",
+            "*/g/V/+.isa([name=>'marko']).outE(knows).count()                       % 2",
+            "*/g/V/+.isa([name=>'marko']).outE(created).count()                     % 1",
+            "*/g/V/+.isa([name=>'marko']).outE(nonexistent).count()                 % 0",
             // ── inE (vertex → incoming edges) ──
-            "*/g/V/+.where([name=>'vadas']).inE().count()                             % 1",
-            "*/g/V/+.where([name=>'vadas']).inE(knows).count()                         % 1",
+            "*/g/V/+.isa([name=>'vadas']).inE().count()                             % 1",
+            "*/g/V/+.isa([name=>'vadas']).inE(knows).count()                         % 1",
             // ── bothE ──
-            "*/g/V/+.where([name=>'marko']).bothE(+).count()                           % 3",
-            "*/g/V/+.where([name=>'marko']).bothE().count?int<=#{*}()                     % 3",
-            "*/g/V/+.where([name=>'marko']).bothE(knows).count?int<=#{*}()                % 2",
+            "*/g/V/+.isa([name=>'marko']).bothE(+).count()                           % 3",
+            "*/g/V/+.isa([name=>'marko']).bothE().count?int<=#{*}()                     % 3",
+            "*/g/V/+.isa([name=>'marko']).bothE(knows).count?int<=#{*}()                % 2",
             // ── out (vertex → adjacent vertices) ──
-            "*/g/V/+.where([name=>'marko']).out().count?int<=#{*}()                      % 3",
-            "*/g/V/+.where([name=>'marko']).out(knows).count?int<=#{*}()                 % 2",
-            "*/g/V/+.where([name=>'marko']).out(knows)>>name                              % {\"vadas\",\"josh\"}",
-            "*/g/V/+.where([name=>'marko']).out(created)>>name                            % \"lop\"",
+            "*/g/V/+.isa([name=>'marko']).out().count?int<=#{*}()                      % 3",
+            "*/g/V/+.isa([name=>'marko']).out(knows).count?int<=#{*}()                 % 2",
+            "*/g/V/+.isa([name=>'marko']).out(knows)>>name                              % {\"vadas\",\"josh\"}",
+            "*/g/V/+.isa([name=>'marko']).out(created)>>name                            % \"lop\"",
             // ── in (vertex → incoming adjacent vertices) ──
-            "*/g/V/+.where([name=>'vadas']).in().count()                                  % 1",
-            "*/g/V/+.where([name=>'vadas']).in(knows).count()                              % 1",
+            "*/g/V/+.isa([name=>'vadas']).in().count()                                  % 1",
+            "*/g/V/+.isa([name=>'vadas']).in(knows).count()                              % 1",
             // ── both ──
-            "*/g/V/+.where([name=>'marko']).both().count?int<=#{*}()                       % 3",
-            "*/g/V/+.where([name=>'marko']).both(knows).count?int<=#{*}()                  % 2",
+            "*/g/V/+.isa([name=>'marko']).both().count?int<=#{*}()                       % 3",
+            "*/g/V/+.isa([name=>'marko']).both(knows).count?int<=#{*}()                  % 2",
             // ── inV / outV (vertex → edge → endpoint vertex) ──
-            "*/g/V/+.where([name=>'marko']).outE(knows).where([weight=>0.5]).inV()>>name   % \"vadas\"",
-            "*/g/V/+.where([name=>'marko']).outE(knows).where([weight=>0.5]).outV()>>name  % \"marko\"",
-            "*/g/V/+.where([name=>'marko']).outE(knows).?[weight=>0.5].inV()>>age    % 27",
+            "*/g/V/+.isa([name=>'marko']).outE(knows).isa([weight=>0.5]).inV()>>name   % \"vadas\"",
+            "*/g/V/+.isa([name=>'marko']).outE(knows).isa([weight=>0.5]).outV()>>name  % \"marko\"",
+            "*/g/V/+.isa([name=>'marko']).outE(knows).?[weight=>0.5].inV()>>age    % 27",
             // ── edge property access via instruction chain ──
-            "*/g/V/+.where([name=>'marko']).outE(created)>>weight                         % 0.4000",
-            "*/g/V/+.where([name=>'marko']).outE(knows)>>weight                           % {0.5000,1.0000}",
+            "*/g/V/+.isa([name=>'marko']).outE(created)>>weight                         % 0.4000",
+            "*/g/V/+.isa([name=>'marko']).outE(knows)>>weight                           % {0.5000,1.0000}",
             // ── instruction-call chain (outE → inV) ──
-            "*/g/V/+.where([name=>'marko']).outE(knows).inV()>>name                           % {\"vadas\",\"josh\"}",
+            "*/g/V/+.isa([name=>'marko']).outE(knows).inV()>>name                           % {\"vadas\",\"josh\"}",
             // ── wildcard vertex set with outE ──
             "*/g/V/+.outE(+).count()                                                    % 6",
             "*/g/V/+.outE(knows).count()                                                % 2",
@@ -282,14 +282,14 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
             "*/g/V/+.out().count?int<=#{*}()                                                      % 6",
             "*/g/V/+.out(knows)>>name                                                             % {\"vadas\",\"josh\"}",
             // ── double walk (vertex → vertices → vertices) ──
-            "*/g/V/+.where([name=>'marko']).out(knows).out(created)>>name                                                 % {\"ripple\",\"lop\"}",
-            "*/g/V/+.where([name=>'marko']).outE(knows).inV().outE(created).inV()>>name                                   % {\"ripple\",\"lop\"}",
-            "*/g/V/+.where([name=>'marko']).outE(knows).has(weight).inV().outE(created).has(weight).inV()>>name           % {\"ripple\",\"lop\"}",
+            "*/g/V/+.isa([name=>'marko']).out(knows).out(created)>>name                                                 % {\"ripple\",\"lop\"}",
+            "*/g/V/+.isa([name=>'marko']).outE(knows).inV().outE(created).inV()>>name                                   % {\"ripple\",\"lop\"}",
+            "*/g/V/+.isa([name=>'marko']).outE(knows).has(weight).inV().outE(created).has(weight).inV()>>name           % {\"ripple\",\"lop\"}",
             // ── from testBasicTraversals (instruction-call equivalents) ──
-            "*/g/V/+.where([name=>'josh']).inE().count()                                                % 1",
-            "*/g/V/+.where([name=>'marko']).out(created)>>lang                                           % \"java\"",
-            "*/g/V/+.where([name=>'marko']).outE(created)>>weight.sum?real<=real{*}()                    % 0.4000",
-            "*/g/V/+.where([name=>'marko']).out()>>name                                                  % {\"lop\",\"vadas\",\"josh\"}",
+            "*/g/V/+.isa([name=>'josh']).inE().count()                                                % 1",
+            "*/g/V/+.isa([name=>'marko']).out(created)>>lang                                           % \"java\"",
+            "*/g/V/+.isa([name=>'marko']).outE(created)>>weight.sum?real<=real{*}()                    % 0.4000",
+            "*/g/V/+.isa([name=>'marko']).out()>>name                                                  % {\"lop\",\"vadas\",\"josh\"}",
     }, delimiter = '%')
     public void testInstructionCallTraversals(final String code, final String expected) {
         LOG.warn(ObjmtronSerializer.parse(code).resolve(space));
@@ -297,12 +297,12 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
     }
 
     /**
-     * Isolated edge-property where() test.  Creates a single edge with
-     * int, real, string, and bool properties and verifies that {@code where()}
+     * Isolated edge-property isa() test.  Creates a single edge with
+     * int, real, string, and bool properties and verifies that {@code isa()}
      * predicates filter correctly on each type.
      */
     @Test
-    public void testEdgePropertyWhere() {
+    public void testEdgePropertyIsa() {
         final grphSpace gs = (grphSpace) Router.global().getSpaceFor(f("/g"));
         // Create alice and bob vertices (match constructor seeding pattern)
         final Vertex alice = gs.sjvm().addV("testVertex").property("name", "alice").next();
@@ -320,26 +320,26 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
         try {
             // ── int property ──
             AbstractMetatronTest.checkCodeParseApply(LOG,
-                    "*/g/V/" + aliceId + ".outE(testEdge).where([rank=>42]).count()", "1");
+                    "*/g/V/" + aliceId + ".outE(testEdge).isa([rank=>42]).count()", "1");
             AbstractMetatronTest.checkCodeParseApply(LOG,
-                    "*/g/V/" + aliceId + ".outE(testEdge).where([rank=>99]).count()", "0");
+                    "*/g/V/" + aliceId + ".outE(testEdge).isa([rank=>99]).count()", "0");
             // ── real property ──
             AbstractMetatronTest.checkCodeParseApply(LOG,
-                    "*/g/V/" + aliceId + ".outE(testEdge).where([score=>0.75]).count()", "1");
+                    "*/g/V/" + aliceId + ".outE(testEdge).isa([score=>0.75]).count()", "1");
             AbstractMetatronTest.checkCodeParseApply(LOG,
-                    "*/g/V/" + aliceId + ".outE(testEdge).where([score=>?>0.5]).count()", "1");
+                    "*/g/V/" + aliceId + ".outE(testEdge).isa([score=>?>0.5]).count()", "1");
             AbstractMetatronTest.checkCodeParseApply(LOG,
-                    "*/g/V/" + aliceId + ".outE(testEdge).where([score=>?>0.9]).count()", "0");
+                    "*/g/V/" + aliceId + ".outE(testEdge).isa([score=>?>0.9]).count()", "0");
             // ── string property ──
             AbstractMetatronTest.checkCodeParseApply(LOG,
-                    "*/g/V/" + aliceId + ".outE(testEdge).where([tag=>'trusted']).count()", "1");
+                    "*/g/V/" + aliceId + ".outE(testEdge).isa([tag=>'trusted']).count()", "1");
             AbstractMetatronTest.checkCodeParseApply(LOG,
-                    "*/g/V/" + aliceId + ".outE(testEdge).where([tag=>'wrong']).count()", "0");
+                    "*/g/V/" + aliceId + ".outE(testEdge).isa([tag=>'wrong']).count()", "0");
             // ── bool property ──
             AbstractMetatronTest.checkCodeParseApply(LOG,
-                    "*/g/V/" + aliceId + ".outE(testEdge).where([active=>true]).count()", "1");
+                    "*/g/V/" + aliceId + ".outE(testEdge).isa([active=>true]).count()", "1");
             AbstractMetatronTest.checkCodeParseApply(LOG,
-                    "*/g/V/" + aliceId + ".outE(testEdge).where([active=>false]).count()", "0");
+                    "*/g/V/" + aliceId + ".outE(testEdge).isa([active=>false]).count()", "0");
         } finally {
             assertFalse(gs.sjvm().E(edge.id()).drop().hasNext());
             assertFalse(gs.sjvm().V(alice.id()).drop().hasNext());
@@ -405,7 +405,7 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
                 // add a second likes edge to a different vertex
                 "@$$/V/+.?[name=>'marko'].addE(likes,*$$/V/+.?[name=>'josh']) % *$$/V/+.?[name=>'marko'].outE(likes).count()  % 2",
                 // add edge with property
-                "@$$/V/+.?[name=>'marko'].addE(trusts,*$$/V/+.?[name=>'vadas'], [weight=>10]) % *$$/V/+.?[name=>'marko'].outE(trusts).where([weight=>10]).count()      % 1",
+                "@$$/V/+.?[name=>'marko'].addE(trusts,*$$/V/+.?[name=>'vadas'], [weight=>10]) % *$$/V/+.?[name=>'marko'].outE(trusts).isa([weight=>10]).count()      % 1",
                 // total outE for marko: 2 (knows) + 1 (created) + 2 (likes) + 1 (trusts) = 6
                 ".  %  *$$/V/+.?[name=>'marko'].outE(+).count()                               % 6",
         };
@@ -503,25 +503,25 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
 
     @ParameterizedTest
     @CsvSource(value = {
-            "*/g/V/+.where([name=>'marko'])                                                % person::T    % true",
-            "*/g/V/+=?=[name=>'marko']                                                % rec::T       % true",
-            "*/g/V/+=?=[name=>'marko']                                                % rec::T       % true",
-            "*/g/V/+=?=[name=>'vadas']                                                % person::T    % true",
-            "*/g/V/+=?=[name=>'vadas']                                                % software::T  % false",
-            "*/g/V/+=?=[name=>'lop']                                                  % software::T  % true",
-            "*/g/V/+=?=[name=>'lop']                                                  % created::T   % false",
-            "*/g/V/+=?=[name=>'marko']                                                % created::T   % false",
+            "*/g/V/+.isa([name=>'marko'])                                                % person::T    % true",
+            "*/g/V/+?[name=>'marko']                                                % rec::T       % true",
+            "*/g/V/+?[name=>'marko']                                                % rec::T       % true",
+            "*/g/V/+?[name=>'vadas']                                                % person::T    % true",
+            "*/g/V/+?[name=>'vadas']                                                % software::T  % false",
+            "*/g/V/+?[name=>'lop']                                                  % software::T  % true",
+            "*/g/V/+?[name=>'lop']                                                  % created::T   % false",
+            "*/g/V/+?[name=>'marko']                                                % created::T   % false",
             "*/g/V/+                                                                  % #{+}::T   % true",
-            "*/g/V/+=?=[name=>'marko'].id{2}()                                        % int{2}::T  % false",
-            "*/g/V/+=?=[name=>'marko'].-<[_,_]>-                                      % person{2}::T  % true",
-            "*/g/V/+=?=[name=>'marko'].-<[_,_]>-                                      % vrtx{2}::T  % true",
-            "*/g/V/+=?=[name=>'marko'].-<[_,_]>-                                      % rec{2}::T  % true",
-            "*/g/V/+=?=[name=>'marko'].-<[_,_]>-                                      % #{2}::T  % true",
-            "*/g/V/+=?=[name=>'marko'].-<[_,_]>-                                      % str{2}::T  % false",
-            "*/g/V/+=?=[name=>'marko'].id{2}()                                        % elmt{2}::T  % true",
-            "*/g/V/+=?=[name=>'marko'].id{2}()                                        % person{2}::T % true",
-            "*/g/V/+=?=[name=>'marko']                                                % rec{2}::T   % false",
-            "*/g/V/+=?=[name=>'marko'].-<[_,_]>-                                      % rec{3}::T   % false",
+            "*/g/V/+?[name=>'marko'].id{2}()                                        % int{2}::T  % false",
+            "*/g/V/+?[name=>'marko'].-<[_,_]>-                                      % person{2}::T  % true",
+            "*/g/V/+?[name=>'marko'].-<[_,_]>-                                      % vrtx{2}::T  % true",
+            "*/g/V/+?[name=>'marko'].-<[_,_]>-                                      % rec{2}::T  % true",
+            "*/g/V/+?[name=>'marko'].-<[_,_]>-                                      % #{2}::T  % true",
+            "*/g/V/+?[name=>'marko'].-<[_,_]>-                                      % str{2}::T  % false",
+            "*/g/V/+?[name=>'marko'].id{2}()                                        % elmt{2}::T  % true",
+            "*/g/V/+?[name=>'marko'].id{2}()                                        % person{2}::T % true",
+            "*/g/V/+?[name=>'marko']                                                % rec{2}::T   % false",
+            "*/g/V/+?[name=>'marko'].-<[_,_]>-                                      % rec{3}::T   % false",
     }, delimiter = '%')
     public void testTypeInheritance(final String lhs, final String type, final boolean matches) {
         new grphInstSet().setup();

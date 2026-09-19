@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.type.resolver;
 
 import org.junit.jupiter.api.*;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.benchmark.BenchmarkTracker;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -307,7 +308,7 @@ public class InstResolverBenchmarkTest extends AbstractMetatronTest {
     @DisplayName("Benchmark: as(type) resolution")
     void benchmarkAsType() {
         Obj lhs = jnt(42);
-        Type realType = T(mInstSet.REAL_TID);
+        Type realType = T(Tokens.REAL_TID);
 
         BenchmarkResult result = runBenchmark("as(real) on int", () -> {
             asInst(realType).resolve(lhs);

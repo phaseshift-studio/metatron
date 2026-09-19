@@ -21,12 +21,12 @@ package studio.phaseshift.metatron.isa.llm.type;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.output.Response;
-import dev.langchain4j.service.AiServices;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.PartialThinking;
 import dev.langchain4j.model.chat.response.PartialToolCall;
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.output.Response;
+import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolExecution;
 import studio.phaseshift.metatron.furi.fURI;
@@ -114,6 +114,9 @@ public class Agent extends MRec {
      */
     private static final ConcurrentHashMap<String, AtomicInteger> depthMap = new ConcurrentHashMap<>();
 
+    public fURI getDataPath(final fURI root) {
+        return root.extend(sessionVID().name()).extend(chatId()).extend(currentDepth);
+    }
 
     public Agent(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(new ConcurrentHashMap<>(jvm), tid, vid);

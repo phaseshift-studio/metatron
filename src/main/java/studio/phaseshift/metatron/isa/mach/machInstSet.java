@@ -52,7 +52,6 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjFactory.M_FACTORY_TYPE;
@@ -134,7 +133,7 @@ public class machInstSet extends AbstractInstSet {
                         MACH_SWARM_MACHINE_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_MACHINE_TID)
                                         .vid(MACH_SWARM_MACHINE_TID)
-                                        .isaPredicate(rec(uri(CODE), T(ALL)))
+                                        //  .isaPredicate(rec()) // uri(CODE), T(ALL))
                                         .constructor(machine -> SwarmMachine.machine(machine.jvm(), machine.tid(), machine.vid()))
                                         .create(), null, null, Map.of(uri(CODE), "the code the machine will evaluate"),
                                 """

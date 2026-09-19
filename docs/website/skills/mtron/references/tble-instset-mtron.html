@@ -611,9 +611,9 @@ mtron&gt; @tbledoc:person/+.take(2)     [-- anchor path --]
 </code></pre>
 <h3>the rewrites — reads that become SQL</h3>
 <p>The interesting half of <code>/m/tble</code>: a read that matches a table is rewritten to SQL before it runs, so <code>count()</code> is
-<code>SELECT COUNT(*)</code>, <code>=?=</code> is <code>WHERE</code>, and a projection is a column list. The match is on the <em>code</em>, not the data — the
+<code>SELECT COUNT(*)</code>, <code>isa()</code> is <code>WHERE</code>, and a projection is a column list. The match is on the <em>code</em>, not the data — the
 same expression over a <code>memspace</code> stays in mtron.</p>
-<pre><code class="language-mtron">mtron&gt; *tbledoc:person/+.=?=[age=&gt;?&lt;30]        [-- SELECT * FROM person WHERE age &lt; 30 --]
+<pre><code class="language-mtron">mtron&gt; *tbledoc:person/+.?[age=&gt;?&lt;30]        [-- SELECT * FROM person WHERE age &lt; 30 --]
 ==&gt;[name=&gt;'marko',age=&gt;29]@tbledoc:person/noobj
 ==&gt;[name=&gt;'grant',age=&gt;25]@tbledoc:person/noobj
 mtron&gt; *tbledoc:person/+.count()               [-- SELECT COUNT(*) FROM person --]
@@ -654,13 +654,13 @@ mtron&gt; *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
 <tr><th>rewrite</th><th>mtron</th><th>sql</th></tr>
 </thead>
 <tbody>
-<tr><td><code>sql_where</code></td><td><code>*db:table/+/+.=?=[col=&gt;pred]</code></td><td><code>SELECT * ... WHERE</code></td></tr>
-<tr><td><code>sql_where_count</code></td><td><code>*db:table/+/+.=?=[col=&gt;pred].count()</code></td><td><code>SELECT COUNT(*) ... WHERE</code></td></tr>
-<tr><td><code>sql_where_order</code></td><td><code>...=?=[..].order(select(col))</code></td><td><code>... WHERE ... ORDER BY</code></td></tr>
-<tr><td><code>sql_where_order_offset</code></td><td><code>...=?=[..].order(select(col)).skip(n)</code></td><td><code>... ORDER BY ... OFFSET n</code></td></tr>
-<tr><td><code>sql_where_limit</code></td><td><code>...=?=[..].take(n)</code></td><td><code>... WHERE ... LIMIT n</code></td></tr>
-<tr><td><code>sql_where_offset</code></td><td><code>...=?=[..].skip(n)</code></td><td><code>... WHERE ... OFFSET n</code></td></tr>
-<tr><td><code>sql_where_offset_limit</code></td><td><code>...=?=[..].skip(m).take(n)</code></td><td><code>... WHERE ... LIMIT n OFFSET m</code></td></tr>
+<tr><td><code>sql_where</code></td><td><code>*db:table/+/+.?[col=&gt;pred]</code></td><td><code>SELECT * ... WHERE</code></td></tr>
+<tr><td><code>sql_where_count</code></td><td><code>*db:table/+/+.?[col=&gt;pred].count()</code></td><td><code>SELECT COUNT(*) ... WHERE</code></td></tr>
+<tr><td><code>sql_where_order</code></td><td><code>...?[..].order(select(col))</code></td><td><code>... WHERE ... ORDER BY</code></td></tr>
+<tr><td><code>sql_where_order_offset</code></td><td><code>...?[..].order(select(col)).skip(n)</code></td><td><code>... ORDER BY ... OFFSET n</code></td></tr>
+<tr><td><code>sql_where_limit</code></td><td><code>...?[..].take(n)</code></td><td><code>... WHERE ... LIMIT n</code></td></tr>
+<tr><td><code>sql_where_offset</code></td><td><code>...?[..].skip(n)</code></td><td><code>... WHERE ... OFFSET n</code></td></tr>
+<tr><td><code>sql_where_offset_limit</code></td><td><code>...?[..].skip(m).take(n)</code></td><td><code>... WHERE ... LIMIT n OFFSET m</code></td></tr>
 <tr><td><code>sql_select</code></td><td><code>*db:table/+/+.==[col=&gt;_]</code></td><td><code>SELECT col ...</code></td></tr>
 <tr><td><code>sql_order</code></td><td><code>*db:table/+/+.order(select(col))</code></td><td><code>... ORDER BY col</code></td></tr>
 <tr><td><code>sql_distinct</code></td><td><code>*db:table/+/+.dedup(select(col))</code></td><td><code>SELECT DISTINCT col ...</code></td></tr>
@@ -782,33 +782,37 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/22
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/26
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/24
+==&gt;[body=&gt;'another one']@tbledoc:note/28
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;12
 ==&gt;17
 ==&gt;21
+==&gt;26
 ==&gt;11
+==&gt;27
+==&gt;4
+==&gt;6
+==&gt;16
+==&gt;3
+==&gt;24
+==&gt;28
+==&gt;20
+==&gt;7
 ==&gt;15
 ==&gt;19
 ==&gt;23
 ==&gt;2
-==&gt;4
-==&gt;6
 ==&gt;8
 ==&gt;1
 ==&gt;13
-==&gt;16
 ==&gt;22
-==&gt;3
+==&gt;25
 ==&gt;10
 ==&gt;14
 ==&gt;18
-==&gt;24
-==&gt;20
 ==&gt;5
-==&gt;7
 ==&gt;9
 </code></pre>
 <h3>taking the space down</h3>

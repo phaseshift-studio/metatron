@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
 
 import java.util.List;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.Tokens.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
 /*

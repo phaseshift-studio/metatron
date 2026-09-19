@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.iot.miot.type;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.iot.miot.miotInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -32,9 +33,8 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.Tokens.SUPER;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.iot.miot.miotInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -88,7 +88,7 @@ public final class Entity {
 
     public static void installTypes(final Set<Type> types, final Set<Inst> insts) {
         Type.Builder.build()
-                .tid(REC_TID)
+                .tid(Tokens.REC_TID)
                 .vid(MIOT_ENTITY_TID)
                 .isaPredicate(rec(uri(SUPER), T(MIOT_DEVICE_TID)))
                 .create(types, insts);

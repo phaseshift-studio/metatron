@@ -82,7 +82,6 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -1410,7 +1409,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * focus (or re-focus) one.  Native text selection is still available via
      * Shift+drag.
      *
-     * @param focused a widget currently holds the focus
+     * @param focused  a widget currently holds the focus
      * @param released the pointer was handed back to the terminal
      * @param widgets  widgets with a drawn region on screen
      */

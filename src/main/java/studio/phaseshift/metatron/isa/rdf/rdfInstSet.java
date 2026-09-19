@@ -18,16 +18,15 @@
 
 package studio.phaseshift.metatron.isa.rdf;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.SPACE;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -38,7 +37,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 @InstSet.JREService(vid = "/m/rdf")
 public class rdfInstSet extends AbstractInstSet {
 
-    public static final fURI RDF_ISA_TID = M_ISA_TID.extend("rdf");
+    public static final fURI RDF_ISA_TID = Tokens.M_ISA_TID.extend("rdf");
     public static final fURI RDF_INST_TID = RDF_ISA_TID.extend("inst");
     public static final fURI RDF_ISA_SPACE_TID = RDF_ISA_TID.extend(SPACE);
     public static final fURI RDF_TRIPLE_TID = RDF_ISA_SPACE_TID.extend("triple");
@@ -46,7 +45,7 @@ public class rdfInstSet extends AbstractInstSet {
     public static Type RDF_SPACE_TYPE;
 
     public static final Type RDF_TRIPLE_TYPE = Type.Builder.build()
-            .tid(LST_TID)
+            .tid(Tokens.LST_TID)
             .vid(RDF_TRIPLE_TID)
             .isaPredicate(lst(URI_TYPE, URI_TYPE, URI_TYPE)).create();
 
@@ -80,7 +79,7 @@ public class rdfInstSet extends AbstractInstSet {
                                                 uri(ROOT).maybe(), REC_TYPE,
                                                 uri(SERIALIZER).maybe(), else_(auto_from_(OBJ_RDF_SERIALIZER_VID))))
                                         //uri(SCHEMA).maybe(), InstSet.INSTSET_TYPE))
-                                        .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).dom(ALL.maybe()).rng(RDF_SPACE_TID),
+                                        .constructor(instC(Tokens.M_ISA_INST_TID.dom(ALL.maybe()).dom(ALL.maybe()).rng(RDF_SPACE_TID),
                                                 lst(REC_TYPE),
                                                 (lhs, inst) -> {
                                                     Graphitty.log(rdfSpace.class).info("rdfSpace constructor: %s", inst);
