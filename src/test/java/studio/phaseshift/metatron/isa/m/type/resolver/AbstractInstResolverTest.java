@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,6 +22,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -345,8 +346,8 @@ public abstract class AbstractInstResolverTest extends AbstractMetatronTest {
         results.add(runBenchmark("plus(real) on real", () -> plusInst(real(10.0)).resolve(real(23.5))));
         results.add(runBenchmark("mult(int) on int", () -> multInst(jnt(2)).resolve(jnt(42))));
         results.add(runBenchmark("mult(real) on real", () -> multInst(real(2.0)).resolve(real(23.5))));
-        results.add(runBenchmark("as(real) on int", () -> asInst(T(mInstSet.REAL_TID)).resolve(jnt(42))));
-        results.add(runBenchmark("as(int) on real", () -> asInst(T(mInstSet.INT_TID)).resolve(real(42.5))));
+        results.add(runBenchmark("as(real) on int", () -> asInst(T(Tokens.REAL_TID)).resolve(jnt(42))));
+        results.add(runBenchmark("as(int) on real", () -> asInst(T(Tokens.INT_TID)).resolve(real(42.5))));
 
         // Log results
         String resolverName = resolverSupplier.get().getClass().getSimpleName();

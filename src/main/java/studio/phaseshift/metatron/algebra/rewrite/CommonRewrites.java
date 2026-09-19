@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.algebra.rewrite;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -119,7 +120,7 @@ public final class CommonRewrites {
 
         return RewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTid)
-                .rng(INT_TID)
+                .rng(Tokens.INT_TID)
                 // ALL (wildcard) catches both FROM_INST_TID (*) and AT_INST_TID (@);
                 // the matchPredicate below rejects non-source instructions.
                 .match(ALL, COUNT_INST_TID)
@@ -221,7 +222,7 @@ public final class CommonRewrites {
 
         return RewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
-                .rng(REAL_TID)
+                .rng(Tokens.REAL_TID)
                 .match(FROM_INST_TID, MEAN_INST_TID)
                 .matchFromOrAt()
                 .matchSpacePredicate(matchSpacePredicate)
@@ -294,7 +295,7 @@ public final class CommonRewrites {
 
         return new LimitRewriteBuilder<>(spaceType, limitFunction, matchSpacePredicate)
                 .tid(rewriteTID)
-                .rng(ALL_STAR)
+                .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, TAKE_INST_TID)
                 .matchFromOrAt()
                 .build();
@@ -352,7 +353,7 @@ public final class CommonRewrites {
                             expandedfURI, limitValue, space);
 
                     // Create the optimized instruction
-                    return List.of(instC(this.rewriteTid.dom(ALL_STAR).rng(this.resultTid), lst(uri(expandedfURI), jnt(limitValue)),
+                    return List.of(instC(this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid), lst(uri(expandedfURI), jnt(limitValue)),
                                     (lhs, inst) -> {
                                         try {
                                             return this.limitOperation.execute(typedSpace, dp, limitValue);
@@ -389,7 +390,7 @@ public final class CommonRewrites {
 
         return RewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
-                .rng(INT_TID.maybe().some())
+                .rng(Tokens.INT_TID.maybe().some())
                 .match(FROM_INST_TID, PROD_INST_TID)
                 .optimize("from_prod", (space, dp, coeff) -> {
                     final Number prod = prodFunction.apply(space, dp);
@@ -452,7 +453,7 @@ public final class CommonRewrites {
 
         return new SelectRewriteBuilder<>(spaceType, selectFunction, matchSpacePredicate)
                 .tid(rewriteTID)
-                .rng(ALL_STAR)
+                .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, RSHIFT_INST_TID)
                 .matchFromOrAt()
                 .build();
@@ -528,7 +529,7 @@ public final class CommonRewrites {
 
                 return java.util.List.of(
                         instC(
-                                this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                                this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
                                 lst(
                                         uri(expandedfURI),
                                         lst(colObjs)),
@@ -678,16 +679,16 @@ public final class CommonRewrites {
     /**
      * Create a where (filter) optimization rewrite.
      *
-     * <p>Optimizes {@code from(furi).where(predicate)} to use native database WHERE clauses
+     * <p>Optimizes {@code from(furi).isa(predicate)} to use native database WHERE clauses
      * instead of loading all records and filtering in memory.
      *
      * <p>Currently supports simple predicates:
      * <ul>
-     *   <li>{@code where([field=>value])} → {@code WHERE field = value}</li>
-     *   <li>{@code where([field=>?>n])} → {@code WHERE field > n}</li>
-     *   <li>{@code where([field=>?<n])} → {@code WHERE field < n}</li>
-     *   <li>{@code where([field=>?>=n])} → {@code WHERE field >= n}</li>
-     *   <li>{@code where([field=>?<=n])} → {@code WHERE field <= n}</li>
+     *   <li>{@code isa([field=>value])} → {@code WHERE field = value}</li>
+     *   <li>{@code isa([field=>?>n])} → {@code WHERE field > n}</li>
+     *   <li>{@code isa([field=>?<n])} → {@code WHERE field < n}</li>
+     *   <li>{@code isa([field=>?>=n])} → {@code WHERE field >= n}</li>
+     *   <li>{@code isa([field=>?<=n])} → {@code WHERE field <= n}</li>
      * </ul>
      *
      * <p>Complex predicates that cannot be translated will cause the rewrite to fail,
@@ -718,8 +719,8 @@ public final class CommonRewrites {
 
         return new WhereRewriteBuilder<>(spaceType, whereFunction, predicateJoiner, conditionFormatter, matchSpacePredicate)
                 .tid(rewriteTID)
-                .rng(ALL_STAR)
-                .match(FROM_INST_TID, WHERE_INST_TID)
+                .rng(Tokens.ALL_STAR)
+                .match(FROM_INST_TID, ISA_INST_TID)
                 .matchFromOrAt()
                 .build();
     }
@@ -757,7 +758,7 @@ public final class CommonRewrites {
             return map -> {
                 final java.util.List<Inst> matchedInsts = new java.util.ArrayList<>(map.values());
                 final Inst fromInst = matchedInsts.get(0);
-                final Inst whereInst = matchedInsts.get(1);
+                final Inst isaInst = matchedInsts.get(1);
 
                 final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
                 final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(oldfURI);
@@ -770,13 +771,13 @@ public final class CommonRewrites {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
-                // Try to translate the where predicate to backend-agnostic conditions
-                final Obj predicate = whereInst.arg(0);
+                // Try to translate the isa predicate to backend-agnostic conditions
+                final Obj predicate = isaInst.arg(0);
                 final List<String> conditions = tryTranslatePredicate(predicate);
 
                 // If translation failed, fall back to normal execution
                 if (conditions == null) {
-                    LOG.debug("where predicate too complex for native translation: %s", predicate);
+                    LOG.debug("isa predicate too complex for native translation: %s", predicate);
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
@@ -799,7 +800,7 @@ public final class CommonRewrites {
 
                 return java.util.List.of(
                         instC(
-                                this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                                this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
                                 lst(uri(expandedfURI), str(filterClause)),
                                 (lhs, inst) -> {
                                     // Barrier re-application guard: if the SwarmMachine
@@ -1003,7 +1004,7 @@ public final class CommonRewrites {
 
         return new WhereCountRewriteBuilder<>(spaceType, whereRewriteTID, whereCountFunction, matchSpacePredicate)
                 .tid(rewriteTID)
-                .rng(INT_TID)
+                .rng(Tokens.INT_TID)
                 .match(whereRewriteTID, COUNT_INST_TID)
                 .build();
     }
@@ -1069,7 +1070,7 @@ public final class CommonRewrites {
 
                 return java.util.List.of(
                         instC(
-                                this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                                this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
                                 lst(
                                         uri(furi),
                                         str(filterClause)),
@@ -1146,7 +1147,7 @@ public final class CommonRewrites {
 
         return new WhereLimitRewriteBuilder<>(spaceType, whereRewriteTID, whereLimitFunction, matchSpacePredicate)
                 .tid(rewriteTID)
-                .rng(ALL_STAR)
+                .rng(Tokens.ALL_STAR)
                 .match(whereRewriteTID, TAKE_INST_TID)
                 .build();
     }
@@ -1216,7 +1217,7 @@ public final class CommonRewrites {
 
                 return java.util.List.of(
                         instC(
-                                this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                                this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
                                 lst(
                                         uri(furi),
                                         str(filterClause),
@@ -1281,7 +1282,7 @@ public final class CommonRewrites {
 
         return new SkipRewriteBuilder<>(spaceType, skipFunction, matchSpacePredicate)
                 .tid(rewriteTID)
-                .rng(ALL_STAR)
+                .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, SKIP_INST_TID)
                 .matchFromOrAt()
                 .build();
@@ -1340,7 +1341,7 @@ public final class CommonRewrites {
                         expandedfURI, skipValue, space);
 
                 return List.of(instC(
-                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
                         lst(uri(expandedfURI), jnt(skipValue)),
                         (lhs, inst) -> {
                             try {
@@ -1409,7 +1410,7 @@ public final class CommonRewrites {
 
         return new OffsetLimitRewriteBuilder<>(spaceType, offsetRewriteTID, offsetLimitFunction, matchSpacePredicate)
                 .tid(rewriteTID)
-                .rng(ALL_STAR)
+                .rng(Tokens.ALL_STAR)
                 .match(offsetRewriteTID, TAKE_INST_TID)
                 .build();
     }
@@ -1474,7 +1475,7 @@ public final class CommonRewrites {
                         furi, skipValue, limitValue, space);
 
                 return List.of(instC(
-                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
                         lst(uri(furi), jnt(skipValue), jnt(limitValue)),
                         (lhs, inst) -> {
                             try {
@@ -1553,7 +1554,7 @@ public final class CommonRewrites {
 
         return new WhereOffsetRewriteBuilder<>(spaceType, whereRewriteTID, whereOffsetFunction, matchSpacePredicate)
                 .tid(rewriteTID)
-                .rng(ALL_STAR)
+                .rng(Tokens.ALL_STAR)
                 .match(whereRewriteTID, SKIP_INST_TID)
                 .build();
     }
@@ -1613,7 +1614,7 @@ public final class CommonRewrites {
                         furi, filterClause, skipValue, space);
 
                 return List.of(instC(
-                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
                         lst(uri(furi), str(filterClause), jnt(skipValue)),
                         (lhs, inst) -> {
                             try {
@@ -1653,7 +1654,7 @@ public final class CommonRewrites {
 
         return new WhereOrderRewriteBuilder<>(spaceType, whereRewriteTID, whereOrderFunction, matchSpacePredicate)
                 .tid(rewriteTID)
-                .rng(ALL_STAR)
+                .rng(Tokens.ALL_STAR)
                 .match(whereRewriteTID, ORDER_INST_TID)
                 .build();
     }
@@ -1706,7 +1707,7 @@ public final class CommonRewrites {
                     LOG.debug("where+order columns too complex for native translation: %s", columnSpecArg);
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
-                
+
                 final Space space = Router.global().getSpaceFor(furi);
 
                 if (!this.spaceType.isInstance(space)) {
@@ -1726,7 +1727,7 @@ public final class CommonRewrites {
                         furi, filterClause, columns, space);
 
                 return List.of(instC(
-                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
                         lst(uri(furi), str(filterClause), lst(columns.stream().<Obj>map(col -> str(col)).toList())),
                         (lhs, inst) -> {
                             try {
@@ -1766,7 +1767,7 @@ public final class CommonRewrites {
 
         return new WhereOrderOffsetRewriteBuilder<>(spaceType, whereOrderRewriteTID, whereOrderOffsetFunction, matchSpacePredicate)
                 .tid(rewriteTID)
-                .rng(ALL_STAR)
+                .rng(Tokens.ALL_STAR)
                 .match(whereOrderRewriteTID, SKIP_INST_TID)
                 .build();
     }
@@ -1828,7 +1829,7 @@ public final class CommonRewrites {
                         furi, filterClause, columns, skipValue, space);
 
                 return List.of(instC(
-                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
                         lst(uri(furi), str(filterClause), lst(columns.stream().<Obj>map(col -> str(col)).toList()), jnt(skipValue)),
                         (lhs, inst) -> {
                             try {
@@ -1868,7 +1869,7 @@ public final class CommonRewrites {
 
         return new WhereOffsetLimitRewriteBuilder<>(spaceType, whereOffsetRewriteTID, whereOffsetLimitFunction, matchSpacePredicate)
                 .tid(rewriteTID)
-                .rng(ALL_STAR)
+                .rng(Tokens.ALL_STAR)
                 .match(whereOffsetRewriteTID, TAKE_INST_TID)
                 .build();
     }
@@ -1929,7 +1930,7 @@ public final class CommonRewrites {
                         furi, filterClause, skipValue, limitValue, space);
 
                 return List.of(instC(
-                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
                         lst(uri(furi), str(filterClause), jnt(skipValue), jnt(limitValue)),
                         (lhs, inst) -> {
                             try {
@@ -1967,7 +1968,7 @@ public final class CommonRewrites {
 
         return new OrderRewriteBuilder<>(spaceType, orderFunction, matchSpacePredicate)
                 .tid(rewriteTID)
-                .rng(ALL_STAR)
+                .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, ORDER_INST_TID)
                 .matchFromOrAt()
                 .build();
@@ -2037,7 +2038,7 @@ public final class CommonRewrites {
                 LOG.debug("evaluating native order on %s by %s in space %s", expandedfURI, columns, space);
 
                 return List.of(instC(
-                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
                         lst(uri(expandedfURI), lst(columns.stream().map(c -> (Obj) str(c)).toList())),
                         (lhs, inst) -> {
                             try {
@@ -2075,7 +2076,7 @@ public final class CommonRewrites {
 
         return new DedupRewriteBuilder<>(spaceType, dedupFunction, matchSpacePredicate)
                 .tid(rewriteTID)
-                .rng(ALL_STAR)
+                .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, DEDUP_INST_TID)
                 .matchFromOrAt()
                 .build();
@@ -2143,7 +2144,7 @@ public final class CommonRewrites {
                 LOG.debug("evaluating native dedup on %s by %s in space %s", expandedfURI, columns, space);
 
                 return List.of(instC(
-                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
                         lst(uri(expandedfURI), lst(columns.stream().map(c -> (Obj) str(c)).toList())),
                         (lhs, inst) -> {
                             try {

@@ -27,12 +27,11 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.dcmnt.schema.MQLRewriteUtils;
 import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
-import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.ArrayList;
@@ -45,7 +44,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -109,7 +107,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                                 uri(ROOT).maybe(), T(TYPE_TID),
                                                 uri(SCHEMA).maybe(), T(INSTSET_TID)
                                         ))
-                                        .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(DCMNT_SPACE_TID),
+                                        .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(DCMNT_SPACE_TID),
                                                 lst(REC_TYPE),
                                                 (lhs, inst) -> dcmntSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create().asType(),
                                 "a rec describing a document database connection",
@@ -205,7 +203,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                 }
                         ),
 
-                        // Optimize: *collection.where([field=>value]) → MongoDB find(filter)
+                        // Optimize: *collection.isa([field=>value]) → MongoDB find(filter)
                         CommonRewrites.whereRewrite(
                                 dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_where"),

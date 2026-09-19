@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.llm.parser;
 
 import dev.langchain4j.model.chat.request.json.*;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.ArrayList;
@@ -26,17 +27,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -116,7 +109,7 @@ public final class JsonSchemaGenerator {
         else if (element instanceof JsonEnumSchema || element instanceof JsonReferenceSchema)
             return URI_TYPE;
         else if (element instanceof JsonArraySchema)
-            return Type.Builder.build().tid(LST_TID).vid(LST_TID)
+            return Type.Builder.build().tid(Tokens.LST_TID).vid(Tokens.LST_TID)
                     .isaPredicate(lst(schemaToType(((JsonArraySchema) element).items())))
                     .create();
         else if (element instanceof JsonObjectSchema)
@@ -134,6 +127,6 @@ public final class JsonSchemaGenerator {
             final Obj key = required.contains(name) ? uri(name) : uri(name).maybe();
             fields.put(key, schemaToType(sub));
         });
-        return Type.Builder.build().tid(REC_TID).vid(REC_TID).isaPredicate(rec(fields)).create();
+        return Type.Builder.build().tid(Tokens.REC_TID).vid(Tokens.REC_TID).isaPredicate(rec(fields)).create();
     }
 }

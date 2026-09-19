@@ -237,6 +237,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
                             </div>
                         </div>
                     </li>
@@ -280,6 +281,9 @@
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant">Modelfile.mtron-qwen-14b-assistant</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant-thinking">Modelfile.mtron-qwen-14b-assistant-thinking</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
                                 <div class="skill-resource-group">assets</div>
@@ -614,21 +618,7 @@ For now, create the following bootloader as plain text&#8201;&#8212;&#8201;it wi
     type=&gt;[mime::T,xml::T,html::T,json::T,yaml::T,xsv::T,csv::T,css::T,markdown::T,java::T,...(34 more)],
     inst=&gt;[ping?time&lt;=#{?}(uri::T),format?str&lt;=markdown(),as?skill&lt;=markdown(str::T),as?rec&lt;=json(rec::T),as?rec&lt;=yaml(rec::T),as?json&lt;=rec(json::T),as?rec&lt;=xml(rec::T),as?xml&lt;=rec(xml::T),as?rec&lt;=html(rec::T),as?html&lt;=rec(html::T),...(12 more)]]@/m/web
 memspace::[pattern  =&gt;/usr/#, q     =&gt;[docq::[=&gt;],subq::[=&gt;]]]@/sys/space/usr;
-==&gt;memspace::[
-    pattern=&gt;/usr/#,
-    q=&gt;[
-     docq::[
-      pattern=&gt;docq,
-      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
-     subq::[
-      pattern=&gt;subq,
-      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      obj=&gt;[,]]]]@/sys/space/usr
+==&gt;ERROR: unable to construct memspace::T: fail::[inst apply failure: java.lang.NullPointerException: Cannot invoke "dev.langchain4j.mcp.client.McpClient.listTools()" because "this.client" is null]@/sys/fail/1596
 memspace::[pattern  =&gt;g:#,    q     =&gt;[subq::[=&gt;]]]           @/sys/space/graph;
 ==&gt;memspace::[
     pattern=&gt;g:#,
@@ -641,11 +631,11 @@ memspace::[pattern  =&gt;g:#,    q     =&gt;[subq::[=&gt;]]]           @/sys/spa
 fsspace::[pattern   =&gt;local:#,route =&gt;[local: =&gt; &lt;~/&gt;]]       @/sys/space/fs;
 ==&gt;fsspace::[
     pattern=&gt;local:#,
-    route=&gt;[local:=&gt;/home/ubuntu/]]@/sys/space/fs
+    route=&gt;[local:=&gt;/home/killswitch/]]@/sys/space/fs
 httpspace::[pattern =&gt;http://#,
              host    =&gt;http://localhost:8765,
              route   =&gt;[/            =&gt;local:]]@/sys/space/http;
-==&gt;ERROR: unable to construct httpspace::T: fail::[inst apply failure: Address already in use[Net&lt;-2&gt;:Address already in use]]@/sys/fail/1462
+==&gt;ERROR: unable to construct httpspace::T: fail::[inst apply failure: Address already in use[Net&lt;-2&gt;:Address already in use]]@/sys/fail/1598
 console::[=&gt;]@/usr/ui/console;
 ==&gt;console::[=&gt;]@/usr/ui/console</code></pre>
 </div>
@@ -740,7 +730,6 @@ In metatron, the uri is called a <em>fURI</em> (<strong>functional uniform resou
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/+.count()
 ==&gt;14
 mtron&gt; */sys/space/+.&gt;&gt;pattern
-==&gt;fs:#
 ==&gt;&lt;+/#&gt;
 ==&gt;/te/cold/#
 ==&gt;g:#
@@ -748,25 +737,26 @@ mtron&gt; */sys/space/+.&gt;&gt;pattern
 ==&gt;/usr/#
 ==&gt;http://#
 ==&gt;/te/hot/#
-==&gt;/sys/#
-==&gt;loc:#
+==&gt;fs:#
 ==&gt;acme:#
-==&gt;farm:#
 ==&gt;mtronfs:#
 ==&gt;local:#
+==&gt;/sys/#
+==&gt;loc:#
+==&gt;farm:#
 mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
-==&gt;[fs:#=&gt;[
-    fs:m=&gt;/home/ubuntu/software/metatron,
-    fs:=&gt;/home/ubuntu/]]
 ==&gt;{5}[=&gt;]
 ==&gt;[/te/cold/#=&gt;[/te/cold/=&gt;&lt;&gt;]]
 ==&gt;[ha:#=&gt;[ha:=&gt;/home/chips]]
 ==&gt;[http://#=&gt;[/=&gt;local:]]
 ==&gt;[/te/hot/#=&gt;[/te/hot/=&gt;&lt;&gt;]]
+==&gt;[fs:#=&gt;[
+    fs:m=&gt;/home/killswitch/software/metatron,
+    fs:=&gt;/home/killswitch/]]
 ==&gt;[acme:#=&gt;[acme:=&gt;&lt;&gt;]]
-==&gt;[farm:#=&gt;[farm:=&gt;&lt;&gt;]]
 ==&gt;[mtronfs:#=&gt;[mtronfs:=&gt;&lt;.metatron&gt;]]
-==&gt;[local:#=&gt;[local:=&gt;/home/ubuntu/]]</code></pre>
+==&gt;[local:#=&gt;[local:=&gt;/home/killswitch/]]
+==&gt;[farm:#=&gt;[farm:=&gt;&lt;&gt;]]</code></pre>
 </div>
 </div>
 <br><br></main>

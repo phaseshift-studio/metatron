@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type.resolver;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -31,8 +32,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
@@ -223,7 +223,7 @@ public class V2InstResolver implements InstResolver {
         }
 
         // --- pre-filter: inst-on-inst domain guard ---
-        if (lhs.isInst() && !apiInst.dom().baseTypeID().equals(M_ISA_INST_TID)) {
+        if (lhs.isInst() && !apiInst.dom().baseTypeID().equals(Tokens.M_ISA_INST_TID)) {
             return null;
         }
 

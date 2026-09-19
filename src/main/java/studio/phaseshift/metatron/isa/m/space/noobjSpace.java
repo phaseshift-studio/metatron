@@ -27,8 +27,8 @@ import studio.phaseshift.metatron.isa.mach.type.Stats;
 import java.util.Map;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
+import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 public final class noobjSpace implements Space, InstSet {

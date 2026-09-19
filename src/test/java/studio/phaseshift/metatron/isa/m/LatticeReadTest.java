@@ -31,7 +31,13 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.INT_TID;
+import static studio.phaseshift.metatron.Tokens.REAL_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.NAT_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.gt_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.is_;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 /**
@@ -100,16 +106,16 @@ public class LatticeReadTest extends AbstractInstSetTest {
 
     @Test
     public void natChainIsIntThenRoot() {
-        final Type nat = T(f("nat"));
-        final Type real = T(f("real"));
+        final Type nat = T(f(NAT_TID.name()));
+        final Type real = T(f(REAL_TID.name()));
         assertTrue(nat.isRefinementOf(T(f("int"))), "nat must refine int (chain nat -> int -> #)");
         assertFalse(nat.isRefinementOf(real), "nat must NOT refine real (real is off nat's chain)");
     }
 
     @Test
     public void admittedForNatIncludesIntContract() {
-        final List<Inst> admitted = admitted(f("nat"));
-        final Type nat = T(f("nat"));
+        final List<Inst> admitted = admitted(f(NAT_TID.name()));
+        final Type nat = T(f(NAT_TID.name()));
         final boolean has = admitted.stream().anyMatch(i -> nat.pathIncludes(i.dom()));
         assertTrue(has, "*plus?<=nat must admit a contract on nat's path (nat -> int -> #); admitted=" + admitted);
         final int nearest = admitted.stream().mapToInt(i -> nat.pathTo(i.dom())).min().orElse(Integer.MAX_VALUE);
@@ -118,28 +124,33 @@ public class LatticeReadTest extends AbstractInstSetTest {
 
     @Test
     public void admittedForNatExcludesSiblings() {
-        final List<Inst> admitted = admitted(f("nat"));
+        final List<Inst> admitted = admitted(f(NAT_TID.name()));
         final boolean anySibling = admitted.stream()
                 .map(Inst::dom)
-                .anyMatch(d -> !d.isGeneric() && !T(f("nat")).isRefinementOf(d) && !d.isRefinementOf(T(f("nat"))));
+                .anyMatch(d -> !d.isGeneric() && !T(f(NAT_TID.name())).isRefinementOf(d) && !d.isRefinementOf(T(f(NAT_TID.name()))));
         assertFalse(anySibling, "no contract off nat's chain may be admitted; admitted=" + admitted);
     }
 
     @Test
     public void exactDomStillAdmitted() {
-        final List<Inst> admitted = admitted(f("real"));
-        final boolean hasExact = admitted.stream().anyMatch(i -> i.dom().equals(T(f("real")))
-                || (i.dom().isRefinementOf(T(f("real"))) && T(f("real")).isRefinementOf(i.dom())));
+        final List<Inst> admitted = admitted(f(REAL_TID.name()));
+        final boolean hasExact = admitted.stream().anyMatch(i -> i.dom().equals(T(f(REAL_TID.name())))
+                || (i.dom().isRefinementOf(T(f(REAL_TID.name()))) && T(f(REAL_TID.name())).isRefinementOf(i.dom())));
         assertTrue(hasExact, "*plus?<=real must still admit the exact real-dom contract; admitted=" + admitted);
     }
 
     @Test
     public void resolutionMatchesAdmission() {
         // what nat::5.plus(1) resolves to must be among what *plus?<=nat admits
-        final Obj applied = ObjmtronSerializer.parse("nat::5.plus(1)").apply();
+        Type.Builder.build()
+                .tid(INT_TID)
+                .vid(NAT_TID)
+                .predicate(is_(gt_(jnt(0))).tryToInst())
+                .create();
+        final Obj applied = ObjmtronSerializer.parse("plus(1)").apply(jnt(5, NAT_TID, null));
         final Type got = applied.type();
-        final List<Inst> admitted = admitted(f("nat"));
-        final boolean covered = admitted.stream().anyMatch(i -> T(f("nat")).pathIncludes(i.dom()));
+        final List<Inst> admitted = admitted(f(NAT_TID.name()));
+        final boolean covered = admitted.stream().anyMatch(i -> T(f(NAT_TID.name())).pathIncludes(i.dom()));
         assertTrue(covered, "resolved dom " + got + " must be admitted by *plus?<=nat; admitted=" + admitted);
     }
 

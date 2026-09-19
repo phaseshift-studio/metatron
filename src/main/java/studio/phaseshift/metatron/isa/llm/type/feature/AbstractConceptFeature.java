@@ -45,10 +45,9 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -87,7 +86,7 @@ public abstract class AbstractConceptFeature extends AbstractFeature implements 
 
     private static final String CONCEPT_FEATURE_SYSTEM_TEMPLATE =
             """
-            ----[concept_feature]----
+            ---[concept_feature]---
             The following concepts have recently been extracted.
             %s
             To review messages associated with concepts, use tool:

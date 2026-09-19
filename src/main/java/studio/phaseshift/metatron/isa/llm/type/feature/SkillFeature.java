@@ -19,13 +19,11 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 
-import static studio.phaseshift.metatron.Tokens.NAME;
-import static studio.phaseshift.metatron.Tokens.SKILL;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrapDocs;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;

@@ -18,18 +18,18 @@
 
 package studio.phaseshift.metatron.isa.tble.space;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.DataPath;
-import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.BaseQ;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ_TID;
@@ -62,10 +62,10 @@ public class tbleIncrQ extends BaseQ {
         return mutableMap(
                 uri(PATTERN), uri(INCRQ_PATTERN),
                 uri(PRE_WRITE), instC(
-                        studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID
+                        Tokens.M_ISA_INST_TID
                                 .dom(fURI.Singleton.ALL.maybe())
                                 .rng(fURI.Singleton.ALL.maybeSome()),
-                        lst(studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE,
+                        lst(mInstSet.URI_TYPE,
                                 T(fURI.Singleton.ALL)),
                         (lhs, inst) -> {
                             final fURI vid = inst.arg(0).uriValue();

@@ -27,18 +27,20 @@ import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.INST_CTOR_TID;
+import static studio.phaseshift.metatron.Tokens.REC_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -56,7 +58,7 @@ public class PanelWidget extends SpaceRec<PanelWidget> implements Widget<PanelWi
             .isaPredicate(rec())
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(UI_PANEL_TID),
                     lst(T(REC_TID)), (lhs, inst) ->
-                    new PanelWidget(inst.arg(0).as().jvm(), UI_PANEL_TID, inst.arg(0).vid())))
+                            new PanelWidget(inst.arg(0).as().jvm(), UI_PANEL_TID, inst.arg(0).vid())))
             .create();
 
     private static final Obj K_TITLE = uri("title");
@@ -140,9 +142,18 @@ public class PanelWidget extends SpaceRec<PanelWidget> implements Widget<PanelWi
 
     // ── Widget contract ────────────────────────────────────────────
 
-    /** A layout hint for a parent widget; nothing reads it back (see Widget#cursor). */
-    @Override public PanelWidget cursor(final Cursor cursor) { return this; }
-    @Override public Style<PanelWidget> getStyle()           { return Style.from(this.get(this.read(), STYLE_KEY)); }
+    /**
+     * A layout hint for a parent widget; nothing reads it back (see Widget#cursor).
+     */
+    @Override
+    public PanelWidget cursor(final Cursor cursor) {
+        return this;
+    }
+
+    @Override
+    public Style<PanelWidget> getStyle() {
+        return Style.from(this.get(this.read(), STYLE_KEY));
+    }
 
     @Override
     public PanelWidget style(final Style<PanelWidget> style) {
@@ -153,9 +164,19 @@ public class PanelWidget extends SpaceRec<PanelWidget> implements Widget<PanelWi
         return this;
     }
 
-    @Override public void close()  {}
-    @Override public String renderInPlace() { return this.format() + "\n"; }
-    @Override public String renderFresh()   { return this.format() + "\n"; }
+    @Override
+    public void close() {
+    }
+
+    @Override
+    public String renderInPlace() {
+        return this.format() + "\n";
+    }
+
+    @Override
+    public String renderFresh() {
+        return this.format() + "\n";
+    }
 
     // ── rendering ──────────────────────────────────────────────────
 
@@ -199,9 +220,9 @@ public class PanelWidget extends SpaceRec<PanelWidget> implements Widget<PanelWi
         final String color = style.background() + style.foreground();
         sb.append(style.prefix()).append(color);
         final String top = "%s%s".formatted(
-                title,
-                style.border().topSide().repeat(
-                        title.isEmpty() ? maxLen : maxLen - Highlighter.visualLength(title)))
+                        title,
+                        style.border().topSide().repeat(
+                                title.isEmpty() ? maxLen : maxLen - Highlighter.visualLength(title)))
                 .stripTrailing();
         if (!top.isEmpty())
             sb.append(style.border().topLeftCorner()).append(top)
@@ -234,7 +255,9 @@ public class PanelWidget extends SpaceRec<PanelWidget> implements Widget<PanelWi
         return Utilities.wordWrap(line, maxW);
     }
 
-    /** Regex to capture leading Graphitty codes (e.g. "{{y}}{{b}}") from a line. */
+    /**
+     * Regex to capture leading Graphitty codes (e.g. "{{y}}{{b}}") from a line.
+     */
     private static final Pattern LEADING_CODES = Pattern.compile("^(\\{\\{[^}]*}})*");
 
     private static String leadingCodes(final String line) {
@@ -242,5 +265,8 @@ public class PanelWidget extends SpaceRec<PanelWidget> implements Widget<PanelWi
         return m.find() ? m.group() : "";
     }
 
-    @Override public String toString() { return this.format(); }
+    @Override
+    public String toString() {
+        return this.format();
+    }
 }

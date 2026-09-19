@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.isa.m.type.Bytes;
 
 import java.nio.ByteBuffer;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.BYTES_TID;
+import static studio.phaseshift.metatron.Tokens.BYTES_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -35,11 +35,11 @@ public class MBytes extends MObj implements Bytes {
     }
 
     public static Bytes bytes(final ByteBuffer jvm) {
-        return bytes(jvm, BYTES_TID,null);
+        return bytes(jvm, BYTES_TID, null);
     }
 
     public static Bytes bytes(final byte[] jvm) {
-        return bytes(ByteBuffer.wrap(jvm), BYTES_TID,null);
+        return bytes(ByteBuffer.wrap(jvm), BYTES_TID, null);
     }
 
     public static Bytes bytes(final ByteBuffer jvm, final fURI tid, final fURI vid) {

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
@@ -75,7 +76,7 @@ public interface Call extends Obj, Ring<Call> {
         if (this.isCode())
             return (Code) this;
         else
-            return new MCode(List.of(this.as()), CODE_TID, null);
+            return new MCode(List.of(this.as()), Tokens.CODE_TID, null);
     }
 
     default List<Inst> insts() {

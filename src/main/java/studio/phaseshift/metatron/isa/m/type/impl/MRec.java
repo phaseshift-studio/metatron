@@ -27,10 +27,9 @@ import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.Tokens.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 

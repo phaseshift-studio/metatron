@@ -23,6 +23,9 @@ import org.jline.terminal.TerminalBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -37,6 +40,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@Isolated
+@Execution(ExecutionMode.SAME_THREAD)
 public class FloatingSurfaceTest extends AbstractMetatronTest {
 
     private static final int TERM_HEIGHT = 40;
@@ -662,7 +667,9 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
 
     // ── drag: the chevron handle, the translation, and what it writes ─
 
-    /** A 120-column by 40-row terminal (jline's Size takes columns first). */
+    /**
+     * A 120-column by 40-row terminal (jline's Size takes columns first).
+     */
     private static Terminal dragTerminal(final java.io.OutputStream out) throws IOException {
         return TerminalBuilder.builder().dumb(true)
                 .size(new org.jline.terminal.Size(120, 40))
@@ -785,7 +792,7 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
             "1 % 1     % below the lower bounds, the widget keeps a body",
     }, delimiter = '%')
     public void testResizeClampsToTheTerminalAndTheLowerBounds(final int width, final int height,
-                                                                final String description) throws Exception {
+                                                               final String description) throws Exception {
         final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
         final Terminal term = dragTerminal(out);
         final FloatingSurface surface_ = new FloatingSurface(term);
@@ -1021,7 +1028,9 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
 
     // ── scrolling: content off the viewport is off-viewport, not gone ──
 
-    /** A widget whose body is longer than any viewport it will be given. */
+    /**
+     * A widget whose body is longer than any viewport it will be given.
+     */
     private static AccordionWidget noteWidget(final int bodyLines) {
         final StringBuilder body = new StringBuilder();
         for (int i = 1; i <= bodyLines; i++) {
@@ -1033,7 +1042,9 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         return widget;
     }
 
-    /** A terminal + surface whose output can be read back per render pass. */
+    /**
+     * A terminal + surface whose output can be read back per render pass.
+     */
     private static final class CapturingSurface {
         final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
         final Terminal term;
@@ -1046,14 +1057,16 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
             this.surface = new FloatingSurface(this.term);
         }
 
-        /** Render synchronously and return only what these passes wrote.
-         *  <p>The first (barrier) pass drains anything the surface queued
-         *  fire-and-forget — a scroll/nudge render would otherwise land inside
-         *  the captured window and be read as this pass's output.  Two
-         *  capturing passes then follow: a widget's render can be a no-op on a
-         *  pass (its region already matches), so one pass is not enough
-         *  evidence — the assertions only need this state to have been drawn
-         *  once, and never need a pre-scroll pass to have been missed. */
+        /**
+         * Render synchronously and return only what these passes wrote.
+         * <p>The first (barrier) pass drains anything the surface queued
+         * fire-and-forget — a scroll/nudge render would otherwise land inside
+         * the captured window and be read as this pass's output.  Two
+         * capturing passes then follow: a widget's render can be a no-op on a
+         * pass (its region already matches), so one pass is not enough
+         * evidence — the assertions only need this state to have been drawn
+         * once, and never need a pre-scroll pass to have been missed.
+         */
         String pass() {
             this.surface.renderNow();
             final String before = this.out.toString(java.nio.charset.StandardCharsets.UTF_8);

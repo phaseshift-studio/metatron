@@ -123,11 +123,11 @@ the anchored form is the one to keep when the rows might be written back:
 ## the rewrites — reads that become SQL
 
 The interesting half of `/m/tble`: a read that matches a table is rewritten to SQL before it runs, so `count()` is
-`SELECT COUNT(*)`, `=?=` is `WHERE`, and a projection is a column list. The match is on the *code*, not the data — the
+`SELECT COUNT(*)`, `isa()` is `WHERE`, and a projection is a column list. The match is on the *code*, not the data — the
 same expression over a `memspace` stays in mtron.
 
 ```mtron_pre
-*tbledoc:person/+.=?=[age=>?<30]        [-- SELECT * FROM person WHERE age < 30 --]
+*tbledoc:person/+.?[age=>?<30]        [-- SELECT * FROM person WHERE age < 30 --]
 *tbledoc:person/+.count()               [-- SELECT COUNT(*) FROM person --]
 *tbledoc:person/+/age.sum()             [-- SELECT SUM(age) FROM person --]
 *tbledoc:person/+/age.mean()            [-- SELECT AVG(age) FROM person --]
@@ -140,13 +140,13 @@ same expression over a `memspace` stays in mtron.
 
 | rewrite                  | mtron                                   | sql                                                 |
 |--------------------------|-----------------------------------------|-----------------------------------------------------|
-| `sql_where`              | `*db:table/+/+.=?=[col=>pred]`          | `SELECT * ... WHERE`                                |
-| `sql_where_count`        | `*db:table/+/+.=?=[col=>pred].count()`  | `SELECT COUNT(*) ... WHERE`                         |
-| `sql_where_order`        | `...=?=[..].order(select(col))`         | `... WHERE ... ORDER BY`                            |
-| `sql_where_order_offset` | `...=?=[..].order(select(col)).skip(n)` | `... ORDER BY ... OFFSET n`                         |
-| `sql_where_limit`        | `...=?=[..].take(n)`                    | `... WHERE ... LIMIT n`                             |
-| `sql_where_offset`       | `...=?=[..].skip(n)`                    | `... WHERE ... OFFSET n`                            |
-| `sql_where_offset_limit` | `...=?=[..].skip(m).take(n)`            | `... WHERE ... LIMIT n OFFSET m`                    |
+| `sql_where`              | `*db:table/+/+.?[col=>pred]`          | `SELECT * ... WHERE`                                |
+| `sql_where_count`        | `*db:table/+/+.?[col=>pred].count()`  | `SELECT COUNT(*) ... WHERE`                         |
+| `sql_where_order`        | `...?[..].order(select(col))`         | `... WHERE ... ORDER BY`                            |
+| `sql_where_order_offset` | `...?[..].order(select(col)).skip(n)` | `... ORDER BY ... OFFSET n`                         |
+| `sql_where_limit`        | `...?[..].take(n)`                    | `... WHERE ... LIMIT n`                             |
+| `sql_where_offset`       | `...?[..].skip(n)`                    | `... WHERE ... OFFSET n`                            |
+| `sql_where_offset_limit` | `...?[..].skip(m).take(n)`            | `... WHERE ... LIMIT n OFFSET m`                    |
 | `sql_select`             | `*db:table/+/+.==[col=>_]`              | `SELECT col ...`                                    |
 | `sql_order`              | `*db:table/+/+.order(select(col))`      | `... ORDER BY col`                                  |
 | `sql_distinct`           | `*db:table/+/+.dedup(select(col))`      | `SELECT DISTINCT col ...`                           |

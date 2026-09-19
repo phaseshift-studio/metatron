@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import java.util.*;
 
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -37,7 +37,6 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 public final class NoObj implements Obj, Inst {
 
     private static final NoObj SINGLE = new NoObj();
-    public static final Type NOOBJ_TYPE = Type.Builder.build().tid(NOOBJ_TID.zero()).vid(NOOBJ_TID.zero()).predicate((lhs, inst) -> noobj()).create();
     private static final int HASHCODE = 632862684;
 
     private NoObj() {
@@ -55,7 +54,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public Inst resolve(final Obj lhs) {
-return this;
+        return this;
         //        return instC(M_ISA_INST_TID.extend("self").dom(lhs.tid()).rng(lhs.tid()), lst(), (lhs2, inst) -> lhs2);
     }
 
@@ -69,9 +68,9 @@ return this;
         return lst();
         //throw MTronException.of("%s has no accessible arguments", this);
     }
-    
+
     @Override
-    public Inst args(final Poly<?,?> args) {
+    public Inst args(final Poly<?, ?> args) {
         return this;
     }
 

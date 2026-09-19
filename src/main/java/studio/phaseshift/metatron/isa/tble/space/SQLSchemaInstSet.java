@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -26,20 +26,18 @@ import studio.phaseshift.metatron.isa.tble.tbleSpace;
 
 import java.util.Collection;
 
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.TYPE;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * A runtime-discovered SQL schema as a minimal instset.
- *
+ * <p>
  * Lives at {@code /m/tble/space/schema/{dbName}} — in the {@code /m/} system namespace,
  * backed by memSpace so it never routes back into the tbleSpace's data pattern.
- *
+ * <p>
  * Uses the setup() model (jvm map pre-loaded with types) so that
  * AbstractInstSet does not call types() during construction before the
  * field is initialized.
@@ -48,9 +46,11 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class SQLSchemaInstSet extends AbstractInstSet {
 
-    /** The owning tbleSpace — set only on the eager empty placeholder so its first read can
-     *  lazily trigger the expensive table-mapping discovery.  The populated instset (built by
-     *  {@code ensureTableMapping}) has no back-reference. */
+    /**
+     * The owning tbleSpace — set only on the eager empty placeholder so its first read can
+     * lazily trigger the expensive table-mapping discovery.  The populated instset (built by
+     * {@code ensureTableMapping}) has no back-reference.
+     */
     private final tbleSpace space;
 
     /**
@@ -65,7 +65,9 @@ public class SQLSchemaInstSet extends AbstractInstSet {
         this(schemaVid, types, null);
     }
 
-    /** The eager empty placeholder — carries a back-reference to its tbleSpace for lazy population. */
+    /**
+     * The eager empty placeholder — carries a back-reference to its tbleSpace for lazy population.
+     */
     public SQLSchemaInstSet(final fURI schemaVid, final Collection<Type> types, final tbleSpace space) {
         super(mutableMap(
                 uri(PATTERN), uri(schemaVid.extend(ALL)),

@@ -509,24 +509,24 @@ configured.</p>
     tag=&gt;&lt;26-ea-26-jdk&gt;]
 ==&gt;[
     containers=&gt;0,
+    created_at=&gt;datetime::&lt;//2026.08:21/12/26/55/000?tz=-0600&gt;,
+    created_since=&gt;&lt;4 weeks ago&gt;,
+    id=&gt;&lt;2e11686badc6&gt;,
+    repository=&gt;eclipse-temurin,
+    size=&gt;mB::311.0000,
+    tag=&gt;&lt;25-jre-jammy&gt;]
+==&gt;[
+    containers=&gt;0,
     created_at=&gt;datetime::&lt;//2026.08:13/13/16/08/000?tz=-0600&gt;,
     created_since=&gt;&lt;5 weeks ago&gt;,
     id=&gt;&lt;19d88319bea9&gt;,
     repository=&gt;postgres,
     size=&gt;mB::451.0000,
     tag=&gt;&lt;16&gt;]
-==&gt;[
-    containers=&gt;0,
-    created_at=&gt;datetime::&lt;//2026.08:21/12/26/55/000?tz=-0600&gt;,
-    created_since=&gt;&lt;3 weeks ago&gt;,
-    id=&gt;&lt;2e11686badc6&gt;,
-    repository=&gt;eclipse-temurin,
-    size=&gt;mB::311.0000,
-    tag=&gt;&lt;25-jre-jammy&gt;]
 mtron&gt; *docker:container/+                  [-- all containers                           --]
 ==&gt;[ command=&gt;&lt;/docker-entrypoint.sh nginx -g 'daemon off;&gt;,
-    created_at=&gt;datetime::&lt;//2026.09:16/07/35/16/000?tz=-0600&gt;,
-    id=&gt;&lt;70402fae5cf8eef3c4670baeeb1e0afc5d30ea6d37ae5e096480b1f017d025a7&gt;,
+    created_at=&gt;datetime::&lt;//2026.09:18/14/44/37/000?tz=-0600&gt;,
+    id=&gt;&lt;4bbbbb4cc4ace65a0aaf1eaf1074d1b06602c219e64a735237cd2933ad2dcfbb&gt;,
     image=&gt;!*docker:image/nginx,
     labels=&gt;[
      &lt;com.docker.compose.config-hash&gt;=&gt;f3bd03ea666f08645557a71e46313f367713e950177918b309e8a1e5bde8397c,
@@ -542,24 +542,7 @@ mtron&gt; *docker:container/+                  [-- all containers               
     local_volumes=&gt;0,
     names=&gt;my-stack-web-1,
     ports=&gt;'0.0.0.0:8080-&gt;80/tcp, [::]:8080-&gt;80/tcp',
-    running_for=&gt;&lt;45 hours ago&gt;,
-    size=&gt;bB::0.0000,
-    ...(3 more)]
-==&gt;[ command=&gt;&lt;/app/entrypoint.sh [boot=&gt;&lt;boot/_b4.boot.mtron&gt;,log=&gt;info]&gt;,
-    created_at=&gt;datetime::&lt;//2026.09:2/18/49/18/000?tz=-0600&gt;,
-    id=&gt;&lt;43e3c45618061959569f2998b17a25afa01bee99dc1507b09e18a19ed57f2bad&gt;,
-    image=&gt;!*&lt;docker:image/ghcr.io/phaseshift-studio/metatron:main&gt;,
-    labels=&gt;[
-     &lt;org.opencontainers.image.description&gt;=&gt;'a distributed data-oriented computing language and virtual ...',
-     &lt;org.opencontainers.image.licenses&gt;=&gt;&lt;AGPL-3.0&gt;,
-     &lt;org.opencontainers.image.source&gt;=&gt;&lt;https://github.com/phaseshift-studio/metatron&gt;,
-     &lt;org.opencontainers.image.title&gt;=&gt;metatron,
-     &lt;org.opencontainers.image.vendor&gt;=&gt;'PhaseShift Studio',
-     &lt;org.opencontainers.image.version&gt;=&gt;start(0.1000).minus(SNAPSHOT)],
-    local_volumes=&gt;0,
-    mounts=&gt;/home/killswitch/software/metatron/boot,/home/killswitch/software/metatron,
-    names=&gt;B4,
-    running_for=&gt;&lt;2 weeks ago&gt;,
+    running_for=&gt;&lt;9 hours ago&gt;,
     size=&gt;bB::0.0000,
     ...(3 more)]
 ==&gt;[ command=&gt;&lt;/usr/local/bin/mvn-entrypoint.sh sh -c 'java --enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/sun.nio.cs=ALL-UNNAMED -cp target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar studio.phaseshift.metatron.BootLoader '[boot=&gt;&lt;_probe/http-probe.resolved.mtron&gt;,log=&gt;debug]&gt;,
@@ -579,6 +562,23 @@ mtron&gt; *docker:container/+                  [-- all containers               
     running_for=&gt;&lt;2 weeks ago&gt;,
     size=&gt;bB::0.0000,
     ...(3 more)]
+==&gt;[ command=&gt;&lt;/app/entrypoint.sh [boot=&gt;&lt;boot/_b4.boot.mtron&gt;,log=&gt;info]&gt;,
+    created_at=&gt;datetime::&lt;//2026.09:2/18/49/18/000?tz=-0600&gt;,
+    id=&gt;&lt;43e3c45618061959569f2998b17a25afa01bee99dc1507b09e18a19ed57f2bad&gt;,
+    image=&gt;!*&lt;docker:image/ghcr.io/phaseshift-studio/metatron:main&gt;,
+    labels=&gt;[
+     &lt;org.opencontainers.image.description&gt;=&gt;'a distributed data-oriented computing language and virtual ...',
+     &lt;org.opencontainers.image.licenses&gt;=&gt;&lt;AGPL-3.0&gt;,
+     &lt;org.opencontainers.image.source&gt;=&gt;&lt;https://github.com/phaseshift-studio/metatron&gt;,
+     &lt;org.opencontainers.image.title&gt;=&gt;metatron,
+     &lt;org.opencontainers.image.vendor&gt;=&gt;'PhaseShift Studio',
+     &lt;org.opencontainers.image.version&gt;=&gt;start(0.1000).minus(SNAPSHOT)],
+    local_volumes=&gt;0,
+    mounts=&gt;/home/killswitch/software/metatron,/home/killswitch/software/metatron/boot,
+    names=&gt;B4,
+    running_for=&gt;&lt;2 weeks ago&gt;,
+    size=&gt;bB::0.0000,
+    ...(3 more)]
 ==&gt;[ command=&gt;&quot;&quot;&quot;/sbin/tini -g -- sh -c 'sqlite3 /data/dr.sqlite \&quot;.database...&quot;&quot;&quot;,
     created_at=&gt;datetime::&lt;//2026.08:6/13/44/53/000?tz=-0600&gt;,
     id=&gt;&lt;92497c549f1fea0779b32c4c8c75c86a01277c198ac063d7a880dc90bea63d40&gt;,
@@ -590,27 +590,6 @@ mtron&gt; *docker:container/+                  [-- all containers               
     size=&gt;bB::0.0000,
     state=&gt;exited,
     ...(2 more)]
-==&gt;[ command=&gt;&quot;&quot;&quot;/sbin/tini -g -- sh -c 'sqlite3 /data/dr.sqlite \&quot;.database...&quot;&quot;&quot;,
-    created_at=&gt;datetime::&lt;//2026.08:6/14/10/11/000?tz=-0600&gt;,
-    id=&gt;&lt;461d48c7bd9c9a67a5723ff145de6814b89a84b1edd0bbf9c7ff703bac14f346&gt;,
-    image=&gt;!*docker:image/keinos/sqlite3:latest,
-    labels=&gt;[
-     &lt;com.docker.compose.config-hash&gt;=&gt;&lt;66b3453120ba0a109508db556cf836d0c09d14fea2283ee9f3a27167bc2ee06e&gt;,
-     &lt;com.docker.compose.container-number&gt;=&gt;1,
-     &lt;com.docker.compose.image&gt;=&gt;sha256:f7949ff704155043d694069c4ec579d237c22151fb3ca3e9fe25829d1c5d7ea7,
-     &lt;com.docker.compose.oneoff&gt;=&gt;False,
-     &lt;com.docker.compose.project.config_files&gt;=&gt;&lt;/tmp/metatron-docker/dr/docker-compose.yml&gt;,
-     &lt;com.docker.compose.project.working_dir&gt;=&gt;/tmp/metatron-docker/dr,
-     &lt;com.docker.compose.project&gt;=&gt;dr,
-     &lt;com.docker.compose.replace&gt;=&gt;sqlite-1,
-     &lt;com.docker.compose.service&gt;=&gt;sqlite,
-     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;],
-    local_volumes=&gt;0,
-    mounts=&gt;&lt;/home/killswitch/.metatron&gt;,
-    names=&gt;dr-sqlite-1,
-    running_for=&gt;&lt;6 weeks ago&gt;,
-    size=&gt;bB::0.0000,
-    ...(3 more)]
 ==&gt;[ command=&gt;&lt;tail -f /dev/null&gt;,
     created_at=&gt;datetime::&lt;//2026.08:6/14/41/18/000?tz=-0600&gt;,
     id=&gt;&lt;940ada5b423fc56f3b0c5e946d2825d31a340b2b076ea086ecca8165e00c6bc8&gt;,
@@ -624,6 +603,27 @@ mtron&gt; *docker:container/+                  [-- all containers               
      &lt;com.docker.compose.project.working_dir&gt;=&gt;/tmp/metatron-docker/dr_sqlite,
      &lt;com.docker.compose.project&gt;=&gt;dr_sqlite,
      &lt;com.docker.compose.replace&gt;=&gt;sqlite-1,
+     &lt;com.docker.compose.service&gt;=&gt;sqlite,
+     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;],
+    local_volumes=&gt;0,
+    mounts=&gt;&lt;/home/killswitch/.metatron&gt;,
+    names=&gt;dr_sqlite-sqlite-1,
+    running_for=&gt;&lt;6 weeks ago&gt;,
+    size=&gt;bB::0.0000,
+    ...(3 more)]
+==&gt;[ command=&gt;&lt;/docker-entrypoint.sh nginx -g 'daemon off;&gt;,
+    created_at=&gt;datetime::&lt;//2026.09:19/00/00/57/000?tz=-0600&gt;,
+    id=&gt;&lt;57d323032c938d7062cbae64de6c6308dae4d268f6dc43adef2cc5e68defecda&gt;,
+    image=&gt;!*docker:image/nginx:alpine,
+    labels=&gt;[maintainer=&gt;'NGINX Docker Maintainers &lt;docker-maint@nginx.com&gt;'],
+    local_volumes=&gt;1,
+    names=&gt;web,
+    running_for=&gt;&lt;1 second ago&gt;,
+    size=&gt;bB::0.0000,
+    state=&gt;created,
+    ...(3 more)]
+==&gt;[ command=&gt;&lt;/app/entrypoint.sh [boot=&gt;&lt;boot/docker.boot.mtron&gt;,log=&gt;info,console=&gt;true]&gt;,
+    created_at=&gt;datetime::&lt;//2026.09:3/00/20/05/000?tz=-0600&gt;,
    ...
 mtron&gt; *docker:volume/+                     [-- all volumes                              --]
 ==&gt;[
@@ -736,12 +736,27 @@ mtron&gt; *docker:network/+                    [-- all networks                 
     ipv6=&gt;false,
     internal=&gt;false,
     labels=&gt;[
+     &lt;com.docker.compose.config-hash&gt;=&gt;df437304bb211fbfc4b353c55c6fef38b07f9ae28b57ebc6c8b7b315709a02af,
      &lt;com.docker.compose.network&gt;=&gt;default,
      &lt;com.docker.compose.project&gt;=&gt;l3c,
-     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;,
-     &lt;com.docker.compose.config-hash&gt;=&gt;df437304bb211fbfc4b353c55c6fef38b07f9ae28b57ebc6c8b7b315709a02af],
+     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;],
     name=&gt;l3c_default,
     scope=&gt;local]
+==&gt;[
+    created_at=&gt;datetime::&lt;//2026.09:18/14/44/37/806?tz=+0000&gt;,
+    driver=&gt;bridge,
+    id=&gt;f4147e3417d9,
+    ipv4=&gt;true,
+    ipv6=&gt;false,
+    internal=&gt;false,
+    labels=&gt;[
+     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;,
+     &lt;com.docker.compose.config-hash&gt;=&gt;&lt;58c75ad45450a419e19489859bceed95b344afac255832f7cedc5ea678321155&gt;,
+     &lt;com.docker.compose.network&gt;=&gt;default,
+     &lt;com.docker.compose.project&gt;=&gt;my-stack],
+    name=&gt;my-stack_default,
+    scope=&gt;local,
+    container=&gt;[!*docker:container/my-stack-web-1]]
 ==&gt;[
     created_at=&gt;datetime::&lt;//2026.08:27/08/33/01/479?tz=+0000&gt;,
     driver=&gt;bridge,
@@ -750,10 +765,10 @@ mtron&gt; *docker:network/+                    [-- all networks                 
     ipv6=&gt;false,
     internal=&gt;false,
     labels=&gt;[
+     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;,
      &lt;com.docker.compose.config-hash&gt;=&gt;edf7769ebc38e22fe8be401f97ddeabc2328a412e6a2f42ed79e2e88fa012357,
      &lt;com.docker.compose.network&gt;=&gt;default,
-     &lt;com.docker.compose.project&gt;=&gt;metatron_sqlite,
-     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;],
+     &lt;com.docker.compose.project&gt;=&gt;metatron_sqlite],
     name=&gt;metatron_sqlite_default,
     scope=&gt;local,
     container=&gt;[!*docker:container/metatron_sqlite-sqlite-1]]
@@ -794,10 +809,10 @@ mtron&gt; *docker:network/+                    [-- all networks                 
     ipv6=&gt;false,
     internal=&gt;false,
     labels=&gt;[
-     &lt;com.docker.compose.project&gt;=&gt;dr_sqlite,
-     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;,
      &lt;com.docker.compose.config-hash&gt;=&gt;&lt;454211c5597511dbc4de2c2d7054ec34854741b9a0a3020c77fa2de25572c260&gt;,
-     &lt;com.docker.compose.network&gt;=&gt;default],
+     &lt;com.docker.compose.network&gt;=&gt;default,
+     &lt;com.docker.compose.project&gt;=&gt;dr_sqlite,
+     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;],
     name=&gt;dr_sqlite_default,
     scope=&gt;local,
     container=&gt;[!*docker:container/dr_sqlite-sqlite-1]]
@@ -809,25 +824,10 @@ mtron&gt; *docker:network/+                    [-- all networks                 
     ipv6=&gt;false,
     internal=&gt;false,
     labels=&gt;[
-     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;,
      &lt;com.docker.compose.config-hash&gt;=&gt;b82bc38b085051212ab2999d5d8a56646d5a2f6cd18fb5f3cbf5d7d6624c75fc,
      &lt;com.docker.compose.network&gt;=&gt;default,
-     &lt;com.docker.compose.project&gt;=&gt;dr],
-    name=&gt;dr_default,
-    scope=&gt;local,
-    container=&gt;[!*docker:container/dr-sqlite-1]]
-==&gt;[
-    created_at=&gt;datetime::&lt;//2026.08:6/13/53/33/644?tz=+0000&gt;,
-    driver=&gt;bridge,
-    id=&gt;&lt;357c897ce4c7&gt;,
-    ipv4=&gt;true,
-    ipv6=&gt;false,
-    internal=&gt;false,
-    labels=&gt;[
-     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;,
-     &lt;com.docker.compose.config-hash&gt;=&gt;dcfdb94ed5044fb11e16ff38ab584fd0bda75806da995978e02547c50430328a,
-     &lt;com.docker.compose.network&gt;=&gt;default,
-     &lt;com.docker.compose.project&gt;=&gt;test_sqlite],
+     &lt;com.docker.compose.project&gt;=&gt;dr,
+     &lt;com.docker.compose.version&gt;=&gt;&lt;2.40.3&gt;],
    ...
 </code></pre>
 <h4>Inspect a resource</h4>
@@ -843,13 +843,13 @@ mtron&gt; *docker:network/+                    [-- all networks                 
     container=&gt;[!*docker:container/web]]
 mtron&gt; *docker:container/web                [-- full container rec --]
 ==&gt;[ command=&gt;&lt;/docker-entrypoint.sh nginx -g 'daemon off;&gt;,
-    created_at=&gt;datetime::&lt;//2026.09:18/04/34/08/000?tz=-0600&gt;,
-    id=&gt;f0a956a4eee8d6ac9d5628e0a194995eefe40bc3239ec48ef6d50688aaa5ffeb,
+    created_at=&gt;datetime::&lt;//2026.09:19/00/00/57/000?tz=-0600&gt;,
+    id=&gt;&lt;57d323032c938d7062cbae64de6c6308dae4d268f6dc43adef2cc5e68defecda&gt;,
     image=&gt;!*docker:image/nginx:alpine,
     labels=&gt;[maintainer=&gt;'NGINX Docker Maintainers &lt;docker-maint@nginx.com&gt;'],
     local_volumes=&gt;1,
     names=&gt;web,
-    running_for=&gt;&lt;3 seconds ago&gt;,
+    running_for=&gt;&lt;2 seconds ago&gt;,
     size=&gt;bB::0.0000,
     state=&gt;created,
     ...(3 more)]
@@ -1018,9 +1018,9 @@ mtron&gt; *mydb:people/+/name                                      [-- all names
 ==&gt;'stynx'
 ==&gt;'marko'
 ==&gt;'metis'
-mtron&gt; *mydb:people/+.=?=[role=&gt;developer]==[name=&gt;_]           [-- all developer names   --]
+mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_]           [-- all developer names   --]
 ==&gt;[name=&gt;'stynx']
-mtron&gt; *mydb:people/+.=?=[role=&gt;developer]==[name=&gt;_].explain() [-- sql rewrite usage     --]
+mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_].explain() [-- sql rewrite usage     --]
 ==&gt;&quot;&quot;&quot;
     op         dom      rng      args                           f    desc    c_dom  c_rng 
     sql_where  #{*}::T  #{*}::T  people/+,&quot;role = 'developer'&quot;  &lt;j&gt;  gather  {*}    {*}   

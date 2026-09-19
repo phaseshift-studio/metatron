@@ -38,8 +38,6 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;

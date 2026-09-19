@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
+import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
 
 /**
  * Original instruction resolver that uses {@code findFirst()} selection.

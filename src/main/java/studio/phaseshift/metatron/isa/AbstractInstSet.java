@@ -35,7 +35,6 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -167,6 +166,33 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     @Override
     public Set<Inst> rewrites() {
         return old ? new LinkedHashSet<>() : new LinkedHashSet<>(REWRITE_TABLE.values());
+    }
+
+    @Override
+    public fURI vidToTid(final fURI vid) {
+        if (null == vid)
+            return null;
+        // type registry — the refinement edge (vid → parent tid); base types (vid == tid) have no parent
+        final Type type = TYPE_TABLE.get(vid);
+        if (null != type) {
+            final fURI tid = type.tid();
+            return (null == tid || tid.test(type.vid())) ? null : tid;
+        }
+        // constants — keyed by vid
+        final Obj constant = CONST_TABLE.get(vid);
+        if (null != constant)
+            return constant.tid();
+        // rewrites — keyed by tid
+        final Inst rewrite = REWRITE_TABLE.get(vid);
+        if (null != rewrite)
+            return rewrite.tid();
+        // instructions — keyed by basePath
+        final Set<Inst> insts = INST_TABLE.get(vid.basePath());
+        if (null != insts)
+            for (final Inst inst : insts)
+                if (inst.tid().test(vid))
+                    return inst.tid();
+        return null;
     }
 
     @Override

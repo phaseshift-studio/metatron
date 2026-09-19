@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type.reflect;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -37,14 +38,6 @@ import java.util.function.BiFunction;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -82,13 +75,13 @@ public class JObjFactory extends MObjFactory {
             return null;
         } else if (!tid.c().isOne()) {
             return objs(((List<Object>) value).stream().map(e -> this.toObj(e, tid.c(cInt.ONE()), null)).toList(), tid, vid());
-        } else if (tid.equals(STR_TID)) {
+        } else if (tid.equals(Tokens.STR_TID)) {
             newValue = value.toString();
-        } else if (tid.equals(URI_TID)) {
+        } else if (tid.equals(Tokens.URI_TID)) {
             newValue = f(value.toString());
         } else if (tid.equals(FILE_TID)) {
             return fsSpace.makeFile((Path) value);
-        } else if (tid.equals(M_ISA_INST_TID)) {
+        } else if (tid.equals(Tokens.M_ISA_INST_TID)) {
             return instC(f(field.getName()), lst(), (BiFunction<Obj, Inst, Obj>) value);
         }
         return this.toObj(newValue, tid, vid);

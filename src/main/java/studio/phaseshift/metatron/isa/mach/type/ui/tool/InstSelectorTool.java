@@ -19,19 +19,18 @@
 package studio.phaseshift.metatron.isa.mach.type.ui.tool;
 
 import org.jline.reader.Buffer;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
-
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.SelectorWidget;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
+import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
 
 /**
  * InstSelector - A widget for selecting instructions based on domain type.

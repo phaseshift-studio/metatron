@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type.resolver;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -30,8 +31,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.MONAD;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -163,7 +163,7 @@ public class ScoringInstResolver implements InstResolver {
                         i.tid().hasQ(MONAD) ||
                         this.checkArgs(userInst.args(), i.args()))
                 //.filter(i -> (i.args().isEmpty() && userInst.args().isEmpty()) || i.args().count() >= userInst.args().count())
-                .filter(i -> !lhs.isInst() || (i.dom().baseTypeID().equals(M_ISA_INST_TID)))
+                .filter(i -> !lhs.isInst() || (i.dom().baseTypeID().equals(Tokens.M_ISA_INST_TID)))
                 .toList();
 
         if (viable.isEmpty())

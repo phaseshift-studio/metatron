@@ -247,11 +247,11 @@ mtron> @tbledoc:person/+.take(2)     [-- anchor path --]
 ## the rewrites — reads that become SQL
 
 The interesting half of `/m/tble`: a read that matches a table is rewritten to SQL before it runs, so `count()` is
-`SELECT COUNT(*)`, `=?=` is `WHERE`, and a projection is a column list. The match is on the *code*, not the data — the
+`SELECT COUNT(*)`, `isa()` is `WHERE`, and a projection is a column list. The match is on the *code*, not the data — the
 same expression over a `memspace` stays in mtron.
 
 ```mtron
-mtron> *tbledoc:person/+.=?=[age=>?<30]        [-- SELECT * FROM person WHERE age < 30 --]
+mtron> *tbledoc:person/+.?[age=>?<30]        [-- SELECT * FROM person WHERE age < 30 --]
 ==>[name=>'marko',age=>29]@tbledoc:person/noobj
 ==>[name=>'grant',age=>25]@tbledoc:person/noobj
 mtron> *tbledoc:person/+.count()               [-- SELECT COUNT(*) FROM person --]
@@ -289,13 +289,13 @@ mtron> *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
 ```
 | rewrite                  | mtron                                   | sql                                                 |
 |--------------------------|-----------------------------------------|-----------------------------------------------------|
-| `sql_where`              | `*db:table/+/+.=?=[col=>pred]`          | `SELECT * ... WHERE`                                |
-| `sql_where_count`        | `*db:table/+/+.=?=[col=>pred].count()`  | `SELECT COUNT(*) ... WHERE`                         |
-| `sql_where_order`        | `...=?=[..].order(select(col))`         | `... WHERE ... ORDER BY`                            |
-| `sql_where_order_offset` | `...=?=[..].order(select(col)).skip(n)` | `... ORDER BY ... OFFSET n`                         |
-| `sql_where_limit`        | `...=?=[..].take(n)`                    | `... WHERE ... LIMIT n`                             |
-| `sql_where_offset`       | `...=?=[..].skip(n)`                    | `... WHERE ... OFFSET n`                            |
-| `sql_where_offset_limit` | `...=?=[..].skip(m).take(n)`            | `... WHERE ... LIMIT n OFFSET m`                    |
+| `sql_where`              | `*db:table/+/+.?[col=>pred]`          | `SELECT * ... WHERE`                                |
+| `sql_where_count`        | `*db:table/+/+.?[col=>pred].count()`  | `SELECT COUNT(*) ... WHERE`                         |
+| `sql_where_order`        | `...?[..].order(select(col))`         | `... WHERE ... ORDER BY`                            |
+| `sql_where_order_offset` | `...?[..].order(select(col)).skip(n)` | `... ORDER BY ... OFFSET n`                         |
+| `sql_where_limit`        | `...?[..].take(n)`                    | `... WHERE ... LIMIT n`                             |
+| `sql_where_offset`       | `...?[..].skip(n)`                    | `... WHERE ... OFFSET n`                            |
+| `sql_where_offset_limit` | `...?[..].skip(m).take(n)`            | `... WHERE ... LIMIT n OFFSET m`                    |
 | `sql_select`             | `*db:table/+/+.==[col=>_]`              | `SELECT col ...`                                    |
 | `sql_order`              | `*db:table/+/+.order(select(col))`      | `... ORDER BY col`                                  |
 | `sql_distinct`           | `*db:table/+/+.dedup(select(col))`      | `SELECT DISTINCT col ...`                           |
@@ -441,33 +441,37 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/22
+==>[body=>'a note with a database-assigned key']@tbledoc:note/26
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/24
+==>[body=>'another one']@tbledoc:note/28
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==>12
 ==>17
 ==>21
+==>26
 ==>11
+==>27
+==>4
+==>6
+==>16
+==>3
+==>24
+==>28
+==>20
+==>7
 ==>15
 ==>19
 ==>23
 ==>2
-==>4
-==>6
 ==>8
 ==>1
 ==>13
-==>16
 ==>22
-==>3
+==>25
 ==>10
 ==>14
 ==>18
-==>24
-==>20
 ==>5
-==>7
 ==>9
 ```
 ## taking the space down

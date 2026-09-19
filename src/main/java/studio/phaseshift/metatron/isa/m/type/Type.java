@@ -18,9 +18,9 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -82,7 +82,7 @@ public interface Type extends Obj {
     }
 
     default boolean isBaseType() {
-        return this.hasVID() && (this.isRootType() || mInstSet.BASE_TYPES.contains(this.vid().basePath()));
+        return this.hasVID() && (this.isRootType() || Tokens.BASE_TYPES.contains(this.vid().basePath()));
     }
 
     default boolean isGeneric() {
@@ -135,18 +135,14 @@ public interface Type extends Obj {
             return true;
         if (other.isRootType())
             return this.c().within(other.c());
-        Type current = this;
-        while (!current.isRootType()) {
-            if (current.hasVID() && current.vid().basePath().equals(other.tid().basePath()) || current.vid().basePath().equals(other.vid().basePath()))
-                return this.c().within(other.c());
-            if (current.isBaseType()) break;
-            current = current.parentType();
-        }
-        return false;
+        // address-only nominal walk: no Type construction (parentType() -> T())
+        final boolean refines = Obj.Helper.isRefinementOfTid(this.vid(), this.tid(), other.vid())
+                || Obj.Helper.isRefinementOfTid(this.vid(), this.tid(), other.tid());
+        return refines && this.c().within(other.c());
     }
 
     default boolean isEphemeral() {
-        return !BASE_TYPES.contains(this.tid().basePath()) && this.tid().equals(this.vid());
+        return !Tokens.BASE_TYPES.contains(this.tid().basePath()) && this.tid().equals(this.vid());
     }
 
     /**
@@ -615,9 +611,12 @@ public interface Type extends Obj {
                     if (!lhs.test(rhs.tid().polyParsed().orElse(null)))
                         return false;
                 }
+                /*
                 if (lhs.isObjs() && lhs.stream().anyMatch(Obj::isObjCall)) // TODO: a hack (see RecTest requirements vs. TypeTest requirements)
                     return false;
                 if (lhs.isObjs() && lhs.stream().allMatch(o -> o.test(rhs.asType().hasPredicate() ? rhs : rhs.vid(rhs.vid().c(o.c())))))
+                 */
+                if (lhs.isObjs() && lhs.c().within(rhs.c()) && lhs.stream().allMatch(o -> o.test(rhs.c(o.c()))))
                     return true;
                 if (rhs.asType().isBaseType() && !lhs.baseTypeID().test(rhs.vid()))
                     return false;
@@ -700,7 +699,7 @@ public interface Type extends Obj {
                 throw MTronException.of("vid must be set prior to specifying predicate");
             if (null == this.tid)
                 throw MTronException.of("tid must be set prior to specifying predicate");
-            return this.predicate(instC(INST_PRED_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL_STAR)), predicate));
+            return this.predicate(instC(Tokens.INST_PRED_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(Tokens.ALL_STAR)), predicate));
         }
 
         public Builder isaPredicate(final Obj predicate) {
@@ -715,13 +714,13 @@ public interface Type extends Obj {
         public Builder constructor(final Function<Obj, Obj> function) {
             if (null == this.vid)
                 throw MTronException.of("vid must be set prior to specifying constructor");
-            return this.constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(this.vid), lst(T(ALL_STAR)), (lhs, inst) -> function.apply(inst.arg(0))));
+            return this.constructor(instC(Tokens.INST_CTOR_TID.dom(ALL.maybe()).rng(this.vid), lst(T(Tokens.ALL_STAR)), (lhs, inst) -> function.apply(inst.arg(0))));
         }
 
         public Builder constructor(final Supplier<Obj> supplier) {
             if (null == this.vid)
                 throw MTronException.of("vid must be set prior to specifying constructor");
-            return this.constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(this.vid), lst(), (lhs, inst) -> supplier.get()));
+            return this.constructor(instC(Tokens.INST_CTOR_TID.dom(ALL.maybe()).rng(this.vid), lst(), (lhs, inst) -> supplier.get()));
         }
 
         public Builder inst(final fURI tid, final Poly<?, ?> args, final BiFunction<Obj, Inst, Obj> func) {

@@ -43,18 +43,11 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Bool.*;
-import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -66,31 +59,40 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 @InstSet.JREService(vid = "/m")
 public class mInstSet extends AbstractInstSet {
 
-    public static final fURI M_ISA_TID = f("/m");
-    // /m/obj
-    public static final fURI FAIL_TID = M_ISA_TID.extend("fail");
-    public static final fURI BOOL_TID = M_ISA_TID.extend("bool");
-    public static final fURI BYTES_TID = M_ISA_TID.extend("bytes");
-    public static final fURI INT_TID = M_ISA_TID.extend("int");
-    public static final fURI REAL_TID = M_ISA_TID.extend("real");
-    public static final fURI STR_TID = M_ISA_TID.extend("str");
-    public static final fURI URI_TID = M_ISA_TID.extend("uri");
-    public static final fURI REL_TID = M_ISA_TID.extend("rel");
-    public static final fURI LST_TID = M_ISA_TID.extend("lst");
-    public static final fURI REC_TID = M_ISA_TID.extend("rec");
-    public static final fURI AUTHORITY_TID = URI_TID.extend("authority");
-    public static final fURI M_ISA_INST_TID = M_ISA_TID.extend("inst");
-    public static final fURI M_ISA_REWRITE_TID = M_ISA_INST_TID.extend("rewrite");
-    public static final fURI INSTSET_TID = M_ISA_TID.extend("instset");
-    public static final fURI OBJS_TID = M_ISA_TID.extend("objs");
-    public static final fURI TYPE_TID = M_ISA_TID.extend("type");
-    public static final fURI CODE_TID = M_ISA_TID.extend("code");
-    public static final fURI NOOBJ_TID = f("noobj");
-    public static final fURI ALL_STAR = ALL.maybeSome();
-    public static final fURI SPACE_TID = M_ISA_TID.extend("space");
-    /// ////////////////////////////////////////////////////////
-    public static final fURI INST_CTOR_TID = M_ISA_INST_TID.extend(CTOR).dom(ALL.maybe());
-    public static final fURI INST_PRED_TID = M_ISA_INST_TID.extend("pred").rng(ALL.maybe());
+    public static final Type BOOL_TYPE = Type.Builder.build().tid(BOOL_TID).vid(BOOL_TID).create();
+
+    public static final Type BYTES_TYPE = Type.Builder.build().tid(BYTES_TID).vid(BYTES_TID).create();
+
+    public static final Type INT_TYPE = Type.Builder.build().tid(INT_TID).vid(INT_TID).create();
+
+    public static final Type REAL_TYPE = Type.Builder.build().tid(REAL_TID).vid(REAL_TID).create();
+
+    public static final Type STR_TYPE = Type.Builder.build().tid(STR_TID).vid(STR_TID).create();
+
+    public static final Type URI_TYPE = Type.Builder.build().tid(URI_TID).vid(URI_TID).create();
+
+    public static final Type LST_TYPE = Type.Builder.build()
+            .tid(LST_TID)
+            .vid(LST_TID).create();
+
+    public static final Type REC_TYPE = Type.Builder.build().tid(REC_TID).vid(REC_TID).create();
+
+
+    /**
+     * Cache for fully resolved instructions when ALL arguments are literals (non-call objects).
+     * Key: "lhsType|instBasePath|args" - includes lhs type, instruction name, and literal args
+     * Value: The fully resolved instruction (safe to reuse since literal args don't depend on lhs)
+     * Call args (inst, code, type) are NOT cached because they depend on the lhs value.
+     */
+    // Map<String, Inst> RESOLUTION_CACHE = new ConcurrentHashMap<>();
+    // ThreadLocal<Boolean> REWRITE_MODE = ThreadLocal.withInitial(() -> false);
+
+    // Uri ARGS_URI = uri(ARGS_FURI);
+    public static final Type INST_TYPE = Type.Builder.build().tid(M_ISA_INST_TID).vid(M_ISA_INST_TID).create();
+
+    public static final Type CODE_TYPE = Type.Builder.build().tid(CODE_TID).vid(CODE_TID).create();
+    public static final Type NOOBJ_TYPE = Type.Builder.build().tid(NOOBJ_TID.zero()).vid(NOOBJ_TID.zero()).predicate((lhs, inst) -> noobj()).create();
+
     public static final fURI LIKE_INST_TID = M_ISA_INST_TID.extend("like");
     public static final fURI CAUSE_INST_TID = M_ISA_INST_TID.extend("cause");
     public static final fURI NATIVE_INST_TID = M_ISA_INST_TID.extend("native");
@@ -220,12 +222,6 @@ public class mInstSet extends AbstractInstSet {
     public static Type REGEX_TYPE;
     public static final fURI REGEX_TID = STR_TID.extend("rx");
 
-    //public static final Set<fURI> MARKER_TYPES = Set.of(MONO_TID, POLY_TID, NUM_TID);
-    public static final Set<fURI> BASE_TYPES = Set.of(
-            FAIL_TID, BOOL_TID, BYTES_TID, INT_TID, REAL_TID,
-            STR_TID, URI_TID, REL_TID,
-            LST_TID, REC_TID, M_ISA_INST_TID,
-            CODE_TID, OBJS_TID, NOOBJ_TID);
     public static Type AUTHORITY_TYPE;
     public static final Type ALL_TYPE = Type.Builder.build().tid(ALL).vid(ALL).create();
     public static final Type SPACE_TYPE = Type.Builder.build()
@@ -519,6 +515,7 @@ public class mInstSet extends AbstractInstSet {
                         SpaceType.insts().stream(),
                         ObjType.insts().stream(),
                         NoObj.NoObjType.insts().stream(),
+                        Obj.Helper.isaInsts().stream(),
                         Stream.of(instC(M_ISA_INST_TID.extend("save").dom(ALL).rng(ALL), lst(), (lhs, inst) -> lhs.save())),
                         Stream.of(instA(INST_CTOR_TID))
                 ).flatMap(i -> i)),

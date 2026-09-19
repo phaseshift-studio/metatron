@@ -23,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
@@ -35,9 +36,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.rec;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -357,7 +358,7 @@ public class InstTest extends AbstractObjTest {
 
     @Test
     public void testInstFCode() {
-        Inst i = instC(f("dosomething").dom(INT_TID.maybe()).rng(INT_TID), lst(T(INT_TID), T(M_ISA_INST_TID)), "*b.plus(*a)");
+        Inst i = instC(f("dosomething").dom(Tokens.INT_TID.maybe()).rng(Tokens.INT_TID), lst(T(Tokens.INT_TID), T(Tokens.M_ISA_INST_TID)), "*b.plus(*a)");
         assertEquals(jnt(4), i.args(rec(uri("a"), jnt(1), uri("b"), jnt(3))).resolve(noobj()).apply());
         //i = instC(f("dosomething"), lst(T(INT_TID), T(STR_TID)), "*b.-<''>-.count().plus(*a)");
         //assertEquals(jnt(4), i.args(rec(uri("a"), jnt(1), uri("b"), str("abc"))).resolve(noobj()).apply());

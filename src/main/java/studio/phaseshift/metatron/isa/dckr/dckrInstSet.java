@@ -31,7 +31,7 @@ import static studio.phaseshift.metatron.isa.dckr.dckrSpace.DCKR_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATASIZE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;

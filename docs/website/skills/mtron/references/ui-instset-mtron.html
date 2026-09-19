@@ -458,7 +458,7 @@ the same declarations the type checker uses:</p>
      obj=&gt;accordion_widget::T,
      dom=&gt;'maybe an obj',
      rng=&gt;'an accordion obj',
-     args=&gt;[{?}body=&gt;'the body content of the accordion',{?}title=&gt;'the title of the accordion'],
+     args=&gt;[{?}title=&gt;'the title of the accordion',{?}body=&gt;'the body content of the accordion'],
      desc=&gt;'[structural] an expandable/collapsible accordion widget'],
     progress_table_widget=&gt;docs::[
      obj=&gt;progress_table_widget::T,
@@ -468,13 +468,19 @@ the same declarations the type checker uses:</p>
      obj=&gt;table_widget::T,
      dom=&gt;'maybe an obj',
      rng=&gt;'a table widget',
-     args=&gt;[{?}header=&gt;'a lst of obj table headers',{?}row=&gt;'a lst of poly table rows',{?}metadata=&gt;'a lst of rows of data behind the display'],
+     args=&gt;[{?}row=&gt;'a lst of poly table rows',{?}metadata=&gt;'a lst of rows of data behind the display',{?}header=&gt;'a lst of obj table headers'],
      desc=&gt;'[structural] a tabular data widget'],
     tree_widget=&gt;docs::[
      obj=&gt;tree_widget::T,
      dom=&gt;'maybe an obj',
      rng=&gt;'a tree widget',
-     args=&gt;[{?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration',max=&gt;'the max depth to traverse',{?}flatten=&gt;'fold single-folder chains into one path row (default false)',root=&gt;'the root uri to traverse from',{?}code=&gt;'transform obj prior to insertion into tree (default _)',{?}expand=&gt;'branch uris whose children are read regardless of max'],
+     args=&gt;[
+      root=&gt;'the root uri to traverse from',
+      {?}code=&gt;'transform obj prior to insertion into tree (default _)',
+      {?}expand=&gt;'branch uris whose children are read regardless of max',
+      {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration',
+      max=&gt;'the max depth to traverse',
+      {?}flatten=&gt;'fold single-folder chains into one path row (default false)'],
      desc=&gt;'[structural] the root uri space is traversed to specified d...'],
     selector_widget=&gt;docs::[
      obj=&gt;selector_widget::T,
@@ -486,8 +492,8 @@ the same declarations the type checker uses:</p>
      dom=&gt;'rec',
      rng=&gt;'panel',
      args=&gt;[
-      body=&gt;'the body content of the panel',
-      title=&gt;'the title of the panel'],
+      title=&gt;'the title of the panel',
+      body=&gt;'the body content of the panel'],
      desc=&gt;'[structural] a simple bordered UI panel widget'],
     label_line_widget=&gt;docs::[
      obj=&gt;label_line_widget::T,
@@ -635,9 +641,9 @@ mtron&gt; accordion_widget::[title=&gt;'notes',body=&gt;&quot;l01\nl02\nl03&quot
    &quot;&quot;&quot;
 </code></pre>
 <pre><code class="language-mtron">mtron&gt; menu_bar_widget::[height=&gt;1,lines=&gt;[label_line_widget::[body=&gt;'File'],label_line_widget::[body=&gt;'Edit']]].as?str&lt;=widget(str::T)
-==&gt;ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3206
+==&gt;ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3440
 mtron&gt; label_line_widget::[body=&gt;'a label line'].as?str&lt;=widget(str::T)
-==&gt;ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3214
+==&gt;ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3448
 </code></pre>
 <h3>style</h3>
 <p><code>style::T</code> is a rec of presentation keys. The ones that change what you see:</p>

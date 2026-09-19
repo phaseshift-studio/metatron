@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -28,7 +29,6 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -41,8 +41,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface Bytes extends Mono, PlusMonoid.O<Bytes> {
-
-    Type BYTES_TYPE = Type.Builder.build().tid(BYTES_TID).vid(BYTES_TID).create();
 
     @Override
     Bytes clone(final Object jvm, final fURI tid, final fURI vid);
@@ -104,13 +102,13 @@ public interface Bytes extends Mono, PlusMonoid.O<Bytes> {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(BYTES_TID).rng(BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> bool(!Arrays.stream(lhs.bytesValue().asIntBuffer().array()).allMatch(b -> b == 0), inst.arg(0).vidOrTid().c(c->c.mult(lhs.c())), lhs.vid())),
-                    instC(AS_INST_TID.dom(BYTES_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(new String(lhs.bytesValue().array(), StandardCharsets.UTF_8), inst.arg(0).vidOrTid().c(c->c.mult(lhs.c())), lhs.vid())),
+                    instC(AS_INST_TID.dom(Tokens.BYTES_TID).rng(Tokens.BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> bool(!Arrays.stream(lhs.bytesValue().asIntBuffer().array()).allMatch(b -> b == 0), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
+                    instC(AS_INST_TID.dom(Tokens.BYTES_TID).rng(Tokens.STR_TID), lst(T(Tokens.STR_TID)), (lhs, inst) -> str(new String(lhs.bytesValue().array(), StandardCharsets.UTF_8), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     //instC(LSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(jnt(1)).tryToInst()), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOfRange(lhs.bytesValue().array(), inst.arg(0).intValue().intValue(), lhs.bytesValue().array().length)))),
                     //instC(RSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(jnt(1)).tryToInst()), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOf(lhs.bytesValue().array(), lhs.bytesValue().array().length - inst.arg(0).intValue().intValue())))),
-                    instC(ZERO_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(), (lhs, inst) -> lhs.asBytes().zero()),
-                    instC(PLUS_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> lhs.<Bytes>as().plus(inst.arg(0).as())),
-                    instC(WITHIN_INST_TID.dom(BYTES_TID).rng(B), lst(T(B)), (lhs, inst) -> IntStream.range(0, lhs.bytesValue().array().length).map(i -> lhs.bytesValue().array()[i]).boxed().map(b -> inst.arg(0).apply(bytes(ByteBuffer.wrap(new byte[]{(byte) b.intValue()})))).map(o -> (PlusMonoid.O) o).reduce((a, b) -> (PlusMonoid.O) a.plus(b)).map(Obj::<Obj>as).orElse(noobj()))));
+                    instC(ZERO_INST_TID.dom(Tokens.BYTES_TID).rng(Tokens.BYTES_TID), lst(), (lhs, inst) -> lhs.asBytes().zero()),
+                    instC(PLUS_INST_TID.dom(Tokens.BYTES_TID).rng(Tokens.BYTES_TID), lst(T(Tokens.BYTES_TID)), (lhs, inst) -> lhs.<Bytes>as().plus(inst.arg(0).as())),
+                    instC(WITHIN_INST_TID.dom(Tokens.BYTES_TID).rng(B), lst(T(B)), (lhs, inst) -> IntStream.range(0, lhs.bytesValue().array().length).map(i -> lhs.bytesValue().array()[i]).boxed().map(b -> inst.arg(0).apply(bytes(ByteBuffer.wrap(new byte[]{(byte) b.intValue()})))).map(o -> (PlusMonoid.O) o).reduce((a, b) -> (PlusMonoid.O) a.plus(b)).map(Obj::<Obj>as).orElse(noobj()))));
 
                     /*instC(SPLIT_INST_TID.dom(BYTES_TID).rng(LST_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
                         final byte[] array = lhs.bytesValue().array();

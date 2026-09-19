@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -30,7 +31,9 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.Tokens.ALL_STAR;
+import static studio.phaseshift.metatron.Tokens.LST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -39,7 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public interface Objs extends Obj, PlusMonoid.O<Objs> {
 
-    Type OBJS_TYPE = Type.Builder.build().tid(OBJS_TID).vid(OBJS_TID).create();
+    Type OBJS_TYPE = Type.Builder.build().tid(Tokens.OBJS_TID).vid(Tokens.OBJS_TID).create();
 
     static Obj trySingleton(final Obj obj) {
         return null != obj && obj.isObjs() ? objs(obj) : obj;

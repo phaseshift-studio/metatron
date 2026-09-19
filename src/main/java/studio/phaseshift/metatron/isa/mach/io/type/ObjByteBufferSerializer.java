@@ -29,9 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
-import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_BYTE_BUFFER_SERIALIZER_TID;
-import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_BYTE_BUFFER_SERIALIZER_VID;
+import static studio.phaseshift.metatron.Tokens.CODE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

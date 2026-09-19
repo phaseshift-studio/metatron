@@ -50,9 +50,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
  *   <li>count() = 10</li>
  *   <li>sum(value) = 55 (1+2+3+...+10)</li>
  *   <li>mean(value) = 5.5</li>
- *   <li>where(value > 5).count() = 5 (rows 6,7,8,9,10)</li>
- *   <li>where(value < 3).count() = 2 (rows 1,2)</li>
- *   <li>where(active=true).count() = 5</li>
+ *   <li>isa(value > 5).count() = 5 (rows 6,7,8,9,10)</li>
+ *   <li>isa(value < 3).count() = 2 (rows 1,2)</li>
+ *   <li>isa(active=true).count() = 5</li>
  * </ul>
  *
  * <h2>Usage</h2>
@@ -288,46 +288,46 @@ public interface CommonRewritesTestContract {
     // ========================================================================
 
     /**
-     * Test cases for where() filter rewrite optimization.
+     * Test cases for isa() filter rewrite optimization.
      */
     default Stream<Arguments> generateWhereTestCases() {
         final String p = getTestDataUriPrefix().toString();
         return Stream.of(
                 // Equality predicates
-                Arguments.of("where: value = 1", "*" + p + "/+.where([value=>1]).count()", jnt(1)),
-                Arguments.of("where: value = 5", "*" + p + "/+.where([value=>5]).count()", jnt(1)),
-                Arguments.of("where: value = 10", "*" + p + "/+.where([value=>10]).count()", jnt(1)),
-                Arguments.of("where: value = 99 (none)", "*" + p + "/+.where([value=>99]).count()", jnt(0)),
+                Arguments.of("isa: value = 1", "*" + p + "/+.isa([value=>1]).count()", jnt(1)),
+                Arguments.of("isa: value = 5", "*" + p + "/+.isa([value=>5]).count()", jnt(1)),
+                Arguments.of("isa: value = 10", "*" + p + "/+.isa([value=>10]).count()", jnt(1)),
+                Arguments.of("isa: value = 99 (none)", "*" + p + "/+.isa([value=>99]).count()", jnt(0)),
 
                 // Greater than
-                Arguments.of("where: value > 0", "*" + p + "/+.where([value=>?>0]).count()", jnt(10)),
-                Arguments.of("where: value > 5", "*" + p + "/+.where([value=>?>5]).count()", jnt(5)),
-                Arguments.of("where: value > 9", "*" + p + "/+.where([value=>?>9]).count()", jnt(1)),
-                Arguments.of("where: value > 10 (none)", "*" + p + "/+.where([value=>?>10]).count()", jnt(0)),
+                Arguments.of("isa: value > 0", "*" + p + "/+.isa([value=>?>0]).count()", jnt(10)),
+                Arguments.of("isa: value > 5", "*" + p + "/+.isa([value=>?>5]).count()", jnt(5)),
+                Arguments.of("isa: value > 9", "*" + p + "/+.isa([value=>?>9]).count()", jnt(1)),
+                Arguments.of("isa: value > 10 (none)", "*" + p + "/+.isa([value=>?>10]).count()", jnt(0)),
 
                 // Less than
-                Arguments.of("where: value < 1 (none)", "*" + p + "/+.where([value=>?<1]).count()", jnt(0)),
-                Arguments.of("where: value < 3", "*" + p + "/+.where([value=>?<3]).count()", jnt(2)),
-                Arguments.of("where: value < 5", "*" + p + "/+.where([value=>?<5]).count()", jnt(4)),
-                Arguments.of("where: value < 11 (all)", "*" + p + "/+.where([value=>?<11]).count()", jnt(10)),
+                Arguments.of("isa: value < 1 (none)", "*" + p + "/+.isa([value=>?<1]).count()", jnt(0)),
+                Arguments.of("isa: value < 3", "*" + p + "/+.isa([value=>?<3]).count()", jnt(2)),
+                Arguments.of("isa: value < 5", "*" + p + "/+.isa([value=>?<5]).count()", jnt(4)),
+                Arguments.of("isa: value < 11 (all)", "*" + p + "/+.isa([value=>?<11]).count()", jnt(10)),
 
                 // Greater than or equal
-                Arguments.of("where: value >= 1 (all)", "*" + p + "/+.where([value=>?>=1]).count()", jnt(10)),
-                Arguments.of("where: value >= 5", "*" + p + "/+.where([value=>?>=5]).count()", jnt(6)),
-                Arguments.of("where: value >= 10", "*" + p + "/+.where([value=>?>=10]).count()", jnt(1)),
-                Arguments.of("where: value >= 11 (none)", "*" + p + "/+.where([value=>?>=11]).count()", jnt(0)),
+                Arguments.of("isa: value >= 1 (all)", "*" + p + "/+.isa([value=>?>=1]).count()", jnt(10)),
+                Arguments.of("isa: value >= 5", "*" + p + "/+.isa([value=>?>=5]).count()", jnt(6)),
+                Arguments.of("isa: value >= 10", "*" + p + "/+.isa([value=>?>=10]).count()", jnt(1)),
+                Arguments.of("isa: value >= 11 (none)", "*" + p + "/+.isa([value=>?>=11]).count()", jnt(0)),
 
                 // Less than or equal
-                Arguments.of("where: value <= 0 (none)", "*" + p + "/+.where([value=>?<=0]).count()", jnt(0)),
-                Arguments.of("where: value <= 1", "*" + p + "/+.where([value=>?<=1]).count()", jnt(1)),
-                Arguments.of("where: value <= 5", "*" + p + "/+.where([value=>?<=5]).count()", jnt(5)),
-                Arguments.of("where: value <= 10 (all)", "*" + p + "/+.where([value=>?<=10]).count()", jnt(10)),
+                Arguments.of("isa: value <= 0 (none)", "*" + p + "/+.isa([value=>?<=0]).count()", jnt(0)),
+                Arguments.of("isa: value <= 1", "*" + p + "/+.isa([value=>?<=1]).count()", jnt(1)),
+                Arguments.of("isa: value <= 5", "*" + p + "/+.isa([value=>?<=5]).count()", jnt(5)),
+                Arguments.of("isa: value <= 10 (all)", "*" + p + "/+.isa([value=>?<=10]).count()", jnt(10)),
 
                 // Boolean predicates - commented out: SQLite stores booleans as 0/1 integers
-                // Arguments.of("where: active = true",         "*" + p + "/+.where([active=>true]).count()",   jnt(5)),
-                // Arguments.of("where: active = false",        "*" + p + "/+.where([active=>false]).count()",  jnt(5)),
-                // @ (anchor) — where fires on AT source, then count chains
-                Arguments.of("where: @ value = 5", "@" + p + "/+.where([value=>5]).count()", jnt(1))
+                // Arguments.of("isa: active = true",         "*" + p + "/+.isa([active=>true]).count()",   jnt(5)),
+                // Arguments.of("isa: active = false",        "*" + p + "/+.isa([active=>false]).count()",  jnt(5)),
+                // @ (anchor) — isa fires on AT source, then count chains
+                Arguments.of("isa: @ value = 5", "@" + p + "/+.isa([value=>5]).count()", jnt(1))
         );
     }
 
@@ -336,21 +336,21 @@ public interface CommonRewritesTestContract {
     // ========================================================================
 
     /**
-     * Test cases for combined where().count() rewrite optimization.
-     * These test the optimization that fuses where and count into a single native operation.
+     * Test cases for combined isa().count() rewrite optimization.
+     * These test the optimization that fuses isa and count into a single native operation.
      */
     default Stream<Arguments> generateWhereCountTestCases() {
         final String p = getTestDataUriPrefix().toString();
         return Stream.of(
-                // where+count combined (should fuse to single native op)
-                Arguments.of("where+count: value > 0 (all)", "*" + p + "/+.where([value=>?>0]).count()", jnt(10)),
-                Arguments.of("where+count: value > 5", "*" + p + "/+.where([value=>?>5]).count()", jnt(5)),
-                Arguments.of("where+count: value > 9", "*" + p + "/+.where([value=>?>9]).count()", jnt(1)),
-                Arguments.of("where+count: value > 10", "*" + p + "/+.where([value=>?>10]).count()", jnt(0)),
-                Arguments.of("where+count: value < 3", "*" + p + "/+.where([value=>?<3]).count()", jnt(2)),
-                // @ (anchor) — where fires on AT source, then sql_where_count composes
-                Arguments.of("where+count: @ value > 5", "@" + p + "/+.where([value=>?>5]).count()", jnt(5))
-                // Arguments.of("where+count: active=true",     "*" + p + "/+.where([active=>true]).count()",   jnt(5))  // SQLite boolean issue
+                // isa+count combined (should fuse to single native op)
+                Arguments.of("isa+count: value > 0 (all)", "*" + p + "/+.isa([value=>?>0]).count()", jnt(10)),
+                Arguments.of("isa+count: value > 5", "*" + p + "/+.isa([value=>?>5]).count()", jnt(5)),
+                Arguments.of("isa+count: value > 9", "*" + p + "/+.isa([value=>?>9]).count()", jnt(1)),
+                Arguments.of("isa+count: value > 10", "*" + p + "/+.isa([value=>?>10]).count()", jnt(0)),
+                Arguments.of("isa+count: value < 3", "*" + p + "/+.isa([value=>?<3]).count()", jnt(2)),
+                // @ (anchor) — isa fires on AT source, then sql_where_count composes
+                Arguments.of("isa+count: @ value > 5", "@" + p + "/+.isa([value=>?>5]).count()", jnt(5))
+                // Arguments.of("isa+count: active=true",     "*" + p + "/+.isa([active=>true]).count()",   jnt(5))  // SQLite boolean issue
         );
     }
 
@@ -359,48 +359,48 @@ public interface CommonRewritesTestContract {
     // ========================================================================
 
     /**
-     * Test cases for combined where().take(n) rewrite optimization.
+     * Test cases for combined isa().take(n) rewrite optimization.
      * These test the optimization that fuses sql_where and take into
      * a single native WHERE+LIMIT operation.
      *
-     * <p>Important: where filters first, then take limits. The count
+     * <p>Important: isa filters first, then take limits. The count
      * at the end verifies the combined result.
      */
     default Stream<Arguments> generateWhereLimitTestCases() {
         final String p = getTestDataUriPrefix().toString();
         return Stream.of(
-                // where filters to 7 rows (values 4-10), take 2
-                Arguments.of("where+limit: >3 take(2)", "*" + p + "/+.where([value=>?>3]).take(2).count()", jnt(2)),
-                // where filters to 7 rows, take 5
-                Arguments.of("where+limit: >3 take(5)", "*" + p + "/+.where([value=>?>3]).take(5).count()", jnt(5)),
-                // where filters to 7 rows, take 10 (only 7 available)
-                Arguments.of("where+limit: >3 take(10)", "*" + p + "/+.where([value=>?>3]).take(10).count()", jnt(7)),
-                // where filters to 5 rows (values 6-10), take 1
-                Arguments.of("where+limit: >5 take(1)", "*" + p + "/+.where([value=>?>5]).take(1).count()", jnt(1)),
-                // where filters to 5 rows, take 3
-                Arguments.of("where+limit: >5 take(3)", "*" + p + "/+.where([value=>?>5]).take(3).count()", jnt(3)),
-                // where filters to 5 rows, take 5 (all)
-                Arguments.of("where+limit: >5 take(5)", "*" + p + "/+.where([value=>?>5]).take(5).count()", jnt(5)),
-                // where filters to 5 rows, take 10 (only 5 available)
-                Arguments.of("where+limit: >5 take(10)", "*" + p + "/+.where([value=>?>5]).take(10).count()", jnt(5)),
-                // where filters to 2 rows (values 1-2), take 1
-                Arguments.of("where+limit: <3 take(1)", "*" + p + "/+.where([value=>?<3]).take(1).count()", jnt(1)),
-                // where filters to 2 rows, take 2 (all)
-                Arguments.of("where+limit: <3 take(2)", "*" + p + "/+.where([value=>?<3]).take(2).count()", jnt(2)),
-                // where filters to 2 rows, take 5 (only 2)
-                Arguments.of("where+limit: <3 take(5)", "*" + p + "/+.where([value=>?<3]).take(5).count()", jnt(2)),
-                // where matches 0 rows, take anything
-                Arguments.of("where+limit: >10 take(1)", "*" + p + "/+.where([value=>?>10]).take(1).count()", jnt(0)),
+                // isa filters to 7 rows (values 4-10), take 2
+                Arguments.of("isa+limit: >3 take(2)", "*" + p + "/+.isa([value=>?>3]).take(2).count()", jnt(2)),
+                // isa filters to 7 rows, take 5
+                Arguments.of("isa+limit: >3 take(5)", "*" + p + "/+.isa([value=>?>3]).take(5).count()", jnt(5)),
+                // isa filters to 7 rows, take 10 (only 7 available)
+                Arguments.of("isa+limit: >3 take(10)", "*" + p + "/+.isa([value=>?>3]).take(10).count()", jnt(7)),
+                // isa filters to 5 rows (values 6-10), take 1
+                Arguments.of("isa+limit: >5 take(1)", "*" + p + "/+.isa([value=>?>5]).take(1).count()", jnt(1)),
+                // isa filters to 5 rows, take 3
+                Arguments.of("isa+limit: >5 take(3)", "*" + p + "/+.isa([value=>?>5]).take(3).count()", jnt(3)),
+                // isa filters to 5 rows, take 5 (all)
+                Arguments.of("isa+limit: >5 take(5)", "*" + p + "/+.isa([value=>?>5]).take(5).count()", jnt(5)),
+                // isa filters to 5 rows, take 10 (only 5 available)
+                Arguments.of("isa+limit: >5 take(10)", "*" + p + "/+.isa([value=>?>5]).take(10).count()", jnt(5)),
+                // isa filters to 2 rows (values 1-2), take 1
+                Arguments.of("isa+limit: <3 take(1)", "*" + p + "/+.isa([value=>?<3]).take(1).count()", jnt(1)),
+                // isa filters to 2 rows, take 2 (all)
+                Arguments.of("isa+limit: <3 take(2)", "*" + p + "/+.isa([value=>?<3]).take(2).count()", jnt(2)),
+                // isa filters to 2 rows, take 5 (only 2)
+                Arguments.of("isa+limit: <3 take(5)", "*" + p + "/+.isa([value=>?<3]).take(5).count()", jnt(2)),
+                // isa matches 0 rows, take anything
+                Arguments.of("isa+limit: >10 take(1)", "*" + p + "/+.isa([value=>?>10]).take(1).count()", jnt(0)),
                 // take 0 always yields 0
-                Arguments.of("where+limit: >3 take(0)", "*" + p + "/+.where([value=>?>3]).take(0).count()", jnt(0)),
-                // where filters to 6 rows (values 5-10), take 1
-                Arguments.of("where+limit: >=5 take(1)", "*" + p + "/+.where([value=>?>=5]).take(1).count()", jnt(1)),
-                // where filters to 4 rows (values 1-4), take 2
-                Arguments.of("where+limit: <5 take(2)", "*" + p + "/+.where([value=>?<5]).take(2).count()", jnt(2)),
-                // where filters to 5 rows (values 1-5), take 3
-                Arguments.of("where+limit: <=5 take(3)", "*" + p + "/+.where([value=>?<=5]).take(3).count()", jnt(3))
+                Arguments.of("isa+limit: >3 take(0)", "*" + p + "/+.isa([value=>?>3]).take(0).count()", jnt(0)),
+                // isa filters to 6 rows (values 5-10), take 1
+                Arguments.of("isa+limit: >=5 take(1)", "*" + p + "/+.isa([value=>?>=5]).take(1).count()", jnt(1)),
+                // isa filters to 4 rows (values 1-4), take 2
+                Arguments.of("isa+limit: <5 take(2)", "*" + p + "/+.isa([value=>?<5]).take(2).count()", jnt(2)),
+                // isa filters to 5 rows (values 1-5), take 3
+                Arguments.of("isa+limit: <=5 take(3)", "*" + p + "/+.isa([value=>?<=5]).take(3).count()", jnt(3))
                 // Boolean predicates commented out: SQLite stores booleans as 0/1 integers
-                // Arguments.of("where+limit: active=true take(2)", "*" + p + "/+.where([active=>true]).take(2).count()", jnt(2))
+                // Arguments.of("isa+limit: active=true take(2)", "*" + p + "/+.isa([active=>true]).take(2).count()", jnt(2))
         );
     }
 
@@ -411,17 +411,17 @@ public interface CommonRewritesTestContract {
     default Stream<Arguments> generateWhereOffsetTestCases() {
         final String p = getTestDataUriPrefix().toString();
         return Stream.of(
-                // where filters to 7 rows (values 4-10), skip slices from there
-                Arguments.of("where+offset: >3 skip(0)", "*" + p + "/+.where([value=>?>3]).skip(0).count()", jnt(7)),
-                Arguments.of("where+offset: >3 skip(2)", "*" + p + "/+.where([value=>?>3]).skip(2).count()", jnt(5)),
-                Arguments.of("where+offset: >3 skip(6)", "*" + p + "/+.where([value=>?>3]).skip(6).count()", jnt(1)),
-                Arguments.of("where+offset: >3 skip(10)", "*" + p + "/+.where([value=>?>3]).skip(10).count()", jnt(0)),
-                // where filters to 5 rows (values 6-10)
-                Arguments.of("where+offset: >5 skip(2)", "*" + p + "/+.where([value=>?>5]).skip(2).count()", jnt(3)),
-                // where filters to 2 rows (values 1-2)
-                Arguments.of("where+offset: <3 skip(1)", "*" + p + "/+.where([value=>?<3]).skip(1).count()", jnt(1)),
-                // where matches 0 rows
-                Arguments.of("where+offset: >10 skip(0)", "*" + p + "/+.where([value=>?>10]).skip(0).count()", jnt(0))
+                // isa filters to 7 rows (values 4-10), skip slices from there
+                Arguments.of("isa+offset: >3 skip(0)", "*" + p + "/+.isa([value=>?>3]).skip(0).count()", jnt(7)),
+                Arguments.of("isa+offset: >3 skip(2)", "*" + p + "/+.isa([value=>?>3]).skip(2).count()", jnt(5)),
+                Arguments.of("isa+offset: >3 skip(6)", "*" + p + "/+.isa([value=>?>3]).skip(6).count()", jnt(1)),
+                Arguments.of("isa+offset: >3 skip(10)", "*" + p + "/+.isa([value=>?>3]).skip(10).count()", jnt(0)),
+                // isa filters to 5 rows (values 6-10)
+                Arguments.of("isa+offset: >5 skip(2)", "*" + p + "/+.isa([value=>?>5]).skip(2).count()", jnt(3)),
+                // isa filters to 2 rows (values 1-2)
+                Arguments.of("isa+offset: <3 skip(1)", "*" + p + "/+.isa([value=>?<3]).skip(1).count()", jnt(1)),
+                // isa matches 0 rows
+                Arguments.of("isa+offset: >10 skip(0)", "*" + p + "/+.isa([value=>?>10]).skip(0).count()", jnt(0))
         );
     }
 
@@ -432,16 +432,16 @@ public interface CommonRewritesTestContract {
     default Stream<Arguments> generateWhereOffsetLimitTestCases() {
         final String p = getTestDataUriPrefix().toString();
         return Stream.of(
-                // where filters to 7 rows (values 4-10), skip 2, take 3 → rows 6,7,8 (values 6,7,8)
-                Arguments.of("where+offset+limit: >3 skip(2).take(3)", "*" + p + "/+.where([value=>?>3]).skip(2).take(3).count()", jnt(3)),
-                // where filters to 7 rows, skip 5, take 4 → only 2 available
-                Arguments.of("where+offset+limit: >3 skip(5).take(4)", "*" + p + "/+.where([value=>?>3]).skip(5).take(4).count()", jnt(2)),
-                // where filters to 7 rows, skip 10, take 3 → none
-                Arguments.of("where+offset+limit: >3 skip(10).take(3)", "*" + p + "/+.where([value=>?>3]).skip(10).take(3).count()", jnt(0)),
+                // isa filters to 7 rows (values 4-10), skip 2, take 3 → rows 6,7,8 (values 6,7,8)
+                Arguments.of("isa+offset+limit: >3 skip(2).take(3)", "*" + p + "/+.isa([value=>?>3]).skip(2).take(3).count()", jnt(3)),
+                // isa filters to 7 rows, skip 5, take 4 → only 2 available
+                Arguments.of("isa+offset+limit: >3 skip(5).take(4)", "*" + p + "/+.isa([value=>?>3]).skip(5).take(4).count()", jnt(2)),
+                // isa filters to 7 rows, skip 10, take 3 → none
+                Arguments.of("isa+offset+limit: >3 skip(10).take(3)", "*" + p + "/+.isa([value=>?>3]).skip(10).take(3).count()", jnt(0)),
                 // take 0 always yields 0
-                Arguments.of("where+offset+limit: >3 skip(2).take(0)", "*" + p + "/+.where([value=>?>3]).skip(2).take(0).count()", jnt(0)),
-                // where+offset+limit: values < 5 (4 rows), skip 1, take 2
-                Arguments.of("where+offset+limit: <5 skip(1).take(2)", "*" + p + "/+.where([value=>?<5]).skip(1).take(2).count()", jnt(2))
+                Arguments.of("isa+offset+limit: >3 skip(2).take(0)", "*" + p + "/+.isa([value=>?>3]).skip(2).take(0).count()", jnt(0)),
+                // isa+offset+limit: values < 5 (4 rows), skip 1, take 2
+                Arguments.of("isa+offset+limit: <5 skip(1).take(2)", "*" + p + "/+.isa([value=>?<5]).skip(1).take(2).count()", jnt(2))
         );
     }
 
@@ -457,7 +457,7 @@ public interface CommonRewritesTestContract {
                 // order + take
                 Arguments.of("order: by name take(3)", "*" + p + "/+.order(select(name))>-.take(3).count()", jnt(3)),
                 Arguments.of("order: by value take(5)", "*" + p + "/+.order(select(value))>-.take(5).count()", jnt(5)),
-                // order + where + take (order before where)
+                // order + isa + take (order before isa)
                 Arguments.of("order: by name take(1)", "*" + p + "/+.order(select(name))>-.take(1).count()", jnt(1))
         );
     }
@@ -469,14 +469,14 @@ public interface CommonRewritesTestContract {
     default Stream<Arguments> generateWhereOrderTestCases() {
         final String p = getTestDataUriPrefix().toString();
         return Stream.of(
-                // where+order — chain .count() to verify row count (order doesn't change it)
-                Arguments.of("where+order: >5 order by value count",
-                        "*" + p + "/+.where([value=>?>5]).order(select(value))>-.count()", jnt(5)),
-                Arguments.of("where+order: >3 order by name count",
-                        "*" + p + "/+.where([value=>?>3]).order(select(name))>-.count()", jnt(7)),
+                // isa+order — chain .count() to verify row count (order doesn't change it)
+                Arguments.of("isa+order: >5 order by value count",
+                        "*" + p + "/+.isa([value=>?>5]).order(select(value))>-.count()", jnt(5)),
+                Arguments.of("isa+order: >3 order by name count",
+                        "*" + p + "/+.isa([value=>?>3]).order(select(name))>-.count()", jnt(7)),
                 // @ (anchor) — verify VID stamping through composed rewrite
-                Arguments.of("where+order: @ >5 order by value count",
-                        "@" + p + "/+.where([value=>?>5]).order(select(value))>-.count()", jnt(5))
+                Arguments.of("isa+order: @ >5 order by value count",
+                        "@" + p + "/+.isa([value=>?>5]).order(select(value))>-.count()", jnt(5))
         );
     }
 
@@ -487,16 +487,16 @@ public interface CommonRewritesTestContract {
     default Stream<Arguments> generateWhereOrderOffsetTestCases() {
         final String p = getTestDataUriPrefix().toString();
         return Stream.of(
-                // where+order+offset — chain .count() to verify row count after skip
-                Arguments.of("where+order+offset: >3 order by value skip(2)",
-                        "*" + p + "/+.where([value=>?>3]).order(select(value))>-.skip(2).count()", jnt(5)),
-                Arguments.of("where+order+offset: >5 order by name skip(1)",
-                        "*" + p + "/+.where([value=>?>5]).order(select(name))>-.skip(1).count()", jnt(4)),
-                Arguments.of("where+order+offset: >3 order by value skip(10) past end",
-                        "*" + p + "/+.where([value=>?>3]).order(select(value))>-.skip(10).count()", jnt(0)),
+                // isa+order+offset — chain .count() to verify row count after skip
+                Arguments.of("isa+order+offset: >3 order by value skip(2)",
+                        "*" + p + "/+.isa([value=>?>3]).order(select(value))>-.skip(2).count()", jnt(5)),
+                Arguments.of("isa+order+offset: >5 order by name skip(1)",
+                        "*" + p + "/+.isa([value=>?>5]).order(select(name))>-.skip(1).count()", jnt(4)),
+                Arguments.of("isa+order+offset: >3 order by value skip(10) past end",
+                        "*" + p + "/+.isa([value=>?>3]).order(select(value))>-.skip(10).count()", jnt(0)),
                 // @ (anchor)
-                Arguments.of("where+order+offset: @ >3 order by value skip(2)",
-                        "@" + p + "/+.where([value=>?>3]).order(select(value))>-.skip(2).count()", jnt(5))
+                Arguments.of("isa+order+offset: @ >3 order by value skip(2)",
+                        "@" + p + "/+.isa([value=>?>3]).order(select(value))>-.skip(2).count()", jnt(5))
         );
     }
 
@@ -549,14 +549,14 @@ public interface CommonRewritesTestContract {
                 // Basic rewrite + arithmetic
                 // ================================================================
                 Arguments.of("compose: count + 10", "*" + p + "/+.count().plus(10)", jnt(20)),
-                Arguments.of("compose: where.count + 10", "*" + p + "/+.where([value=>?>5]).count().plus(10)", jnt(15)),
+                Arguments.of("compose: isa.count + 10", "*" + p + "/+.isa([value=>?>5]).count().plus(10)", jnt(15)),
                 Arguments.of("compose: take.count * 2", "*" + p + "/+.take(5).count().mult(2)", jnt(10)),
 
                 // ================================================================
                 // id removal (_) + rewrite
                 // ================================================================
                 Arguments.of("compose: _.count", "*" + p + "/+._.count()", jnt(10)),
-                Arguments.of("compose: _.where.count", "*" + p + "/+._.where([value=>?<5]).count()", jnt(4)),
+                Arguments.of("compose: _.isa.count", "*" + p + "/+._.isa([value=>?<5]).count()", jnt(4)),
                 Arguments.of("compose: _.take.count", "*" + p + "/+._.take(3).count()", jnt(3)),
 
                 // ================================================================
@@ -564,34 +564,36 @@ public interface CommonRewritesTestContract {
                 // ================================================================
                 Arguments.of("compose: is(rec).count", "*" + p + "/+.isa(rec::T).count()", jnt(10)),
                 Arguments.of("compose: _.isa(rec::T).count", "*" + p + "/+._.isa(rec::T).count()", jnt(10)),
-                Arguments.of("compose: isa(rec::T).where.count", "*" + p + "/+.isa(rec::T).where([value=>?>5]).count()", jnt(5)),
-                Arguments.of("compose: _.isa(rec::T).where.count", "*" + p + "/+._.isa(rec::T).where([value=>?>5]).count()", jnt(5)),
+                Arguments.of("compose: isa(rec::T).isa.count", "*" + p + "/+.isa(rec::T).isa([value=>?>5]).count()", jnt(5)),
+                Arguments.of("compose: _.isa(rec::T).isa.count", "*" + p + "/+._.isa(rec::T).isa([value=>?>5]).count()", jnt(5)),
 
                 // ================================================================
-                // Chained where filters
+                // Chained isa filters
                 // ================================================================
-                Arguments.of("compose: where.where.count", "*" + p + "/+.where([value=>?>3]).where([value=>?<8]).count()", jnt(4)),  // 4,5,6,7
-                Arguments.of("compose: _.where.where.count", "*" + p + "/+._.where([value=>?>2]).where([value=>?<=7]).count()", jnt(5)),  // 3,4,5,6,7
+                Arguments.of("compose: isa.isa.count", "*" + p + "/+.isa([value=>?>3]).isa([value=>?<8]).count()", jnt(4)),  // 4,5,6,7
+                Arguments.of("compose: _.isa.isa.count", "*" + p + "/+._.isa([value=>?>2]).isa([value=>?<=7]).count()", jnt(5)),  // 3,4,5,6,7
 
                 // ================================================================
-                // take + where combinations (take(10) uses all rows to avoid ordering issues)
+                // take + isa combinations (take(10) uses all rows to avoid ordering issues)
                 // ================================================================
-                Arguments.of("compose: take(all).where.count", "*" + p + "/+.take(10).where([value=>?>3]).count()", jnt(7)),  // all 10 rows, filter >3 = 4,5,6,7,8,9,10
-                Arguments.of("compose: where.take.count", "*" + p + "/+.where([value=>?>3]).take(3).count()", jnt(3)),  // filter first (7 rows), then take 3 = 3
+                Arguments.of("compose: take(all).isa.count", "*" + p + "/+.take(10).isa([value=>?>3]).count()", jnt(7)),  // all 10 rows, filter >3 = 4,5,6,7,8,9,10
+                Arguments.of("compose: isa.take.count", "*" + p + "/+.isa([value=>?>3]).take(3).count()", jnt(3)),  // filter first (7 rows), then take 3 = 3
 
                 // ================================================================
                 // Complex arithmetic chains
                 // ================================================================
                 Arguments.of("compose: count.plus.mult", "*" + p + "/+.count().plus(5).mult(2)", jnt(30)),  // (10+5)*2
                 Arguments.of("compose: count.mult.plus", "*" + p + "/+.count().mult(3).plus(7)", jnt(37)),  // 10*3+7
-                Arguments.of("compose: where.count.plus.mult", "*" + p + "/+.where([value=>?>5]).count().plus(2).mult(3)", jnt(21)),  // (5+2)*3
+                Arguments.of("compose: isa.count.plus.mult", "*" + p + "/+.isa([value=>?>5]).count().plus(2).mult(3)", jnt(21)),  // (5+2)*3
 
                 // ================================================================
                 // sum with filters
+                // isa() now has a per-base-type registration (rng(T.maybe())), so it
+                // preserves the record type and >>value.sum() resolves type-safely.
                 // ================================================================
-                Arguments.of("compose: where.sum", "*" + p + "/+.where([value=>?>5])>>value.sum()", jnt(40)),  // 6+7+8+9+10
-                Arguments.of("compose: where.sum(<=5)", "*" + p + "/+.where([value=>?<=5])>>value.sum()", jnt(15)),  // 1+2+3+4+5 (deterministic unlike take)
-                Arguments.of("compose: _.where.sum", "*" + p + "/+._.where([value=>?<4])>>value.sum()", jnt(6)),   // 1+2+3
+                Arguments.of("compose: isa.sum", "*" + p + "/+.isa([value=>?>5])>>value.sum()", jnt(40)),  // 6+7+8+9+10
+                Arguments.of("compose: isa.sum(<=5)", "*" + p + "/+.isa([value=>?<=5])>>value.sum()", jnt(15)),  // 1+2+3+4+5 (deterministic unlike take)
+                Arguments.of("compose: _.isa.sum", "*" + p + "/+._.isa([value=>?<4])>>value.sum()", jnt(6)),   // 1+2+3
 
                 // ================================================================
                 // Multiple id removals and type checks
@@ -607,13 +609,13 @@ public interface CommonRewritesTestContract {
                 Arguments.of("compose: count.lt", "*" + p + "/+.count().lt(5)", bool(false)),
                 Arguments.of("compose: count.gte", "*" + p + "/+.count().gte(10)", bool(true)),
                 Arguments.of("compose: count.lte", "*" + p + "/+.count().lte(9)", bool(false)),
-                Arguments.of("compose: where.count.gt", "*" + p + "/+.where([value=>?>5]).count().gt(3)", bool(true)),  // 5 > 3
+                Arguments.of("compose: isa.count.gt", "*" + p + "/+.isa([value=>?>5]).count().gt(3)", bool(true)),  // 5 > 3
 
                 // ================================================================
                 // Nested expressions with large literal values
                 // ================================================================
                 Arguments.of("compose: count.lt(large)", "*" + p + "/+.count().lt(100000000)", bool(true)),
-                Arguments.of("compose: where.count.lt(large)", "*" + p + "/+.where([value=>?>0]).count().lt(999999)", bool(true)),
+                Arguments.of("compose: isa.count.lt(large)", "*" + p + "/+.isa([value=>?>0]).count().lt(999999)", bool(true)),
                 Arguments.of("compose: sum.lt(large)", "*" + p + "/+>>value.sum().lt(100000000)", bool(true))
         );
     }

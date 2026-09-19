@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -29,8 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.LongSummaryStatistics;
 
-import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REAL_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -49,7 +49,7 @@ public class QuickResolverBench extends AbstractMetatronTest {
 
     private record Result(String name, double avgUs, long minNs, long maxNs, int n) {
         public String toString() {
-            return String.format("  %-30s avg=%.2f us  min=%.2f us  max=%.2f us  (n=%d)", name, avgUs, minNs/1000.0, maxNs/1000.0, n);
+            return String.format("  %-30s avg=%.2f us  min=%.2f us  max=%.2f us  (n=%d)", name, avgUs, minNs / 1000.0, maxNs / 1000.0, n);
         }
     }
 

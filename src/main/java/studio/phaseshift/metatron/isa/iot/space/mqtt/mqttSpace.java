@@ -55,9 +55,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -75,8 +74,8 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                     .vid(MQTT_SPACE_TID)
                     .isaPredicate(rec(uri(HOST), URI_TYPE))
                     .constructor(
-                            instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(MQTT_SPACE_TID),
-                                    lst(REC_TYPE), (lhs, inst) ->
+                            instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MQTT_SPACE_TID),
+                                    lst(mInstSet.REC_TYPE), (lhs, inst) ->
                                             mqttSpace.of(inst.arg(0).asRec().apply().asRec(), inst.arg(0).vid()))).create();
 
     protected final fURI broker;

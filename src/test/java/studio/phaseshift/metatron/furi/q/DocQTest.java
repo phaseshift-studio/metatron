@@ -39,7 +39,6 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AND_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -64,7 +63,7 @@ public class DocQTest extends AbstractMetatronTest {
         final Inst inst = Router.readFromSpace(AND_INST_TID).asInst();
         final Docs doc = new Docs(Router.readFromSpace(AND_INST_TID.addQ(DOCQ)).asRec());
         assertTrue(doc.test(DOCQ_TYPE));
-        assertTrue(doc.description().contains("\\("),"and() documentation has latex formatting in its description");
+        assertTrue(doc.description().contains("\\("), "and() documentation has latex formatting in its description");
         assertEquals(doc.at(DESC).strValue(), doc.description());
         assertEquals(inst, doc.at(OBJ));
     }

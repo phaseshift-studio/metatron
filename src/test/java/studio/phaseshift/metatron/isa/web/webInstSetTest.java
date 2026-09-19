@@ -23,25 +23,24 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.web.type.MIME;
-
-import static studio.phaseshift.metatron.isa.web.webHelper.isProtocolSurface;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.web.type.MIME;
+import studio.phaseshift.metatron.isa.web.type.mcpServer;
 
 import java.util.LinkedHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static studio.phaseshift.metatron.Tokens.STR_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.web.webHelper.isProtocolSurface;
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_SERVER_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.PROTOCOL_TID;
 

@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractDataPathSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -52,10 +53,8 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
@@ -126,7 +125,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
                             uri(HOST), URI_TYPE,
                             uri(DRIVER), URI_TYPE))
                     .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(TBLE_SPACE_TID),
-                            lst(REC_TYPE),
+                            lst(mInstSet.REC_TYPE),
                             (lhs, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
                     .create();
 

@@ -511,9 +511,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result{4}::[
     status=&gt;success,
-    runtime=&gt;millis::771.0000,
+    runtime=&gt;millis::716.0000,
     command=&gt;'mvn -f src/test/resources/scratch clean',
-    output=&gt;!*/sys/tmp/7ee07d3b]
+    output=&gt;!*/sys/tmp/b8f00169]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 ==&gt;{4}'WARNING: A terminally deprecated method in sun.misc.Unsafe has been called'
 ==&gt;{4}'WARNING: sun.misc.Unsafe::staticFieldBase has been called by com.google.inject.internal.aop.HiddenClassDefiner (file:/home/killswitch/.sdkman/candidates/maven/current/lib/guice-5.1.0-classes.jar)'
@@ -531,8 +531,8 @@ mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 ==&gt;{4}'[INFO] Nothing to compile - all classes are up to date.'
 ==&gt;{12}'[INFO] ------------------------------------------------------------------------'
 ==&gt;{4}'[INFO] BUILD SUCCESS'
-==&gt;{4}'[INFO] Total time:  0.259 s'
-==&gt;{4}'[INFO] Finished at: 2026-09-18T04:33:58-06:00'
+==&gt;{4}'[INFO] Total time:  0.226 s'
+==&gt;{4}'[INFO] Finished at: 2026-09-19T00:00:50-06:00'
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
 <pre><code class="language-mtron">mtron&gt; tree_widget::[root=&gt;/dev/scratch, max=&gt;3, xref=&gt;[=&gt;]].as?str&lt;=widget(str::T)

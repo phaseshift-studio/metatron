@@ -24,6 +24,7 @@ import org.jline.terminal.Size;
 import org.jline.terminal.Terminal;
 import org.jline.utils.Display;
 import org.jline.utils.InfoCmp;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.reflect.SpaceRec;
@@ -45,7 +46,7 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> extends SpaceR
 
     public AbstractWidget() {
         // the map must be mutable: the write path installs into this rec
-        this(new java.util.LinkedHashMap<>(), studio.phaseshift.metatron.isa.m.mInstSet.REC_TID, null);
+        this(new java.util.LinkedHashMap<>(), Tokens.REC_TID, null);
     }
 
     public AbstractWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {

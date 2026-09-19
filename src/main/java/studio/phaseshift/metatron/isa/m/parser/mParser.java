@@ -26,6 +26,7 @@ import org.petitparser.parser.combinators.OptionalParser;
 import org.petitparser.parser.combinators.SequenceParser;
 import org.petitparser.parser.combinators.SettableParser;
 import org.petitparser.parser.primitive.CharacterParser;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Sugar;
@@ -149,7 +150,7 @@ public class mParser {
                 opt(m_furi_poly_type(), null),
                 opt(m_furi_coefficient(), null),
                 opt(none(), null)).map(t -> f(pick(t, 0)).poly(pick(t, 1)).c(cInt.of((String) pick(t, 2))).qString(pick(t, 3))));
-        rel_parser.set(seq(m_type_prefix(REL_TID), m_paren_wrap(seq(obj_rel_back_parser, of("=>").trim(), m_obj()))).map(t -> rel(Tuple.Pair.with(pick(pick(t, 1), 0), pick(pick(t, 1), 2)), pick(t, 0), null)));
+        rel_parser.set(seq(m_type_prefix(Tokens.REL_TID), m_paren_wrap(seq(obj_rel_back_parser, of("=>").trim(), m_obj()))).map(t -> rel(Tuple.Pair.with(pick(pick(t, 1), 0), pick(pick(t, 1), 2)), pick(t, 0), null)));
         obj_no_call_parser.set(choice(
                 m_comment(),
                 m_type(),
@@ -230,14 +231,14 @@ public class mParser {
                 m_lst(),
                 m_uri(),
                 m_objs()));
-        lst_parser.set(seq(m_type_prefix(LST_TID),
+        lst_parser.set(seq(m_type_prefix(Tokens.LST_TID),
                 of('[').trim(),
                 lst_internal(),
                 of(']').trim(),
                 m_vid_postfix())
                 .map(t -> new MLst(pick(t, 2), pick(t, 0), pick(t, 4))));
 
-        rec_parser.set(seq(m_type_prefix(REC_TID), of('[').trim(), rec_internal(obj_rel_back_parser, m_call_prefix(MAP_INST_TID)), of(']').trim(), m_vid_postfix()).trim().map(t -> rec((Map<Obj, Obj>) pick(t, 2), pick(t, 0), pick(t, 4))));
+        rec_parser.set(seq(m_type_prefix(Tokens.REC_TID), of('[').trim(), rec_internal(obj_rel_back_parser, m_call_prefix(MAP_INST_TID)), of(']').trim(), m_vid_postfix()).trim().map(t -> rec((Map<Obj, Obj>) pick(t, 2), pick(t, 0), pick(t, 4))));
         inst_parser.set(choice(m_inst_b(), m_inst_c()));
         and_or_parser.set(seq(m_obj(), choice(of("||").trim(), of("&&").trim()), m_obj()).map(t -> {
             final Obj lhs = pick(t, 0);
@@ -357,7 +358,7 @@ public class mParser {
 
     public static Parser m_inst_c() {
         return seq(
-                choice(m_inst_furi(), m_type_prefix(M_ISA_INST_TID)), // 0 inst_tid
+                choice(m_inst_furi(), m_type_prefix(Tokens.M_ISA_INST_TID)), // 0 inst_tid
                 seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_call_prefix(MAP_INST_TID)), lst_internal(), of("")).trim(), of(')').trim()).pick(1), // 1 inst_args
                 seq(of('{').trim(), choice(
                                 of('?').map(t -> null),
@@ -464,7 +465,7 @@ public class mParser {
                 newCode.add(instB(headTID, lst(first.isInst() ? noobj() : first)));
             else if (first.isInst()) newCode.add(first.as());
             newCode.addAll(mParser.<Call>pick(t, 2).insts());
-            return MCode.of(newCode, CODE_TID, pick(t, 3)).tryToInst();
+            return MCode.of(newCode, Tokens.CODE_TID, pick(t, 3)).tryToInst();
         });
     }
 
@@ -838,7 +839,7 @@ public class mParser {
             }
             return (O) single;
         }
-        return (O) MCode.of(allInsts, CODE_TID, null).tryToInst();
+        return (O) MCode.of(allInsts, Tokens.CODE_TID, null).tryToInst();
     }
 
     /**
@@ -1031,7 +1032,7 @@ public class mParser {
     }
 
     public static Parser m_fail() {
-        return seq(choice(of("fail"), of(FAIL_TID.toString())), of("::"), seq(of('[').trim(), m_obj(), of(']').trim()).map(t -> pick(t, 1)).plus(), m_vid_postfix())
+        return seq(choice(of("fail"), of(Tokens.FAIL_TID.toString())), of("::"), seq(of('[').trim(), m_obj(), of(']').trim()).map(t -> pick(t, 1)).plus(), m_vid_postfix())
                 .map(t -> {
                     final Object test = pick(t, 2);
                     final List<Obj> objs = test instanceof List ? ((List) test) : (List) List.of(test);
@@ -1044,26 +1045,26 @@ public class mParser {
     }
 
     public static Parser m_bool() {
-        return seq(m_type_prefix(BOOL_TID), of("true").trim().or(of("false").trim()), m_vid_postfix())
+        return seq(m_type_prefix(Tokens.BOOL_TID), of("true").trim().or(of("false").trim()), m_vid_postfix())
                 .map(t -> pick(t, 1).equals("true") ?
                         bool(true, pick(t, 0), pick(t, 2)) :
                         bool(false, pick(t, 0), pick(t, 2)));
     }
 
     public static Parser m_bytes() {
-        return seq(m_type_prefix(BYTES_TID),
+        return seq(m_type_prefix(Tokens.BYTES_TID),
                 of("0x"), choice(digit(), anyOf("abcdefABCDEF")).plus().flatten(), m_vid_postfix()).
                 map(t -> bytes(ByteBuffer.wrap(HexFormat.of().parseHex(mParser.<String>pick(t, 2))), pick(t, 0), pick(t, 3)));
     }
 
     public static Parser m_int() {
-        return seq(m_type_prefix(INT_TID), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()))
+        return seq(m_type_prefix(Tokens.INT_TID), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()))
                 .flatten().trim(), m_vid_postfix())
                 .map(t -> jnt(Long.parseLong(pick(t, 1).toString()), pick(t, 0), pick(t, 2)));
     }
 
     public static Parser m_real() {
-        return seq(m_type_prefix(REAL_TID), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()), of('.'), digit().plus(), opt(seq(of("E"), opt(of("-"), ""), digit().plus()), ""))
+        return seq(m_type_prefix(Tokens.REAL_TID), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()), of('.'), digit().plus(), opt(seq(of("E"), opt(of("-"), ""), digit().plus()), ""))
                 .flatten().trim(), m_vid_postfix())
                 .map(t -> new MReal(Double.parseDouble(pick(t, 1).toString()), pick(t, 0), pick(t, 2)));
     }
@@ -1077,12 +1078,12 @@ public class mParser {
                 of('"').repeat(3, 3),
                 any().starLazy(of('"').repeat(3, 3)),
                 of('"').repeat(3, 3)).flatten().map(t -> t.toString().substring(3, t.toString().length() - 3));
-        return seq(m_type_prefix(STR_TID), choice(tripleQuote, singleQuote, doubleQuote), m_vid_postfix())
+        return seq(m_type_prefix(Tokens.STR_TID), choice(tripleQuote, singleQuote, doubleQuote), m_vid_postfix())
                 .map(t -> new MStr(mParser.pick(t, 1), pick(t, 0), pick(t, 2)));
     }
 
     public static Parser m_uri() {
-        return seq(m_type_prefix(URI_TID), m_furi(REDUCED_FURI_CHARS, true, true, true), m_vid_postfix()).map(t -> mParser.<fURI>pick(t, 0).isZero() ? noobj() : new MUri(pick(t, 1), pick(t, 0), pick(t, 2)));
+        return seq(m_type_prefix(Tokens.URI_TID), m_furi(REDUCED_FURI_CHARS, true, true, true), m_vid_postfix()).map(t -> mParser.<fURI>pick(t, 0).isZero() ? noobj() : new MUri(pick(t, 1), pick(t, 0), pick(t, 2)));
     }
 
     public static Parser m_rel() {
@@ -1101,12 +1102,12 @@ public class mParser {
         return seq(m_type_prefix(null), of('T'),
                 opt(seq(of('['), opt(m_obj(), null), of(']')).map(t -> pick(t, 1)), null),
                 opt(seq(of('['), opt(m_obj(), null), of(']')).map(t -> pick(t, 1)), null),
-                choice(m_furi_coefficient().map(t -> TYPE_TID.c(cInt.of(t.toString()))), m_vid_postfix()))
+                choice(m_furi_coefficient().map(t -> Tokens.TYPE_TID.c(cInt.of(t.toString()))), m_vid_postfix()))
                 .map(t -> T(Tuple.Pair.with(pick(t, 2), pick(t, 3)), pick(t, 0), pick(t, 4)));
     }
 
     public static Parser m_code() {
-        return seq(m_type_prefix(CODE_TID), opt(of("|["), "|["), m_inst().separatedBy(opt(of('.').trim(), '.')), opt(of("]|"), "]|"), m_vid_postfix())
+        return seq(m_type_prefix(Tokens.CODE_TID), opt(of("|["), "|["), m_inst().separatedBy(opt(of('.').trim(), '.')), opt(of("]|"), "]|"), m_vid_postfix())
                 .map(t -> ((List<Object>) pick(t, 2)).size() == 1 ?
                         ((List<Inst>) pick(t, 2)).get(0) :
                         new MCode((List) ((List<Object>) pick(t, 2))

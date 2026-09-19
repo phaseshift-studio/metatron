@@ -20,32 +20,24 @@
 
  import org.apache.commons.configuration2.BaseConfiguration;
  import org.apache.commons.configuration2.Configuration;
- import org.apache.commons.configuration2.ConfigurationMap;
- import org.apache.commons.configuration2.PropertiesConfiguration;
  import org.apache.tinkerpop.gremlin.driver.Cluster;
  import org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection;
- import org.apache.tinkerpop.gremlin.process.remote.traversal.RemoteTraversal;
  import org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalSource;
  import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
  import org.apache.tinkerpop.gremlin.structure.*;
  import org.apache.tinkerpop.gremlin.structure.io.binary.TypeSerializerRegistry;
  import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
- import org.apache.tinkerpop.gremlin.structure.util.GraphFactoryClass;
- import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
  import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
- import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerIoRegistryV3;
  import org.apache.tinkerpop.gremlin.util.ser.GraphBinaryMessageSerializerV1;
  import org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry;
  import studio.phaseshift.metatron.furi.DataPath;
  import studio.phaseshift.metatron.furi.QProc;
  import studio.phaseshift.metatron.furi.fURI;
  import studio.phaseshift.metatron.isa.AbstractDataPathSpace;
- import studio.phaseshift.metatron.isa.AbstractSpace;
  import studio.phaseshift.metatron.isa.SchemaSpace;
  import studio.phaseshift.metatron.isa.Space;
  import studio.phaseshift.metatron.isa.grph.grphInstSet;
  import studio.phaseshift.metatron.isa.grph.io.ObjTP3Serializer;
- import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
  import studio.phaseshift.metatron.isa.m.type.*;
  import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
  import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
@@ -68,11 +60,7 @@
  import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TYPE;
  import static studio.phaseshift.metatron.isa.grph.grphInstSet.VRTX_TYPE;
  import static studio.phaseshift.metatron.isa.m.mInstSet.*;
- import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.failure_;
- import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
- import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
  import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
- import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
  import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
  import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
  import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -362,7 +350,7 @@
                      ? IteratorUtil.stream(readResult.objsValue().iterator())
                      .map(o -> IdObj.of(o.vid() != null ? o.vid() : exactPattern, o)).toList()
                      : readResult.isNoObj() ? List.of()
-                       : List.of(IdObj.of(exactPattern, readResult));
+                     : List.of(IdObj.of(exactPattern, readResult));
              return readResults.stream()
                      .flatMap(kv -> {
                          Obj result = kv.obj();
@@ -797,8 +785,8 @@
          final Object id = Long.parseLong(dp.entry());
          final String label = "V".equals(dp.collection())
                  ? (obj.isRec() && obj.asRec().jvm().containsKey(grphInstSet.LABEL)
-                    ? obj.asRec().jvm().get(grphInstSet.LABEL).uriValue().toString()
-                    : obj.tid().basePath().toString())
+                 ? obj.asRec().jvm().get(grphInstSet.LABEL).uriValue().toString()
+                 : obj.tid().basePath().toString())
                  : dp.collection();
          try {
              // Promote parked flat entries before the first write of a new label.

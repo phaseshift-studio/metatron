@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
@@ -34,7 +35,8 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.TYPE_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
@@ -85,33 +87,33 @@ public interface ObjFactory extends Rec {
     default <OBJ extends Obj> OBJ toObj(final Object value, final Class<OBJ> objClass) {
         fURI tid;
         if (null == value)
-            tid = NOOBJ_TID;
+            tid = Tokens.NOOBJ_TID;
         else if (Bool.class.isAssignableFrom(objClass))
-            tid = BOOL_TID;
+            tid = Tokens.BOOL_TID;
         else if (Int.class.isAssignableFrom(objClass))
-            tid = INT_TID;
+            tid = Tokens.INT_TID;
         else if (Real.class.isAssignableFrom(objClass))
-            tid = REAL_TID;
+            tid = Tokens.REAL_TID;
         else if (Str.class.isAssignableFrom(objClass))
-            tid = STR_TID;
+            tid = Tokens.STR_TID;
         else if (Uri.class.isAssignableFrom(objClass))
-            tid = URI_TID;
+            tid = Tokens.URI_TID;
         else if (Lst.class.isAssignableFrom(objClass))
-            tid = LST_TID;
+            tid = Tokens.LST_TID;
         else if (Rel.class.isAssignableFrom(objClass))
-            tid = REL_TID;
+            tid = Tokens.REL_TID;
         else if (Rec.class.isAssignableFrom(objClass))
-            tid = REC_TID;
+            tid = Tokens.REC_TID;
         else if (Inst.class.isAssignableFrom(objClass))
             tid = M_ISA_INST_TID;
         else if (Code.class.isAssignableFrom(objClass))
-            tid = CODE_TID;
+            tid = Tokens.CODE_TID;
         else if (Objs.class.isAssignableFrom(objClass))
-            tid = OBJS_TID;
+            tid = Tokens.OBJS_TID;
         else if (Type.class.isAssignableFrom(objClass))
             tid = TYPE_INST_TID;
         else if (Fail.class.isAssignableFrom(objClass))
-            tid = FAIL_TID;
+            tid = Tokens.FAIL_TID;
         else if (NoObj.class.isAssignableFrom(objClass))
             tid = NOOBJ;
         else if (PCMonad.class.isAssignableFrom(objClass))
@@ -157,38 +159,38 @@ public interface ObjFactory extends Rec {
         public static fURI baseTID(final Obj obj) {
             final Object value = obj.jvm();
             if (null == value)
-                return NOOBJ_TID;
+                return Tokens.NOOBJ_TID;
             final Class<?> objClass = value.getClass();
             if (Boolean.class.isAssignableFrom(objClass))
-                return BOOL_TID;
+                return Tokens.BOOL_TID;
             else if (Long.class.isAssignableFrom(objClass))
-                return INT_TID;
+                return Tokens.INT_TID;
             else if (Double.class.isAssignableFrom(objClass))
-                return REAL_TID;
+                return Tokens.REAL_TID;
             else if (String.class.isAssignableFrom(objClass))
-                return STR_TID;
+                return Tokens.STR_TID;
             else if (fURI.class.isAssignableFrom(objClass))
-                return URI_TID;
+                return Tokens.URI_TID;
             else if (List.class.isAssignableFrom(objClass))
-                return LST_TID;
+                return Tokens.LST_TID;
             else if (Tuple.Pair.class.isAssignableFrom(objClass))
-                return REL_TID;
+                return Tokens.REL_TID;
             else if (Map.class.isAssignableFrom(objClass))
-                return REC_TID;
+                return Tokens.REC_TID;
             else if (Tuple.Triplet.class.isAssignableFrom(objClass))
                 return M_ISA_INST_TID;
             else if (List.class.isAssignableFrom(objClass))
-                return CODE_TID;
+                return Tokens.CODE_TID;
             else if (List.class.isAssignableFrom(objClass))
-                return OBJS_TID;
+                return Tokens.OBJS_TID;
             else if (Tuple.Pair.class.isAssignableFrom(objClass))
                 return TYPE_INST_TID;
             else if (Exception.class.isAssignableFrom(objClass) || Fail.class.isAssignableFrom(objClass))
-                return FAIL_TID;
+                return Tokens.FAIL_TID;
             else if (Lst.class.isAssignableFrom(objClass))
                 return MACH_MONAD_TID;
             else if (ByteBuffer.class.isAssignableFrom(objClass))
-                return BYTES_TID;
+                return Tokens.BYTES_TID;
             return ALL;
         }
 

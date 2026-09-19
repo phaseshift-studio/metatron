@@ -52,8 +52,6 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
@@ -106,7 +104,7 @@ public class mcpClient extends MRec implements AutoCloseable {
                                 .map(kv -> rel(uri(kv.getKey()), str(Optional.ofNullable(kv.getValue().description()).orElse("<no description>"))))
                                 .collect(new CommonUtil.RecCollector())).orElse(rec());
                 //////////////////////////////////////////////////////////////////////////////////////
-                final Inst toolInst = instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()),
+                final Inst toolInst = instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()),
                         evaluationArgs, (lhs2, inst2) -> {
                             final ToolExecutionResult result =
                                     this.client.executeTool(ToolExecutionRequest.builder()

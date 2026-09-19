@@ -52,12 +52,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.AI_MESSAGE_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -2716,7 +2715,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
                 // --- @ where rewrite (returns rows, must have VIDs) ---
                 final Obj atWhereResult = ObjmtronSerializer.parse(
-                        "@" + fullBase + "/+.where([val=>?<30])").apply();
+                        "@" + fullBase + "/+.isa([val=>?<30])").apply();
                 final List<Obj> atWhereRows = atWhereResult.stream().toList();
                 assertEquals(2, atWhereRows.size(),
                         label + ": @ where val<30 should find 2 rows (10,20)");
@@ -2728,19 +2727,19 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
                 // --- where + count rewrite (integer predicate) ---
                 final Obj whereCountResult = ObjmtronSerializer.parse(
-                        "*" + fullBase + "/+.where([val=>?>20]).count()").apply();
+                        "*" + fullBase + "/+.isa([val=>?>20]).count()").apply();
                 assertEquals(jnt(3), whereCountResult,
                         label + ": where val>20 should find 3 rows (30,40,50)");
 
                 // --- where + count rewrite (string predicate) ---
                 final Obj whereCountStr = ObjmtronSerializer.parse(
-                        "*" + fullBase + "/+.where([tag=>\"even\"]).count()").apply();
+                        "*" + fullBase + "/+.isa([tag=>\"even\"]).count()").apply();
                 assertEquals(jnt(2), whereCountStr,
                         label + ": where tag=even should find 2 rows");
 
                 // --- where + order rewrite (rows with VIDs, sorted) ---
                 final Obj whereOrderResult = ObjmtronSerializer.parse(
-                        "@" + fullBase + "/+.where([val=>?>20]).order(select(val))>-").apply();
+                        "@" + fullBase + "/+.isa([val=>?>20]).order(select(val))>-").apply();
                 final List<Obj> whereOrderRows = whereOrderResult.stream().toList();
                 assertEquals(3, whereOrderRows.size(),
                         label + ": @ where val>20 order by val should return 3 rows");

@@ -27,6 +27,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 
@@ -282,6 +283,27 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
      */
 
     @ParameterizedTest
+    @TestData(value = {"/sys/tmp/lst_test/0 -> [a=>1,b=>[a,b,c]]"}, oneTime = true)
+    @CsvSource(value = {
+            "*/sys/tmp/lst_test/0 >>= [a=>2]                                     % [a=>2,b=>[a,b,c]]",
+            "*/sys/tmp/lst_test/0                                                % [a=>1,b=>[a,b,c]]",
+            "@/sys/tmp/lst_test/0 >>= [a=>2]                                     % [a=>2,b=>[a,b,c]]",
+            "*/sys/tmp/lst_test/0                                                % [a=>2,b=>[a,b,c]]",
+            "*/sys/tmp/lst_test/0 >>= +[b=>2]                                    % [a=>2,b=>{2,[a,b,c]}]",
+            "*/sys/tmp/lst_test/0 >>= -[b=>2]                                    % [a=>2,b=>[a,b,c]]",
+            "@/sys/tmp/lst_test/0 >>= [b=>+[d,e]]                                % [a=>2,b=>[a,b,c,d,e]]",
+            "*/sys/tmp/lst_test/0                                                % [a=>2,b=>[a,b,c,d,e]]",
+            "@/sys/tmp/lst_test/0 >>= [b=>-[a,d]]                                % [a=>2,b=>[b,c,e]]",
+            "*/sys/tmp/lst_test/0                                                % [a=>2,b=>[b,c,e]]",
+            "@/sys/tmp/lst_test/0                                                % [a=>2,b=>[b,c,e]]@/sys/tmp/lst_test/0",
+            // "@/sys/tmp/lst_test/0 >>= +[a=>3,b=>+[d,e]]                          % [a=>{2,3},b=>[b,c,e,d,e]]",
+            // "*/sys/tmp/lst_test/0                                                % [a=>{2,3},b=>[b,c,e,d,e]]",
+    }, delimiter = '%')
+    public void testUpdate(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
     @CsvSource(value = {
             "[1,2,3].as(rec::T)                                                % [0=>1,1=>2,2=>3]",
             "[1,2,3,4,5,6].as(rec::T) >>= [5 => 'X']                           % [0=>1,1=>2,2=>3,3=>4,4=>5,5=>\'X\']",
@@ -325,6 +347,7 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
     public void testReverse(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
+
 
     @ParameterizedTest
     @CsvSource(value = {

@@ -52,6 +52,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -197,8 +198,8 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
                         uri(TOOL), rec(uri("custom_only"),
                                 instC(
                                         f("custom_only")
-                                                .dom(studio.phaseshift.metatron.furi.fURI.Singleton.ALL.maybe())
-                                                .rng(studio.phaseshift.metatron.furi.fURI.Singleton.ALL.maybe()),
+                                                .dom(ALL.maybe())
+                                                .rng(ALL.maybe()),
                                         lst(),
                                         (lhs, inst) -> str("custom"))))),
                 vid), MCP_SERVER_TID, vid);
@@ -482,6 +483,6 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
     private static Obj evalMtron(final mcpClient client, final String code) {
         final Rec tools = client.at(uri(TOOL)).asRec();
         final Inst evalInst = tools.at(uri("m_web_mcp_mcp_mtron_eval_mtron")).asRec().at(uri(INST)).asInst();
-        return evalInst.args(rec(uri("code"), str(code))).apply(noobj());
+        return evalInst.args(rec(uri(CODE), str(code))).apply(noobj());
     }
 }

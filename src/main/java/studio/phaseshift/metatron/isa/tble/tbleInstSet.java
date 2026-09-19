@@ -43,7 +43,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -349,7 +349,7 @@ public class tbleInstSet extends AbstractInstSet {
                                 tableGuard
                         ), "sql_offset(table,800).take(10)", "sql_offset_limit(table, 800, 10)", Map.of(), "fuses offset and limit into a single native SELECT ... LIMIT n OFFSET m"),
 
-                        // Optimize: *table.where([col=>val]) → SELECT * FROM table WHERE col = val
+                        // Optimize: *table.isa([col=>val]) → SELECT * FROM table WHERE col = val
                         docWrap(CommonRewrites.whereRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_where"),

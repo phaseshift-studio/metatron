@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.dckr;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.space.AbstractMemorySpace;
 import studio.phaseshift.metatron.isa.m.space.TopicTrie;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
@@ -43,15 +44,13 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.Tokens.HOST;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.dckr.dckrInstSet.DCKR_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_CTOR_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -82,7 +81,7 @@ public class dckrSpace extends AbstractMemorySpace {
             .vid(DCKR_SPACE_TID)
             .isaPredicate(rec(
                     uri(HOST).maybe().asUri(), URI_TYPE,
-                    uri("progress").maybe(), REC_TYPE))
+                    uri("progress").maybe(), mInstSet.REC_TYPE))
             .constructor(
                     instC(INST_CTOR_TID.dom(ALL.maybe()).rng(DCKR_SPACE_TID),
                             lst(T(DCKR_SPACE_TID)),

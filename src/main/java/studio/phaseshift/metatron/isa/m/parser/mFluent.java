@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -53,7 +52,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     // ========================================
 
     protected mFluent() {
-        this(new ArrayList<>(), mInstSet.CODE_TID, null);
+        this(new ArrayList<>(), CODE_TID, null);
     }
 
     protected mFluent(final List<Inst> value, final fURI tid, final fURI vid) {

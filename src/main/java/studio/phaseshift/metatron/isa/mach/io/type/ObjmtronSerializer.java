@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.io.type;
 
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -62,13 +63,13 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     // ── Config key URIs ───────────────────────────────────────────
     private static final fURI KEY_CLIP = f("clip");
-    private static final fURI KEY_REC = KEY_CLIP.extend(REC_TID);
-    private static final fURI KEY_LST = KEY_CLIP.extend(LST_TID);
-    private static final fURI KEY_STR = KEY_CLIP.extend(STR_TID);
-    private static final fURI KEY_URI = KEY_CLIP.extend(URI_TID);
-    private static final fURI KEY_REAL = KEY_CLIP.extend(REAL_TID);
-    private static final fURI KEY_BYTES = KEY_CLIP.extend(BYTES_TID);
-    private static final fURI KEY_FAIL = KEY_CLIP.extend(FAIL_TID);
+    private static final fURI KEY_REC = KEY_CLIP.extend(Tokens.REC_TID);
+    private static final fURI KEY_LST = KEY_CLIP.extend(Tokens.LST_TID);
+    private static final fURI KEY_STR = KEY_CLIP.extend(Tokens.STR_TID);
+    private static final fURI KEY_URI = KEY_CLIP.extend(Tokens.URI_TID);
+    private static final fURI KEY_REAL = KEY_CLIP.extend(Tokens.REAL_TID);
+    private static final fURI KEY_BYTES = KEY_CLIP.extend(Tokens.BYTES_TID);
+    private static final fURI KEY_FAIL = KEY_CLIP.extend(Tokens.FAIL_TID);
     private static final fURI KEY_JUSTIFY = f("justify");
 
     // ── Singletons ───────────────────────────────────────────────
@@ -450,9 +451,9 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     private StringBuilder handleTID(final StringBuilder sb, final Obj obj, final boolean hideBaseTID) {
         if (!obj.isFail() && !obj.isCaughtFail() && hideBaseTID && !obj.tid().hasPoly()) {
-            if (BASE_TYPES.contains(obj.tid()))
+            if (Tokens.BASE_TYPES.contains(obj.tid()))
                 return sb;
-            else if (BASE_TYPES.contains(obj.tid().basePath())) {
+            else if (Tokens.BASE_TYPES.contains(obj.tid().basePath())) {
                 sb.append('{').append(obj.tid().c()).append('}');
                 return sb;
             }
@@ -561,7 +562,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             sb.append("]");
         }
         if (type.hasVID()) {
-            if (type.vid().basePath().equals(TYPE_TID) && !type.vid().c().isOne()) {
+            if (type.vid().basePath().equals(Tokens.TYPE_TID) && !type.vid().c().isOne()) {
                 sb.append("{").append(type.vid().c()).append("}");
             } else if (!type.tid().basePath().equals(type.vid().basePath()))
                 sb.append("@").append(type.vid());

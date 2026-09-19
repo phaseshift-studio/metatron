@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -77,7 +77,7 @@ public class IntTest extends AbstractAlgebraTest<Int> {
             "1                                   % is(gt(0))                    % 1",
             "1                                   % matches(int::T[])            % true",
             "1                                   % is(matches(int::T[]))        % 1",
-          //  "1                                   % ~(str::T[])                  % false",
+            //  "1                                   % ~(str::T[])                  % false",
             "1                                   % ?str::T[]                    % noobj",
             "int{-1}::1                          % is(matches(int{**}::T[]))    % int{-1}::1",
             "int{-1}::1                          % ?int{,}::T[]                 % int{-1}::1"

@@ -55,30 +55,18 @@ public interface Inst extends Call {
 
     fURI ARGS_FURI = fURI.Singleton.f(ARGS);
 
-    /**
-     * Cache for fully resolved instructions when ALL arguments are literals (non-call objects).
-     * Key: "lhsType|instBasePath|args" - includes lhs type, instruction name, and literal args
-     * Value: The fully resolved instruction (safe to reuse since literal args don't depend on lhs)
-     * Call args (inst, code, type) are NOT cached because they depend on the lhs value.
-     */
-    // Map<String, Inst> RESOLUTION_CACHE = new ConcurrentHashMap<>();
-    // ThreadLocal<Boolean> REWRITE_MODE = ThreadLocal.withInitial(() -> false);
-
-    // Uri ARGS_URI = uri(ARGS_FURI);
-    Type INST_TYPE = Type.Builder.build().tid(M_ISA_INST_TID).vid(M_ISA_INST_TID).create();
-
     enum Form {
-        initial("generates objs from nothing; domain coefficient is zero"),
-        terminal("renders objs to nothing; range coefficient is zero"),
+        initial("maps nothing to objs (dom_c = 0)"),
+        terminal("maps objs to nothing (rng_c = 0)"),
         fork("splits objs across parallel streams"),
         join("merges parallel streams of objs into a single stream"),
-        reducer("gathers multiple inputs and produces a single output (range coefficient is one)"),
-        gather("accepts multiple inputs; domain max coefficient is unbounded"),
-        scatter("distributes a single input across multiple outputs (range > 1)"),
-        catcher("handles fail objs, intercepting fail propagation"),
-        filter("conditionally passes or drops objs (range coefficient is maybe)"),
-        mapper("one-to-one obj transformation (domain coefficient is one, range is one)"),
-        flatmapper("one-to-many obj transformation (domain coefficient is one, range > 1)"),
+        reducer("gathers objs and produces a single output (rng_c = 1)"),
+        gather("maps objs to objs (dom_c = {0,})"),
+        scatter("maps an obj to objs (rng_c = {0,})"),
+        catcher("intercepts fail obj for recovery"),
+        filter("conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})"),
+        mapper("one-to-one obj transformation (dom_c = rng_c = 1)"),
+        flatmapper("one-to-many obj transformation (dom_c = 1, rng_c > 1)"),
         standard("an instruction with no well-defined classification");
 
         public final String description;

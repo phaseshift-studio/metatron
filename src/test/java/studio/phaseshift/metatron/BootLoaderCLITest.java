@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * capture stdout/stderr for assertion.
  */
 @Isolated
-public class BootLoaderCLITest {
+public class BootLoaderCLITest extends AbstractMetatronTest {
 
     private final ByteArrayOutputStream outCapture = new ByteArrayOutputStream();
     private final ByteArrayOutputStream errCapture = new ByteArrayOutputStream();

@@ -2,10 +2,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.ChatService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.ConceptService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.*;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
@@ -22,11 +19,9 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_at_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -125,6 +120,17 @@ public class ToDoFeature extends AbstractFeature {
                                     return todoLst;
                                 }), "noobj", "an updated todo lst",
                                 Map.of(uri(INDEX), "the index of the todo item to remove"), "remove an item from the todo lst")))));
+        final Obj todos = Router.readFromSpace(this.getRoot(agent).extend("+"));
+        if (!todos.isNoObj()) {
+            agent.requireService(SystemService.class).addSystemMessage(
+                    """
+                    ---[todo_feature]---
+                    the following items are still on your todo list:
+                    %s
+                    """.formatted(String.join("\n", todos.stream()
+                            .filter(x -> !x.asRec().at(STATUS).orElse(uri("complete")).equals(uri("complete")))
+                            .map(Object::toString).toList())));
+        }
         return noobj();
     }
 }

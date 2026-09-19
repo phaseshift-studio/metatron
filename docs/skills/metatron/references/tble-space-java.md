@@ -146,7 +146,7 @@ native pushdown).
 | `sql_offset`             | `from(uri).skip(n)`            | `SELECT * FROM table OFFSET n`                               |
 | `sql_offset_limit`       | `sql_offset.take(m)`           | `SELECT * FROM table LIMIT m OFFSET n`                       |
 | `sql_has`                | `from(uri).has()`              | `SELECT EXISTS(SELECT 1 FROM table LIMIT 1)`                 |
-| `sql_where`              | `from(uri).where(pred)`        | `SELECT * FROM table WHERE conditions`                       |
+| `sql_where`              | `from(uri).isa(pred)`        | `SELECT * FROM table WHERE conditions`                       |
 | `sql_where_count`        | `sql_where.count()`            | `SELECT COUNT(*) FROM table WHERE conditions`                |
 | `sql_where_limit`        | `sql_where.take(n)`            | `SELECT * FROM table WHERE conditions LIMIT n`               |
 | `sql_where_offset`       | `sql_where.skip(n)`            | `SELECT * FROM table WHERE conditions OFFSET n`              |
@@ -165,9 +165,9 @@ native pushdown).
 
 Result: a single `SELECT * FROM table LIMIT 10 OFFSET 100`.
 
-A more complex chain — `from(uri).where(pred).skip(n).take(m)` fires three rewrites:
+A more complex chain — `from(uri).isa(pred).skip(n).take(m)` fires three rewrites:
 
-1. `sql_where`: `from(uri).where(pred)` → `sql_where(uri, pred)`
+1. `sql_where`: `from(uri).isa(pred)` → `sql_where(uri, pred)`
 2. `sql_where_offset`: `sql_where(uri, pred).skip(n)` → `sql_where_offset(uri, pred, n)`
 3. `sql_where_offset_limit`: `sql_where_offset(uri, pred, n).take(m)` → `sql_where_offset_limit(uri, pred, n, m)`
 
@@ -454,4 +454,4 @@ columns differently from their target tables to avoid the convention match entir
 
 - `rewrite-system-java.md` — RewriteBuilder, Rewriter, Code.rewrite () loop
 - `type-system-java.md` — Type interface, MType, Fluent API
-- `mtron-skill-reference.md` — mtron expression syntax (from, skip, take, where, count)
+- `mtron-skill-reference.md` — mtron expression syntax (from, skip, take, isa, count)

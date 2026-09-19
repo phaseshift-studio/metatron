@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.tble.space;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -28,12 +29,6 @@ import java.util.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -191,14 +186,14 @@ public class SQLSchemaGenerator {
     /**
      * Resolve the table-level TID for {@code tableName}.
      * Looks up the {@code $table} sentinel from {@link #tableTids}, falling
-     * back to {@link studio.phaseshift.metatron.isa.m.mInstSet#REC_TID}.
+     * back to {@link Tokens#REC_TID}.
      */
     private fURI resolveTableTid(final String tableName) {
         if (tableTids != null) {
             final fURI tid = tableTids.get(tableName.toLowerCase());
             if (tid != null) return tid;
         }
-        return REC_TID;
+        return Tokens.REC_TID;
     }
 
     /**
@@ -217,7 +212,7 @@ public class SQLSchemaGenerator {
         final Type t = generateTableTypeAt(table, schemaBasePath.extend(table.tableName().toLowerCase()));
         // Add wildcard entry so on-the-fly columns are accepted.
         final Map<Obj, Obj> fields = new LinkedHashMap<>(t.isPredicateObj().recValue());
-        fields.put(T(URI_TID.maybe()), ALL_TYPE);
+        fields.put(T(Tokens.URI_TID.maybe()), ALL_TYPE);
         return Type.Builder.build()
                 .tid(t.tid())
                 .vid(t.vid())

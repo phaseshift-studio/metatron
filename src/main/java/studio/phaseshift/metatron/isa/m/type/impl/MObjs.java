@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -32,8 +32,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_STAR;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.Tokens.ALL_STAR;
+import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 public class MObjs implements Objs {
@@ -265,7 +265,7 @@ public class MObjs implements Objs {
             final Type lcd = Type.Helper.findLCD(types);
             this.tid = lcd.vid();
         }*/ // TODO: messes up at reduction instructions
-       try {
+        try {
             return this.jvm
                     .stream()
                     .map(Obj::tid)

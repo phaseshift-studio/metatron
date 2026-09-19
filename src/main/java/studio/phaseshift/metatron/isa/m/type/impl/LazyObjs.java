@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -32,7 +32,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_STAR;
+import static studio.phaseshift.metatron.Tokens.ALL_STAR;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 
@@ -232,9 +232,9 @@ public class LazyObjs implements Objs {
 
     @Override
     public fURI tid() {
-       //this.drainToList();
-      //  final cInt c = this.objsC == null ? this.c() : this.objsC.mult(this.c());
-     //   this.tid = this.tid.c(c.toString());
+        //this.drainToList();
+        //  final cInt c = this.objsC == null ? this.c() : this.objsC.mult(this.c());
+        //   this.tid = this.tid.c(c.toString());
         return this.tid;
 /*        if (!cache.isEmpty())
             return ALL.some();

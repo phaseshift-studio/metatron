@@ -31,7 +31,7 @@ import java.util.Arrays;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -60,7 +60,7 @@ public @interface JInst {
         private Helper() {
             // do nothing
         }
-        
+
         public static void processInst(final Object source) {
             Arrays.stream(source.getClass().getMethods())
                     .filter(m -> m.isAnnotationPresent(JInst.class))

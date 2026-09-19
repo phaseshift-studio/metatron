@@ -42,8 +42,6 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_SUB_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -226,7 +224,7 @@ public class mcpServer extends MRec {
                                     uri("inputSchema"), jsonSchemaToRec(spec.parameters()));
                         })
                         .filter(r -> null != r)
-                .toList())));
+                        .toList())));
     }
 
     /**

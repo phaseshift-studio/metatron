@@ -455,7 +455,7 @@ under <code>/m/math/+</code> and available via the standard type resolution syst
 <h5>construction</h5>
 <pre><code class="language-mtron">mtron&gt; [-- current system time --]
 mtron&gt; datetime_now()
-==&gt;datetime::&lt;//2026.09:18/04/34/33/043?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.09:19/00/01/14/169?tz=-0600&gt;
 mtron&gt; [-- from record (goes through .as(uri::T) first) --]
 mtron&gt; [host=&gt;&lt;2024.12&gt;,port=&gt;25,path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
         c=&gt;[min=&gt;1,max=&gt;1],q=&gt;[tz=&gt;'-0500']].as(uri::T).as(datetime::T)
