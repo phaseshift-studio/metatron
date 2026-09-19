@@ -116,7 +116,16 @@ public interface InstResolver {
                     token = inst.hasRng() ? inst.rng() : token;
                 } else {
                     resolvedCode.add(resolvedInst.clone().selfVID(f("" + i)).as());
-                    token = resolvedInst.rng();
+                    // A filter's rng is X{0,1} ("one-or-none": emit the object or ∅). Threading that
+                    // {0,1} into the next inst makes a map's dom X{1,1} fail to match, but the ∅ branch
+                    // can never reach the map — a filter that emits ∅ short-circuits the chain. So drop
+                    // the 0 wing ({0,n} → {n,n}) for compile-time typing only, leaving rng() itself maybe
+                    // so isFilter()/isPredicate()/gather-classification still read the filter cardinality.
+                    token = resolvedInst.isFilter() ? resolvedInst.rng().c(resolvedInst.c().max()) : resolvedInst.rng();
+                    // isGather() = dom().c().max() == null — the reduce/flatmap boundary. SwarmMachine seeds a
+                    // gather as a barrier monad (SwarmMachine:239-242) that accumulates every incoming object
+                    // into one Objs and applies only once the stream is drained, so a gather swallows the whole
+                    // upstream pipeline. Prefer pointwise map/filter doms to keep insts per-object.
                     if (resolvedInst.isGather()) {
                         LOG.trace("  {{m}}==|{{/m}} marking {{y}}barrier{{/y}} at %s", resolvedInst);
                     } else if (resolvedInst.isInitial()) {
