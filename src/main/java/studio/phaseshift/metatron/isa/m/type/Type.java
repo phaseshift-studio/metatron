@@ -611,11 +611,6 @@ public interface Type extends Obj {
                     if (!lhs.test(rhs.tid().polyParsed().orElse(null)))
                         return false;
                 }
-                /*
-                if (lhs.isObjs() && lhs.stream().anyMatch(Obj::isObjCall)) // TODO: a hack (see RecTest requirements vs. TypeTest requirements)
-                    return false;
-                if (lhs.isObjs() && lhs.stream().allMatch(o -> o.test(rhs.asType().hasPredicate() ? rhs : rhs.vid(rhs.vid().c(o.c())))))
-                 */
                 if (lhs.isObjs() && lhs.c().within(rhs.c()) && lhs.stream().allMatch(o -> o.test(rhs.c(o.c()))))
                     return true;
                 if (rhs.asType().isBaseType() && !lhs.baseTypeID().test(rhs.vid()))

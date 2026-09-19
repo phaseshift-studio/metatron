@@ -915,10 +915,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         }
 
         /**
-         * The type-preserving {@code isa} filter — {@code dom(A).rng(A.maybe())}
-         * with a generic argument type, mirroring {@code where}.  The generic
-         * {@code A} domain carries a ONE coefficient, so {@code isa} resolves as a
-         * pointwise map/filter rather than a gather (an unbounded domain would
+         * The type-preserving {@code isa} filter — one concrete-domain registration
+         * per base type ({@code dom(T).rng(T.maybe())}, i.e. {@code T{?}<=T}).  Each
+         * concrete {@code T} domain carries a ONE coefficient, so {@code isa} resolves
+         * as a pointwise map/filter rather than a gather (an unbounded domain would
          * aggregate the whole upstream pipeline before applying).
          */
         public static Set<Inst> isaInsts() {

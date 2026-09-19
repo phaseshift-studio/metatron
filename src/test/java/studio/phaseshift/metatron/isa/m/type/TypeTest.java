@@ -748,7 +748,7 @@ public class TypeTest extends AbstractMetatronTest {
             "person   -> being::T[?[name=>str::T]]",
             "mortal   -> person::T[?[age=>?<120]]",
             "immortal -> being::T[?[alias=>str{2,3}::T]]",
-            "team     -> rec::T[?[flag=>?str::T.split?lst<=('')>-.count().?=2, member=>being{+}::T]]"})
+            "team     -> rec::T[?[flag=>?str::T.-<('')>-.count().?=2, member=>being{+}::T]]"})
     @CsvSource(value = {
             "[age=>2]                                                            % rec::T                % true",
             "[age=>2]                                                            % lst::T                % false",
