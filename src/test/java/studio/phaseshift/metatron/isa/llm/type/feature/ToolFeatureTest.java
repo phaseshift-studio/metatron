@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -45,6 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_BASH_INST_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * {@code ToolFeature} — the gateway to the agent's tool registry: a single
@@ -57,7 +59,12 @@ public class ToolFeatureTest extends AbstractFeatureTest {
 
     @Override
     protected ToolFeature feature() {
-        return new ToolFeature(new LinkedHashMap<Obj, Obj>(), LLM_TOOL_FEATURE_TID, null);
+        return new ToolFeature(new LinkedHashMap<>(), LLM_TOOL_FEATURE_TID, null);
+    }
+
+    @Override
+    public Agent agent() {
+        return agentWith(feature(new SystemFeature(mutableMap(), LLM_SYSTEM_FEATURE_TID, null)));
     }
 
     // ── bash tool (the system /m/sys/inst/bash instruction, modulated by q-params) ──

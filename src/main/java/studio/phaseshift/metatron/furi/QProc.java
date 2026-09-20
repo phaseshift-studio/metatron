@@ -255,7 +255,9 @@ public interface QProc extends Rec {
                     }
                 }
             }
-            return Optional.ofNullable(found ? acc : null).filter(a -> !a.isNoObj());
+            // noobj is a result, not an absence: a qproc that finds nothing for this read suppresses it rather
+            // than handing the caller the result the read would have had without the qproc.
+            return Optional.ofNullable(found ? acc : null);
         }
 
         public static Optional<Obj> processQlessWrite(final Lst qs, final fURI vid, final Obj obj) {

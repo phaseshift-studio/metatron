@@ -18,15 +18,19 @@
 
 package studio.phaseshift.metatron.isa.llm.type.feature;
 
+import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.model.TokenCountEstimator;
 import dev.langchain4j.service.AiServices;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.MessageBuilder;
+import studio.phaseshift.metatron.isa.llm.TokenCalculator;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.space.ToolPairGate;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.AgentServices;
+import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 import studio.phaseshift.metatron.isa.llm.type.feature.service.ToolService;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
@@ -36,8 +40,10 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -75,6 +81,12 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
 
     private SpaceChatSessionStore store = null;
     private ChatMemory memory = null;
+    /**
+     * The per-chat provider-usage accumulator.  LLMFactory attaches it as a listener on
+     * every model the chat builds; {@link #onBeforeChat} starts it fresh and
+     * {@link #onCompleteResponse} reports what it counted.
+     */
+    private final TokenCalculator tokenCalculator = new TokenCalculator();
 
     protected AbstractMessageFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -114,6 +126,25 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
     }
 
     /**
+     * The per-chat usage accumulator — the object LLMFactory registers as a
+     * {@code ChatModelListener} and the one {@link #onCompleteResponse} reports.
+     */
+    public TokenCalculator tokenCalculator() {
+        return this.tokenCalculator;
+    }
+
+    /**
+     * The message feature's usage accumulator for an agent — whichever provider it
+     * carries ({@code token} or {@code window}).  Empty when the agent has no
+     * message feature at all (then there is no chat to report usage for).
+     */
+    public static Optional<TokenCalculator> calculatorFor(final Agent agent) {
+        return agent.service(MessageService.class)
+                .filter(service -> service instanceof AbstractMessageFeature messageFeature)
+                .map(service -> ((AbstractMessageFeature) service).tokenCalculator());
+    }
+
+    /**
      * The configured aggregation budget ({@code algorithm => [max => N]}), in the provider's own
      * unit (tokens for {@code token}, messages for {@code window}).  The store sizes its window
      * from this.
@@ -141,6 +172,37 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
      * The descriptive name this provider stamps on the session policy (e.g. {@code token_window}).
      */
     protected abstract String algorithmName();
+
+    /**
+     * A character-count token estimator — the default for token-budgeted work
+     * ({@code token} memory windows, compaction thresholds).  It is a heuristic,
+     * not a tokenizer: it approximates rather than counts, so it is right for
+     * budgeting against a limit and wrong for reporting a chat's actual usage —
+     * that number comes from the model's response, not from the estimator.
+     */
+    public static class DefaultTokenCountEstimator implements TokenCountEstimator {
+
+        private static final DefaultTokenCountEstimator INSTANCE = new DefaultTokenCountEstimator();
+
+        @Override
+        public int estimateTokenCountInText(final String text) {
+            return Math.round(((float) text.length()) / 4.0f);
+        }
+
+        @Override
+        public int estimateTokenCountInMessage(final ChatMessage message) {
+            return this.estimateTokenCountInText(message.toString());
+        }
+
+        @Override
+        public int estimateTokenCountInMessages(final Iterable<ChatMessage> messages) {
+            return IteratorUtil.stream(messages).mapToInt(this::estimateTokenCountInMessage).sum();
+        }
+
+        public static DefaultTokenCountEstimator singleton() {
+            return INSTANCE;
+        }
+    }
 
     public static void buildSession(final Agent agent, final AiServices<AgentServices> service) {
         if (agent.service(MessageService.class).isPresent())
@@ -234,6 +296,9 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
+        // a fresh chat recounts from zero: the listener accumulates whatever
+        // model calls this turn makes, so onCompleteResponse reports exactly it
+        this.tokenCalculator.reset();
         final fURI sessionID = this.at(SESSION).uriValue();
         Rec session = Router.readFromSpace(sessionID).orElse(rec());
         try {
@@ -248,6 +313,34 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
             throw MTronException.of("unable to setup session: %s", e);
         }
         return noobj();
+    }
+
+    @Override
+    public void onCompleteResponse(final Agent agent, final ChatFrame result) {
+        // the chat's usage: the in/out the provider reported for each of the
+        // chat's model calls (LLMFactory's listener sums them), plus est — the
+        // estimated composition of what this side sent, by message kind.  The
+        // est numbers will not sum to in: the provider bills the rendered
+        // prompt, which carries overhead this side never sees.  Written only
+        // when there is something to report: a model that reports no usage
+        // and sent no messages must not be presented as a zero.
+        final Map<Obj, Obj> jvm = new LinkedHashMap<>();
+        final long in = this.tokenCalculator.inputTokens();
+        final long out = this.tokenCalculator.outputTokens();
+        if (in > 0)
+            jvm.put(uri(IN), jnt(in));
+        if (out > 0)
+            jvm.put(uri(OUT), jnt(out));
+        final Map<String, Long> estimates = this.tokenCalculator.estimates();
+        if (!estimates.isEmpty()) {
+            final Map<Obj, Obj> est = new LinkedHashMap<>();
+            estimates.forEach((kind, value) -> est.put(uri(kind), jnt(value)));
+            jvm.put(uri(EST), rec(est));
+        }
+        StatusLine.message(f("tokens"), rec(jvm));
+        if (jvm.isEmpty())
+            return;
+        result.put(TOKEN, rec(jvm));
     }
 
     // ── Ledger fsck + session resolution (the ledger capability this feature owns) ──

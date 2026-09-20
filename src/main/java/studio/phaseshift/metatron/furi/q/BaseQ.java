@@ -125,7 +125,9 @@ public class BaseQ extends MRec implements QProc {
             if (i.isNoObj()) return Optional.empty();
             final Inst withArgs = i.args(lst(uri(vid), obj));
             final Obj result = withArgs.f().apply(noobj(), withArgs);
-            return result.isNoObj() ? Optional.empty() : Optional.of(result);
+            // a handler that returns noobj says there is no such result -- that is a finding, not a no-op, so it
+            // is carried out as noobj rather than dropped (which would fall back to the un-augmented read).
+            return Optional.of(result);
         }
     }
 

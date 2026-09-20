@@ -224,7 +224,7 @@ public class CompactionFeature extends AbstractFeature {
         final int contextWindow = this.resolveContextWindow();
         if (contextWindow <= 0)
             return false;
-        final TokenMessageFeature.DefaultTokenCountEstimator estimator = TokenMessageFeature.DefaultTokenCountEstimator.singleton();
+        final AbstractMessageFeature.DefaultTokenCountEstimator estimator = AbstractMessageFeature.DefaultTokenCountEstimator.singleton();
         final int payloadTokens = messageFeature.store().query(sessionVID).stopAt(COMPACTION_MESSAGE_TID).apply()
                 .stream().mapToInt(r -> estimator.estimateTokenCountInText(Str.Helper.cleanString(r.at(TEXT).orElse(str(""))))).sum();
         return ((double) payloadTokens / (double) contextWindow) >= threshold;
@@ -354,7 +354,7 @@ public class CompactionFeature extends AbstractFeature {
      * @return the written sentinel rec (text + in/out/compression + session/depth)
      */
     public static Rec writeCompaction(final fURI agentHome, final fURI sessionVID, final List<Rel> messages, final String digest, final String summary) {
-        final TokenMessageFeature.DefaultTokenCountEstimator estimator = TokenMessageFeature.DefaultTokenCountEstimator.singleton();
+        final AbstractMessageFeature.DefaultTokenCountEstimator estimator = AbstractMessageFeature.DefaultTokenCountEstimator.singleton();
         final int tokensIn = estimator.estimateTokenCountInText(digest);
         final int tokensOut = estimator.estimateTokenCountInText(summary);
         final double compression = tokensIn == 0 ? 0.0 : 1.0 - ((double) tokensOut / (double) tokensIn);

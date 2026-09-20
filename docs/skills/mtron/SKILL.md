@@ -286,7 +286,9 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 **Not yet split out** (deep dives this entry doc points at, but which have no reference doc of their own):
 
 * `qprocs` -- the `?q` family as a whole: `?docq` (each instruction's own doc), `?incq` (auto-increment), `?hasq`,
-  `?statq` (address-level read/write heat), `?subq` (pubsub), and the fact that a qproc's data space is independent of
+  `?statq` (address-level read/write heat), `?subq` (pubsub), `?asq` (an `as` instruction read as a property-graph
+  edge: label `as`, outV its dom, inV its rng, and `?asq` the kinds of as-graph relation that edge participates in --
+  `*as?nat<=int&asq`, narrowed by `?asq=[kind,...]`), and the fact that a qproc's data space is independent of
   the obj's. Only two corners are written down today: `?subq` in
   [MCP Server Notifications](references/mcp-server-notifications.md), and `?mimeq`/`?lineq` in the fsSpace half of
   [sys instruction set](references/sys-instset-mtron.md).

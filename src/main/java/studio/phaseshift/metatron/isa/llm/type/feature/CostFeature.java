@@ -22,10 +22,9 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
-import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Real;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.Map;
@@ -33,11 +32,6 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
-import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Tracks LLM cost during chat using real token data from {@link CostCalculator}.
@@ -57,31 +51,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class CostFeature extends AbstractFeature {
     public static final fURI FEATURE_TID = studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_COST_FEATURE_TID;
-
-
-    private final fURI currencyTID;
     private final CostCalculator calculator;
-    private fURI sessionVID;
-    /**
-     * The cost row written for the current chat — attached to the chat_result as a ref.
-     */
-    private Obj lastCost;
-
-    private record Cost(Real in, Real out, Real total) {
-    }
 
     public CostFeature(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.currencyTID = this.at(f(RATE).extend(IN)).orElse(real(0.0)).tid();
-        this.calculator = new CostCalculator(this.at(f(RATE).extend(IN)).realValue(), this.at(f(RATE).extend(OUT)).realValue(), this.currencyTID);
-    }
-
-    @Override
-    public void onAgentCtor(final Agent agent) {
-        // Create calculator and store on Agent; LLMFactory will pick it up
-        Router.readFromSpace(this.getRoot(agent).extend("+")).stream().filter(x -> x.asRec().has(SESSION)).filter(x -> x.asRec().at(SESSION).uriValue().equals(this.sessionVID)).findFirst().orElse(rec());
-        this.calculator.setCost(this.at(f(COST).extend(IN)).orElse(real(0.0)).realValue(), this.at(f(COST).extend(IN)).orElse(real(0.0)).realValue());
-        this.sessionVID = agent.service(MessageService.class).map(MessageService::sessionVID).orElse(f(""));
+        this.calculator = new CostCalculator(this.at(f(RATE).extend(IN)), this.at(f(RATE).extend(OUT)));
     }
 
     public CostCalculator getCalculator() {
@@ -91,19 +65,14 @@ public class CostFeature extends AbstractFeature {
 
     @Override
     public void onCompleteResponse(final Agent agent, final ChatFrame result) {
-        final Cost cost = persistCost(agent);
-        result.putRef("cost", this.lastCost);
-        LOG.debug("running cost: %s => %s", cost, this.at(TO));
-        if (!this.at(TO).isNoObj())
-            this.at(TO).asInst().args(lst(cost.in(), cost.out(), cost.total())).apply(jnt(1));
+        result.putRef("cost", persistCost(agent));
     }
 
     @Override
     public void onError(final Agent agent, final Fail fail) {
         // Finalize cost even on error — whatever accumulated is still useful
-        final Cost cost = persistCost(agent);
-        if (!this.at(TO).isNoObj())
-            this.at(TO).asInst().args(lst(cost.in(), cost.out(), cost.total())).apply(jnt(1));
+        persistCost(agent);
+
     }
 
     /**
@@ -111,17 +80,10 @@ public class CostFeature extends AbstractFeature {
      * The blackboard is populated by Agent.chat() Phase 3 right before
      * feature hooks fire, so features can read it here.
      */
-    public Cost persistCost(final Agent agent) {
-        final Real inCost = real(this.calculator.getInputCost(), this.currencyTID, null);
-        final Real outCost = real(this.calculator.getOutputCost(), this.currencyTID, null);
-        final Real totalCost = real(this.calculator.getTotalCost(), this.currencyTID, null);
-        try {
-            // Write in/out/total to space so other features (e.g., AuditFeature) can read it
-            this.lastCost = Router.writeToSpace(this.getRoot(agent).extend("_").addQ(INCRQ), rec(uri(SESSION), uri(this.sessionVID), uri(TIME), mathInstSet.nowDatetime(), uri(IN), inCost, uri(OUT), outCost, uri(TOTAL), totalCost));
-            LOG.debug("persisted cost to %s: in=%.4f, out=%.4f, total=%.4f", this.getRoot(agent).toString(), inCost.realValue(), outCost.realValue(), totalCost.realValue());
-        } catch (final Exception e) {
-            LOG.warn("failed to persist cost data: %s", e.getMessage());
-        }
-        return new Cost(inCost, outCost, totalCost);
+    public Rec persistCost(final Agent agent) {
+        final Rec cost = Router.writeToSpace(this.getRoot(agent).extend("_").addQ(INCRQ), agent.getChatPath().toRec().plus(this.calculator.getCost())).as();
+        LOG.status(DEBUG, "💰 cost total: %.4f [in: %.4f out: %.4f] (%s)", cost.at(TOTAL).realValue(), cost.at(IN).realValue(), cost.at(OUT).realValue(), this.calculator.getCurrencyTID().name());
+        if (this.has(TO)) this.at(TO).asInst().args(cost).apply(cost);
+        return cost;
     }
 }

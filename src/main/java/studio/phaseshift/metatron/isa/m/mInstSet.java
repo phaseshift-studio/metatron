@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.AsQ;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
@@ -286,7 +287,7 @@ public class mInstSet extends AbstractInstSet {
 
 
     public mInstSet() {
-        super(new LinkedHashMap<>(Map.of(uri(PATTERN), uri(M_ISA_TID.extend(ALL)))), INSTSET_TID, M_ISA_TID);
+        super(new LinkedHashMap<>(Map.<Obj, Obj>of(uri(PATTERN), uri(M_ISA_TID.extend(ALL)), uri(QPROC), lst(AsQ.asQ()))), INSTSET_TID, M_ISA_TID);
     }
 
     public void setup() {

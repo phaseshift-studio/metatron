@@ -32,12 +32,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 import static org.slf4j.event.Level.ERROR;
@@ -51,8 +46,10 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.type.reflect.TypedRec.typedRec;
@@ -62,7 +59,9 @@ import static studio.phaseshift.metatron.isa.m.type.reflect.TypedRec.typedRec;
  */
 public class StatusLine implements Runnable {
 
-    /** How many banner messages are retained; the oldest scroll off the tail. */
+    /**
+     * How many banner messages are retained; the oldest scroll off the tail.
+     */
     static final int MESSAGE_HISTORY = 8;
     /**
      * Divides one banner message from the next: a bullet rather than the hairline
@@ -80,8 +79,11 @@ public class StatusLine implements Runnable {
     private long startTime = 0;
     private long lastExecutionTime = 0;
     private final Status status;
-    private final TypedRec<Uri, Call> widgets = typedRec();
-    /** The banner's messages, newest first — a new message shifts the rest right. */
+    private static final TypedRec<Uri, Call> widgets = typedRec();
+    private static final Rec widgetData = rec();
+    /**
+     * The banner's messages, newest first — a new message shifts the rest right.
+     */
     private static final Deque<String> messages = new ArrayDeque<>();
     private static long lastMessageTime = 0L;
     private static String lastMessageColor = "b";
@@ -91,13 +93,13 @@ public class StatusLine implements Runnable {
         this.status = Status.getStatus(Console.getTerminal());
         final Real inBytes = mathInstSet.normalizeData(real((double) (Router.global().stats().ioStats().bytesRecv()), MATH_BYTE_TID, null));
         final Real outBytes = mathInstSet.normalizeData(real((double) (Router.global().stats().ioStats().bytesSent()), MATH_BYTE_TID, null));
-        this.addWidget(f("type_check_"), () -> "{{w&[%s]}} T {{X}}".formatted(TypeCheck.colorLevel()));
-        //this.addWidget(f("spaces"), () -> "{{w}}spaces:{{y}}%d".formatted(Router.global().spaces().count()));
-        //this.addWidget(f("nodes"), () -> "{{w}}nodes:{{y}}%d".formatted(Router.global().server().nodes().size()));
+        this.addWidget(f("type_check"), () -> "{{w&[%s]}} T {{X}}".formatted(TypeCheck.colorLevel()));
         this.addWidget(f("in_bytes"), () -> " {{w}}\uD83D\uDCE5 {{%s}}%s::%.2f ".formatted(getForegroundColor(), inBytes.tid().name(), inBytes.realValue()));
         this.addWidget(f("out_bytes"), () -> "{{w}}\uD83D\uDCE4 {{%s}}%s::%.2f ".formatted(getForegroundColor(), outBytes.tid().name(), outBytes.realValue()));
         this.addWidget(f("time"), () -> "{{%s}}⏳{{%s}}%s ".formatted(this.runningTime() > 10000 ? "r" : "w", getForegroundColor(), timeFormat(this.runningTime())));
+        this.addWidget(f("tokens"), () -> "\uD83E\uDD16 %s ".formatted(StatusLine.widgetData.at("tokens").orElse((Obj) jnt(0)).toCleanString()));
         this.addWidget(f("message"), () -> StatusLine.bannerMarkup(getForegroundColor(), getBackgroundColor()));
+        
         /*this.addWidget(f("run"), () -> "{{w}}run:{{y}}%d".formatted(Router.global().stats().monadicStats().runningMonads()));
         this.addWidget(f("halt"), () -> "{{w}}halt:{{y}}%d".formatted(Router.global().stats().monadicStats().haltedMonads()));
         this.addWidget(f("kill"), () -> "{{w}}kill:{{y}}%d".formatted(Router.global().stats().monadicStats().killedMonads()));
@@ -105,6 +107,10 @@ public class StatusLine implements Runnable {
         this.addWidget(f("ws"), () -> "{{w}}ws:{{w&[g]}}[%d]{{[%s]}} %s".formatted(Router.global().stats().ioStats().connections(), this.getColor(), formatMessage(Router.global().stats().ioStats().lastMessage())));*/
         Router.writeToSpace(console.vid().extend(STATUS).addQ(SUBQ), instLambda((lhs, inst) -> {
             message(lhs.asRec().at(OBJ));
+            return noobj();
+        }));
+        Router.writeToSpace(console.vid().extend(STATUS).extend("widget").extend("#").addQ(SUBQ), instLambda((lhs, inst) -> {
+            message(f(lhs.asRec().at(TARGET).uriValue().name()), lhs.asRec().at(OBJ));
             return noobj();
         }));
     }
@@ -130,6 +136,10 @@ public class StatusLine implements Runnable {
         }
         StatusLine.lastMessageTime = System.currentTimeMillis();
         StatusLine.lastMessageColor = text.toLowerCase().contains("error") ? "r" : "g";
+    }
+
+    public synchronized static void message(final fURI widget, final Obj message) {
+        StatusLine.widgetData.at(uri(widget), message, MUTABLE);
     }
 
     /**
@@ -198,7 +208,7 @@ public class StatusLine implements Runnable {
         boolean capped = false;
         int used = 0;   // the display columns already spent on this line
         for (final Map.Entry<Uri, Call> ws : this.widgets.jvmTyped().entrySet()) {
-            final String w = ws.getValue().apply(noobj()).strValue();
+            final String w = ws.getValue().apply(noobj()).strValue().replace("\n", " ");
             final String cap;
             if (capped || ws.getKey().uriValue().toString().endsWith("_")) {
                 cap = "";

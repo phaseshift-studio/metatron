@@ -227,6 +227,7 @@ exact match for a method parameter name (needs the `-parameters` compiler flag);
 `{{{expr}}}` template) is emitted verbatim.
 
 ```java
+
 @Training(
         instruction = "when the {{{rec}}} rec is rshifted by the {{{key}}} key, what is the result?",
         input = "{{{rec}}}>>{{{key}}}",
@@ -236,7 +237,7 @@ exact match for a method parameter name (needs the `-parameters` compiler flag);
         "[a=>b]   % c   % noobj",
         "[a=>b]   % a   % b",
 }, delimiter = '%')
-void testKeyValue(String rec, String key, String value) { ... }
+void testKeyValue(String rec, String key, String value) { ...}
 ```
 
 Each CSV row emits one `{instruction, input, output}` entry. Repeat the annotation to emit several entries per row.
@@ -247,15 +248,16 @@ woven into the instruction).
 the annotation's `value()` strings joined with newlines, so an entry can cite its preloaded setup data:
 
 ```java
+
 @Training(instruction = "given {{{@TestData}}}, what is the result of the mtron expression {{{code}}}?",
-          output = "{{{expected}}}")
+        output = "{{{expected}}}")
 @TestData(value = {
         "x -> [address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"]",
         "y -> [address/home/city=>\"santa fe\",address/work/city=>\"santa fe\"]"})
 @CsvSource(value = {
         "[a=>1,b=>2,c=>3].select([a=>_,b=>_])   % [a=>1,b=>2]",
 }, delimiter = '%')
-void testSelect(String code, String expected) { ... }
+void testSelect(String code, String expected) { ...}
 ```
 
 Rendering throws `MTronException("attempting to access non-existent @TestData")` if the method has no `@TestData`.
@@ -385,8 +387,19 @@ A wildcard space read that matched several things hands you an `Objs` in Java. I
 obj alone**. So one code path covers "one match" and "many matches" with no shape inspection:
 
 ```java
-objs(jnt(1), jnt(2), jnt(3)).stream().forEach(...);   // many
-jnt(1).stream().forEach(...);                         // one — the same code
+objs(jnt(1),jnt(2),
+
+jnt(3)).
+
+stream().
+
+forEach(...);   // many
+
+jnt(1).
+
+stream().
+
+forEach(...);                         // one — the same code
 ```
 
 That uniformity is not luck: `MObjs.objs(...)` collapses an empty collection to `noobj()` and **a single element to that
@@ -503,6 +516,11 @@ corresponding file:
 5. **User-directed:** only create or update `.md` files when the user explicitly asks you to, or when the change is
    clearly mechanical (adding a new class to an existing package map). For substantive documentation rewrites, confirm
    with the user first.
+
+**IMPORTANT**: human-oriented documentation (adocs), metatron api reference docs (instset), and agent-oriented skills
+(markdown) are built from base documentation source at `docs/website/adoc/`, source code instruction set, `docs/skills`.
+Never change the compiled source files as they are overwritten with each new doc build. Edit the documentation source
+files. Finally, note that `docs/skills` is symlinked via `.metatron/skills`.
 
 ### Existing Docs
 

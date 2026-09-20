@@ -90,7 +90,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     public AbstractInstSet(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), jvm, tid, vid);
-        this.at(uri(Tokens.QPROC), lst(QCollection.docQ()), MUTABLE);
+        this.at(uri(QPROC), this.at(uri(Tokens.QPROC)).orElse(lst()).add(QCollection.docQ(), MUTABLE), MUTABLE);
         this.sugars().forEach(mParser::addSugar);
         old = false;
     }
@@ -258,11 +258,18 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                 // to the int contract. A dom .test(pattern.dom()) here defeats that -- only exact-name
                 // doms survive, so nat admits nothing and imperial admits only itself.
                 .filter(i -> null == queriedDom || queriedDom.pathIncludes(i.dom()))
-                .filter(i -> !pattern.hasRng() || i.rng().vidOrTid().test(pattern.rng()))
-                .filter(i -> null == queriedRng || queriedRng.pathIncludes(i.rng()));
+                .filter(i -> null == queriedRng ?
+                        (!pattern.hasRng() || i.rng().vidOrTid().test(pattern.rng())) :
+                        (queriedRng.pathIncludes(i.rng()) && !i.rng().isRootType() && !i.rng().isGeneric()));
+        // ranking runs when a dom is queried: an exact rng match first, then closest-to-the-token on each axis;
+        // the rng key is guarded because a query may name a dom without an rng.
         return null == queriedDom ?
                 insts :
-                insts.sorted(Comparator.comparingInt(i -> queriedDom.pathTo(i.dom())));
+                insts.sorted(Comparator
+                        .comparingInt((Obj i) -> pattern.hasRng() && i.rng().vidOrTid().test(pattern.rng()) ? 0 : 1)
+                        .thenComparingInt(i -> queriedDom.pathTo(i.dom()))
+                        .thenComparingInt(i -> null == queriedRng ? 0 : queriedRng.pathTo(i.rng())));
+
     }
 
     /**

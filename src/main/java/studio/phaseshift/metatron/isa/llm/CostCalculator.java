@@ -24,6 +24,12 @@ import dev.langchain4j.model.embedding.listener.EmbeddingModelListener;
 import dev.langchain4j.model.embedding.listener.EmbeddingModelResponseContext;
 import dev.langchain4j.model.output.TokenUsage;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Real;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -40,10 +46,10 @@ public class CostCalculator implements ChatModelListener, EmbeddingModelListener
     private double outputCost = 0;
     private final fURI currencyTID;
 
-    public CostCalculator(final Double inRate, final Double outRate, final fURI currencyTID) {
-        this.costPerInputToken = inRate / MILLION;
-        this.costPerOutputToken = outRate / MILLION;
-        this.currencyTID = currencyTID;
+    public CostCalculator(final Real inRate, final Real outRate) {
+        this.costPerInputToken = inRate.realValue() / MILLION;
+        this.costPerOutputToken = outRate.realValue() / MILLION;
+        this.currencyTID = inRate.typeId();
     }
 
     public void setCost(final double inCost, final double outCost) {
@@ -72,16 +78,20 @@ public class CostCalculator implements ChatModelListener, EmbeddingModelListener
         this.updateCosts(responseContext.response().tokenUsage());
     }
 
-    public double getInputCost() {
-        return this.inputCost;
+    public Real getInputCost() {
+        return real(this.inputCost, this.currencyTID, null);
     }
 
-    public double getOutputCost() {
-        return this.outputCost;
+    public Real getOutputCost() {
+        return real(this.outputCost, this.currencyTID, null);
     }
 
-    public double getTotalCost() {
-        return this.inputCost + this.outputCost;
+    public Real getTotalCost() {
+        return real(this.inputCost + this.outputCost, this.currencyTID, null);
+    }
+
+    public Rec getCost() {
+        return rec(IN, this.getInputCost(), OUT, this.getOutputCost(), TOTAL, this.getTotalCost());
     }
 
     public fURI getCurrencyTID() {

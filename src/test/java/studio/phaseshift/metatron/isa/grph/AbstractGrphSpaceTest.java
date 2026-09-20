@@ -34,7 +34,6 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.IncrQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.grph.space.GraphLoader;
@@ -53,13 +52,12 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.SCHEMA;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.grph.space.GraphLoader.MODERN;
 import static studio.phaseshift.metatron.isa.grph.space.schema.modernSchema.MODERN_SCHEMA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -489,13 +487,13 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
 
     @ParameterizedTest
     @CsvSource(value = {
-          //  "*/g/+                                                   % true",
+            //  "*/g/+                                                   % true",
             "*/g/+.count()                                                                   % 2",
             "*/g/+                                                                           % {edge::T@E,vrtx::T@V}",
             "*/g/S                                                                           % modern::T",
             //"*/g/S.vid().*(_)                                                             % 4",
             //"*/g/S>>pattern.*_.count()                                                       % 5",
-           // "*/g/S>>pattern.*(_).vid()                                                        % {/m/grph/schema/modern/person,/m/grph/schema/modern/software,/m/grph/schema/modern/created,/m/grph/schema/modern/knows,/m/grph/schema/modern}",
+            // "*/g/S>>pattern.*(_).vid()                                                        % {/m/grph/schema/modern/person,/m/grph/schema/modern/software,/m/grph/schema/modern/created,/m/grph/schema/modern/knows,/m/grph/schema/modern}",
     }, delimiter = '%')
     public void testSchemaTraversal(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

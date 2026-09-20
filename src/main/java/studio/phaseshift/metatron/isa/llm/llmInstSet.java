@@ -137,7 +137,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_SKILL_SERVICE_TID = LLM_SERVICE_TID.extend("skill");
     public static final fURI LLM_SYSTEM_SERVICE_TID = LLM_SERVICE_TID.extend("system");
     public static final fURI LLM_MESSAGE_SERVICE_TID = LLM_SERVICE_TID.extend("message");
-    public static final fURI LLM_CONCEPT_SERVICE_TID = LLM_SERVICE_TID.extend("concept_extraction");
+    public static final fURI LLM_CONCEPT_SERVICE_TID = LLM_SERVICE_TID.extend("concept");
     public static final fURI LLM_CHAT_SERVICE_TID = LLM_SERVICE_TID.extend("chat");
     public static final fURI LLM_THINK_SERVICE_TID = LLM_SERVICE_TID.extend("think");
     public static final fURI LLM_FRAME_SERVICE_TID = LLM_SERVICE_TID.extend("frame");
@@ -517,6 +517,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 // hook fields — each is an optional inst a feature can override
                                                 uri(ROOT).maybe().asUri(), URI_TYPE,
+                                                uri(TO).maybe().asUri(), ALL_TYPE,
                                                 uri(ON_AGENT_CTOR).maybe(), ALL_TYPE,
                                                 uri(ON_BEFORE_CHAT).maybe(), ALL_TYPE,
                                                 uri(ON_PARTIAL_RESPONSE).maybe(), ALL_TYPE,
@@ -530,6 +531,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .create(),
                                 null, null, mutableMap(
                                         uri(ROOT).maybe(), "the root uri location of feature data",
+                                        uri(TO).maybe(), "code to evaluate on the feature result",
                                         uri(ON_AGENT_CTOR).maybe(), "inst?noobj<=agent(){ [-- one time setup --] }",
                                         uri(ON_BEFORE_CHAT).maybe(), "inst?#{?}<=agent(){ [-- non-noobj to short-circuit --] }",
                                         uri(ON_PARTIAL_RESPONSE).maybe(), "inst?noobj<=agent(text=>str::T)",

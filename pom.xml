@@ -80,6 +80,7 @@
         <hive.version>1.4.0</hive.version>
         <jakarta.version>2.2.0</jakarta.version>
         <jsoup.version>1.23.2</jsoup.version>
+        <vectors.version>0.1.22</vectors.version>
         <asciidoctor.version>3.2.0</asciidoctor.version>
         <asciidoctorj.version>3.0.1</asciidoctorj.version>
         <exp4j.version>0.4.8</exp4j.version>
@@ -156,6 +157,11 @@
         </dependencies>
     </dependencyManagement>
     <dependencies>
+        <dependency>
+            <groupId>com.integrallis</groupId>
+            <artifactId>vectors</artifactId>
+            <version>${vectors.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-core</artifactId>
@@ -527,6 +533,7 @@
                     <include>studio/phaseshift/metatron/util/dictionary_en.txt</include>
                     <include>studio/phaseshift/metatron/util/terrier_stop_word_list_en.txt</include>
                     <include>emoji.txt</include>
+                    <include>conf/kitty/open-actions.conf</include>
                 </includes>
             </resource>
             <!-- META-INF/services handled via bin/metatron classpath (src/main/resources) -->

@@ -664,10 +664,10 @@ public abstract class AbstractfURI implements fURI {
             return (T) bool(Boolean.valueOf(this.qMap().get(key)));
         else if (Lst.class.isAssignableFrom(valueClass)) {
             final String listValue = this.qMap().get(key);
-            return ObjmtronSerializer.parse(listValue);
+            return (T) (null == listValue ? null : ObjmtronSerializer.parse(listValue));
         } else if (Rec.class.isAssignableFrom(valueClass)) {
             final String recValue = this.qMap().get(key);
-            return ObjmtronSerializer.parse(recValue);
+            return (T) (null == recValue ? null : ObjmtronSerializer.parse(recValue));
         }
         // NATIVE JAVA OBJECTS ////////////////////////////
         else if (String.class.isAssignableFrom(valueClass))

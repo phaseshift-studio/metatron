@@ -119,6 +119,8 @@ public final class Tokens {
     public static final String CONTEXT = "context";
     public static final String THRESHOLD = "threshold";
     public static final String COMPRESSION = "compression";
+    public static final String TOKEN = "token";
+    public static final String EST = "est";
     public static final String COEFFICIENT = "coefficient";
     public static final String QUERY = "query";
     public static final String DOM = "dom";
