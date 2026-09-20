@@ -596,7 +596,7 @@ public class llmInstSet extends AbstractInstSet {
                         Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_TOOL_FEATURE_TID)
-                                .isaPredicate(rec(uri(f(TOOL)).maybe().asUri(), T(LST_TID.maybe())))
+                                .isaPredicate(rec(uri(TOOL).maybe().asUri(), T(LST_TID.maybe()), uri(MAX).maybe().asUri(), isa_(INT_TYPE).else_(jnt(-1))))
                                 .constructor(arg -> createStageLambdas(new ToolFeature(arg.asRec().jvm(), LLM_TOOL_FEATURE_TID, arg.vid())))
                                 .create(),
                         Type.Builder.build()
@@ -901,9 +901,13 @@ public class llmInstSet extends AbstractInstSet {
                                             final AbstractMessageFeature.SessionAddress address = AbstractMessageFeature.addressOf(sessionOrAgent);
                                             if (null == address.sessionVID() || address.sessionVID().isEmpty())
                                                 return fail("compact requires an anchored agent or session — use @dr.compact() or compact(@dr)");
-                                            final Rec config = rec(uri(MODEL), inst.arg(f(MODEL), 1),
-                                                    uri(PROMPT), inst.arg(f(PROMPT), 2),
-                                                    uri(TO), uri(address.agentHome()));
+                                            final Rec config = (lhs.isRec() ? lhs.asRec() : rec())
+                                                    .at(MODEL, noobj())
+                                                    .at(PROMPT, noobj())
+                                                    .at(TO, noobj()).plus(
+                                                            rec(uri(MODEL), inst.arg(f(MODEL), 1),
+                                                                    uri(PROMPT), inst.arg(f(PROMPT), 2),
+                                                                    uri(TO), uri(address.agentHome())));
                                             return CompactionFeature.compactSession(address.agentHome(), address.sessionVID(), config);
                                         }),
                                 "a session or agent to compact",

@@ -38,6 +38,7 @@ import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.Comparator;
 import java.util.List;
@@ -56,6 +57,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -292,6 +294,7 @@ public class CompactionFeature extends AbstractFeature {
         final Obj modelArg = config.at(uri(MODEL));
         final Obj promptArg = config.at(uri(PROMPT));
         final Obj output = config.at(uri(TO));
+        final Obj otherStreams = config.at(REFERENCE).orElse(noobj());
         final fURI outputBase = output.isNoObj() ? agentHome : output.uriValue();
         // 1. collect this session's messages from the ledger, oldest -> newest
         LOG.status(DEBUG, "\uD83D\uDCE9 gathering messages for compaction");
@@ -305,7 +308,10 @@ public class CompactionFeature extends AbstractFeature {
                     return sessionUri.isUri() && sessionUri.uriValue().equals(sessionVID);
                 })
                 .sorted(Comparator.comparing(pair -> Integer.parseInt(pair.first().uriValue().name())))
-                .toList();
+                .collect(Collectors.toCollection(CommonUtil::mutableList));
+        messages.addAll(otherStreams.stream()
+                .map(x -> x.isRel() ? x.asRel() : rel(x.hasVID() ? uri(x.vid()) : uri(""), x))
+                .toList());
         LOG.status(DEBUG, "\uD83D\uDCE9 gathered %d messages for compaction", messages.size());
         if (messages.isEmpty())
             return fail("no messages found for session %s at %s", sessionVID, messagesLocation);

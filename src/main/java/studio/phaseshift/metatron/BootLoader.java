@@ -412,11 +412,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
                             .reduce("", (a, b) -> a + "\n\t\t" + b));
             /// // SET TRACER STAGES /// ///
             LOG.info("registering the {{c}}x_ers{{X}}...");
-            final Rec tracer = args.at("tracer/stage")
-                    .orElse(Stream.of(Tracer.values())
+            final Rec tracer = Tracer.init(rec(uri("stack"),
+                    args.at("tracer/stack").orElse(Stream.of(Tracer.values())
                             .map(t -> rel(uri(t.name()), BOOL_FALSE))
-                            .collect(new CommonUtil.RecCollector()));
-            Tracer.init(tracer.tid(TRACER_TYPE_TID).as());
+                            .collect(new CommonUtil.RecCollector()))).tid(TRACER_TYPE_TID).as());
             LOG.info("{{c}}tracer{{X}} registered: %s", tracer);
             /// /// SET TYPE CHECKER STAGES /// ///
             final Rec typer = args.at("typer/stage")
@@ -454,6 +453,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
             LOG.debug("router location: %s", ROUTER.vid());
             sysSpace.write("/sys/typer/stage", typer);
+            sysSpace.write("/sys/tracer", tracer);
             sysSpace.write("/sys/rewriter", rewriter);
             sysSpace.write("/sys/tmp", str("""
                                            use /sys/tmp as a temporary location for objs.

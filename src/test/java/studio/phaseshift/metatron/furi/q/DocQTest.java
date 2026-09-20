@@ -55,14 +55,15 @@ public class DocQTest extends AbstractMetatronTest {
     protected static final GraphittyLogger LOG = Graphitty.log(DocQTest.class);
 
     private DocQTest() {
-        // do nothing
+
     }
 
     @Test
     public void testDocStructure() {
         final Inst inst = Router.readFromSpace(AND_INST_TID).asInst();
         final Docs doc = new Docs(Router.readFromSpace(AND_INST_TID.addQ(DOCQ)).asRec());
-        assertTrue(doc.test(DOCQ_TYPE));
+        LOG.warn(doc);
+        assertTrue(doc.test(DOCS_TYPE));
         assertTrue(doc.description().contains("\\("), "and() documentation has latex formatting in its description");
         assertEquals(doc.at(DESC).strValue(), doc.description());
         assertEquals(inst, doc.at(OBJ));
@@ -73,7 +74,7 @@ public class DocQTest extends AbstractMetatronTest {
         final fURI dummyURI = f("/m/inst/NoTAInsT");
         final Inst inst = Router.readFromSpace(dummyURI).asInst();
         final Docs doc = new Docs(Router.readFromSpace(dummyURI.addQ(DOCQ)).asRec());
-        assertTrue(doc.test(DOCQ_TYPE));
+        assertTrue(doc.test(DOCS_TYPE));
         assertEquals(NO_DOCS.at(DESC).strValue(), doc.description());
         assertTrue(inst.isNoObj());
     }
@@ -87,14 +88,14 @@ public class DocQTest extends AbstractMetatronTest {
         /// //
         Router.global().write(newURI.addQ(DOCQ), str("some obj"));
         doc = new Docs(Router.readFromSpace(newURI.addQ(DOCQ)).asRec());
-        assertTrue(doc.test(DOCQ_TYPE));
+        assertTrue(doc.test(DOCS_TYPE));
         assertEquals("some obj", doc.description());
         assertEquals("some obj", doc.at(DESC).strValue());
         /// //
         final fURI newURI2 = f("/m/some_obj_2");
         docWrap(str("some obj 2", STR_TID, newURI2), "a test str", "aa", "bb");
         doc = new Docs(Router.readFromSpace(newURI2.addQ(DOCQ)).asRec());
-        assertTrue(doc.test(DOCQ_TYPE));
+        assertTrue(doc.test(DOCS_TYPE));
         assertEquals("a test str", doc.description());
         assertTrue(doc.examples().contains("aa"));
         assertTrue(doc.examples().contains("bb"));

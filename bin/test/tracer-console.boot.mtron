@@ -1,0 +1,15 @@
+[== boot args ==]
+[space          => /sys/space,
+ log            => info,
+ tracer/stack   => [mtron_stack  => true,
+                    java_stack   => false]]
+[===============]
+print("{{y}}tracer demo boot{{X}} {{k}}— mtron_stack tracer on (see boot args header){{X}}\n");
+import(/m/mach/io);
+import(/m/mach/ui,ui);
+import(/m/sys);
+import(/m/math);
+memspace::[pattern => /usr/#,
+              q => [subq::[=>],docq::[=>]]]@/sys/space/usr;
+console::[header=>'tracer demo']@/usr/ui/console;
+print("{{g}}console created{{X}} {{k}}— type a failing expression{{X}}\n");

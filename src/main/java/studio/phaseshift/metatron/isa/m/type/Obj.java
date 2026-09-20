@@ -872,14 +872,20 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         /**
          * Address-only refinement check: is {@code otherTid} on the nominal
          * refinement chain of a type named {@code vid} whose parent is {@code tid}
-         * (vid -> tid -> ... -> base)?  Never constructs a {@link Type} nor applies
-         * a predicate, so it is the recursion-free middle ground between the
-         * type-constructing {@link Type#isRefinementOf(Type)} walk and the
-         * too-lenient {@link Obj#test(Obj)}.
+         * (vid -> tid -> ... -> base)?  Resolves parents via the {@link InstSet}
+         * registry ({@code vid -> tid} edges) without constructing a {@link Type},
+         * so it is the fast, recursion-free path for InstSet-registered types.
+         * <p>
+         * The root ({@code #}) is never reached by the walk (base types, whose
+         * {@code vid == tid}, have no parent), so a root {@code otherTid} returns
+         * true nominally — the coefficient bound is left to the caller.
          */
         public static boolean isRefinementOfTid(final fURI vid, final fURI tid, final fURI otherTid) {
             if (null == otherTid)
                 return false;
+            // root type (#/ALL): every type refines it — coefficient checked by caller
+            if (otherTid.basePath().equals(ALL))
+                return true;
             // node 1: the type's own vid
             if (null != vid && vid.basePath().equals(otherTid.basePath()))
                 return true;
@@ -894,6 +900,15 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 current = vidToTid(current);
             }
             return false;
+        }
+
+        /**
+         * whether a tid is registered in an {@link InstSet} (so its parent edges are
+         * resolvable via {@link #vidToTid(fURI)}).  on-the-fly/user-defined types are
+         * not, and fall back to the Obj walk ({@link Type#isRefinementOf(Type)}).
+         */
+        public static boolean inInstSet(final fURI tid) {
+            return null != tid && Router.loaded() && Router.global().getSpaceFor(tid) instanceof InstSet;
         }
 
         /**
@@ -973,10 +988,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
             // ── ObjCall handling ──
             if (rhs.isObjCall() && !rhs.asCall().isPredicate(lhs)) {
-                if (false) // TODO
-                    return (Obj.Helper.specificType(lhs).test(rhs.dom()) &&
-                            Obj.Helper.specificType(lhs).test(rhs.rng()));
-                return true;
+                return ((!TypeCheck.inst_dom.enabled() || Obj.Helper.specificType(lhs).test(rhs.dom())) &&
+                        (!TypeCheck.inst_rng.enabled() || Obj.Helper.specificType(lhs).test(rhs.rng())));
             }
 
             // ── non-base type with TID→VID match: predicate-aware early exit ──
@@ -1095,9 +1108,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
          */
         public static void objTypeCheck(final Obj obj) {
             if (Router.loaded() && null != obj.jvm() && !obj.isType() && !obj.isNoObj() && !obj.isCall() && !obj.isInstSet() && !ObjFactory.Helper.baseTID(obj).test(obj.type().baseTypeID().basePath()))
-                throw MTronException.of("%s [%s] is not a %s".formatted(obj, obj.jvm().getClass().getSimpleName().toLowerCase(), obj.type()));
+                throw new TypeMismatchException(obj, obj.type(), "%s [%s] is not a %s", obj, obj.jvm().getClass().getSimpleName().toLowerCase(), obj.type());
             if (!obj.isType() && obj.tid().isGeneric())
-                throw MTronException.of("%s value can not be typed generic %s::T", obj.jvm(), obj.tid());
+                throw new TypeMismatchException(obj, obj.type(), "%s value can not be typed generic %s::T", obj.jvm(), obj.tid());
             if (TypeCheck.type_pred.enabled()) {
                 if (Router.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.test(obj.type())) {
                     if (obj.isPoly()) {
@@ -1112,8 +1125,15 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                 indent("X=>", 6),
                                 indent(obj.type().toString(), 2), indent("-".repeat(width), 2), indent(matchDiffString, 2));
                     } else {
+                        // name the level that rejected the value, not just the leaf. A type's constraints are
+                        // its whole predicate stack, so for a nested stack the leaf may be the very predicate
+                        // that PASSED — young::-3 fails nat's ?>=0 while young's own ?<25 accepts it.
                         final Type attemptedType = obj.type();
-                        throw MTronException.of("%s is not a %s".formatted(obj.selfTID(obj.baseTypeID()), attemptedType));
+                        final Type rejectedAt = Type.Helper.rejectedBy(obj, attemptedType);
+                        final String level = (null == rejectedAt || rejectedAt.equals(attemptedType)) ? "" :
+                                "%n\trejected at the %s level of the predicate stack (%s)".formatted(
+                                        null == rejectedAt.vid() ? "root" : rejectedAt.vid().name(), rejectedAt);
+                        throw new TypeMismatchException(obj, attemptedType, "%s is not a %s%s", obj.selfTID(obj.baseTypeID()), attemptedType, level);
                     }
                 }
             }

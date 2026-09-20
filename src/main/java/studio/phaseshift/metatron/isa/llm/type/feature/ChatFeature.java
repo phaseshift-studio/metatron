@@ -71,7 +71,6 @@ public class ChatFeature extends AbstractFeature implements ChatService {
             agent.requireService(SystemService.class).addSystemMessage(
                     """
                     ---[chat_feature]---
-                    you are an agent in the metatron (http://metatron.phaseshift.studio).
                     your underlying inference model is:
                     %s
                     ---[syntax_feature]---

@@ -1026,7 +1026,9 @@ body can colorize it — that pass is <code>FloatingSurface</code>'s <code>Graph
 <li>
 <p><strong>Measuring text is O(1) for plain text.</strong> <code>Graphitty.strip</code>/<code>viewLength</code> return the input
 unchanged when it has no <code>{{…}}</code> code, no ANSI escape and nothing outside ASCII — 2.4 µs → 34 ns
-per call, and every widget measures every one of its lines.</p>
+per call, and every widget measures every one of its lines.  That same all-ASCII case is why a
+plain line still measures exactly as it always did: there a column IS a char, so <code>viewLength</code>
+answers with the char count without walking code points.</p>
 </li>
 <li>
 <p><strong>Widget passes outrank console output.</strong> The render thread drains <code>urgentQueue</code> (widget
@@ -1527,7 +1529,9 @@ the block, and only the exactly-spelled <code>{{/syntax:lang}}</code> closes it.
 <tr><td><code>Graphitty.strip(str)</code></td><td>Remove all ANSI escapes (and Graphitty tags) to measure <strong>visual length</strong>.  Used by <code>Highlighter.visualLength()</code> and <code>WidgetCanvas</code> for width clipping.</td></tr>
 <tr><td><code>Graphitty.out(stream, f, args...)</code></td><td>Write a Graphitty string directly to an output stream.  Used by <code>WidgetCanvas.finish()</code> for the final flush.</td></tr>
 <tr><td><code>Graphitty.writeToTerminal(f, args...)</code></td><td>Write through the serialized terminal-writer bridge (FloatingSurface-safe).</td></tr>
-<tr><td><code>Graphitty.viewLength(str)</code></td><td>Alias for <code>strip(str).length()</code>.</td></tr>
+<tr><td><code>Graphitty.viewLength(str)</code></td><td>The <strong>display columns</strong> <code>str</code> occupies: stripped, then summed a code point at a time through jline's <code>WCWidth</code> — a CJK glyph is 2, a variation selector or combining mark 0, an emoji 1 glyph across 2 chars, a line break 0.  All-printable-ASCII lines short-circuit to the char count.  This is the measure <code>Highlighter.visualLength()</code> and every widget width rides on.</td></tr>
+<tr><td><code>Graphitty.viewIndex(str, columns)</code></td><td>The char index at which <code>str</code> has spent <code>columns</code> of its <code>viewLength</code> — for slicing a line at a column boundary (<code>substring</code> counts chars).  Never lands inside a surrogate pair; a zero-width mark stays with its base.</td></tr>
+<tr><td><code>Graphitty.viewPrefix(str, columns)</code></td><td><code>viewIndex</code> as a slice, never shorter than the first code point — a clip makes progress even when one glyph is wider than the budget.</td></tr>
 </tbody>
 </table>
 <p><code>Graphitty</code> owns the tags; what a <code>{{syntax:lang}}</code> block is colored <em>with</em> is <code>Highlighter</code>'s — see <strong>Syntax blocks</strong>

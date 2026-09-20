@@ -136,9 +136,32 @@ public interface Type extends Obj {
         if (other.isRootType())
             return this.c().within(other.c());
         // address-only nominal walk: no Type construction (parentType() -> T())
-        final boolean refines = Obj.Helper.isRefinementOfTid(this.vid(), this.tid(), other.vid())
-                || Obj.Helper.isRefinementOfTid(this.vid(), this.tid(), other.tid());
-        return refines && this.c().within(other.c());
+        // final boolean refines = Obj.Helper.isRefinementOfTid(this.vid(), this.tid(), other.vid())
+        //       || Obj.Helper.isRefinementOfTid(this.vid(), this.tid(), other.tid());
+        //   return refines && this.c().within(other.c());
+
+        if (Obj.Helper.inInstSet(this.tid())) {
+            final boolean refines = Obj.Helper.isRefinementOfTid(this.vid(), this.tid(), other.vid())
+                    || Obj.Helper.isRefinementOfTid(this.vid(), this.tid(), other.tid());
+            return refines && this.c().within(other.c());
+        }
+        // fallback: Obj walk (parentType()) for types not in an InstSet, which also
+        // reaches the root and so covers a #{n} rhs without a separate root guard.
+        final fURI otherVid = other.vid();
+        final fURI otherTid = other.tid();
+        Type t = this;
+        int hops = 0;
+        while (null != t && hops < 256) {
+            if (Helper.basePathEquals(t.vid(), otherVid) || Helper.basePathEquals(t.vid(), otherTid)
+                    || Helper.basePathEquals(t.tid(), otherVid) || Helper.basePathEquals(t.tid(), otherTid))
+                return this.c().within(other.c());
+            if (t.isRootType())
+                break;
+            t = t.parentType();
+            hops++;
+        }
+        return false;
+
     }
 
     default boolean isEphemeral() {
@@ -224,8 +247,19 @@ public interface Type extends Obj {
 
     default List<Call> predicateStack() {
         final List<Call> result = new ArrayList<>();
+        final Set<String> seen = new HashSet<>();
         Type type = this;
-        while (!type.isRootType()) {
+        int hops = 0;
+        while (!type.isRootType() && hops++ < 256) {
+            // the parent chain is not guaranteed acyclic: parentType() resolves a parent by
+            // re-entering the type space (T(tid())), and a type whose tid and vid disagree --
+            // /m/llm/session_or_agent{?}@/m/llm/session_or_agent, where only the tid carries the
+            // pattern piece -- resolves back to itself. Unbounded, this loop re-added the same
+            // predicate until the heap died (an ArrayList.add OutOfMemoryError, not a stack one),
+            // so a level already visited ends the walk. 256 mirrors the bound on the sibling
+            // walks (pathIncludes, isRefinementOf's fallback).
+            if (!seen.add(System.identityHashCode(type) + "@" + type.tid() + ":" + type.vid()))
+                break;
             if (type.hasPredicate())
                 result.add(type.predicate());
             type = type.parentType();
@@ -313,6 +347,10 @@ public interface Type extends Obj {
     }
 
     final static class Helper {
+
+        static boolean basePathEquals(final fURI a, final fURI b) {
+            return null != a && null != b && a.basePath().equals(b.basePath());
+        }
 
         public static Type findLCD(final List<Type> types) {
             if (types == null || types.isEmpty())
@@ -566,6 +604,31 @@ public interface Type extends Obj {
             return null;
         }
 
+        /**
+         * The level of {@code type}'s predicate stack whose OWN predicate rejects {@code obj}, or null
+         * when every level accepts it. Leaf-first, mirroring {@link Type#predicateStack()}.
+         * <p>
+         * This exists because a type's constraints are the conjunction of its whole stack, so the leaf
+         * alone does not explain a rejection: young::-3 fails nat's ?>=0 while young's own ?<25 accepts
+         * it, and a message that prints only the leaf names the predicate that passed.
+         */
+        public static Type rejectedBy(final Obj obj, final Type type) {
+            final Obj lhs = obj.clone().selfTID(obj.baseTypeID());
+            Type level = type;
+            while (!level.isRootType()) {
+                if (level.hasPredicate()) {
+                    final Call predicate = level.predicate();
+                    if (null != predicate && !predicate.isNoObj() && predicate.apply(lhs).isNothing())
+                        return level;
+                }
+                final Type parent = level.parentType();
+                if (parent.equals(level))
+                    break;
+                level = parent;
+            }
+            return null;
+        }
+
         public static boolean typeCheck(final Obj lhs, final Obj rhs) {
             if (null != lhs.vid() && Objects.equals(lhs.vid(), rhs.vid()))
                 return lhs.c().within(rhs.c()) &&
@@ -615,7 +678,29 @@ public interface Type extends Obj {
                     return true;
                 if (rhs.asType().isBaseType() && !lhs.baseTypeID().test(rhs.vid()))
                     return false;
-                return !rhs.asType().hasPredicate() || (!rhs.asType().predicate().apply(lhs.clone().selfTID(lhs.baseTypeID())).isNothing()); // selfTID() prevents infinite recursion on type checking
+                // The type's constraints are the conjunction of EVERY predicate from here to the root, not
+                // this level's alone: a stockholmare must satisfy creature[age:int] and human[name:str] and
+                // swedish[name has 'son'] as well as its own city requirement. predicateStack() is leaf-first
+                // and skips levels that carry no predicate of their own.
+                // NOTE: selfTID() prevents infinite recursion on type checking.
+                final fURI lhsTID = lhs.tid();
+                final Obj predLhs = lhs.clone().selfTID(lhs.baseTypeID());
+                boolean accepted = true;
+                for (final Call pred : rhs.asType().predicateStack()) {
+                    if (pred.isNoObj())
+                        continue;
+                    if (pred.apply(predLhs).isNothing()) {
+                        accepted = false;
+                        break;
+                    }
+                }
+                // Obj.Helper.objClone is an identity function when tid, vid and jvm are all unchanged, so
+                // lhs.clone() can BE lhs. The base-type re-tag above would then mutate the caller's object --
+                // a test that strips a handler or a typed value of its type as a side effect. Undo exactly
+                // that case; a genuine clone is left alone.
+                if (predLhs == lhs && !Objects.equals(lhs.tid(), lhsTID))
+                    lhs.selfTID(lhsTID);
+                return accepted;
             } else {
                 return lhs.test(rhs);
             }

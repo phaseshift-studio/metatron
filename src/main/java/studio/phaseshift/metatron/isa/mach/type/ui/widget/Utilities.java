@@ -56,7 +56,7 @@ public class Utilities {
      * are returned as-is.  A {@code maxW <= 0} means no wrapping.
      *
      * @param line the line to wrap (may contain Graphitty markup)
-     * @param maxW maximum visible characters per output line
+     * @param maxW maximum visible columns per output line
      * @return wrapped lines (single-element list if no wrapping needed)
      */
     public static List<String> wordWrap(final String line, final int maxW) {
@@ -73,20 +73,30 @@ public class Utilities {
         final String[] words = stripped.split(" ");
         final List<String> wrapped = new ArrayList<>();
         final StringBuilder current = new StringBuilder();
+        int currentColumns = 0;   // a line's budget is columns, not chars
 
         for (final String word : words) {
             if (word.isEmpty()) continue;
-            final int newLen = current.length() + (current.isEmpty() ? 0 : 1) + word.length();
-            if (newLen > maxW && !current.isEmpty()) {
+            final int wordColumns = Highlighter.visualLength(word);
+            if (currentColumns + (current.isEmpty() ? 0 : 1) + wordColumns > maxW && !current.isEmpty()) {
                 wrapped.add(leadIn + current);
                 current.setLength(0);
+                currentColumns = 0;
             }
-            if (!current.isEmpty()) current.append(' ');
+            if (!current.isEmpty()) {
+                current.append(' ');
+                currentColumns++;
+            }
             current.append(word);
-            // Handle a single word longer than maxW — hard-break it
-            while (current.length() > maxW) {
-                wrapped.add(leadIn + current.substring(0, maxW));
-                current.delete(0, maxW);
+            currentColumns += wordColumns;
+            // Handle a single word longer than maxW — hard-break it at a column boundary,
+            // which is not a char index: a wide glyph costs two columns per one char
+            while (currentColumns > maxW) {
+                final String pending = current.toString();
+                final String head = Graphitty.viewPrefix(pending, maxW);
+                wrapped.add(leadIn + head);
+                current.delete(0, head.length());
+                currentColumns -= Highlighter.visualLength(head);
             }
         }
         if (!current.isEmpty()) wrapped.add(leadIn + current);
@@ -94,12 +104,12 @@ public class Utilities {
     }
 
     /**
-     * Clip text to {@code maxW} visible characters, appending {@code …} when
+     * Clip text to {@code maxW} visible columns, appending {@code …} when
      * truncated.  Preserves leading Graphitty codes so the clip marker inherits
      * the same colour.  A {@code maxW <= 0} means no clipping.
      *
      * @param text the text to clip (may contain Graphitty markup)
-     * @param maxW maximum visible characters before the ellipsis
+     * @param maxW maximum visible columns before the ellipsis
      * @return original text or a clipped version ending in {@code …}
      */
     public static String textClip(final String text, final int maxW) {
@@ -110,7 +120,7 @@ public class Utilities {
         final String leadIn = m.find() ? m.group() : "";
         final String rest = leadIn.isEmpty() ? collapsed : collapsed.substring(leadIn.length());
         final String stripped = Highlighter.unformat(rest);
-        return leadIn + stripped.substring(0, Math.max(1, maxW - 1)) + "…";
+        return leadIn + Graphitty.viewPrefix(stripped, Math.max(1, maxW - 1)) + "…";
     }
 
     public static void runCursorLessWidget(final Widget<?> widget, final boolean close) {

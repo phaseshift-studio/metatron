@@ -142,6 +142,10 @@ public class ScrollViewTest extends AbstractMetatronTest {
             "abcdef % 9 % 3 % ''         % a window past the end is empty",
             "abcdef % 0 % 0 % ''         % a zero-width viewport shows nothing",
             "{{y}}abc % 0 % 6 % {{y}}abc % an unshifted window keeps the line verbatim (colors included)",
+            "日本語です % 2 % 4 % 本語     % shifting two columns in skips one wide glyph, and four columns show two",
+            "日本語です % 0 % 5 % 日本     % ...and the window closes on a glyph boundary, never inside one",
+            "📥abc % 0 % 3 % 📥a          % a surrogate pair is one glyph across two chars",
+            "📥abc % 2 % 3 % abc          % scrolling past it lands on the next char, not the second half",
     }, delimiter = '%')
     void testHorizontalWindow(final String line, final int offset, final int width,
                               final String expected, final String description) {

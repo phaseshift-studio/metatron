@@ -81,7 +81,6 @@ public class Agent extends MRec {
 
     private final AtomicReference<Tuple.Pair<fURI, fURI>> currentHook = new AtomicReference<>(null);
     final AtomicBoolean first = new AtomicBoolean(true);
-    private static final int MAX_TOOL_CALLS = -1;
 
     /**
      * The current user message — single source of truth, mutable by features.
@@ -593,7 +592,7 @@ public class Agent extends MRec {
      */
     private AgentServices buildService(final List<Obj> features, final Rec responseFormat) {
         final AiServices<AgentServices> service = AiServices.builder(AgentServices.class)
-                .maxToolCallingRoundTrips(MAX_TOOL_CALLS)
+                .maxToolCallingRoundTrips(this.feature(ToolFeature.class).map(ToolFeature::maxToolCalls).orElse(100))
                 .storeRetrievedContentInChatMemory(true)
                 .toolProvider(this.feature(ToolFeature.class).map(ToolFeature::getToolProvider).orElseGet(mToolProvider::new))
                 .toolExecutionErrorHandler((error, context) -> {
@@ -664,7 +663,7 @@ public class Agent extends MRec {
     }
 
     private void onPartialThinking(final PartialThinking t, final CountDownLatch latch) {
-        StatusLine.message(str("\uD83D\uDCAD on_partial_thinking"));
+        StatusLine.message(str("\uD83E\uDDE0 on_partial_thinking"));
         if (this.isInterrupted()) {
             latch.countDown();
             return;

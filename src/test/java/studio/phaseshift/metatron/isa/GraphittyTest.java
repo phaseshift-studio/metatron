@@ -273,7 +273,8 @@ public class GraphittyTest extends AbstractMetatronTest {
     void testMarkdownFenceIsColorizedAndMeasuresVerbatim(final String code, final String language, final String desc) {
         final String rendered = Graphitty.string("```%s\n%s\n```".formatted(language, code));
         assertEquals("\n" + code + "\n", Graphitty.strip(rendered), "a fence measures as its code: " + desc);
-        assertEquals(("\n" + code + "\n").length(), Graphitty.viewLength(rendered), "color adds no visual length: " + desc);
+        assertEquals(code.length(), Graphitty.viewLength(rendered),
+                "color adds no visual length — and the fence's two line breaks, being line breaks, no column: " + desc);
         assertTrue(rendered.contains("\u001B["), "a fence is colorized (" + Graphitty.strip(rendered) + "): " + desc);
     }
 
@@ -434,4 +435,102 @@ public class GraphittyTest extends AbstractMetatronTest {
         assertTrue(rendered.contains("\u001B[32mint"), "the code is still colorized (" + rendered.replace("\u001B", "\\e") + ")");
     }
 
+    // ── viewLength: columns, not characters ────────────────────────
+
+    /**
+     * A widget lays itself out in COLUMNS, so that is what it must measure in.  A
+     * character count is right only for ASCII and narrow BMP glyphs, and wrong in both
+     * directions everywhere else: a CJK glyph is two columns from one char, a combining
+     * mark or variation selector is none, an emoji is one glyph across two chars.  A
+     * line break costs no column at all — it ends a line, and the width of a line is
+     * what is being asked for.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "monad halted      % 12 % ASCII: a column is a char",
+            "日本語             % 6  % each CJK glyph is two columns from one char",
+            "日                 % 2  % one wide glyph, two columns",
+            "e\u0301           % 1  % a combining mark adds no column of its own",
+            "⏳ 5s              % 5  % a single-char emoji the terminal draws wide",
+            "📥 bytes          % 8  % a surrogate pair is one glyph (across two chars)",
+            "✉️ mail           % 6  % ...and a variation selector adds nothing to it",
+            "{{y}}colored{{X}} % 7  % markup is not columns",
+    }, delimiter = '%')
+    void testViewLengthCountsColumns(final String text, final int columns, final String description) {
+        assertEquals(columns, Graphitty.viewLength(text), description);
+        assertEquals(Graphitty.viewLength(text), Highlighter.visualLength(text),
+                "a widget's measure and the DSL's agree: " + description);
+    }
+
+    /**
+     * A line break ends a line rather than occupying one, so it costs no column: the
+     * question a widget asks is how wide a line is, and a newline is never drawn as a
+     * cell (a {@code \r} of a CRLF pair no more than the {@code \n}).
+     */
+    @Test
+    void testViewLengthTreatsALineBreakAsNoColumn() {
+        assertEquals(2, Graphitty.viewLength("a\nb"), "one column of text, a break, another column");
+        assertEquals(3, Graphitty.viewLength("a\nb\nc"), "three one-column lines are three columns wide");
+        assertEquals(2, Graphitty.viewLength("a\r\nb"), "a CRLF costs no more than the LF it carries");
+    }
+
+    /**
+     * Every widget laid out before the measure counted columns was laid out by printable
+     * ASCII and by the narrow box-drawing glyphs of a border and a cap — one column each,
+     * which is where counting chars was already right.  This is the no-op half of the
+     * change: those lines measure exactly as they always did, which is why the widget
+     * layout that existed before it does not move.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "monad halted              % a line of text",
+            "┌ notes [-] ─────────────┐ % a border row",
+            "│ L01                │    % a body row between its edges",
+            "▎ t 📥 bB::0.00            % the status line's cap and its narrow glyphs",
+    }, delimiter = '%')
+    void testViewLengthIsUnchangedForNarrowGlyphLines(final String line, final String description) {
+        assertEquals(Highlighter.unformat(line).length(), Graphitty.viewLength(line),
+                "one column per char, exactly as the char count had it: " + description);
+    }
+
+    /**
+     * {@code viewIndex} is the same model read the other way, and it is what code that
+     * slices a line at a column boundary has to use — {@code substring} counts chars.  It
+     * never lands inside a surrogate pair, and a zero-width mark rides along with what it
+     * marks rather than being counted as a column of its own.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "abcdef   % 0 % 0 % ''     % nothing asked for, nothing consumed",
+            "abcdef   % 3 % 3 % abc    % a narrow line: a column is a char",
+            "abcdef   % 9 % 6 % abcdef % a budget past the end is the whole line",
+            "日本語   % 4 % 2 % 日本   % two columns at a time",
+            "日本語   % 3 % 1 % 日     % a budget that stops inside a glyph takes the whole glyph",
+            "📥abc    % 2 % 2 % 📥     % a surrogate pair is consumed whole",
+            "📥abc    % 1 % 0 % ''     % a budget too small for the glyph consumes nothing, never half of it",
+            "e\u0301x % 1 % 2 % e\u0301 % the combining mark rides along with its base",
+    }, delimiter = '%')
+    void testViewIndexStopsOnGlyphBoundaries(final String text, final int columns, final int index, final String prefix) {
+        assertEquals(index, Graphitty.viewIndex(text, columns), "viewIndex(%s, %d)".formatted(text, columns));
+        assertEquals(prefix, text.substring(0, index), "the index is a boundary a substring can be taken at");
+        assertTrue(0 == index || Graphitty.viewLength(text.substring(0, index)) <= columns,
+                "the prefix spends no more columns than the budget asked for");
+    }
+
+    /**
+     * Clipping is {@code viewIndex} as a slice, and it always makes progress: one glyph
+     * over budget beats half a surrogate pair (which is what a char-index clip writes —
+     * a replacement char) or an elision that elided nothing.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "monad halted % 5 % monad % a narrow line clips to the column",
+            "日本語        % 4 % 日本  % wide glyphs clip whole",
+            "日本語        % 3 % 日    % ...never in half",
+            "📥abc        % 1 % 📥    % a glyph wider than the budget is still whole",
+            "''           % 5 % ''    % nothing to clip",
+    }, delimiter = '%')
+    void testViewPrefixAlwaysEndsOnAGlyphBoundary(final String text, final int columns, final String expected) {
+        assertEquals(expected, Graphitty.viewPrefix(text, columns), "viewPrefix(%s, %d)".formatted(text, columns));
+    }
 }

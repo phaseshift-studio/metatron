@@ -806,6 +806,14 @@ public class mInstSetTest extends AbstractInstSetTest {
     }
 
 
+    // known-fail: the row "*a.>>{a,b/c}.sum() % 3" below — under the test
+    // boot (code_resolve disabled, dynamic resolution) `.sum()` on a read
+    // result resolves to the rec sum (dom REC.maybeSome wins; a read can
+    // inherit its source's tid), so asRec() on an int element fails
+    // ("unable to convert int::T to rec::T"); the console (strict
+    // resolution) returns 3 correctly. a sibling row was worked around the
+    // same way (.as(int::T).sum?int<=int{*}()). this is a
+    // dynamic-resolution/read-tid dispatch issue, not a fail-text one.
     @ParameterizedTest
     @TestData(value = {
             "a -> [a=>1,b=>[c=>2,d=>[e,f,[g,h]]]]",

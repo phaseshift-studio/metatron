@@ -31,7 +31,10 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Call;
+import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -703,6 +706,29 @@ public class mParser {
         return null;
     }
 
+    /**
+     * A construction-time type violation ({@code nat::-3}) arrives as an MTronException thrown while the
+     * parser was BUILDING the value — {@code MObj.<init>} -> {@code Obj.Helper.objTypeCheck} — not while
+     * evaluating it. Turn it into a {@code fail::T} so the failure is a value: inspectable, testable, and
+     * reportable at a boundary instead of escaping as a Java exception.
+     * <p>
+     * It is NOT catchable by a {@code .catch()} chained inside the same expression: the failure returns
+     * from the parse of that expression, so anything written after the offending literal is never parsed.
+     * That is an acceptable limit because the violation is STATIC — the value and its type are both right
+     * there in the expression — so the useful affordance is the diagnostic (which level of the predicate
+     * stack rejected it, and from which source), not a runtime handler.
+     * <p>
+     * The source fragment and its offset are attached because no {@code ExecutionStack} frame is live at
+     * parse time: {@code Tracer.mtron_stack} has nothing to capture here, so without the offset a
+     * frame-less failure would say only what went wrong, never where.
+     */
+    private static Obj parseFailure(final MTronException e, final String source, final int offset) {
+        final String snippet = source.trim();
+        return offset > 0
+                ? fail(e, "%s%n\twhile parsing: %s%n\tat offset %d", e.getMessage(), snippet, offset)
+                : fail(e, "%s%n\twhile parsing: %s", e.getMessage(), snippet);
+    }
+
     public static <O extends Obj> O parse(final String code) {
         final String trimmed = stripComments(code.trim());
         if (trimmed.isEmpty())
@@ -714,6 +740,8 @@ public class mParser {
             result = cachedMainParser.parse(trimmed);
         } catch (final StackOverflowError e) {
             throw MTronException.of("infinite recursion detected in parser: possible left recursion in '%s'", trimmed);
+        } catch (final MTronException e) {
+            return (O) parseFailure(e, trimmed, 0);
         }
         long parseTime = System.nanoTime() - start;
         if (result.isFailure()) {
@@ -793,6 +821,8 @@ public class mParser {
                 result = cachedExpressionParser.parse(remaining);
             } catch (final StackOverflowError e) {
                 throw MTronException.of("infinite recursion detected in parser: possible left recursion in '%s'", remaining);
+            } catch (final MTronException e) {
+                return (O) parseFailure(e, remaining, trimmed.length() - remaining.length());
             }
             if (result.isFailure()) {
                 if (!allInsts.isEmpty()) break;   // partial parse, return what we have
@@ -1032,15 +1062,23 @@ public class mParser {
     }
 
     public static Parser m_fail() {
+        // fail::[outermost][middle]...[root cause]@vid — the brackets are
+        // the failure stack, left to right: the leftmost bracket is the
+        // fail's own message, each following bracket is one level of cause
+        // (reading right gets you to the source of the fail). This mirrors
+        // writeFail's rendering, so parse(write(fail)) preserves the stack.
         return seq(choice(of("fail"), of(Tokens.FAIL_TID.toString())), of("::"), seq(of('[').trim(), m_obj(), of(']').trim()).map(t -> pick(t, 1)).plus(), m_vid_postfix())
                 .map(t -> {
                     final Object test = pick(t, 2);
-                    final List<Obj> objs = test instanceof List ? ((List) test) : (List) List.of(test);
-                    Fail root = null;
-                    for (final Obj obj : objs) {
-                        root = null == root ? fail(MTronException.of(obj.toString())) : fail(MTronException.of(obj.toString()), root);
-                    }
-                    return root.vid(pick(t, 3));
+                    final List<Obj> objs = test instanceof List ? ((List) test) : List.of((Obj) test);
+                    final int n = objs.size();
+                    // build inside-out: the last bracket is the root cause;
+                    // each preceding bracket becomes the outer fail of the
+                    // one built so far
+                    MTronException chain = MTronException.of(objs.get(n - 1).toString());
+                    for (int i = n - 2; i >= 0; i--)
+                        chain = MTronException.of(chain, objs.get(i).toString());
+                    return fail(chain).vid(pick(t, 3));
                 });
     }
 

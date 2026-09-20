@@ -433,6 +433,63 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             }
         }
 
+        /**
+         * The failed child expression inside obj, if any: when an argument
+         * is itself a fail, the deepest such (one that carries its own
+         * cause chain wins over a bare one). This is what belongs in the
+         * parent's cause chain — never stringified into the parent's
+         * message.
+         */
+        public static Fail failChild(final Obj obj) {
+            final Fail[] found = {null, null};
+            obj.stream().forEach(o -> {
+                if (o.isFail()) {
+                    final Fail f = o.asFail();
+                    if (null == found[0])
+                        found[0] = f;
+                    if (f.cause().isPresent())
+                        found[1] = f;
+                }
+            });
+            return null != found[1] ? found[1] : found[0];
+        }
+
+        /**
+         * Compact one-line description of an args/rng mismatch: which slot
+         * failed, the expected type, and — only when the failing value is a
+         * plain value — a short rendering of it. A fail value is described
+         * as "fail": its own text lives in the cause chain (the next
+         * bracket), not duplicated here.
+         */
+        public static String mismatchText(final Obj expected, final Obj actual) {
+            final List<String> notes = new ArrayList<>();
+            if (expected.isRec() && actual.isRec()) {
+                final Rec exp = expected.asRec();
+                actual.asRec().elements().forEach(kv -> {
+                    final Obj slotExpect = exp.at(kv.first());
+                    if (null == slotExpect || !slotExpect.test(kv.second()))
+                        notes.add(slotName(kv.first()) + " expected " + (null == slotExpect ? "?" : slotExpect.tid()) + " (got " + compactValue(kv.second()) + ")");
+                });
+            } else if (expected.isRec() || actual.isRec())
+                notes.add("expected " + (expected.isRec() ? expected.tid() : actual.tid()) + " (got " + compactValue(actual) + ")");
+            else
+                notes.add("expected " + expected.tid() + " (got " + compactValue(actual) + ")");
+            return notes.isEmpty() ? "type mismatch" : String.join("; ", notes);
+        }
+
+        private static String slotName(final Obj key) {
+            return key.c().isZeroable() ? "arg" : key.toCleanString();
+        }
+
+        private static String compactValue(final Obj value) {
+            if (value.isFail())
+                return "fail";
+            final String text = value.toCleanString();
+            final int nl = text.indexOf('\n');
+            final String single = nl < 0 ? text : text.substring(0, nl);
+            return single.length() > 40 ? single.substring(0, 40) + "…" : single;
+        }
+
         public static Lst diffLstRecursion(final Lst lhs, final Lst rhs) {
             final List<Obj> result = new ArrayList<>();
             final int max = Math.max(lhs.lstValue().size(), rhs.lstValue().size());

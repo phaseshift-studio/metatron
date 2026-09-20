@@ -257,12 +257,12 @@ public class mInstSet extends AbstractInstSet {
     public static final Type TRACER_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(TRACER_TYPE_TID)
-            .isaPredicate(rec(
-                    uri(Tracer.mtron_stack.name()), BOOL_TYPE,
-                    uri(Tracer.java_stack.name()), BOOL_TYPE))
-            .constructor(stages -> rec(
-                    uri(Tracer.mtron_stack.name()), stages.asRec().at(uri(Tracer.mtron_stack.name())).orElse(BOOL_TRUE),
-                    uri(Tracer.java_stack.name()), stages.asRec().at(uri(Tracer.java_stack.name())).orElse(BOOL_FALSE)))
+            .isaPredicate(rec(uri("stack"), rec(
+                    uri(Tracer.mtron_stack.name()).maybe().asUri(), BOOL_TYPE,
+                    uri(Tracer.java_stack.name()).maybe(), BOOL_TYPE)))
+            .constructor(stacks -> rec(uri("stack"), rec(
+                    uri(Tracer.mtron_stack.name()), stacks.asRec().at(uri(Tracer.mtron_stack.name())).orElse(BOOL_TRUE),
+                    uri(Tracer.java_stack.name()), stacks.asRec().at(uri(Tracer.java_stack.name())).orElse(BOOL_FALSE))))
             .create();
     
    /* public static final Type MONO_TYPE = Type.Builder.build()

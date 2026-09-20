@@ -30,6 +30,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrapDocs;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_CLIENT_TYPE;
@@ -99,6 +100,10 @@ public class ToolFeature extends AbstractFeature implements ToolService {
      */
     public Lst tools() {
         return this.toolProvider.getTools().stream().collect(new CommonUtil.LstCollector());
+    }
+
+    public int maxToolCalls() {
+        return this.at(MAX).orElse(jnt(-1)).intValue().intValue();
     }
 
     @Override

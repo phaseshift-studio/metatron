@@ -46,6 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public interface Inst extends Call {
@@ -392,19 +393,21 @@ public interface Inst extends Call {
                         return rhs;
                     Graphitty.log(cinst).trace("%s (lhs) => %s (inst) => %s (rhs) evaluated successfully", clhs, cinst, rhs);
                 } catch (final Exception e) {
-                    if (!cinst.args().test(this.args()))
-                        throw MTronException.of("args do not match inst args:\n\t%s", Poly.Helper.diffObjRecursion(cinst.args(), this.args()));
-                    else
-                        throw MTronException.of("inst apply failure: %s", e);
-                    /*throw MTronException.of(e, "apply failure:" +
-                                    "\n\t[lhs]    │ %s" +
-                                    "\n\t \\_type  │ %s" +
-                                    "\n\t  \\_pred │ %s" +
-                                    "\n\t[inst]   │ %s" +
-                                    "\n\t \\_dom   │ %s" +
-                                    "\n\t \\_args  │ %s",
-                            clhs, clhs.tid(), clhs.type().predicateStack(), cinst, cinst.dom(), cinst.args());*/
-                    // e.printStackTrace();
+                    if (!cinst.args().test(this.args())) {
+                        // the message is this mismatch only — the failed child
+                        // expression (a fail value among the args) is threaded
+                        // as the cause, never stringified into the message
+                        final Fail child = Poly.Helper.failChild(this.args());
+                        final String text = "args do not match inst args: " + Poly.Helper.mismatchText(cinst.args(), this.args());
+                        throw null == child ? MTronException.of(text) : MTronException.of(child.jvm(), text);
+                    } else
+                        // of(Throwable, format, args) both links e as the java
+                        // cause (so the tracer dedups the failure chain once
+                        // and the inner is machine-traversable) and keeps e's
+                        // raw text in the message — the origin is the failing
+                        // instruction's address (not a java factory line);
+                        // query stripped: it can carry secrets (?env=[...])
+                        throw MTronException.of(e, "inst apply failure: %s (at %s)", e, Helper.instContext(cinst));
                 } finally {
                     Router.stack().pop();
                     //  Router.stack().pop();
@@ -413,9 +416,13 @@ public interface Inst extends Call {
                 rhs = fail(e);
             }
             if (TypeCheck.inst_rng.enabled() && !isMonadicInst && !rhs.isType() && !rhs.isFail() && !clhs.isCaughtFail()
-                    && !instDomRngMatch(rhs, cinst.rng()))
-                //rhs = fail(MTronException.of("inst resolution failure: %s", cinst, fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())))));
-                rhs = fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())));
+                    && !instDomRngMatch(rhs, cinst.rng())) {
+                // same contract as args mismatch: own message + the failed
+                // value as cause, never a dump of it
+                final Fail child = Poly.Helper.failChild(rhs);
+                final String text = "rhs does not match inst range: " + Poly.Helper.mismatchText(cinst.rng(), rhs);
+                rhs = null == child ? fail(MTronException.of(text)) : fail(MTronException.of(child.jvm(), text));
+            }
         } else {
             rhs = clhs; // propagate fail through inst unless it's a catch inst
         }
@@ -495,6 +502,23 @@ public interface Inst extends Call {
     final class Helper {
         private Helper() {
             // do nothing
+        }
+
+        /**
+         * The inst's address for origin context in fail messages: the vid if
+         * it is a clean full address (no query), otherwise the tid base with
+         * the vid's index appended ("plus@1" — the inst plus its slot in the
+         * resolution). The inst query can carry sensitive state
+         * (?env=[...=>...]) so it is never rendered into a failure text.
+         */
+        public static String instContext(final Inst cinst) {
+            final String vid = Optional.ofNullable(cinst.vid()).map(Object::toString).orElse("");
+            if (vid.startsWith("/") && !vid.contains("?"))
+                return vid;
+            final String tid = Optional.ofNullable(cinst.tid()).map(Object::toString).orElse("");
+            final int q = tid.indexOf('?');
+            final String base = q < 0 ? tid : tid.substring(0, q);
+            return vid.isEmpty() ? base : base + "@" + vid;
         }
 
         public static Optional<fURI> isFromOrAtInstToUri(final Inst inst) {
@@ -978,6 +1002,39 @@ public interface Inst extends Call {
         private static String typeName(final fURI f) {
             final cInt c = f.c();
             return f.name() + (null == c || c.isOne() ? "" : "{" + c + "}");
+        }
+
+        /**
+         * The projection surface of an inst as a rec — what a bare {@code inst>>} yields. This is
+         * the shape an as-graph edge record mirrors, so {@code edge>>rng} and {@code edge>>inst>>rng}
+         * agree.
+         */
+        public static Obj descriptor(final Obj inst) {
+            return rec(uri(DOM), inst.dom(),
+                    uri(RNG), inst.rng(),
+                    uri(ARGS), inst.asInst().args(),
+                    uri(TID), uri(inst.tid()),
+                    uri(VID), null == inst.vid() ? noobj() : uri(inst.vid()));
+        }
+
+        /**
+         * One field of {@link #descriptor(Obj)}, selected by an rshift key ({@code inst>>rng}). A
+         * noobj key yields the whole descriptor and an unknown key yields noobj — {@code >>} is a
+         * projection, not an assertion, so a bad key must not throw.
+         */
+        public static Obj project(final Obj inst, final Obj key) {
+            if (null == key || key.isNoObj())
+                return descriptor(inst);
+            if (!key.isUri())
+                return noobj();
+            return switch (key.uriValue().name()) {
+                case DOM -> inst.dom();
+                case RNG -> inst.rng();
+                case ARGS -> inst.asInst().args();
+                case TID -> uri(inst.tid());
+                case VID -> null == inst.vid() ? noobj() : uri(inst.vid());
+                default -> noobj();
+            };
         }
 
     }

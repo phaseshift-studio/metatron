@@ -699,7 +699,9 @@ click.  Three things make that affordable (measured on a 300-line accordion: a p
   body can colorize it — that pass is `FloatingSurface`'s `Graphitty.string(sb)`.
 - **Measuring text is O(1) for plain text.** `Graphitty.strip`/`viewLength` return the input
   unchanged when it has no `{{…}}` code, no ANSI escape and nothing outside ASCII — 2.4 µs → 34 ns
-  per call, and every widget measures every one of its lines.
+  per call, and every widget measures every one of its lines.  That same all-ASCII case is why a
+  plain line still measures exactly as it always did: there a column IS a char, so `viewLength`
+  answers with the char count without walking code points.
 - **Widget passes outrank console output.** The render thread drains `urgentQueue` (widget
   passes: `render()`, `renderNow()`) ahead of `renderQueue` (console output, slot erases), so an
   agent streaming a widget body cannot make a scroll wait behind thousands of output writes.  The
@@ -1237,7 +1239,9 @@ the block, and only the exactly-spelled `{{/syntax:lang}}` closes it.
 | `Graphitty.strip(str)`                  | Remove all ANSI escapes (and Graphitty tags) to measure **visual length**.  Used by `Highlighter.visualLength()` and `WidgetCanvas` for width clipping. |
 | `Graphitty.out(stream, f, args...)`     | Write a Graphitty string directly to an output stream.  Used by `WidgetCanvas.finish()` for the final flush.                                            |
 | `Graphitty.writeToTerminal(f, args...)` | Write through the serialized terminal-writer bridge (FloatingSurface-safe).                                                                             |
-| `Graphitty.viewLength(str)`             | Alias for `strip(str).length()`.                                                                                                                        |
+| `Graphitty.viewLength(str)`             | The **display columns** `str` occupies: stripped, then summed a code point at a time through jline's `WCWidth` — a CJK glyph is 2, a variation selector or combining mark 0, an emoji 1 glyph across 2 chars, a line break 0.  All-printable-ASCII lines short-circuit to the char count.  This is the measure `Highlighter.visualLength()` and every widget width rides on. |
+| `Graphitty.viewIndex(str, columns)`     | The char index at which `str` has spent `columns` of its `viewLength` — for slicing a line at a column boundary (`substring` counts chars).  Never lands inside a surrogate pair; a zero-width mark stays with its base. |
+| `Graphitty.viewPrefix(str, columns)`    | `viewIndex` as a slice, never shorter than the first code point — a clip makes progress even when one glyph is wider than the budget. |
 
 `Graphitty` owns the tags; what a `{{syntax:lang}}` block is colored *with* is `Highlighter`'s — see **Syntax blocks**
 above for `syntaxName`, `highlightBlock`, `block` and the line-oriented `highlightLine`.

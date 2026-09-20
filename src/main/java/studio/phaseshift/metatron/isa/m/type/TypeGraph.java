@@ -180,8 +180,7 @@ public final class TypeGraph {
         for (final var e : this.resolved.entrySet()) {
             final Key k = e.getKey();
             final Entry en = e.getValue();
-            if (!en.type.isEphemeral())
-                continue;
+
             final fURI name = null != k.vid() ? k.vid() : k.tid();
             if (null == name)
                 continue;
