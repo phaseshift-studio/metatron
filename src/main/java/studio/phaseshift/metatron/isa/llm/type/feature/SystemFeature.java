@@ -6,7 +6,6 @@ import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
-import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
@@ -152,7 +151,7 @@ public class SystemFeature extends AbstractFeature implements SystemService {
      * hooks have run.
      */
     public String systemMessage() {
-        final String base = this.at(uri(BASE)).orElse(str(DEFAULT_SYSTEM_MESSAGE.formatted(mathInstSet.humanReadableDatetime(mathInstSet.nowDatetime())))).strValue().trim();
+        final String base = this.at(uri(BASE)).orElse(str("")).strValue().trim();
         final String dynamic = String.join("\n", this.systemMessages);
         if (base.isBlank())
             return dynamic;

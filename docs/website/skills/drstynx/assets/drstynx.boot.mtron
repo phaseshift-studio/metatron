@@ -276,6 +276,8 @@ model::[provider     => ollama,
         host         => <http://ginger.local:11434>,
         llm          => <mtron-qwen3.8-27b:latest>]@/usr/dr/model;==]
 /usr/dr/agent -> |!*dr;
+/m/inst/web?str<=noobj{0}(url=>union(uri::T,str::T),native=>bool{?}::T){ *<url>.as(uri::T).*_.-<|[*mtron.else(false) => as(rec::T).as(str::T), _ => _]>> };
+/m/inst/web?docq -> docs::[desc=>'resolve a web url',dom=>"none",rng=>"the url referent as a str::T",args=>[url=>"the webpage url",native=>"as an mtron rec"]];
 [-- tag::asciidoc_tag[] --]
 agent::[
  name     => 'dr.stynx',
@@ -309,7 +311,7 @@ agent::[
                        threshold     => 0.8],
   loop_feature::::::::[max_loop      => 100],
   todo_feature::::::::[              => ],
-  skill_feature:::::::[skill         => [ <mfs:.metatron/skills/metatron>, 
+  skill_feature:::::::[skill         => [<mfs:.metatron/skills/metatron>, 
                                          <mfs:.metatron/skills/mtron>,
                                          <mfs:.metatron/skills/ide>]],
   lucene_concept_feature::::[=>],
@@ -322,16 +324,12 @@ agent::[
                                                               top   =>5,
                                                               foreground =>"{{y}}"]]@<audit_widget> },
                       to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }],
- [== lambda_feature:::::[stage         => [on_before_chat       =>  [ inst(a=>agent::T){ *0.tid().print('starting:',_,'...\n') }],
-                                         [==on_complete_response =>  [ inst(_,_){ @<audit_widget>>>=[body=>""].display() } ],
-                                         on_tool_executed     =>  [ inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }]]],==]
   summarize_feature::[              => ],
   embed_feature::::::[root          => embed:chat_result,
                       model         => model::[provider     => ollama,
                                                protocol     => ollama,
                                                host         => <http://ginger.local:11434>,
                                                llm          => <qwen3-embedding:4b>]],
-  system_feature:::::[              => ],
   tool_feature:::::::[tool          => [!*gremlin,
                                         !*sql,
                                         !(map(json::"""
@@ -350,13 +348,13 @@ agent::[
                                         !*find_file,
                                         !*read_file,
                                         !*edit_file,
+                                        /m/inst/web?str<=noobj{0}(url=>union(uri::T,str::T),native=>bool{?}::T){ *<url>.as(uri::T).*_.-<|[*mtron.else(false) => as(rec::T).as(str::T), _ => _]>> },
                                         !*bash?reject=['\brm\b','\bgit\b'],
                                         mcp_client::[host=><http://localhost:8777/mcp>],
                                         forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
-  cost_feature:::::::[to            => inst(in_cost=>real::T,out_cost=>real::T,total_cost=>real::T){ 
-                                         /usr/marko/console/status("cost total: ${*2} [in: ${*0} out: ${*1}]") },
-                      rate          => [in  => usd_currency::0.435,
-                                        out => usd_currency::0.870]]]]@<dr>; 
+  cost_feature:::::::[rate          => [in  => usd_currency::0.435,
+                                        out => usd_currency::0.870]],
+  system_feature:::::[              => ]]]@<dr>; 
 [-- end::asciidoc_tag[] --]
 [== user console ==] 
 console::[header=>!*boot/args/header]@/usr/marko/console;

@@ -1106,8 +1106,8 @@ silently no-ops. The compiler can't catch this because `Style extends MRec exten
 ## 9. Graphitty — terminal markup DSL (`Graphitty.java`)
 
 Graphitty is a lightweight macro-to-ANSI preprocessor used throughout the UI layer. Tags are written `{{...}}` and are
-stripped by `Graphitty.strip()` for visual-length calculations. The DSL supports four families of tags: colour and effect,
-cursor and screen, chaining with `&`, and `{{syntax:lang}}` blocks of foreign source.
+stripped by `Graphitty.strip()` for visual-length calculations. The DSL supports five families of tags: colour and effect,
+cursor and screen, chaining with `&`, `{{syntax:lang}}` blocks of foreign source, and `{{link}}` … `{{/link}}` uris.
 
 ### Colour / effect tags
 
@@ -1205,6 +1205,28 @@ and a syntax file that colours trailing whitespace would otherwise paint it.
 
 `bin/test/console-syntax-block.steps` drives this in a real console — an accordion whose body is a block — and is the
 regression for the day a line-oriented pass split a block apart.
+
+### Links (`{{link}}` … `{{/link}}`)
+
+The text between the tags is a candidate uri. When `fURI.Singleton.f` accepts it, the text renders as an **OSC 8
+hyperlink** and an underline — `\033]8;;<uri>\a\033[4m<uri>\033]8;;\a` plus the enclosing-rule restore — so a terminal
+that honors hyperlinks (kitty, wezterm, iTerm2, VS Code) turns it into a clickable link. Text the furi parser rejects is
+emitted plain: a dead link is worse than none.
+
+```java
+// render an object's uri as an active link — click in the terminal, the uri opens:
+"{{link}}" + uri + "{{/link}}"
+```
+
+Rules of the road:
+
+- **The wrapped text is both the label and the target** — the tag names no uri, it wraps one.
+- **Measurement sees the text, not the escapes**: `Graphitty.strip()`, `viewLength()` and `Highlighter.visualLength()`
+  measure exactly the uri as drawn.
+- **A link left open** commits at the outermost parse, the way an open block flushes rather than throws.
+- **A rule mid-link** commits the link (its text is a link unto itself) and applies to whatever follows.
+- **A link inside a colour** leaves the colour running after it — the same restore every `{{/rule}}` performs.
+- Clicks on a committed link are terminal-side for now; routing the click back to a registered handler is the follow-up.
 
 ### Stack and chaining
 

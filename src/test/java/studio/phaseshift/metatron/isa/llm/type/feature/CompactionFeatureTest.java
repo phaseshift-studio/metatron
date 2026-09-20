@@ -122,7 +122,7 @@ public class CompactionFeatureTest extends AbstractMetatronTest {
         assertEquals(sessionVID, sentinel.at(uri(SESSION)).uriValue(), "sentinel must carry its session");
         assertEquals(summary, Str.Helper.cleanString(sentinel.at(uri(TEXT))), "sentinel text is the resume summary");
 
-        final TokenMessageFeature.DefaultTokenCountEstimator estimator = TokenMessageFeature.DefaultTokenCountEstimator.singleton();
+        final AbstractMessageFeature.DefaultTokenCountEstimator estimator = AbstractMessageFeature.DefaultTokenCountEstimator.singleton();
         final int expectedIn = estimator.estimateTokenCountInText(digest);
         final int expectedOut = estimator.estimateTokenCountInText(summary);
         assertEquals(expectedIn, sentinel.at(uri(IN)).intValue().intValue(), "in is the digest token estimate");

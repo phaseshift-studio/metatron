@@ -34,10 +34,13 @@ color green "=>"
 ### bytes
 icolor yellow "0x([0-9]|[A-F]|[a-f])+"
 color yellow,underline "0x"
+### uri <>
+color blue "[<][^>]*[>]"
+color green "<" ">"
 # qProc keys
-icolor cyan "(|#|\+|[a-z]|-|_|\{.\})+(=|<=)(?!>)"
+icolor cyan "&?(|#|\+|[a-z]|-|_|\{.\})+(&|=|<=)(?!>)"
 icolor blue "=([a-z]|[0-9]|\.|_|-|/|#|\+)+"
-icolor cyan "(<=)([a-z]|[0-9]|\.|_|-|/|#|\+)+"
+icolor cyan "(<=|&)([a-z]|[0-9]|_|-|/|#|\+)+"
 icolor blue "([a-z]|[0-9]|/|#|\+)+::"
 color green "=" "::"
 # c coefficients
@@ -58,9 +61,6 @@ color green "\{\}"
 color blue "[^-][<][^=]([^>])*[>][^-]^(=>)]"
 icolor blue "[,a-z0-9_/-]+::"
 color green "::"
-### uri <>
-color blue "[<][^>]*[>]"
-color green "<" ">"
 ### bool
 color yellow "(^|[^/])(true|false)([^/]|$)"
 ### uri key — overrides generic <> cyan before =>
@@ -73,6 +73,7 @@ color red "(=>)?X=>"
 color yellow "(=>)?/=>"
 ### sugars and structures
 color magenta "=>" ">-" "-<" "==" "_/" "\\_" "=?=" ">>="
+color yellow "<=" "&"
 color green "\(" "\)" "\[" "\]" ","
 ### noobj 
 color magenta "noobj"

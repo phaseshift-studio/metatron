@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -27,14 +26,15 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.Tracer;
-import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.AsQ;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
@@ -46,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.FAIL_TID;
 import static studio.phaseshift.metatron.Tokens.INT_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -65,6 +66,7 @@ public class TypeTest extends AbstractMetatronTest {
     public static void enableMtronStackTrace() {
         Tracer.mtron_stack.enable();
         Tracer.java_stack.disable();
+        InstSet.importInstSet(MATH_ISA_TID);
     }
 
 
@@ -315,7 +317,7 @@ public class TypeTest extends AbstractMetatronTest {
     }
 
     @ParameterizedTest
-    @TestData(value = {"nat -> int::T[is(gt(0))]", "bignat -> nat::T[is(gt(100))]",})
+    @TestData(value = {"nat -> int::T[is(gt(0))]", "bignat -> int::T[is(gt(100))]",})
     @CsvSource(value = {
             // obj               | type                                       | matches?
             "A::T                |   A::T                                       | true",
@@ -693,8 +695,8 @@ public class TypeTest extends AbstractMetatronTest {
             "b -> int::T[?>1]",
             "c -> int::T[?=2]",
             "d -> int::T[?>2]",
-            "e -> int::T[?>5]",
-            "f -> e::T[?>3]",
+            "ee -> int::T[?>5]",
+            "f -> ee::T[?>3]",
             "g -> f::T[?>4]",
             "h -> g::T[?>6]"})
     @CsvSource(value = {
@@ -702,19 +704,19 @@ public class TypeTest extends AbstractMetatronTest {
             "3                  | b::T                  | true | [b,int] ",
             "4                  | c::T                  | false | [c,int] ",
             "5                  | d::T                  | true | [d,int] ",
-            "5                  | e::T                  | false | [e,int] ",
-            //   "5                  | f::T                  | false | [f,e,int] ",
-            //   "5                  | g::T                  | false | [g,f,e,int] ",
-            "10                 | g::T                  | true | [g,f,e,int] ",
-            "6                  | g::T                  | true | [g,f,e,int] ",
-            "4                  | g::T                  | false | [g,f,e,int] ",
-            "1                  | h::T                  | false | [h,g,f,e,int] ",
-            "2                  | h::T                  | false | [h,g,f,e,int] ",
-            "3                  | h::T                  | false | [h,g,f,e,int] ",
-            "4                  | h::T                  | false | [h,g,f,e,int] ",
-            "5                  | h::T                  | false | [h,g,f,e,int] ",
-            "6                  | h::T                  | false | [h,g,f,e,int] ",
-            "7                  | h::T                  | true | [h,g,f,e,int] "
+            "5                  | ee::T                  | false | [ee,int] ",
+            //   "5                  | f::T                  | false | [f,ee,int] ",
+            //   "5                  | g::T                  | false | [g,f,ee,int] ",
+            "10                 | g::T                  | true | [g,f,ee,int] ",
+            "6                  | g::T                  | true | [g,f,ee,int] ",
+            "4                  | g::T                  | false | [g,f,ee,int] ",
+            "1                  | h::T                  | false | [h,g,f,ee,int] ",
+            "2                  | h::T                  | false | [h,g,f,ee,int] ",
+            "3                  | h::T                  | false | [h,g,f,ee,int] ",
+            "4                  | h::T                  | false | [h,g,f,ee,int] ",
+            "5                  | h::T                  | false | [h,g,f,ee,int] ",
+            "6                  | h::T                  | false | [h,g,f,ee,int] ",
+            "7                  | h::T                  | true | [h,g,f,ee,int] "
     }, delimiter = '|')
     public void testTypeRecursion(final String instance, final String type, final boolean matches, final String stack) {
         //LOG.debug("testing %s %s", mParser.eval("*h"), mParser.eval("*h").asType().parentType());
@@ -1229,11 +1231,11 @@ public class TypeTest extends AbstractMetatronTest {
             "/m/type_test/french               % /m/type_test/nordic            % AMBIGUOUS"},
             delimiter = '%')
     public void testTypeTestSiblingLabels(final String siblingA, final String siblingB, final String label) {
-        final List<String> labels = Inst.Helper.checkAsGraph().stream()
-                .filter(v -> null != v.type() && v.insts().size() > 1)
+        final List<String> labels = AsQ.check().stream()
+                .filter(v -> null != v.kind() && v.insts().size() > 1)
                 .filter(v -> v.insts().stream().anyMatch(i -> i.tid().dom().basePath().equals(f(siblingA)))
                         && v.insts().stream().anyMatch(i -> i.tid().dom().basePath().equals(f(siblingB))))
-                .map(v -> v.type().name())
+                .map(v -> v.kind().name())
                 .distinct()
                 .toList();
         LOG.warn("sibling pair %s / %s => %s", siblingA, siblingB, labels);
@@ -1633,7 +1635,7 @@ public class TypeTest extends AbstractMetatronTest {
      *   lst[int{4}]            ONE slot, whose value is itself an int{4}   (slot 0 holds four ints)
      *   lst[{4}int]            the list is COMPOSED OF four ints           (four int slots)
      * </pre>
-     *
+     * <p>
      * The distinction is what lets one construct serve both as a generic (List&lt;Integer&gt;) and as a
      * tuple, because position is significant and each slot carries its own type: lst[age,zipcode] is a
      * two-slot signature, not a bag of two either-or values.
@@ -1770,7 +1772,7 @@ public class TypeTest extends AbstractMetatronTest {
      * <pre>
      *   lst::T[>-.count()?=2]@lst2      -- merge().count().is(eq(2)) -- exactly two elements
      * </pre>
-     *
+     * <p>
      * Two spellings read the count and one does not, and the difference is a single character:
      *
      * <pre>
@@ -1778,7 +1780,7 @@ public class TypeTest extends AbstractMetatronTest {
      *   &gt;&gt;.count()?=2    rshift().count().is(eq(2))       discriminates
      *   &gt;&gt;count()?=2     rshift(count()).is(eq(2))        VACUOUS — accepts both
      * </pre>
-     *
+     * <p>
      * The two working forms accept [1,2] and reject [1,2,3]; the third accepts both. The dot is a real parse
      * difference, not a cosmetic one. mInstSet.sugars() registers two prefix rules for &gt;&gt; — one taking
      * an argument (line 910) and one taking none (line 911) — and without the dot the one-argument rule
@@ -1875,7 +1877,7 @@ public class TypeTest extends AbstractMetatronTest {
      *   lst4b::[1,2,3,4]                     ... and construction fails EARLIER, at parse time, with a
      *                                        left-recursion error rather than reaching the cast
      * </pre>
-     *
+     * <p>
      * So giving the type a polynomial moves the failure rather than fixing it: the operand is still not
      * known to the predicate, and the shape only changes which stage notices.
      */

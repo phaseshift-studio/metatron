@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.furi.q.AsQ;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 
@@ -44,16 +45,16 @@ public class AsGraphTest extends AbstractObjTest {
 
     @Test
     public void testAsValidation() {
-        final Set<Inst.Helper.Violation> violations = Inst.Helper.checkAsGraph();
-        final Map<Inst.Helper.Violation.Type, Integer> types = new HashMap<>();
-        for (final Inst.Helper.Violation v : violations) {
-            types.compute(v.type(), (a, b) -> null == b ? 1 : b + 1);
-            if (!v.type().equals(Inst.Helper.Violation.Type.INCOMPARABLE))
+        final Set<AsQ.AsEdge> violations = AsQ.check();
+        final Map<AsQ.AsEdge.Kind, Integer> types = new HashMap<>();
+        for (final AsQ.AsEdge v : violations) {
+            types.compute(v.kind(), (a, b) -> null == b ? 1 : b + 1);
+            if (!v.kind().equals(AsQ.AsEdge.Kind.INCOMPARABLE))
                 LOG.warn(v);
         }
         LOG.warn("TYPES OF VIOLATIONS: %s", types);
 
-        final List<Inst> implicit = Inst.Helper.implicitAsGraph();
+        final List<Inst> implicit = AsQ.implicit();
         for (final Inst inst : implicit) {
             LOG.warn("implicit: %s", inst);
         }

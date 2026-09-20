@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.llm;
 import dev.langchain4j.model.anthropic.AnthropicModelCatalog;
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
@@ -39,7 +40,9 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.parser.JsonSchemaGenerator;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.feature.AbstractMessageFeature;
 import studio.phaseshift.metatron.isa.llm.type.feature.CostFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.ThinkService;
 import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
@@ -52,6 +55,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -62,9 +66,9 @@ import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.noobjRec;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.rec;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.rec0;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -234,6 +238,23 @@ public final class LLMFactory {
                 null;
     }
 
+    /**
+     * The listeners every chat model of this agent carries, assembled once so each provider
+     * branch attaches the same set: cost accounting when a cost feature is attached, and the
+     * per-chat token-usage calculator when a message feature is attached — the usage it
+     * accumulates is what lands on the chat_result in {@code onCompleteResponse}.
+     */
+    private static List<ChatModelListener> listenersFor(final Agent agent) {
+        final List<ChatModelListener> listeners = new ArrayList<>();
+        if (agent.hasFeature(LLM_COST_FEATURE_TID)) {
+            final CostCalculator calculator = agent.feature(LLM_COST_FEATURE_TID).<CostFeature>as().getCalculator();
+            if (null != calculator)
+                listeners.add(calculator);
+        }
+        AbstractMessageFeature.calculatorFor(agent).ifPresent(listeners::add);
+        return listeners;
+    }
+
     public static StreamingChatModel createChatInteraction(final Agent agent, final Obj modelObj, final Obj responseObj, final Obj fmt) {
         final Rec model = modelObj.isNoObj() ? noobjRec() : modelObj.asRec();
         if (model.at(LLM).toCleanString().equals("human:latest"))
@@ -241,7 +262,7 @@ public final class LLMFactory {
         final Rec responseFormat = fmt.isNoObj() ? rec0().c(cInt::zero).as() : fmt.asRec();
         final fURI provider = model.at(f(PROTOCOL)).uriValue();
         final String host = model.at(HOST).uriValue().toString();
-        final boolean thinking = agent.hasFeature(LLM_THINK_FEATURE_TID);
+        final boolean thinking = agent.service(ThinkService.class).isPresent();
         final Str api_key = model.at(API_KEY).orElse(str0());//model.at(f(PROVIDER)).asRec().at(API_KEY).orElse(str0());
         // final Str organization = model.at(f(PROVIDER)).asRec().at(ORG).orElse(str0());
         final String name = Str.Helper.cleanString(model.at(LLM));
@@ -270,11 +291,9 @@ public final class LLMFactory {
                                 .logger(Graphitty.log(OllamaStreamingChatModel.class).logger(Level.WARN));
                 if (hasResponseFormat)
                     builder = builder.responseFormat(createResponseFormat(responseFormat2));
-                if (agent.hasFeature(LLM_COST_FEATURE_TID)) {
-                    final CostCalculator calculator = agent.feature(LLM_COST_FEATURE_TID).<CostFeature>as().getCalculator();
-                    if (calculator != null)
-                        builder.listeners(List.of(calculator));
-                }
+                final List<ChatModelListener> listeners = listenersFor(agent);
+                if (!listeners.isEmpty())
+                    builder.listeners(listeners);
                 yield builder.build();
             }
             case OPENAI -> {
@@ -302,11 +321,9 @@ public final class LLMFactory {
                         .logger(Graphitty.log(OpenAiStreamingChatModel.class).logger(Level.WARN))
                         .timeout(Duration.ofSeconds(60))
                         .responseFormat(openAiFormat);
-                if (agent.hasFeature(LLM_COST_FEATURE_TID)) {
-                    final CostCalculator calculator = agent.feature(LLM_COST_FEATURE_TID).<CostFeature>as().getCalculator();
-                    if (calculator != null)
-                        builder.listeners(List.of(calculator));
-                }
+                final List<ChatModelListener> listeners = listenersFor(agent);
+                if (!listeners.isEmpty())
+                    builder.listeners(listeners);
                 yield builder.build();
             }
             case ANTHROPIC -> {
@@ -320,11 +337,9 @@ public final class LLMFactory {
                                 // .listeners(model.cost().isPresent() ? List.of(new CostCalculator(model.cost().get())) : null)
                                 .logger(Graphitty.log(AnthropicStreamingChatModel.class).logger(Level.WARN))
                                 .responseFormat(createResponseFormat(responseFormat));
-                if (agent.hasFeature(LLM_COST_FEATURE_TID)) {
-                    final CostCalculator calculator = agent.feature(LLM_COST_FEATURE_TID).<CostFeature>as().getCalculator();
-                    if (calculator != null)
-                        builder.listeners(List.of(calculator));
-                }
+                final List<ChatModelListener> listeners = listenersFor(agent);
+                if (!listeners.isEmpty())
+                    builder.listeners(listeners);
                 yield builder.build();
             }
 

@@ -66,6 +66,7 @@ import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -94,8 +95,7 @@ public class Agent extends MRec {
      * returned by {@link #chatDepth()}.
      */
     private int currentDepth = 0;
-
-    int currentChatId = 0;
+    private int currentChatId = 0;
 
     /**
      * The chat_result::T being assembled for the current chat — features mutate it in onCompleteResponse.
@@ -113,8 +113,15 @@ public class Agent extends MRec {
      */
     private static final ConcurrentHashMap<String, AtomicInteger> depthMap = new ConcurrentHashMap<>();
 
-    public fURI getDataPath(final fURI root) {
-        return root.extend(sessionVID().name()).extend(chatId()).extend(currentDepth);
+    public record ChatPath(fURI root, fURI session, int chat, int depth) {
+        public Rec toRec() {
+            return rec(SESSION, uri(session), CHAT_ID, jnt(chat), DEPTH, jnt(depth));
+        }
+    }
+
+    public ChatPath getChatPath() {
+        // agent=db, session=collection, chat=entry, depth=property
+        return new ChatPath(this.at(ROOT).uriValue(), sessionVID(), chatId(), currentDepth);
     }
 
     public Agent(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {

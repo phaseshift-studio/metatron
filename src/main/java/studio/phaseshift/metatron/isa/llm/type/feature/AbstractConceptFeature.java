@@ -87,13 +87,13 @@ public abstract class AbstractConceptFeature extends AbstractFeature implements 
     private static final String CONCEPT_FEATURE_SYSTEM_TEMPLATE =
             """
             ---[concept_feature]---
-            The following concepts have recently been extracted.
+            the following concepts have recently been extracted.
             %s
-            To review messages associated with concepts, use tool:
+            to review messages associated with concepts, use tool:
               %s(c1,c2,...)
-            To see related adjacent concepts, use tool:
+            to see related adjacent concepts, use tool:
               %s(c1,c2,...)
-            Both tools can take 1 or more concept arguments.
+            both tools can take 1 or more concept arguments.
             """;
 
 
@@ -163,7 +163,7 @@ public abstract class AbstractConceptFeature extends AbstractFeature implements 
             return;
         final String content = this.systemMessage();
         if (content == null) return;
-        agent.requireService(SkillService.class).addSkill(mSkill.of(rec(mutableMap(uri(NAME), uri(LLM_CONCEPT_SERVICE_TID.name()),
+        agent.requireService(SkillService.class).addSkill(mSkill.of(rec(mutableMap(uri(NAME), uri(this.tid.name()),
                 uri(DESC), str("in situ concept graph construction w/ spreading activation recommendation"),
                 uri(CONTENT), str(content + "\nconcept::T is defined as\n%s\n".formatted(CommonUtil.indent(LLM_CONCEPT_TYPE.toString(), 2))),
                 uri(TOOL), lst(

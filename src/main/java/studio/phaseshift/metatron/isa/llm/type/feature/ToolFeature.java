@@ -27,7 +27,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrapDocs;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_SERVICE_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.TOOL_RESULT_MESSAGE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -118,14 +119,16 @@ public class ToolFeature extends AbstractFeature implements ToolService {
         // ── 1. register this feature's own tool extensions (its config surface) ──
         if (this.has(TOOL)) {
             this.at(TOOL).elements().forEach(t -> {
-                LOG.status(DEBUG, "preparing %s as a tool", t.isRec() && t.asRec().has(NAME) ? t.asRec().at(NAME).toCleanString() : t.vidOrTid());
+                LOG.debug("preparing %s as a tool", t.isRec() && t.asRec().has(NAME) ? t.asRec().at(NAME).toCleanString() : t.vidOrTid());
                 try {
                     if (t.isNothing()) {
                         // do nothing
                     } else if (t instanceof mTool) {
                         this.addTool((mTool) t);
                     } else if (t.isRec() && t.test(MCP_CLIENT_TYPE)) {
-                        this.mcpClients.add(Rec.wrap(t.as(), mcpClient.class));
+                        mcpClient client = Rec.wrap(t.as(), mcpClient.class);
+                        client.at(TOOL).asPoly().values().forEach(tt -> this.addTool(mTool.tool(tt)));
+                        this.mcpClients.add(client);
                     } else
                         this.addTool(mTool.tool(t));
 
@@ -140,20 +143,18 @@ public class ToolFeature extends AbstractFeature implements ToolService {
             //this.mcpClients.clear();
         }
         LOG.status(DEBUG, "registering %s tools", this.toolProvider.getTools().size());
-        if (agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
-            agent.requireService(SystemService.class).addSystemMessage(
-                    """
-                    ---[tool_feature]---
-                    you can control the metatron using the mtron language by either
-                      1. calling an mtron eval tool
-                      2. generating executable mtron code in your thoughts and responses.
-                    any messages you produce containing templates of the form ${ code } will evaluate.
-                    e.g. the text
-                        the result you wanted is ${ 1.-<[+2,_]>-.sum() }
-                    is read by the user as
-                        the result you wanted is 4.
-                    """);
-        }
+        agent.service(SystemService.class).ifPresent(s -> s.addSystemMessage(
+                """
+                ---[tool_feature]---
+                you can control the metatron using the mtron language by either
+                  1. calling an mtron eval tool
+                  2. generating executable mtron code in your thoughts and responses.
+                any messages you produce containing templates of the form ${ code } will evaluate.
+                e.g. the text
+                    the result you wanted is ${ 1.-<[+2,_]>-.sum() }
+                is read by the user as
+                    the result you wanted is 4.
+                """));
         return noobj();
     }
 

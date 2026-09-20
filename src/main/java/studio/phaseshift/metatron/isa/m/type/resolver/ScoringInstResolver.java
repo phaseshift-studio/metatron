@@ -86,7 +86,12 @@ public class ScoringInstResolver implements InstResolver {
                 return Router.readFromSpace(userInst.tid()).asInst().args(lst(uri(fromOrAt.get()))).rng(T(ALL.maybeSome()));
             }
         }
-        if (userInst.tid().big().test(AS_INST_TID)) {
+        // a cast names its target type in its own argument, and the general path rebinds the resolved contract's
+        // rng to exactly that type before applying it (see the AS_INST_TID branch below) -- that rebinding is what
+        // makes the resulting tag the named type rather than the contract's own rng. This fast path returns the
+        // contract un-rebound, so it serves only calls that name no type; a cast falls through and is resolved,
+        // scored and rebound by the general path.
+        if (userInst.tid().big().test(AS_INST_TID) && !userInst.args().elements().anyMatch(Obj::isType)) {
             final List<Obj> result = Router.readFromSpace(AS_INST_TID
                     .dom(Obj.Helper.specificTypeId(userInst.hasDom() ? userInst.dom() : lhs))
                     .rng(Obj.Helper.specificTypeId(userInst.arg(0)))).stream().toList();
