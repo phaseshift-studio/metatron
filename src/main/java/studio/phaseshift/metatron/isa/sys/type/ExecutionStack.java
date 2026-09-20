@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayDeque;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.function.Supplier;
@@ -62,7 +61,9 @@ public class ExecutionStack {
     public record ExecutionState(ExState state, String message, Obj obj, Obj... objs) {
     }
 
-    /** Compact frame factories — one for state+message only, one adding a safe obj tid note. */
+    /**
+     * Compact frame factories — one for state+message only, one adding a safe obj tid note.
+     */
     public static ExecutionState exec(final ExState state, final String message) {
         return new ExecutionState(state, message, null);
     }
@@ -107,7 +108,7 @@ public class ExecutionStack {
     public static String generateStackTrace() {
         final Deque<ExecutionState> stack = STACK.get();
         if (null == stack || stack.isEmpty())
-            return "no execution state stack";
+            return "";
         final List<ExecutionState> snapshot = List.copyOf(stack);
         final StringBuilder builder = new StringBuilder();
         int indent = 0;
@@ -117,15 +118,15 @@ public class ExecutionStack {
             for (int i = 0; i < indent; i++)
                 builder.append("    ");
             indent++;
-            String line = state.state().name() + (null == state.message() || state.message().isEmpty() ? "" : ": " + state.message());
+            StringBuilder line = new StringBuilder(state.state().name() + (null == state.message() || state.message().isEmpty() ? "" : ": " + state.message()));
             if (null != state.obj())
-                line += " lhs=" + tidOf(state.obj());
+                line.append(" lhs=").append(tidOf(state.obj()));
             final Obj[] objs = state.objs();
             if (null != objs)
                 for (final Obj obj : objs)
-                    line += ", " + tidOf(obj);
+                    line.append(", ").append(tidOf(obj));
             if (line.length() > MAX_FRAME_LEN)
-                line = line.substring(0, MAX_FRAME_LEN) + "...";
+                line = new StringBuilder(line.substring(0, MAX_FRAME_LEN) + "...");
             builder.append("\\_").append(line);
         }
         return builder.toString();

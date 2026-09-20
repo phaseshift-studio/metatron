@@ -148,15 +148,18 @@ public final class ScrollView {
      * codes and all — so the common case is byte-identical to no scrolling at
      * all; only a shifted or overlong line is stripped to its text (the same
      * stripping the surface does when it clips a wide line).
+     *
+     * <p>The window is measured in columns but sliced by char index, so both ends are
+     * resolved through the width model: a CJK glyph is two columns from one char, an
+     * emoji two chars for one glyph, and a raw substring would show half of either.
      */
     public static String windowHorizontally(final String line, final int offset, final int width) {
         if (null == line) return "";
         final int w = Math.max(0, width);
         if (offset <= 0 && visualLength(line) <= w) return line;
         final String text = Graphitty.strip(line);
-        if (offset >= text.length()) return "";
-        final int from = Math.min(Math.max(0, offset), text.length());
-        return text.substring(from, Math.min(text.length(), from + w));
+        final int from = Graphitty.viewIndex(text, Math.max(0, offset));
+        return text.substring(from, Graphitty.viewIndex(text, Math.max(0, offset) + w));
     }
 
     /** Widest line, in visual columns (Graphitty codes ignored). */

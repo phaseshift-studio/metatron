@@ -1643,7 +1643,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             result.stream().takeWhile(o -> !this.interruptRequested.get())
                     .forEach(o -> {
                         this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
-                        this.write(this.serializer.write(o));
+                        this.write(Highlighter.format(this.serializer.write(o)));
                         this.write("\n");
                     });
             terminal.flush();

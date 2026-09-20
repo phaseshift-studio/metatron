@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -48,9 +49,10 @@ public enum Tracer {
 
     private static final Set<Tracer> ACTIVE_TRACERS = new LinkedHashSet<>(List.of(values()));
 
-    public static void init(final Rec config) {
+    public static Rec init(final Rec tracer) {
         ACTIVE_TRACERS.clear();
-        Stream.of(Tracer.values()).filter(t -> config.at(uri(t.name())).orElse(BOOL_FALSE).boolValue()).forEachOrdered(ACTIVE_TRACERS::add);
+        Stream.of(Tracer.values()).filter(t -> tracer.at("stack").asRec().orElse(rec()).at(uri(t.name())).orElse(BOOL_FALSE).boolValue()).forEachOrdered(ACTIVE_TRACERS::add);
+        return tracer;
     }
 
     public boolean enabled() {
@@ -60,13 +62,13 @@ public enum Tracer {
     public static void enable(final Tracer... stages) {
         ACTIVE_TRACERS.addAll(List.of(stages));
         for (final Tracer stage : stages)
-            Router.writeToSpace(mInstSet.TRACER_TYPE_TID.extend(stage.name()), BOOL_TRUE);
+            Router.writeToSpace(mInstSet.TRACER_TYPE_TID.extend("stack").extend(stage.name()), BOOL_TRUE);
     }
 
     public static void disable(final Tracer... stages) {
         List.of(stages).forEach(ACTIVE_TRACERS::remove);
         for (final Tracer stage : stages)
-            Router.writeToSpace(mInstSet.TRACER_TYPE_TID.extend(stage.name()), BOOL_FALSE);
+            Router.writeToSpace(mInstSet.TRACER_TYPE_TID.extend("stack").extend(stage.name()), BOOL_FALSE);
     }
 
     public static Set<Tracer> getEnabled() {

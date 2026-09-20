@@ -214,8 +214,9 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         // anything). siblings (metric/imperial under real) admit each other for
         // no query. results are ranked closest-to-the-token first.
         final Type queriedDom = !pattern.hasDom() ? null : T(pattern.dom());
+        final Type queriedRng = !pattern.hasRng() ? null : T(pattern.rng());
         return QProc.Helper.processPreRead(this.qs(), pattern).orElseGet(() -> {
-            final Obj result = objs(admitted(pattern, queriedDom)
+            final Obj result = objs(admitted(pattern, queriedDom, queriedRng)
                     // copy any user qs to api inst
                     .map(i -> pattern.hasNonDomRngQ() ? i.clone().selfTID(i.tid().copyQ(pattern)) : i)
                     .map(i -> pattern.isNode() ? i : rel(i.tid().toUri(), i)))
@@ -246,18 +247,42 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
      * dom axis per {@link Type#pathIncludes(Type)}, ranked closest-to-the-token
      * first (a no-dom pattern returns them all, unranked).
      */
-    private Stream<Obj> admitted(final fURI pattern, final Type queriedDom) {
+    private Stream<Obj> admitted(final fURI pattern, final Type queriedDom, final Type queriedRng) {
         final Stream<Obj> insts = INST_TABLE.entrySet()
                 .stream()
                 .filter(kv -> kv.getKey().test(pattern.basePath().asNode()))
                 .flatMap(kv -> kv.getValue().stream())
                 .<Obj>map(i -> i)
+                // dom admission is a PATH relation, not a name match: a contract on nat's path
+                // (nat -> int -> #) is admitted for a nat query, which is what makes ?dom=nat resolve
+                // to the int contract. A dom .test(pattern.dom()) here defeats that -- only exact-name
+                // doms survive, so nat admits nothing and imperial admits only itself.
                 .filter(i -> null == queriedDom || queriedDom.pathIncludes(i.dom()))
-                .filter(i -> !pattern.hasRng() || i.rng().vidOrTid().test(pattern.rng()));
+                .filter(i -> !pattern.hasRng() || i.rng().vidOrTid().test(pattern.rng()))
+                .filter(i -> null == queriedRng || queriedRng.pathIncludes(i.rng()));
         return null == queriedDom ?
                 insts :
                 insts.sorted(Comparator.comparingInt(i -> queriedDom.pathTo(i.dom())));
     }
+
+    /**
+     * private Stream<Obj> admitted(final fURI pattern) {
+     * final Stream<Obj> insts = INST_TABLE.entrySet()
+     * .stream()
+     * .filter(kv -> kv.getKey().test(pattern.basePath().asNode()))
+     * .flatMap(kv -> kv.getValue().stream())
+     * .<Obj>map(i -> i)
+     * .filter(i -> !pattern.hasDom() || Obj.Helper.isRefinementOfTid(pattern.dom(), i.tid().dom(), i.tid().dom()))
+     * .filter(i -> !pattern.hasRng() || Obj.Helper.isRefinementOfTid(pattern.rng(), i.tid().rng(), i.tid().rng()));
+     * //.filter(i -> !pattern.hasRng() || i.rng().vidOrTid().test(pattern.rng()));
+     * return pattern.hasDom() ?
+     * insts.sorted(Comparator.comparingInt(i -> T(pattern).pathTo(i.dom()))) : insts;
+     * }
+     *
+     * @param vid
+     * @param obj
+     * @return
+     */
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {

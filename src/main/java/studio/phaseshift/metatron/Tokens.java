@@ -123,6 +123,8 @@ public final class Tokens {
     public static final String QUERY = "query";
     public static final String DOM = "dom";
     public static final String RNG = "rng";
+    public static final String TID = "tid";
+    public static final String VID = "vid";
     public static final String SIZE = "size";
     public static final String SKILL = "skill";
     public static final String URL = "url";

@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.type.ui.graphitty;
 
 import org.jline.utils.AttributedString;
+import org.jline.utils.WCWidth;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
@@ -293,8 +294,10 @@ public class Graphitty {
 
     /**
      * True when {@link #strip(String)} has work to do: the string carries a
-     * DSL code ({@code {{…}}}), an ANSI escape, or a non-ASCII character (the
-     * parser treats those specially so their display width stays right).
+     * DSL code ({@code {{…}}}), an ANSI escape, a backtick, or a non-ASCII character
+     * (the parser writes those as whole code points, so an emoji survives the UTF-8
+     * round trip as one glyph instead of two replacement chars — how many COLUMNS it
+     * costs is {@link #viewLength}'s business, not the parser's).
      */
     private static boolean needsParsing(final String string) {
         for (int i = 0; i < string.length(); i++) {
@@ -304,8 +307,77 @@ public class Graphitty {
         return false;
     }
 
+    /**
+     * The display columns {@code string} occupies on a terminal: its markup stripped,
+     * then summed a code point at a time through jline's {@link WCWidth} — the same
+     * model the terminal's own renderer measures with.  A character count would not
+     * do, and this is where that matters: a CJK glyph is two columns from one char, a
+     * combining mark or a variation selector is none, and an emoji is one glyph from a
+     * surrogate pair — or, with ZWJ sequences, several.  A line break and the other
+     * control characters cost nothing: they end a line, and the width of a line is
+     * what a widget lays out.
+     */
     public static int viewLength(final String string) {
-        return strip(string).length();
+        final String stripped = strip(string);
+        // a line of printable ASCII is the common case, and there a column IS a char
+        if (!needsViewParsing(stripped)) return stripped.length();
+        int columns = 0;
+        for (int i = 0; i < stripped.length(); ) {
+            final int cp = stripped.codePointAt(i);
+            columns += Math.max(0, WCWidth.wcwidth(cp));
+            i += Character.charCount(cp);
+        }
+        return columns;
+    }
+
+    /**
+     * The character index at which {@code string} has spent {@code columns} of its
+     * {@link #viewLength display columns} — the companion to {@code viewLength} for code
+     * that has to slice a line at a column boundary.  {@link String#substring} counts
+     * chars, a viewport counts columns, and the two part company at the first wide glyph
+     * or surrogate pair: windowing by char index shows a caller half a glyph and the
+     * wrong number of columns.  The index never lands inside a surrogate pair, and a
+     * zero-width character (a combining mark, a variation selector) stays with what it
+     * marks rather than being counted as a column of its own.
+     */
+    public static int viewIndex(final String string, final int columns) {
+        if (columns <= 0) return 0;
+        if (!needsViewParsing(string)) return Math.min(columns, string.length());
+        int spent = 0;
+        int index = 0;
+        while (index < string.length()) {
+            final int cp = string.codePointAt(index);
+            final int width = Math.max(0, WCWidth.wcwidth(cp));
+            if (spent + width > columns) break;
+            spent += width;
+            index += Character.charCount(cp);
+        }
+        return index;
+    }
+
+    /**
+     * The prefix of {@code string} that fits in {@code columns} display columns:
+     * {@link #viewIndex} as a slice.  It is never shorter than the string's first code
+     * point — a clip has to make progress, and half a surrogate pair, or an elision with
+     * nothing elided, is worse than one glyph over budget.
+     */
+    public static String viewPrefix(final String string, final int columns) {
+        if (string.isEmpty()) return string;
+        return string.substring(0, Math.max(Character.charCount(string.codePointAt(0)), viewIndex(string, Math.max(0, columns))));
+    }
+
+    /**
+     * True when {@link #viewLength} and {@link #viewIndex} must walk code points: the
+     * string carries a non-ASCII character (one that may be wide, zero-width, or half of
+     * a surrogate pair) or a control character (which is not a column at all).  A string
+     * of printable ASCII measures one column per char, so the fast path is exact.
+     */
+    private static boolean needsViewParsing(final String string) {
+        for (int i = 0; i < string.length(); i++) {
+            final char c = string.charAt(i);
+            if (c < ' ' || c > '~') return true;
+        }
+        return false;
     }
 
     /**

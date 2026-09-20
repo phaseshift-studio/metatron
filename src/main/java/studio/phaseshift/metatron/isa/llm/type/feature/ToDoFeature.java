@@ -108,6 +108,7 @@ public class ToDoFeature extends AbstractFeature {
                                             todo.at(MESSAGE, todo.at(MESSAGE).orElse(lst()).add(auto_from_(lastMessage.vid())), MUTABLE);
                                     }
                                     Router.writeToSpace(this.getRoot(agent), todoLst);
+                                    LOG.status(DEBUG, "\uD83D\uDCDD todo added: %s", todo);
                                     return todoLst;
                                 }), "noobj", "an updated todo lst",
                                 Map.of(uri(TODO), "the todo item to add to the todo lst",
@@ -115,8 +116,9 @@ public class ToDoFeature extends AbstractFeature {
                         docWrap(instC(f("remove_todo").dom(NOOBJ_TID.zero()).rng(LST_TID.poly(LLM_TODO_TID.maybeSome())), rec(uri(INDEX), INT_TYPE), (lhs, inst) -> {
                                     Lst todoLst = Router.readFromSpace(this.getRoot(agent)).orElse(lst());
                                     final int index = inst.arg(INDEX, 0).intValue().intValue();
-                                    todoLst.lstValue().remove(index);
+                                    final String text = todoLst.lstValue().remove(index).strValue();
                                     Router.writeToSpace(this.getRoot(agent), todoLst);
+                                    LOG.status(DEBUG, "\uD83D\uDCDD todo removed: %s", text);
                                     return todoLst;
                                 }), "noobj", "an updated todo lst",
                                 Map.of(uri(INDEX), "the index of the todo item to remove"), "remove an item from the todo lst")))));
@@ -128,6 +130,7 @@ public class ToDoFeature extends AbstractFeature {
                     the following items are still on your todo list:
                     %s
                     """.formatted(String.join("\n", todos.stream()
+                            .filter(Obj::isRec)
                             .filter(x -> !x.asRec().at(STATUS).orElse(uri("complete")).equals(uri("complete")))
                             .map(Object::toString).toList())));
         }

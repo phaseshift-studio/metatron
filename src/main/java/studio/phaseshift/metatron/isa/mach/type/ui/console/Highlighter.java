@@ -374,8 +374,15 @@ public class Highlighter implements org.jline.reader.Highlighter {
         return Graphitty.strip(string);
     }
 
+    /**
+     * The display columns {@code string} occupies once its markup is stripped — the
+     * measure the widgets lay themselves out with.  Delegates to
+     * {@link Graphitty#viewLength}, which counts columns and not characters: a CJK
+     * glyph is two of them, a combining mark or variation selector none, an emoji one
+     * glyph across two chars.
+     */
     public static int visualLength(final String string) {
-        return Highlighter.unformat(string).length();
+        return Graphitty.viewLength(string);
     }
 
     public void setTerminal(final Terminal terminal) {

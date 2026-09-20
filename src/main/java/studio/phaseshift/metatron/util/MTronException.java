@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MTronException extends RuntimeException {
 
@@ -35,6 +36,55 @@ public class MTronException extends RuntimeException {
      * Back-pointer to the mtron-level {@link Fail} wrapping this exception. Set-once.
      */
     private volatile Fail failRef;
+
+    /**
+     * Snapshot of the mtron execution stack captured at creation time —
+     * {@code null} when no frame was on the stack then. The deepest
+     * (earliest captured, still most complete) non-blank capture in the chain
+     * is what gets emitted; the live stack is already unraveling by the time
+     * an outer re-wrap sees it.
+     */
+    private volatile String mtronTrace;
+    private volatile boolean mtronTraceEmitted;
+    private volatile boolean javaTraceEmitted;
+
+    // ------------------------------------------------------------------
+    // diagnostic / test hooks — how many traces each tracer emitted, and
+    // what the last mtron one said
+    // ------------------------------------------------------------------
+
+    private static final AtomicInteger mtronTracesEmitted = new AtomicInteger();
+    private static final AtomicInteger javaTracesEmitted = new AtomicInteger();
+    private static volatile String lastMtronTrace;
+
+    /**
+     * @return the execution stack snapshot captured on this exception, or
+     *         {@code null} when no frame was in flight at creation
+     */
+    public String mtronTrace() {
+        return this.mtronTrace;
+    }
+
+    /**
+     * @return how many mtron stack traces have been emitted so far
+     */
+    public static int mtronTracesEmitted() {
+        return mtronTracesEmitted.get();
+    }
+
+    /**
+     * @return how many java stack traces have been emitted so far
+     */
+    public static int javaTracesEmitted() {
+        return javaTracesEmitted.get();
+    }
+
+    /**
+     * @return the last emitted mtron stack trace, or {@code null}
+     */
+    public static String lastMtronTrace() {
+        return lastMtronTrace;
+    }
 
     /**
      * @return the mtron {@link Fail} that wraps this exception, or {@code null}
@@ -72,64 +122,141 @@ public class MTronException extends RuntimeException {
     }
 
     /**
-     * Compact summary of the throwable and its cause chain.  Multi-line
-     * messages are truncated at the first newline; nested causes are
-     * separated by {@code ←}.
+     * The origin suffix: WHERE the failure happened — for a raw-java cause,
+     * the java class+line of the deepest frame (class only, no re-quoted
+     * summary — that text lives in the message or the cause chain;
+     * pointing at a MTronException factory line carries no information).
+     * <p>
+     * mtron chains (the tail is an MTronException) get no suffix at all:
+     * they are self-describing, the instruction origin rides in the message
+     * where it is generated (the inst funnel), and the fail text must
+     * round-trip byte-stable through the parser (a parse-time frame is not
+     * the failing instruction's).
      */
-    private static String causeSummary(final Throwable cause) {
-        final StringBuilder sb = new StringBuilder();
-        Throwable c = cause;
-        int depth = 0;
-        while (c != null && depth < 4) {
-            if (depth > 0) sb.append(" ← ");
-            final String msg = c.getMessage();
-            if (msg != null) {
-                final int nl = msg.indexOf('\n');
-                sb.append(nl < 0 ? msg : msg.substring(0, nl) + "...");
-            } else {
-                sb.append('(').append(c.getClass().getSimpleName()).append(')');
-            }
-            c = c.getCause();
-            depth++;
-        }
-        if (c != null) sb.append(" ← ...");
-        return sb.toString();
+    private static String originSuffix(final Throwable cause) {
+        Throwable owner = cause;
+        while (null != owner.getCause())
+            owner = owner.getCause();
+        if (owner instanceof MTronException)
+            return "";
+        final StackTraceElement origin = originOf(cause);
+        final String name = Optional.ofNullable(origin).map(o -> o.getClassName().substring(o.getClassName().lastIndexOf('.') + 1)).orElse("");
+        if (name.isEmpty() || MTronException.class.getSimpleName().equals(name))
+            return "";
+        return " [" + name + "<" + origin.getLineNumber() + ">]";
     }
 
     private MTronException(final String message, final Throwable cause) {
-        super(null == cause ? Graphitty.string(message) : Graphitty.string((message != null ? message : "(null)").replace("%", "%%") + "[%s<%d>:%s]",
-                Optional.ofNullable(originOf(cause)).map(o -> o.getClassName().substring(o.getClassName().lastIndexOf('.') + 1)).orElse("no stack element"),
-                Optional.ofNullable(originOf(cause)).map(StackTraceElement::getLineNumber).orElse(0),
-                causeSummary(cause)), cause);
+        // a constructor must start with super() (statements before the
+        // invocation are the JEP 513 flexible bodies — preview only here),
+        // so the suffix is composed inline
+        super(null == cause ? Graphitty.string(message) :
+                    Graphitty.string((message != null ? message : "(null)").replace("%", "%%") + originSuffix(cause)),
+               null == cause ? null : cause);
     }
 
     private MTronException(final String message) {
-        this(Graphitty.string(message), null);
+        super(Graphitty.string(message));
     }
 
-    protected MTronException(final String message, final Throwable cause, final boolean dummy) {
-        super(null == cause ? Graphitty.string(message) : Graphitty.string((message != null ? message : "(null)").replace("%", "%%") + "[%s<%d>:%s]",
-                originOf(cause).getClassName().substring(originOf(cause).getClassName().lastIndexOf('.') + 1),
-                originOf(cause).getLineNumber(),
-                causeSummary(cause)), cause);
+    /**
+     * Verbatim-message constructor — the caller's text stays exactly as
+     * formatted (no origin suffix appended); a non-null cause is still linked.
+     * (TypeMismatchException is the current user.)
+     */
+    protected MTronException(final String message, final Throwable cause, final boolean verbatim) {
+        super(Graphitty.string(null == message ? "(null)" : message), cause);
     }
 
     private static MTronException tracerThrow(final MTronException e) {
+        // creation time: capture the live execution stack on this exception
+        // (the deepest capture in the chain is the most complete — the live
+        // stack is unraveling as the exception unwinds). Emission happens
+        // when the failure is reported (see emitStackTrace) — discarded
+        // retries of a failing pipeline must not each print their own
+        // shrink-wrapped trace.
         if (Tracer.mtron_stack.enabled())
-            Graphitty.log(Tracer.class).error(ExecutionStack.generateStackTrace());
-        if (Tracer.java_stack.enabled())
-            e.printStackTrace();
+            captureIfAbsent(e);
         return e;
+    }
+
+    private static void captureIfAbsent(final MTronException e) {
+        if (null != e.mtronTrace)
+            return;
+        final String trace = ExecutionStack.generateStackTrace();
+        if (!trace.isBlank())
+            e.mtronTrace = trace;
+    }
+
+    /**
+     * Emit the mtron and java stack traces for a failure — each exactly
+     * once. Call this at the reporting boundary: when a fail is serialized
+     * for display (console result line, headless -e print, MCP/WS reply,
+     * log line — {@code writeFail} does this) or an exception escapes
+     * uncaught. Never at exception creation: one logical failure passes
+     * through several MTronExceptions (the deepest throw, then each outer
+     * re-wrap), the live execution stack is already shrunk by the time
+     * each later wrap is born (frames unwind as the exception unwinds),
+     * and a failing pipeline may retry-and-die several times before the
+     * failure that is actually reported.
+     * <p>
+     * So the mtron trace emitted is always the deepest non-blank capture
+     * in the chain — the most complete one — and a chain whose trace
+     * already went out stays quiet. A blank capture (no frame was alive
+     * at any point) emits nothing, rather than leaving a bare "[Tracer]"
+     * log line behind.
+     */
+    public static void emitStackTrace(final Throwable head) {
+        if (null == head)
+            return;
+        if (Tracer.mtron_stack.enabled())
+            emitMtronTrace(head);
+        if (Tracer.java_stack.enabled())
+            emitJavaTrace(head);
+    }
+
+    private static void emitMtronTrace(final Throwable head) {
+        MTronException carrier = null;   // walk to the tail — the deepest non-blank capture wins
+        for (Throwable c = head; null != c; c = c.getCause())
+            if (c instanceof MTronException m && null != m.mtronTrace)
+                carrier = m;
+        if (null == carrier || carrier.mtronTraceEmitted)
+            return;
+        carrier.mtronTraceEmitted = true;
+        lastMtronTrace = carrier.mtronTrace;
+        mtronTracesEmitted.incrementAndGet();
+        Graphitty.log(Tracer.class).error(carrier.mtronTrace);
+    }
+
+    /**
+     * The outermost exception in the chain carries the most complete java
+     * frames, so head's trace is printed — the first time the chain is seen.
+     */
+    private static void emitJavaTrace(final Throwable head) {
+        for (Throwable c = head; null != c; c = c.getCause())
+            if (c instanceof MTronException m && m.javaTraceEmitted)
+                return;
+        for (Throwable c = head; c instanceof MTronException m; c = c.getCause())
+            m.javaTraceEmitted = true;
+        javaTracesEmitted.incrementAndGet();
+        head.printStackTrace();
     }
 
     public static MTronException of(final Throwable cause) {
         if (cause instanceof MTronException)
             return (MTronException) cause;
-        final MTronException m = convert(cause);
-        return cause.getCause() != null ? m.cause(convert(cause.getCause())) : m;
+        // convert() already preserves the original java cause chain — the
+        // convert-cause round trip here was always a no-op (cause() returns
+        // early for MTronException arguments) but still fired a stray trace
+        // into a discarded, unlinked chain
+        return convert(cause);
     }
 
     public static MTronException of(final Throwable cause, final String format, final Object... args) {
+        // links cause as the java cause (the tracer's once-per-chain dedup,
+        // cause-chain walks, and fail serialization all see the whole chain)
+        // and embeds the inner text in the outer message (the flat
+        // failure-text contract)
         return tracerThrow(new MTronException(Graphitty.string(args.length == 0 ? format : format.formatted(args)), convert(cause)));
     }
 
@@ -243,12 +370,16 @@ public class MTronException extends RuntimeException {
 
     @Override
     public boolean equals(final Object other) {
-        return other instanceof MTronException && this.getMessage().equals(((MTronException) other).getMessage());
+        // chain-aware: a bare message no longer distinguishes funnel wraps
+        // ("inst apply failure" with different inners)
+        if (!(other instanceof MTronException o) || !Objects.equals(this.getMessage(), o.getMessage()))
+            return false;
+        return Objects.equals(this.getCause(), o.getCause());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.getMessage());
+        return Objects.hash(this.getMessage(), this.getCause());
     }
 
 

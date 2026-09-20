@@ -1,0 +1,46 @@
+# Console status-banner test — the status line's messages accumulate into a scrolling
+# banner instead of replacing one another: a new message goes onto the head and the
+# messages already there shift right, divided by a middle dot, until the oldest one
+# falls off the terminal's right edge.
+#
+#   bin/metatron-docker build console --steps bin/test/console-status-banner.steps
+#
+# The messages come from the console itself: scrolling a focused widget reports what the
+# viewport now shows ("rows 16-24/25 (scrolled)"), so every scroll posts a status message.
+#
+# The needles deliberately avoid the message's widget-key prefix (a running widget is
+# keyed by an identity hash, so it differs run to run) and the row numbers: what is
+# asserted is the banner's *shape* — no divider while the banner holds one message, and
+# a divider immediately after the newest message's text once a second message arrives,
+# which can only be there because the first message was kept and pushed right.
+# (That a message goes on the head and the older one shifts right — the banner's
+# ordering — is the unit test's contract; jline's diff-render rewrites only the cells a
+# frame changed, so a pty cannot always see both messages in one contiguous run.)
+
+WAIT_CONSOLE
+
+# --- float a widget whose body outruns its viewport ---
+MARK float
+SEND accordion_widget::[title=>'notes',body=>"l01\nl02\nl03\nl04\nl05\nl06\nl07\nl08\nl09\nl10\nl11\nl12\nl13\nl14\nl15\nl16\nl17\nl18\nl19\nl20\nl21\nl22\nl23\nl24",style=>[anchor=>top_left,width=>40,height=>10]].display()
+WAIT │ l24 20
+# the prompt answering proves the float job is done: a focus key sent mid-job is dropped
+SEND 1
+WAIT_SINCE float ==>1 20
+KEY alt+w
+WAIT ▶ 20
+
+# --- the first scroll leaves one message: nothing to divide it from ---
+MARK first
+KEY alt+u
+WAIT_SINCE first (scrolled) 15
+SILENT first • 3
+
+# --- the second scroll shifts that message right, behind the divider ---
+MARK second
+KEY alt+u
+WAIT_SINCE second (scrolled) • 15
+
+# --- and the banner keeps scrolling: a third message takes the head ---
+MARK third
+KEY alt+u
+WAIT_SINCE third (scrolled) • 15

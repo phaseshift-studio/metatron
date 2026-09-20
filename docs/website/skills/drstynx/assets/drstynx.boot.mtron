@@ -12,7 +12,8 @@
     embedding => <http://ginger.local:8025/api/v2>,
     knowgraph => <ws://ginger.local:8182/gremlin>,
     session   => <sqlite:/home/killswitch/.metatron/dr.sqlite>],
- tracer/stage => [stack=>false],
+ tracer/stack => [mtron_stack  => true,
+                  java_stack   => false],
  typer/stage  => [inst_dom     => false,
                   inst_rng     => false,
                   type_pred    => false,
@@ -291,7 +292,7 @@ agent::[
   chat_feature:::::::[model         => !(*</usr/dr/model>.else(model::[provider     => ollama,
                                                                        protocol     => ollama,
                                                                        host         => <http://ginger.local:11434>,
-                                                                       llm          => <qwen3.8:27b>])),
+                                                                       llm          => <qwen3.8:27b>].to(/usr/dr/model))),
                       response      => [complete => print("{{y}}{{:horse:}} ${>>chat}")]],
   think_feature::::::[on_agent_ctor => inst(a=>agent::T){
                                           accordion_widget::[title => "thoughts", 
@@ -301,9 +302,9 @@ agent::[
                                                                right=>10,
                                                                width=>100,
                                                                top=>2]]@<think_widget> },
-                     on_before_chat => inst(){ @<think_widget> >>= [body=>""] },
-                     think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
-  midchat_feature:::::[root         => /usr/dr],
+                      on_before_chat => inst(){ @<think_widget> >>= [body=>""] },
+                      think          => [to => inst(a=>str::T){ @<think_widget>>>=[body=>+*a].display() }]],
+  midchat_feature:::::[              => ],
   compaction_feature::[model         => !*/usr/dr/model,
                        threshold     => 0.8],
   loop_feature::::::::[max_loop      => 100],
@@ -311,7 +312,7 @@ agent::[
   skill_feature:::::::[skill         => [ <mfs:.metatron/skills/metatron>, 
                                          <mfs:.metatron/skills/mtron>,
                                          <mfs:.metatron/skills/ide>]],
-  lucene_concept_feature::::[root => /usr/dr/concept],
+  lucene_concept_feature::::[=>],
   audit_feature::::::[on_before_chat  => inst(a=>agent::T) {   
                                          accordion_widget::[title  => "audit",
                                                             body   => "",
@@ -352,8 +353,7 @@ agent::[
                                         !*bash?reject=['\brm\b','\bgit\b'],
                                         mcp_client::[host=><http://localhost:8777/mcp>],
                                         forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
-  cost_feature:::::::[root          => /usr/dr/cost,
-                      to            => inst(in_cost=>real::T,out_cost=>real::T,total_cost=>real::T){ 
+  cost_feature:::::::[to            => inst(in_cost=>real::T,out_cost=>real::T,total_cost=>real::T){ 
                                          /usr/marko/console/status("cost total: ${*2} [in: ${*0} out: ${*1}]") },
                       rate          => [in  => usd_currency::0.435,
                                         out => usd_currency::0.870]]]]@<dr>; 

@@ -271,10 +271,25 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     @Override
     public String writeFail(final Fail fail) {
         final StringBuilder sb = new StringBuilder();
-        // Walk the cause chain and serialize each level as [message]
+        // Serializing a fail IS the report boundary — the console result
+        // line, a headless -e print, an MCP/WS reply, a log line. This is
+        // where the tracer fires: the deepest mtron stack capture of the
+        // chain, once per chain (each failure chain emits exactly one
+        // trace, no matter how many retries died before it).
+        MTronException.emitStackTrace(fail.jvm());
+        // Walk the cause chain (outermost first, reading right gets to the
+        // root) and serialize each level's OWN message as one bracket. A
+        // level whose text is already embedded in the level above's message
+        // — e.g. the root's "inst apply failure: <detail>" — is not
+        // re-emitted as a second bracket; genuinely distinct levels (even
+        // two identical "args do not match" levels) each keep their bracket.
         Fail current = fail;
+        String above = null;
         while (current != null) {
-            sb.append("[").append(current.message() != null ? current.message() : "").append("]");
+            final String msg = current.message() != null ? current.message() : "";
+            if (null == above || !(msg.length() > 0 && above.length() > msg.length() && above.contains(msg)))
+                sb.append("[").append(msg).append("]");
+            above = msg;
             current = current.cause().orElse(null);
         }
         return handleIds(fail, sb.toString());
