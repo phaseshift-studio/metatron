@@ -234,7 +234,8 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
      */
     @JRecElement(key = "prompt", rng = "noobj{0}", mimic = JRecElement.Mimic.METHOD)
     public void appendInput(final Obj input) {
-        this.appendOutput(this.prompt() + Highlighter.format(input.isStr() ? input.strValue() : input.toString()));
+        // their line, not the console's output: colored, never resolved (see Highlighter.line)
+        this.appendOutput(this.prompt() + Highlighter.line(input.isStr() ? input.strValue() : input.toString()));
     }
 
     /**

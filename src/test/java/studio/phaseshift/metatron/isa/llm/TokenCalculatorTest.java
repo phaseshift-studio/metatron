@@ -125,22 +125,36 @@ public class TokenCalculatorTest extends AbstractMetatronTest {
         assertEquals(estimated(SYSTEM), (long) est.get("system"), "the system share");
         assertEquals(estimated(USER), (long) est.get("user"), "the user share");
         assertEquals(estimated(AI), (long) est.get("ai"), "the ai share");
-        assertEquals(estimated(TOOL_RESULT), (long) est.get(TokenCalculator.TOOL_RESULT), "the tool-result share");
+        assertEquals(estimated(TOOL_RESULT), (long) est.get("tool"), "the tool-result share, under the ledger's tool name");
     }
 
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
-            "1 % estimates accumulate across the chat's calls",
-            "3 % a tool loop re-sends its window, and every call counts"
+            "1 % a single request measures once",
+            "3 % a tool loop re-sending the same window must not multiply the fill"
     })
-    void estimatesAccumulateAcrossCalls(final int calls, final String desc) {
+    void estimatesTrackTheCurrentRequest(final int calls, final String desc) {
         final TokenCalculator calculator = new TokenCalculator();
         for (int i = 0; i < calls; i++)
             calculator.onRequest(requestWith(SYSTEM, USER));
         final Map<String, Long> est = calculator.estimates();
-        assertEquals((long) calls * estimated(SYSTEM), (long) est.get("system"), desc);
-        assertEquals((long) calls * estimated(USER), (long) est.get("user"), desc);
+        assertEquals((long) estimated(SYSTEM), (long) est.get("system"), desc);
+        assertEquals((long) estimated(USER), (long) est.get("user"), desc);
         assertEquals(0L, (long) est.getOrDefault("ai", 0L), desc);
+    }
+
+    @Test
+    void estimationTracksTheGrownRequest() {
+        // the tool loop grows the context: the est of the larger, later
+        // request is the one that stands — the earlier fill is replaced,
+        // not summed
+        final TokenCalculator calculator = new TokenCalculator();
+        calculator.onRequest(requestWith(SYSTEM, USER));
+        calculator.onRequest(requestWith(SYSTEM, USER, AI, TOOL_RESULT));
+        final Map<String, Long> est = calculator.estimates();
+        assertEquals(4, est.size(), "the later request's kinds: " + est);
+        assertEquals((long) estimated(TOOL_RESULT), (long) est.get("tool"), "the grown tool share, under the ledger's tool name");
+        assertEquals((long) estimated(SYSTEM), (long) est.get("system"), "the unchanged system share is re-measured, not doubled");
     }
 
     @Test

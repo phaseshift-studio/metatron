@@ -7,6 +7,8 @@ import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 
+import java.util.Map;
+
 /**
  * The session/ledger capability — the agent's chat memory and its backing space store.
  */
@@ -64,4 +66,33 @@ public interface MessageService {
      * @return the message/session root uri
      */
     fURI root(final Agent agent);
+
+    /**
+     * Seed the chat's estimated usage with the pre-call composition the
+     * session store measured as it formed the model's view — the window's
+     * messages by kind, plus the agent's current prompt and live system
+     * text.  Merged into the calculator's estimates and the feature's
+     * {@code to} fires, so the readout updates before any model call has
+     * reported.
+     *
+     * @param agent     the agent whose chat this is
+     * @param estimates estimated tokens by message kind (user/system/ai/tool)
+     */
+    default void updateTokenCounts(final Agent agent, final Map<String, Long> estimates) {
+    }
+
+    /**
+     * Re-measure the context as the model will next see it and push the
+     * readout — the store's chat view, which now stops at the newest
+     * compaction sentinel when one was just written.  Called at the end of a
+     * compaction write so the bar collapses to the post-compaction fill
+     * immediately, instead of waiting for the next model call to re-read the
+     * window.  A no-op without a store (bus paths carry none).
+     *
+     * @param agent the agent whose context just changed
+     */
+    default void resyncTokenCounts(final Agent agent) {
+        if (null != store())
+            store().getMessages(sessionVID());
+    }
 }

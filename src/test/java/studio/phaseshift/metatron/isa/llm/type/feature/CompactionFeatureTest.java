@@ -24,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -116,7 +117,7 @@ public class CompactionFeatureTest extends AbstractMetatronTest {
     void writeCompactionStampsSummaryAndStats(final String summary, final String digest) {
         final fURI agentHome = f("/usr/test/compact/sentinel");
         final fURI sessionVID = agentHome.extend("session").extend("1");
-        final Rec sentinel = CompactionFeature.writeCompaction(agentHome, sessionVID, msgs(U(), A()), digest, summary);
+        final Rec sentinel = CompactionFeature.writeCompaction(Agent.agent(rec(mutableMap(uri(ROOT), uri(agentHome), uri(SESSION), uri(sessionVID)))), msgs(U(), A()), digest, summary);
 
         assertEquals(COMPACTION_MESSAGE_TID, sentinel.tid(), "sentinel must be a compaction message");
         assertEquals(sessionVID, sentinel.at(uri(SESSION)).uriValue(), "sentinel must carry its session");
@@ -144,7 +145,7 @@ public class CompactionFeatureTest extends AbstractMetatronTest {
                 U(), A("c1"), T("c1"), A(),
                 U(), A("c2"), T("c2"), A(),
                 U(), A("c3"), T("c3"));
-        CompactionFeature.writeCompaction(agentHome, sessionVID, messages, "digest", "summary");
+        CompactionFeature.writeCompaction(Agent.agent(rec(mutableMap(uri(ROOT), uri(agentHome), uri(SESSION), uri(sessionVID)))), messages, "digest", "summary");
 
         final List<Rel> ledger = Router.readFromSpace(agentHome.extend(MESSAGE).extend("+/")).stream()
                 .map(Obj::asRel)
@@ -166,7 +167,7 @@ public class CompactionFeatureTest extends AbstractMetatronTest {
         // message after a user message breaks the model's "system at the
         // beginning" invariant
         final List<Rel> messages = msgs(U(), S(), THINK(), A("c1"), T("c1"));
-        CompactionFeature.writeCompaction(agentHome, sessionVID, messages, "digest", "summary");
+        CompactionFeature.writeCompaction(Agent.agent(rec(mutableMap(uri(ROOT), uri(agentHome), uri(SESSION), uri(sessionVID)))), messages, "digest", "summary");
         final List<Rel> ledger = Router.readFromSpace(agentHome.extend(MESSAGE).extend("+/")).stream()
                 .map(Obj::asRel)
                 .sorted(Comparator.comparing(p -> Integer.parseInt(p.first().uriValue().name())))

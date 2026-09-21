@@ -105,6 +105,14 @@ else
 fi
 
 # ── launch ──────────────────────────────────────────────────────────
+# Extra JVM switches from the environment: METATRON_JAVA_OPTS="-Dfoo=bar -Dbaz=1"
+# Without this a system property is unreachable from the command line — "$@"
+# below belongs to the boot file, not to the JVM.
+if [ -n "${METATRON_JAVA_OPTS:-}" ]; then
+    # shellcheck disable=SC2206  # splitting is intended: the value is a list of switches
+    JVM_FLAGS+=( ${METATRON_JAVA_OPTS} )
+fi
+
 # Loop on EXIT_RESET (100) so the JVM can request a clean restart.
 # BootLoader.EXIT_RESET must match this number.
 EXIT_RESET=100

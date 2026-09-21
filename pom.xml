@@ -546,6 +546,11 @@
         -->
         <plugins>
             <plugin>
+                <groupId>com.integrallis</groupId>
+                <artifactId>mfcqi-maven-plugin</artifactId>
+                <version>0.7.0</version>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-install-plugin</artifactId>
             </plugin>

@@ -18,11 +18,7 @@
 
 package studio.phaseshift.metatron.isa.llm;
 
-import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.SystemMessage;
-import dev.langchain4j.data.message.ToolExecutionResultMessage;
-import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.data.message.*;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
@@ -33,9 +29,7 @@ import studio.phaseshift.metatron.isa.llm.type.feature.AbstractMessageFeature;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.AI;
-import static studio.phaseshift.metatron.Tokens.SYSTEM;
-import static studio.phaseshift.metatron.Tokens.USER;
+import static studio.phaseshift.metatron.Tokens.*;
 
 /**
  * The per-chat token accounting: two data streams, deliberately kept apart.
@@ -48,13 +42,18 @@ import static studio.phaseshift.metatron.Tokens.USER;
  * which is why this is a {@link ChatModelListener} rather than a read at the
  * end of the chat.</li>
  * <li><b>Estimated composition</b> — {@link #estimates()}: the
- * {@code AbstractMessageFeature.DefaultTokenCountEstimator} applied to each
- * message of every request, keyed by message kind.  No provider reports a
- * per-message breakdown, so the only place one can exist is the request
- * itself — this listener sees it in {@code onRequest}.  The per-kind numbers
- * are heuristic (chars/4) and do NOT sum to the provider's {@code in}: the
- * provider bills the rendered prompt, which carries overhead this side never
- * sees.</li>
+ * {@code AbstractMessageFeature.DefaultTokenCountEstimator} applied to the
+ * messages of the <em>current</em> request, keyed by message kind.  No
+ * provider reports a per-message breakdown, so the only place one can exist
+ * is the request itself — this listener sees it in {@code onRequest}.  The
+ * per-kind numbers are heuristic (chars/4) and do NOT sum to the provider's
+ * {@code in}: the provider bills the rendered prompt, which carries overhead
+ * this side never sees.  Replaced on every request rather than accumulated:
+ * est answers "what is in the context window right now", and summing it over
+ * the tool loop's calls would inflate the bar several times past the real
+ * fill.  The pre-call seed ({@link #addEstimates}) uses the same replace
+ * semantics, so the store's per-measure and this listener's per-request
+ * number can never stack on each other.</li>
  * </ul>
  *
  * <p>Both streams are per-chat by design, unlike {@link CostCalculator}
@@ -83,6 +82,9 @@ public class TokenCalculator implements ChatModelListener {
         final ChatRequest request = requestContext.chatRequest();
         if (null == request || null == request.messages())
             return;
+        // the composition of THIS request, replacing any previous one: est is
+        // the current context fill, not a running total
+        this.estimates.clear();
         for (final ChatMessage message : request.messages()) {
             final long est = AbstractMessageFeature.DefaultTokenCountEstimator.singleton()
                     .estimateTokenCountInMessage(message);
@@ -113,8 +115,10 @@ public class TokenCalculator implements ChatModelListener {
     /**
      * The message kind a request message belongs to — the ledger's own
      * message names, so the est keys read back onto the message vocabulary.
+     * Public so the session store can seed per-chat estimates with the same
+     * kind names it streams the messages under.
      */
-    private static String kindOf(final ChatMessage message) {
+    public static String kindOf(final ChatMessage message) {
         if (message instanceof SystemMessage)
             return SYSTEM;
         if (message instanceof UserMessage)
@@ -122,7 +126,7 @@ public class TokenCalculator implements ChatModelListener {
         if (message instanceof AiMessage)
             return AI;
         if (message instanceof ToolExecutionResultMessage)
-            return TOOL_RESULT;
+            return TOOL;
         return OTHER;
     }
 
@@ -146,5 +150,22 @@ public class TokenCalculator implements ChatModelListener {
      */
     public Map<String, Long> estimates() {
         return new LinkedHashMap<>(this.estimates);
+    }
+
+    /**
+     * Record estimated usage gathered before the provider reported — the
+     * session store seeds this with the composition of the window it formed
+     * plus the current prompt and system text, so the readout has a number
+     * to show from the first stage of the chat.  Replace semantics, matching
+     * {@link #onRequest}: the seed describes the current request, and the
+     * store's per-measure and the listener's per-request number must never
+     * stack on each other.
+     */
+    public void addEstimates(final Map<String, Long> byKind) {
+        this.estimates.clear();
+        byKind.forEach((kind, value) -> {
+            if (null != kind && null != value && value > 0)
+                this.estimates.merge(kind, value, Long::sum);
+        });
     }
 }

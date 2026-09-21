@@ -20,9 +20,11 @@ package studio.phaseshift.metatron.isa.mach.type.ui.graphitty;
 
 import org.jline.utils.AttributedString;
 import org.jline.utils.WCWidth;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjLinkSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.ByteArrayOutputStream;
@@ -47,8 +49,10 @@ public class Graphitty {
      * language as the open tag.
      */
     public static final String SYNTAX_RULE_PREFIX = "syntax:";
-    /** The markdown code-fence marker: {@code ```lang} … {@code ```} is a second
-     * spelling of {@code {{syntax:lang}}} … {@code {{/syntax:lang}}}. */
+    /**
+     * The markdown code-fence marker: {@code ```lang} … {@code ```} is a second
+     * spelling of {@code {{syntax:lang}}} … {@code {{/syntax:lang}}}.
+     */
     public static final String FENCE = "```";
     public static final Map<String, String> CURSOR_REWRITES = new LinkedHashMap<>();
     private static final Graphitty GRAPHITTY_STDOUT = new Graphitty(System.out);
@@ -132,14 +136,20 @@ public class Graphitty {
      */
     private StringBuilder syntaxBlock;
 
-    /** Colorizer of the block being captured, carrying jline's multi-line state across the seams. */
+    /**
+     * Colorizer of the block being captured, carrying jline's multi-line state across the seams.
+     */
     private Highlighter.Block syntaxSession;
 
-    /** Set once markup split a block into pieces, so the block is no longer one text. */
+    /**
+     * Set once markup split a block into pieces, so the block is no longer one text.
+     */
     private boolean syntaxFragmented;
 
-    /** True when the block being captured was opened by a markdown fence (```), so its
-     * close is a bare {@code ```} line rather than a {@code {{/syntax:…}}} tag. */
+    /**
+     * True when the block being captured was opened by a markdown fence (```), so its
+     * close is a bare {@code ```} line rather than a {@code {{/syntax:…}}} tag.
+     */
     private boolean syntaxFence;
 
     /**
@@ -148,6 +158,73 @@ public class Graphitty {
      * block renders, it does not throw.
      */
     private int parseDepth;
+
+    /**
+     * Literal text of the link being captured ({@code {{link}}…{{/link}}}), or
+     * {@code null} when not inside one — the buffer itself is the "capturing" state,
+     * as it is for a syntax block.  While a link is open, emitted text is held here
+     * rather than drawn, because the wrapped text is <em>both</em> the label and the
+     * target: it has to be held whole to be validated before anything is drawn with
+     * it, and a link that cannot be a uri must be drawn as the plain text it is.
+     */
+    private StringBuilder linkBuffer;
+
+    /**
+     * The rule that opens a link: {@code {{link}}uri{{/link}}}.
+     */
+    public static final String LINK_RULE = "link";
+    /**
+     * OSC 8 opener — {@code ESC ] 8 ; params ; uri BEL} — with the params left empty.
+     */
+    private static final String LINK_OPEN = "\033]8;;";
+    /**
+     * The string terminator of an OSC 8 sequence; BEL, which terminals accept.
+     */
+    private static final String LINK_ST = "\007";
+    /**
+     * OSC 8 closer — the same sequence with an empty uri — plus its terminator.
+     */
+    private static final String LINK_CLOSE = "\033]8;;\007";
+    /**
+     * Underline: what makes a link look like one where the terminal ignores OSC 8.
+     */
+    private static final String LINK_UNDERLINE = "\033[4m";
+
+    /**
+     * Whether a link is <em>drawn</em> as one (an underline).  The hyperlink itself is not
+     * optional — a click reads the uri back out of it — so this turns only the visual affordance
+     * on and off, which is what the console's {@code :links} command toggles.
+     */
+    private static volatile boolean linkUnderline = false;
+
+    /**
+     * Whether a marked-up uri answers a click at all (the {@code :link} command's first flag).
+     * <p>
+     * With it off a uri is drawn as the text it is: no OSC 8 span, so nothing on screen answers a
+     * click and the pointer stays the terminal's (selection, copy).  Checked where the link is built
+     * AND where a click is resolved, so the two can never disagree.
+     */
+    private static volatile boolean linkClickable = true;
+
+    /** Whether a marked-up uri answers a click. */
+    public static boolean linkClickable() {
+        return linkClickable;
+    }
+
+    /** Turn clicking a uri on or off. */
+    public static void linkClickable(final boolean clickable) {
+        linkClickable = clickable;
+    }
+
+    /** Turn the link underline on or off (see {@link #linkUnderline}). */
+    public static void linkUnderline(final boolean on) {
+        linkUnderline = on;
+    }
+
+    /** True when links are drawn with an underline. */
+    public static boolean linkUnderline() {
+        return linkUnderline;
+    }
 
     public Graphitty(final Map<String, String> rewrites, final OutputStream out) {
         this.out = out;
@@ -232,7 +309,11 @@ public class Graphitty {
     }*/
 
     public String writeToString(final String f, final Object... args) {
-        this.parseDSL(f.formatted(args));
+        final Object[] args2 = new Object[args.length];
+        for (int i = 0; i < args.length; i++) {
+            args2[i] = args[i] instanceof Obj ? ObjLinkSerializer.single().write((Obj) args[i]) : args[i];
+        }
+        this.parseDSL(f.formatted(args2));
         final String result = new String(((ByteArrayOutputStream) this.out).toByteArray(), StandardCharsets.UTF_8);
         ((ByteArrayOutputStream) this.out).reset();
         return result;
@@ -245,9 +326,13 @@ public class Graphitty {
         // percents and formats again — is what makes it literal.  Hoisting the
         // call out of the try makes that fallback unreachable (GraphittyLogger's
         // "logging must never break its caller" tests catch exactly this).
+        final Object[] args2 = new Object[args.length];
+        for (int i = 0; i < args.length; i++) {
+            args2[i] = args[i] instanceof Obj ? ObjLinkSerializer.single().write((Obj) args[i]) : args[i];
+        }
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             final Graphitty temp = new Graphitty(out);
-            temp.parseDSL(f.formatted(args));
+            temp.parseDSL(f.formatted(args2));
             return out.toString(StandardCharsets.UTF_8);
         } catch (final Exception e) {
             try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -492,6 +577,22 @@ public class Graphitty {
                         rule.append(buffer.charAt(m));
                         i = m;
                     }
+                    // {{link}}uri{{/link}}: the text between the tags is a candidate uri,
+                    // and it is BOTH the label and the target ("the wrapped text is the
+                    // uri").  The tags are handled here, before the rule machinery, because
+                    // a link is not a colour: it captures text instead of rewriting it.
+                    if (LINK_RULE.contentEquals(rule)) {
+                        this.openLink();
+                        continue;
+                    }
+                    if (("/" + LINK_RULE).contentEquals(rule)) {
+                        this.commitLink();
+                        continue;
+                    }
+                    // Any other rule mid-link commits it: the captured text is a link unto
+                    // itself, and the rule applies to whatever follows.
+                    this.commitLink();
+
                     // {{syntax:java}} … {{/syntax:java}}: the literal text between the tags
                     // is source code, colorized from that language's conf/nanorc file.  The
                     // tags are handled in BOTH modes — rendering captures the code to colorize
@@ -586,6 +687,8 @@ public class Graphitty {
                     this.emit(buffer.charAt(i));
                 }
             }
+            if (1 == this.parseDepth && null != this.linkBuffer)
+                this.commitLink();    // {{link}} left open: it still renders as a link
             if (1 == this.parseDepth && null != this.syntaxLanguage)
                 this.closeSyntax();   // {{syntax:…}} left open: flush what was captured
             this.flush();
@@ -605,7 +708,9 @@ public class Graphitty {
         this.openSyntax(language, false);
     }
 
-    /** Open a block whose delimiter is the markdown fence ({@code ``` … ```}). */
+    /**
+     * Open a block whose delimiter is the markdown fence ({@code ``` … ```}).
+     */
     private void openFence(final String language) {
         this.openSyntax(language, true);
     }
@@ -633,6 +738,72 @@ public class Graphitty {
      *                 block is then no longer a single text and needs the stateful
      *                 colorizer rather than a memoized whole-block pass
      */
+    /**
+     * Open a link, committing one already open: a link inside a link ends the outer.
+     */
+    private void openLink() {
+        this.commitLink();
+        this.linkBuffer = new StringBuilder();
+    }
+
+    /**
+     * Draw an open link and forget it, or draw nothing when none is open.
+     *
+     * <p>The wrapped text is the target, so it is validated first: a uri the furi parser
+     * rejects is written as the plain text it is — a dead link is worse than no link — and
+     * a uri it accepts becomes an OSC 8 hyperlink with an underline, which is a link to a
+     * terminal that honours hyperlinks and a legible one to a terminal that does not.
+     *
+     * <p>What follows the link is the restoring code of the rule that encloses it, with its
+     * underline dropped — the same restore a close tag emits — so a link inside a colour
+     * leaves the colour running.
+     */
+    private void commitLink() {
+        if (null == this.linkBuffer) return;
+        final String text = this.linkBuffer.toString();
+        this.linkBuffer = null;
+        // clicking can be switched off outright (:link off): a uri is then drawn as the text it is
+        final boolean clicking = linkClickable;
+        // The captured text can carry styling: the console's highlighter colors whatever sits
+        // between markup rules, so a {{link}} around a uri arrives with escapes inside it.  Styling
+        // is not part of the uri — validating the raw text rejects every colored link and draws it
+        // plain, which is a uri on screen that no click can resolve.  The stripped text is the
+        // target and the colored text is the label.
+        final String uri = strip(text);
+        // Measuring renders no styling at all — the same reason the rule machinery below
+        // runs only when ansiOn: strip() and viewLength() must see the text a reader sees,
+        // not the escapes that make it a link.
+        if (!this.ansiOn || !clicking || !linkable(uri)) {
+            // not a link -- but an underline the reader asked for is a decoration in its own right,
+            // so it is drawn, with no OSC 8 to open it
+            this.writeRaw(this.ansiOn && linkUnderline ? LINK_UNDERLINE + text + "\033[m" : text);
+            return;
+        }
+        String restore = this.rewriteStack.isEmpty() ? null : this.rewrites.get(this.rewriteStack.peek());
+        restore = null == restore ? this.rewrites.get("X") : restore.replace("\033[", "\033[0;");
+        this.writeRaw(LINK_OPEN + uri + LINK_ST + (linkUnderline ? LINK_UNDERLINE : "")
+                + text + LINK_CLOSE + restore);
+    }
+
+    /**
+     * True when the text is a uri a terminal could open: the wrapped text is the target, so
+     * a candidate the furi parser rejects is drawn plain.
+     */
+    /**
+     * True when the text is a uri: what makes a {@code {{link}}} tag a link, and what lets the
+     * console treat uri-shaped text as one without any tag at all (a uri written into a message
+     * or a log line was never a {@code Uri} object, so nothing wrapped it).
+     */
+    public static boolean linkable(final String text) {
+        if (null == text || text.isEmpty()) return false;
+        try {
+            fURI.Singleton.f(text);
+            return true;
+        } catch (final Exception e) {
+            return false;
+        }
+    }
+
     private void flushSyntax(final boolean midBlock) {
         if (null == this.syntaxBlock || this.syntaxBlock.isEmpty()) return;
         final String pending = this.syntaxBlock.toString();
@@ -706,6 +877,10 @@ public class Graphitty {
      * code), otherwise straight to the output stream.
      */
     private void emit(final char c) {
+        if (null != this.linkBuffer) {
+            this.linkBuffer.append(c);
+            return;
+        }
         if (null != this.syntaxBlock) {
             this.syntaxBlock.append(c);
             return;
@@ -717,9 +892,13 @@ public class Graphitty {
         }
     }
 
-    /** Emit literal text (a code point above ASCII, written as UTF-8). */
+    /**
+     * Emit literal text (a code point above ASCII, written as UTF-8).
+     */
     private void emit(final String string) {
-        if (null != this.syntaxBlock)
+        if (null != this.linkBuffer)
+            this.linkBuffer.append(string);
+        else if (null != this.syntaxBlock)
             this.syntaxBlock.append(string);
         else
             this.writeRaw(string);

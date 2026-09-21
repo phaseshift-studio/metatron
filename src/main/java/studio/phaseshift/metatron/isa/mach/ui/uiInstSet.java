@@ -50,10 +50,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -102,6 +99,8 @@ public class uiInstSet extends AbstractInstSet {
     public static Type UI_SWIPE_PANEL_TYPE;
     public static final fURI UI_MODAL_TID = UI_WIDGET_TID.extend("modal_widget");
     public static Type UI_MODAL_TYPE;
+    public static final fURI UI_STACK_BAR_TID = UI_WIDGET_TID.extend("stack_bar_widget");
+    public static Type UI_STACK_BAR_TYPE;
     public static final fURI UI_ANCHOR_TID = UI_ISA_TID.extend("anchor");
     public static Type UI_ANCHOR_TYPE;
     public static final fURI UI_CONSOLE_TID = UI_ISA_TID.extend("console");
@@ -323,7 +322,22 @@ public class uiInstSet extends AbstractInstSet {
                                         .create(), "rec", "modal", Map.of(
                                         uri(TITLE), "the title of the modal",
                                         uri(BODY), "the body content of the modal"),
-                                "a modal popup panel: space/enter/ctrl-d dismisses")),
+                                "a modal popup panel: space/enter/ctrl-d dismisses"),
+                        docWrap(UI_STACK_BAR_TYPE = Type.Builder.build()
+                                        .tid(UI_WIDGET_TID)
+                                        .vid(UI_STACK_BAR_TID)
+                                        .isaPredicate(rec(
+                                                uri(DATA).maybe().asUri(), REC_TYPE,
+                                                uri(CONTEXT).maybe(), INT_TYPE,
+                                                uri(TOTAL).maybe(), INT_TYPE))
+                                        .constructor(arg -> new StackBarWidget(arg.asRec().jvm(), UI_STACK_BAR_TID, arg.vid()))
+                                        .create(), "maybe an obj", "a stack bar widget", Map.of(
+                                        uri(DATA).maybe(), "the sections: [key => int], each labelled by its key and drawn smallest first, largest last; the reserved key <> (the empty uri) is the what-is-left section — drawn last, wearing the unused section's style (dark by default)",
+                                        uri(CONTEXT).maybe(), "the denominator: the bar spans it, the rest is the unused tail, and total/context is the percent; absent = a composition (the data fills the bar, no percent, no tail)",
+                                        uri(TOTAL).maybe(), "the numerator of the percent (default: the sum of the data)"),
+                                "a general single-line stacked bar; only the data is specified — the rec is open world: pre=/post= framing content (a str, or a dereference such as post=>!*/usr/dr/context_window), style.width the width of the bar, and style.section the per-section styles: [name => style::T] (body => the label painted, else the key name; foreground/background the fragments around it; width its own width) — the reserved key unused styles the unused / what-is-left section"
+                        )),
+
                 uri(INST), lst(
                         docWrap(instC(AS_INST_TID.dom(UI_WIDGET_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> {
                             final String widgetString = ((Widget<?>) lhs).format();

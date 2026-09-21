@@ -205,7 +205,7 @@ public class FloatingSurface {
                     // Never let the render thread die — an uncaught exception
                     // would silently kill the daemon and stall every caller
                     // blocked in submitAndWait.
-                    System.err.println("[terminal-writer] task threw: " + t.getMessage());
+                    studio.phaseshift.metatron.isa.mach.type.ui.console.Console.rawErr().println("[terminal-writer] task threw: " + t.getMessage());
                 }
             }
             Runnable tail;
@@ -250,7 +250,7 @@ public class FloatingSurface {
         });
         try {
             if (!latch.await(SUBMIT_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)) {
-                System.err.println("[terminal-writer] timed out — direct write");
+                studio.phaseshift.metatron.isa.mach.type.ui.console.Console.rawErr().println("[terminal-writer] timed out — direct write");
                 synchronized (this.terminal) { task.run(); }
             }
         } catch (final InterruptedException e) {
@@ -276,6 +276,111 @@ public class FloatingSurface {
             this.scrollAccum.addAndGet((int) text.chars().filter(c -> c == '\n').count());
             this.terminal.writer().print(text);
             this.terminal.writer().flush();
+        });
+    }
+
+    /**
+     * Whoever owns the rows a widget draws over (the console's screen), or null when
+     * nobody does.
+     *
+     * <p>When someone is listening, this surface stops erasing outside a widget's own
+     * box — no "buffer zone" row blanked above it — and instead reports the rows it
+     * did erase, so the owner can repaint them from the content.  That division is
+     * the point: a terminal cannot say what a row held, so a surface that blanks a
+     * row it does not own destroys text nothing can restore, and a surface that
+     * blanks the same row on every pass fights any repair forever.
+     */
+    private volatile java.util.function.Consumer<int[]> damageListener = null;
+
+    /**
+     * Take ownership of the rows widgets draw over.  The listener is handed
+     * {@code {top, bottom}} — the rows a pass erased outside a widget's new box.
+     */
+    public void setDamageListener(final java.util.function.Consumer<int[]> listener) {
+        this.damageListener = listener;
+    }
+
+    /** True when something else owns the rows underneath the widgets. */
+    public boolean rowsOwned() {
+        return null != this.damageListener;
+    }
+
+    /**
+     * Tell the owner which rows a pass erased, so it can put the content back.
+     *
+     * <p>Queued rather than delivered inline, and that is not incidental: an erase
+     * usually happens *during* a pass (a widget found deleted, a moved box's
+     * leftovers), and the owner's repair is itself a pass — one that coalesces on the
+     * same flag the running pass holds.  Delivering this inline meant the repair was
+     * dropped as a duplicate of the pass that asked for it, which is exactly how a
+     * removed widget's text failed to come back.
+     */
+    private void reportDamage(final int from, final int to) {
+        final java.util.function.Consumer<int[]> listener = this.damageListener;
+        if (null == listener || to < from) return;
+        submit(() -> listener.accept(new int[]{from, to}));
+    }
+
+    /**
+     * Queue a repair of terminal rows followed by a widget pass, as one task on
+     * this surface's render thread, and do not wait for it.
+     *
+     * <p>The two writes have to be one task and in this order: the repair repaints
+     * rows from whatever owns them (the console's screen), and the widgets that had
+     * drawn over those rows must end up on top of the repair, not under it.  Split
+     * across the two queues — widget passes are urgent, repairs are not — they can
+     * land the other way round and leave a widget erased by its own repair.
+     *
+     * <p>Fire-and-forget and coalesced on the same flag a widget pass uses: this is
+     * called per pointer motion during a drag, where waiting is what makes the
+     * pointer feel sluggish, and where a burst of events only needs the last frame.
+     *
+     * @param ansi rows to repaint before the widget pass; empty queues a plain pass
+     */
+    public void paintAndRender(final String ansi) {
+        this.paintAndRender(() -> ansi);
+    }
+
+    /**
+     * Queue rows followed by a widget pass, <em>always</em> — never coalesced away.
+     *
+     * <p>The difference from {@link #paintAndRender(java.util.function.Supplier)} is the
+     * reason it exists: that one drops a request when a pass is already queued, which is
+     * right for a burst of output and wrong for a row that must be painted — a dropped
+     * pass is a row the owner asked to have put back and did not get.  A caller that
+     * coalesces on its own flag can use this and be certain the pass it asked for
+     * happens, carrying rows produced when it runs rather than when it was asked for.
+     *
+     * @param ansi produces the rows to write before the widget pass
+     */
+    public void writeAndRender(final java.util.function.Supplier<String> ansi) {
+        submit(() -> this.renderInternal(null == ansi ? null : ansi.get()));
+    }
+
+    /**
+     * As {@link #paintAndRender(String)}, but the rows are produced on this surface's
+     * thread, when the task runs.
+     *
+     * <p>That timing is the point: a queued pass may be coalesced away, and rows
+     * computed by the caller at request time would be lost with it.  Producing them
+     * here means the pass that does run paints what is true *then* — including anything
+     * the owner forgot in the meantime.
+     *
+     * @param ansi produces the rows to write before the widget pass
+     */
+    public void paintAndRender(final java.util.function.Supplier<String> ansi) {
+        if (!this.renderQueued.compareAndSet(false, true)) return;
+        submit(() -> {
+            try {
+                final String rows = ansi.get();
+                if (null != rows && !rows.isEmpty()) {
+                    this.terminal.writer().print(rows);
+                    this.terminal.writer().flush();
+                }
+                renderInternal();
+            } finally {
+                this.renderQueued.set(false);
+            }
         });
     }
 
@@ -499,11 +604,26 @@ public class FloatingSurface {
     /** Runs on the render thread.  Builds save-cursor + widgets + restore-cursor
      *  in one StringBuilder, expands {{X}} codes, and writes atomically. */
     private void renderInternal() {
+        this.renderInternal(null);
+    }
+
+    /**
+     * Render the pass, with {@code preamble} — rows someone else owns (the console's
+     * screen) — written into the <em>same</em> buffer, ahead of the widgets.
+     *
+     * <p>One buffer means one write, and that is what removes a flash: painting the rows
+     * and then the widgets as two writes shows the rows first, covering the widgets that
+     * were drawn a moment ago, so every pass blinks where a widget overlaps the rows.
+     * Order matters too — the rows are painted first so the widgets end up on top of
+     * them, which is the only order that leaves both correct.
+     */
+    private void renderInternal(final String preamble) {
         final long __t0 = System.nanoTime();
         // Consume the scroll accumulated since the last pass so each widget's
         // stale copy — carried up by scrolled console output — gets erased.
         final int scroll = this.scrollAccum.getAndSet(0);
-        if (!hasSlots()) return;
+        final boolean slots = hasSlots();
+        if (!slots && (null == preamble || preamble.isEmpty())) return;
         final int termWidth = this.terminal.getWidth();
         final int termHeight = this.terminal.getHeight();
         final var sb = new StringBuilder(512);
@@ -514,6 +634,17 @@ public class FloatingSurface {
         // (e.g. the status line's trailing bg) — otherwise they show up as a
         // stray colored blank line above floating widgets.
         sb.append("\033[m");
+
+        // the owner's rows, before any widget draws over them (see the javadoc)
+        if (null != preamble) sb.append(preamble);
+        if (!slots) {
+            sb.append("\033[u"); // restore cursor
+            synchronized (this.terminal) {
+                this.terminal.writer().print(sb.toString());
+                this.terminal.writer().flush();
+            }
+            return;
+        }
 
         // Blank the focus marker cell drawn in the previous pass, if any —
         // focus may have moved, the widget relocated, or the widget been
@@ -556,7 +687,7 @@ public class FloatingSurface {
         // pre-rendered.  A second Graphitty pass here would re-read the literal ```
         // or {{…}} that escaped widget text produced as fresh markup and break it.
         if (RENDER_TRACE)
-            System.err.println("[render] pass took " + (System.nanoTime() - __t0) / 1_000_000 + "ms");
+            studio.phaseshift.metatron.isa.mach.type.ui.console.Console.rawErr().println("[render] pass took " + (System.nanoTime() - __t0) / 1_000_000 + "ms");
         synchronized (this.terminal) {
             this.terminal.writer().print(sb.toString());
             this.terminal.writer().flush();
@@ -1106,6 +1237,22 @@ public class FloatingSurface {
     }
 
     /**
+     * The absolute terminal rows a widget's last render occupies, as
+     * {@code {top, bottom}} inclusive, or null when it has never been drawn.
+     *
+     * <p>This is what a caller needs in order to repair what a widget wrote over:
+     * the rows it covered are known only from where it was actually drawn — its
+     * anchor offsets are a position hint, not a row — and a caller that owns the
+     * rows underneath (the console, in screen mode) has to repaint them once the
+     * widget has moved on.
+     */
+    public int[] lastRows(final Widget<?> widget) {
+        final Slot slot = slot(widget);
+        if (null == slot || slot.prevHeight <= 0 || slot.lastRow <= 0) return null;
+        return new int[]{slot.lastRow, slot.lastRow + slot.prevHeight - 1};
+    }
+
+    /**
      * True when at least one pinned widget has a drawn region — i.e. the
      * pointer has something to act on (click to focus, click an affordance,
      * wheel to scroll).  This is what licenses terminal mouse tracking;
@@ -1175,6 +1322,7 @@ public class FloatingSurface {
                 sb.append("\033[").append(slot.lastRow + r).append(";").append(col).append("H");
                 sb.append(" ".repeat(Math.max(0, slot.prevWidth)));
             }
+            this.reportDamage(slot.lastRow, slot.lastRow + slot.prevHeight - 1);
         }
     }
 
@@ -1194,7 +1342,7 @@ public class FloatingSurface {
         final long __f1 = RENDER_TRACE ? System.nanoTime() : 0;
         final String[] content = formatted.split("\n", -1);
         if (RENDER_TRACE)
-            System.err.println("[render] format=" + (__f1 - __f0) / 1_000_000 + "ms lines=" + content.length);
+            studio.phaseshift.metatron.isa.mach.type.ui.console.Console.rawErr().println("[render] format=" + (__f1 - __f0) / 1_000_000 + "ms lines=" + content.length);
 
         // ── the viewport ───────────────────────────────────────────────
         // Every pinned widget is drawn through a viewport: the rows it may
@@ -1284,7 +1432,7 @@ public class FloatingSurface {
         // carrying its previous representation up the screen.  Erase it where
         // it now sits — within the widget's own columns — so stale copies
         // never rise row-by-row with each new output line.
-        if (scroll > 0 && oldPrevHeight > 0) {
+        if (!this.rowsOwned() && scroll > 0 && oldPrevHeight > 0) {
             final int staleRow = oldLastRow - scroll;
             final int staleHeight = Math.min(oldPrevHeight, scroll);
             // Wrap-tolerant band: a console line that wraps at the terminal
@@ -1308,6 +1456,8 @@ public class FloatingSurface {
         // covered by new content are skipped; the new lines overwrite them.
         // Clearing and rendering share one StringBuilder (single atomic
         // terminal write) so there is no flicker.
+        int erasedTop = Integer.MAX_VALUE;
+        int erasedBottom = 0;
         if (oldPrevHeight > 0 && oldLastRow > 0) {
             final boolean sameCol = oldLastCol == slot.lastCol;
             for (int r = 0; r < oldPrevHeight; r++) {
@@ -1325,12 +1475,19 @@ public class FloatingSurface {
                 // cells and leave the old right edge behind as a ghost trail.
                 sb.append("\033[").append(row).append(";").append(oldLastCol + covered).append("H");
                 sb.append(" ".repeat(Math.max(0, oldPrevWidth - covered)));
+                erasedTop = Math.min(erasedTop, row);
+                erasedBottom = Math.max(erasedBottom, row);
             }
         }
+        // the rows just blanked are the owner's to repaint: this surface does not know
+        // what they held, and only the owner keeps a copy
+        if (oldPrevHeight > 0) this.reportDamage(erasedTop, erasedBottom);
 
         // Buffer zone: keep the row directly above the widget clean, scoped
-        // to the widget's own width so the row is never blanked beyond it.
-        if (slot.lastRow > 1) {
+        // to the widget's own width so the row is never blanked beyond it.  Skipped
+        // when someone owns the rows: the blank is not the widget's to write, and it
+        // would be re-blanked on every pass — forever undoing the owner's repair.
+        if (!this.rowsOwned() && slot.lastRow > 1) {
             sb.append("\033[").append(slot.lastRow - 1).append(";").append(slot.lastCol).append("H");
             sb.append(" ".repeat(Math.max(0, newWidth)));
         }
@@ -1425,6 +1582,7 @@ public class FloatingSurface {
                 this.terminal.writer().print(sb.toString());
                 this.terminal.writer().flush();
             }
+            this.reportDamage(slot.lastRow, slot.lastRow + slot.prevHeight - 1);
         });
     }
 

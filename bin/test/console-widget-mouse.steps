@@ -93,11 +93,14 @@ RAW b"\x1b[<0\x3b5\x3b4m"
 SLEEP 1
 WAIT_SINCE refocus ▶ 10
 
-# --- wheel over empty terminal: the wheel follows the pointer, so an empty
-# --- cell hands the pointer back — focus drops (the marker goes) and the
-# --- terminal gets its own mouse again for its scrollback ---
+# --- wheel over the transcript: the console owns its rows, so the wheel scrolls
+# --- THEM (there is no terminal scrollback holding this transcript to reach) and
+# --- the pointer is NOT handed back — which is what keeps a click on a widget
+# --- working without alt+w after the reader has scrolled the transcript.
 MARK wheel
 RAW b"\x1b[<64\x3b70\x3b30M"
 SLEEP 1
+SEND :widgets
 SLEEP 1
-SILENT wheel ▶ 3
+WAIT_SINCE wheel ▶ 5
+WAIT_SINCE wheel 1 floating widget 5

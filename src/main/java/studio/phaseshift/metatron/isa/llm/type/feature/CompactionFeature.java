@@ -187,11 +187,10 @@ public class CompactionFeature extends AbstractFeature {
         if (null != running && !running.isDone())
             return;
         // 4. queue the background compaction — the block rec is a deferred compact() call
-        final fURI agentHome = agent.at(ROOT).uriValue();
         final Rec config = this.resolveConfig(agent, null == block ? rec() : block);
         final CoreThread thread = CoreThread.core(instLambda((lhs, inst) -> {
             try {
-                final Obj applied = compactSession(agentHome, sessionVID, config);
+                final Obj applied = compactSession(agent, config);
                 if (applied.isFail())
                     LOG.warn("compaction failed: %s", Str.Helper.cleanString(applied));
                 return applied;
@@ -281,15 +280,16 @@ public class CompactionFeature extends AbstractFeature {
      * the CompactionFeature's background thread — the config rec has the same
      * vocabulary as the {@code <<mtron:compaction>>} block (agent, model, prompt).
      *
-     * @param agentHome  the agent root — the model rec is resolved from
-     *                   {@code <agentHome>/model} when the config's model is noobj
-     * @param sessionVID the session whose ledger messages are compacted
-     * @param config     the argument/block rec — {@code model} and {@code prompt}
-     *                   override the summarizer's model and prompt template
+     * @param agent  the agent — the model rec is resolved from
+     *               {@code <agentHome>/model} when the config's model is noobj
+     * @param config the argument/block rec — {@code model} and {@code prompt}
+     *               override the summarizer's model and prompt template
      * @return the applied-constraints rec — the resolved [to, compaction=>vid]
      * plus the [in, out, compression] stats; a fail::T on error
      */
-    public static Obj compactSession(final fURI agentHome, final fURI sessionVID, final Rec config) {
+    public static Obj compactSession(final Agent agent, final Rec config) {
+        final fURI agentHome = agent.root();
+        final fURI sessionVID = agent.sessionVID();
         final GraphittyLogger LOG = Graphitty.log(CompactionFeature.class);
         final Obj modelArg = config.at(uri(MODEL));
         final Obj promptArg = config.at(uri(PROMPT));
@@ -330,7 +330,7 @@ public class CompactionFeature extends AbstractFeature {
         final ChatFrame result = Agent.Helper.miniChat("session_compactor", model(model.at(TIMEOUT, real(5.0, MATH_MINUTE_TID, null))), prompt.formatted(digest));
         final String summary = Str.Helper.cleanString(result.at(CHAT).orElse(str("")));
         // 5. write the sentinel + pair-safe recent-tail
-        final Rec sentinel = writeCompaction(agentHome, sessionVID, messages, digest, summary);
+        final Rec sentinel = writeCompaction(agent, messages, digest, summary);
         return rec(uri(TO), uri(outputBase),
                 uri("compaction"), uri(sentinel.vid()),
                 uri(IN), sentinel.at(uri(IN)),
@@ -346,14 +346,15 @@ public class CompactionFeature extends AbstractFeature {
      * {@link #compactSession} so the write-path is testable without an LLM
      * round-trip.
      *
-     * @param agentHome  the agent root — the sentinel/tail write under {@code <agentHome>/message/}
-     * @param sessionVID the session the sentinel belongs to
-     * @param messages   the session's messages, oldest -> newest, as ledger rels
-     * @param digest     the conversation digest (drives the {@code in} token stat)
-     * @param summary    the resume summary (the sentinel's {@code text})
+     * @param agent    the agent root — the sentinel/tail write under {@code <agentHome>/message/}
+     * @param messages the session's messages, oldest -> newest, as ledger rels
+     * @param digest   the conversation digest (drives the {@code in} token stat)
+     * @param summary  the resume summary (the sentinel's {@code text})
      * @return the written sentinel rec (text + in/out/compression + session/depth)
      */
-    public static Rec writeCompaction(final fURI agentHome, final fURI sessionVID, final List<Rel> messages, final String digest, final String summary) {
+    public static Rec writeCompaction(final Agent agent, final List<Rel> messages, final String digest, final String summary) {
+        final fURI agentHome = agent.root();
+        final fURI sessionVID = agent.sessionVID();
         final AbstractMessageFeature.DefaultTokenCountEstimator estimator = AbstractMessageFeature.DefaultTokenCountEstimator.singleton();
         final int tokensIn = estimator.estimateTokenCountInText(digest);
         final int tokensOut = estimator.estimateTokenCountInText(summary);
@@ -387,6 +388,11 @@ public class CompactionFeature extends AbstractFeature {
             final Rec tail = conversational.get(i).second().asRec();
             MessageBuilder.build(tail.tid()).copy(tail.jvm()).create(writePath);
         }
+        // the window has collapsed: re-measure it (the chat view now stops at
+        // the sentinel written above) and push the readout, so the token bar
+        // drops to the post-compaction fill immediately instead of waiting
+        // for the next model call to re-read the window
+        agent.service(MessageService.class).ifPresent(service -> service.resyncTokenCounts(agent));
         return sentinel;
     }
 

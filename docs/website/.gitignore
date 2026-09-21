@@ -1,0 +1,10 @@
+# Ignore everything in this directory (generated HTML, etc.)...
+/*
+# ...except these three pages
+!/index.html
+!/tractatus.html
+!/start.html
+# ...and the committed agent-skills tree (published by the website deploy)
+!/skills
+# ...but the rendered skill HTML is derived from the .md — regenerated, not committed
+# skills/**/*.html

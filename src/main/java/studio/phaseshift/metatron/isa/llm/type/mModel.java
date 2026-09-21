@@ -46,7 +46,7 @@ public class mModel extends MRec {
     }
 
     public static mModel model(final Rec modelRec) {
-        return new mModel(modelRec.jvm(), modelRec.tid(), modelRec.vid());
+        return modelRec instanceof mModel ? (mModel) modelRec : new mModel(modelRec.jvm(), modelRec.tid(), modelRec.vid());
     }
 
     public Uri llm() {

@@ -57,6 +57,33 @@ public class Highlighter implements org.jline.reader.Highlighter {
 
     private static final Highlighter INSTANCE = new Highlighter(SyntaxHighlighter.build(Highlighter.configurations.getConfig("jnanorc"), "mtron"));
 
+    /**
+     * The instance that colors the user's OWN text: built without graphitty, so a rule in it is
+     * the characters they typed rather than an instruction.
+     */
+    private static final Highlighter LINE =
+            new Highlighter(new ObjmtronSerializer(true), true);
+
+    /**
+     * The user's own text — the line they are editing, and the echo of the line they submitted —
+     * colored as syntax and nothing else.
+     * <p>
+     * Graphitty markup in their line IS the characters they typed and has to stay that way.
+     * Resolving it there rewrites what they see: {@code {{link}}/m/inst/+{{/link}}} collapses to
+     * {@code /m/inst/+}, a half-typed tag eats the line under the cursor, and a clear-screen rule
+     * wipes the screen out from under them.  Their own words are never markup, before or after
+     * the <enter> that submits them.
+     * <p>
+     * Output is the other way round — a result, a banner, a widget body is the console's to
+     * decorate, and that is {@link #format(Object)}.  This instance has the same syntax config as
+     * the reader's own highlighter (also built with {@code ignoreGraphitty}), so the echo, the
+     * console's redraw of the live line, and jline's redraw of it all agree.
+     */
+    public static String line(final String text) {
+        if (null == text || text.isEmpty()) return text;
+        return LINE.syntaxHighlighter.highlight(text).toAnsi();
+    }
+
     public static Highlighter single() {
         return INSTANCE;
     }
@@ -202,12 +229,16 @@ public class Highlighter implements org.jline.reader.Highlighter {
      */
     private static final Map<String, Optional<String>> SYNTAX_NAMES = new ConcurrentHashMap<>();
 
-    /** The short forms of the conf/nanorc file names. */
+    /**
+     * The short forms of the conf/nanorc file names.
+     */
     private static final Map<String, String> LANGUAGE_ALIASES = Map.of(
             "js", "javascript", "ts", "javascript", "py", "python",
             "yml", "yaml", "md", "markdown", "htm", "html");
 
-    /** The {@code syntax "Java"} declaration opening a nanorc file. */
+    /**
+     * The {@code syntax "Java"} declaration opening a nanorc file.
+     */
     private static final Pattern SYNTAX_DECLARATION = Pattern.compile("^syntax\\s+\"?([^\"\\s]+)");
 
     private static Optional<String> resolveSyntax(final String token) {
@@ -443,18 +474,12 @@ public class Highlighter implements org.jline.reader.Highlighter {
 
     @Override
     public AttributedString highlight(final LineReader reader, final String buffer) {
-        if (null == this.graphitty) {
-            return this.syntaxHighlighter.highlight(buffer);
-        } else {
-            final Matcher matcher = this.GRAPHITTY_PATTERN.matcher(buffer);
-            if (matcher.find() || Graphitty.hasFence(buffer)) {
-                // writeToString emits ANSI; parse it back into styles so the caller's
-                // toAnsi() re-emits the color — a plain AttributedString would treat
-                // the escapes as text and drop them.
-                return AttributedString.fromAnsi(this.graphitty.writeToString(buffer));
-            } else {
-                return this.syntaxHighlighter.highlight(buffer);
-            }
-        }
+        // The reader's line is the user's OWN text, so it is coloured as syntax and nothing else.
+        // Resolving graphitty here rewrites what they are typing as they type it: {{link}} stops
+        // being the characters they see (a name in braces is swallowed as a rule, a tag they have
+        // not closed yet changes the line under the cursor), and the line re-flows mid-word.  The
+        // markup still applies to whatever they SUBMIT — that is the echo and the results, which
+        // go through format() instead.
+        return this.syntaxHighlighter.highlight(buffer);
     }
 }
