@@ -562,7 +562,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default boolean isAutoFrom() {
-        return Obj.Helper.isAutoPointer(this);
+        return this.tid().basePath().equals(AUTO_FROM_INST_TID);
+    }
+
+    default boolean isAutoAt() {
+        return this.tid().basePath().equals(AUTO_AT_INST_TID);
     }
 
     default Obj as(final Type type) {

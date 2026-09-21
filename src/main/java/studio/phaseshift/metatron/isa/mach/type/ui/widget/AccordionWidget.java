@@ -293,7 +293,7 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
         final List<String> displayLines = floatW > 0 ? displayLines(body, style) : new ArrayList<>(body);
         final long __p2 = System.nanoTime();
         if (Boolean.getBoolean("metatron.render.trace"))
-            System.err.println("[render]   acc anchored-read=" + (__p1 - __p0) / 1_000_000
+            studio.phaseshift.metatron.isa.mach.type.ui.console.Console.rawErr().println("[render]   acc anchored-read=" + (__p1 - __p0) / 1_000_000
                     + "ms body=" + (__p2 - __p1) / 1_000_000 + "ms lines=" + displayLines.size());
         final int bodyWidth = displayLines.stream().map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
         final int titleW = Highlighter.visualLength(title) + Highlighter.visualLength(ind) + 3;

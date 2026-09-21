@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.TokenCounterTool;
 import studio.phaseshift.metatron.isa.vec.type.MVec;
 
 import java.lang.reflect.Method;
@@ -76,6 +77,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_TOOL_TID = LLM_ISA_TID.extend(TOOL);
     public static final fURI LLM_CONCEPT_TID = LLM_ISA_TID.extend(CONCEPT);
     public static final fURI LLM_TODO_TID = LLM_ISA_TID.extend(TODO);
+    public static final fURI LLM_TOKEN_COUNTER_TOOL_TID = LLM_ISA_TID.extend("ui/tool/token_counter_tool");
     public static final fURI LLM_SESSION_TID = LLM_ISA_TID.extend(SESSION);
     public static final fURI LLM_ITERATION_TID = LLM_ISA_TID.extend(ITERATION);
     public static final fURI LLM_CLAIM_TID = LLM_ISA_TID.extend("claim");
@@ -161,6 +163,7 @@ public class llmInstSet extends AbstractInstSet {
     public static Type LLM_COMPACTION_MESSAGE_TYPE;
     public static Type LLM_TODO_TYPE;
     public static Type LLM_TOOL_TYPE;
+    public static Type LLM_TOKEN_COUNTER_TOOL_TYPE;
     public static Type LLM_CHAT_RESULT_TYPE;
     public static Type LLM_WATERMARK_TYPE;
     public static ObjFactory LLM_OBJ_FACTORY = MObjFactory.of().addExtension(MVec.class, x -> lst(x.jvm().stream().toList()));
@@ -293,6 +296,26 @@ public class llmInstSet extends AbstractInstSet {
                                 reference to artifacts in metatron can be attached.
                                 """,
                                 "@/agent/todo/1 >>= [reference => +[!*/project/src,!*/project/test]] [-- adding references to a todo --]"),
+                        docWrap(LLM_TOKEN_COUNTER_TOOL_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_TOKEN_COUNTER_TOOL_TID)
+                                        .isaPredicate(rec(
+                                                uri(IN).maybe().asUri(), isa_(INT_TYPE).else_(jnt(0)),
+                                                uri(OUT).maybe(), isa_(INT_TYPE).else_(jnt(0)),
+                                                uri(MAX).maybe(), INT_TYPE,
+                                                uri(EST).maybe(), rec(
+                                                        uri(USER).maybe().asUri(), INT_TYPE,
+                                                        uri(AI).maybe(), INT_TYPE,
+                                                        uri(TOOL).maybe(), INT_TYPE,
+                                                        uri(SYSTEM).maybe(), INT_TYPE).maybe()))
+                                        .constructor(arg -> new TokenCounterTool(arg.asRec().jvm(), LLM_TOKEN_COUNTER_TOOL_TID, arg.vid()))
+                                        .create(), "", "", Map.of(
+                                        uri(IN).maybe(), "actual input tokens of the chat",
+                                        uri(OUT).maybe(), "actual output tokens of the chat (counted for the record, not drawn)",
+                                        uri(MAX).maybe(), "the context window's size in tokens — the bar's window: the sections are its share, in/max the percent, the rest the unused tail",
+                                        uri(EST).maybe(), "the estimated composition of the window: [system=>int, ai=>int, user=>int, tool=>int]"),
+                                "a single-line token-usage bar — the tailor-made caller of the general ui stack bar: the est categories as colored sections (smallest first, largest last, an empty one skipped) against the context window (max), with in over max as the percent and the window sized behind the bar",
+                                "token_counter_tool::[in=>4413,out=>66,max=>100000,est=>[system=>622,ai=>170,user=>409,tool=>334]]"),
                         // CLAIM — a distilled proposition with provenance
                         docWrap(LLM_CLAIM_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
@@ -546,8 +569,14 @@ public class llmInstSet extends AbstractInstSet {
                         LLM_AGENT_TYPE = docWrap(Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(LLM_AGENT_TID)
+                                        // name is required: the session_or_agent union matches
+                                        // arms in order, and an all-optional agent refinement is
+                                        // satisfied vacuously by every rec — with such an arm
+                                        // first, it swallows the session rows (rootFor resolving
+                                        // to noobj).  A required discriminator is what keeps the
+                                        // union's arm order safe.
                                         .isaPredicate(rec(
-                                                uri(NAME), STR_TYPE,
+                                                uri(NAME).asUri(), STR_TYPE,
                                                 uri(DESC).maybe(), STR_TYPE,
                                                 uri(FEATURE).maybe(), LST_TYPE))
                                         .constructor(arg -> new Agent(arg.recValue(), LLM_AGENT_TID, arg.vid()))
@@ -884,7 +913,7 @@ public class llmInstSet extends AbstractInstSet {
                                                     uri(KIND), inst.arg(f(KIND), 3),
                                                     uri(CONCEPT), inst.arg(f(CONCEPT), 4),
                                                     uri(TO), uri(address.agentHome()));
-                                            return SummarizeFeature.summarizeSession(address.agentHome(), address.sessionVID(), config);
+                                            return SummarizeFeature.summarizeSession(agent(rec(mutableMap(uri(ROOT), uri(address.agentHome()), uri(SESSION), uri(address.sessionVID())))), config);
                                         }),
                                 "a session to distill",
                                 "the applied constraints rec — [session, model, scope, kind, concept, to, claim=>[vids], loose_end=>[vids]]",
@@ -910,7 +939,7 @@ public class llmInstSet extends AbstractInstSet {
                                                             rec(uri(MODEL), inst.arg(f(MODEL), 1),
                                                                     uri(PROMPT), inst.arg(f(PROMPT), 2),
                                                                     uri(TO), uri(address.agentHome())));
-                                            return CompactionFeature.compactSession(address.agentHome(), address.sessionVID(), config);
+                                            return CompactionFeature.compactSession(agent(rec(mutableMap(uri(ROOT), uri(address.agentHome()), uri(SESSION), uri(address.sessionVID())))), config);
                                         }),
                                 "a session or agent to compact",
                                 "the applied constraints rec — [to, compaction=>vid, in, out, compression]",

@@ -25,7 +25,10 @@ import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.llm.TokenCalculator;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
+import studio.phaseshift.metatron.isa.llm.type.feature.AbstractMessageFeature;
+import studio.phaseshift.metatron.isa.llm.type.feature.SystemFeature;
 import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -331,7 +334,45 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                 this.currentMessages.add(message.vid());
             chat.add(converted);
         }
+        // the pre-call seed: while the stream was processed above, every
+        // window message contributed its estimate to its kind — plus the
+        // prompt the agent is running now (still outside the ledger window)
+        // and the live system text (transformed onto the system channel, so
+        // it is not in the window itself).  Fed through MessageService so the
+        // feature's to-slot readout updates before the first call reports.
+        this.seedEstimates(chat);
         return chat;
+    }
+
+    /**
+     * Measure what this exact view will carry and hand it to the message
+     * service: each message of the window keyed under the calculator's own
+     * kind names, the agent's current prompt under user, and the agent's
+     * live system text under system.  The agent is optional on this store —
+     * bus paths carry none — and without one there is no calculator to feed,
+     * so a bus-formed view seeds nothing.
+     */
+    private void seedEstimates(final List<ChatMessage> chat) {
+        if (null == this.agent)
+            return;
+        final var estimator = AbstractMessageFeature.DefaultTokenCountEstimator.singleton();
+        final Map<String, Long> seeded = new LinkedHashMap<>();
+        for (final ChatMessage message : chat) {
+            if (null == message)
+                continue;
+            seeded.merge(TokenCalculator.kindOf(message), (long) estimator.estimateTokenCountInMessage(message), Long::sum);
+        }
+        final String prompt = this.agent.userMessage();
+        if (null != prompt && !prompt.isEmpty())
+            seeded.merge(USER, (long) estimator.estimateTokenCountInText(prompt), Long::sum);
+        this.agent.feature(SystemFeature.class)
+                .map(SystemFeature::systemMessage)
+                .filter(text -> null != text && !text.isEmpty())
+                .ifPresent(text -> seeded.merge(SYSTEM, (long) estimator.estimateTokenCountInText(text), Long::sum));
+        if (seeded.isEmpty())
+            return;
+        this.agent.service(MessageService.class)
+                .ifPresent(service -> service.updateTokenCounts(this.agent, seeded));
     }
 
     /**

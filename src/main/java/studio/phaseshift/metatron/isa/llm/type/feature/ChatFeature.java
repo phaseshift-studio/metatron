@@ -53,6 +53,10 @@ public class ChatFeature extends AbstractFeature implements ChatService {
         return this.lastMessage;
     }
 
+    public mModel model() {
+        return mModel.model(this.at(MODEL));
+    }
+
     @Override
     public Obj onBeforeChat(final Agent agent) {
         final String userMessage = agent.userMessage();

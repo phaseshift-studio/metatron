@@ -23,6 +23,7 @@ import org.jline.builtins.TTop;
 import org.jline.reader.Buffer;
 import org.jline.reader.LineReader;
 import org.jline.reader.Widget;
+import org.jline.terminal.MouseEvent;
 import org.jline.utils.InfoCmp;
 import org.jline.widget.Widgets;
 import org.slf4j.event.Level;
@@ -209,7 +210,8 @@ public final class CommandPalette extends MRec {
 
         // ===== clear =====
         this.at("clear", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-            Graphitty.out(Console.getTerminal().output(), "{{XX}}");
+            // through the screen, so the display and the screen's model of it are wiped together
+            console.clearTranscript();
             console.getStatus().refresh();
             return noobj();
         }), MUTABLE);
@@ -514,6 +516,30 @@ public final class CommandPalette extends MRec {
             return noobj();
         }), MUTABLE);
 
+        // ===== links (how a clickable uri is drawn, and what the console believes about it) =====
+        this.at("links", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+            final String arg = lhs.isStr() ? lhs.strValue().trim() : "";
+            if (arg.isEmpty()) {
+                // the report is the diagnostic: a uri that is drawn but not clickable is either a
+                // screen the console does not own the rows of, or a pointer the terminal kept
+                this.console.logger().info("{{y}}links{{X}}: %s", this.console.linkReport());
+                return noobj();
+            }
+            switch (arg.toLowerCase()) {
+                case "on", "true", "yes" ->
+                        studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.linkUnderline(true);
+                case "off", "false", "no" ->
+                        studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.linkUnderline(false);
+                default -> {
+                    this.console.logger().info("usage: :links [on|off] — the underline a clickable uri is drawn with");
+                    return noobj();
+                }
+            }
+            this.console.logger().info("link underline {{y}}%s{{X}} — a uri is still clickable either way",
+                    studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.linkUnderline() ? "on" : "off");
+            return noobj();
+        }), MUTABLE);
+
         // ===== scroll (move the focused widget's viewport over its own text) =====
         this.at("scroll", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             final String arg = lhs.isStr() ? lhs.strValue().trim() : "";
@@ -720,6 +746,16 @@ public final class CommandPalette extends MRec {
 
         // -------------------------------------------------------
         // Panes
+        // selection: hand the pointer back to the terminal.  While the console holds the mouse a
+        // click can be resolved to a row (a link, a widget) but the terminal's own selection is
+        // unavailable, so this gives it back on request — re-armed at the next prompt, which makes
+        // the cost one key rather than a mode.
+        widgets.getKeyMap().bind((Widget) () -> {
+            console.releasePointer();
+            console.syncWidgetMouseTracking(true);   // write the mode now, not at the next tick
+            console.logger().info("{{y}}pointer released{{X}} — the terminal has its mouse back (re-armed at the next prompt)");
+            return true;
+        }, alt('s'));
         widgets.getKeyMap().bind((Widget) () -> {
             if (console.isSplitMode()) {
                 this.at("next-pane").apply(noobj());
@@ -860,6 +896,13 @@ public final class CommandPalette extends MRec {
                                     ? -MOUSE_WHEEL_ROWS : MOUSE_WHEEL_ROWS;
                             surface.scroll(hovered, 0, step);
                             if (console.getActiveWidget() != hovered) console.focusWidget(hovered);
+                        } else if (Console.screenMode()) {
+                            // The console owns its rows, so the wheel scrolls THEM: there is
+                            // no terminal scrollback holding this transcript to reach, and
+                            // handing the pointer over took the mouse away from the widgets —
+                            // after which clicking one needed alt+w to get it back.
+                            console.scrollScreen(event.getButton() == org.jline.terminal.MouseEvent.Button.WheelUp
+                                    ? -MOUSE_WHEEL_ROWS : MOUSE_WHEEL_ROWS);
                         } else {
                             console.releasePointer();
                         }
@@ -867,8 +910,10 @@ public final class CommandPalette extends MRec {
                         // A press on the focused widget's chevron takes hold of it to
                         // drag; anything else is a click: focus what is under the
                         // pointer, let the widget work its own affordances, or — on
-                        // empty terminal — drop the focus entirely.
-                        console.mousePressed(row, col);
+                        // empty terminal — drop the focus entirely.  A held control key
+                        // is carried through: on a link it means "follow it now".
+                        console.mousePressed(row, col,
+                                event.getModifiers().contains(MouseEvent.Modifier.Control));
                     } else if (event.getType() == org.jline.terminal.MouseEvent.Type.Dragged) {
                         console.mouseDragged(row, col);
                     } else if (event.getType() == org.jline.terminal.MouseEvent.Type.Released) {

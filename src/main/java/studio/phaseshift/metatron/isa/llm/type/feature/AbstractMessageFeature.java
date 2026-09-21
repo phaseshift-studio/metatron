@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.llm.space.ToolPairGate;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.AgentServices;
 import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.ChatService;
 import studio.phaseshift.metatron.isa.llm.type.feature.service.MessageService;
 import studio.phaseshift.metatron.isa.llm.type.feature.service.ToolService;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
@@ -40,7 +41,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -140,7 +140,7 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
      */
     public static Optional<TokenCalculator> calculatorFor(final Agent agent) {
         return agent.service(MessageService.class)
-                .filter(service -> service instanceof AbstractMessageFeature messageFeature)
+                .filter(service -> service instanceof AbstractMessageFeature)
                 .map(service -> ((AbstractMessageFeature) service).tokenCalculator());
     }
 
@@ -312,7 +312,42 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
         } catch (final Exception e) {
             throw MTronException.of("unable to setup session: %s", e);
         }
+        // the prompt has been accepted and the calculator recounted from zero:
+        // drop the bar to the fresh-chat state (0% of the window, empty bar)
+        // before the first model call lands, so the climb is seen from the
+        // start of the iteration instead of sitting on the previous chat's
+        // numbers.  max is the only key present, so the rec is non-empty and
+        // the widget re-reads itself — a model with no context window keeps
+        // an empty rec and the bar is left as-is
+        final Rec staging = this.tokenRec(agent);
+        if (!staging.isEmpty() && this.has(TO))
+            this.at(TO).apply(staging);
         return noobj();
+    }
+
+    @Override
+    public void updateTokenCounts(final Agent agent, final Map<String, Long> estimates) {
+        // the pre-call seed lands on the same estimates the listener streams
+        // accumulate into the calculator — one composition, so the to-slot
+        // readout follows the same path as every other stage of the chat
+        this.tokenCalculator.addEstimates(estimates);
+        final Rec staging = this.tokenRec(agent);
+        if (!staging.isEmpty() && this.has(TO))
+            this.at(TO).apply(staging);
+    }
+
+    @Override
+    public void onToolExecuted(final Agent agent, final Obj result) {
+        // the bar climbs with every stage of the iteration, not just at the
+        // end: by the time a tool has executed, the model call that requested
+        // it has already flowed through the calculator — so the rec built
+        // here reads the usage so far (the next model call adds its own at
+        // the following stage, or at completion).  onToolExecuted fires
+        // BETWEEN model calls, which is the safe window to render: mid-stream
+        // is where the console cursor and a redraw fight.
+        final Rec staging = this.tokenRec(agent);
+        if (!staging.isEmpty() && this.has(TO))
+            this.at(TO).apply(staging);
     }
 
     @Override
@@ -324,23 +359,38 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
         // prompt, which carries overhead this side never sees.  Written only
         // when there is something to report: a model that reports no usage
         // and sent no messages must not be presented as a zero.
-        final Map<Obj, Obj> jvm = new LinkedHashMap<>();
+        final Rec tokenRec = this.tokenRec(agent);
+        if (!tokenRec.isEmpty() && this.has(TO))
+            this.at(TO).apply(tokenRec);
+        result.put(TOKEN, tokenRec.isEmpty() ? noobj() : tokenRec);
+    }
+
+    /**
+     * The iteration's usage so far — a snapshot of the calculator: the in/out
+     * the provider reported for the model calls made so far, the model's
+     * context window as max, and est — the estimated composition of what this
+     * side sent, by message kind.  Empty when there is nothing to report (a
+     * model that reports no usage and sent no messages must not be presented
+     * as a zero).  Called from onToolExecuted (each stage) and from
+     * onCompleteResponse (the final count).
+     */
+    protected Rec tokenRec(final Agent agent) {
+        final Rec tokenRec = rec();
         final long in = this.tokenCalculator.inputTokens();
         final long out = this.tokenCalculator.outputTokens();
         if (in > 0)
-            jvm.put(uri(IN), jnt(in));
+            tokenRec.at(uri(IN), jnt(in), MUTABLE);
         if (out > 0)
-            jvm.put(uri(OUT), jnt(out));
+            tokenRec.at(uri(OUT), jnt(out), MUTABLE);
+        agent.service(ChatService.class).ifPresent(chatService -> tokenRec.at(uri(MAX), chatService.model().context(), MUTABLE));
         final Map<String, Long> estimates = this.tokenCalculator.estimates();
         if (!estimates.isEmpty()) {
             final Map<Obj, Obj> est = new LinkedHashMap<>();
             estimates.forEach((kind, value) -> est.put(uri(kind), jnt(value)));
-            jvm.put(uri(EST), rec(est));
+            final Rec estimateRec = rec(est);
+            tokenRec.at(uri(EST), estimateRec, MUTABLE);
         }
-        StatusLine.message(f("tokens"), rec(jvm));
-        if (jvm.isEmpty())
-            return;
-        result.put(TOKEN, rec(jvm));
+        return tokenRec;
     }
 
     // ── Ledger fsck + session resolution (the ledger capability this feature owns) ──
@@ -468,18 +518,23 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
      * populated after {@code llmInstSet.setup()}.
      */
     private static final class Resolver {
+        // arm order is the match order: the session arm comes first because the
+        // agent arm's refinement is all-optional fields, which is satisfied by
+        // every rec — with it first, choose hand a session row to the agent arm
+        // and the root resolves to noobj.  The specific shape must shadow the
+        // universal one.
         private static final Inst INSTANCE = choose_(rec(
+                isa_(LLM_SESSION_TYPE).tryToInst(), instLambda(in -> {
+                    final Rec row = in.asRec();
+                    final fURI vid = row.vid();
+                    return rec(uri(SESSION), null == vid ? noobj() : uri(vid),
+                            uri(ROOT), uri((null == vid || vid.isEmpty()) ? rootOf(row) : SpaceChatSessionStore.memoryRootOf(vid)));
+                }),
                 isa_(LLM_AGENT_TYPE).tryToInst(), instLambda(in -> {
                     final Agent ag = agent(in.asRec());
                     final fURI vid = ag.service(MessageService.class).map(MessageService::sessionVID).orElse(null);
                     return rec(uri(SESSION), null == vid ? noobj() : uri(vid),
                             uri(ROOT), uri(ag.at(ROOT).uriValue()));
-                }),
-                isa_(LLM_SESSION_TYPE), instLambda(in -> {
-                    final Rec row = in.asRec();
-                    final fURI vid = row.vid();
-                    return rec(uri(SESSION), null == vid ? noobj() : uri(vid),
-                            uri(ROOT), uri((null == vid || vid.isEmpty()) ? rootOf(row) : SpaceChatSessionStore.memoryRootOf(vid)));
                 })
         )).tryToInst().asInst();
     }

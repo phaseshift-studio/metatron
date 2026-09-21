@@ -334,6 +334,8 @@ public final class Tokens {
     public static final String BOOT = "boot";
     public static final String TITLE = "title";
     public static final String STYLE = "style";
+    public static final String POST = "post";
+    public static final String PRE = "pre";
     public static final String ROW = "row";
     public static final String METADATA = "metadata";
     public static final String META = "meta";

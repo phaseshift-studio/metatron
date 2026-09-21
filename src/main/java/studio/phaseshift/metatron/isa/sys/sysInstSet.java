@@ -352,9 +352,11 @@ public class sysInstSet extends AbstractInstSet {
                             return lhs;
                         }), "maybe an obj", "maybe an obj", Map.of(), "prints arg jvm object to the terminal and emits lhs obj as rhs obj"),
                         docWrap(instC(SYS_INST_TID.extend("stdin").dom(ALL.maybe()).rng(STR_TID), lst(), (lhs, inst) -> {
-                            final Scanner scanner = new Scanner(System.in);
-                            final String input = scanner.nextLine();
-                            return str(input);
+                            // metatron's stdio, not System.in: whoever owns input (the console, a
+                            // pipe, an embedding host) installed the stream, so this reads what the
+                            // person is actually typing wherever metatron is running
+                            final String input = mSystem.readLine();
+                            return str(null == input ? "" : input);
                         }), "maybe an obj", "a single line of input", Map.of(), "read a line of input from the running terminal"))))
         ;
         super.setup();

@@ -126,15 +126,15 @@ public class TokenMessageFeatureTest extends AbstractFeatureTest {
     void completionEstimatesTheInputCompositionByMessageKind() {
         final TokenMessageFeature feature = feature();
         chatOnce(feature.tokenCalculator(), 40, 10, SYSTEM, USER);
-        chatOnce(feature.tokenCalculator(), 8, 2, SYSTEM, USER); // re-sends its window, and every call counts
+        chatOnce(feature.tokenCalculator(), 8, 2, SYSTEM, USER); // re-sends its window — est follows the latest request
         final ChatFrame result = chatResultOf("the answer", "the question");
         feature.onCompleteResponse(agentWith(feature), result);
         final Rec est = result.at(uri(TOKEN)).asRec().at(uri(EST)).asRec();
         assertTrue(est.isRec(), "the est breakdown sits under the token key");
-        assertEquals(2 * estOf(SYSTEM), est.asRec().at(uri("system")).intValue().intValue(),
-                "est.system is the estimator over each call's system message, summed over the chat");
-        assertEquals(2 * estOf(USER), est.asRec().at(uri("user")).intValue().intValue(),
-                "est.user is the estimator over each call's user message, summed over the chat");
+        assertEquals(estOf(SYSTEM), est.asRec().at(uri("system")).intValue().intValue(),
+                "est.system is the estimator over the latest request's system message, not a sum over the chat");
+        assertEquals(estOf(USER), est.asRec().at(uri("user")).intValue().intValue(),
+                "est.user is the estimator over the latest request's user message, not a sum over the chat");
     }
 
     private static int estOf(final ChatMessage message) {

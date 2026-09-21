@@ -29,20 +29,20 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.sys.mSystem;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 
 import java.util.List;
-import java.util.Scanner;
 
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
+
 public class HumanStreamingModel implements StreamingChatModel {
 
     private static final GraphittyLogger LOG = Graphitty.log(HumanStreamingModel.class);
-    private final Scanner scanner = new Scanner(System.in);
 
     @Override
     public void doChat(final ChatRequest chatRequest, final StreamingChatResponseHandler handler) {
@@ -55,15 +55,21 @@ public class HumanStreamingModel implements StreamingChatModel {
                 // Print ALL messages so the human sees the system prompt + history
                 LOG.none("\n--- {{c}}context{{/c}} ---\n");
                 for (var msg : chatRequest.messages()) {
+                    // any of these may be null: an ai message that neither spoke nor called a tool
+                    // (a stripped or empty turn) has no text, and a user message carrying tool
+                    // results has no text either — printing the context must not be what fails
                     if (msg instanceof SystemMessage sys) {
-                        LOG.none("[{{y}}SYSTEM{{/y}}] %s\n", sys.text().trim());
+                        LOG.none("[{{y}}SYSTEM{{/y}}] %s\n", text(sys.text()));
                     } else if (msg instanceof UserMessage user) {
-                        LOG.none("[{{y}}USER{{/y}}] %s\n", user.singleText().trim());
+                        LOG.none("[{{y}}USER{{/y}}] %s\n", text(user.singleText()));
                     } else if (msg instanceof AiMessage ai) {
-                        if (ai.hasToolExecutionRequests())
-                            LOG.none("[{{y}}AI  {{/y}}] → calls %s\n", ai.toolExecutionRequests().getFirst().name().trim());
-                        else
-                            LOG.none("[{{y}}AI  {{/y}}] %s\n", ai.text().trim());
+                        if (ai.hasToolExecutionRequests()) {
+                            final String tool = null == ai.toolExecutionRequests().getFirst() ? null
+                                    : ai.toolExecutionRequests().getFirst().name();
+                            LOG.none("[{{y}}AI  {{/y}}] → calls %s\n", text(tool));
+                        } else {
+                            LOG.none("[{{y}}AI  {{/y}}] %s\n", text(ai.text()));
+                        }
                     }
                 }
 
@@ -87,7 +93,11 @@ public class HumanStreamingModel implements StreamingChatModel {
                 String humanResponse = "";
                 final StringBuilder completeResponse = new StringBuilder();
                 while (!humanResponse.contains("<<done>>")) {
-                    humanResponse = scanner.nextLine().trim();
+                    // through metatron's stdio: whoever owns input installed it (the console
+                    // installs a stream over the terminal it holds), so this reads the person's
+                    // typing without knowing who is serving it
+                    final String human = mSystem.readLine();
+                    humanResponse = null == human ? "<<done>>" : human.trim();
                     if (humanResponse.startsWith("call:")) {
                         final String[] parts = humanResponse.split(":", 3);
                         if (parts.length < 3) {
@@ -122,4 +132,10 @@ public class HumanStreamingModel implements StreamingChatModel {
                 .modelName("human:latest")
                 .build();
     }
+
+    /** A message field as it should be printed: text when there is any, empty when there is none. */
+    private static String text(final String value) {
+        return null == value ? "" : value.trim();
+    }
+
 }

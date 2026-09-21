@@ -44,11 +44,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -160,7 +156,7 @@ public final class mcpMetatronBuilder {
                                 // code arrives already parsed to code::T by the schema-aware JSON
                                 // layer — no JSON-massaging here; just evaluate it.
                                 try {
-                                    Obj result = inst.arg(CODE, 0).apply();
+                                    Obj result = inst.arg(CODE, 0);
                                     // surface evaluation failures as a fail (so callers can
                                     // report an MCP error) rather than flattening them to text
                                     if (result.isFail())

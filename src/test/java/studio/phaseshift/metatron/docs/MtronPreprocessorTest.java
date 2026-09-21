@@ -24,6 +24,7 @@ import ch.qos.logback.core.read.ListAppender;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -114,7 +115,7 @@ public class MtronPreprocessorTest extends AbstractMetatronTest {
     public void testFailingStatementWithoutErrorDirectiveLogs() {
         final String output = processWithErrorCapture("1 + a");
         assertTrue(hasDocsBuggyWarning(), "failing statement without [ERROR] must log the docs-buggy warning");
-        LOG.warn("{{r}}THE ABOVE ERROR IS EXPECTED -- TESTING DOC PROCESSOR LOGGING");
+        LOG.warn(Graphitty.sillyPrint("THE ABOVE ERROR IS EXPECTED -- TESTING DOC PROCESSOR LOGGING", true, true));
     }
 
     /// [ERROR] on the first line of a multi-line statement suppresses that warning

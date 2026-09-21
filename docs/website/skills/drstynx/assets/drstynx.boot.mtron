@@ -263,21 +263,24 @@ scratch
         [======================]
 [== if the llm session already exists, continue, else create it ==]    
 [== <drdb:llm_session>.mult(print('\n what session number?: ').stdin().as(uri::T)).to(session_vid) ==]
-[==model::[
+model::[
   provider => deepseek,
   protocol => openai,
   host     => <https://api.deepseek.com>,
   api_key  => !*</sys/env/DEEPSEEK_API_KEY>,
   llm      => <deepseek-v4-pro> 
 ]@/usr/dr/model;
-human -> model::[llm=>'human:latest'];
-model::[provider     => ollama,
+
+[==model::[provider     => ollama,
         protocol     => ollama,
         host         => <http://ginger.local:11434>,
         llm          => <mtron-qwen3.8-27b:latest>]@/usr/dr/model;==]
 /usr/dr/agent -> |!*dr;
 /m/inst/web?str<=noobj{0}(url=>union(uri::T,str::T),native=>bool{?}::T){ *<url>.as(uri::T).*_.-<|[*mtron.else(false) => as(rec::T).as(str::T), _ => _]>> };
 /m/inst/web?docq -> docs::[desc=>'resolve a web url',dom=>"none",rng=>"the url referent as a str::T",args=>[url=>"the webpage url",native=>"as an mtron rec"]];
+[-- [ai=>3,user=>3,system=>34,<>=>34] --]
+[--human -> model::[llm=>'human:latest',context=>1000].to(/usr/dr/model)--]
+[-- map([ai=>3,user=>3,system=>34,<>=>34]) --]
 [-- tag::asciidoc_tag[] --]
 agent::[
  name     => 'dr.stynx',
@@ -289,8 +292,10 @@ agent::[
                                                    user      => !*boot/args/internal/user_home,
                                                    name      => 'general chat',
                                                    algorithm => [name=><message_window>, max=>20]]
-                                                         ==[_=>_].to(/usr/dr/session/1)) },
-                      session       => /usr/dr/session/1],
+                                                         ==[_=>_].to(/usr/dr/session/1)).
+                                          map(token_counter_tool::[style=>[anchor=>top_right]]@<token_widget>)},
+                             to            => inst(tok=>rec::T) { @token_widget>>=(==[style=>_] + *tok).display()  },
+                             session       => /usr/dr/session/1],
   chat_feature:::::::[model         => !(*</usr/dr/model>.else(model::[provider     => ollama,
                                                                        protocol     => ollama,
                                                                        host         => <http://ginger.local:11434>,
@@ -369,3 +374,24 @@ menu_bar_widget::::[lines  =>[!*ll],
                                             sum?str<=str{*}().
                                             as(markdown::T).
                                             as(skill::T)),==]
+                                            
+[==  inst(tok=>rec::T){ -<stack_bar_widget::[
+                                                                         style=>[
+                                                                           anchor=>top_right,
+                                                                           title=>'context',
+                                                                           section=>[
+                                                                             ai  =>[background=>"{{[b]}}"],
+                                                                             user=>[background=>"{{[g]}}"],
+                                                                             sys =>[background=>"{{[m]}}"],
+                                                                             tool=>[background=>"{{[c]}}"],
+                                                                             <>  =>[background=>"{{[k]}}",
+                                                                                    foreground=>"{{w}}",
+                                                                                    body      =>!(*tok>>.sum().as(real::T).
+                                                                                                         div(*</usr/dr/model/context>.
+                                                                                                         as(real::T)) * 100.0.as(int::T).print(_).as(str::T))]]],
+                                                                         data=>-<[
+                                                                          sys=>>>system, 
+                                                                          ai=>>>ai, 
+                                                                          user=>>>user, 
+                                                                          tool=>>>tool_result,
+                                                                          <>  =>*</usr/dr/model/context>.-(*tok>>.sum()).else(0).print('here:',_)]]@<token_widget>.display() } ==]

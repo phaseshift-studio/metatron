@@ -255,7 +255,7 @@ public class AbstractMessageFeatureTest extends AbstractMetatronTest {
     }, delimiter = '%')
     public void testHowASessionNamesItsLedgerRoot(final String session, final String expected, final String why) {
         ObjmtronSerializer.parse("/usr/test/ledger11/session/1 -> "
-                + "[agent=>/usr/test/ledger99,user=>/usr/test/ann,algorithm=>[policy=>'window']]").apply();
+                + "session::[agent=>/usr/test/ledger99,user=>/usr/test/ann,algorithm=>[policy=>'window']]").apply();
         final Obj target = ObjmtronSerializer.parse(session.trim()).apply();
         if ("<ERROR>".equals(expected))
             assertThrows(MTronException.class, () -> AbstractMessageFeature.rootFor(target), why);
@@ -276,7 +276,7 @@ public class AbstractMessageFeatureTest extends AbstractMetatronTest {
     }, delimiter = '%')
     public void testAnInstructionSweepsASessionsLedger(final String sweep, final String why) {
         ObjmtronSerializer.parse("/usr/test/ledger12/session/1 -> "
-                + "[agent=>/usr/test/ledger12,user=>/usr/test/ann,algorithm=>[policy=>'window']]").apply();
+                + "session::[agent=>/usr/test/ledger12,user=>/usr/test/ann,algorithm=>[policy=>'window']]").apply();
         writeAiRequestAt(f("/usr/test/ledger12/message/1"), CALL_ID);
         assertEquals(List.of(CALL_ID), ids(ObjmtronSerializer.parse(sweep).apply(), AbstractMessageFeature.ORPHAN), why);
     }
@@ -349,6 +349,9 @@ public class AbstractMessageFeatureTest extends AbstractMetatronTest {
                 .time()
                 .create(root.extend(MESSAGE).extend("_").addQ(INCRQ));
     }
+
+
+
 
     /** How many rows the ledger holds. */
     private static long messageCount(final fURI root) {

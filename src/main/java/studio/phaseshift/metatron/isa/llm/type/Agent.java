@@ -131,6 +131,10 @@ public class Agent extends MRec {
 
     }
 
+    public fURI root() {
+        return this.at(ROOT).uriValue();
+    }
+
     /**
      * The agent is the integrator of features.  At construction it ensures
      * that every attached feature's hard dependencies
@@ -196,7 +200,7 @@ public class Agent extends MRec {
      * Resolve the session VID from this agent's message service (whatever provider is attached).
      */
     public fURI sessionVID() {
-        return this.service(MessageService.class).map(MessageService::sessionVID).orElse(null);
+        return this.service(MessageService.class).map(MessageService::sessionVID).orElse(this.has(SESSION) ? this.at(SESSION).uriValue() : null);
     }
 
     // ── Factory ────────────────────────────────────────────────────

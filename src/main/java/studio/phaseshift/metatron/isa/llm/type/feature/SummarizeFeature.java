@@ -163,7 +163,7 @@ public class SummarizeFeature extends AbstractFeature {
         // queue the distill on a background thread so this turn completes immediately
         final CoreThread thread = CoreThread.core(instLambda((lhs, inst) -> {
             try {
-                final Obj applied = summarizeSession(agentHome, sessionVID, config);
+                final Obj applied = summarizeSession(agent, config);
                 if (applied.isFail())
                     LOG.warn("summarize failed: %s", Str.Helper.cleanString(applied));
                 return applied;
@@ -347,41 +347,40 @@ public class SummarizeFeature extends AbstractFeature {
      * {@code <<mtron:summarize>>} block (session, model, scope, kinds,
      * concepts, output), so the block is simply a deferred summary() call.
      *
-     * @param agentHome  the agent root — the model rec is resolved from
-     *                   {@code <agentHome>/model} when the config's model is noobj
-     * @param sessionVID the session whose ledger messages are distilled
-     * @param config     the argument/block rec — {@code scope} filters the
-     *                   message set (a time::T duration or datetime::T cutoff);
-     *                   {@code kind} and {@code concept} are recall hints
-     *                   echoed back for the follow-on briefing; {@code to} is
-     *                   the anchor base (default: the agent home)
+     * @param agent  the agent root — the model rec is resolved from
+     *               {@code <agentHome>/model} when the config's model is noobj
+     * @param config the argument/block rec — {@code scope} filters the
+     *               message set (a time::T duration or datetime::T cutoff);
+     *               {@code kind} and {@code concept} are recall hints
+     *               echoed back for the follow-on briefing; {@code to} is
+     *               the anchor base (default: the agent home)
      * @return the applied-constraints rec — the resolved
      * [session, model, scope, kind, concept, to] plus the written
      * claim/ and loose_end/ vids; a fail::T on error
      */
-    public static Obj summarizeSession(final fURI agentHome, final fURI sessionVID, final Rec config) {
+    public static Obj summarizeSession(final Agent agent, final Rec config) {
         final Obj modelArg = config.at(uri(MODEL));
         final Obj scope = config.at(uri(SCOPE));
         final Obj kinds = config.at(uri(KIND));
         final Obj concepts = config.at(uri(CONCEPT));
         final Obj output = config.at(uri(TO));
-        final fURI outputBase = output.isNoObj() ? agentHome : output.uriValue();
+        final fURI outputBase = output.isNoObj() ? agent.root() : output.uriValue();
         // 1. collect this session's messages from the ledger as rels
         //    (vid => rec) — the rel key IS the message vid (branch read)
-        final fURI messagesLocation = agentHome.extend(MESSAGE).extend("+/");
+        final fURI messagesLocation = agent.root().extend(MESSAGE).extend("+/");
         final List<Rel> messages = Router.readFromSpace(messagesLocation)
                 .stream()
                 .map(Obj::asRel)
                 .filter(pair -> !pair.second().tid().equals(LLM_TOOL_RESULT_MESSAGE_TYPE.vid()))
                 .filter(pair -> {
                     final Obj sessionUri = pair.second().asRec().at(SESSION);
-                    return sessionUri.isUri() && sessionUri.uriValue().equals(sessionVID);
+                    return sessionUri.isUri() && sessionUri.uriValue().equals(agent.sessionVID());
                 })
                 .filter(pair -> withinScope(pair.second().asRec(), scope))
                 .sorted(Comparator.comparing(pair -> Integer.parseInt(pair.first().uriValue().name())))
                 .toList();
         if (messages.isEmpty())
-            return fail("no messages found for session %s at %s", sessionVID, messagesLocation);
+            return fail("no messages found for session %s at %s", agent.sessionVID(), messagesLocation);
         // 2. build the distill digest — vid ==> text so the model can cite real vids
         final String digest = messages.stream()
                 .filter(pair -> !Str.Helper.cleanString(pair.second().asRec().at(TEXT)).isBlank())
@@ -389,7 +388,7 @@ public class SummarizeFeature extends AbstractFeature {
                 .collect(Collectors.joining("\n"))
                 .replace("%", ""); // remove all string formatting meta-characters
         // 3. the model — from the agent home (matches <agent>/model)
-        final mModel model = modelArg.isNoObj() ? mModel.model(Router.readFromSpace(agentHome.extend(MODEL)).asRec()) : mModel.model(modelArg.asRec());
+        final mModel model = modelArg.isNoObj() ? mModel.model(Router.readFromSpace(agent.root().extend(MODEL)).asRec()) : mModel.model(modelArg.asRec());
         // 4. distill via a mini-task
         final ChatFrame result = Agent.Helper.miniChat("session_summarizer", model(model.at(TIMEOUT, real(10.0, MATH_MINUTE_TID, null))), SUMMARIZE_PROMPT + digest);
         // 5. parse the <<json:claim>> and <<json:loose_end>> watermarks into vids
@@ -449,7 +448,7 @@ public class SummarizeFeature extends AbstractFeature {
             }
         }
         // 6. the applied constraints — the config echoed back with defaults resolved
-        return rec(uri(SESSION), uri(sessionVID),
+        return rec(uri(SESSION), uri(agent.sessionVID()),
                 uri(MODEL), model,
                 uri(SCOPE), scope,
                 uri(KIND), kinds,

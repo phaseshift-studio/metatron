@@ -87,7 +87,9 @@ public class AgentTest extends AbstractMetatronTest {
 
     private static Rec buildFixture() {
         Map<Obj, Obj> map = new LinkedHashMap<>();
-        map.put(uri(NAME), str(MODEL_NAME));
+        // the agent's own name — a string (the type's name slot is STR_TYPE),
+        // distinct from the model it runs
+        map.put(uri(NAME), str("test_agent"));
         final mModel model = mModel.model(rec(
                 NAME, uri(MODEL_NAME),
                 PROVIDER, uri("ollama"),

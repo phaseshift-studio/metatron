@@ -25,6 +25,7 @@ isa.mach.type.ui.widget
   AbstractWidget.java       ← base for interactive widgets (raw mode, key handling)
   GridWidget.java           ← widget grid layout
   CardWidget.java           ← simple card
+  StackBarWidget.java       ← general single-line stacked bar: data sections by share, percent over context (or a composition), pre/post framing, per-section styling via a style.section rec of style::T
   WidgetCanvas.java         ← pane-bounded absolute/relative render helper
   Utilities.java            ← runCursorLessWidget, key constants
 isa.mach.type.ui.console
@@ -52,6 +53,7 @@ isa.mach.type.ui.tool
   TreeSelectTool.java      ← interactive tree browser with nested obj inspection
   SwipePanelWidgetTool.java ← left-right swipe panel for browsing a stream of objs
   ModalTool.java          ← modal popup panel (title + body), dismiss on space/enter/ctrl-d
+  TokenCounterTool.java   ← token-usage bar (extends StackBarWidget): est categories as its own colored sections (sys/ai/usr/tool) vs the context window (max), in/max %, unused tail, window size
 isa.mach.ui
   uiInstSet.java            ← mtron type/instruction registration for all UI types
 isa.m.type.reflect

@@ -23,7 +23,6 @@ import org.jline.keymap.KeyMap;
 import org.jline.terminal.Attributes;
 import org.jline.utils.InfoCmp;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.AbstractWidget;
@@ -172,7 +171,7 @@ public abstract class SelectorWidget<T, S extends SelectorWidget<T, S>> extends 
             Graphitty.out(terminal.output(), "\r\n\r\n");
             Graphitty.out(terminal.output(), "{{-X-}}");
             Graphitty.out(terminal.output(), Console.LOCAL_INSTANCE.prompt());
-            Graphitty.out(terminal.output(), Highlighter.format(Console.LOCAL_INSTANCE.getReader().getBuffer().toString()));
+            Graphitty.out(terminal.output(), Console.LOCAL_INSTANCE.redrawLine());
         }
         terminal.writer().flush();
     }
