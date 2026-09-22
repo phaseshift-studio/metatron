@@ -24,16 +24,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.AccordionWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 
@@ -44,7 +38,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ConsoleWidgetPointerTest extends AbstractMetatronTest {
+public class ConsoleWidgetMousePointerTest extends AbstractMetatronTest {
 
     private static final String TITLE = "notes";
 
@@ -73,7 +67,9 @@ public class ConsoleWidgetPointerTest extends AbstractMetatronTest {
         }
     }
 
-    /** The indicator sits in the title bar: border, space, title, space, [-]. */
+    /**
+     * The indicator sits in the title bar: border, space, title, space, [-].
+     */
     private int indicatorColumn() {
         return 1 + 3 + TITLE.length() + 1;   // 1-based terminal column
     }
@@ -237,7 +233,9 @@ public class ConsoleWidgetPointerTest extends AbstractMetatronTest {
         assertSame(this.notes, this.console.getActiveWidget(), "the click focused it");
     }
 
-    /** The focused widget's resize cell: the bottom-right corner of its drawn box. */
+    /**
+     * The focused widget's resize cell: the bottom-right corner of its drawn box.
+     */
     private int[] resizeCorner() {
         final FloatingSurface surface = this.console.getFloatingSurface();
         final org.jline.terminal.Size size = Console.getTerminal().getSize();

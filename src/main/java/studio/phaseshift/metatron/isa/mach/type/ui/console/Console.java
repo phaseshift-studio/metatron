@@ -19,32 +19,18 @@
 package studio.phaseshift.metatron.isa.mach.type.ui.console;
 
 import org.jline.builtins.ConfigurationPath;
-import org.jline.console.SystemRegistry;
-import org.jline.console.impl.Builtins;
-import org.jline.console.impl.SystemRegistryImpl;
 import org.jline.keymap.KeyMap;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
-import org.jline.reader.impl.history.DefaultHistory;
-import org.jline.terminal.Attributes;
 import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
-import org.jline.utils.NonBlockingReader;
 import org.jline.widget.Widgets;
-import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tracer;
-import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.m.type.reflect.JInst;
-import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
-import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
@@ -52,8 +38,6 @@ import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.Pane;
-import studio.phaseshift.metatron.isa.mach.type.ui.tmux.PaneNode;
-import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitContainer;
 import studio.phaseshift.metatron.isa.mach.type.ui.tmux.SplitLayout;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.TraceTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.TypeDiffTool;
@@ -66,32 +50,24 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -100,32 +76,28 @@ import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_CONSOLE_TID;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
 import static studio.phaseshift.metatron.util.CommonUtil.HEADER_FILE;
 
-public class Console extends JRec<Console> implements Closeable, Runnable {
+public class Console extends MRec implements Closeable, Runnable {
 
-    @JRecElement(key = "metatron_version", rng = "/m/uri")
     public static final String METATRON_VERSION = "0.1-alpha";
-    //@JRecElement(key = "mtron", rng = "/m/uri")
     public static final String MTRON = "mtron";
+    /**
+     * The one prompt the console shows — mtron is the only language it runs.
+     */
+    public static final String PROMPT = "{{m}}mtron{{g}}> ";
     public static final String MTRON_NANORC = "mtron.nanorc";
     public static Path HISTORY_FILE = Paths.get(".metatron.history");
-    @JRecElement(key = "history", rng = "/m/inst")
     public Inst history = instA(f("dummy"));
-    @JRecElement(key = "redirect/input", rng = "/m/inst")
     public Inst input = noobj();
-    @JRecElement(key = "redirect/output", rng = "/m/inst")
     public Inst output = noobj();
-    @JRecElement(key = "prefix", rng = "/m/str")
     public String prefix = "";
-    @JRecElement(key = "postfix", rng = "/m/str")
     public String postfix = "";
-    @JRecElement(key = "serializer", rng = "/m/rec")
+
     /**
      * The serializer every result goes through.  It is the console's own (see
      * {@code ObjConsoleSerializer}) because that is where a uri becomes a {@code {{link}}} — a
      * plain serializer writes the uri and nothing downstream can tell it apart from text.
      */
     public ObjSerializer<String> serializer = new ObjConsoleSerializer();
-    @JRecElement(key = "status", rng = "/m/inst")
     public Inst statusLine = instLambda((lhs, inst) -> {
         StatusLine.message(inst.arg(0));
         return noobj();
@@ -134,13 +106,6 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     private static Terminal terminal;
     private final LineReader reader;
     private final Widgets widgets;
-    /**
-     * Built-in key bindings (sequence -&gt; handler object as bound) that must
-     * keep working across prompts.  A later binder on the same sequence (a
-     * menu line key, a tool, anything) shadows a builtin until the next
-     * prompt, when {@link #reassertBuiltinKeys} reclaims it.
-     */
-    private final java.util.Map<String, Object> builtinBindings = new java.util.LinkedHashMap<>();
     private final StatusLine status;
     private final static ConfigurationPath configurations = new ConfigurationPath(
             Paths.get("conf"),                                     // application-wide settings
@@ -156,94 +121,26 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     public static AtomicBoolean userMode = new AtomicBoolean(false);
 
     /**
-     * Keystrokes typed while a foreground job runs.  The repl polls the job's
-     * future instead of blocking on it, so {@code <alt>+b} can detach the job
-     * and give the keyboard back; the classifier turns those keystrokes into a
-     * detach, a cancel, or text for the next prompt.
+     * The foreground-job contract: the watch loop, the detach/cancel/interrupt
+     * protocol, the terminal handoff, and the detached-jobs list.  The
+     * {@code machine} beside it stays here — the repl and the interrupt paths
+     * both read it directly.
      */
-    private final Hotkeys hotkeys = new Hotkeys();
+    private final ForegroundJobs jobs = new ForegroundJobs(this);
 
-    /**
-     * True while a foreground job holds the console — the window in which the
-     * repl thread is not inside {@code readLine()} and the {@link #watchTerminal}
-     * thread owns the terminal's keystrokes.
-     */
-    private volatile boolean watching = false;
-
-    /**
-     * set by the watcher when {@code <alt>+b} is pressed while a job runs
-     */
-    private final AtomicBoolean detachRequested = new AtomicBoolean(false);
-
-    /**
-     * set by the watcher when ctrl-c arrives as a byte — sigint is a no-op off the prompt
-     */
-    private final AtomicBoolean interruptRequested = new AtomicBoolean(false);
-
-    /**
-     * set by the watcher when the cancel key answers an armed cancel offer
-     */
-    private final AtomicBoolean cancelRequested = new AtomicBoolean(false);
-
-    /**
-     * stops the watcher when the console closes
-     */
-    private volatile boolean watcherClosed = false;
-
-    /**
-     * Orders the terminal handoff between the watcher's read and the prompt:
-     * {@code watching} and {@code watchingRead} are only touched under it.
-     */
-    private final Object watchGate = new Object();
-
-    /**
-     * true while the watcher sits inside a terminal read
-     */
-    private boolean watchingRead = false;
-
-    /**
-     * Jobs detached with {@code <alt>+b} that are still running.  A detached
-     * job is untouched — its own thread keeps updating widgets — this list only
-     * tracks it so its result can be printed when it halts.
-     */
-    private final List<Machine> backgroundJobs = java.util.Collections.synchronizedList(new ArrayList<>());
-
-    /**
-     * cadence of the foreground poll — small enough that {@code <alt>+b} feels instant
-     */
-    private static final long FOREGROUND_POLL_MS = 120;
-    /**
-     * how long a job may hold the console before it offers to be cancelled
-     */
-    private static final long CANCEL_OFFER_MS = 10_000;
-    /**
-     * how often the idle watcher re-checks whether a job took the console
-     */
-    private static final long WATCHER_IDLE_MS = 25;
-    /**
-     * how long the prompt waits for the watcher to leave its read before taking the terminal back
-     */
-    private static final long WATCH_HANDOFF_MS = 400;
-    /**
-     * how long one watcher read waits for a keystroke.  It must be finite: with
-     * timeout 0 a raw-mode read never expires, so the watcher would still be
-     * parked inside a read when the job ends, the handoff would time out, and
-     * restoring the cooked attributes would turn that read into a blocking one
-     * that swallows the user's next keystroke — the half-eaten arrow key, where
-     * the escape goes to the watcher and the rest lands in the line as text.
-     */
-    private static final long WATCH_READ_MS = 100;
     /**
      * how much of the console line a detached-job banner echoes
      */
     private static final int DETACH_PREVIEW_CHARS = 48;
 
     // ========== Split Pane Support ==========
-    // Pane tree: root can be a single Pane or a SplitContainer with nested panes
-    private PaneNode paneRoot;
-    private Pane activePane;
+    /**
+     * The pane tree — its shape, which pane is active, and the split /
+     * close / focus / cycle / resize operations (see {@link PaneManager}).
+     */
+    private final PaneManager panes = new PaneManager();
+
     private final AtomicBoolean needsRedraw = new AtomicBoolean(false);
-    private boolean splitMode = false;  // True when we have more than one pane
     private boolean traceEnabled = false; // True when :trace toggled on — dumps Java stack on fail
     private FloatingSurface floatingSurface;
 
@@ -299,48 +196,13 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         return SCREEN_REQUESTED && !studio.phaseshift.metatron.BootLoader.TESTING;
     }
 
-    private final ConsoleScreen screen = new ConsoleScreen();
     /**
-     * True while a screen paint is on its way to the render thread, so a burst of
-     * writes paints once rather than per line.
+     * The console's screen — the transcript buffer, the output funnel that fills
+     * it, the paint pass, the link clicks it answers, and the repair of the rows
+     * it shares with the floating widgets (see {@link ScreenView}).
      */
-    private final AtomicBoolean screenPaintRunning = new AtomicBoolean(false);
+    private final ScreenView screenView = new ScreenView(this);
 
-    /**
-     * True when something changed that a paint would show, and that paint has not
-     * happened yet — a request that arrives while a pass is running must not be dropped,
-     * or the rows it was about (a widget's erased box) stay unpainted until the next
-     * prompt.  The running pass re-runs itself while this is set.
-     */
-    private final AtomicBoolean screenPaintWanted = new AtomicBoolean(false);
-
-    /**
-     * True while the console's output is still being appended to the terminal rather than
-     * painted (see {@link #screenAppends()}), so the first painted frame knows it must
-     * repaint the whole region instead of trusting what is on screen.
-     */
-    private volatile boolean screenAppended = false;
-
-    /**
-     * The row the prompt sits on: the bottom of the terminal until the transcript is tall
-     * enough to fill the screen, and below the transcript until then.
-     *
-     * <p>Pinning it at the bottom from the first prompt is what leaves a screen of blank
-     * space above a short transcript — the banner would sit at the top with twenty empty
-     * rows between it and the prompt, and the boot text a reader was still reading is
-     * pushed out of view.  Letting the prompt follow the transcript instead means the
-     * transcript starts at the top row (which is where the boot text already is), the
-     * prompt stays immediately below the newest line, and the moment the transcript fills
-     * the screen the prompt arrives at the bottom and stays there.
-     *
-     * <p>The last row is not available to it: jline's {@code Status} owns the bottom row.
-     */
-    private int screenPromptRow() {
-        final int bottom = Math.max(2, terminal.getHeight() - 1);
-        final int top = this.screenStart > 0 ? this.screenStart : 1;
-        final int transcript = this.screen.size();
-        return Math.min(bottom, Math.max(Math.min(2, top), top + transcript));
-    }
 
     /**
      * The shared {@link FloatingSurface} for this console session.
@@ -351,7 +213,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             this.floatingSurface = new FloatingSurface(terminal);
             // The surface claims the output funnel in its constructor; on a console
             // that owns its screen, the screen takes it instead (see installScreenWriter).
-            this.installScreenWriter();
+            this.screenView.installScreenWriter();
             // The screen also takes the rows the widgets draw over: the surface reports
             // what it erased and stops blanking rows it does not own (see repairRowedRows).
             if (screenMode())
@@ -360,94 +222,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         return this.floatingSurface;
     }
 
-    /**
-     * Point the console's output funnel at the screen, so every row the console
-     * writes is a row the console holds a copy of.
-     *
-     * <p>{@code Graphitty.setTerminalWriter} is the funnel every console write
-     * already goes through — results ({@code Console.write}), the {@code print}
-     * instruction, log lines, agent replies — because {@code Graphitty.out} hands
-     * the resolved text to it rather than to the terminal.  Routing individual call
-     * sites instead leaves the rest writing rows the screen never saw, and a row the
-     * screen never saw is a row nothing can put back: it scrolls the terminal away
-     * and is gone (which is exactly how {@code print} output behaved until the
-     * funnel pointed here).
-     */
-    private void installScreenWriter() {
-        if (!screenMode()) return;
-        Graphitty.setTerminalWriter(this::screenOutput);
+
+    boolean screenAppends() {
+        return this.screenView.screenAppends();
     }
 
-    /**
-     * The terminal row the console's own output starts on, or -1 while that is unknown.
-     *
-     * <p>Everything the console paints is positioned against it, and a click is resolved by it
-     * (terminal row − this = the console's own row), so it is the one fact the screen cannot
-     * work without.  Probing the terminal for it is the only way to learn it, and doing so
-     * waits for input on a terminal that does not answer, so it is left unknown (-1) and the
-     * console appends its output instead until it owns the screen.
-     */
-    /**
-     * The clear-screen code the graphitty {@code {{XX}}} rewrite carries.
-     */
-    private static final String CLEAR_SCREEN = "\033[2J";
-
-    private volatile int screenStart = declaredStartRow();
-
-    /**
-     * The row the console's own output starts on, from the launcher's banner count when it gives
-     * one ({@code -Dmetatron.console.bannerRows=N} — the rows it printed before starting the VM),
-     * or -1 when it does not, which leaves the console appending below whatever is there.
-     */
-    private static int declaredStartRow() {
-        final int banner = Integer.getInteger("metatron.console.bannerRows", -1);
-        return banner >= 0 ? banner + 1 : -1;
-    }
-
-    /**
-     * Where and when the last link click landed.  A terminal does not report a double click —
-     * the same press simply arrives twice — so it is the cell and the timing that say so.
-     */
-
-    /**
-     * Ask the terminal where its cursor is, once, with a bounded read.
-     *
-     * <p>Non-destructive by construction: the reply is <em>peeked</em> for (a peek consumes
-     * nothing) and only an escape — the start of a cursor-position report — is actually read,
-     * so a key the user happened to press in this window is left for the reader.  A terminal
-     * that does not answer costs one short wait and leaves {@link #screenStart} unknown, in
-     * which case the console appends its output instead of painting it.
-     *
-     * @return the 1-based row the cursor is on, or -1 when the terminal did not say
-     */
-    /**
-     * True while the console is still filling the terminal, so its output is appended the
-     * ordinary way instead of painted over rows.
-     *
-     * <p>The console does not start on a blank terminal: a launcher prints a banner, the
-     * boot logs print theirs, and a shell may have left whatever it liked above that.
-     * Those rows are not the console's to paint over — and it cannot ask where they end
-     * (the cursor-position report is a blocking read with no timeout, which would hang
-     * startup on a terminal that does not answer).  So output is appended, the way any
-     * terminal program appends it, until the console has printed more than a screenful:
-     * by then its own content has scrolled everything before it away, the rows belong to
-     * the console, and painting them is what keeps them restorable.
-     */
-    private boolean screenAppends() {
-        if (!screenMode()) return false;
-        // The console's first row is known, so painting from it is safe at any length: a launcher
-        // that printed a banner says how many rows it took (-Dmetatron.console.bannerRows), and
-        // the console's output then starts on the line after it — the banner stays readable AND
-        // its own rows are addressable, which is what a click needs.
-        if (this.screenStart > 0) return false;
-        // Unknown, and it CANNOT be found out: the only way to ask a terminal where its cursor is
-        // is jline's cursor-position report, whose read blocks on a terminal that does not answer
-        // (measured — it hangs startup).  So the console appends, the way any terminal program
-        // does: the launcher's output is left alone, and the cost is that its own rows are not
-        // addressable — a click cannot be resolved to one — until it has filled the screen and
-        // taken the rows over.
-        return true;
-    }
 
     /**
      * Where the link trace goes, when it is asked for (see {@link #linkTrace}) — a file, never the
@@ -476,57 +255,18 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     /**
-     * A line the console is asked for by someone other than its own read loop (see {@link #readHumanLine}).
+     * The ask/answer protocol for lines the console is asked for by anyone
+     * other than its own read loop — the queue and the answer side live on
+     * {@link HumanBroker}.
      */
-    private record HumanRead(String prompt, java.util.concurrent.CompletableFuture<String> answer) {
+    private final HumanBroker human = new HumanBroker(this);
+
+    public HumanBroker human() {
+        return this.human;
     }
 
-    /**
-     * Lines waiting to be taken by the console's read loop, oldest first.
-     */
-    private final java.util.concurrent.BlockingQueue<HumanRead> humanReads =
-            new java.util.concurrent.LinkedBlockingQueue<>();
-
-    /**
-     * Ask the human for a line of input, through the console's own reader.
-     * <p>
-     * A job that wants a line cannot read the terminal itself: the console owns it — it holds the
-     * tty for keys and mouse, and while a prompt is up its reader consumes whatever is typed, so a
-     * second reader on {@code System.in} sees nothing and what the human types is taken as a repl
-     * command instead of an answer.  So the request is queued and answered on the console's side:
-     * by the read loop when the console is at a prompt, and by the watcher while a foreground job
-     * holds it (that thread is the only reader of the terminal in that window, see
-     * {@link #watchTerminal}).  One reader, one terminal.
-     * <p>
-     * Falls back to {@code System.in} where there is no console at all (headless boots, tests).
-     *
-     * @param prompt what the human is being asked for (markup is resolved)
-     * @return the line they typed, without its newline
-     */
-    private static String readHumanLine(final String prompt) {
-        final Console console = Console.LOCAL_INSTANCE;
-        if (null == console || null == console.reader || BootLoader.TESTING)
-            return new java.util.Scanner(System.in).nextLine();
-        final HumanRead request = new HumanRead(prompt, new java.util.concurrent.CompletableFuture<>());
-        console.humanReads.add(request);
-        if (console.inReadLine)
-            // break the console out of the prompt it is showing so its reader thread comes back
-            // around and takes this request: accept-line is the widget the console's own bindings
-            // submit with
-            try {
-                console.widgets.callWidget("accept-line");
-            } catch (final Exception ignore) {
-                // no prompt to break out of: the loop takes the request at its next pass
-            }
-        // While a foreground job holds the console the watcher is the only reader of the terminal:
-        // reading here as well would put two readers on one stream — each taking a share of the
-        // bytes, so the job would get a stray character while the person's typing went to the
-        // type-ahead buffer, and <enter> would be classified as no key at all.
-        try {
-            return request.answer().get();
-        } catch (final Exception e) {
-            throw MTronException.of(e);
-        }
+    public boolean inReadLine() {
+        return this.inReadLine;
     }
 
     /**
@@ -545,7 +285,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             @Override
             public int read() {
                 if (this.at >= this.pending.length) {
-                    final String line = readHumanLine(null);
+                    final String line = HumanBroker.readHumanLine(null);
                     if (null == line) return -1;    // end of input, not a blank line
                     this.pending = (line + "\n").getBytes(java.nio.charset.StandardCharsets.UTF_8);
                     this.at = 0;
@@ -574,8 +314,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 this.screenAppends()
                         ? "appending to the terminal (a click cannot be resolved yet)"
                         : "painting its own rows",
-                this.screen.linkRows(),
-                this.widgetMouseTracking ? "held by the console" : "held by the terminal",
+                this.screenView.screen().linkRows(),
+                this.pointer.widgetMouseTracking() ? "held by the console" : "held by the terminal",
                 null == term ? "no terminal" : term.hasMouseSupport() ? "supported" : "not supported",
                 this.inReadLine ? "yes" : "no");
     }
@@ -591,156 +331,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * transcript, and the pointer is re-synced to what is actually on screen.
      */
     public void clearTranscript() {
-        if (!screenMode()) return;
-        Graphitty.out(terminal.output(), CLEAR_SCREEN);
-        this.screen.clear();
-        this.screen.invalidate();
-        this.requestScreenPaint();
-        this.syncWidgetMouseTracking();
+        this.screenView.clearTranscript();
     }
 
-    /**
-     * Where every console write lands: recorded in the screen, and — while the console is
-     * still filling the terminal — also appended to it (see {@link #screenAppends()}).
-     *
-     * @param ansi the text, already resolved
-     */
-    private void screenOutput(final String ansi) {
-        if (null == ansi || ansi.isEmpty()) return;
-        linkTrace("out len=%d osc8=%b linkMarkup=%b | %s", ansi.length(), ansi.contains("\033]8;"),
-                ansi.contains("{{link}}"), Graphitty.strip(ansi).replace("\n", "\\n"));
-        // A clear-screen code ({{XX}} — and so :clear, and any print of it) is an ACTION, not
-        // content: the terminal is cleared AND the screen's own rows are dropped with it.
-        // Clearing only the terminal left every row in the buffer, so the next frame — or a
-        // widget moving over those rows — painted the text straight back, which is what :clear
-        // used to do.
-        if (ansi.contains(CLEAR_SCREEN)) {
-            final String rest = ansi.replace(CLEAR_SCREEN, "");
-            this.screen.clear();
-            this.screen.invalidate();
-            this.screenStart = 1;          // cleared: the console's rows start at the top again
-            this.screenAppended = false;
-            getFloatingSurface().writeToTerminal(CLEAR_SCREEN + "\033[H");
-            if (rest.isEmpty()) this.requestScreenPaint();
-            else this.screenOutput(rest);
-            return;
-        }
-        this.screen.appendAnsi(ansi);
-        if (this.screenAppends()) {
-            this.screenAppended = true;
-            // Plain text, without the hyperlink: the console is not yet handling clicks on
-            // these rows (it does not know which terminal rows they are), and a terminal that
-            // is handed a hyperlink takes the click for itself — which is how a link ended up
-            // opening the desktop's "Unsupported operation" instead of being followed here.
-            getFloatingSurface().writeToTerminal(
-                    studio.phaseshift.metatron.isa.mach.type.ui.console.ScreenPainter.withoutLinks(ansi));
-            return;
-        }
-        if (this.screenAppended) {
-            // the console owns the rows now: what it appended has moved (the terminal
-            // scrolled), so the region is repainted from the buffer rather than trusting
-            // what happens to be on screen
-            this.screenAppended = false;
-            this.screen.invalidate();
-        }
-        this.requestScreenPaint();
-    }
-
-    /**
-     * Take the process's stdout for the screen, so text that never went through a
-     * routed writer still lands somewhere restorable.
-     *
-     * <p>The funnel above catches everything written through {@code Graphitty}, but
-     * that is not everything a console prints: {@code print} reaches the terminal
-     * through {@code GraphittyLogger.none}'s {@code System.out} fallback, Logback's
-     * appender holds the stream it started with, and a library may write to stdout
-     * on its own.  An uncaptured row is a row that scrolls the terminal and is gone,
-     * which is exactly what happened to {@code print} output before this existed.
-     *
-     * <p>This must run <em>after</em> the terminal is built: jline takes the real
-     * stdout when it is constructed, so replacing {@code System.out} afterwards
-     * leaves the terminal's own writes on their original stream — the screen paints
-     * through jline, and capturing that would be a loop.
-     */
-    private void installStdoutCapture() {
-        if (!screenMode()) return;
-        final ScreenOutputStream sink = new ScreenOutputStream(this::screenOutput);
-        System.setOut(new java.io.PrintStream(sink, true, java.nio.charset.StandardCharsets.UTF_8));
-        // stderr too, and not as an afterthought: logging is configured to write there
-        // (conf/logback.xml targets System.err, with the Graphitty layout), so a console
-        // that captured only stdout left every log line going to the terminal at the
-        // cursor — where the screen's next frame painted over it, and the output looked
-        // as if it had stopped.  Logback's console target forwards to System.err on each
-        // write, so replacing it here is enough to bring the log into the transcript.
-        System.setErr(new java.io.PrintStream(
-                new ScreenOutputStream(this::screenOutput), true, java.nio.charset.StandardCharsets.UTF_8));
-    }
-
-    /**
-     * Paint the screen soon, without blocking the caller.
-     *
-     * <p>The funnel runs on whatever thread wrote — a job thread streaming output —
-     * so it must not wait on the render thread per write.  Requests coalesce: a
-     * burst of writes paints on the last frame rather than once per line.
-     */
-    private void requestScreenPaint() {
-        if (!screenMode() || this.screenAppends()) return;
-        // Never drop a request: note that a paint is wanted, and let whoever is already
-        // painting see it.  A dropped request is a row that stays blank until the next
-        // prompt — which is exactly how a widget's erased box survived a quick drag.
-        this.screenPaintWanted.set(true);
-        if (!this.screenPaintRunning.compareAndSet(false, true)) return;
-        getFloatingSurface().writeAndRender(() -> {
-            final StringBuilder painted = new StringBuilder();
-            try {
-                // paint until nothing new arrives mid-pass: the rows are produced here, on
-                // the render thread, so every forget that has happened by now is included
-                do {
-                    this.screenPaintWanted.set(false);
-                    painted.append(this.screenFrame());
-                } while (this.screenPaintWanted.get());
-            } finally {
-                this.screenPaintRunning.set(false);
-                // a request that arrived between the last check and the flag clearing has
-                // no pass to join, so it gets one (this is bounded: the retry either paints
-                // or coalesces with a pass that is already running)
-                if (this.screenPaintWanted.get()) this.requestScreenPaint();
-            }
-            return painted.toString();
-        });
-    }
-
-    /**
-     * Lay the region out and return the bytes that bring it up to date (see
-     * {@link ConsoleScreen#frame()}), with the cursor handed back to the prompt row.
-     */
-    private String screenFrame() {
-        // while the console is still appending there is nothing to paint: the text is
-        // already on the terminal, below everything that was there before it
-        if (this.screenAppends()) return "";
-        final int promptRow = this.screenPromptRow();
-        final int top = this.screenStart > 0 ? this.screenStart : 1;
-        this.screen.layout(top, promptRow - top, terminal.getWidth());
-        // The pointer follows the links.  A uri arrives with a job's output — AFTER the prompt was
-        // drawn, which is when the arming decision was taken, with nothing on screen to click yet.
-        // Re-checking here, on the paint that put the link there, is what lets a freshly painted
-        // uri answer a click instead of leaving the mouse with the terminal until the next prompt.
-        // Writing the mode inside the pass is safe: it moves no cursor, and the frame is written
-        // after it.
-        this.syncWidgetMouseTracking();
-        final String frame = this.screen.frame();
-        if (this.inReadLine) {
-            // Mid-prompt the cursor is jline's, and jline draws from where it believes the
-            // cursor is: moving it here would leave jline's bookkeeping wrong, and the next
-            // keystroke would be written at a column that no longer matches what is on
-            // screen (characters landing on top of each other at the start of the prompt
-            // line).  So the rows are painted with the cursor saved and put back exactly
-            // where it was — the same save/restore a widget pass uses.
-            return frame.isEmpty() ? "" : "\033[s" + frame + "\033[u";
-        }
-        // Between prompts the console may place it: the next prompt is drawn from there.
-        return frame + "\033[" + promptRow + ";1H";
-    }
 
     /**
      * Minimum ms between content-only live redraws triggered by pane output.
@@ -776,7 +369,6 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * ENTER and popped.  Accessible from mtron via {@code *exp>>0} etc.
      * when the console is stored at {@code /usr/console}.
      */
-    @JRecElement(key = "exp", rng = "/m/lst")
     public Lst expressionStack = lst();
 
     /**
@@ -784,33 +376,13 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      */
     private static final long INPUT_IDLE_THRESHOLD_MS = 500;
 
-    // Language mode for multi-language support
-    public enum Language {
-        MTRON("mtron", "{{m}}mtron{{g}}> "),
-        GREMLIN("gremlin", "{{y}}gremlin{{g}}> "),
-        SQL("sql", "{{c}}sql{{g}}> ");
-
-        public final String name;
-        public final String prompt;
-
-        Language(String name, String prompt) {
-            this.name = name;
-            this.prompt = prompt;
-        }
-    }
-
-    private Language currentLanguage = Language.MTRON;
-
     public Console(final Rec options, final fURI vid) {
         super(options.jvm(), UI_CONSOLE_TID, vid);
         BootLoader.ONE_SHOT = false;
         Console.LOCAL_INSTANCE = this;
         try {
             // Initialize pane system with a single pane
-            this.activePane = new Pane();
-            this.activePane.setConsole(this);
-            this.paneRoot = this.activePane;
-            registerPaneListener(this.activePane);
+            this.panes.init(this);
 
             // Register the pane writer so GraphittyLogger.targetPane(id) works.
             // GraphittyLogger lives in the graphitty sub-package and cannot import Console
@@ -830,28 +402,14 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             .findFirst()
                             .ifPresent(p -> p.appendOutput(message, false)));
 
-            final DefaultParser parser = new DefaultParser()
-                    .quoteChars(new char[]{'\'', '"'})
-                    .lineCommentDelims(new String[]{"[--", "--]"})
-                    .blockCommentDelims(new DefaultParser.BlockCommentDelims("[===", "===]"))
-                    .eofOnUnclosedQuote(true)
-                    .eofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
-            Console.terminal = TerminalBuilder.builder().signalHandler(signal -> {
-                if (signal == Terminal.Signal.INT) {
-                    // Interrupt active pane's machine
-                    if (this.activePane != null && this.activePane.machine() != null) {
-                        this.activePane.machine().stop();
-                    } else if (null != this.machine) {
-                        this.machine.stop();
-                    }
-                }
-            }).encoding(StandardCharsets.UTF_8).system(true).build();
+            final DefaultParser parser = ReaderSetup.parser();
+            Console.terminal = ReaderSetup.buildTerminal(this.jobs::interruptActive);
             // Register terminal with Graphitty so widgets can write without
             // depending on Console/Terminal directly.
             Graphitty.init(terminal.output());
             // ...and take the process's own stdout too, so text that never went
             // through Graphitty still lands in the screen (see the method).
-            this.installStdoutCapture();
+            this.screenView.installStdoutCapture();
             // and its input, which the console owns while it runs: mSystem hands out a stream over
             // this console's reader, so sys:stdin and a human chat model read what is typed at the
             // prompt instead of a second reader on System.in that would see nothing
@@ -866,9 +424,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             // console's own banner begins on the first row.  That row is also what a click is
             // resolved against, which is why the console cannot simply append below it.
             if (screenMode()) {
-                this.screenStart = 1;
-                terminal.writer().print("\033[2J\033[H");
-                terminal.writer().flush();
+                this.screenView.beginAtTop();
             }
             // Request extended key reporting so terminals that support it (kitty, ghostty,
             // xterm with modifyOtherKeys, iTerm2, etc.) will send distinguishable
@@ -878,28 +434,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             terminal.writer().print("\033[>4;2m"); // xterm modifyOtherKeys level 2
             terminal.writer().flush();
             this.outputHeader("");
-            final Supplier<Path> currentDir = () -> Paths.get("");
-            final Builtins builtins = new Builtins(currentDir, Console.configurations, null);
-            SystemRegistry systemRegistry = new SystemRegistryImpl(parser, terminal, currentDir, Console.configurations);
-            systemRegistry.setCommandRegistries(builtins);
-            final Highlighter highlighter = new Highlighter(new ObjConsoleSerializer(), true);
-            highlighter.setTerminal(terminal);
-            Highlighter.single().setTerminal(terminal);
-            this.reader = LineReaderBuilder.builder()
-                    .terminal(terminal)
-                    .appName("metatron")
-                    .history(new DefaultHistory())
-                    .highlighter(highlighter)
-                    .parser(parser)
-                    .variable(LineReader.HISTORY_FILE, HISTORY_FILE)
-                    .option(LineReader.Option.AUTO_FRESH_LINE, true)
-                    .option(LineReader.Option.HISTORY_IGNORE_DUPS, true)
-                    .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
-                    .option(LineReader.Option.MOUSE, false)
-                    .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&m}}     {{g}}| {{X}}"))
-                    .variable(LineReader.INDENTATION, 0)
-                    .completer(new MCompleter(this))
-                    .build();
+            ReaderSetup.installSystemRegistry(parser, terminal, configurations);
+            this.reader = ReaderSetup.buildReader(parser, terminal, this);
             this.widgets = new Widgets(this.reader) { /* keys bound by CommandPalette.bindKeys */
             };
             this.status = new StatusLine(this);
@@ -933,15 +469,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     @Override
     public void close() {
         try {
-            this.watcherClosed = true;
-            this.watching = false;
+            this.jobs.close();
             this.reader.getBuffer().clear();
             // Hand mouse tracking back to the terminal if widget scrolling
             // owns it — the shell we return to must not inherit it.
-            if (this.widgetMouseTracking && terminal.hasMouseSupport()) {
-                terminal.writer().print(MOUSE_OFF);
-                this.widgetMouseTracking = false;
-            }
+            this.pointer.handBackMouseTracking();
             // Disable extended key reporting before exit so we don't leave the
             // terminal in a state that confuses subsequent applications.
             terminal.writer().print("\033[<u");    // kitty: pop keyboard enhancement
@@ -962,7 +494,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         if (screenMode()) {
             // recorded in the screen, and shown either the way any terminal program shows
             // it or by the screen's own painting (see screenOutput)
-            this.screenOutput(studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.string(markup));
+            this.screenView.screenOutput(studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.string(markup));
             return;
         }
         Graphitty.out(terminal.output(), markup);
@@ -1007,10 +539,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     public String prompt() {
-        if (this.splitMode && this.activePane != null) {
-            return this.activePane.prompt();
+        if (this.panes.splitMode() && this.panes.activePane() != null) {
+            return this.panes.activePane().prompt();
         }
-        return Graphitty.string(this.currentLanguage.prompt + this.prefix);
+        return Graphitty.string(PROMPT + this.prefix);
     }
 
     /**
@@ -1026,9 +558,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         // re-asserted here, once per prompt (the watcher tick only reacts to a
         // change, so nothing chatters in between).  A new prompt also re-arms
         // the pointer if a wheel released it to the terminal.
-        this.pointerReleased = false;
+        this.pointer.rearmPointer();
         this.syncWidgetMouseTracking(true);
-        if (screenMode() && !this.splitMode) {
+        if (screenMode() && !this.panes.splitMode()) {
             // The screen owns the rows above the prompt, and the prompt is pinned to
             // a fixed row — so jline must not print its ~ marker (or a fresh line)
             // when the cursor is not where it expects to be.  Pane mode learned this
@@ -1041,14 +573,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             // a row, and jline's status line moves the terminal when it makes room for
             // itself — the screen has scrolled, so every row the painter believed it
             // knew has moved.  Measured cost of the full region is under a millisecond.
-            this.screen.invalidate();
-            // And a new prompt is where the live end is: a reader who wheeled back into
-            // history gets the newest rows again as soon as they are given something to
-            // type at — what a terminal's scroll-to-bottom-on-input does, and without it
-            // the command they are about to run would print off-screen.
-            this.screen.scrollToTail();
+            this.screenView.resetForNewPrompt();
             this.renderScreen(false);
-        } else if (this.splitMode && this.activePane != null) {
+        } else if (this.panes.splitMode() && this.panes.activePane() != null) {
             // Disable AUTO_FRESH_LINE in split mode - it interferes with cursor positioning
             // by outputting a ~ marker when cursor isn't at column 1
             this.reader.unsetOpt(LineReader.Option.AUTO_FRESH_LINE);
@@ -1069,7 +596,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             // e.g. pane at cols 1-50 (content 2-49) → COLUMNS = 49
             //      pane at cols 51-100 (content 52-99) → COLUMNS = 99
             // ----------------------------------------------------------------
-            final int[] pos = calculatePanePosition(this.activePane);
+            final int[] pos = panes.calculatePanePosition(this, this.panes.activePane());
             if (pos == null) return; // activePane not in tree (stale ref) – skip constraints
             final int paneStartCol = pos[1];   // 1-based left col of pane box
             final int paneAvailWidth = pos[3];
@@ -1104,35 +631,18 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         getFloatingSurface().render();
     }
 
-    public Language getCurrentLanguage() {
-        if (this.activePane != null) {
-            return this.activePane.language();
-        }
-        return this.currentLanguage;
-    }
-
-    public void setLanguage(Language language) {
-        if (this.activePane != null) {
-            this.activePane.language(language);
-        }
-        this.currentLanguage = language;
-        LOG.info("switched to {{y}}%s{{X}} mode", language.name);
-    }
-
     // ========== Pane Management ==========
 
     public Pane getActivePane() {
-        return this.activePane;
+        return this.panes.activePane();
     }
 
-    @JRecElement(key = "pane", rng = "/m/lst[rec{*}]", mimic = JRecElement.Mimic.FIELD)
-    //@JInst(tid = "pane", dom = "#{?}", rng = "/m/lst", attach = JInst.Attach.OBJ)
     public List<Pane> getAllPanes() {
-        return null == this.paneRoot ? new ArrayList<>() : this.paneRoot.getAllPanes();
+        return this.panes.getAllPanes();
     }
 
     public boolean isSplitMode() {
-        return this.splitMode;
+        return this.panes.splitMode();
     }
 
     public boolean isTraceEnabled() {
@@ -1159,139 +669,40 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
 
     /**
      * Split the active pane in the given direction.
-     * Creates a new pane and makes it the sibling of the current active pane.
      *
      * @param direction VERTICAL (left|right) or HORIZONTAL (top|bottom)
      * @return the newly created pane
      */
     public Pane split(final SplitLayout direction) {
-        if (direction == SplitLayout.NONE) {
-            LOG.warn("cannot split with direction NONE");
-            return this.activePane;
-        }
-
-        // Create new pane
-        final Pane newPane = new Pane(this.activePane.language(), 1000);
-        newPane.setConsole(this);
-        registerPaneListener(newPane);
-
-        // Create split container with active pane and new pane
-        final SplitContainer container = new SplitContainer(direction, this.activePane, newPane);
-
-        // Replace active pane in tree with the container
-        if (this.paneRoot == this.activePane) {
-            // Active pane is root - just replace root
-            this.paneRoot = container;
-        } else {
-            // Find and replace in tree
-            this.paneRoot.replaceChild(this.activePane, container);
-        }
-
-        this.splitMode = true;
-        LOG.info("split pane {{y}}%d{{X}} %s, created pane {{y}}%d{{X}}",
-                this.activePane.id(), direction.name().toLowerCase(), newPane.id());
-
-        // Switch focus to new pane
-        this.activePane = newPane;
-        this.requestRedraw();
-        JInst.Helper.processInst(this);
-        return newPane;
+        return this.panes.split(this, direction);
     }
 
     /**
      * Close the active pane. If it's the last pane, do nothing.
      */
     public void closeActivePane() {
-        final List<Pane> allPanes = getAllPanes();
-        if (allPanes.size() <= 1) {
-            LOG.warn("cannot close the last pane");
-            return;
-        }
-
-        final Pane toClose = this.activePane;
-
-        // Find next pane to focus — use id() comparison to avoid equals()/jvm() issues
-        final int currentIndex = indexOfPaneById(allPanes, toClose != null ? toClose.id() : -1);
-        final Pane nextPane = allPanes.get((currentIndex + 1) % allPanes.size());
-
-        // Remove from tree — unsubscribe first so no stale space subscriptions linger
-        if (toClose != null) toClose.unsubscribe();
-        this.paneRoot = this.paneRoot.removePane(toClose);
-        if (this.paneRoot == null) {
-            // Shouldn't happen, but safety
-            this.paneRoot = nextPane;
-        }
-
-        this.activePane = nextPane;
-        this.splitMode = getAllPanes().size() > 1;
-
-        LOG.info("closed pane {{y}}%d{{X}}, focused pane {{y}}%d{{X}}", toClose.id(), this.activePane.id());
-        this.requestRedraw();
+        this.panes.closeActivePane(this);
     }
 
     /**
      * Focus a specific pane by ID.
      */
     public void focusPane(final int paneId) {
-        final Pane pane = this.paneRoot.findPane(paneId);
-        if (pane == null) {
-            LOG.error("pane {{r}}%d{{X}} not found", paneId);
-            return;
-        }
-        this.activePane = pane;
-        LOG.info("focused pane {{y}}%d{{X}}", paneId);
-        this.requestRedraw();
+        this.panes.focusPane(this, paneId);
     }
 
     /**
      * Cycle to the next pane.
      */
     public void nextPane() {
-        final List<Pane> allPanes = getAllPanes();
-        if (allPanes.size() <= 1) return;
-
-        // Use id() comparison to avoid equals()/jvm() issues introduced by JRec changes
-        // (JRec.jvm() now creates new instLambda objects on every call, breaking Map.equals())
-        final int currentIndex = indexOfPaneById(allPanes, this.activePane != null ? this.activePane.id() : -1);
-        this.activePane = allPanes.get((currentIndex + 1) % allPanes.size());
-        LOG.info("focused pane {{y}}%d{{X}}", this.activePane.id());
-        this.requestRedraw();
+        this.panes.nextPane(this);
     }
 
     /**
      * Cycle to the previous pane.
      */
     public void prevPane() {
-        final List<Pane> allPanes = getAllPanes();
-        if (allPanes.size() <= 1) return;
-
-        // Use id() comparison to avoid equals()/jvm() issues introduced by JRec changes
-        final int currentIndex = indexOfPaneById(allPanes, this.activePane != null ? this.activePane.id() : -1);
-        this.activePane = allPanes.get((currentIndex - 1 + allPanes.size()) % allPanes.size());
-        LOG.info("focused pane {{y}}%d{{X}}", this.activePane.id());
-        this.requestRedraw();
-    }
-
-    /**
-     * Wire the output-change listener and space subscriptions onto a pane.
-     */
-    private void registerPaneListener(final Pane pane) {
-        pane.setOutputListener(this::onPaneOutputChanged);
-        pane.subscribe();
-    }
-
-    /**
-     * Find the index of a pane by its integer id, avoiding {@link Object#equals} / {@code jvm()}
-     * comparisons which are unreliable for JRec subclasses (JRec.jvm() creates new lambda
-     * instances on every call, causing Map.equals to return false even for the same object).
-     *
-     * @return the index, or -1 if not found
-     */
-    private static int indexOfPaneById(final List<Pane> panes, final int id) {
-        for (int i = 0; i < panes.size(); i++) {
-            if (panes.get(i).id() == id) return i;
-        }
-        return -1;
+        this.panes.prevPane(this);
     }
 
     /**
@@ -1300,74 +711,45 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * @param delta positive = more space for active pane, negative = less space
      */
     public void resizeActivePane(final float delta) {
-        if (!this.splitMode || this.activePane == null) return;
-        if (this.paneRoot.isLeaf()) return; // Single pane, nothing to resize
-
-        // Find the parent container of the active pane
-        final SplitContainer parent = ((SplitContainer) this.paneRoot).findParentOf(this.activePane);
-        if (parent == null) {
-            // Active pane might be direct child of root
-            if (this.paneRoot instanceof SplitContainer root) {
-                // Check if active pane is in first or second subtree
-                if (root.first() == this.activePane ||
-                        (!root.first().isLeaf() && root.first().findPane(this.activePane.id()) != null)) {
-                    // Active pane is in first subtree - increase ratio for more space
-                    root.adjustRatio(delta);
-                } else {
-                    // Active pane is in second subtree - decrease ratio for more space
-                    root.adjustRatio(-delta);
-                }
-            }
-        } else {
-            // Determine if active pane is first or second child
-            if (parent.first() == this.activePane) {
-                // Active pane is first child - increase ratio for more space
-                parent.adjustRatio(delta);
-            } else {
-                // Active pane is second child - decrease ratio for more space
-                parent.adjustRatio(-delta);
-            }
-        }
-
-        this.requestRedraw();
+        this.panes.resizeActivePane(this, delta);
     }
 
     // ========== Floating Widget Focus (mirrors the pane focus above) ==========
 
     /**
-     * Per-keystroke resize step for floating widgets (the pane analog
-     * resizes by ±0.05 ratio per keystroke).
+     * The console's navigation over its pinned floating widgets — focus,
+     * cycling, resizing, viewport scrolling, and the reasserted built-in
+     * key bindings (see {@link WidgetNavigator}).
      */
-    private static final int WIDGET_WIDTH_STEP = 4;
-    private static final int WIDGET_HEIGHT_STEP = 1;
+    private final WidgetNavigator widgetsNav = new WidgetNavigator(this);
 
     /**
-     * The stable key of the focused floating widget
-     * ({@link FloatingSurface#widgetKey} — its vid when it has one).  A
-     * floating widget is re-hydrated into a fresh instance on every
-     * {@code .display()} update, so the key — not the instance — is tracked,
-     * and the current instance is resolved lazily.  null = no focus.
+     * The console's pointer — the click/drag gestures on the pinned widgets,
+     * the terminal mouse-tracking mode, and the hand-back to the terminal
+     * (see {@link MousePointer}).
      */
-    private volatile String activeWidgetKey = null;
+    private final MousePointer pointer = new MousePointer(this);
 
     /**
-     * Whether terminal mouse tracking is currently owned by widget scrolling
-     * (see {@link #syncWidgetMouseTracking()}).
+     * The console's execution engine: one prompt line in, its segments
+     * parsed, each run through a machine, and the results streamed back
+     * to the console (see {@link Executor}).
      */
-    private volatile boolean widgetMouseTracking = false;
+    private final Executor executor = new Executor(this);
 
     /**
-     * When true the pointer has been handed back to the terminal (mouse tracking
-     * disabled) so the wheel scrolls the terminal's own scrollback.  Re-armed on
-     * the next prompt or when a widget is focused via {@code alt}+{@code w}.
+     * Re-arm the pointer after a widget (re)gains focus — a wheel released
+     * to the terminal is handed back to the widgets.
      */
-    private volatile boolean pointerReleased = false;
+    void rearmPointer() {
+        this.pointer.rearmPointer();
+    }
 
     /**
      * @return true when the console's floating surface has at least one pinned widget
      */
     public boolean hasFloatingWidgets() {
-        return !getFloatingSurface().widgets().isEmpty();
+        return this.widgetsNav.hasFloatingWidgets();
     }
 
     /**
@@ -1376,7 +758,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * shadows it (a menu line key, a tool, anything bound after startup).
      */
     public void registerBuiltinKey(final String sequence, final Object handler) {
-        this.builtinBindings.put(sequence, handler);
+        this.widgetsNav.registerBuiltinKey(sequence, handler);
     }
 
     /**
@@ -1386,9 +768,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * lasts until the next read.
      */
     public void reassertBuiltinKeys() {
-        if (this.builtinBindings.isEmpty())
-            return;
-        reassertBuiltin(this.widgets.getKeyMap(), this.builtinBindings);
+        this.widgetsNav.reassertBuiltinKeys();
     }
 
     /**
@@ -1410,21 +790,21 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * @return the currently bound handler for the given key sequence (may be null)
      */
     public Object boundKeyHandler(final String sequence) {
-        return this.widgets.getKeyMap().getBound(sequence);
+        return this.widgetsNav.boundKeyHandler(sequence);
     }
 
     /**
      * @return the handler the console registered for the builtin (may be null)
      */
     public Object builtinKeyHandler(final String sequence) {
-        return this.builtinBindings.get(sequence);
+        return this.widgetsNav.builtinKeyHandler(sequence);
     }
 
     /**
      * @return the sequences the console keeps as reasserted builtins
      */
     public java.util.Set<String> builtinKeySequences() {
-        return this.builtinBindings.keySet();
+        return this.widgetsNav.builtinKeySequences();
     }
 
     /**
@@ -1432,7 +812,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * (see {@link FloatingSurface#widgets()})
      */
     public List<Widget<?>> getFloatingWidgets() {
-        return getFloatingSurface().widgets();
+        return this.widgetsNav.getFloatingWidgets();
     }
 
     /**
@@ -1441,13 +821,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * an unknown key since)
      */
     public Widget<?> getActiveWidget() {
-        final String key = getFloatingSurface().resolveKey(this.activeWidgetKey);
-        if (null == key) return null;
-        for (final Widget<?> w : getFloatingWidgets()) {
-            if (key.equals(FloatingSurface.widgetKey(w)))
-                return w;
-        }
-        return null;
+        return this.widgetsNav.getActiveWidget();
     }
 
     /**
@@ -1455,20 +829,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * Triggers a re-render so the focus marker lands immediately.
      */
     public void focusWidget(final Widget<?> widget) {
-        if (null == widget) {
-            this.activeWidgetKey = null;
-            getFloatingSurface().setFocusKey(null);
-        } else {
-            this.activeWidgetKey = FloatingSurface.widgetKey(widget);
-            getFloatingSurface().setFocusKey(this.activeWidgetKey);
-            // re-arming a widget re-arms the pointer, so a wheel released to
-            // the terminal is handed back to the widgets
-            this.pointerReleased = false;
-        }
-        // fire-and-forget: a click must never stall the console thread on a
-        // render, and the pointer decision only needs the focus itself
-        getFloatingSurface().render();
-        this.syncWidgetMouseTracking();
+        this.widgetsNav.focusWidget(widget);
     }
 
     /**
@@ -1476,139 +837,69 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * no widgets are pinned.
      */
     public void nextWidget() {
-        cycleWidgetFocus(1);
+        this.widgetsNav.nextWidget();
     }
 
     /**
      * Cycle the focus back to the previous floating widget (wrapping).
      */
     public void prevWidget() {
-        cycleWidgetFocus(-1);
-    }
-
-    private void cycleWidgetFocus(final int direction) {
-        final List<Widget<?>> widgets = getFloatingWidgets();
-        if (widgets.isEmpty()) {
-            LOG.warn("no floating widgets to focus");
-            return;
-        }
-        final String activeKey = getFloatingSurface().resolveKey(this.activeWidgetKey);
-        int index = -1;
-        for (int i = 0; i < widgets.size(); i++) {
-            if (null != activeKey && activeKey.equals(FloatingSurface.widgetKey(widgets.get(i)))) {
-                index = i;
-                break;
-            }
-        }
-        if (index < 0 && widgets.size() > 1) {
-            // lost the position — say so, so a live session can see it
-            // (single-widget cycling back to the same widget is normal)
-            LOG.debug("focus key {{y}}%s{{X}} not found among {{y}}%d{{X}} floating widgets; cycling restarts at the first — see {{m}}:widgets{{X}}",
-                    this.activeWidgetKey, widgets.size());
-        }
-        final Widget<?> next = widgets.get(((index + 1 + direction) % widgets.size() + widgets.size()) % widgets.size());
-        focusWidget(next);
+        this.widgetsNav.prevWidget();
     }
 
     /**
-     * Grow the focused floating widget's width by one step
-     * ({@value WIDGET_WIDTH_STEP} columns).  Which edge moves is decided by
-     * the widget's anchor: a left-anchored widget extends its right edge,
-     * a right-anchored widget pulls in its left edge.
+     * Grow the focused floating widget's width by one step.  Which edge
+     * moves is decided by the widget's anchor: a left-anchored widget
+     * extends its right edge, a right-anchored widget pulls in its left.
      */
     public void growActiveWidgetWidth() {
-        nudgeActiveWidget(WIDGET_WIDTH_STEP, 0);
+        this.widgetsNav.growActiveWidgetWidth();
     }
 
     /**
      * Shrink the focused floating widget's width by one step.
      */
     public void shrinkActiveWidgetWidth() {
-        nudgeActiveWidget(-WIDGET_WIDTH_STEP, 0);
+        this.widgetsNav.shrinkActiveWidgetWidth();
     }
 
     /**
-     * Grow the focused floating widget's height by one step
-     * ({@value WIDGET_HEIGHT_STEP} rows).  Which edge moves is decided by
-     * the widget's anchor: a bottom-anchored widget pushes its top edge
-     * up, a top-anchored widget pushes its bottom edge down.
+     * Grow the focused floating widget's height by one step.  Which edge
+     * moves is decided by the widget's anchor: a bottom-anchored widget
+     * pushes its top edge up, a top-anchored widget pushes its bottom down.
      */
     public void growActiveWidgetHeight() {
-        nudgeActiveWidget(0, WIDGET_HEIGHT_STEP);
+        this.widgetsNav.growActiveWidgetHeight();
     }
 
     /**
      * Shrink the focused floating widget's height by one step.
      */
     public void shrinkActiveWidgetHeight() {
-        nudgeActiveWidget(0, -WIDGET_HEIGHT_STEP);
+        this.widgetsNav.shrinkActiveWidgetHeight();
     }
-
-    private void nudgeActiveWidget(final int widthDelta, final int heightDelta) {
-        final Widget<?> active = getActiveWidget();
-        if (null == active) {
-            LOG.warn("no floating widget in focus");
-            return;
-        }
-        getFloatingSurface().nudge(active, widthDelta, heightDelta);
-    }
-
-    // ========== Floating Widget Scrolling ==========
-    // A pinned widget draws through a viewport (its style height, else the
-    // terminal), so content that does not fit is not discarded — it is simply
-    // off the viewport, still alive in the widget's body.  These methods move
-    // that viewport, which is how the text scrolled out of sight is read again.
 
     /**
      * Scroll the focused floating widget's viewport by {@code (dx, dy)} cells.
-     * Positive {@code dy} moves toward newer content, positive {@code dx}
-     * toward later columns.
      *
      * @return true when the focused widget accepted the scroll
      */
     public boolean scrollActiveWidget(final int dx, final int dy) {
-        final Widget<?> active = getActiveWidget();
-        // nothing focused is not an error — a scroll key is allowed to fall
-        // through to the binding that owned it before
-        if (null == active) return false;
-        if (!getFloatingSurface().scroll(active, dx, dy)) {
-            LOG.warn("focused floating widget {{y}}%s{{X}} does not scroll", this.activeWidgetKey);
-            return false;
-        }
-        this.reportWidgetScroll(active);
-        return true;
+        return this.widgetsNav.scrollActiveWidget(dx, dy);
     }
 
     /**
-     * Scroll the focused floating widget by one viewport page
-     * ({@code direction} &lt; 0 = back in the text, &gt; 0 = forward).
+     * Scroll the focused floating widget by one viewport page.
      */
     public boolean pageActiveWidget(final int direction) {
-        final Widget<?> active = getActiveWidget();
-        // nothing focused is not an error — a scroll key is allowed to fall
-        // through to the binding that owned it before
-        if (null == active) return false;
-        final int page = getFloatingSurface().pageRows(active) * (direction < 0 ? -1 : 1);
-        if (!getFloatingSurface().scroll(active, 0, page)) {
-            LOG.warn("focused floating widget {{y}}%s{{X}} does not scroll", this.activeWidgetKey);
-            return false;
-        }
-        this.reportWidgetScroll(active);
-        return true;
+        return this.widgetsNav.pageActiveWidget(direction);
     }
 
     /**
-     * Put the focused floating widget's viewport back on its newest content —
-     * the state it starts in, and the one it returns to as content arrives.
+     * Put the focused floating widget's viewport back on its newest content.
      */
     public boolean tailActiveWidget() {
-        final Widget<?> active = getActiveWidget();
-        // nothing focused is not an error — a scroll key is allowed to fall
-        // through to the binding that owned it before
-        if (null == active) return false;
-        getFloatingSurface().scrollToTail(active);
-        this.reportWidgetScroll(active);
-        return true;
+        return this.widgetsNav.tailActiveWidget();
     }
 
     /**
@@ -1616,13 +907,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * (clamped to the content).
      */
     public boolean scrollActiveWidgetTo(final int row) {
-        final Widget<?> active = getActiveWidget();
-        // nothing focused is not an error — a scroll key is allowed to fall
-        // through to the binding that owned it before
-        if (null == active) return false;
-        getFloatingSurface().scrollTo(active, row);
-        this.reportWidgetScroll(active);
-        return true;
+        return this.widgetsNav.scrollActiveWidgetTo(row);
     }
 
     /**
@@ -1630,8 +915,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * viewport that a scroll would reveal
      */
     public boolean activeWidgetScrolls() {
-        final Widget<?> active = getActiveWidget();
-        return null != active && getFloatingSurface().canScroll(active);
+        return this.widgetsNav.activeWidgetScrolls();
     }
 
     /**
@@ -1639,163 +923,50 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * {@code rows 12-31/240} (empty when it is not scrollable).
      */
     public String activeWidgetScrollInfo() {
-        final Widget<?> active = getActiveWidget();
-        if (null == active) return "";
-        final String info = getFloatingSurface().scrollInfo(active);
-        return info.isEmpty() ? "" : getFloatingSurface().resolveKey(this.activeWidgetKey) + " " + info;
+        return this.widgetsNav.activeWidgetScrollInfo();
     }
 
     /**
-     * Echo a widget's viewport position to the status line, so a scroll (which
-     * changes nothing a cursor can point at) is still visibly acknowledged.
-     */
-    private void reportWidgetScroll(final Widget<?> widget) {
-        final String key = getFloatingSurface().resolveKey(this.activeWidgetKey);
-        final String info = getFloatingSurface().scrollInfo(widget);
-        StatusLine.message(str(info.isEmpty()
-                ? "{{y}}%s{{X}} {{w}}has nothing off its viewport{{X}}".formatted(key)
-                : "{{y}}%s{{X}} %s".formatted(key, info)));
-    }
-
-    /**
-     * A pointer click at a terminal cell.
-     *
-     * <p>The gesture vocabulary is the one a pointer implies: the widget under
-     * the pointer is focused, its own affordances get first refusal (an
-     * accordion's {@code [-]} / {@code [+]} toggle, for example — see
-     * {@link Widget#onClick(int, int)}), and a click on terminal that has no
-     * widget under it means no widget owns the user's attention, so the focus
-     * is cleared.
+     * A pointer click at a terminal cell: the widget under the pointer is
+     * focused, its affordances get first refusal, and a click on empty
+     * terminal clears the focus.
      *
      * @param row 1-based terminal row of the click
      * @param col 1-based terminal column of the click
      * @return true when a widget consumed the click for itself
      */
     public boolean clickAt(final int row, final int col) {
-        return this.clickAt(row, col, false);
+        return this.pointer.clickAt(row, col);
     }
 
     /**
-     * As {@link #clickAt(int, int)} with a held control key (see {@link #mousePressed(int, int, boolean)}).
+     * As {@link #clickAt(int, int)} with a held control key: on a link it means
+     * follow the uri (type it AND submit it) rather than only type it.
+     *
+     * @return true when a widget consumed the click for itself
      */
     public boolean clickAt(final int row, final int col, final boolean follow) {
-        final Widget<?> hit = getFloatingSurface().widgetAt(row, col);
-        if (Boolean.getBoolean("metatron.render.trace"))
-            rawErr().println("[click] row=" + row + " col=" + col + " widget=" + (null != hit)
-                    + " inRead=" + this.inReadLine + " appends=" + this.screenAppends()
-                    + " rows=" + this.screen.rows() + " top=" + this.screen.top());
-        if (null == hit) {
-            // A link in the transcript is the screen's own affordance, and it answers before
-            // the focus is touched: it types rather than focuses.
-            if (this.openScreenLink(row, col, follow)) return true;
-            // Empty terminal — including the prompt area: nothing owns the
-            // user's attention, so the focus is dropped.  The pointer stays
-            // armed, though — while a widget is on screen the next click can
-            // still focus one (no alt+w re-entry).  Use Shift+drag for native
-            // terminal text selection while the widgets hold the mouse.
-            if (null != getActiveWidget()) focusWidget(null);
-            else syncWidgetMouseTracking();
-            return false;
-        }
-        final boolean focused = getActiveWidget() == hit;
-        if (!focused) focusWidget(hit);
-        // The affordance gets its own render: a click that both focuses a widget
-        // and toggles it must show the toggled state (focusWidget's render ran
-        // before the widget acted).  surface.render() coalesces, so a click
-        // never costs more than one pass.
-        final boolean consumed = getFloatingSurface().click(hit, row, col, false);
-        if (consumed) {
-            getFloatingSurface().render();
-        }
-        return consumed;
+        return this.pointer.clickAt(row, col, follow);
     }
 
-    // ── the drag gesture ──────────────────────────────────────────────
-    //
-    // Where a widget sits and how big it is WHILE the pointer works on it is VIEW state,
-    // so it lives here and on the widget's slot — never in the widget's rec.  Only the
-    // release writes the rec (style top/left after a move, width/height after a resize),
-    // because that is what has to outlive the session: every .display() re-hydrates the
-    // widget into a fresh instance, and geometry that only lived in this console would be
-    // gone the next time the widget's content changed.
-
     /**
-     * The widget the pointer is working on, or null when no drag is in flight.
-     */
-    private volatile Widget<?> dragWidget = null;
-    /**
-     * Which handle was taken hold of: the chevron (move) or the corner marker (resize).
-     */
-    private FloatingSurface.Handle dragHandle = null;
-    /**
-     * Where the pointer took hold — the handle's own cell.
-     */
-    private int dragRow = 0;
-    private int dragCol = 0;
-    /**
-     * The box at press time: a resize is a delta from it, not an accumulation of events.
-     */
-    private int dragWidth = 0;
-    private int dragHeight = 0;
-    /**
-     * True once the pointer actually moved, so a press-and-release stays a click.
-     */
-    private boolean dragMoved = false;
-
-    /**
-     * A pointer press: taking hold of one of the focused widget's handles starts a
-     * gesture, and anything else keeps the click semantics (focus the widget under the
-     * pointer, let it work its affordance, or clear the focus on empty terminal).
-     *
-     * <p>The handles are the two cells a widget can be worked from, and both are
-     * painted in the widget's own box — so the cell the user grabs IS the geometry the
-     * gesture changes: the chevron ({@code ▶}) in the top-left cell is the widget's
-     * origin, which makes a move a translation, and the marker ({@code ◢}) in the
-     * bottom-right cell is the far corner of its box, which makes a resize a
-     * width/height delta.  No offset arithmetic, and targets that small stay easy to
-     * hit on purpose: nobody clicks a corner by accident, and the body of the widget
-     * stays free for selection, scrolling and affordances.
-     *
-     * <p>An affordance under the press still wins: the click runs first, and only a
-     * press the widget did not consume becomes a grab.  A widget whose own top-left
-     * cell acts on a click (a selector's first row, say) keeps that click and simply
-     * cannot be dragged by its chevron.
+     * A pointer press: taking hold of one of the focused widget's handles
+     * starts a drag gesture; anything else keeps the click semantics.
      *
      * @param row 1-based terminal row of the press
      * @param col 1-based terminal column of the press
      * @return true when the press was consumed — by the widget's affordance or by a grab
      */
     public boolean mousePressed(final int row, final int col) {
-        return this.mousePressed(row, col, false);
+        return this.pointer.mousePressed(row, col);
     }
 
     /**
-     * As {@link #mousePressed(int, int)} with a held control key: on a link it means follow the
-     * uri (type it AND submit it) rather than only type it.
+     * As {@link #mousePressed(int, int)} with a held control key: on a link it
+     * means follow the uri (type it AND submit it) rather than only type it.
      */
     public boolean mousePressed(final int row, final int col, final boolean follow) {
-        linkTrace("press row=%d col=%d follow=%b | %s", row, col, follow, this.linkReport());
-        // whose handles these are: the ALREADY focused widget's.  A press on the corner
-        // of an unfocused widget is how you focus it (no handle is drawn there yet, so
-        // the user did not aim at one), and a second press then grabs.
-        final Widget<?> focused = getActiveWidget();
-        final FloatingSurface.Handle handle = null == focused
-                ? null : getFloatingSurface().handleAt(focused, row, col);
-        // the click runs first so a widget's own affordance keeps its cell
-        final boolean consumed = this.clickAt(row, col, follow);
-        if (null == handle || consumed) return consumed;
-        final FloatingSurface.Placement placement = getFloatingSurface().placement(focused);
-        this.dragWidget = focused;
-        this.dragHandle = handle;
-        this.dragRow = row;
-        this.dragCol = col;
-        this.dragWidth = null == placement ? 0 : placement.width();
-        this.dragHeight = null == placement ? 0 : placement.height();
-        this.dragMoved = false;
-        // hold the pointer for the whole gesture: a mid-drag hand-back to the
-        // terminal would drop the release event and leave the widget in flight
-        this.syncWidgetMouseTracking(true);
-        return true;
+        return this.pointer.mousePressed(row, col, follow);
     }
 
     /**
@@ -1806,183 +977,60 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * @return true when a gesture is in flight
      */
     public boolean mouseDragged(final int row, final int col) {
-        final Widget<?> widget = this.dragWidget;
-        if (null == widget) return false;
-        if (row == this.dragRow && col == this.dragCol) return true;   // still on the handle
-        this.dragMoved = true;
-        this.applyDrag(widget, this.dragHandle, row, col);
-        return true;
+        return this.pointer.mouseDragged(row, col);
     }
 
     /**
-     * Put the gesture's current pointer cell to work on the widget: measured from the
-     * press cell, so a drag is a delta and not an accumulation of motion events.
-     */
-    private void applyDrag(final Widget<?> widget, final FloatingSurface.Handle handle,
-                           final int row, final int col) {
-        // what the box covers now is what the move is about to leave behind: the
-        // screen has to put those rows back (see repairRows), and asking here — on the
-        // console thread, once per motion event — keeps a fast drag from outrunning the
-        // damage the render pass reports
-        final int[] before = getFloatingSurface().lastRows(widget);
-        if (FloatingSurface.Handle.RESIZE == handle)
-            getFloatingSurface().resizeTo(widget,
-                    this.dragWidth + (col - this.dragCol),
-                    this.dragHeight + (row - this.dragRow));
-        else
-            // the corner lands where the pointer is — placeAt clamps so the handle itself
-            // can never be dragged off screen and out of reach
-            getFloatingSurface().placeAt(widget, row, col);
-        if (null != before) this.repairRows(before[0], before[1]);
-    }
-
-    /**
-     * A pointer release: park the widget — write what the gesture changed into its style
-     * so it survives re-hydration — and end the gesture.  A press and release that never
-     * moved is just a click on a handle, and the press already focused the widget.
+     * A pointer release: park the widget — write what the gesture changed into
+     * its style so it survives re-hydration — and end the gesture.
      *
      * @return true when a gesture was in flight
      */
     public boolean mouseReleased(final int row, final int col) {
-        final Widget<?> widget = this.dragWidget;
-        if (null == widget) return false;
-        final FloatingSurface.Handle handle = this.dragHandle;
-        if (this.dragMoved) {
-            this.dragMoved = false;
-            // the release cell is the final word: a terminal need not send a motion
-            // event for the last cell the pointer crossed
-            this.applyDrag(widget, handle, row, col);
-            this.parkDrag(widget, handle);
-            // where the gesture ends, repair for certain: the per-motion repair is
-            // coalesced, so the last one may have been skipped
-            if (screenMode()) this.repairRows(row, row);
-        }
-        this.dragWidget = null;
-        this.dragHandle = null;
-        this.syncWidgetMouseTracking(true);
-        return true;
-    }
-
-    /**
-     * Write what the gesture changed into the widget's style — the rec is where a
-     * widget's geometry lives, so both survive the re-hydration every update performs
-     * and a later session.  A move parks {@code top}/{@code left}; a resize parks
-     * {@code width}/{@code height} (and, harmlessly, the position it was resized from,
-     * because the anchor's free edge moves as the box grows).  The rest of the style is
-     * untouched: this reads it, changes a couple of keys, and puts it back.
-     */
-    private void parkDrag(final Widget<?> widget, final FloatingSurface.Handle handle) {
-        final FloatingSurface.Placement placement = getFloatingSurface().placement(widget);
-        if (null == placement) return;
-        try {
-            final var style = widget.style().top(placement.top()).left(placement.left());
-            if (FloatingSurface.Handle.RESIZE == handle)
-                style.width(placement.width()).height(placement.height());
-            style.applyStyle();
-        } catch (final Exception e) {
-            LOG.warn("pointer: could not park the widget's geometry: {{r}}%s{{X}}", e.getMessage());
-        }
+        return this.pointer.mouseReleased(row, col);
     }
 
     /**
      * True while the pointer is moving a widget.
      */
     public boolean dragging() {
-        return null != this.dragWidget;
+        return this.pointer.dragging();
     }
 
     /**
-     * Terminal mouse modes this console turns on: button events (1000), button-event
-     * tracking (1002) — motion while a button is held, which is what a drag is — and
-     * the SGR encoding (1006), and nothing else.
-     *
-     * <p>Deliberately NOT jline's {@code MouseSupport.trackMouse(Normal)}, which
-     * also enables {@code ?1005h} — the legacy UTF-8 coordinate encoding.  With
-     * 1005 and 1006 enabled together a terminal may report the pointer in either
-     * encoding, and a mis-decoded column is exactly what makes a small target
-     * (an accordion's {@code [-]} cell) impossible to hit while a large one (the
-     * widget body) still works.
-     */
-    private static final String MOUSE_ON = "\033[?1000h\033[?1002h\033[?1006h";
-    /**
-     * Every mode jline may have enabled, off — a full hand-back to the terminal.
-     */
-    private static final String MOUSE_OFF =
-            "\033[?1000l\033[?1002l\033[?1003l\033[?1005l\033[?1006l\033[?1015l\033[?1016l";
-
-    /**
-     * Turn terminal mouse tracking on or off to match what is on screen.
-     *
-     * <p>The pointer belongs to the widgets while any of them is on screen
-     * (or one is focused): that is what lets a cold click focus a widget,
-     * and a click after unfocusing re-focus one.  Only with nothing pinned
-     * does the terminal get its own mouse back (wheel, drag-selection).
-     *
-     * <p>Called only when the prompt owns the terminal (the console's watcher
-     * thread, and the console thread itself): while a job holds the console the
-     * mouse stays off, so its bytes can never be mistaken for typed input.
+     * Turn terminal mouse tracking on or off to match what is on screen — the
+     * pointer belongs to the widgets while any of them is on screen (or one
+     * is focused), and to the terminal only with nothing pinned.
      */
     public void syncWidgetMouseTracking() {
-        syncWidgetMouseTracking(false);
+        this.pointer.syncWidgetMouseTracking();
     }
 
     /**
-     * @param force re-assert the mode even when it has not changed — used once
-     *              per prompt, because jline releases mouse tracking at the end
-     *              of every readLine, so the flag alone would leave the pointer
-     *              dead from the second prompt on
+     * As {@link #syncWidgetMouseTracking()}, re-asserting the mode even when
+     * it has not changed — used once per prompt, because jline releases mouse
+     * tracking at the end of every readLine.
+     *
+     * @param force re-assert the mode even when it has not changed
      */
     public void syncWidgetMouseTracking(final boolean force) {
-        final Terminal term = getTerminal();
-        if (null == term || !term.hasMouseSupport()) return;
-        final int widgets = getFloatingSurface().drawnWidgetCount();
-        // a drag holds the pointer whatever else changes — the gesture is not over
-        // until the button comes up
-        final boolean wanted = this.dragging()
-                || pointerWanted(null != getActiveWidget(), this.pointerReleased, widgets)
-                // ...and while the transcript holds a link: clicking one is the screen's own
-                // affordance, and a click is only ours while we hold the pointer.  A release the
-                // reader asked for (alt+s) outranks it: the pointer goes back to the terminal so
-                // shift-drag selection works, and stays there until the next prompt re-arms it —
-                // re-arming on the next paint would take it back before they could select anything
-                || (screenMode() && !this.pointerReleased && this.screen.hasLinks());
-        if (wanted == this.widgetMouseTracking && !force) return;
-        linkTrace("mouse %s (wanted=%b force=%b dragging=%b focused=%b released=%b widgets=%d links=%d rows=%d)",
-                wanted ? "ON" : "OFF", wanted, force, this.dragging(), null != getActiveWidget(),
-                this.pointerReleased, widgets, this.screen.linkRows(), this.screen.rows());
-        try {
-            // only the enable is worth re-asserting (jline turns it off again at
-            // the end of every readLine); a disable is written once, on the way out
-            if (wanted) {
-                term.writer().print(MOUSE_ON);
-            } else if (this.widgetMouseTracking) {
-                term.writer().print(MOUSE_OFF);
-            }
-            term.writer().flush();
-            this.widgetMouseTracking = wanted;
-        } catch (final Exception e) {
-            LOG.warn("could not %s mouse tracking: {{r}}%s{{X}}", wanted ? "enable" : "disable", e.getMessage());
-        }
+        this.pointer.syncWidgetMouseTracking(force);
     }
 
     /**
      * Whether terminal mouse tracking is currently owned by widget scrolling.
      */
     public boolean widgetMouseTracking() {
-        return this.widgetMouseTracking;
+        return this.pointer.widgetMouseTracking();
     }
 
     /**
      * Hand the pointer back to the terminal (disable mouse tracking) so the
-     * wheel scrolls the terminal's own scrollback.  Triggered by a wheel over
-     * empty terminal with nothing focused; re-armed on the next prompt or when
-     * a widget is focused via {@code alt}+{@code w}.
+     * wheel scrolls the terminal's own scrollback.  Re-armed on the next
+     * prompt or when a widget is focused via {@code alt}+{@code w}.
      */
     public void releasePointer() {
-        this.pointerReleased = true;
-        // drop the focus too, so the widgets read as fully detached from the
-        // pointer and the focus marker disappears with the re-render
-        this.focusWidget(null);
+        this.pointer.releasePointer();
     }
 
     /**
@@ -1998,9 +1046,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * terminal gives up on it.  Marking the rows unknown is enough — the next output or prompt
      * repaints them, and repainting stale rows is exactly what invalidating prevents.
      */
-    private void resyncScreen() {
-        if (!screenMode()) return;
-        this.screen.invalidate();
+    void resyncScreen() {
+        this.screenView.resyncScreen();
     }
 
     /**
@@ -2014,16 +1061,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * quit, ctrl-c, or the launcher restarting the VM.
      */
     private void releaseTerminalOnExit() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                final Terminal term = getTerminal();
-                if (null == term) return;
-                term.writer().print(MOUSE_OFF);
-                term.writer().flush();
-            } catch (final Exception ignore) {
-                // the process is going away: nothing here is worth an error
-            }
-        }, "metatron-console-teardown"));
+        Runtime.getRuntime().addShutdownHook(new Thread(() ->
+                this.pointer.disableMouseModesForExit(), "metatron-console-teardown"));
     }
 
     /**
@@ -2049,8 +1088,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * Called after operations that move the cursor (like status refresh).
      */
     public void positionCursorInActivePane() {
-        if (this.activePane == null) return;
-        final int[] pos = calculatePanePosition(this.activePane);
+        if (this.panes.activePane() == null) return;
+        final int[] pos = panes.calculatePanePosition(this, this.panes.activePane());
         if (pos == null) return; // activePane not in tree yet (e.g. during split transition)
         final int promptRow = pos[0] + pos[2] - 2; // startRow + height - 2
         final int promptCol = pos[1] + 1; // startCol + 1 to skip left border
@@ -2059,55 +1098,15 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     /**
-     * Calculate a pane's position (startRow, startCol, height, width) by traversing the tree.
-     * This ensures we always have the correct position regardless of render state.
+     * Calculate a pane's position (startRow, startCol, height, width) by
+     * traversing the tree — this ensures we always have the correct position
+     * regardless of render state.
      *
+     * @param pane the pane to locate
      * @return int[] {startRow, startCol, height, width}
      */
     public int[] calculatePanePosition(final Pane pane) {
-        final int height = terminal.getHeight() - 1;  // -1 for status line only
-        final int width = terminal.getWidth();
-        return calculatePanePositionInNode(pane, this.paneRoot, 1, 1, height, width);
-    }
-
-    private int[] calculatePanePositionInNode(final Pane target, final PaneNode node,
-                                              final int startRow, final int startCol,
-                                              final int height, final int width) {
-        if (node == target) {
-            return new int[]{startRow, startCol, height, width};
-        }
-        if (node.isLeaf()) {
-            return null; // Not found in this branch
-        }
-        // It's a SplitContainer
-        final SplitContainer container = (SplitContainer) node;
-        if (container.direction() == SplitLayout.VERTICAL) {
-            // No divider - panes are directly adjacent
-            final int firstWidth = (int) (width * container.ratio());
-            final int secondWidth = width - firstWidth;
-
-            // Check first (left)
-            int[] result = calculatePanePositionInNode(target, container.first(),
-                    startRow, startCol, height, firstWidth);
-            if (result != null) return result;
-
-            // Check second (right)
-            return calculatePanePositionInNode(target, container.second(),
-                    startRow, startCol + firstWidth, height, secondWidth);
-        } else { // HORIZONTAL
-            // No divider - panes are directly adjacent
-            final int firstHeight = (int) (height * container.ratio());
-            final int secondHeight = height - firstHeight;
-
-            // Check first (top)
-            int[] result = calculatePanePositionInNode(target, container.first(),
-                    startRow, startCol, firstHeight, width);
-            if (result != null) return result;
-
-            // Check second (bottom)
-            return calculatePanePositionInNode(target, container.second(),
-                    startRow + firstHeight, startCol, secondHeight, width);
-        }
+        return this.panes.calculatePanePosition(this, pane);
     }
 
     /**
@@ -2119,7 +1118,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * echo subsequent keystrokes at column 1 instead of where the user left off.
      */
     public void renderSinglePaneContent(final Pane pane) {
-        if (!this.splitMode || pane == null) return;
+        if (!this.panes.splitMode() || pane == null) return;
         final int[] pos = calculatePanePosition(pane);
         if (pos == null) return;
         // Save cursor — preserves exact row/col (including buffer offset)
@@ -2136,8 +1135,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * Pane calls this after every {@code appendOutput}. This method owns all
      * throttling/rendering logic — Pane itself stays free of rendering concerns.
      */
-    private void onPaneOutputChanged(final Pane pane) {
-        if (!this.splitMode) return;
+    void onPaneOutputChanged(final Pane pane) {
+        if (!this.panes.splitMode()) return;
 
         // Defer rendering while the user is actively typing so the cursor doesn't
         // jump to a different pane mid-input.  After the idle threshold expires,
@@ -2166,7 +1165,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * {@link #INPUT_IDLE_THRESHOLD_MS} the method returns {@code false} and
      * rendering proceeds — the user is reading or thinking, cursor detours are safe.
      */
-    private boolean deferNonActivePaneRender() {
+    boolean deferNonActivePaneRender() {
         if (!this.inReadLine) return false;
         // Poll JLine's buffer — length changes mean the user typed.
         // getBuffer() is safe to read cross-thread (returns live Buffer ref).
@@ -2204,7 +1203,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      *                      widget actions (split, resize) that must render immediately.
      */
     private void renderPanes(final boolean deferIfTyping) {
-        if (!this.splitMode) return;
+        if (!this.panes.splitMode()) return;
 
         // Defer non-essential rendering while the user is actively typing.
         if (deferIfTyping && deferNonActivePaneRender()) return;
@@ -2222,10 +1221,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         }
 
         // Render pane tree (this updates each pane's region tracking)
-        this.paneRoot.render(terminal, 1, 1, height, width, this.activePane);
+        this.panes.root().render(terminal, 1, 1, height, width, this.panes.activePane());
 
         // Position cursor at active pane's prompt location (use dynamic calculation)
-        final int[] pos = calculatePanePosition(this.activePane);
+        final int[] pos = panes.calculatePanePosition(this, this.panes.activePane());
         if (pos == null) {
             // activePane not found in tree (race or stale ref) – flush and bail
             terminal.writer().flush();
@@ -2284,19 +1283,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      *                      the cursor out from under a half-typed line
      */
     private void renderScreen(final boolean deferIfTyping) {
-        if (!screenMode()) return;
-        if (deferIfTyping && deferNonActivePaneRender()) return;
-        // while the console is appending, the prompt the reader is looking at is jline's
-        // and it is already exactly where the cursor is: nothing to paint, nothing to
-        // move — the widgets are still drawn (they float wherever they were pinned)
-        if (this.screenAppends()) {
-            getFloatingSurface().render();
-            return;
-        }
-        // screenFrame() lays the region out and knows whether the console may place the
-        // cursor (between prompts) or must put it back where it was (mid-prompt)
-        getFloatingSurface().writeToTerminal(this.screenFrame());
-        getFloatingSurface().render();
+        this.screenView.renderScreen(deferIfTyping);
     }
 
     /**
@@ -2310,99 +1297,20 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * tail again resumes following, so scrolling back down needs no separate gesture.
      */
     public void scrollScreen(final int delta) {
-        if (!screenMode()) return;
-        this.screen.scrollBy(delta);
-        // the window moved under the rows, so what is on screen is no longer known
-        this.screen.invalidate();
-        this.repaintScreen();
+        this.screenView.scrollScreen(delta);
     }
 
     /**
      * Repaint the screen region now, without blocking the caller's interest in the result.
      */
     private void repaintScreen() {
-        getFloatingSurface().writeAndRender(this::screenFrame);
+        this.screenView.repaintScreen();
     }
 
-    /**
-     * A click on a link in the transcript: type the dereference of its uri at the prompt,
-     * leaving the reader one &lt;enter&gt; from the resource.
-     *
-     * <p>The uri is not dereferenced for the reader, and that is the point: in metatron a uri
-     * IS an expression, so typing {@code *<uri>} puts the reader in charge of the resource —
-     * they can edit it, extend it, or walk somewhere else from it — while still being one
-     * keystroke from following the link.  It also means a link cannot run something the
-     * reader did not see.
-     *
-     * @param row 1-based terminal row of the click
-     * @param col 1-based terminal column of the click
-     * @return true when a link was there and its uri is now in the prompt
-     */
-    /**
-     * How far from the clicked row the console will look for the link it was aimed at, nearest
-     * first.  0 is the row itself; the rest absorb the row-origin difference between the screen's
-     * model and the terminal's display, which put a uri the reader could see one or two rows away
-     * from where they had to click.
-     */
-    private static final int[] LINK_ROW_PROBE = {0, 1, -1, 2, -2};
-
-    /**
-     * The uri a link at this terminal row and column resolves to, or null when that row has none.
-     */
-    private String linkAtRow(final int row, final int col) {
-        final int index = row - this.screen.top();
-        if (index < 0 || index >= this.screen.rows()) return null;
-        final java.util.List<String> window = this.screen.visible();
-        return index < window.size() ? ScreenPainter.linkAt(window.get(index), col - 1) : null;
+    boolean openScreenLink(final int row, final int col, final boolean follow) {
+        return this.screenView.openScreenLink(row, col, follow);
     }
 
-    private boolean openScreenLink(final int row, final int col, final boolean follow) {
-        // Resolving a click needs the console's own rows: while it is appending (opt-in), a
-        // terminal row is not a buffer row and the pointer stays the terminal's.
-        if (!screenMode() || this.screenAppends() || !this.inReadLine) {
-            linkTrace("  refused: screen=%b appends=%b inReadLine=%b",
-                    screenMode(), this.screenAppends(), this.inReadLine);
-            return false;
-        }
-        // One click, one gesture: type the dereference and let the reader decide, or — with control
-        // held — submit it as well.  Nothing is remembered between clicks, so a repaint that moves
-        // the row cannot make the next click answer for the last one.
-        String target = null;
-        int landedOn = row;
-        // The row the reader points at and the row the console believes it painted can differ by a
-        // row or two (the terminal's origin against the screen's), and a uri they can plainly see
-        // should not have to be clicked "about here": the exact row answers first, then the nearest
-        // rows do, nearest first.
-        for (final int offset : LINK_ROW_PROBE) {
-            final String found = this.linkAtRow(row + offset, col);
-            linkTrace("  probe %+d row %d -> %s", offset, row + offset, found);
-            if (null != found) {
-                target = found;
-                landedOn = row + offset;
-                break;
-            }
-        }
-        if (null == target) return false;
-        linkTrace("  resolved '%s' from row %d (clicked row %d, top %d, rows %d, follow=%b)",
-                target, landedOn, row, this.screen.top(), this.screen.rows(), follow);
-        final String expression = "*" + target;
-        if (follow) {
-            // follow it: submit what the click resolved, with no keystroke in between.  The uri is
-            // asserted rather than appended — a click may already have typed it, and appending
-            // would submit it twice.
-            if (!expression.equals(this.reader.getBuffer().toString())) {
-                this.reader.getBuffer().clear();
-                this.reader.getBuffer().write(expression);
-            }
-            // through Widgets, the way the console's own bindings submit a line
-            this.widgets.callWidget("accept-line");
-            return true;
-        }
-        this.reader.getBuffer().write(expression);
-        // the reader thread owns the line: ask jline to draw what was typed
-        this.reader.callWidget(LineReader.REDISPLAY);
-        return true;
-    }
 
     /**
      * Put back the rows a widget erased, then draw the widgets back over them.
@@ -2417,17 +1325,15 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * @param from 1-based first terminal row erased
      * @param to   1-based last terminal row erased
      */
-    private void repairRows(final int from, final int to) {
-        if (!screenMode()) return;
-        this.screen.forget(from, to);
-        this.requestScreenPaint();
+    void repairRows(final int from, final int to) {
+        this.screenView.repairRows(from, to);
     }
 
     /**
      * The console's screen (see {@link ConsoleScreen}) — for commands that report on it.
      */
     public ConsoleScreen getScreen() {
-        return this.screen;
+        return this.screenView.screen();
     }
 
     public StatusLine getStatus() {
@@ -2439,10 +1345,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     protected void printResult(final Obj result) {
-        if (this.splitMode && this.activePane != null) {
-            this.activePane.appendResult(result);
+        if (this.panes.splitMode() && this.panes.activePane() != null) {
+            this.panes.activePane().appendResult(result);
         } else {
-            result.stream().takeWhile(o -> !this.interruptRequested.get())
+            result.stream().takeWhile(o -> !this.jobs.interruptRequested())
                     .forEach(o -> {
                         this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
                         this.write(Highlighter.format(this.serializer.write(o)));
@@ -2456,8 +1362,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     private void renderTrace(final Obj failObj) {
-        if (this.splitMode && this.activePane != null)
-            this.activePane.appendOutput(formatTraceAnsi(failObj), false);
+        if (this.panes.splitMode() && this.panes.activePane() != null)
+            this.panes.activePane().appendOutput(formatTraceAnsi(failObj), false);
         else
             this.write(formatTraceMarkup(failObj));
     }
@@ -2467,7 +1373,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * {@link TraceTool} for each fail object.  Falls back to
      * {@link #renderTrace} when the user declines.
      */
-    private void promptTraceForFails(final Obj result) {
+    void promptTraceForFails(final Obj result) {
         if (!Tracer.java_stack.enabled()) return;
         result.stream().filter(Obj::isFail).forEach(failObj -> {
             terminal.writer().write(Graphitty.string("{{y}}display trace tool? {{g}}[y/N]{{y}} {{X}}"));
@@ -2481,12 +1387,12 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 if (ch == 'y' || ch == 'Y') {
                     terminal.writer().write("\n");
                     final TraceTool traceTool = new TraceTool(failObj.asFail());
-                    if (Console.this.splitMode && Console.this.activePane != null) {
-                        final int[] pos = Console.this.calculatePanePosition(Console.this.activePane);
+                    if (Console.this.panes.splitMode() && Console.this.panes.activePane() != null) {
+                        final int[] pos = Console.this.panes.calculatePanePosition(Console.this, Console.this.panes.activePane());
                         if (pos != null) traceTool.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
                     }
                     Utilities.runCursorLessWidget(traceTool, true);
-                    if (Console.this.splitMode) {
+                    if (Console.this.panes.splitMode()) {
                         Console.this.renderPanes(false);
                     }
                     redrawBuffer();
@@ -2567,274 +1473,35 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         pane.appendResult(result);
     }
 
-    protected void executeInCurrentLanguage(final String line) {
-        final Language lang = this.getCurrentLanguage();
-        switch (lang) {
-            case MTRON -> this.executeMtron(line);
-            case GREMLIN -> this.executeGremlin(line);
-            case SQL -> this.executeSql(line);
-        }
+    protected void execute(final String line) {
+        this.executor.execute(line);
     }
 
-    protected void executeMtron(final String line) {
-        /// /////////////////////////////////////////////////////
-        AtomicReference<Obj> running = new AtomicReference<>(noobj());
-        final String fullInput = this.prefix + line + this.postfix;
-        if (fullInput.isBlank()) return;
-
-        // 1. Parse the full input — the parser natively handles ; via end() sugar
-        final Obj parsed = ObjmtronSerializer.parseMulti(fullInput);
-        if (null == parsed || parsed.isNoObj()) return;
-
-        // 2. Split into independently executable segments at end() boundaries
-        final List<Code> segments;
-        if (parsed.isCode()) {
-            segments = ObjmtronSerializer.splitCodeAtEnd(parsed.asCode());
-        } else {
-            // Single expression (bare value or single instruction) — wrap as a one-instruction code
-            segments = List.of(MCode.of(List.of(
-                    parsed.isInst() ? parsed.as() : instB(START_INST_TID, lst(parsed)))));
-        }
-        if (segments.isEmpty()) return;
-
-        // 3. Execute each segment with its own SwarmMachine, chaining running state
-        boolean backgrounded = false;
-        for (final Code segment : segments) {
-            try {
-                final Level startLevel = this.status.getState();
-                final Obj resolvedResult = Call.Helper.resolveInspection(running.get(), segment, unresolved -> {
-                    if (TypeCheck.code_resolve.enabled()) {
-                        throw MTronException.of("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(Obj::tid).toList());
-                    } else {
-                        this.status.setState(Level.WARN);
-                        segment.logger().status(DEBUG, "{{y}}dynamic resolution{{X}}: %s", unresolved.stream().map(i -> "{{b}}" + i.tid() + "{{y}}@" + i.vid() + "{{X}}").reduce("", (a, b) -> a + "," + b).substring(1));
-                    }
-                });
-                final AtomicReference<Obj> computeResult = new AtomicReference<>(noobj());
-                if (this.input.isNoObj()) {
-                    final Machine mach = SwarmMachine.of(resolvedResult.as());
-                    final Consumer<Obj> defaultOnHalt = mach.onHalt(); // accumulate into HALTED
-                    mach.onHalt(o -> {
-                        defaultOnHalt.accept(o);  // persist in HALTED collection
-                        //this.printResult(o);      // display
-                    });
-                    // Track machine in both places for interruption
-                    this.machine = mach;
-                    if (this.activePane != null) {
-                        this.activePane.machine(mach);
-                    }
-                    final FutureObj<Obj> future = mach.applyAsync();
-                    if (this.awaitForeground(mach, future, line)) {
-                        // <alt>+b — the machine keeps its own thread and keeps
-                        // running (widgets stay live); this turn is over.
-                        backgrounded = true;
-                    } else {
-                        computeResult.set(future.get());
-                    }
-                } else {
-                    computeResult.set(this.input.apply(resolvedResult));
-                }
-                running.set(computeResult.get());
-                computeResult.get().stream().forEach(this::printResult);
-                this.promptTraceForFails(computeResult.get());
-                this.status.setState(startLevel);
-            } catch (final Exception e) {
-                final Obj failResult = fail(e);
-                this.printResult(failResult);
-                this.promptTraceForFails(failResult);
-            } finally {
-                userMode.set(false);
-                if (this.activePane != null)
-                    this.activePane.clearMachine();
-
-            }
-            // a detached job took the rest of this input to the background
-            if (backgrounded) break;
-        }
-    }
 
     /**
      * Poll a foreground job's future until it completes, watching the terminal
-     * while we wait.  The repl thread holds the reader here — jline is not
-     * reading — so keystrokes typed during the job belong to the console:
-     * {@code <alt>+b} detaches the job, {@code [q]} cancels it once the cancel
-     * offer has been printed, and anything else is kept for the next prompt.
+     * while we wait — {@code <alt>+b} detaches, ctrl-c stops, {@code [q]}
+     * cancels once the offer has been printed, other keystrokes are kept for
+     * the next prompt.  The protocol itself lives on
+     * {@link ForegroundJobs#awaitForeground(Machine, Object, String)}.
      *
-     * @param mach   the machine running the foreground job
-     * @param future the job's future
-     * @param line   the console line that started the job
      * @return true when the job was detached with {@code <alt>+b} (it is still
      * running — the console returns to the prompt)
      */
-    private boolean awaitForeground(final Machine mach, final FutureObj<Obj> future, final String line) {
-        long offerAtMs = System.currentTimeMillis() + CANCEL_OFFER_MS;
-        this.detachRequested.set(false);
-        this.cancelRequested.set(false);
-        this.interruptRequested.set(false);
-        // jline restores the terminal's cooked attributes when readLine()
-        // returns, so outside the prompt keystrokes are line-buffered: alt+b
-        // would not arrive until Enter.  Raw mode for the life of the job makes
-        // every keypress a byte the watcher can classify.  jline saves and
-        // restores its own attributes around each readLine, so handing the
-        // cooked attributes back before returning is exactly what it expects.
-        final Attributes cooked = terminal.enterRawMode();
-        // the watcher owns the terminal from here until this job is over: the
-        // repl thread is parked on the future below, so jline is not reading
-        synchronized (this.watchGate) {
-            this.watching = true;
-            this.watchGate.notifyAll();
-        }
-        try {
-            while (!future.isDone()) {
-                try {
-                    future.get(FOREGROUND_POLL_MS);
-                } catch (final Exception e) {
-                    // a poll window ending is the normal path — the job is still running
-                }
-                if (future.isDone())
-                    break;
-                final boolean detach = this.detachRequested.getAndSet(false);
-                final boolean interrupt = this.interruptRequested.getAndSet(false);
-                final boolean cancel = this.cancelRequested.getAndSet(false);
-                switch (foregroundStep(detach, interrupt, cancel, userMode.get(),
-                        System.currentTimeMillis(), offerAtMs)) {
-                    case DETACH -> {
-                        this.detachForegroundJob(mach, future, line);
-                        return true;
-                    }
-                    case INTERRUPT -> mach.stop();
-                    case CANCEL -> {
-                        this.hotkeys.disarmCancel();
-                        this.write(Graphitty.string("{{-X-&|0}}"));
-                        future.cancel(true);
-                    }
-                    case OFFER_CANCEL -> {
-                        this.hotkeys.armCancel();
-                        offerAtMs = System.currentTimeMillis() + CANCEL_OFFER_MS;
-                        terminal.writer().write(Highlighter.format(
-                                "{{-X-}}{{k}}cancel stream with [q] or background with <" + Hotkeys.DETACH_COMBO + "> {{X}}\r"));
-                        terminal.writer().flush();
-                    }
-                    case WAIT -> {
-                    }
-                }
-            }
-            return false;
-        } finally {
-            this.releaseTerminal(cooked);
-        }
+    boolean awaitForeground(final Machine mach, final FutureObj<Obj> future, final String line) {
+        return this.jobs.awaitForeground(mach, future, line);
     }
 
     /**
-     * Read the terminal while a foreground job holds the console, one keystroke
-     * at a time, and classify each one through {@link Hotkeys}.  This is the
-     * only reader in that window — jline is parked outside {@code readLine()} —
-     * and a bounded read is exactly right here: the reading happens on this
-     * thread, never on the repl thread, so the console's poll loop stays live
-     * and the read can still be released when the job ends.
-     *
-     * <p>A terminal read cannot be interrupted, so a read that started while the
-     * job ran may complete after it ended.  A keystroke taken that way is handed
-     * back to the line being typed ({@link #injectTypedText()}) — the prompt is
-     * live by then and jline never saw it.
+     * Read the terminal while a foreground job holds the console and classify
+     * each keystroke through {@link Hotkeys} — served on a dedicated thread so
+     * the repl's poll loop stays live.  The watcher loop lives on
+     * {@link ForegroundJobs#watchTerminal()}; it hands keystrokes that are not
+     * detach/interrupt/cancel back to the line being typed
+     * ({@link #injectTypedText()}).
      */
     private void watchTerminal() {
-        while (!this.watcherClosed) {
-            if (!this.beginWatch()) {
-                // The prompt owns the terminal: keep the pointer alive for
-                // whatever widgets are on screen (a widget floated while the
-                // user sat at the prompt turns the mouse on within a tick).
-                if (!this.watching) this.syncWidgetMouseTracking();
-                CommonUtil.sleepThread(WATCHER_IDLE_MS);
-                continue;
-            }
-            try {
-                final int c = terminal.reader().read(WATCH_READ_MS);
-                if (NonBlockingReader.READ_EXPIRED == c) {
-                    // nothing typed: a half-seen escape sequence ends here, so a
-                    // stale escape can never swallow the next keystroke
-                    this.hotkeys.reset();
-                    continue;
-                }
-                if (c < 0)
-                    continue;  // eof — nothing to classify
-                // a job asking the human takes the keystrokes first: this thread is the only reader
-                // while the console is busy, so the answer has to be served from here (see readHumanLine)
-                if (this.answerHumanRead(c)) continue;
-                final boolean onWatch = this.watching;
-                switch (this.hotkeys.accept(c)) {
-                    case DETACH -> this.detachRequested.set(true);
-                    case INTERRUPT -> this.interruptRequested.set(true);
-                    case CANCEL -> this.cancelRequested.set(true);
-                    case TEXT -> {
-                        if (onWatch)
-                            this.echoTypedChar(c);
-                        else
-                            this.injectTypedText();
-                    }
-                    case NONE -> {
-                    }
-                }
-            } catch (final Exception e) {
-                // a failed read must never kill the watcher — the repl still works
-                CommonUtil.sleepThread(WATCHER_IDLE_MS);
-            } finally {
-                this.endWatch();
-            }
-        }
-    }
-
-    /**
-     * Take the terminal for one read.  False when no job holds the console —
-     * the prompt owns the keystrokes then, and the watcher must not be a second
-     * reader racing jline for them — and also when a widget is in user mode:
-     * the widget (e.g. a selector or modal) reads the terminal itself with its
-     * own {@code BindingReader}, so the watcher must not race it for keystrokes.
-     */
-    private boolean beginWatch() {
-        synchronized (this.watchGate) {
-            //if (Console.userMode.get())
-            //    return false;  // a widget owns the terminal; never race its reader
-            if (!this.watching && !this.hotkeys.inSequence())
-                return false;
-            this.watchingRead = true;
-            return true;
-        }
-    }
-
-    /**
-     * give the terminal back, waking anyone waiting on the handoff
-     */
-    private void endWatch() {
-        synchronized (this.watchGate) {
-            this.watchingRead = false;
-            this.watchGate.notifyAll();
-        }
-    }
-
-    /**
-     * Hand the terminal back to the prompt.  The order matters: restoring the
-     * cooked attributes while a raw-mode read is still pending turns that read
-     * into a blocking one, which then swallows the user's next keystroke.  So
-     * the watcher is told to stop first and given a moment to leave its read —
-     * in raw mode a read with no input expires in about 100ms — and only then do
-     * the cooked attributes go back.
-     */
-    private void releaseTerminal(final Attributes cooked) {
-        synchronized (this.watchGate) {
-            this.watching = false;
-            this.watchGate.notifyAll();
-            final long end = System.currentTimeMillis() + WATCH_HANDOFF_MS;
-            while (this.watchingRead && System.currentTimeMillis() < end) {
-                try {
-                    this.watchGate.wait(WATCH_HANDOFF_MS);
-                } catch (final InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
-        }
-        terminal.setAttributes(cooked);
+        this.jobs.watchTerminal();
     }
 
     /**
@@ -2842,63 +1509,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * the life of the job, so the terminal does not echo for us — without this,
      * typing ahead of a long job would be invisible.
      */
-    /**
-     * Delete/backspace, as the answer loop edits with (see {@link #answerHumanRead}).
-     */
-    private static final int DEL = 0x7f;
-
-    /**
-     * The line being typed as an answer to a job's question (see {@link #answerHumanRead}).
-     */
-    private final StringBuilder humanAnswer = new StringBuilder();
-
-    /**
-     * Take one keystroke as the human's answer to the job that is asking, when one is.
-     * <p>
-     * Served here because this thread is the only reader of the terminal while a foreground job
-     * holds the console: the answer is echoed and edited like a line, and {@code <enter>} releases
-     * the job waiting on it.  Keys are consumed only while a question is outstanding — otherwise
-     * this is a plain keystroke and the hotkeys decide what it means.
-     *
-     * @return true when the keystroke was consumed as part of an answer
-     */
-    private boolean answerHumanRead(final int c) {
-        final HumanRead asked = this.humanReads.peek();
-        if (null == asked) return false;
-        if ('\r' == c || '\n' == c) {
-            final String answer = this.humanAnswer.toString();
-            this.humanAnswer.setLength(0);
-            this.humanReads.poll();
-            this.echoTypedChar('\n');
-            asked.answer().complete(answer);
-            // The answer was echoed straight to the terminal (echoTypedChar), not into the screen,
-            // and the job's own output kept painting absolute rows in the meantime: the two do not
-            // agree about where the cursor is or which rows are current.  Reconcile before anything
-            // else draws, or every later paint corrects a layout the next write undoes — which reads
-            // as a transcript that creeps up a line and back down.
-            this.resyncScreen();
-            return true;
-        }
-        if (DEL == c || 0x08 == c) {
-            if (this.humanAnswer.length() > 0) {
-                this.humanAnswer.setLength(this.humanAnswer.length() - 1);
-                try {
-                    terminal.writer().print("\b \b");
-                    terminal.writer().flush();
-                } catch (final Exception ignore) {
-                    // echo is a courtesy
-                }
-            }
-            return true;
-        }
-        if (c >= 32) {
-            this.humanAnswer.append((char) c);
-            this.echoTypedChar(c);
-        }
-        return true;
-    }
-
-    private void echoTypedChar(final int c) {
+    void echoTypedChar(final int c) {
         try {
             terminal.writer().print((char) c);
             terminal.writer().flush();
@@ -2911,8 +1522,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * Hand a keystroke the watcher took as the foreground job ended back to the
      * line the user is typing (or to the next prompt when it missed that window).
      */
-    private void injectTypedText() {
-        final String text = this.hotkeys.takePendingText();
+    void injectTypedText() {
+        final String text = this.jobs.hotkeys().takePendingText();
         if (text.isEmpty())
             return;
         if (this.inReadLine) {
@@ -2961,67 +1572,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     /**
-     * Hand a running foreground job to the background — {@code <alt>+b}.  The
-     * job is not touched: it keeps its own thread, keeps updating widgets, and
-     * stays addressable at {@code /sys/thread/<vid>}.  The console only stops
-     * waiting on it and stops treating it as foreground work, so ctrl-c at the
-     * returning prompt cannot kill it.  A collector thread prints its result
-     * when it halts.
-     */
-    private void detachForegroundJob(final Machine mach, final FutureObj<Obj> future, final String line) {
-        final fURI vid = vidOf(mach);
-        this.backgroundJobs.add(mach);
-        // the turn no longer owns this machine: clear both places the interrupt
-        // paths read (the ctrl-c signal handler and UserInterrupt handling)
-        this.machine = null;
-        if (this.activePane != null)
-            this.activePane.clearMachine();
-        docWrap(virtual(instLambda((lhs, inst) -> {
-            this.printBackgroundResult(mach, future);
-            return noobj();
-        }), SYS.extend("thread/console_background")), "background result collector").applyAsync();
-        LOG.none("{{-X-&|0}}");
-        LOG.info("<%s> => background %s (:bg to list)", Hotkeys.DETACH_COMBO, preview(line));
-        terminal.flush();
-    }
-
-    /**
-     * Print the result of a detached job, once its future resolves.  Runs on
-     * the job's collector thread.
-     */
-    private void printBackgroundResult(final Machine mach, final FutureObj<Obj> future) {
-        final Obj result;
-        try {
-            result = future.get();
-        } catch (final Exception e) {
-            this.backgroundJobs.remove(mach);
-            LOG.none("{{-X-&|0}}");
-            this.printResult(fail(e));
-            return;
-        }
-        // the job has halted — only now drop it from the tracking list, so
-        // :bg lists it for the whole time it is still running
-        this.backgroundJobs.remove(mach);
-        LOG.none("{{-X-&|0}}\r[{{g}}result start{{/g}}:%s]\n", null == vidOf(mach) ? "?" : vidOf(mach).toString());
-        this.printResult(result);
-        LOG.none("[{{g}}result end{{/g}}:%s]\n", null == vidOf(mach) ? "?" : vidOf(mach).toString());
-    }
-
-    /**
-     * a machine's thread vid, when it has one — every machine is a rec at run-time
-     */
-    private static fURI vidOf(final Machine mach) {
-        return (mach instanceof Obj obj) ? obj.vid() : null;
-    }
-
-    /**
      * @return the jobs detached with {@code <alt>+b} that have not yet halted,
      * in detach order
      */
     public List<Machine> backgroundJobs() {
-        synchronized (this.backgroundJobs) {
-            return List.copyOf(this.backgroundJobs);
-        }
+        return this.jobs.backgroundJobs();
     }
 
     /**
@@ -3029,25 +1584,14 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * one is addressable at {@code /sys/thread/<vid>}
      */
     public List<fURI> backgroundJobVids() {
-        final List<fURI> vids = new ArrayList<>();
-        synchronized (this.backgroundJobs) {
-            for (final Machine job : this.backgroundJobs) {
-                final fURI vid = vidOf(job);
-                if (null != vid)
-                    vids.add(vid);
-            }
-        }
-        return vids;
+        return this.jobs.backgroundJobVids();
     }
 
     /**
      * Stop every detached job.  Returns the number of jobs stopped.
      */
     public int stopBackgroundJobs() {
-        final List<Machine> jobs = this.backgroundJobs();
-        jobs.forEach(Machine::stop);
-        this.backgroundJobs.clear();
-        return jobs.size();
+        return this.jobs.stopBackgroundJobs();
     }
 
     /**
@@ -3061,57 +1605,17 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 : flat.substring(0, DETACH_PREVIEW_CHARS - 3) + "...";
     }
 
-    protected void executeGremlin(final String line) {
-        try {
-            // TODO: Implement Gremlin execution using GremlinScriptEngine
-            // The result should be converted to Metatron objects
-            LOG.warn("Gremlin execution not yet implemented");
-            this.printResult(fail(new UnsupportedOperationException("Gremlin mode not yet implemented")));
-        } catch (final Exception e) {
-            this.printResult(fail(e));
-        }
-    }
-
-    protected void executeSql(final String line) {
-        try {
-            // TODO: Implement SQL execution
-            // The result should be converted to Metatron objects (similar to tbleSpace.sql())
-            LOG.warn("SQL execution not yet implemented");
-            this.printResult(fail(new UnsupportedOperationException("SQL mode not yet implemented")));
-        } catch (final Exception e) {
-            this.printResult(fail(e));
-        }
-    }
-
     public void redrawBuffer() {
-        // In split mode, skip the newline - prompt() includes cursor positioning
-        if (!this.splitMode) {
-            Graphitty.out(terminal.output(), "\n");
-        }
-        Graphitty.out(terminal.output(), this.prompt());
-        Graphitty.out(terminal.output(), this.redrawLine());
-        terminal.flush();
+        ReaderSetup.redrawBuffer(this);
     }
 
     /**
-     * The live input line as the user sees it while typing: syntax color and nothing else.
-     * <p>
-     * This text is the user's OWN, so graphitty markup must stay literal -- resolving it here
-     * rewrites the line under the cursor mid-word (a name in braces is swallowed as a rule, a
-     * tag they have not closed yet changes what they already typed, and {{XX}} clears the
-     * screen out from under them).  `redrawBuffer` runs whenever a widget or a trace renders
-     * mid-line, which is why ordinary typing feels like it is being rewritten.
-     * <p>
-     * The reader's highlighter is built with {@code ignoreGraphitty}, so jline's own redraw of
-     * the same line and this one agree.  The markup still applies to what they SUBMIT: the
-     * echo and the results go through {@link Highlighter#format(Object)}.
+     * The live input line as the user sees it while typing: syntax color and
+     * nothing else.  The rules for keeping the user's markup literal in it
+     * live on {@link ReaderSetup#redrawLine(Console)}.
      */
     public String redrawLine() {
-        final String line = this.reader.getBuffer().toString();
-        final String ansi = Highlighter.line(line);
-        if (Boolean.getBoolean("metatron.render.trace"))
-            rawErr().println("[line] in=<" + line + "> out=<" + ansi + ">");
-        return ansi;
+        return ReaderSetup.redrawLine(this);
     }
 
     public void run() {
@@ -3126,7 +1630,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 // someone else's line first: a job asking the human (see readHumanLine).  It is
                 // answered here rather than executed as a command -- the human was answering a
                 // question, not typing mtron.
-                final HumanRead asked = this.humanReads.poll();
+                final HumanBroker.HumanRead asked = this.human.poll();
                 if (null != asked) {
                     this.inReadLine = true;
                     // readLine answers null at end of input (ctrl-d, a closed stream): that is not a
@@ -3145,7 +1649,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 this.lastBufferLength = 0; // fresh buffer for new readLine
                 // keys typed while a foreground job held the console seed this
                 // prompt, so typing ahead of a long job is never lost
-                final String typedAhead = this.hotkeys.takePendingText();
+                final String typedAhead = this.jobs.hotkeys().takePendingText();
                 if (!typedAhead.isEmpty())
                     this.seedBuffer = null == this.seedBuffer ? typedAhead : this.seedBuffer + typedAhead;
                 final String read = null != this.seedBuffer
@@ -3158,7 +1662,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 // Drain any agent output that was deferred while the user was typing.
                 if (this.pendingPaneFlush) {
                     this.pendingPaneFlush = false;
-                    if (this.splitMode) this.renderPanes();
+                    if (this.panes.splitMode()) this.renderPanes();
                     else this.renderScreen(false);
                 }
                 // --- Expression overlay (\_) detection ---
@@ -3187,13 +1691,13 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         final String chatPart = this.expressionStack.at(jnt(-1)).strValue();
                         if (!chatPart.isEmpty()) {
                             this.status.startTimer();
-                            if (this.splitMode && this.activePane != null) {
-                                this.activePane.appendOutput(
+                            if (this.panes.splitMode() && this.panes.activePane() != null) {
+                                this.panes.activePane().appendOutput(
                                         Graphitty.string("{{c}}  \\_{{X}} ") + Highlighter.format(chatPart));
                             }
-                            this.executeInCurrentLanguage(chatPart);
+                            this.execute(chatPart);
                             this.machine = null;
-                            if (this.splitMode) {
+                            if (this.panes.splitMode()) {
                                 this.renderPanes();
                             }
                         }
@@ -3205,7 +1709,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     // in display order (mtron> part first, then \_ lines).
                     final Obj[] remaining = this.expressionStack.elements().toArray(Obj[]::new);
                     if (remaining.length > 1) {
-                        final int promptWidth = Highlighter.visualLength(this.getCurrentLanguage().prompt);
+                        final int promptWidth = Highlighter.visualLength(PROMPT);
                         final StringBuilder sb = new StringBuilder(remaining[0].strValue());
                         for (int i = 1; i < remaining.length; i++) {
                             sb.append('\n');
@@ -3237,7 +1741,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     // Enter already ends that line — echoing here as well put a second
                     // newline on it, which is the stray blank line between the first
                     // prompts and none after.
-                    if (screenMode() && !screenAppends()) this.screenOutput(this.prompt() + "\n");
+                    if (screenMode() && !screenAppends()) this.screenView.screenOutput(this.prompt() + "\n");
                     continue;
                 }
                 if (line.startsWith(COLON)) {
@@ -3251,9 +1755,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 } else {
                     this.status.startTimer();
                     // Echo the input line to the pane's output (with prompt, syntax highlighted)
-                    if (this.splitMode && this.activePane != null) {
+                    if (this.panes.splitMode() && this.panes.activePane() != null) {
                         // the line is the user's own: colored, never resolved (see Highlighter.line)
-                        this.activePane.appendOutput(Graphitty.string(this.currentLanguage.prompt)
+                        this.panes.activePane().appendOutput(Graphitty.string(PROMPT)
                                 + studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter.line(line));
                     } else if (screenMode()) {
                         // The screen's transcript has to read like the conversation it is:
@@ -3269,13 +1773,13 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         // rule.  The prompt is markup and is resolved here; the line is
                         // syntax-highlighted and appended verbatim.  The newline is the Enter
                         // itself, ending the echoed line so the result lands on the next row.
-                        this.screen.appendAnsi(Graphitty.string(this.currentLanguage.prompt)
+                        this.screenView.screen().appendAnsi(Graphitty.string(PROMPT)
                                 + Highlighter.line(line) + "\n");
                     }
-                    this.executeInCurrentLanguage(line);
+                    this.execute(line);
                     this.machine = null;
                     // Redraw panes after command execution to show output
-                    if (this.splitMode) {
+                    if (this.panes.splitMode()) {
                         this.renderPanes();
                     }
                 }
@@ -3312,12 +1816,12 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     final TypeMismatchException tme = (TypeMismatchException) e;
                     terminal.writer().write("\n");
                     final TypeDiffTool widget = new TypeDiffTool(tme.instance(), tme.type());
-                    if (Console.this.splitMode && Console.this.activePane != null) {
-                        final int[] pos = Console.this.calculatePanePosition(Console.this.activePane);
+                    if (Console.this.panes.splitMode() && Console.this.panes.activePane() != null) {
+                        final int[] pos = Console.this.panes.calculatePanePosition(Console.this, Console.this.panes.activePane());
                         if (pos != null) widget.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
                     }
                     Utilities.runCursorLessWidget(widget, true);
-                    if (Console.this.splitMode) {
+                    if (Console.this.panes.splitMode()) {
                         Console.this.renderPanes(false);
                     }
                     redrawBuffer();
@@ -3326,7 +1830,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 this.status.stopTimer();
                 this.status.refresh();
                 // Reposition cursor to active pane after status refresh (which moves cursor to bottom)
-                if (this.splitMode && this.activePane != null) {
+                if (this.panes.splitMode() && this.panes.activePane() != null) {
                     this.positionCursorInActivePane();
                 }
             }
@@ -3345,10 +1849,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 final String banner = this.at(HEADER).isNoObj()
                         ? CommonUtil.getHeader(HEADER_FILE, name, true)
                         : Graphitty.string(Str.Helper.cleanString(this.at(HEADER)));
-                this.screenOutput(banner);
+                this.screenView.screenOutput(banner);
                 // screenOutput takes resolved text: the prompt prefix is markup
-                this.screenOutput(Graphitty.string("\t{{b}}ve{{y}}rs{{m}}ion {{y}}" + METATRON_VERSION + "{{X}}\n"));
-                this.screenOutput(Graphitty.string("   {{m}}:help{{X}} for console features\n\n"));
+                this.screenView.screenOutput(Graphitty.string("\t{{b}}ve{{y}}rs{{m}}ion {{y}}" + METATRON_VERSION + "{{X}}\n"));
+                this.screenView.screenOutput(Graphitty.string("   {{m}}:help{{X}} for console features\n\n"));
                 this.renderScreen(false);
                 return;
             }

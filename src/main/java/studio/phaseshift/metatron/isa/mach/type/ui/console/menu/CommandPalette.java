@@ -123,7 +123,7 @@ public final class CommandPalette extends MRec {
                     .addRow(List.of(cc(":bg [stop]"), "list (or stop) jobs backgrounded with " + kc("<alt>+b")))
                     //.addRow(List.of(kc("<ctrl>+d") + "  " + cc(":stop-agents"), "stop all agent threads"))
                     .addRow(List.of(kc("<alt>+l") + "  " + cc(":line"), "add a new chat overlay line (\\_)"))
-                    .addRow(List.of(cc(":lang [mtron|gremlin|sql]"), "switch console language"))
+
                     .addRow(List.of(kc("<shift>+<left/right>"), "jump word left/right"))
                     .addRow(List.of(kc("<alt>+<backspace>"), "delete previous word"))
                     .addRow(List.of(kc("<alt>+k [char]"), "erase buffer back to first occurrence of char"))
@@ -312,18 +312,6 @@ public final class CommandPalette extends MRec {
             return noobj();
         }), MUTABLE);
 
-        // ===== lang =====
-        this.at("lang", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-            final String langName = lhs.isStr() ? lhs.strValue().toLowerCase() : "";
-            try {
-                final Console.Language newLang = Console.Language.valueOf(langName.toUpperCase());
-                console.setLanguage(newLang);
-            } catch (IllegalArgumentException e) {
-                this.console.logger().error("unknown language: {{r}}%s{{X}}. Available: mtron, gremlin, sql", langName);
-            }
-            return noobj();
-        }), MUTABLE);
-
         // ===== prefix =====
         this.at("prefix", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             String text = lhs.isStr() ? lhs.strValue() : "";
@@ -393,8 +381,8 @@ public final class CommandPalette extends MRec {
             this.console.logger().info("{{y}}%d{{X}} pane(s):", panes.size());
             for (final Pane p : panes) {
                 final String active = (p == console.getActivePane()) ? " {{g}}[active]{{X}}" : "";
-                this.console.logger().info("  [{{y}}%d{{X}}] %s, %d lines%s",
-                        p.id(), p.language().name, p.outputBuffer().size(), active);
+                this.console.logger().info("  [{{y}}%d{{X}}] %d lines%s",
+                        p.id(), p.outputBuffer().size(), active);
             }
             return noobj();
         }), MUTABLE);
@@ -638,7 +626,7 @@ public final class CommandPalette extends MRec {
             while ((idx = text.indexOf("\\_ ", idx + 1)) >= 0) {
                 depth++;
             }
-            final int promptWidth = Highlighter.visualLength(console.getCurrentLanguage().prompt);
+            final int promptWidth = Highlighter.visualLength(Console.PROMPT);
             buffer.cursor(buffer.length());
             buffer.write("\n" + " ".repeat(promptWidth - 2 + depth) + "\\_ ");
             console.getReader().setVariable(LineReader.SECONDARY_PROMPT_PATTERN,
