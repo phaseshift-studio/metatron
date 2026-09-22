@@ -22,9 +22,9 @@ import org.jline.utils.AttributedString;
 import org.jline.utils.WCWidth;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjLinkSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjLinkSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.ByteArrayOutputStream;
@@ -206,22 +206,30 @@ public class Graphitty {
      */
     private static volatile boolean linkClickable = true;
 
-    /** Whether a marked-up uri answers a click. */
+    /**
+     * Whether a marked-up uri answers a click.
+     */
     public static boolean linkClickable() {
         return linkClickable;
     }
 
-    /** Turn clicking a uri on or off. */
+    /**
+     * Turn clicking a uri on or off.
+     */
     public static void linkClickable(final boolean clickable) {
         linkClickable = clickable;
     }
 
-    /** Turn the link underline on or off (see {@link #linkUnderline}). */
+    /**
+     * Turn the link underline on or off (see {@link #linkUnderline}).
+     */
     public static void linkUnderline(final boolean on) {
         linkUnderline = on;
     }
 
-    /** True when links are drawn with an underline. */
+    /**
+     * True when links are drawn with an underline.
+     */
     public static boolean linkUnderline() {
         return linkUnderline;
     }
@@ -287,26 +295,6 @@ public class Graphitty {
     public static void setTerminalWriter(final java.util.function.Consumer<String> writer) {
         Graphitty.terminalWriter = writer;
     }
-    
-   /* public static Graphitty stdout() {
-        return GRAPHITTY_STDOUT;
-    }
-
-    public static String erase(int depth) {
-        return "{{X-&v1}}".repeat(Math.max(0, depth)) + "{{^" + depth + "}}";
-    }
-
-    public static String floating(final String f) {
-        final String strip = Graphitty.strip(f);
-        List<Integer> backs = Arrays.stream(strip.split("\n")).map(String::length).toList();
-        StringBuilder ret = new StringBuilder();
-        int i = 0;
-        for (final String line : f.split("\n")) {
-            ret.append(line).append("{{v1&<").append(backs.get(i)).append("}}");
-        }
-        ret.append("{{^").append(backs.size()).append("}}");
-        return ret.toString();
-    }*/
 
     public String writeToString(final String f, final Object... args) {
         final Object[] args2 = new Object[args.length];

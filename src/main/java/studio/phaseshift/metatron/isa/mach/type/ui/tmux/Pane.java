@@ -23,8 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
-import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
@@ -56,7 +54,6 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /**
  * A Pane is a leaf node in the pane tree - an actual terminal region with:
  * - Output buffer (thread-safe, for parallel output from background threads)
- * - Language mode (mtron, gremlin, sql)
  * - Machine reference (for interruption)
  * - Style support (border, foreground color, etc.)
  *
@@ -72,14 +69,13 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
+public class Pane implements PaneNode, Stylable<Pane> {
 
     private static final AtomicInteger ID_COUNTER = new AtomicInteger(0);
     private static final int DEFAULT_MAX_OUTPUT_LINES = 1000;
     private static final Logger log = LoggerFactory.getLogger(Pane.class);
 
     private final int id;
-    private Console.Language language;
     private Machine machine;
     private final List<String> outputBuffer;
     private final int maxOutputLines;
@@ -91,6 +87,11 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
     // Reference to console for redraw requests
     private Console console;
 
+    // The pane's identity: a vid under the console's own.  The pane is not a
+    // rec — this is what remains of the rec it used to be (the rec carried no
+    // content, only the elements now exposed as its Java API).
+    private fURI vid;
+
     /**
      * Optional listener fired on every {@link #appendOutput} call.
      * Registered by Console so it can redraw the pane without Pane needing to
@@ -99,18 +100,21 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
     private Consumer<Pane> outputListener;
 
     public Pane() {
-        this(Console.Language.MTRON, DEFAULT_MAX_OUTPUT_LINES);
+        this(DEFAULT_MAX_OUTPUT_LINES);
     }
 
-    public Pane(final Console.Language language, final int maxOutputLines) {
-        super(mutableMap(), UI_CONSOLE_TID.extend("pane"), Console.LOCAL_INSTANCE.vid().extend("pane").extend("" + ID_COUNTER.getAndIncrement()));
+    public Pane(final int maxOutputLines) {
+        // The pane is not a rec: the old rec carried no content, and its
+        // language surface (the prompt/stream/result elements) is now just
+        // its Java API — what survives of the rec is the vid, kept as a
+        // stable identity under the console's own.
+        this.vid = Console.LOCAL_INSTANCE.vid().extend("pane").extend("" + ID_COUNTER.getAndIncrement());
         this.id = ID_COUNTER.get() - 1;
-        this.language = language;
         this.maxOutputLines = maxOutputLines;
         this.outputBuffer = Collections.synchronizedList(new ArrayList<>());
         this.machine = null;
         // Default to simple border style (ASCII: +, |, -) for visibility
-        this.style = Stylable.Style.from(this.style().border(Border.continuous).applyStyle());
+        this.style = this.style().border(Border.continuous);
         //  this.subscribe();
     }
 
@@ -154,7 +158,7 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
 
     public void subscribe() {
         if (this.vid() == null) {
-            LOG.warn("console has no vid. unable to support pane subscriptions.");
+            log.warn("console has no vid. unable to support pane subscriptions.");
             return;
         }
         Router.global().write(this.vid().extend(IN).addQ(SUBQ), rec(mutableMap(
@@ -175,15 +179,6 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
 
     public int id() {
         return this.id;
-    }
-
-    public Console.Language language() {
-        return this.language;
-    }
-
-    public Pane language(final Console.Language language) {
-        this.language = language;
-        return this;
     }
 
     public Machine machine() {
@@ -232,7 +227,6 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
     /**
      * Append a result object to output (formatted with ==> and syntax highlighted). Thread-safe.
      */
-    @JRecElement(key = "prompt", rng = "noobj{0}", mimic = JRecElement.Mimic.METHOD)
     public void appendInput(final Obj input) {
         // their line, not the console's output: colored, never resolved (see Highlighter.line)
         this.appendOutput(this.prompt() + Highlighter.line(input.isStr() ? input.strValue() : input.toString()));
@@ -241,7 +235,6 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
     /**
      * Append a result object to output (formatted with ==> and syntax highlighted). Thread-safe.
      */
-    @JRecElement(key = "stream", rng = "noobj{0}", mimic = JRecElement.Mimic.METHOD)
     public void streamInput(final Obj input) {
         this.appendOutput(Highlighter.format(input.isStr() ? input.strValue() : input.toString()), false);
     }
@@ -249,7 +242,6 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
     /**
      * Append a result object to output (formatted with ==> and syntax highlighted). Thread-safe.
      */
-    @JRecElement(key = "result", rng = "noobj{0}", mimic = JRecElement.Mimic.METHOD)
     public void appendResult(final Obj result) {
         result.stream().forEach(o -> {
             // Use Highlighter for syntax highlighting
@@ -282,7 +274,7 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
      * Generate the prompt string for this pane (pane ID shown in top border, not needed here).
      */
     public String prompt() {
-        return Graphitty.string(this.language.prompt);
+        return Graphitty.string(Console.PROMPT);
     }
 
     // ========== PaneNode interface ==========
@@ -453,6 +445,6 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
 
     @Override
     public String toString() {
-        return "Pane[%d, %s, lines=%d]".formatted(this.id, this.language.name, this.outputBuffer.size());
+        return "Pane[%d, lines=%d]".formatted(this.id, this.outputBuffer.size());
     }
 }

@@ -32,15 +32,18 @@ KEY enter
 SINCE typeahead ==>2
 
 # --- alt+b: hand a running job to the background, keep the console ---
+# the detached job's result (==>5) never appeared before the mark, so the
+# SILENT check is immune to the console redrawing its transcript between
+# marks (a redraw of history would re-emit any earlier ==>N and break it)
 MARK bg
-SEND 1.sleep(second::8.0)
+SEND 5.sleep(second::8.0)
 SLEEP 2
 KEY alt+b
 SLEEP 1
 SEND 2
 WAIT ==>2 6
-SILENT bg ==>1 0
-WAIT_SINCE bg ==>1 20
+SILENT bg ==>5 0
+WAIT_SINCE bg ==>5 20
 
 # --- ctrl-c still stops a foreground job ---
 MARK stop
@@ -60,11 +63,11 @@ ELAPSED cancel-key
 
 # --- :bg lists a detached job for its whole run (regression) ---
 MARK bglist
-SEND 1.sleep(second::8.0)
+SEND 6.sleep(second::8.0)
 SLEEP 2
 KEY alt+b
 SLEEP 1
 SEND :bg
 WAIT running 5
 SILENT bglist no detached jobs
-WAIT_SINCE bglist ==>1 20
+WAIT_SINCE bglist ==>6 20

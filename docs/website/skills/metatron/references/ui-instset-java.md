@@ -29,7 +29,18 @@ isa.mach.type.ui.widget
   WidgetCanvas.java         ← pane-bounded absolute/relative render helper
   Utilities.java            ← runCursorLessWidget, key constants
 isa.mach.type.ui.console
-  Console.java              ← REPL, terminal, pane tree, FloatingSurface integration
+  Console.java              ← facade: REPL run loop, boot/output funnel, delegates to the collaborators below
+  ReaderSetup.java          ← terminal + jline reader construction, parser, redraw hooks
+  ForegroundJobs.java       ← foreground watch loop (alt+b detach, ctrl-c, [q] cancel offer, detached-jobs list)
+  HumanBroker.java          ← :human readLine handoff (prompt/answer queue, System.in fallback)
+  PaneManager.java          ← pane tree: split/close/focus/cycle/resize + position walk
+  WidgetNavigator.java      ← widget focus/cycle/resize/scroll + builtin-key registry
+  Pointer.java              ← mouse click/drag on widgets, terminal mouse modes, pointer release/hand-back
+  ScreenView.java           ← transcript buffer + output capture + paint pass + link clicks + repair
+  Executor.java             ← execute(): parse → segments at end() → one machine per segment → result stream
+  ConsoleScreen.java        ← the screen buffer model (rows, layout, scroll, links)
+  ScreenPainter.java        ← row painting, link extraction/stripping (OSC8)
+  ScreenOutputStream.java   ← captured stdout/stderr into the screen
   StatusLine.java           ← terminal status bar
   Highlighter.java          ← syntax highlighting (language tokens + blocks) + visualLength/unformat
   Hotkeys.java              ← keystrokes typed while a job holds the console (alt+b, [q], type-ahead)

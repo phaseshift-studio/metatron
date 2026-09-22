@@ -735,8 +735,17 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().to_(obj);
         }
 
+        public static <F extends mFluent<F>> F to_(final fURI id) {
+            return to_(uri(id));
+        }
+
+
         public static <F extends mFluent<F>> F from_(final Obj obj) {
             return new mFluent<F>().from_(obj);
+        }
+
+        public static <F extends mFluent<F>> F from_(final fURI id) {
+            return from_(uri(id));
         }
 
         public static <F extends mFluent<F>> F loop_() {

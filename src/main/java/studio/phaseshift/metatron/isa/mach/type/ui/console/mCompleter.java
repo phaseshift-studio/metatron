@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -36,11 +36,11 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class MCompleter implements Completer {
+public class mCompleter implements Completer {
 
     protected Console console;
 
-    public MCompleter(final Console console) {
+    public mCompleter(final Console console) {
         this.console = console;
     }
 
@@ -60,7 +60,7 @@ public class MCompleter implements Completer {
                 } else if (bufferString.startsWith("*") && bufferString.trim().endsWith("/")) {
                     final Obj rels = Router.readFromSpace(f(bufferString.substring(1) + "+/"));
                     rels.forEach(r -> candidates.add(new Candidate("*" + r.<Rel>as().first().uriValue().toString(), Graphitty.string(r.toString()), null, null, "", null, false)));
-                } else  {
+                } else {
                     final Obj o = ObjmtronSerializer.parse(bufferString);
                     if (o.isCode())
                         candidates.add(new Candidate("", new ExplainTool(o.as()).format(), null, null, "", null, false));
