@@ -49,13 +49,11 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.feat;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -441,12 +439,12 @@ public class AgentTest extends AbstractMetatronTest {
         // Agent.chat() builds a chat_result with monos inline (chat, user, time).
         final ChatFrame result = ChatFrame.chatFrame()
                 .put("chat", str("bare response"))
-                .put("user", str("test prompt"))
-                .put("time", real(100.0, MATH_MILLIS_TID, null));
+                .put("user", str("test prompt"));
         assertNotNull(result, "chat_result must be a rec");
         assertEquals(LLM_CHAT_RESULT_TID, result.tid(), "chat_result must have the chat_result tid");
         assertEquals("bare response", result.at(uri(CHAT)).strValue());
-        assertEquals(100.0, result.at(uri(TIME)).realValue());
+        assertTrue(result.has(RUNTIME));
+        assertTrue(result.has(TIME));
     }
 
     @Test
