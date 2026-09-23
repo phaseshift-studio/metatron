@@ -1,0 +1,25 @@
+# Console shutdown regression — the quit path (CTRL-Q / `:quit`).
+#
+#   bin/metatron-docker build console --steps bin/test/console-quit.steps
+#
+# Bug this guards: on quit, the process used to hand the tty back to the shell
+# (and then exit) while the shutdown's own log line was still queued on the
+# render thread (a daemon) — so `metatron successfully shutdown` landed either
+# after the shell's prompt or not at all.  close() now drains the render queue
+# before it gives the terminal back, so the line is on the wire before exit.
+#
+# The harness pumps the pty until the line appears OR the process dies, then
+# re-checks once — so a line lost to the dying daemon thread fails the check
+# deterministically, and a delivered one passes.
+
+WAIT_CONSOLE
+
+# --- the console is live before we ask it to go ---
+MARK live
+SEND 1
+WAIT ==>1
+
+# --- :quit: the shutdown log must be on the terminal before the process ends ---
+MARK quit
+SEND :quit
+WAIT metatron successfully shutdown 40

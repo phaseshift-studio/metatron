@@ -20,18 +20,23 @@ package studio.phaseshift.metatron.isa.llm.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Real;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_CHAT_RESULT_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * The chat-specific frame — {@link Frame} plus the chat result fields ({@code chat},
@@ -50,10 +55,12 @@ public class ChatFrame extends Frame {
     }
 
     public static ChatFrame chatFrame() {
-        return new ChatFrame(new LinkedHashMap<>(), null);
+        return new ChatFrame(mutableMap(uri(RUNTIME), real(0.0, MATH_MILLIS_TID, null), uri(TIME), mathInstSet.nowDatetime()), null);
     }
 
-    /** Covariant {@link Frame#prompt} so the fluent chain stays a {@code ChatFrame}. */
+    /**
+     * Covariant {@link Frame#prompt} so the fluent chain stays a {@code ChatFrame}.
+     */
     @Override
     public ChatFrame prompt(final String prompt) {
         super.prompt(prompt);
@@ -70,8 +77,12 @@ public class ChatFrame extends Frame {
         return u.isStr() ? u.strValue() : null;
     }
 
-    public Obj time() {
+    public Uri time() {
         return this.at(uri(TIME));
+    }
+
+    public Real runtime() {
+        return this.at(uri(RUNTIME));
     }
 
     public Obj thinking() {

@@ -37,6 +37,7 @@ public final class Tokens {
     public static final fURI M_ISA_TID = f("/m");
     public static final fURI SPACE_TID = M_ISA_TID.extend("space");
     public static final fURI M_ISA_INST_TID = M_ISA_TID.extend("inst");
+    public static final fURI INST_TID = M_ISA_INST_TID;
     public static final fURI M_ISA_REWRITE_TID = M_ISA_INST_TID.extend("rewrite");
     public static final fURI INST_PRED_TID = M_ISA_INST_TID.extend("pred").rng(ALL.maybe());
     public static final fURI INSTSET_TID = M_ISA_TID.extend("instset");

@@ -20,7 +20,6 @@ package studio.phaseshift.metatron;
 /// ///////////////////////////////////////////////
 
 import org.slf4j.bridge.SLF4JBridgeHandler;
-import studio.phaseshift.metatron.algebra.CatQ;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
@@ -444,7 +443,6 @@ public class BootLoader implements Rec, Feature.SelfClone {
             final Space sysSpace = memSpace.of(SYS_VID.extend(ALL), null);
             sysSpace.jvm().put(uri(QPROC), lst(
                     QCollection.docQ(),
-                    CatQ.catQ(),
                     QCollection.subq(),
                     QCollection.incrQ(),
                     QCollection.mimeQ(),

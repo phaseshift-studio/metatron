@@ -464,7 +464,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     // ── TID / VID rendering helpers ──────────────────────────────
 
-    private StringBuilder handleTID(final StringBuilder sb, final Obj obj, final boolean hideBaseTID) {
+    protected StringBuilder handleTID(final StringBuilder sb, final Obj obj, final boolean hideBaseTID) {
         if (!obj.isFail() && !obj.isCaughtFail() && hideBaseTID && !obj.tid().hasPoly()) {
             if (Tokens.BASE_TYPES.contains(obj.tid()))
                 return sb;
@@ -479,8 +479,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         return sb;
     }
 
-    private StringBuilder handleVID(final StringBuilder sb, final Obj obj) {
-        if (null == obj.vid())
+    protected StringBuilder handleVID(final StringBuilder sb, final Obj obj) {
+        if (!obj.hasVID())
             return sb;
         // through writeUri, not wrapUri: this is a uri written into the output, and a renderer tags
         // uris where the serializer writes them.  Going around it left every vid -- and every type
@@ -587,7 +587,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             if (type.vid().basePath().equals(Tokens.TYPE_TID) && !type.vid().c().isOne()) {
                 sb.append("{").append(type.vid().c()).append("}");
             } else if (!type.tid().basePath().equals(type.vid().basePath()))
-                sb.append("@").append(writeUri(type.vid().toUri()));
+                this.handleVID(sb, type);
         }
         return sb;
     }

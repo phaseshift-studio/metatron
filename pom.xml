@@ -65,7 +65,7 @@
         <mariadb.version>3.5.10</mariadb.version>
         <mongodb.version>5.12.0</mongodb.version>
         <langchain4j.version>1.20.0</langchain4j.version>
-        <jlama.version>0.8.4</jlama.version>
+        <!--<jlama.version>0.8.4</jlama.version>-->
         <langchain4j.beta.version>1.20.0-beta30</langchain4j.beta.version>
         <langgraph4j.version>1.8.11</langgraph4j.version>
         <junit.version>6.1.3</junit.version>
@@ -77,6 +77,7 @@
         <rdf4j.version>6.0.0</rdf4j.version>
         <logback.version>1.6.3</logback.version>
         <slf4j.version>2.0.19</slf4j.version>
+        <snakeyaml.version>2.7</snakeyaml.version>
         <hive.version>1.4.0</hive.version>
         <jakarta.version>2.2.0</jakarta.version>
         <jsoup.version>1.23.2</jsoup.version>
@@ -84,14 +85,14 @@
         <asciidoctor.version>3.2.0</asciidoctor.version>
         <asciidoctorj.version>3.0.1</asciidoctorj.version>
         <exp4j.version>0.4.8</exp4j.version>
-        <llama4j.version>0.1.1</llama4j.version>
-        <ollama4j.version>1.1.7</ollama4j.version>
+        <!--<llama4j.version>0.1.1</llama4j.version>-->
+        <!--<ollama4j.version>1.1.7</ollama4j.version>-->
         <!--<guice.version>7.0.0</guice.version>-->
         <moquette.version>0.18.0</moquette.version>
         <commonmark.version>0.30.0</commonmark.version>
         <jserialcomm.version>2.11.4</jserialcomm.version>
-        <rhino.version>1.9.1</rhino.version>
-        <rhino.j2r223.version>1.7.14</rhino.j2r223.version>
+        <!--<rhino.version>1.9.1</rhino.version>
+        <rhino.j2r223.version>1.7.14</rhino.j2r223.version>-->
         <sqlite.version>3.53.4.0</sqlite.version>
         <mcp.version>2.0.1</mcp.version>
         <zt.version>1.13.0</zt.version>
@@ -138,14 +139,6 @@
                 <version>${junit.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.github.tjake</groupId>
-                <artifactId>jlama-native</artifactId>
-                <!-- supports linux-x86_64, macos-x86_64/aarch_64, windows-x86_64
-                     Use https://github.com/trustin/os-maven-plugin to detect os and arch -->
-                <classifier>${os.detected.name}-${os.detected.arch}</classifier>
-                <version>${jlama.version}</version>
             </dependency>
             <!-- <dependency>
                  <groupId>org.eclipse.rdf4j</groupId>
@@ -285,7 +278,7 @@
             <artifactId>langchain4j-ollama</artifactId>
             <version>${langchain4j.version}</version>
         </dependency>
-        <!-- LLAMA4J -->
+        <!-- LLAMA4J
         <dependency>
             <groupId>com.llama4j</groupId>
             <artifactId>gguf</artifactId>
@@ -295,7 +288,7 @@
             <groupId>io.github.ollama4j</groupId>
             <artifactId>ollama4j</artifactId>
             <version>${ollama4j.version}</version>
-        </dependency>
+        </dependency>-->
         <!-- TINKERPOP -->
         <dependency>
             <groupId>org.janusgraph</groupId>
@@ -312,7 +305,7 @@
             <artifactId>tinkergraph-gremlin</artifactId>
             <version>${tinkerpop.version}</version>
         </dependency>
-        <!-- LANGUAGES -->
+        <!-- LANGUAGES 
         <dependency>
             <groupId>org.mozilla</groupId>
             <artifactId>rhino</artifactId>
@@ -322,7 +315,7 @@
             <groupId>cat.inspiracio</groupId>
             <artifactId>rhino-js-engine</artifactId>
             <version>${rhino.j2r223.version}</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>org.buildobjects</groupId>
             <artifactId>jproc</artifactId>
@@ -359,7 +352,7 @@
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>2.7</version>
+            <version>${snakeyaml.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
@@ -1055,13 +1048,13 @@
                     <artifactId>maven-project-info-reports-plugin</artifactId>
                     <version>3.9.0</version>
                 </plugin>
-                <plugin>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <configuration>
-                        <classifier>${os.detected.classifier}</classifier>
-                    </configuration>
-                    <version>3.5.1</version>
-                </plugin>
+                <!-- <plugin>
+                     <artifactId>maven-jar-plugin</artifactId>
+                     <configuration>
+                         <classifier>${os.detected.classifier}</classifier>
+                     </configuration>
+                     <version>3.5.1</version>
+                 </plugin>-->
             </plugins>
         </pluginManagement>
     </build>

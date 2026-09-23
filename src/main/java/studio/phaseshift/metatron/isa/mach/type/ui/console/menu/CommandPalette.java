@@ -195,8 +195,11 @@ public final class CommandPalette extends MRec {
         // ===== quit =====
         this.at("quit", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             BootLoader.close();
-            console.close();
+            // before the close: this newline is a write like any other, and the close's
+            // drain is what lands it — after the close it would queue onto a terminal
+            // that is already given back
             System.out.println("\n");
+            console.close();
             System.exit(0);
             return noobj();
         }), MUTABLE);

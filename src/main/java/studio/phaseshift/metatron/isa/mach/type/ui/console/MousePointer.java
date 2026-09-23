@@ -22,6 +22,9 @@ import org.jline.terminal.Terminal;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
 
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+
 /**
  * The console's pointer: the click and drag gestures on the pinned
  * floating widgets, the terminal mouse-tracking mode the console holds
@@ -54,6 +57,16 @@ public final class MousePointer {
      */
     private static final String MOUSE_OFF =
             "\033[?1000l\033[?1002l\033[?1003l\033[?1005l\033[?1006l\033[?1015l\033[?1016l";
+    /**
+     * The extended key reporting off: the console enables two keyboard protocols
+     * at startup (the kitty progressive enhancement and the xterm
+     * modifyOtherKeys extension {@code >4;2m}) and must not leave either armed
+     * for the shell it returns to.  Pop the kitty enhancement stack and set it
+     * back to the base level outright, and reset the extend mode — the startup
+     * wrote {@code >4;2m} (extend mode 4, level 2), so it is released with the
+     * level zero of that same mode, not with a second enable of it.
+     */
+    private static final String KEYBOARD_OFF = "\033[<u\033[>0u\033[>4;0m";
 
     /**
      * The widget the pointer is working on, or null when no drag is in flight.
@@ -384,32 +397,68 @@ public final class MousePointer {
     }
 
     /**
-     * Hand mouse tracking back to the terminal on the way out — the shell the
-     * console returns to must not inherit it.
+     * Hand the terminal's modes back on the way out — the shell the console
+     * returns to must not inherit them.
+     * <p>
+     * Written unconditionally, not gated on this class's own tracking flag:
+     * mouse tracking may also be on because jline enabled it (a modal tool's
+     * {@code trackMouse} call is invisible to a flag this class never heard
+     * of), and the keyboard enhancement was armed at startup no matter what.
+     * What matters is what the terminal holds, and a disable of a mode that
+     * was never enabled is a no-op for the terminal.
      */
-    public void handBackMouseTracking() {
-        final Terminal terminal = this.console.getTerminal();
-        if (this.widgetMouseTracking && null != terminal && terminal.hasMouseSupport()) {
-            terminal.writer().print(MOUSE_OFF);
-            this.widgetMouseTracking = false;
-        }
+    public void releaseTerminalModes() {
+        this.release(this.console.getTerminal());
+        this.widgetMouseTracking = false;
     }
 
     /**
-     * On every exit path (quit, ctrl-c, the launcher restarting the VM),
-     * turn the mouse modes off outright: they are terminal modes, and the
-     * process going away is the moment the shell would otherwise inherit
-     * them.  Written unconditionally — jline may have enabled modes the
-     * console never did.
+     * The same release, on every path the process goes away by (quit, ctrl-c,
+     * the launcher restarting the VM, a signal).  Here the terminal may
+     * already be given back — jline refuses writes on a closed terminal — so
+     * a release the terminal's own writer will not take lands on the
+     * process's stdout instead: if that is still the channel to the terminal
+     * the modes come off, and if it is not, the bytes are harmlessly
+     * discarded (they are only ever disables).
      */
-    public void disableMouseModesForExit() {
+    public void releaseTerminalModesForExit() {
         final Terminal terminal = this.console.getTerminal();
-        if (null == terminal) return;
+        if (null == terminal) {
+            this.widgetMouseTracking = false;
+            return;
+        }
+        if (this.release(terminal)) {
+            this.widgetMouseTracking = false;
+            return;
+        }
         try {
-            terminal.writer().print(MOUSE_OFF);
-            terminal.writer().flush();
+            final OutputStream out = System.out;
+            out.write((MOUSE_OFF + KEYBOARD_OFF).getBytes(StandardCharsets.UTF_8));
+            out.flush();
         } catch (final Exception ignore) {
             // the process is going away: nothing here is worth an error
+        }
+        this.widgetMouseTracking = false;
+    }
+
+    /**
+     * Write the full mode release (mouse off, keyboard enhancement off) and
+     * flush it.
+     *
+     * @param terminal the terminal to release
+     * @return true when the bytes were written and flushed
+     */
+    private boolean release(final Terminal terminal) {
+        if (null == terminal) return false;
+        try {
+            if (terminal.hasMouseSupport())
+                terminal.writer().print(MOUSE_OFF);
+            terminal.writer().print(KEYBOARD_OFF);
+            terminal.writer().flush();
+            return true;
+        } catch (final Throwable e) {
+            this.console.logger().warn("could not release the terminal's modes: {{r}}%s{{X}}", e.getMessage());
+            return false;
         }
     }
 }

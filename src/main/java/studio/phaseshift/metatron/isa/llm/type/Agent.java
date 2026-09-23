@@ -733,7 +733,8 @@ public class Agent extends MRec {
                 : ChatFrame.chatFrame().prompt(this.userMessage());
         result.put(CHAT, chatObj.apply(this))
                 .put(USER, str(this.userMessage()))
-                .put(TIME, mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)));
+                .put(TIME, mathInstSet.nowDatetime())
+                .put(RUNTIME, mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)));
         if (null != scan && !scan.isEmpty())
             result.put(WATERMARK, scan.list());
         this.currentResult = result;

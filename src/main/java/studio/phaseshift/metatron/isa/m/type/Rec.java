@@ -385,7 +385,11 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    // instC(AS_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid())),
+                    instC(AS_INST_TID.dom(INST_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).asType().constructor().apply(lhs).tid(inst.arg(0).vidOrTid())),
+                    instC(AS_INST_TID.dom(INT_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).asType().constructor().apply(lhs).tid(inst.arg(0).vidOrTid())),
+                    instC(AS_INST_TID.dom(STR_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).asType().constructor().apply(lhs).tid(inst.arg(0).vidOrTid())),
+                    //instC(AS_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid())),
+
                     instC(AS_INST_TID.dom(REC_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> Poly.Helper.transformRecToLst(lhs.asRec(), inst.arg(0).vidOrTid(), null)),
                     //    Map.of(uri(INVERSE), uri(AS_INST_TID.dom(LST_TID).rng(REC_TID)))),
                     // instC(AS_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> Optional.of(lhs).filter(o ->o.matches(inst.arg(0))).map(o-> o.tid(inst.arg(0).tid())).orElseThrow(() -> MTronException.of("unable to resolve %s to %s", lhs, inst.arg(0)))),

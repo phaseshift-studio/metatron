@@ -10,12 +10,12 @@ import studio.phaseshift.metatron.isa.llm.llmInstSetTest;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mInstSetTest;
 import studio.phaseshift.metatron.isa.m.mParserTest;
+import studio.phaseshift.metatron.isa.m.math.mathInstSetTest;
 import studio.phaseshift.metatron.isa.m.parse.CodeParseTest;
 import studio.phaseshift.metatron.isa.m.parse.InstParseTest;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.machInstSetTest;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.math.mathInstSetTest;
 import studio.phaseshift.metatron.isa.sys.sysInstSetTest;
 import studio.phaseshift.metatron.isa.vec.vecInstSetTest;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializerTest;
@@ -372,14 +372,18 @@ public class UnslothTrainingDatasetExtractor {
         LOG.info("  Reference knowledge entries generated: %d", count);
     }
 
-    /** Strips a leading "N. " section number and markdown from a section title. */
+    /**
+     * Strips a leading "N. " section number and markdown from a section title.
+     */
     private static String cleanReferenceTitle(String title) {
         String t = title.trim().replaceFirst("^\\d+\\.\\s*", "");
         t = t.replace("**", "").replace("`", "");
         return t.trim();
     }
 
-    /** Cleans a section body: drops fences, sub-header markers, bold, links, and trailing rules. */
+    /**
+     * Cleans a section body: drops fences, sub-header markers, bold, links, and trailing rules.
+     */
     private static String cleanReferenceBody(String body) {
         String b = body;
         b = b.replaceFirst("(?s)\\s*---\\s*$", "");            // trailing horizontal rule

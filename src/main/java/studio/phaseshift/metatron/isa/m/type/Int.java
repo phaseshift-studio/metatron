@@ -18,8 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.algebra.Category;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -28,22 +26,18 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.algebra.CatQ.catWrap;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  *
@@ -153,29 +147,5 @@ public interface Int extends Mono, Ring.O<Int> {
                     instC(ORDER_INST_TID.dom(INT_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> lst(lhs.stream().sorted(Comparator.comparing(a -> a.asInt().intValue()))))
             ));
         }
-
-        public static Type type() {
-            return catWrap(INT_TYPE, mutableMap(
-                    uri("ring"), rec(mutableMap(
-                                    uri(ADD), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                    uri(MUL), auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                    uri(Tokens.ZERO), auto_from_(ZERO_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                    uri(Tokens.ONE), auto_from_(ONE_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
-                            Category.RING_THEORY_TID, null),
-                    uri("add_group"), rec(mutableMap(
-                                    uri(OP), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                    uri(ID), auto_from_(ZERO_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                    uri(INV), auto_from_(NEG_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
-                            Category.GROUP_THEORY_TID, null),
-                    uri("add_monoid"), rec(mutableMap(
-                                    uri(OP), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                    uri(ID), auto_from_(ZERO_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
-                            Category.MONOID_THEORY_TID, null),
-                    uri("mult_monoid"), rec(mutableMap(
-                                    uri(OP), auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                    uri(ID), auto_from_(ONE_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
-                            Category.MONOID_THEORY_TID, null)));
-        }
-
     }
 }

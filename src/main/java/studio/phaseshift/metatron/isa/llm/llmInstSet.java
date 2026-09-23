@@ -407,13 +407,15 @@ public class llmInstSet extends AbstractInstSet {
                                         .vid(LLM_CHAT_RESULT_TID)
                                         .isaPredicate(rec(
                                                 uri(CHAT).maybe().asUri(), ALL_TYPE,
-                                                uri(TIME).maybe(), auto_from_(MATH_TIME_TID).tryToInst(),
+                                                uri(TIME), DATETIME_TYPE,
+                                                uri(RUNTIME), auto_from_(MATH_TIME_TID).tryToInst(),
                                                 uri(WATERMARK).maybe(), lst(LLM_WATERMARK_TYPE),
                                                 uri(ERROR).maybe(), FAIL_TYPE))
                                         .create(),
                                 null, null, mutableMap(
                                         uri(CHAT), "the chat response — free-text str or structured rec per response format",
-                                        uri(TIME), "elapsed time::T from user message to complete response",
+                                        uri(TIME), "the date and time when the chat completed",
+                                        uri(RUNTIME), "elapsed time::T from user message to complete response",
                                         uri(WATERMARK).maybe(), "the in-band markers the model emitted, in order; their markup is stripped from chat",
                                         uri(ERROR).maybe(), "a fail chain if errors occurred"),
                                 "a response message from a chat interaction"),

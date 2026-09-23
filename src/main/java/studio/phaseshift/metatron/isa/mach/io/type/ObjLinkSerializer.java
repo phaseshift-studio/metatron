@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 
 /**
  * The serializer a renderer uses: {@link ObjmtronSerializer} plus one thing — every uri is wrapped
@@ -71,6 +72,17 @@ public class ObjLinkSerializer extends ObjmtronSerializer {
     }
 
     @Override
+    protected StringBuilder handleVID(final StringBuilder sb, final Obj obj) {
+        if (null == obj.vid())
+            return sb;
+        // through writeUri, not wrapUri: this is a uri written into the output, and a renderer tags
+        // uris where the serializer writes them.  Going around it left every vid -- and every type
+        // named inside a refinement or a collection -- unclickable while plain uri values were fine
+        final fURI vid = Router.loaded() ? Router.global().redirect(obj.vid(), false) : obj.vid();
+        return sb.append("{{y}}@{{/y}}").append(writeUriExtension(vid.toUri(), "y", true));
+    }
+
+    @Override
     protected StringBuilder writeClip(final StringBuilder sb, final Obj obj) {
         if (obj.isInst())
             sb.append(this.writeInst(obj.as()));
@@ -100,13 +112,21 @@ public class ObjLinkSerializer extends ObjmtronSerializer {
         }
     }
 
-    @Override
-    public String writeUri(final Uri uri) {
+    protected String writeUriExtension(final Uri uri, final String color, boolean big) {
         final String uriString = super.writeUri(uri);
         final boolean quoted = uriString.startsWith("<") && uriString.endsWith(">");
-        return (quoted ? "<" : "") +
-                (uri.c().isOne() ? "" : ("{" + uri.c() + "}")) +
-                "{{link}}" + uri.uriValue().one().toString() + "{{/link}}"
-                + (quoted ? ">" : "");
+        final StringBuilder sb = new StringBuilder();
+        handleTID(sb, uri, true);
+        sb.append(quoted ? "<" : "");
+        sb.append(uri.c().isOne() ? "" : ("{" + uri.c() + "}"));
+        sb.append("{{").append(color).append("}}{{link}}").append(big ? uri.uriValue().one().big() : uri.uriValue().one()).append("{{/link}}{{/").append(color).append("}}");
+        sb.append(quoted ? ">" : "");
+        return sb.toString();
+    }
+
+
+    @Override
+    public String writeUri(final Uri uri) {
+        return this.writeUriExtension(uri, "b", false);
     }
 }
