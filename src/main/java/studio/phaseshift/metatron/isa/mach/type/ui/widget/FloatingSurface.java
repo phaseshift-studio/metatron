@@ -141,6 +141,22 @@ public class FloatingSurface {
     private final java.util.concurrent.atomic.AtomicInteger scrollAccum =
             new java.util.concurrent.atomic.AtomicInteger(0);
 
+    /**
+     * The exact bytes of the last frame written by {@link #renderInternal}, so a pass
+     * that reproduces them can skip the terminal write (identical bytes are an identical
+     * effect).  Any other terminal write (console output, a cleared slot, a screen repair)
+     * clears it, because it makes the terminal state no longer match this frame.  Volatile
+     * because the {@code submitAndWait} timeout fallback runs a render on a caller thread.
+     */
+    private volatile String lastFrame = null;
+
+    /**
+     * The bytes of the most recently built frame, whether or not the write was skipped as
+     * redundant.  The render harness reads this to observe the current frame synchronously —
+     * the write may be a no-op, but the frame is always built.
+     */
+    private volatile String lastBuiltFrame = null;
+
     // ── Focus + resize ─────────────────────────────────────────────
     // Widgets are re-hydrated into FRESH instances on every .display()
     // update, so the surface — not the widget instance — must own the
@@ -274,6 +290,7 @@ public class FloatingSurface {
             // Count those scrolls so the next render pass can erase each
             // widget's previous representation at its scrolled position.
             this.scrollAccum.addAndGet((int) text.chars().filter(c -> c == '\n').count());
+            this.lastFrame = null;   // console output moved the screen: the frame is stale
             this.terminal.writer().print(text);
             this.terminal.writer().flush();
         });
@@ -374,6 +391,7 @@ public class FloatingSurface {
             try {
                 final String rows = ansi.get();
                 if (null != rows && !rows.isEmpty()) {
+                    this.lastFrame = null;   // a direct row write: the frame is stale
                     this.terminal.writer().print(rows);
                     this.terminal.writer().flush();
                 }
@@ -382,6 +400,22 @@ public class FloatingSurface {
                 this.renderQueued.set(false);
             }
         });
+    }
+
+    /**
+     * Block until every render task already enqueued has completed and the terminal
+     * is flushed.  The caller's marker rides the queue behind them, so by the time it
+     * has run there is nothing left to render.
+     *
+     * <p>The close sequence uses this before it gives the terminal back: the render
+     * thread is a daemon and exiting does not wait for it, so without the drain it is
+     * still sitting on the shutdown's own log lines when the shell takes the tty, and
+     * they land interleaved with the shell's prompt.  A stalled render thread cannot
+     * stall the close more than it stalls any other console write (the same timeout
+     * applies).
+     */
+    public void drain() {
+        this.submitAndWait(() -> { /* the marker: when it has run, everything enqueued ahead of it has run too */ });
     }
 
     /**
@@ -642,6 +676,7 @@ public class FloatingSurface {
             synchronized (this.terminal) {
                 this.terminal.writer().print(sb.toString());
                 this.terminal.writer().flush();
+                this.lastFrame = null;   // a repair-only write: the frame is stale
             }
             return;
         }
@@ -688,9 +723,17 @@ public class FloatingSurface {
         // or {{…}} that escaped widget text produced as fresh markup and break it.
         if (RENDER_TRACE)
             studio.phaseshift.metatron.isa.mach.type.ui.console.Console.rawErr().println("[render] pass took " + (System.nanoTime() - __t0) / 1_000_000 + "ms");
+        // Whole-frame short-circuit: a pass that produces the same bytes the terminal
+        // already shows changes nothing, so skip the write.  An unchanged pass also
+        // reports no damage (an unchanged widget erases nothing), so nothing is owed.
+        final String frame = sb.toString();
+        this.lastBuiltFrame = frame;
         synchronized (this.terminal) {
-            this.terminal.writer().print(sb.toString());
-            this.terminal.writer().flush();
+            if (!frame.equals(this.lastFrame)) {
+                this.terminal.writer().print(frame);
+                this.terminal.writer().flush();
+                this.lastFrame = frame;
+            }
         }
     }
 
@@ -736,6 +779,16 @@ public class FloatingSurface {
      */
     int size() {
         return slotCount();
+    }
+
+    /**
+     * The bytes of the most recently built frame, whether or not the write was skipped as
+     * redundant.  Package-visible so the render harness can observe the current frame
+     * synchronously, without depending on the terminal stream (which an idempotent pass
+     * does not touch).
+     */
+    String lastBuiltFrame() {
+        return this.lastBuiltFrame;
     }
 
     /**
@@ -1581,6 +1634,7 @@ public class FloatingSurface {
             synchronized (this.terminal) {
                 this.terminal.writer().print(sb.toString());
                 this.terminal.writer().flush();
+                this.lastFrame = null;   // a blanked slot: the frame is stale
             }
             this.reportDamage(slot.lastRow, slot.lastRow + slot.prevHeight - 1);
         });

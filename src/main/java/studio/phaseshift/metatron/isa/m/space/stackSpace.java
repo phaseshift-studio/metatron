@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.space;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.algebra.CatQ;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -69,7 +68,6 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
         this.addQ(QCollection.refQ());
         this.addQ(QCollection.mintQ());
         this.addQ(QCollection.docQ());
-        this.addQ(CatQ.catQ());
     }
 
     @Override

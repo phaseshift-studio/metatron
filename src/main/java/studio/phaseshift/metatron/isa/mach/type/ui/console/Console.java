@@ -471,14 +471,24 @@ public class Console extends MRec implements Closeable, Runnable {
         try {
             this.jobs.close();
             this.reader.getBuffer().clear();
-            // Hand mouse tracking back to the terminal if widget scrolling
-            // owns it — the shell we return to must not inherit it.
-            this.pointer.handBackMouseTracking();
-            // Disable extended key reporting before exit so we don't leave the
-            // terminal in a state that confuses subsequent applications.
-            terminal.writer().print("\033[<u");    // kitty: pop keyboard enhancement
-            terminal.writer().print("\033[>4m");  // xterm: reset modifyOtherKeys
-            terminal.writer().flush();
+            // Everything that has been asked for is in the terminal before the terminal
+            // is given back: the render thread is a daemon and exiting will not wait for
+            // it, so without this drain its queued lines — the shutdown log among them —
+            // would race the shell's prompt for the same tty
+            this.getFloatingSurface().drain();
+            // The terminal's modes — mouse tracking and the extended key reporting —
+            // outlive the process until something writes them off, and they may have
+            // been armed by jline itself (a modal tool's trackMouse) as well as by
+            // this console, so the release is unconditional and covers both (see
+            // MousePointer.releaseTerminalModes)
+            this.pointer.releaseTerminalModes();
+            try {
+                // jline's own tracking state goes with it, so nothing later believes
+                // a tracked mode is still on
+                terminal.trackMouse(Terminal.MouseTracking.Off);
+            } catch (final Exception ignored) {
+                // the release above already wrote the terminal's bytes
+            }
             terminal.close();
         } catch (final IOException e) {
             LOG.error(e);
@@ -1056,13 +1066,13 @@ public class Console extends MRec implements Closeable, Runnable {
      * Mouse tracking is a terminal mode, not a console flag: the terminal keeps reporting presses,
      * drags and the wheel until something turns it off.  Exiting with it armed leaves the shell
      * receiving mouse bytes for every drag, so nothing outside metatron can be selected — and the
-     * sequences type themselves into the next command.  The console writes the mode itself (jline
-     * does not know about it), so it is also the console's to write off, on every exit path:
-     * quit, ctrl-c, or the launcher restarting the VM.
+     * sequences type themselves into the next command.  The mode may be armed by the console
+     * itself or by jline (a modal tool), so the release is unconditional no matter which, and it
+     * has to happen on every exit path: quit, ctrl-c, or the launcher restarting the VM.
      */
     private void releaseTerminalOnExit() {
         Runtime.getRuntime().addShutdownHook(new Thread(() ->
-                this.pointer.disableMouseModesForExit(), "metatron-console-teardown"));
+                this.pointer.releaseTerminalModesForExit(), "metatron-console-teardown"));
     }
 
     /**
@@ -1788,6 +1798,9 @@ public class Console extends MRec implements Closeable, Runnable {
                     this.machine.stop();
                 LOG.none(Graphitty.sillyPrint("\n\rmachine interrupted\n\r", true, true));
             } catch (final EndOfFileException e) {
+                // eof ends the console the way quit does: the close drains the last
+                // writes and hands the terminal back before the process goes
+                this.close();
                 System.exit(0);
             } catch (final Exception e) {
                 Throwable x = e;

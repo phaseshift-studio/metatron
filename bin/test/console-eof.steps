@@ -1,0 +1,29 @@
+# Console shutdown regression — the EOF path (CTRL-D at the prompt).
+#
+#   bin/metatron-docker build console --steps bin/test/console-eof.steps
+#
+# ctrl-D at an empty prompt raises EndOfFileException in the console's read
+# loop.  The fix routes it through the same close-and-drain sequence as :quit —
+# the render queue is drained and the terminal is handed back before the process
+# goes — and the process exits.  (The drain/close itself is proven end-to-end by
+# console-quit.steps and by FloatingSurfaceTest.shouldNotReturnUntilEnqueuedRenderTasksHaveRun;
+# ctrl-D calls the very same Console.close().)
+#
+# What THIS scenario can and does assert: ctrl-D ends the process — so the pty
+# closes and the harness reports "the vm exited early" — instead of hanging.
+# (The harness stops stepping once the pty is closed, so post-exit text cannot
+# be asserted here; a hang leaves no "vm exited early" marker and leaves the VM
+# alive, which is how a regression would show up.)
+
+WAIT_CONSOLE
+
+# --- the console is live before we end it ---
+MARK live
+SEND 1
+WAIT ==>1
+
+# --- ctrl-D at the prompt ends the console; the pump below is what lets the
+#     harness observe the pty close and report "the vm exited early" ---
+MARK eof
+KEY ctrl+d
+SLEEP 1

@@ -42,14 +42,6 @@ public final class ScreenView {
      */
     private static final String CLEAR_SCREEN = "\033[2J";
 
-    /**
-     * How far from the clicked row the console will look for the link it was aimed at, nearest
-     * first.  0 is the row itself; the rest absorb the row-origin difference between the screen's
-     * model and the terminal's display, which put a uri the reader could see one or two rows away
-     * from where they had to click.
-     */
-    private static final int[] LINK_ROW_PROBE = {0, 1, -1, 2, -2};
-
     private final ConsoleScreen screen = new ConsoleScreen();
 
     /**
@@ -454,24 +446,20 @@ public final class ScreenView {
         // One click, one gesture: type the dereference and let the reader decide, or — with control
         // held — submit it as well.  Nothing is remembered between clicks, so a repaint that moves
         // the row cannot make the next click answer for the last one.
-        String target = null;
-        int landedOn = row;
-        // The row the reader points at and the row the console believes it painted can differ by a
-        // row or two (the terminal's origin against the screen's), and a uri they can plainly see
-        // should not have to be clicked "about here": the exact row answers first, then the nearest
-        // rows do, nearest first.
-        for (final int offset : LINK_ROW_PROBE) {
-            final String found = this.linkAtRow(row + offset, col);
-            Console.linkTrace("  probe %+d row %d -> %s", offset, row + offset, found);
-            if (null != found) {
-                target = found;
-                landedOn = row + offset;
-                break;
-            }
+        //
+        // The clicked row is the only row that can answer: a terminal row maps onto the screen's
+        // rows by their exact difference (row − screen.top()), and the row a uri is painted on is
+        // the row it sits on.  Answering a row above or below is how a click once opened a link
+        // the reader was looking past, and the row model it was added to absorb has been exact
+        // since the screen's top row is declared (a launcher's banner rows) or taken over (a
+        // cleared terminal).  A miss on the exact row is refused — the trace says so.
+        final String target = this.linkAtRow(row, col);
+        if (null == target) {
+            Console.linkTrace("  no link at row %d (col %d, top %d, rows %d)",
+                    row, col, this.screen.top(), this.screen.rows());
+            return false;
         }
-        if (null == target) return false;
-        Console.linkTrace("  resolved '%s' from row %d (clicked row %d, top %d, rows %d, follow=%b)",
-                target, landedOn, row, this.screen.top(), this.screen.rows(), follow);
+        Console.linkTrace("  resolved '%s' at row %d (col %d, follow=%b)", target, row, col, follow);
         final String expression = "*" + target;
         if (follow) {
             // follow it: submit what the click resolved, with no keystroke in between.  The uri is

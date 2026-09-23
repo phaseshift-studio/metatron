@@ -294,7 +294,7 @@ kB::1024.0.lte(mB::1.0)
 kB::1024.0.gte(mB::1.0)
 ```
 
-note: relational operators on non-exact unit conversions are a known bug (see the TODOs in `mathInstSetTest`).
+note: relational operators on non-exact unit conversions are a known bug (see the TODOs in `mathInstSetTest2`).
 
 #### normalize
 

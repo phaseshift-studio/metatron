@@ -62,7 +62,7 @@ public class SummarizeFeatureTest extends AbstractFeatureTest {
         return ChatFrame.chatFrame()
                 .put(CHAT, str("I've queued a summarization over the last two days."))
                 .put(USER, str("test prompt"))
-                .put(TIME, real(42.0, MATH_MILLIS_TID, null))
+                .put(RUNTIME, real(42.0, MATH_MILLIS_TID, null))
                 .put(WATERMARK, lst(watermark("summarize", rec(
                         uri(SCOPE), real(2.0, MATH_DAY_TID, null),
                         uri(KIND), lst(uri("decision")),

@@ -22,14 +22,21 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.RUNTIME;
+import static studio.phaseshift.metatron.Tokens.TIME;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.incrQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * The frame spine — a {@link ChatStack} writing frames flat to
@@ -51,7 +58,7 @@ public class ChatStackTest extends AbstractMetatronTest {
         final ChatStack stack = new ChatStack(ROOT, SESSION, 2, 1);
 
         // root frame — depth 1 (the top-level recursion level), no parent
-        final Frame root = stack.push(ChatFrame.chatFrame().prompt("hello"));
+        final Frame root = stack.push(new ChatFrame(mutableMap(uri(RUNTIME), real(40.0, MATH_MILLIS_TID, null), uri(TIME), mathInstSet.nowDatetime()), null).prompt("hello"));
         assertNotNull(stack.current(), "push must address the frame");
         assertEquals(1, root.depth(), "root is depth 1");
         assertEquals(2, root.chatId(), "chat id is stamped");
@@ -64,7 +71,7 @@ public class ChatStackTest extends AbstractMetatronTest {
 
         // child frame — depth 1, links its parent
         final fURI rootURI = stack.current();
-        final Frame child = stack.push(ChatFrame.chatFrame().prompt("nested"));
+        final Frame child = stack.push(new ChatFrame(mutableMap(uri(RUNTIME), real(40.0, MATH_MILLIS_TID, null), uri(TIME), mathInstSet.nowDatetime()), null).prompt("nested"));
         assertEquals(2, child.depth(), "child is depth 2");
         assertEquals(rootURI, child.parentURI(), "child links its parent");
 

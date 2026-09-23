@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.algebra.CatQ;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -91,7 +90,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     public AbstractInstSet(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), jvm, tid, vid);
-        this.at(uri(QPROC), this.at(uri(Tokens.QPROC)).orElse(lst()).add(QCollection.docQ(), MUTABLE).add(CatQ.catQ(), MUTABLE), MUTABLE);
+        this.at(uri(QPROC), this.at(uri(Tokens.QPROC)).orElse(lst()).add(QCollection.docQ(), MUTABLE), MUTABLE);
         this.sugars().forEach(mParser::addSugar);
         old = false;
     }

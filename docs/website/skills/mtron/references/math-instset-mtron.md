@@ -83,6 +83,7 @@ mtron> [-- from string-encoded URI --]
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(datetime::T)
 ==>datetime::<//2024.12:25/09/00/00/000?tz=-0500>
 ```
+
 #### typed vs bare uris
 
 Bare URIs like `<//2024.12:25/...>` work with standard URI operations (`>>host`, `>>port`, `>>path`). The datetime
@@ -104,6 +105,7 @@ mtron> datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>day
 mtron> datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>tz
 ==>'-0500'
 ```
+
 #### vocabulary keys
 
 Named `>>` projections for typed datetimes:
@@ -129,6 +131,7 @@ mtron> datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>{year,month,day}
 mtron> datetime::<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>host
 ==><2024.12>
 ```
+
 #### predicate validation
 
 The `datetime::T` predicate ensures base uri has:
@@ -144,6 +147,7 @@ mtron> <//2024.13:25/09/00/00/000?tz=-0500>.?datetime::T [-- month 13 (bad)   --
 mtron> <//2024.12:25/09/60/00/000?tz=-0500>.?datetime::T [-- second 60 (bad)  --]
 mtron> <//2024.12:25/09/00/00>.?datetime::T              [-- missing tz (bad) --]
 ```
+
 #### mutating and filtering
 
 All standard uri operations apply: `==` (select), `=?=` (where), plus `>>=` (rec update) after `.as(rec::T)`.
@@ -166,6 +170,7 @@ mtron> [-- rec update: change timezone --]
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q=>[tz=>'+0000']]>>q>>tz
 ==>'+0000'
 ```
+
 ### time::T (`/m/math/time`)
 
 `time::T` is a `real::T` refinement. The time unit types (`millis::T` … `day::T`) convert to each other via `.as()`; a
@@ -208,12 +213,14 @@ mtron> [-- bare real: re-label only, no conversion --]
 mtron> 30000.0.as(minute::T)
 ==>minute::30000.0000
 ```
+
 A converted value tests as its target unit:
 
 ```mtron
 mtron> millis::1000.0.as(second::T).matches(second::T)
 ==>true
 ```
+
 Time units require a real-backed value — an int-backed time is a type violation:
 
 ```mtron
@@ -222,6 +229,7 @@ mtron> day::2.as(millis::T)         [-- int-backed time (bad) --]
 mtron> hour::2.as(minute::T)        [-- int-backed time (bad) --]
 ==>ERROR: 2 is not a time::T[][ctor?hour<=#{?}(#{*}::T)]@/m/math/time/hour
 ```
+
 #### relational operators
 
 `eq`, `neq`, `lt`, `gt`, `lte`, and `gte` auto-convert across units before comparing:
@@ -246,6 +254,7 @@ mtron> minute::60.0.lte(hour::1.0)
 mtron> minute::60.0.gte(hour::1.0)
 ==>true
 ```
+
 #### normalize
 
 `normalize()` cascades upward while the value reaches ~2× the next larger unit, until stable:
@@ -269,6 +278,7 @@ mtron> minute::150.0.normalize()
 mtron> hour::72.0.normalize()
 ==>day::3.0000
 ```
+
 ### datasize::T (`/m/math/datasize`)
 
 `datasize::T` is a `real::T` refinement. The data size unit types (`bB::T` … `pB::T`) convert to each other via `.as()`
@@ -315,12 +325,14 @@ mtron> [-- bare real: re-label only, no conversion --]
 mtron> 1024.0.as(kB::T)
 ==>kB::1024.0000
 ```
+
 A converted value tests as its target unit:
 
 ```mtron
 mtron> bB::1024.0.as(kB::T).matches(kB::T)
 ==>true
 ```
+
 #### relational operators
 
 ```mtron
@@ -339,7 +351,8 @@ mtron> kB::1024.0.lte(mB::1.0)
 mtron> kB::1024.0.gte(mB::1.0)
 ==>true
 ```
-note: relational operators on non-exact unit conversions are a known bug (see the TODOs in `mathInstSetTest`).
+
+note: relational operators on non-exact unit conversions are a known bug (see the TODOs in `mathInstSetTest2`).
 
 #### normalize
 
@@ -367,6 +380,7 @@ mtron> kB::2048.0.normalize()
 mtron> tB::2048.0.normalize()
 ==>pB::2.0000
 ```
+
 ### metric::T (`/m/math/metric`)
 
 `metric::T` is a `real::T` refinement. The metric distance unit types (`mm::T` … `km::T`) convert to each other via
@@ -411,12 +425,14 @@ mtron> [-- bare real: re-label only, no conversion --]
 mtron> 5.0.as(meter::T)
 ==>meter::5.0000
 ```
+
 A converted value tests as its target unit:
 
 ```mtron
 mtron> mm::1000.0.as(meter::T).matches(meter::T)
 ==>true
 ```
+
 #### relational operators
 
 ```mtron
@@ -428,6 +444,7 @@ mtron> cm::100.0.eq(meter::1.0)
 mtron> km::1.0.eq(mm::1000000.0)
 ==>true
 ```
+
 #### normalize
 
 `normalize()` cascades upward while the value reaches ~2× the next larger unit, until stable:
@@ -455,6 +472,7 @@ mtron> dm::25.0.normalize()
 mtron> meter::2500.0.normalize()
 ==>km::2.5000
 ```
+
 ### imperial::T (`/m/math/imperial`)
 
 `imperial::T` is a `real::T` refinement. The imperial distance unit types (`inch::T` … `mile::T`) convert to each other
@@ -496,12 +514,14 @@ mtron> [-- bare real: re-label only, no conversion --]
 mtron> 5.0.as(foot::T)
 ==>foot::5.0000
 ```
+
 A converted value tests as its target unit:
 
 ```mtron
 mtron> inch::12.0.as(foot::T).matches(foot::T)
 ==>true
 ```
+
 #### relational operators
 
 ```mtron
@@ -513,6 +533,7 @@ mtron> yard::1.0.eq(foot::3.0)
 mtron> mile::1.0.eq(yard::1760.0)
 ==>true
 ```
+
 #### normalize
 
 `normalize()` cascades upward while the value reaches ~2× the next larger unit, until stable:
@@ -537,6 +558,7 @@ mtron> foot::15.0.normalize()
 mtron> yard::7200.0.normalize()
 ==>mile::4.0909
 ```
+
 **************************************************************************
 
 ## instructions

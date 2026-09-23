@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.feature.AbstractFeature;
 import studio.phaseshift.metatron.isa.llm.type.feature.AgentFixture;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -38,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.incrQ;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -48,6 +49,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * Base class for agent-level tests.  Provides the boot fixture (a shared {@code /usr/test}
@@ -150,10 +152,11 @@ public abstract class AbstractAgentTest extends AbstractMetatronTest {
      * A standard chat_result with monos inline, as {@code Agent.chat} builds it.
      */
     protected static ChatFrame chatResultOf(final String chat, final String user) {
-        return ChatFrame.chatFrame()
-                .put("chat", str(chat))
-                .put("user", str(user))
-                .put("time", real(42.0, MATH_MILLIS_TID, null));
+        return new ChatFrame(mutableMap(
+                uri(CHAT), str(chat),
+                uri(USER), str(user),
+                uri(TIME), mathInstSet.nowDatetime(),
+                uri(RUNTIME), real(42.0, MATH_MILLIS_TID, null)), null);
     }
 
     protected static Inst toolCall() {

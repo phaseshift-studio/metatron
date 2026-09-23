@@ -28,7 +28,6 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.algebra.Category;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -1206,41 +1205,6 @@ public class TypeTest extends AbstractMetatronTest {
             delimiter = '%')
     public void testTypeTestSiblingOverlap(final String instance, final String type, final boolean matches) {
         checkMatches(LOG, instance, type, matches);
-    }
-
-    /**
-     * 2b. The labels checkAsGraph reports for those same sibling pairs, on a graph we control: three
-     * casts into one rng (human), from three incomparable doms. 2a showed the value sets genuinely
-     * overlap, so AMBIGUOUS is the semantically right answer for each pair — the question this test
-     * pins down is whether the label is reached for the right reason.
-     */
-    @ParameterizedTest
-    @TestData(value = {
-            "rec::T[?[age=>int::T]]@/m/type_test/creature",
-            "/m/type_test/creature::T[?[name=>str::T]]@/m/type_test/human",
-            "/m/type_test/human::T[?[name=>?str::T.has('son')]]@/m/type_test/swedish",
-            "/m/type_test/human::T[?[name=>?str::T.has('eau')]]@/m/type_test/french",
-            "/m/type_test/human::T[?[name=>?str::T.has('an')]]@/m/type_test/nordic",
-            "as?rng=/m/type_test/human&dom=/m/type_test/swedish(/m/type_test/human::T)@/m/type_test/as/3",
-            "as?rng=/m/type_test/human&dom=/m/type_test/french(/m/type_test/human::T)@/m/type_test/as/7",
-            "as?rng=/m/type_test/human&dom=/m/type_test/nordic(/m/type_test/human::T)@/m/type_test/as/17"})
-    @CsvSource(value = {
-            // siblingA                        % siblingB                       % label
-            "/m/type_test/swedish              % /m/type_test/french            % AMBIGUOUS",
-            "/m/type_test/swedish              % /m/type_test/nordic            % AMBIGUOUS",
-            "/m/type_test/french               % /m/type_test/nordic            % AMBIGUOUS"},
-            delimiter = '%')
-    public void testTypeTestSiblingLabels(final String siblingA, final String siblingB, final String label) {
-        final List<String> labels = Category.check().stream()
-                .filter(v -> null != v.kind() && v.insts().size() > 1)
-                .filter(v -> v.insts().stream().anyMatch(i -> i.tid().dom().basePath().equals(f(siblingA)))
-                        && v.insts().stream().anyMatch(i -> i.tid().dom().basePath().equals(f(siblingB))))
-                .map(v -> v.kind().name().toUpperCase())
-                .distinct()
-                .toList();
-        LOG.warn("sibling pair %s / %s => %s", siblingA, siblingB, labels);
-        assertTrue(labels.contains(label), siblingA + " / " + siblingB + " should be labelled " + label
-                + " but was labelled " + labels);
     }
 
     /**

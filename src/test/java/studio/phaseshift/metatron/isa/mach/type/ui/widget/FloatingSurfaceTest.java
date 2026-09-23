@@ -1058,23 +1058,16 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         }
 
         /**
-         * Render synchronously and return only what these passes wrote.
-         * <p>The first (barrier) pass drains anything the surface queued
-         * fire-and-forget — a scroll/nudge render would otherwise land inside
-         * the captured window and be read as this pass's output.  Two
-         * capturing passes then follow: a widget's render can be a no-op on a
-         * pass (its region already matches), so one pass is not enough
-         * evidence — the assertions only need this state to have been drawn
-         * once, and never need a pre-scroll pass to have been missed.
+         * Capture the current rendered frame synchronously.
+         * <p>The surface renders idempotently now — a pass that reproduces the bytes
+         * already on the terminal writes nothing — so "what the next pass wrote to the
+         * stream" is no longer a faithful measure of the frame.  Observe the frame itself
+         * instead: renderNow builds it, and lastBuiltFrame() returns it whether or not the
+         * write was skipped as redundant.
          */
         String pass() {
             this.surface.renderNow();
-            final String before = this.out.toString(java.nio.charset.StandardCharsets.UTF_8);
-            this.surface.renderNow();
-            this.surface.renderNow();
-            final String all = this.out.toString(java.nio.charset.StandardCharsets.UTF_8);
-            // measured in CHARS, not bytes — the box-drawing glyphs are 3 bytes each
-            return all.substring(before.length());
+            return this.surface.lastBuiltFrame();
         }
 
         void close() throws IOException {
@@ -1322,5 +1315,45 @@ public class FloatingSurfaceTest extends AbstractMetatronTest {
         capturing.surface.clear();
         assertEquals(false, capturing.surface.hasPointerTargets(), "and it goes away with the widgets");
         capturing.close();
+    }
+
+    // ── drain: the close's barrier ──────────────────────────────────
+
+    /**
+     * drain() is the close sequence's barrier: the render thread is a daemon and
+     * {@code System.exit} will not wait for it, so without the drain the shutdown's last
+     * lines are still queued — or mid-flight — when the shell takes the tty back, and
+     * they land interleaved with the shell's prompt.
+     *
+     * <p>The invariant is happens-before on the <em>task</em>, not on the bytes: drain()
+     * must not return until every render task enqueued ahead of it has executed.  That is
+     * asserted in-process, deterministically — the supplier below runs on the render
+     * thread as part of the queued pass, so "drain returned ⇒ the flag is set" is exactly
+     * the contract, with no dependence on how quickly the terminal's bytes surface.
+     */
+    @Test
+    public void shouldNotReturnUntilEnqueuedRenderTasksHaveRun() throws Exception {
+        final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        final Terminal term = TerminalBuilder.builder().dumb(true)
+                .size(new org.jline.terminal.Size(120, 40))
+                .streams(new java.io.ByteArrayInputStream(new byte[0]), out).build();
+        final FloatingSurface surface = new FloatingSurface(term);
+
+        final java.util.concurrent.atomic.AtomicBoolean renderRan =
+                new java.util.concurrent.atomic.AtomicBoolean(false);
+        // The supplier is invoked on the render thread, inside the queued pass — so
+        // setting the flag here is a happens-before witness: if drain() can return with
+        // it false, the barrier is broken.  writeAndRender is the fire-and-forget path a
+        // console line takes, i.e. the same queue the shutdown log is on at close time.
+        surface.writeAndRender(() -> {
+            renderRan.set(true);
+            return "drain marker line\n";
+        });
+        surface.drain();
+
+        assertTrue(renderRan.get(),
+                "drain must not return until the render task enqueued ahead of it has executed");
+        surface.shutdown();
+        term.close();
     }
 }
