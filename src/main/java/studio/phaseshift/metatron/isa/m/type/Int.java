@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.algebra.Category;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -26,18 +28,22 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.algebra.CatQ.catWrap;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  *
@@ -108,11 +114,17 @@ public interface Int extends Mono, Ring.O<Int> {
                     instC(AS_INST_TID.dom(INT_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.intValue().toString(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     instC(AS_INST_TID.dom(INT_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(f(lhs.intValue().toString()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     instC(ZERO_INST_TID.dom(INT_TID).rng(INT_TID), lst(), (lhs, inst) -> lhs.asInt().zero()),
+                    //   Map.of(uri(LAW), laws(Category.Law.absorbing, Category.Law.idempotent))),
                     instC(ONE_INST_TID.dom(INT_TID).rng(INT_TID), lst(), (lhs, inst) -> lhs.asInt().one()),
+                    //  Map.of(uri(LAW), laws(Category.Law.idempotent))),
                     instC(NEG_INST_TID.dom(INT_TID).rng(INT_TID), lst(), (lhs, inst) -> lhs.asInt().neg()),
+                    //    Map.of(uri(LAW), laws(Category.Law.involution),       uri(INVERSE), uri(NEG_INST_TID.dom(INT_TID).rng(INT_TID)))),
                     instC(DIV_INST_TID.dom(INT_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> jnt(Double.valueOf(lhs.intValue().doubleValue() / inst.arg(0).intValue().doubleValue()).longValue(), lhs.tid(), lhs.vid())),
+                    //     Map.of(uri(INVERSE), uri(MULT_INST_TID.dom(INT_TID).rng(INT_TID)))),
                     docWrap(instC(MULT_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() * inst.arg(0).intValue())), "the lhs int", "the result of the multiplication", Map.of(INT_TYPE, "the int to multiply the lhs by"), "multiply the lhs int by the argument int"),
+                    //  Map.of(uri(LAW), laws(Category.Law.commutative, Category.Law.right_distributive, Category.Law.action),uri(INVERSE), uri(DIV_INST_TID.dom(INT_TID).rng(INT_TID)))),
                     docWrap(instC(MINUS_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() - inst.arg(0).intValue())), "the lhs int", "the result of the subtraction", Map.of(INT_TYPE, "the int to subtract from the lhs"), "subtract the argument int from the lhs int"),
+                    //  Map.of(uri(LAW), laws(Category.Law.action),    uri(INVERSE), uri(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)))),
                     docWrap(instC(PLUS_INST_TID.dom(INT_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> lhs.jvm(lhs.intValue() + inst.arg(0).intValue())),
                             "the lhs int",
                             "the result of the addition",
@@ -122,17 +134,47 @@ public interface Int extends Mono, Ring.O<Int> {
                             "1+2                [-- 3 sugar'd form       --]",
                             "1.plus(plus(1))    [-- 3 nested application --]",
                             "1+(+1)             [-- 3 sugar nested form  --]"),
+                    //    Map.of(uri(LAW), laws(Category.Law.commutative, Category.Law.right_distributive, Category.Law.action),      uri(INVERSE), uri(MINUS_INST_TID.dom(INT_TID).rng(INT_TID)))),
                     //docWrap(instC(PLUS_INST_TID.dom(INT_TID.some()).rng(INT_TID.some()), lst(T(INT_TID)), (lhs, inst) -> objs(lhs.elements().map(i -> i.jvm(i.intValue() + inst.arg(0).intValue())))), "the lhs int list", "the result of the addition", Map.of(INT_TYPE, "the int to add to each element of the lhs list"), "add the argument int to each element of the lhs int list"),
                     docWrap(instC(GT_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() > inst.arg(0).intValue()).isPresent())), "the lhs int", "whether the lhs is greater than the rhs", Map.of(INT_TYPE, "the int to compare against the lhs"), "check whether the lhs int is greater than the argument int"),
+                    //  Map.of(uri(LAW), laws(Category.Law.right_distributive))),
                     docWrap(instC(GTE_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() >= inst.arg(0).intValue()).isPresent())), "the lhs int", "whether the lhs is greater than or equal to the rhs", Map.of(INT_TYPE, "the int to compare against the lhs"), "check whether the lhs int is greater than or equal to the argument int"),
+                    //       Map.of(uri(LAW), laws(Category.Law.right_distributive))),
                     docWrap(instC(LT_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() < inst.arg(0).intValue()).isPresent())), "the lhs int", "whether the lhs is less than the rhs", Map.of(INT_TYPE, "the int to compare against the lhs"), "check whether the lhs int is less than the argument int"),
+                    //        Map.of(uri(LAW), laws(Category.Law.right_distributive))),
                     docWrap(instC(LTE_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() <= inst.arg(0).intValue()).isPresent())), "the lhs int", "whether the lhs is less than or equal to the rhs", Map.of(INT_TYPE, "the int to compare against the lhs"), "check whether the lhs int is less than or equal to the argument int"),
+                    //    Map.of(uri(LAW), laws(Category.Law.right_distributive))),
                     docWrap(instC(SUM_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Int) a).plus((Int) b)).intValue()), jnt(0)), "zero or more ints", "a single plus reduced int", Map.of(), "adds the lhs int stream into a single int", "{1,2,3,4}.sum() [-- 10 --]"),
+                    //     Map.of(uri(LAW), laws(Category.Law.monoidic, Category.Law.commutative, Category.Law.right_distributive))),
                     instC(PROD_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() * (b.intValue() * b.c().max()))).intValue()/* * inst.c().max()*/), jnt(1)),
+                    //    Map.of(uri(LAW), laws(Category.Law.monoidic, Category.Law.commutative, Category.Law.right_distributive))),
                     instC(POW_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt((long) Math.pow(lhs.intValue(), inst.arg(0).intValue()))),
                     instC(MOD_INST_TID.dom(INT_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> jnt(lhs.intValue() % inst.arg(0).intValue())),
                     instC(ORDER_INST_TID.dom(INT_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> lst(lhs.stream().sorted(Comparator.comparing(a -> a.asInt().intValue()))))
             ));
+        }
+
+        public static Type type() {
+            return catWrap(INT_TYPE, mutableMap(
+                    uri("ring"), rec(mutableMap(
+                                    uri(ADD), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                    uri(MUL), auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                    uri(Tokens.ZERO), auto_from_(ZERO_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                    uri(Tokens.ONE), auto_from_(ONE_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
+                            Category.RING_THEORY_TID, null),
+                    uri("add_group"), rec(mutableMap(
+                                    uri(OP), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                    uri(ID), auto_from_(ZERO_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                    uri(INV), auto_from_(NEG_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
+                            Category.GROUP_THEORY_TID, null),
+                    uri("add_monoid"), rec(mutableMap(
+                                    uri(OP), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                    uri(ID), auto_from_(ZERO_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
+                            Category.MONOID_THEORY_TID, null),
+                    uri("mult_monoid"), rec(mutableMap(
+                                    uri(OP), auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                    uri(ID), auto_from_(ONE_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
+                            Category.MONOID_THEORY_TID, null)));
         }
 
     }

@@ -70,7 +70,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         QProc.Helper.checkSpaceQProcs(this, vid);
         return QProc.Helper.processPreRead(this.qs(), vid).orElseGet(() -> {
             final Obj result = Space.Helper.resolveRead(this, vid, directReader());
-            return QProc.Helper.processPostRead(this.qs(), vid, result).orElse(result);
+            return QProc.Helper.processPostRead(this.qs(), vid, result);
         });
     }
 
@@ -81,7 +81,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         if (preRead.isPresent())
             return Stream.of(IdObj.of(pattern, preRead.get()));
         final Obj result = Space.Helper.resolveRead(this, pattern, directReader());
-        final Obj postResult = QProc.Helper.processPostRead(this.qs(), pattern, result).orElse(result);
+        final Obj postResult = QProc.Helper.processPostRead(this.qs(), pattern, result);
         if (postResult.isNoObj())
             return Stream.empty();
         if (postResult.isObjs())

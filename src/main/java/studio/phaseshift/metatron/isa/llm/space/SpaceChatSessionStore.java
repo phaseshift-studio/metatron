@@ -367,7 +367,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
             seeded.merge(USER, (long) estimator.estimateTokenCountInText(prompt), Long::sum);
         this.agent.feature(SystemFeature.class)
                 .map(SystemFeature::systemMessage)
-                .filter(text -> null != text && !text.isEmpty())
+                .filter(text -> !text.isEmpty())
                 .ifPresent(text -> seeded.merge(SYSTEM, (long) estimator.estimateTokenCountInText(text), Long::sum));
         if (seeded.isEmpty())
             return;

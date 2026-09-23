@@ -482,7 +482,11 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     private StringBuilder handleVID(final StringBuilder sb, final Obj obj) {
         if (null == obj.vid())
             return sb;
-        return sb.append("@").append(wrapUri(Router.loaded() ? Router.global().redirect(obj.vid(), false) : obj.vid()));
+        // through writeUri, not wrapUri: this is a uri written into the output, and a renderer tags
+        // uris where the serializer writes them.  Going around it left every vid -- and every type
+        // named inside a refinement or a collection -- unclickable while plain uri values were fine
+        final fURI vid = Router.loaded() ? Router.global().redirect(obj.vid(), false) : obj.vid();
+        return sb.append("@").append(writeUri(vid.toUri()));
     }
 
     // ── Nesting detection ────────────────────────────────────────
@@ -552,9 +556,12 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     // ── Type generation ──────────────────────────────────────────
 
     private StringBuilder generateType(final StringBuilder sb, final Type type, final int depth) {
-        sb.append(
-                        (Router.loaded() ? Router.global().redirect(type.tid(), false) : type.tid()).toString())
-                .append("::T");
+        // the type's own name is a uri too, so it is written through writeUri: a renderer tags uris
+        // where the serializer writes them, and appending the raw string left every type named in a
+        // result (inst::T, union(…), #::T, uri::T) unclickable while the plain uri values beside it
+        // were fine
+        final fURI name = Router.loaded() ? Router.global().redirect(type.tid(), false) : type.tid();
+        sb.append(writeUri(name.toUri())).append("::T");
         if (type.hasPredicate()) {
             if (type.isIsaPredicate()) {
                 sb.append("[?");
@@ -580,7 +587,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             if (type.vid().basePath().equals(Tokens.TYPE_TID) && !type.vid().c().isOne()) {
                 sb.append("{").append(type.vid().c()).append("}");
             } else if (!type.tid().basePath().equals(type.vid().basePath()))
-                sb.append("@").append(type.vid());
+                sb.append("@").append(writeUri(type.vid().toUri()));
         }
         return sb;
     }
@@ -640,7 +647,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     // ── Clip writer ──────────────────────────────────────────────
 
-    private StringBuilder writeClip(final StringBuilder sb, final Obj obj) {
+    protected StringBuilder writeClip(final StringBuilder sb, final Obj obj) {
         if (obj.isStr()) {
             final int max = this.clipStr();
             if (obj.strValue().length() > max)
@@ -684,6 +691,11 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             sb.append(writeFail(fail(message)));
             if (obj.asFail().jvm().getCause() != null)
                 sb.append("[...]");
+        } else if (obj.isType()) {
+            // through the type renderer, not toShortString(): a type written as a pre-rendered string
+            // is a type the serializer never "wrote", so a renderer could not tag it -- which is why
+            // a type was clickable on its own but not inside a rec or an lst
+            sb.append(this.writeType(obj.asType()));
         } else {
             sb.append(obj.toShortString());
         }

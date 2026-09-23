@@ -194,7 +194,9 @@ public final class CommandPalette extends MRec {
 
         // ===== quit =====
         this.at("quit", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+            BootLoader.close();
             console.close();
+            System.out.println("\n");
             System.exit(0);
             return noobj();
         }), MUTABLE);

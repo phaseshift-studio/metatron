@@ -779,7 +779,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             //  "[a=>1,b=>2,c=>3].select::([isa(uri::T)=>-<[_,_]>-.sum()]).isa::([a=>is(gt(2))])                                             % noobj",
             //  "[a=>1,b=>2,c=>3].select::([isa(uri::T)=>-<[_,_]>-.sum()]).isa::([a=>is(gt(1))])                                             % [a=>2,b=>4,c=>6]",
-            "[a=>1,b=>2,c=>3]==[?(uri::T)=>-<[_,_]>-.sum()]=?=[a=>?>1]                                                             % [a=>2,b=>4,c=>6]",
+            "[a=>1,b=>2,c=>3]==[?(uri::T)=>-<[_,_]>-.sum()]?[a=>?>1]                                                                  % [a=>2,b=>4,c=>6]",
             /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             "[1,2,3].select([_,noobj,_])                                                                                               % [1,noobj,3]",
             "[1,2,3].select([_,plus(5),_])                                                                                             % [1,7,3]",
@@ -801,7 +801,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "[a=>[b=>[c=>[1,[x=>[y=>z]],3]]]].select([a/b=>[c=>[?>0.map(100),[x=>[y=>?int::T]],+133]]])                                % [a/b=>[c=>[100,noobj,136]]]"
 
     }, delimiter = '%')
-    public void testSelectWhere(final String code, final String expected) {
+    public void testIsASelect(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
@@ -948,6 +948,19 @@ public class mInstSetTest extends AbstractInstSetTest {
             "[a,b].as(rec::T).as(lst::T)                                                                                 % [(0=>(0=>a)),(1=>(1=>b))]",
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @Disabled
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*/m/inst/as?str<=int.count()                                      % 1",
+            "*/m/inst/as.count().gt(1)                                         % true",
+            "*as?str<=int.count()                                              % 1",
+            "*as.count().gt(1)                                                 % true",
+            "noobj                                 % true"
+    }, delimiter = '%')
+    public void testAsQ(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 

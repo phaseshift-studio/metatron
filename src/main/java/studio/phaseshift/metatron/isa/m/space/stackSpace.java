@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.space;
 
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.algebra.CatQ;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -68,6 +69,7 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
         this.addQ(QCollection.refQ());
         this.addQ(QCollection.mintQ());
         this.addQ(QCollection.docQ());
+        this.addQ(CatQ.catQ());
     }
 
     @Override
@@ -128,7 +130,7 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
     }*/
 
     public boolean pop() {
-        final Poly frame = this.sjvm().pop();
+        final Poly<?, ?> frame = this.sjvm().pop();
         LOG.trace("popped frame {{_&r}}off{{/r&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frame, this.sjvm().size());
         return true;
     }

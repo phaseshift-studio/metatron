@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.ui.tool;
+package studio.phaseshift.metatron.isa.llm.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.llmInstSet;
@@ -45,6 +45,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * </pre>  Each {@code est} category — the estimated composition of what went
  * into the window — is a colored section sized as its share of {@code max} (the
  * window's size), smallest first, largest last, an empty category skipped.
+ * The bar IS the truth and the label fits it: a section is never below one
+ * column, and a section narrower than its label is clipped to its width —
+ * never grown to fit the label — so a wider bar is always the wider share.
  * The percent is {@code in} over {@code max}, painted where the used part
  * ends; the blank tail is the window's unused part; the trailing size
  * ({@code 100k}) is the window itself.  The colors and labels
@@ -178,10 +181,12 @@ public class TokenCounterTool extends StackBarWidget {
         final int pctLen = null == pct ? 0 : pct.length();
 
         // each section is its share of the whole: value/denominator * canvas
-        // columns, never below the room its label needs
+        // columns, floor one.  The label never sets the floor — the bar is the
+        // truth, and a section narrower than its label is clipped in the paint
+        // below, never grown to fit the label
         final List<Section> painted = segments.stream()
                 .map(s -> new Section(s.label(), s.color(),
-                        Math.max(s.label().length() + 1, (int) Math.round(s.value() * (double) canvas / denominator))))
+                        Math.max(1L, (int) Math.round(s.value() * (double) canvas / denominator))))
                 .toList();
         final int used = painted.stream().mapToInt(s -> (int) s.value()).sum();
         final int budget = canvas - pctLen;
@@ -193,9 +198,14 @@ public class TokenCounterTool extends StackBarWidget {
         final StringBuilder sb = new StringBuilder();
         sb.append("│");
         for (final Section s : fitted) {
-            final int sw = (int) Math.max(1L, s.value());
-            sb.append("{{X}}").append(s.color()).append(s.label())
-                    .repeat(" ", Math.max(0, sw - s.label().length()));
+            final int w = (int) Math.max(1L, s.value());
+            // the label fits the bar: a bar at least as wide as the label gets the
+            // whole label plus its padding; a narrower bar gets its first w letters
+            // and nothing else — padding only fills a surplus, never a deficit
+            final int take = Math.min(s.label().length(), w);
+            sb.append("{{X}}").append(s.color())
+                    .append(s.label().substring(0, take))
+                    .repeat(" ", w - take);
         }
         if (null != pct)
             sb.append("{{X}}").append(PCT_STYLE).append(pct);

@@ -33,8 +33,6 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.io.Closeable;
-import java.io.File;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -425,33 +423,6 @@ public interface Space extends Rec, Closeable {
                 newFuri = newFuri.retract(1);
                 if (newFuri.equals(stopURI))
                     break;
-            }
-            return null;
-        }
-
-        public static File locateBaseFile(final fURI vid, final String dirRootFile) {
-            // if dir, check if the root file is in dir
-            if (vid.isBranch() && null != dirRootFile) {
-                final Path path = Path.of(vid.extend(dirRootFile).toString());
-                if (path.toFile().exists() && path.toFile().isFile())
-                    return path.toFile();
-            }
-            if (vid.isNode()) {
-                final Path path = Path.of(vid.toString());
-                if (path.toFile().exists() && path.toFile().isFile())
-                    return path.toFile();
-            }
-            fURI temp = vid.asNode();
-            while (temp.segmentLength() != 0) {
-                Path path = Path.of(temp.toString());
-                if (path.toFile().exists() && path.toFile().isFile())
-                    return path.toFile();
-                if (null != dirRootFile) {
-                    path = Path.of(temp.extend(dirRootFile).toString());
-                    if (path.toFile().exists() && path.toFile().isFile())
-                        return path.toFile();
-                }
-                temp = temp.retract(1);
             }
             return null;
         }

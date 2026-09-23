@@ -41,11 +41,21 @@ public class UriLinkPipelineTest extends AbstractMetatronTest {
             "==>{{link}}/sys/thread/main{{/link}}    % and a tag after a result prefix",
     })
     void testTheTagSurvivesHighlightingAndBecomesAHyperlink(final String highlightedInput, final String description) {
-        final String rendered = Graphitty.string(Highlighter.format(highlightedInput));
-        assertEquals(true, rendered.contains("\033]8;;" + (highlightedInput.contains("/usr") ? "/usr/dr/message/+" : "/sys/thread/main")),
-                description + ": the tag must survive the highlighter (rendered: "
-                        + rendered.replace("\033", "<ESC>") + ")");
-        assertEquals(true, rendered.contains("\033[4m"), description + ": and be underlined");
+        // the underline is part of what this test pins, so it is set explicitly: the flag is a
+        // console-wide setting (:links) that defaults off, and inheriting it from whatever test
+        // ran first is how this assertion passed once and would silently stop testing what it
+        // claims to
+        final boolean previous = Graphitty.linkUnderline();
+        Graphitty.linkUnderline(true);
+        try {
+            final String rendered = Graphitty.string(Highlighter.format(highlightedInput));
+            assertEquals(true, rendered.contains("\033]8;;" + (highlightedInput.contains("/usr") ? "/usr/dr/message/+" : "/sys/thread/main")),
+                    description + ": the tag must survive the highlighter (rendered: "
+                            + rendered.replace("\033", "<ESC>") + ")");
+            assertEquals(true, rendered.contains("\033[4m"), description + ": and be underlined");
+        } finally {
+            Graphitty.linkUnderline(previous);
+        }
     }
 
     @ParameterizedTest()
@@ -56,13 +66,16 @@ public class UriLinkPipelineTest extends AbstractMetatronTest {
     void testTheLinkCanBeTurnedBackIntoTypedText(final String uri, final String description) {
         // the underline is the visual affordance and it is optional; the uri itself — what a click
         // needs — is not
+        final boolean previous = Graphitty.linkUnderline();
         Graphitty.linkUnderline(false);
         try {
             final String plain = Graphitty.string("{{link}}" + uri + "{{/link}}");
             assertEquals(false, plain.contains("\033[4m"), description + ": no underline when the visual is off");
             assertEquals(true, plain.contains("\033]8;;"), description + ": but still a link to click");
         } finally {
-            Graphitty.linkUnderline(true);
+            // restore the setting we found, not a value we assume: leaking on (or off) into the
+            // next test class is exactly the state this test was written to make predictable
+            Graphitty.linkUnderline(previous);
         }
     }
 }

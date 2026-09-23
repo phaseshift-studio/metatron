@@ -20,12 +20,12 @@ package studio.phaseshift.metatron.isa.m;
 
 import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.algebra.Category;
 import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.AsQ;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
@@ -37,6 +37,8 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.algebra.CatQ.CATQ_TYPE;
+import static studio.phaseshift.metatron.algebra.Category.*;
 import static studio.phaseshift.metatron.furi.QProc.QPROC_TID;
 import static studio.phaseshift.metatron.furi.QProc.QPROC_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -287,7 +289,7 @@ public class mInstSet extends AbstractInstSet {
 
 
     public mInstSet() {
-        super(new LinkedHashMap<>(Map.<Obj, Obj>of(uri(PATTERN), uri(M_ISA_TID.extend(ALL)), uri(QPROC), lst(AsQ.asQ()))), INSTSET_TID, M_ISA_TID);
+        super(new LinkedHashMap<>(Map.<Obj, Obj>of(uri(PATTERN), uri(M_ISA_TID.extend(ALL)), uri(QPROC), lst())), INSTSET_TID, M_ISA_TID);
     }
 
     public void setup() {
@@ -487,6 +489,14 @@ public class mInstSet extends AbstractInstSet {
                                 "cs:src/#?lockq -> lock::[usr=>/usr/agent1,expire=>datetime://...]   [-- acquire --]",
                                 "cs:src/.../Foo.java -> ...                                          [-- throws while locked --]",
                                 "cs:src/#?lockq -> noobj                                             [-- release --]"),
+                        docWrap(CATQ_TYPE, "provides access to the morph graph composed of type-vertices and inst-edges"),
+                        docWrap(CATEGORY_TYPE, "the base morphism block: an obj and its reversible orbit"),
+                        docWrap(MORPHISM_TYPE, "the morphism-graph edge block: the form, position, contested witnesses, orbit, family, laws, and inverse of an instruction"),
+                        docWrap(OBJECT_TYPE, "the morphism-graph vertex block: the incoming and outgoing edges of a type"),
+                        docWrap(ALGEBRAIC_THEORY, "the nominal super-type of the algebraic theories: a theory names its operations by role"),
+                        docWrap(RING_THEORY_TYPE, "the theory of rings: the add and mul operations with their zero and one identities"),
+                        docWrap(GROUP_THEORY_TYPE, "the theory of groups: the op with its id and inv"),
+                        docWrap(MONOID_THEORY_TYPE, "the theory of monoids: the op with its id"),
                         ////////////////////////////////////////////////////////////////////////////
                         docWrap(AUTHORITY_TYPE = Type.Builder.build()
                                 .tid(URI_TID)
@@ -517,6 +527,7 @@ public class mInstSet extends AbstractInstSet {
                         ObjType.insts().stream(),
                         NoObj.NoObjType.insts().stream(),
                         Obj.Helper.isaInsts().stream(),
+                        Category.CategoryType.insts().stream(),
                         Stream.of(instC(M_ISA_INST_TID.extend("save").dom(ALL).rng(ALL), lst(), (lhs, inst) -> lhs.save())),
                         Stream.of(instA(INST_CTOR_TID))
                 ).flatMap(i -> i)),
@@ -880,7 +891,7 @@ public class mInstSet extends AbstractInstSet {
     @Override
     public Set<Sugar> sugars() {
         return new LinkedHashSet<>(List.of(
-                Sugar.prefix("=?=", List.of(WHERE_INST_TID), 1),
+                //   Sugar.prefix("=?=", List.of(WHERE_INST_TID), 1),
                 Sugar.prefix("%==", List.of(GROUP_INST_TID), 1),
                 Sugar.prefix("==", List.of(SELECT_INST_TID), 1),
                 Sugar.prefix("?~", List.of(IS_INST_TID, MATCHES_INST_TID), 1),

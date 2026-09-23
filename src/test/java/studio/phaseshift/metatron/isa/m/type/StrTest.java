@@ -110,10 +110,10 @@ public class StrTest extends AbstractAlgebraTest<Str> {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "'abc de fgh'=?=['bc' => 'xx', 'f[a-z]{2}' => +'XYZ', '\\s.{2}\\s' => -<''>-.count().as(str::T)]        % 'abc de fgh'",
-            "'abc de fgh'=?=['bc' => 'xx', 'f[a-z]{2}' => +'XYZ', '\\s.{2}\\s' => -<''>-.count()?>5]                % noobj",
-            "'abc de fgh'.has('bc').has('f[a-z]{2}').has('\\s.{2}\\s')                                              % 'abc de fgh'",
-            "'abc de fgh'.has('bc').has('f[a-z]{2}')=?=(['\\s.{2}\\s' => -<''>-.count()?>5])                           % noobj"
+            "'abc de fgh'.has(['bc' => 'xx', 'f[a-z]{2}' => +'XYZ', '\\s.{2}\\s' => -<''>-.count().as(str::T)])        % 'abc de fgh'",
+            "'abc de fgh'.has(['bc' => 'xx', 'f[a-z]{2}' => +'XYZ', '\\s.{2}\\s' => -<''>-.count()?>5])                % noobj",
+            "'abc de fgh'.has('bc').has('f[a-z]{2}').has('\\s.{2}\\s')                                                 % 'abc de fgh'",
+            "'abc de fgh'.has('bc').has('f[a-z]{2}').has(['\\s.{2}\\s' => -<''>-.count()?>5])                          % noobj"
     }, delimiter = '%', quoteCharacter = '~')
     public void testWhereInst(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

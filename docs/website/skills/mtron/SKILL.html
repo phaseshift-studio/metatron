@@ -732,7 +732,9 @@ becomes typed message recs, loaded and written into a native metatron agent memo
 <p><strong>Not yet split out</strong> (deep dives this entry doc points at, but which have no reference doc of their own):</p>
 <ul>
 <li><code>qprocs</code> -- the <code>?q</code> family as a whole: <code>?docq</code> (each instruction's own doc), <code>?incq</code> (auto-increment), <code>?hasq</code>,
-<code>?statq</code> (address-level read/write heat), <code>?subq</code> (pubsub), and the fact that a qproc's data space is independent of
+<code>?statq</code> (address-level read/write heat), <code>?subq</code> (pubsub), <code>?asq</code> (an <code>as</code> instruction read as a property-graph
+edge: label <code>as</code>, outV its dom, inV its rng, and <code>?asq</code> the kinds of as-graph relation that edge participates in --
+<code>*as?nat&lt;=int&amp;asq</code>, narrowed by <code>?asq=[kind,...]</code>), and the fact that a qproc's data space is independent of
 the obj's. Only two corners are written down today: <code>?subq</code> in
 <a href="references/mcp-server-notifications.html">MCP Server Notifications</a>, and <code>?mimeq</code>/<code>?lineq</code> in the fsSpace half of
 <a href="references/sys-instset-mtron.html">sys instruction set</a>.</li>

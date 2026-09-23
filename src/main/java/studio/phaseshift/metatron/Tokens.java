@@ -115,6 +115,12 @@ public final class Tokens {
     public static final String ID = "id";
     public static final String IN = "in";
     public static final String OUT = "out";
+    public static final String ADD = "add";
+    public static final String MUL = "mul";
+    public static final String OP = "op";
+    public static final String INV = "inv";
+    public static final String ZERO = "zero";
+    public static final String ONE = "one";
     public static final String TOTAL = "total";
     public static final String CONTEXT = "context";
     public static final String THRESHOLD = "threshold";
@@ -327,6 +333,13 @@ public final class Tokens {
     public static final String QUANT = "quant";
     public static final String TIMEOUT = "timeout";
     public static final String FAMILY = "family";
+    public static final String MORPH = "morph";
+    public static final String FORM = "form";
+    public static final String POSITION = "position";
+    public static final String CONTESTED = "contested";
+    public static final String ORBIT = "orbit";
+    public static final String LAW = "law";
+    public static final String INVERSE = "inverse";
     public static final String FROM = "from";
     public static final String PROB = "prob";
     public static final String FIELD = "field";

@@ -35,9 +35,6 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_TIME_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -211,7 +208,7 @@ public class ideInstSet extends AbstractInstSet {
                                                     filter_(from_(id_()).rshift_(uri("location")).has_(inst.arg(CLASS, 0))).
                                                     repeat_(rec(CODE, rshift_(), EMIT, BOOL_TRUE)).
                                                     rshift_(uri("members")).rshift_().rshift_().filter_(from_(id_())
-                                                            .where_(rec(
+                                                            .isa_(rec(
                                                                     NAME, has_(inst.arg(NAME, 1).orElse(str(".*"))),
                                                                     TEXT, has_(inst.arg(TEXT, 2).orElse(str(".*")))))).tryToInst().apply();
                                             /*return from_(uri(lhs.uriValue().extend(f(CODE).extend("/")))).

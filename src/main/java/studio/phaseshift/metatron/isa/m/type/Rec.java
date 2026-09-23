@@ -387,6 +387,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             return new LinkedHashSet<>(List.of(
                     // instC(AS_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid())),
                     instC(AS_INST_TID.dom(REC_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> Poly.Helper.transformRecToLst(lhs.asRec(), inst.arg(0).vidOrTid(), null)),
+                    //    Map.of(uri(INVERSE), uri(AS_INST_TID.dom(LST_TID).rng(REC_TID)))),
                     // instC(AS_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> Optional.of(lhs).filter(o ->o.matches(inst.arg(0))).map(o-> o.tid(inst.arg(0).tid())).orElseThrow(() -> MTronException.of("unable to resolve %s to %s", lhs, inst.arg(0)))),
                     instC(AS_INST_TID.dom(REC_TID).rng(URI_TID), lst(URI_TYPE), (lhs, inst) -> {
                         final Rec lhsRec = lhs.asRec();
@@ -410,15 +411,20 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                             furi = furi.q(lhsRec.at(QPROC).asRec().elements().map(e -> Tuple.Pair.with(e.first().toCleanString(), e.second().isNothing() ? "" : e.second().toCleanString())).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1)));
                         return uri(furi, inst.arg(0).vidOrTid(), null);
                     }),
+                    //Map.of(uri(INVERSE), uri(AS_INST_TID.dom(URI_TID).rng(REC_TID)))),
                     instC(ZERO_INST_TID.dom(REC_TID).rng(REC_TID), lst(), (lhs, inst) -> lhs.asRec().zero()),
+                    //    Map.of(uri(LAW), laws(Category.Law.unit, Category.Law.idempotent))),
                     instC(REVERSE_INST_TID.dom(REC_TID).rng(REC_TID), lst(), (lhs, inst) -> new ArrayList<Rel>(lhs.asRec().elements().toList()).reversed().stream().collect(new CommonUtil.RecCollector(lhs.tid(), lhs.vid()))),
+                    //   Map.of(uri(LAW), laws(Category.Law.involution), uri(INVERSE), uri(REVERSE_INST_TID.dom(REC_TID).rng(REC_TID)))),
                     instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL), T(ALL)), (lhs, inst) -> {
                         final Obj result = inst.arg(1).apply(lhs.asRec().at(inst.arg(0)));
                         return result.isFail() ? result : (result.booleanCheck() ? lhs : noobj());
                     }),
+                    //Map.of(uri(LAW), laws(Category.Law.boolean_))),
                     instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isRel() ?
                             (lhs.<Rec>as().elements().anyMatch(r -> r.test(inst.arg(0))) ? lhs : noobj()) :
                             (lhs.<Rec>as().elements().map(Rel::first).anyMatch(r -> r.test(inst.arg(0))) ? lhs : noobj())),
+                    //        Map.of(uri(LAW), laws(Category.Law.boolean_))),
                     instC(GET_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(URI_TYPE), (lhs, inst) -> objs(lhs.stream().map(r -> r.<Rec>as().at(inst.arg(0))))),
                     instC(SPLIT_INST_TID.dom(A).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).asRec().elements().map(e -> rel(e.first().apply(lhs), e.second().apply(lhs))).collect(new CommonUtil.RecCollector(inst.arg(0).tid(), inst.arg(0).vid()))),
                     instC(MERGE_INST_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> objs(lhs.elements())),
@@ -428,6 +434,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     // instC(RSHIFT_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri("+")).stream().map(k -> lhs.asRec().at(k)))),
                     instC(LSHIFT_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs.parent()),
                     instC(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID.maybeMaybe())), (lhs, inst) -> lhs.jvm(lhs.asRec().plus(inst.arg(0).asRec()).recValue())),
+                    //      Map.of(uri(LAW), laws(Category.Law.monoidic))),
                     instC(MINUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> {
                         final Map<Obj, Obj> values = lhs.recValue();
                         inst.arg(0).asRec().elements().forEach(rkv -> {
@@ -437,6 +444,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                         return lhs.jvm(values);
                     }),
                     instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().at(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),
+                    //     Map.of(uri(LAW), laws(Category.Law.monoidic))),
                     instC(MAPP_INST_TID.addQ(BLOCK).dom(REC_TID).rng(REC_TID), rec(uri(KEY), ALL_TYPE, uri(VALUE), ALL_TYPE), (lhs, inst) -> lhs.asRec().elements().map(r -> rel(inst.arg(KEY, 0).apply(r.first()), inst.arg(VALUE, 1).apply(r.second()))).collect(new CommonUtil.RecCollector())),
                     //instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> rec(Rec.Helper.project(lhs.asRec(), inst.arg(0).asRec(), false), inst.arg(0).tid(), inst.arg(0).vid())),
                     //instC(SELECT_INST_TID.dom(REC_TID).rng(ALL.maybe()), lst(URI_TYPE), (lhs, inst) -> lhs.asRec().at(inst.arg(0))),
@@ -446,8 +454,10 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     //instC(UPDATE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REL_TYPE), (lhs, inst) -> Poly.Helper.updateRecRecursion(lhs.asRec(), rec(inst.arg(0).asRel().jvm().get0(), inst.arg(1).asRel().jvm().get1()), MUTABLE)),// inst.arg(0).asRec().elements().map(r -> lhs.asRec().at(r.first(), r.second(), MUTABLE)).filter(o -> false).findFirst().orElse(lhs.as())),
                     instC(SELECT_INST_TID.dom(REC_TID).rng(B.maybeSome()), lst(T(A.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(s -> lhs.asRec().at(s)))),
                     instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> Poly.Helper.selectPolyRecursion(lhs.asRec(), inst.arg(0).asRec(), false)),
-                    instC(WHERE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(A)), (lhs, inst) -> inst.arg(0).isNothing() ? noobj() : lhs),
-                    instC(WHERE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Poly.Helper.selectRecRecursion(lhs.asRec(), inst.arg(0).asRec(), true))),
+                    //   morphWrap(instC(WHERE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(A)), (lhs, inst) -> inst.arg(0).isNothing() ? noobj() : lhs),
+                    //          Map.of(uri(LAW), laws(Morphism.Law.boolean_))),
+                    //   morphWrap(instC(WHERE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Poly.Helper.selectRecRecursion(lhs.asRec(), inst.arg(0).asRec(), true))),
+                    //           Map.of(uri(LAW), laws(Morphism.Law.boolean_))),
                  
                     /*instC(WHERE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
                        ProjectionFailureException.predicateThrow(lhs, a -> (Obj) Lst.Helper.project(lhs.asLst(), inst.arg(0).orElse(rec0()), true))),
@@ -461,6 +471,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     }),*/
                     instC(WITHIN_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(ALL_STAR)), (lhs, inst) -> rec(lhs.elements().map(r -> inst.arg(0).apply(r).<Rel>as()))),
                     instC(SUM_INST_TID.dom(REC_TID.maybeSome()).rng(REC_TID), lst(), (lhs, inst) -> lhs.stream().map(Obj::asRec).reduce(rec(), Rec::plus))
+                    //         Map.of(uri(LAW), laws(Category.Law.monoidic)))
             ));
 
 

@@ -82,7 +82,8 @@ public class WidgetStateDisciplineTest extends AbstractInstSetTest {
                 Arguments.of("menu_bar_widget", MenuBarWidget.class),
                 Arguments.of("tree_select_widget", TreeSelectTool.class),
                 Arguments.of("swipe_panel_widget", SwipePanelWidgetTool.class),
-                Arguments.of("modal_widget", ModalTool.class));
+                Arguments.of("modal_widget", ModalTool.class),
+                Arguments.of("stack_bar_widget", StackBarWidget.class));
     }
 
     @ParameterizedTest
@@ -148,7 +149,9 @@ public class WidgetStateDisciplineTest extends AbstractInstSetTest {
 
     // ── reflection helpers ─────────────────────────────────────────
 
-    /** A type's declared keys: the key side of its {@code isaPredicate} rec of key => value-type. */
+    /**
+     * A type's declared keys: the key side of its {@code isaPredicate} rec of key => value-type.
+     */
     private static Set<String> declaredKeys(final String tid) {
         final Set<String> keys = new LinkedHashSet<>();
         final Obj registered = Router.global().read(f(tid));
@@ -162,7 +165,9 @@ public class WidgetStateDisciplineTest extends AbstractInstSetTest {
         return keys;
     }
 
-    /** A class's instance fields, inherited ones included — a base-class field counts too. */
+    /**
+     * A class's instance fields, inherited ones included — a base-class field counts too.
+     */
     private static List<Field> instanceFields(final Class<?> type) {
         final List<Field> fields = new ArrayList<>();
         for (Class<?> c = type; null != c && !Object.class.equals(c); c = c.getSuperclass())

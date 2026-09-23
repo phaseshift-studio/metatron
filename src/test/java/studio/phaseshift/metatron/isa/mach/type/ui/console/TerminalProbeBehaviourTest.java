@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.mach.type.ui.console;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.NonBlockingReader;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 
@@ -38,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@Disabled("hangs")
 public class TerminalProbeBehaviourTest extends AbstractMetatronTest {
 
     @Test

@@ -24,8 +24,8 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.*;
 
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;

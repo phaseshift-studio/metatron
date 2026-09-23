@@ -383,7 +383,7 @@
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">web instruction set</h1>
-        <small>The /m/web vocabulary for exposing mtron objs over http, ws and mcp: protocol surfaces, MIME document types, route tables, and the conventions a mount follows. TRIGGER: When mounting an obj to a route, serving mtron objs over http or websockets, making an obj an MCP server, choosing a ?mimeq= rendering, or wondering why a route, an image, or a css file does not serve.</small><br/>
+        <small>The /m/web vocabulary for exposing mtron objs over http, ws and mcp: protocol surfaces, MIME document types, route tables, the mtron::T apply protocol, and the conventions a mount follows. TRIGGER: When mounting an obj to a route, serving mtron objs over http or websockets, making an obj an MCP server, shipping an obj for remote evaluation (mtron::T), choosing a ?mimeq= rendering, or wondering why a route, an image, or a css file does not serve.</small><br/>
         <a href="web-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>web-instset-mtron.md</a>
     </div>
     <div class="markdown-body">
@@ -414,10 +414,10 @@ mtron&gt; person::[name=&gt;'grant',age=&gt;25]@/data/person/2
 <tbody>
 <tr><td><code>protocol::T</code></td><td><code>/m/web/protocol</code></td><td>—</td><td>the umbrella: <strong>a union</strong> of the surfaces below, so it classifies <em>values</em></td></tr>
 <tr><td><code>http::T</code></td><td><code>/m/web/http</code></td><td><code>protocol::T</code></td><td>the http vocabulary</td></tr>
-<tr><td><code>rest::T</code></td><td><code>/m/web/http/rest</code></td><td><code>http::T</code></td><td>a REST surface — what a web root is served as</td></tr>
+<tr><td><code>rest::T</code></td><td><code>/m/web/http/rest</code></td><td><code>http::T</code></td><td>a REST surface — get reads, put replaces, patch updates, delete unlinks, post creates</td></tr>
 <tr><td><code>ws::T</code></td><td><code>/m/web/ws</code></td><td><code>protocol::T</code></td><td>the websocket vocabulary</td></tr>
 <tr><td><code>mcp::T</code></td><td><code>/m/web/mcp</code></td><td><code>protocol::T</code></td><td>an MCP surface</td></tr>
-<tr><td><code>mtron::T</code></td><td><code>/m/web/mtron</code></td><td><code>protocol::T</code></td><td>the mtron-eval surface</td></tr>
+<tr><td><code>mtron::T</code></td><td><code>/m/web/mtron</code></td><td><code>protocol::T</code></td><td>the mtron-eval surface — ship an obj, it is applied, the result returns</td></tr>
 <tr><td><code>stream::T</code></td><td><code>/m/web/stream</code></td><td><code>protocol::T</code></td><td>the raw byte / server-sent-event stream surface</td></tr>
 <tr><td><code>sse::T</code></td><td><code>/m/web/sse</code></td><td><code>stream::T</code></td><td>a server-sent-events response — a chunked <code>text/event-stream</code> over http</td></tr>
 <tr><td><code>mcp_server::T</code></td><td><code>/m/web/mcp/mcp_server</code></td><td><code>mcp::T</code></td><td>an MCP server obj — <strong>transport-agnostic</strong></td></tr>
@@ -459,6 +459,9 @@ rule has two halves, because either alone leaves a hole:</p>
 </code></pre>
 <p><code>application/x-mtron</code> is the <strong>structural parse gate</strong>: it asks for the content parsed into mtron objs rather than
 handed back as text. Read any mount's own documentation with <code>?docq</code>.</p>
+<p>The mechanism is a q-proc: the live carrier declares
+<code>q =&gt; [mimeq::[pattern=&gt;mimeq, post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]]</code> — a <code>post_read</code> inst that runs <em>after</em>
+the read and <em>before</em> serialization. <code>?mimeq=</code> is a server-side as-transform.</p>
 <p>A JSON reader decides how much a JSON string is trusted. <code>ObjJSONSerializer.literal()</code> keeps every string as
 written, which is what a document whose fields are all strings needs: docker reports <code>&quot;Tag&quot;:&quot;11.2&quot;</code>, and reading
 that as a <em>real</em> left the image addressable only as <code>&lt;mariadb:11.2000&gt;</code> — invisibly, because from the JSON face a
@@ -500,6 +503,26 @@ because the space is live rather than a lookup table of two.</p>
 <p>Only a templated value is resolved per request. Anything else — a plain uri, a code — is resolved once at mount
 time, so a route value that <em>builds</em> its target (a <code>code</code> such as <code>*dr.as(skill::T).as(mcp_server::T)</code>) is not
 rebuilt on every request.</p>
+<h4>route values: five flavors</h4>
+<p>Whatever a key mounts, the value is an <em>obj applied to the request uri</em> — and per the rule above, only templated
+values re-resolve per request; the rest resolve once at mount time. The live carriers use five shapes:</p>
+<table>
+<thead>
+<tr><th>value</th><th>example</th><th>what it mounts</th></tr>
+</thead>
+<tbody>
+<tr><td>identity path</td><td><code>/usr =&gt; /usr</code></td><td>this machine's own space, under its own address</td></tr>
+<tr><td>scheme namespace</td><td><code>/mfs =&gt; mfs:</code>, <code>/docker =&gt; docker:</code></td><td>another space, addressed by scheme</td></tr>
+<tr><td>short name</td><td><code>/mcp =&gt; mcp_mtron</code></td><td>the router's redirect table — a <em>type with a constructor</em>, built on demand</td></tr>
+<tr><td>evaluated expression</td><td><code>/drstynx =&gt; *dr.as(skill::T).as(mcp_server::T)</code></td><td>the result, mounted as an obj</td></tr>
+<tr><td>fallback</td><td><code>/ =&gt; mfs:docs/website/</code></td><td>every request no more-specific key caught</td></tr>
+</tbody>
+</table>
+<p>A scheme-keyed entry (<code>http: =&gt; http:</code>) is the sixth shape: an identity on the scheme itself, which is how
+<code>httpSpace</code> serves <em>and</em> fetches — outbound <code>http://</code> derefs stay in the carrier.</p>
+<p>The mount table is also the <strong>exposure boundary</strong>. What is not mounted is not reachable: the live carrier mounts
+<code>/usr</code>, <code>/mfs</code>, <code>/mcp</code>, <code>/message</code>, <code>/docker</code> and <code>/</code>, while <code>/sys</code>, <code>/m</code> and everything else are simply absent
+from the table — and absent from the web. Security by omission; fail-closed by construction.</p>
 <h3>mounting an obj</h3>
 <pre><code class="language-mtron">[-- an mcp_server over http: the protocol follows from the obj --]
 /mcp       =&gt; mcp_mtron
@@ -509,6 +532,40 @@ rebuilt on every request.</p>
 /          =&gt; mfs:docs/website/
 </code></pre>
 <p>A websocket has no per-request uri, only a handshake, so a templated ws mount addresses per <em>connection</em>.</p>
+<p><code>mcp_mtron</code> in the first mount is a short-name redirect to a <code>mcp_server::T</code> <strong>type with a constructor</strong> — the
+mount is a factory: dereferencing the name returns the type, and the carrier constructs the handler from it.</p>
+<h3>a URL is a deref chain</h3>
+<p>Past the mount, the remaining path is a traversal with the space's own read semantics, unchanged:</p>
+<ul>
+<li>
+<p><strong>wildcards are honored.</strong> <code>GET /docker/image/+</code> is a pattern read — every image, as a lst. The literal-prefix
+rule constrains mount <em>keys</em>, not the request path once a key has matched.</p>
+</li>
+<li>
+<p><strong>the path may continue through a result.</strong> <code>/docker/image/+/container/0</code> matches the images, descends
+<code>container</code>, and indexes <code>0</code> — one traversal, expressed as path segments.</p>
+</li>
+<li>
+<p><strong>results may hold <code>!*</code> auto-refs.</strong> A listing returns pointers, not copies —
+<code>container =&gt; [!*docker:container/vtest_a-a-1]</code>. Continuing the path <em>into</em> a ref forces its resolution;
+stopping before it leaves the subtree untouched. The ref is the fourth redirect, at the data level:</p>
+<p>router prefixes → the router's redirect table → mount tables → <code>!*</code> data edges</p>
+</li>
+</ul>
+<h3>the <code>mtron::T</code> apply protocol</h3>
+<p><code>mtron::T</code> is the code-execution surface: ship an obj, the handler <strong>applies</strong> it, the result comes back. Both
+realizations are the same three lines — <code>mtron_wsHandler</code>'s <code>ON_MESSAGE</code> is <code>lhs.apply(noobj())</code> then
+<code>send(rhs)</code>; <code>mtron_httpHandler</code> does the same in <code>ON_GET</code>/<code>ON_POST</code>, with the request rec as the lhs argument.
+Everything else the protocol needs follows from that:</p>
+<ul>
+<li><strong>the incoming obj is the program.</strong> There is no command envelope. Shipped code derefs through the machine's
+own Router, so the handler never knows which space holds the data — <code>*&lt;http://…&gt;</code> from the console is this
+protocol.</li>
+<li><strong>failures are results.</strong> A thrown exception is sent as <code>fail(e)</code> — the wire carries <code>fail</code> objs like any obj.</li>
+<li><strong>the wire format is mtron text.</strong> Both handlers override <code>SEND</code> with <code>application/x-mtron</code> serialization.</li>
+</ul>
+<p>The carriers differ in one respect: http applies the body <em>to the request rec</em> (headers and params are visible to
+the code), while ws applies to <code>noobj()</code>. Code that must behave identically over both should be self-contained.</p>
 <h3>streaming a response (<code>sse::T</code>)</h3>
 <p>A mount is normally request/response — one body, then the handler closes. <code>sse::T</code> is the streaming exception: an
 http handler opens a chunked <code>text/event-stream</code> response and pushes any number of events before it closes. The
@@ -530,14 +587,16 @@ client disconnects.</p>
 <li>the <strong>surface vocabulary</strong> — <code>*dr.as(mcp::T)</code>, <code>person::T.as(rest::T)</code> — needs <code>as</code> rows projecting an obj to a
 protocol surface; today <code>*dr.as(mcp::T)</code> fails with <em>&quot;agent … is not a protocol::T@/m/web/mcp&quot;</em>, which is why the
 projection chain above is spelled <code>.as(skill::T).as(mcp_server::T)</code>.</li>
-<li><strong>pattern route keys</strong> and one route table shared by both carriers both wait on the same missing piece: a resolver
-that checks a surface against the carrier, so http cannot mount a ws handler.</li>
+<li><strong>pattern route keys</strong> — the shape already exists in the type (<code>route::T</code>'s own doc example is
+<code>[/dr/+ =&gt; *dr.as(mcp::T), /docs/# =&gt; &lt;mfs:docs/website/#&gt;]</code>, and <code>webHelper.routeProblems(rec)</code> validates a
+table), but the carrier resolver still matches literal prefixes only. One route table shared by both carriers
+waits on the same missing piece: a resolver that checks a surface against the carrier, so http cannot mount a
+ws handler.</li>
 </ul>
 <h3>see also</h3>
 <ul>
 <li>the webSpace design record at <code>docs/design/webspace.md</code> — the lattice, the route contract, and the migration
 stages in full.</li>
-<li><a href="web_instset_mtron.html">httpPage Fetching</a> — the client side: <code>http://</code> dereference, HTML parse trees, traversal.</li>
 <li><a href="mcp-server-architecture.html">MCP server architecture</a> — <code>mcp_server</code>, tools, resources, notifications.</li>
 <li><a href="type-system-mtron.html">type system</a> — nominal vs structural typing, and why a union classifies values.</li>
 </ul>

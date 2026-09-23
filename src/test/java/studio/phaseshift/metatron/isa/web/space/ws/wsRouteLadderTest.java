@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -59,11 +60,11 @@ class wsRouteLadderTest extends AbstractWebSocketServerIntegrationTest {
     @Override
     protected wsSpace createWSSpace() {
         return wsSpace.of(mutableMap(
-                uri(PATTERN), uri(f("ws://#")),
-                uri(HOST), uri(f("ws://127.0.0.1:" + generatePort())),
-                uri(ROUTE), rec(
-                        uri(f("/mcp")), uri(f("mcp_mtron")),
-                        uri(f("/mtron")), uri(f("mtron_ws")))), 
+                        uri(PATTERN), uri(f("ws://#")),
+                        uri(HOST), uri(f("ws://127.0.0.1:" + generatePort())),
+                        uri(ROUTE), rec(
+                                uri(f("/mcp")), uri(f("mcp_mtron")),
+                                uri(f("/mtron")), uri(f("mtron_ws")))),
                 f("/sys/space/test/wsRouteLadder"));
     }
 
@@ -79,15 +80,19 @@ class wsRouteLadderTest extends AbstractWebSocketServerIntegrationTest {
         return 15;
     }
 
-    /** an mcp_server type is materialized and wrapped in mcp_wsHandler */
+    /**
+     * an mcp_server type is materialized and wrapped in mcp_wsHandler
+     */
     @Test
     void testMcpLaneHandshakes() throws Exception {
         connectToServer("/mcp");
         final String response = sendAndReceive(INITIALIZE);
-        assertEquals(true, response.contains("protocolVersion"), response);
+        assertTrue(response.contains("protocolVersion"), response);
     }
 
-    /** a handler Type with a constructor is built per connection: mtron expressions evaluate */
+    /**
+     * a handler Type with a constructor is built per connection: mtron expressions evaluate
+     */
     @Test
     void testMtronLaneEvaluates() throws Exception {
         connectToServer("/mtron");

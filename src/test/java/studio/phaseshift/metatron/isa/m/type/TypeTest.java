@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.AsQ;
+import studio.phaseshift.metatron.algebra.Category;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -1231,11 +1231,11 @@ public class TypeTest extends AbstractMetatronTest {
             "/m/type_test/french               % /m/type_test/nordic            % AMBIGUOUS"},
             delimiter = '%')
     public void testTypeTestSiblingLabels(final String siblingA, final String siblingB, final String label) {
-        final List<String> labels = AsQ.check().stream()
+        final List<String> labels = Category.check().stream()
                 .filter(v -> null != v.kind() && v.insts().size() > 1)
                 .filter(v -> v.insts().stream().anyMatch(i -> i.tid().dom().basePath().equals(f(siblingA)))
                         && v.insts().stream().anyMatch(i -> i.tid().dom().basePath().equals(f(siblingB))))
-                .map(v -> v.kind().name())
+                .map(v -> v.kind().name().toUpperCase())
                 .distinct()
                 .toList();
         LOG.warn("sibling pair %s / %s => %s", siblingA, siblingB, labels);
