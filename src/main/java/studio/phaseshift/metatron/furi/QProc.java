@@ -37,10 +37,9 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -242,7 +241,11 @@ public interface QProc extends Rec {
             return Optional.ofNullable(acc);
         }
 
-        public static Optional<Obj> processPostRead(final Lst qs, final fURI vid, final Obj current) {
+        public static Obj processPostRead(final Lst qs, final fURI id, final Obj obj) {
+            return obj.isObjs() ? objs(obj.stream().map(current -> processPostReadIndividual(qs, id, current).orElse(current))) : processPostReadIndividual(qs, id, obj).orElse(obj);
+        }
+
+        private static Optional<Obj> processPostReadIndividual(final Lst qs, final fURI vid, final Obj current) {
             if (!vid.hasQ() || qs.isEmpty()) return Optional.empty();
             Obj acc = current;
             boolean found = false;

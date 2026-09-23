@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.Tokens.INST_CTOR_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -54,6 +55,14 @@ public class MInst extends MObj implements Inst {
     @Override
     public Inst c(final cInt c) {
         return (Inst) super.c(c);
+    }
+
+    public static Inst instCtor(final fURI rngTID, final Function<Obj, Obj> construct) {
+        return instCtor(T(rngTID), construct);
+    }
+
+    public static Inst instCtor(final Type rngType, final Function<Obj, Obj> construct) {
+        return instC(INST_CTOR_TID.dom(ALL.maybe()).rng(rngType.vid()), lst(rngType), (lhs, inst) -> construct.apply(inst.arg(0)));
     }
 
     public static Inst instA(final fURI tid) {

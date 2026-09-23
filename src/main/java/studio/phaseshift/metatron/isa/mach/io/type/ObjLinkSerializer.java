@@ -18,6 +18,9 @@
 
 package studio.phaseshift.metatron.isa.mach.io.type;
 
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 
 /**
@@ -50,17 +53,60 @@ public class ObjLinkSerializer extends ObjmtronSerializer {
      */
     private static final ObjLinkSerializer INSTANCE = new ObjLinkSerializer();
 
-    /** The instance every renderer formats objs with (see the class note). */
+    /**
+     * The instance every renderer formats objs with (see the class note).
+     */
     public static ObjLinkSerializer single() {
         return INSTANCE;
+    }
+
+    @Override
+    public String write(final Obj obj) {
+        if (obj.isInst())
+            return this.writeInst(obj.as());
+        else if (obj.isUri())
+            return this.writeUri(obj.as());
+        else
+            return super.write(obj);
+    }
+
+    @Override
+    protected StringBuilder writeClip(final StringBuilder sb, final Obj obj) {
+        if (obj.isInst())
+            sb.append(this.writeInst(obj.as()));
+        else if (obj.isUri())
+            sb.append(this.writeUri(obj.as()));
+        else
+            return super.writeClip(sb, obj);
+        return sb;
+    }
+
+    /**
+     * An instruction is written as its address, its type and its arguments, and the whole of it is
+     * the label of a link whose target is its vid — only the address is a uri, so the explicit
+     * target form is what lets all of it answer a click and still follow the right uri.
+     */
+    @Override
+    public String writeInst(final Inst inst) {
+        // The body is rendered by the PLAIN serializer, and the one link wraps all of it.  Rendering
+        // it here would tag the uri and type inside the instruction, and a link inside a link ends
+        // the outer one (graphitty's rule): the first inner link closed this wrapper, so the
+        // instruction was not clickable while its arguments were.
+        if (Obj.Helper.isAutoPointer(inst)) {
+            final fURI pointer = Obj.Helper.getAutoPointer(inst).get();
+            return "{{link:" + pointer + "}}" + super.writeInst(inst) + "{{/link}}";
+        } else {
+            return super.writeInst(inst);
+        }
     }
 
     @Override
     public String writeUri(final Uri uri) {
         final String uriString = super.writeUri(uri);
         final boolean quoted = uriString.startsWith("<") && uriString.endsWith(">");
-        return (quoted ? "<" : "") + "{{link}}"
-                + (quoted ? uriString.substring(1, uriString.length() - 1) : uriString)
-                + "{{/link}}" + (quoted ? ">" : "");
+        return (quoted ? "<" : "") +
+                (uri.c().isOne() ? "" : ("{" + uri.c() + "}")) +
+                "{{link}}" + uri.uriValue().one().toString() + "{{/link}}"
+                + (quoted ? ">" : "");
     }
 }

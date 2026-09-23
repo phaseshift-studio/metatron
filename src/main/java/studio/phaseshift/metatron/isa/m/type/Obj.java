@@ -1237,6 +1237,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                                 .getBytes())));
                     }),
                     instC(UNION_INST_TID.dom(A).rng(A.maybe()), lst(T(B), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe())), (lhs, inst) -> inst.args().lstValue().stream().anyMatch(o -> o.test(lhs)) ? lhs : noobj()),
+                    //           Map.of(uri(LAW), laws(Category.Law.idempotent, Category.Law.right_distributive, Category.Law.boolean_))),
                     instC(SERIALIZE_INST_TID.dom(A).rng(B), lst(T(OBJ_SERIAL_TID)), (lhs, inst) -> {
                         final Object serialization = inst.arg(0).<ObjSerializer<?>>as().write(lhs);
                         try {
@@ -1246,6 +1247,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             return str(serialization.toString());
                         }
                     }),
+                    //  Map.of(uri(LAW), laws(Category.Law.right_distributive))),
                     instC(FORK_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(ALL_TYPE), (lhs, inst) -> {
                         VirtualThread.virtual(inst.arg(0)).applyAsync(lhs);
                         return lhs;
@@ -1278,6 +1280,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                     objs((Stream) InstSet.importInstSetStream(inst.arg(0).uriValue(), inst.arg(1).isNoObj() ? null : inst.arg(1).uriValue())))),
                     docWrap(instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).distinct())),
                             "any objs", "the deduplicated objs", Map.of(), "a deduplication function \\(f({c}X) \\to {1<=c}X\\)"),
+                    //     Map.of(uri(LAW), laws(Category.Law.idempotent))),
                     instC(BARRIER_INST_TID.dom(ALL_STAR).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.stream().reduce(inst.arg(0), (a, b) -> a.asLst().add(b))),
                     docWrap(instC(BARRIER_INST_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> lhs.stream().reduce(inst.arg(0), (a, b) -> a.asRec().at(b.asRel().first(), b.asRel().second()))),
                             "any objs", "the objs as a rec", Map.of(jnt(0), "the rec to merge into"), "a rec merging function \\(f(X)\\to X\\)"),
@@ -1334,7 +1337,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         return current;
                     }),*/
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
-                    /*docWrap(*/instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs).vid(null)),
+                    instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs).vid(null)),
+                    //         Map.of()),
                     //"maybe an obj", "the obj referred to by the uri arg", Map.of(jnt(0).maybe(), "the uri to dereference"), "like from(uri), except that dereferencing happens immediately upon accessing the instruction (no inst apply required)."),
                     /*docWrap(*/instC(AUTO_AT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> {
                         final Obj resolved = Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs);
@@ -1343,10 +1347,12 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     // "maybe an obj", "the obj referred to by the uri arg", Map.of(jnt(0).maybe(), "the uri to dereference"), "like at(uri), except that dereferencing happens immediately upon accessing the instruction (no inst apply required)."),
                     docWrap(instC(AUTO_TO_INST_TID.dom(ALL.maybe()).rng(ALL), lst(ALL_TYPE), (lhs, inst) -> (null == lhs.vid() || lhs.isAutoFrom()) ? lhs : auto_from_(lhs.vid()).tryToInst()),
                             "any obj", "the uri (if possible) that refers to the obj arg", Map.of(jnt(0), "the obj to reference"), "like !*(vid), except that the obj arg is converted to an !* reference (an inverse dereference) immediately upon inst access (no inst apply required)."),
+                    //   Map.of()),
                     docWrap(instC(CATCH_INST_TID.dom(A).rng(C.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> lhs.isFail() && !lhs.isCaughtFail() ? inst.arg(0).apply(lhs.asFail().caught()).c(c -> c.mult(lhs.c())) : lhs),
                             "any obj", "uncaught fails go to arg, others mapped by identity", Map.of(jnt(0), "the obj triggered on an uncaught fail"), "a catch function f(x)->x"),
                     docWrap(instC(END_INST_TID.dom(ALL_STAR).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
                             "terminal objs", "noobj", Map.of(), "the terminal function \\(f(x)\\to \\emptyset\\)"),
+                    //   Map.of(uri(LAW), laws(Category.Law.absorbing, Category.Law.idempotent))),
                     docWrap(instC(PRINTLN_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none("%s", o.isStr() ? o.strValue() : o.toString())).filter(x -> false).findAny().orElse(lhs).stream().peek(x -> inst.logger().none(lineSeparator())))),
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
                     docWrap(instC(PRINT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none("%s", o.isStr() ? o.strValue() : o.toString())).reduce(noobj(), (a, b) -> noobj()).orElse(lhs))),
@@ -1362,38 +1368,48 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     }),
                     docWrap(instC(ID_INST_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                             "an rhs obj", "an lhs obj", Map.of(), "the obj identity function \\(f(x)\\to x\\)"),
+                    //   Map.of(uri(LAW), laws(Category.Law.unit, Category.Law.involution),   uri(INVERSE), uri(ID_INST_TID.dom(A).rng(A)))),
                     // TODO: do we gut this and rely fully on the non-barried form?
                     docWrap(instC(ID_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                             "the rhs obj", "the lhs obj", Map.of(), "a objs barrier identity function \\(f(X)\\to X\\)"),
                     docWrap(instC(AND_INST_TID.dom(A).rng(BOOL_TID), lst(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe()), (lhs, inst) -> bool(inst.args().elements().map(o -> o.orElse(BOOL_TRUE)).allMatch(Obj::boolValue))),
                             "any objs", "true if all objs are true", Map.of(), "logical \\(\\texttt{and}\\) function \\(f(X)\\to \\tt{true}\\) if all \\(X\\) are true"),
+                    //          Map.of(uri(LAW), laws(Category.Law.monoidic, Category.Law.commutative, Category.Law.boolean_))),
                     docWrap(instC(OR_INST_TID.dom(A).rng(BOOL_TID), lst(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe()), (lhs, inst) -> bool(inst.args().elements().map(o -> o.orElse(BOOL_FALSE)).anyMatch(Obj::boolValue))),
                             "any objs", "true if any objs are true", Map.of(), "logical \\(\\texttt{or}\\) function \\(f(X)\\to \\tt{true}\\) if any \\(X\\) are true"),
+                    //  Map.of(uri(LAW), laws(Category.Law.monoidic, Category.Law.commutative, Category.Law.boolean_))),
                     instC(APPLY_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> lhs.isInst() ?
                             lhs.asInst().apply(inst.args()) :
                             Router.readFromSpace(lhs.uriValue().basePath().extend("apply")).apply(inst.args())),
                     //instC(MAP_INST_TID.dom(A).rng(ALL.maybe()), lst(T(B)), (lhs, inst) -> inst.arg(0)),
                     docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)), "maybe some obj", "the lhs obj applied to the arg obj", Map.of(jnt(0), "any obj"), "applies the lhs obj to the arg obj to yield the rhs obj"),
+                    // Map.of(uri(LAW), laws(Category.Law.right_distributive))),
                     instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).booleanCheck() ? lhs : noobj()),
+                    //  Map.of(uri(LAW), laws(Category.Law.idempotent, Category.Law.right_distributive, Category.Law.boolean_))),
                     docWrap(instC(SIDE_INST_TID.dom(A).rng(A), lst(ALL_TYPE), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
                             "any obj", "the lhs obj", Map.of(jnt(0), "any obj applied by lhs obj"), "passes lhs obj through after applying itself to inst arg obj", "1.side(plus(2).to(x)) [-- 1 [x=>3] --]"),
                     docWrap(instC(TID_INST_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),
                             "any obj", "the lhs obj type id", Map.of(), "the spatial location of the lhs obj [equivalent to f(x) ~ vid(type())]"),
+                    //   Map.of(uri(LAW), laws(Category.Law.right_distributive))),
                     docWrap(instC(VID_INST_TID.dom(A).rng(URI_TID.maybe()), lst(), (lhs, inst) -> null == lhs.vid() ? noobj() : uri(lhs.vid())),
                             "any obj", "a spatial location for the lhs obj", Map.of(jnt(0), "the value id for the lhs obj"), "specifies the spatial location of the lhs obj", "1@abc.vid() [-- abc --]"),
+                    // Map.of(uri(LAW), laws(Category.Law.right_distributive))),
                     docWrap(instC(VID_INST_TID.dom(A).rng(A), lst(T(URI_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue())),
                             "any obj", "a spatial location for the lhs obj", Map.of(jnt(0), "the value id for the lhs obj"), "specifies the spatial location of the lhs obj", "1@abc.vid() [-- abc --]"),
                     docWrap(instC(ELSE_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0).apply(lhs) : lhs),
                             "maybe an obj", "the lhs obj else the arg obj", Map.of(jnt(0), "the rhs obj is the lhs is noobj"), "\\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{lhs} & \\quad \\text{if } \\tt{lhs} \\neq \\emptyset \\\\ \\tt{arg}_0 & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]"),// TODO: rec args needs resolution on generics connected
                     docWrap(instC(IS_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(isa_(T(BOOL_TID)).else_(BOOL_FALSE).tryToInst()), (lhs, inst) -> inst.arg(0).orElse(BOOL_FALSE).boolValue() ? lhs : noobj()),
                             "any obj", "the lhs obj if arg is true", Map.of(jnt(0), "filter lhs if false"), "filters the lhs obj"), // TODO: generics are not working for some reason
+                    //  Map.of(uri(LAW), laws(Category.Law.idempotent, Category.Law.right_distributive, Category.Law.boolean_))),
                     //   docWrap(instC(ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(ALL_TYPE), (lhs, inst) -> lhs.test(inst.arg(0)) ? lhs : noobj()),
                     //        "an obj to match", "the unaltered obj if arg matches", Map.of(jnt(0), "filter lhs if doesn't match arg"), "a filter function \\(f(x)\\to \\{\\emptyset \\cup x\\}\\)"),
                     // docWrap(instC(ISA_INST_TID.dom(ALL).rng(ALL.maybe()), lst(ALL_TYPE), (lhs, inst) -> lhs.test(inst.arg(0)) ? lhs : noobj()),
                     //         "an obj to match", "the unaltered obj if arg matches", Map.of(jnt(0), "filter lhs if doesn't match arg"), "a filter function \\(f(x)\\to \\{\\emptyset \\cup x\\}\\)"),
                     docWrap(instC(SORTA_INST_TID.dom(ALL).rng(ALL.maybe()), lst(ALL_TYPE), (lhs, inst) -> lhs.testNominally(inst.arg(0)) ? lhs : noobj()),
                             "an obj to match taxonomically", "the unaltered obj if arg matches", Map.of(jnt(0), "filter lhs if doesn't match arg"), "checks whether the obj is nominally the arg type or a refinement of the arg type"),
+                    //   Map.of(uri(LAW), laws(Category.Law.idempotent, Category.Law.right_distributive, Category.Law.boolean_))),
                     instC(MATCHES_INST_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(lhs.test(inst.arg(0)))),
+                    //    Map.of(uri(LAW), laws(Category.Law.right_distributive))),
                     docWrap(instC(BLOCK_INST_TID.dom(A.maybe()).rng(B.some()), lst(T(B.some())), (lhs, inst) -> inst.arg(0)),
                             "maybe an obj", "the arg without an applied lhs", Map.of(jnt(0), "the unapplied rhs"), "the lhs obj is halted and the arg is the rhs obj"),
                     instC(SPLIT_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))),
@@ -1508,8 +1524,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                                             rec(jnt(0), MObjFactory.of().toObj(lhs.jvm()))))))),
                     docWrap(instC(REDUCE_INST_TID.dom(A.maybeSome()).rng(A), lst(T(ALL.maybe())), (lhs, inst) -> Stream.concat(inst.arg(0).<Inst>as().arg(0).stream(), lhs.stream()).reduce((a, b) -> inst.arg(0).<Inst>as().args(lst(a)).apply(b)).orElse(noobj())),
                             "any objs", "the result of applying the arg inst to each obj", Map.of(jnt(0), "the inst to apply to each obj"), "a reduce function \\(f(X) \\to x\\)"),
-                    docWrap(instC(WHERE_INST_TID.dom(A).rng(A.maybe()), lst(T(B)), (lhs, inst) -> inst.arg(0).isObjCall() ? (inst.arg(0).apply(lhs).isNoObj() ? noobj() : lhs) : (lhs.test(inst.arg(0)) ? lhs : noobj())),
-                            "any obj", "filter the lhs obj based on whether the arg yields noobj or not", Map.of(jnt(0), "the inst to filter objs by"), "a filter function \\(f(x)\\to \\{\\emptyset \\cup x\\}\\)"),
+                    //  docWrap(instC(WHERE_INST_TID.dom(A).rng(A.maybe()), lst(T(B)), (lhs, inst) -> inst.arg(0).isObjCall() ? (inst.arg(0).apply(lhs).isNoObj() ? noobj() : lhs) : (lhs.test(inst.arg(0)) ? lhs : noobj())),
+                    //          "any obj", "filter the lhs obj based on whether the arg yields noobj or not", Map.of(jnt(0), "the inst to filter objs by"), "a filter function \\(f(x)\\to \\{\\emptyset \\cup x\\}\\)"),
                     instC(GROUP_INST_TID.dom(ALL.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
                         final Map<Obj, Obj> result = new LinkedHashMap<>();
                         lhs.stream().forEach(e -> inst.arg(0).asRec().elements().forEach(kv -> {

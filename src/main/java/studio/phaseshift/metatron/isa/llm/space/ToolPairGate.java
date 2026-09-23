@@ -27,13 +27,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -90,17 +84,27 @@ public final class ToolPairGate {
         // static gate
     }
 
-    /** What the gate did with an offered or staged message. */
+    /**
+     * What the gate did with an offered or staged message.
+     */
     public enum Status {
-        /** the group is complete and in the ledger */
+        /**
+         * the group is complete and in the ledger
+         */
         PUBLISHED,
-        /** held — the group is still missing a side (checked again when the rest arrives) */
+        /**
+         * held — the group is still missing a side (checked again when the rest arrives)
+         */
         PARKED,
-        /** nothing can ever pair with it (no join key) — not written */
+        /**
+         * nothing can ever pair with it (no join key) — not written
+         */
         UNPAIRED
     }
 
-    /** A verdict: what happened, plus the ledger rec when one was written. */
+    /**
+     * A verdict: what happened, plus the ledger rec when one was written.
+     */
     public record Verdict(Status status, Rec written) {
 
         public boolean published() {
@@ -108,18 +112,26 @@ public final class ToolPairGate {
         }
     }
 
-    /** A parked ai message: the group waiting for its results. */
+    /**
+     * A parked ai message: the group waiting for its results.
+     */
     private record Parked(String scope, fURI ledgerPath, Rec aiMessage, String chatId) {
     }
 
-    /** A held result: a tool result waiting for its ai message. */
+    /**
+     * A held result: a tool result waiting for its ai message.
+     */
     private record Held(String scope, fURI ledgerPath, Rec result) {
     }
 
-    /** ai messages held until their results arrive, keyed by ledger scope + tool call id. */
+    /**
+     * ai messages held until their results arrive, keyed by ledger scope + tool call id.
+     */
     private static final Map<String, Parked> PARKED = new ConcurrentHashMap<>();
 
-    /** tool results held until their ai message arrives, keyed by ledger scope + tool call id. */
+    /**
+     * tool results held until their ai message arrives, keyed by ledger scope + tool call id.
+     */
     private static final Map<String, Held> HELD = new ConcurrentHashMap<>();
 
     /**
@@ -150,7 +162,7 @@ public final class ToolPairGate {
      * @param aiMessage   the enveloped ai message carrying tool_requests
      * @param resultsById results the caller already holds, keyed by tool call id
      * @return the verdict — {@code PUBLISHED} (now, or by an earlier offer),
-     *         {@code PARKED} (a result is still outstanding)
+     * {@code PARKED} (a result is still outstanding)
      */
     public static Verdict offer(final SpaceChatSessionStore ledger, final Rec aiMessage,
                                 final Map<String, Rec> resultsById) {
@@ -174,12 +186,12 @@ public final class ToolPairGate {
      * group; a result whose ai message has not been offered yet is held (the
      * pair may still complete).
      *
-     * @param ledger      the ledger the result belongs to
-     * @param toolCallId  the call id that joins this result to its request
-     * @param result      the enveloped tool_result message
+     * @param ledger     the ledger the result belongs to
+     * @param toolCallId the call id that joins this result to its request
+     * @param result     the enveloped tool_result message
      * @return the verdict — {@code PUBLISHED} (this result completed the
-     *         group, or the group is already in the ledger),
-     *         {@code PARKED} (held), {@code UNPAIRED} (no join key at all)
+     * group, or the group is already in the ledger),
+     * {@code PARKED} (held), {@code UNPAIRED} (no join key at all)
      */
     public static Verdict stage(final SpaceChatSessionStore ledger, final String toolCallId, final Rec result) {
         if (null == toolCallId || toolCallId.isBlank()) {
@@ -197,7 +209,9 @@ public final class ToolPairGate {
         return publish(ledger, parked.aiMessage(), toolCallIds(parked.aiMessage()));
     }
 
-    /** True when an ai message is parked on this call id — its result is wanted. */
+    /**
+     * True when an ai message is parked on this call id — its result is wanted.
+     */
     public static boolean isParked(final SpaceChatSessionStore ledger, final String toolCallId) {
         return PARKED.containsKey(key(ledger, toolCallId));
     }
@@ -225,9 +239,9 @@ public final class ToolPairGate {
      * (a group with no chat id is closed too — the boundary cannot be shown to
      * be its own turn); {@code null} closes every group.
      *
-     * @param ledger          the ledger being closed
-     * @param boundaryChatId  the new turn's chat id, or {@code null} for "all"
-     * @param lostResultFor   the placeholder result for an unanswered call id
+     * @param ledger         the ledger being closed
+     * @param boundaryChatId the new turn's chat id, or {@code null} for "all"
+     * @param lostResultFor  the placeholder result for an unanswered call id
      */
     public static void closeStale(final SpaceChatSessionStore ledger, final String boundaryChatId,
                                   final Function<String, Rec> lostResultFor) {
@@ -264,7 +278,9 @@ public final class ToolPairGate {
         });
     }
 
-    /** The groups parked in this ledger — diagnostics and tests. */
+    /**
+     * The groups parked in this ledger — diagnostics and tests.
+     */
     public static int parked(final SpaceChatSessionStore ledger) {
         final String scope = scope(ledger);
         return (int) PARKED.values().stream().filter(p -> scope.equals(p.scope())).count();
@@ -313,7 +329,9 @@ public final class ToolPairGate {
         return new Verdict(Status.PUBLISHED, written);
     }
 
-    /** The ledger scope of a call id — a call id is unique within its conversation, not globally. */
+    /**
+     * The ledger scope of a call id — a call id is unique within its conversation, not globally.
+     */
     private static String key(final SpaceChatSessionStore ledger, final String toolCallId) {
         return ledger.memoryRoot() + "\u0000" + toolCallId;
     }
@@ -322,7 +340,9 @@ public final class ToolPairGate {
         return ledger.memoryRoot().toString();
     }
 
-    /** The chat id an ai message was stamped with, or null when it carries none. */
+    /**
+     * The chat id an ai message was stamped with, or null when it carries none.
+     */
     private static String chatIdOf(final Rec aiMessage) {
         final Obj chatId = aiMessage.at(uri(CHAT_ID));
         if (chatId.isNoObj() || !chatId.isInt())

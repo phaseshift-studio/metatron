@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>web instruction set · PhaseShift Studio</title>
+    <title>as-graph · PhaseShift Studio</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -382,223 +382,214 @@
     })();
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
-        <h1 class="skill-title mb-1">web instruction set</h1>
-        <small>The /m/web vocabulary for exposing mtron objs over http, ws and mcp: protocol surfaces, MIME document types, route tables, the mtron::T apply protocol, and the conventions a mount follows. TRIGGER: When mounting an obj to a route, serving mtron objs over http or websockets, making an obj an MCP server, shipping an obj for remote evaluation (mtron::T), choosing a ?mimeq= rendering, or wondering why a route, an image, or a css file does not serve.</small><br/>
-        <a href="web-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>web-instset-mtron.md</a>
+        <h1 class="skill-title mb-1">as-graph</h1>
+        <small>The as-graph: every as instruction is an edge — label as, outV its dom, inV its rng — and ?asq reads an edge's labels within duplicate, ambiguous, incomparable, coupling, isochain, retract). The graph reads like a space: *as is the whole graph, *as?rng<=dom a single edge, *as?rng<= the in-neighborhood, *as?<=dom the out-neighborhood. TRIGGER: When casting or parsing an obj through as(type::T), when a cast seems to do nothing, when adding an as edge (a dom → rng morphism), when asking whether two casts to the same rng can collide, when traversing the graph (whole-graph, single-edge, or neighborhood reads), or when reading an edge with ?asq.</small><br/>
+        <a href="as-graph-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>as-graph-mtron.md</a>
     </div>
     <div class="markdown-body">
-<h2>web instruction set (<code>/m/web</code>)</h2>
-<p><code>/m/web</code> is the vocabulary the web carriers speak: the <em>types</em> that say what a protocol surface is, the MIME
-types that say what a document is, and <code>route::T</code>, which types a mount table. The spaces themselves live
-elsewhere — <code>/sys/space/web/http</code> (<code>httpspace</code>) and <code>/sys/space/web/ws</code> (<code>wsspace</code>) — each carrying a <code>route</code> rec of
-mounts and reading that vocabulary.</p>
-<p>The organizing idea is that <strong>a protocol is a projection of an obj, not a copy of it</strong>. An <code>mcp_server</code> rides http,
-websockets and stdio alike; a str that is css is <code>css::T</code> whoever asks for it. A mount then only has to say <em>which
-obj</em> and <em>which surface</em>.</p>
-<h3>the space these examples use</h3>
-<p>A mount is only as real as the space behind it, so this document builds one first. Everything below addresses
-<code>/data/person/1</code> and <code>/data/person/2</code>, and every block after this one runs against these objs. (<code>mtron_pre</code>
-blocks are executed by the docs pipeline and inlined with their results; a plain <code>mtron</code> block is only shown.)</p>
-<pre><code class="language-mtron">mtron&gt; memspace::[pattern=&gt;/data/#]@/sys/space/data
-==&gt;memspace::[pattern=&gt;/data/#]@/sys/space/data
-mtron&gt; person::[name=&gt;'marko',age=&gt;29]@/data/person/1
-==&gt;person::[name=&gt;'marko',age=&gt;29]@/data/person/1
-mtron&gt; person::[name=&gt;'grant',age=&gt;25]@/data/person/2
-==&gt;person::[name=&gt;'grant',age=&gt;25]@/data/person/2
+<h2>the as-graph (<code>?asq</code>)</h2>
+<p><code>as</code> is a single instruction family whose declared casts say which obj types may be cast to which:
+<code>as?int&lt;=bool</code> maps a <code>bool</code> to an <code>int</code>. Read that family as a <strong>property graph</strong> and the casts stop being a
+list:</p>
+<ul>
+<li>the <strong>label</strong> is <code>as</code> — every cast is the same instruction, so the family is one edge label;</li>
+<li>the <strong>outV</strong> is the edge's dom — what goes in;</li>
+<li>the <strong>inV</strong> is the edge's rng — what comes out;</li>
+<li>the <strong>edge property map</strong> is <code>?asq</code>: the kinds of relation that edge takes part in.</li>
+</ul>
+<p>The organizing idea is that <strong>an edge is named by its endpoints, not by an address</strong>. <code>*as?int&lt;=str&amp;asq</code> asks
+about the edge <em>str → int</em>, and the map is <em>derived from the endpoints' place in the graph</em> — opposing edges,
+contested siblings, reachability — not read from any one cast. An undeclared pair reads as noobj: the graph only
+speaks for edges that exist.</p>
+<h3>reading the graph</h3>
+<p><code>inst?rng&lt;=dom</code> reads rng first, then <code>&lt;=</code>, then dom — so <code>as?int&lt;=str</code> is the edge <strong>str → int</strong>. Because the
+graph lives in space, every read shape works on it:</p>
+<ul>
+<li><strong>the whole graph</strong> — <code>*as</code> is the edge set, every declared morphism at once.</li>
+<li><strong>one edge</strong> — the endpoint-pair query:</li>
+</ul>
+<pre><code class="language-mtron">mtron&gt; *as?int&lt;=str
+==&gt;as?rng=int&amp;dom=str(int::T){&lt;j&gt;}
 </code></pre>
-<h3>types</h3>
+<ul>
+<li><strong>one edge with its map</strong> — <code>?asq</code> hands the edge back carrying its kind labels:</li>
+</ul>
+<pre><code class="language-mtron">mtron&gt; *as?int&lt;=str&amp;asq
+==&gt;as?rng=int&amp;asq=[incomparable,coupling]&amp;dom=str(int::T){&lt;j&gt;}
+</code></pre>
+<ul>
+<li><strong>the in-neighborhood</strong> — every edge <em>into</em> an rng (<code>as?int&lt;=</code> reads rng <code>int</code>, any dom):</li>
+</ul>
+<pre><code class="language-mtron">mtron&gt; *as?int&lt;=
+==&gt;as?rng=int&amp;dom=bool(int::T){&lt;j&gt;}
+==&gt;as?rng=int&amp;dom=real(int::T){&lt;j&gt;}
+==&gt;as?rng=int&amp;dom=str(int::T){&lt;j&gt;}
+==&gt;as?rng=int&amp;dom=uri(int::T){&lt;j&gt;}
+==&gt;as?rng=int&amp;dom=datetime(int::T){&lt;j&gt;}
+</code></pre>
+<ul>
+<li><strong>the out-neighborhood</strong> — every edge <em>out of</em> a dom (<code>as?&lt;=str</code> reads dom <code>str</code>, any rng):</li>
+</ul>
+<pre><code class="language-mtron">mtron&gt; *as?&lt;=str
+==&gt;as?rng=bytes&amp;dom=str(bytes::T){&lt;j&gt;}
+==&gt;as?rng=bool&amp;dom=str(bool::T){&lt;j&gt;}
+==&gt;as?rng=int&amp;dom=str(int::T){&lt;j&gt;}
+==&gt;as?rng=real&amp;dom=str(real::T){&lt;j&gt;}
+==&gt;as?rng=uri&amp;dom=str(uri::T){&lt;j&gt;}
+==&gt;as?rng=datetime&amp;dom=str(datetime::T){&lt;j&gt;}
+==&gt;as?rng=java&amp;dom=str(java::T){&lt;j&gt;}
+==&gt;as?rng=xsv&amp;dom=str(xsv::T){&lt;j&gt;}
+==&gt;as?rng=csv&amp;dom=str(csv::T){&lt;j&gt;}
+==&gt;as?rng=noobj{0}&amp;dom=A(){&lt;j&gt;}
+==&gt;as?rng=str&amp;dom=A(str::T){&lt;j&gt;}
+==&gt;as?rng=B&amp;dom=A(#::T){&lt;j&gt;}
+==&gt;as?rng=B&amp;dom=A(B::T){&lt;j&gt;}
+</code></pre>
+<ul>
+<li><strong>a neighborhood with its maps</strong> — <code>?asq</code> on the set:</li>
+</ul>
+<pre><code class="language-mtron">mtron&gt; *as?int&lt;=&amp;asq
+==&gt;as?rng=int&amp;asq=[incomparable,coupling]&amp;dom=bool(int::T){&lt;j&gt;}
+==&gt;as?rng=int&amp;asq=[incomparable,coupling]&amp;dom=real(int::T){&lt;j&gt;}
+==&gt;as?rng=int&amp;asq=[incomparable,coupling]&amp;dom=str(int::T){&lt;j&gt;}
+==&gt;as?rng=int&amp;asq=[incomparable,coupling]&amp;dom=uri(int::T){&lt;j&gt;}
+==&gt;as?rng=int&amp;asq=[incomparable,isochain]&amp;dom=datetime(int::T){&lt;j&gt;}
+</code></pre>
+<pre><code class="language-mtron">mtron&gt; *as?&lt;=str&amp;asq
+==&gt;as?asq=[incomparable,coupling]&amp;rng=bytes&amp;dom=str(bytes::T){&lt;j&gt;}
+==&gt;as?asq=[incomparable,coupling]&amp;rng=bool&amp;dom=str(bool::T){&lt;j&gt;}
+==&gt;as?asq=[incomparable,coupling]&amp;rng=int&amp;dom=str(int::T){&lt;j&gt;}
+==&gt;as?asq=[incomparable,coupling]&amp;rng=real&amp;dom=str(real::T){&lt;j&gt;}
+==&gt;as?asq=[incomparable,coupling]&amp;rng=uri&amp;dom=str(uri::T){&lt;j&gt;}
+==&gt;as?asq=[incomparable,coupling]&amp;rng=datetime&amp;dom=str(datetime::T){&lt;j&gt;}
+==&gt;as?asq=[incomparable,isochain]&amp;rng=java&amp;dom=str(java::T){&lt;j&gt;}
+==&gt;as?asq=[incomparable]&amp;rng=xsv&amp;dom=str(xsv::T){&lt;j&gt;}
+==&gt;as?asq=[incomparable]&amp;rng=csv&amp;dom=str(csv::T){&lt;j&gt;}
+==&gt;as?asq=[incomparable]&amp;rng=noobj{0}&amp;dom=A(){&lt;j&gt;}
+==&gt;as?asq=[incomparable]&amp;rng=str&amp;dom=A(str::T){&lt;j&gt;}
+==&gt;as?asq=[duplicate]&amp;rng=B&amp;dom=A(#::T){&lt;j&gt;}
+==&gt;as?asq=[duplicate]&amp;rng=B&amp;dom=A(B::T){&lt;j&gt;}
+</code></pre>
+<p>Two things the neighborhood reads reveal. First, <strong>endpoint queries resolve through refinement</strong> — there is no edge
+declared for <code>nat</code>, yet <code>*as?uri&lt;=nat</code> walks <code>nat</code>'s parent and returns the <code>int → uri</code> edge:</p>
+<pre><code class="language-mtron">mtron&gt; *as?uri&lt;=nat
+==&gt;as?rng=uri&amp;dom=int(uri::T){&lt;j&gt;}
+</code></pre>
+<p>Second, <strong>the generic casts appear in every neighborhood</strong>. The tag casts (<code>as?rng=B&amp;dom=A</code>, <code>as?rng=str&amp;dom=A</code>,
+<code>as?rng=noobj{0}&amp;dom=A</code>) have generic endpoints, so <code>*as?&lt;=str</code> returns them alongside str's concrete out-edges —
+their maps say <code>duplicate</code> (the two <code>B←A</code> casts do the same work) and <code>incomparable</code> (a tag is a conversion, never
+a re-tag).</p>
+<p>A read never writes back: what comes back is a plain uri whose <code>?asq=</code> says what the edge is. The map is derived,
+not stored — it is recomputed from the graph and dropped when a new <code>as</code> cast is written, so a live graph never
+hands out a stale answer.</p>
+<h3>the edge kinds</h3>
 <table>
 <thead>
-<tr><th>type</th><th>vid</th><th>refines</th><th>meaning</th></tr>
+<tr><th>kind</th><th>the relation between the edge and the graph</th><th>what it means for you</th></tr>
 </thead>
 <tbody>
-<tr><td><code>protocol::T</code></td><td><code>/m/web/protocol</code></td><td>—</td><td>the umbrella: <strong>a union</strong> of the surfaces below, so it classifies <em>values</em></td></tr>
-<tr><td><code>http::T</code></td><td><code>/m/web/http</code></td><td><code>protocol::T</code></td><td>the http vocabulary</td></tr>
-<tr><td><code>rest::T</code></td><td><code>/m/web/http/rest</code></td><td><code>http::T</code></td><td>a REST surface — get reads, put replaces, patch updates, delete unlinks, post creates</td></tr>
-<tr><td><code>ws::T</code></td><td><code>/m/web/ws</code></td><td><code>protocol::T</code></td><td>the websocket vocabulary</td></tr>
-<tr><td><code>mcp::T</code></td><td><code>/m/web/mcp</code></td><td><code>protocol::T</code></td><td>an MCP surface</td></tr>
-<tr><td><code>mtron::T</code></td><td><code>/m/web/mtron</code></td><td><code>protocol::T</code></td><td>the mtron-eval surface — ship an obj, it is applied, the result returns</td></tr>
-<tr><td><code>stream::T</code></td><td><code>/m/web/stream</code></td><td><code>protocol::T</code></td><td>the raw byte / server-sent-event stream surface</td></tr>
-<tr><td><code>sse::T</code></td><td><code>/m/web/sse</code></td><td><code>stream::T</code></td><td>a server-sent-events response — a chunked <code>text/event-stream</code> over http</td></tr>
-<tr><td><code>mcp_server::T</code></td><td><code>/m/web/mcp/mcp_server</code></td><td><code>mcp::T</code></td><td>an MCP server obj — <strong>transport-agnostic</strong></td></tr>
-<tr><td><code>web_http</code></td><td><code>/m/web/http/web_http</code></td><td><code>rest::T</code></td><td>the handler that serves a web root</td></tr>
-<tr><td><code>mcp_http</code> / <code>mcp_ws</code></td><td><code>/m/web/mcp/mcp_http</code>, <code>/m/web/mcp/mcp_ws</code></td><td><code>mcp::T</code></td><td>an <code>mcp_server</code> bound to a carrier</td></tr>
-<tr><td><code>mtron_http</code> / <code>mtron_ws</code></td><td><code>/m/web/http/mtron_http</code>, <code>/m/web/ws/mtron_ws</code></td><td><code>mtron::T</code></td><td>the mtron-eval surface on each carrier</td></tr>
-<tr><td><code>route::T</code></td><td><code>/m/web/route</code></td><td><code>rec::T</code></td><td>a mount table: <code>uri =&gt; target</code></td></tr>
+<tr><td><code>duplicate</code></td><td>another <code>as</code> cast maps this edge's outV to its inV</td><td>a redundant edge — two casts do the same work; drop one</td></tr>
+<tr><td><code>ambiguous</code></td><td>this edge's outV (or inV) is contested by an incomparable sibling that <em>overlaps</em> it</td><td>a future input could match both with no most-specific winner: dispatch is not deterministic, so refine one dom</td></tr>
+<tr><td><code>incomparable</code></td><td>this edge's outV (or inV) is contested by a sibling that is incomparable and <strong>disjoint</strong></td><td>benign — no input matches both, so dispatch stays total; no action</td></tr>
+<tr><td><code>coupling</code></td><td>an opposing edge exists: this edge's inV casts back to its outV</td><td>a candidate isomorphism/retraction — the round trip is available</td></tr>
+<tr><td><code>isochain</code></td><td>no direct opposing edge, but the endpoints are linked by a chain of them</td><td>the endpoints sit in the reversible core of the graph: you can navigate between them</td></tr>
+<tr><td><code>retract</code></td><td>the endpoints are mutually reachable (a round trip exists, not a pair)</td><td>the round trip is an <em>idempotent</em>: the cast lands in a subobject, so it is lossy rather than reversible</td></tr>
 </tbody>
 </table>
-<p>Two ways to ask &quot;is this a protocol surface?&quot;, and they are not interchangeable:</p>
-<ul>
-<li><strong>a value</strong> — <code>value?protocol::T</code> works, because <code>protocol::T</code> is a union whose predicate is applied to the
-objs on its lhs (an <code>mcp_server</code> value classifies as a protocol surface).</li>
-<li><strong>a type</strong> — ask the <em>declared</em> parent chain: <code>rest::T → http::T → protocol::T</code> is
-true, while <code>rest::T?protocol::T</code> is <strong>noobj</strong>, because a type is not a protocol value.</li>
-</ul>
-<h3>MIME document types</h3>
-<p>A document is typed by its MIME. Every document type under <code>/m/web/mime/+</code> refines <code>str::T</code> — <code>html</code>, <code>markdown</code>,
-<code>java</code>, <code>yaml</code>, <code>xsv</code>, <code>csv</code>, <code>json</code>, <code>xml</code>, <code>css</code>. This is
-a contract, not a coincidence — <code>fsspace::T</code> reads a file by typing its
-bytes with the MIME, so a document type that did not accept a <code>str::T</code> would throw
-on read. A MIME type is a <strong>predicate on text</strong>, not a structural transformation: <code>html::&quot;&lt;html&gt;…&quot;</code> is a <code>str::T</code> that
-verifies as HTML -- aka &quot;typed strings&quot;.</p>
-<h3>binary documents are bytes</h3>
-<p>A file that is not text is read as <code>bytes::T</code>. Decoding binary through UTF-8 and re-encoding it
-on the way out does not fail, it <em>grows</em>: a 1337-byte favicon was served as 2231 bytes, one replacement character per
-non-ASCII byte, and a browser draws a broken image — which reads as &quot;the image is missing&quot; rather than as a bug. The
-rule has two halves, because either alone leaves a hole:</p>
-<ul>
-<li>the read (<code>fsspace::T</code>): not text, or not valid UTF-8 at all (an unlisted extension falls back to <code>text/plain</code>), is
-<code>bytes</code>;</li>
-<li>the write (<code>MIME.MIMEType.toBytes</code>): bytes are written verbatim, whatever serializer the MIME would otherwise use.</li>
-</ul>
-<h3><code>?mimeq=</code> — choosing the rendering</h3>
-<p>The rendering is chosen per request with <code>?mimeq=&lt;media type&gt;</code>:</p>
-<pre><code class="language-mtron">/docker/image?mimeq=application/json     [-- the docker images as JSON --]
-/docker/image?mimeq=text/plain           [-- the same objs, mtron-typed, as plain text --]
-/docker/image                            [-- the native mtron rendering --]
+<p>The three relation kinds are exclusive and reported at the tightest one — a coupling is not also reported as a
+retract, though it certainly is one. The contest kinds are what to watch when adding a cast: <code>incomparable</code> is
+the graph telling you the new cast is safe, <code>ambiguous</code> is it telling you an input can reach two instructions.</p>
+<h3>one edge per kind</h3>
+<h4>a coupling — <code>metric</code> and <code>imperial</code></h4>
+<p>Metric and imperial each cast to the other, so each edge is a candidate isomorphism:</p>
+<pre><code class="language-mtron">mtron&gt; *as?metric&lt;=imperial&amp;asq
+==&gt;as?rng=metric&amp;asq=[coupling]&amp;dom=imperial(metric::T){&lt;j&gt;}
 </code></pre>
-<p><code>application/x-mtron</code> is the <strong>structural parse gate</strong>: it asks for the content parsed into mtron objs rather than
-handed back as text. Read any mount's own documentation with <code>?docq</code>.</p>
-<p>The mechanism is a q-proc: the live carrier declares
-<code>q =&gt; [mimeq::[pattern=&gt;mimeq, post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]]</code> — a <code>post_read</code> inst that runs <em>after</em>
-the read and <em>before</em> serialization. <code>?mimeq=</code> is a server-side as-transform.</p>
-<p>A JSON reader decides how much a JSON string is trusted. <code>ObjJSONSerializer.literal()</code> keeps every string as
-written, which is what a document whose fields are all strings needs: docker reports <code>&quot;Tag&quot;:&quot;11.2&quot;</code>, and reading
-that as a <em>real</em> left the image addressable only as <code>&lt;mariadb:11.2000&gt;</code> — invisibly, because from the JSON face a
-number and a string render alike. <code>simple()</code> and <code>web()</code> keep the content-sniffing behaviour their callers depend on.</p>
-<h3>route tables</h3>
-<p>A <code>route</code> rec maps a request path to a target. Four rules:</p>
+<h4>an incomparable sibling — and a map that carries two kinds</h4>
+<p><code>json</code> casts to <code>yaml</code>, and <code>json</code> also casts to <code>mcp_client</code>. Those two rngs are incomparable with each other and
+disjoint, so no input reaches both — dispatch stays total and the map says exactly that:</p>
+<pre><code class="language-mtron">mtron&gt; *as?yaml&lt;=json&amp;asq
+==&gt;as?rng=str&amp;asq=[incomparable]&amp;dom=A(str::T){&lt;j&gt;}
+</code></pre>
+<p><code>int</code> is the busier example: it casts to <code>bool</code>, <code>bytes</code>, <code>real</code>, <code>str</code> and <code>uri</code>. Every one of those edges also has
+an opposing edge, so the map reports the contest <em>and</em> the coupling — one kind for each relation the edge takes part
+in:</p>
+<pre><code class="language-mtron">mtron&gt; *as?real&lt;=int&amp;asq
+==&gt;as?rng=real&amp;asq=[incomparable,coupling]&amp;dom=int(real::T){&lt;j&gt;}
+</code></pre>
+<h4>an isochain — <code>bytes</code> and <code>int</code></h4>
+<p>No single cast maps <code>bytes</code> to <code>int</code> and back, yet they sit in the <em>reversible core</em> of the graph: a chain of
+opposing pairs links them, so a round trip exists even though no direct one does. The map names that shape
+<code>isochain</code>:</p>
+<pre><code class="language-mtron">mtron&gt; *as?bytes&lt;=int&amp;asq
+==&gt;as?rng=bytes&amp;asq=[incomparable,isochain]&amp;dom=int(bytes::T){&lt;j&gt;}
+</code></pre>
+<h4>a retract — the self-loop</h4>
+<p>An edge whose endpoints are the same type is the identity, and the identity is idempotent, so the edge is a retract
+of itself (not a coupling — that needs two types). Its outV is still contested by int's other casts, which is why
+the map carries both kinds:</p>
+<pre><code class="language-mtron">mtron&gt; *as?int&lt;=int&amp;asq
+</code></pre>
+<h3>narrowing a map</h3>
+<p><code>?asq=[kind,…]</code> asks for the edge's map <em>as far as those kinds are concerned</em>: the answer is the intersection, and
+when the intersection is empty there is no such edge property to read, so the read yields nothing at all.</p>
+<pre><code class="language-mtron">mtron&gt; *as?str&lt;=int&amp;asq=[coupling]
+==&gt;as?rng=str&amp;asq=[coupling]&amp;dom=int(str::T){&lt;j&gt;}
+</code></pre>
+<pre><code class="language-mtron">mtron&gt; *as?str&lt;=int&amp;asq=[duplicate]
+</code></pre>
+<h3>declared casts, and the tag that no one declares</h3>
+<p>A declared cast <em>does work</em>: <code>as?rec&lt;=json</code> parses a JSON document into a rec, <code>as?json&lt;=rec</code> serializes one back.
+The str-refinement document types under <code>/m/web/mime/+</code> are declared in pairs like that (<code>json</code>, <code>yaml</code>, <code>xml</code>,
+<code>html</code>, <code>markdown</code>, <code>csv</code>, <code>xsv</code>).</p>
+<p>A cast to a type nobody declares is still legal — it is a <strong>tag</strong>, and it is served by one fully generic cast whose
+whole job is <em>&quot;the lhs obj as the arg type&quot;</em>:</p>
+<pre><code class="language-java">instC(AS_INST_TID.dom(A).rng(B), lst(ALL_TYPE), (lhs, inst) -&gt; inst.arg(0).isType()
+        ? lhs.as(inst.arg(0).asType())
+        : fail(MTronException.of(&quot;%s is not a %s&quot;, lhs, inst.arg(0))))
+</code></pre>
+<p><code>'{&quot;a&quot;:1}'.as(json::T)</code> retags the text as JSON without touching it, and adding <code>.as(rec::T)</code> then hits
+the declared parse cast:</p>
+<pre><code class="language-mtron">mtron&gt; '{&quot;a&quot;:1}'.as(json::T)                                 [-- a tag: the generic arg-type cast --]
+==&gt;json::'{&quot;a&quot;:1}'
+</code></pre>
+<pre><code class="language-mtron">mtron&gt; '{&quot;a&quot;:1}'.as(json::T).as(rec::T)                      [-- the tag, then the declared parse cast --]
+==&gt;[a=&gt;1]
+</code></pre>
+<p>That division is worth knowing: <strong>the tag is generic and structural, the conversion is declared per pair</strong> -- which
+is why <code>.as(html::T).as(rec::T)</code> parses HTML and <code>.as(rec::T).as(html::T)</code> serializes it, while a tag on its own
+changes only what the obj claims to be.</p>
+<h3>the implicit as-graph</h3>
+<p>Most casts are never written down. If <code>stockholmare</code> refines <code>human</code>, then a <code>stockholmare</code> <em>is</em> a <code>human</code> and the
+cast is just dropping the constraint that distinguishes them — no edge needed. <code>AsQ.implicit()</code> manifests those
+ancestor casts from the hierarchy of the types already in the graph, which is the set of edges the as-graph would
+carry if every refinement were written out.</p>
+<h3>caveats</h3>
 <ul>
-<li><strong>keys are literal prefixes.</strong> The carrier matches a context by literal longest prefix, so <code>/people/#</code> mounts a
-context whose subtree cannot reach it — <code>/people/34</code> is unmounted, silently, and the context is reachable only by
-a path containing a literal <code>#</code> (percent-encoded <code>%23</code>). A literal key mounts its whole subtree; that is the idiom
-every live mount uses (<code>/mcp</code>, <code>/docker</code>, <code>/</code>).</li>
-<li><strong>a prefix value is a root</strong>, extended by the request's remaining path: <code>/docs =&gt; mfs:docs/website/</code> serves
-<code>/docs/x/y</code> from <code>mfs:docs/website/x/y</code>.</li>
-<li><strong>a templated value is the address.</strong> It is evaluated with the request uri as its lhs, so the mount has already
-consumed the path and nothing is appended:</li>
-</ul>
-<pre><code class="language-mtron">mtron&gt; /person/1.map(&lt;/data/person/${name()}&gt;)                  [-- the tail segment --]
-==&gt;/data/person/1
-</code></pre>
-<pre><code class="language-mtron">mtron&gt; /person/1.map(&lt;/data/person/${as(rec::T).&gt;&gt;path/2}&gt;)     [-- the same, positionally --]
-==&gt;/data/person/1
-</code></pre>
-<p>Both are <code>/data/person/1</code>: segment <em>n</em> is <code>path/(n+1)</code>, the path being 0-indexed with an empty leading element.
-The expressions see the whole request uri, so the pattern never has to carry the capture — there is no capture
-binding step, and a route is debuggable by looking at the request uri.</p>
-<ul>
-<li><strong>an address resolved for a request travels in the request rec</strong> as <code>web_root</code>, and the handler is cached per (mount,
-client, resolved <em>target</em>) — never per address, since a templated mount resolves a different address per
-request while the same protocol engine serves them all.</li>
-</ul>
-<p>So a mount over it:</p>
-<pre><code class="language-mtron">/person =&gt; &lt;/data/person/${name()}&gt;
-</code></pre>
-<pre><code class="language-mtron">mtron&gt; *&lt;/data/person/1&gt;
-==&gt;person::[name=&gt;'marko',age=&gt;29]
-</code></pre>
-<p><code>/person/1</code> serves that obj and <code>/person/2</code> serves the other, through the <em>same</em> handler — and <code>/person/3</code> is a 404,
-because the space is live rather than a lookup table of two.</p>
-<p>Only a templated value is resolved per request. Anything else — a plain uri, a code — is resolved once at mount
-time, so a route value that <em>builds</em> its target (a <code>code</code> such as <code>*dr.as(skill::T).as(mcp_server::T)</code>) is not
-rebuilt on every request.</p>
-<h4>route values: five flavors</h4>
-<p>Whatever a key mounts, the value is an <em>obj applied to the request uri</em> — and per the rule above, only templated
-values re-resolve per request; the rest resolve once at mount time. The live carriers use five shapes:</p>
-<table>
-<thead>
-<tr><th>value</th><th>example</th><th>what it mounts</th></tr>
-</thead>
-<tbody>
-<tr><td>identity path</td><td><code>/usr =&gt; /usr</code></td><td>this machine's own space, under its own address</td></tr>
-<tr><td>scheme namespace</td><td><code>/mfs =&gt; mfs:</code>, <code>/docker =&gt; docker:</code></td><td>another space, addressed by scheme</td></tr>
-<tr><td>short name</td><td><code>/mcp =&gt; mcp_mtron</code></td><td>the router's redirect table — a <em>type with a constructor</em>, built on demand</td></tr>
-<tr><td>evaluated expression</td><td><code>/drstynx =&gt; *dr.as(skill::T).as(mcp_server::T)</code></td><td>the result, mounted as an obj</td></tr>
-<tr><td>fallback</td><td><code>/ =&gt; mfs:docs/website/</code></td><td>every request no more-specific key caught</td></tr>
-</tbody>
-</table>
-<p>A scheme-keyed entry (<code>http: =&gt; http:</code>) is the sixth shape: an identity on the scheme itself, which is how
-<code>httpSpace</code> serves <em>and</em> fetches — outbound <code>http://</code> derefs stay in the carrier.</p>
-<p>The mount table is also the <strong>exposure boundary</strong>. What is not mounted is not reachable: the live carrier mounts
-<code>/usr</code>, <code>/mfs</code>, <code>/mcp</code>, <code>/message</code>, <code>/docker</code> and <code>/</code>, while <code>/sys</code>, <code>/m</code> and everything else are simply absent
-from the table — and absent from the web. Security by omission; fail-closed by construction.</p>
-<h3>mounting an obj</h3>
-<pre><code class="language-mtron">[-- an mcp_server over http: the protocol follows from the obj --]
-/mcp       =&gt; mcp_mtron
-[-- the same agent object over websockets --]
-/drstynx   =&gt; *dr.as(skill::T).as(mcp_server::T)
-[-- a web root --]
-/          =&gt; mfs:docs/website/
-</code></pre>
-<p>A websocket has no per-request uri, only a handshake, so a templated ws mount addresses per <em>connection</em>.</p>
-<p><code>mcp_mtron</code> in the first mount is a short-name redirect to a <code>mcp_server::T</code> <strong>type with a constructor</strong> — the
-mount is a factory: dereferencing the name returns the type, and the carrier constructs the handler from it.</p>
-<h3>a URL is a deref chain</h3>
-<p>Past the mount, the remaining path is a traversal with the space's own read semantics, unchanged:</p>
-<ul>
-<li>
-<p><strong>wildcards are honored.</strong> <code>GET /docker/image/+</code> is a pattern read — every image, as a lst. The literal-prefix
-rule constrains mount <em>keys</em>, not the request path once a key has matched.</p>
-</li>
-<li>
-<p><strong>the path may continue through a result.</strong> <code>/docker/image/+/container/0</code> matches the images, descends
-<code>container</code>, and indexes <code>0</code> — one traversal, expressed as path segments.</p>
-</li>
-<li>
-<p><strong>results may hold <code>!*</code> auto-refs.</strong> A listing returns pointers, not copies —
-<code>container =&gt; [!*docker:container/vtest_a-a-1]</code>. Continuing the path <em>into</em> a ref forces its resolution;
-stopping before it leaves the subtree untouched. The ref is the fourth redirect, at the data level:</p>
-<p>router prefixes → the router's redirect table → mount tables → <code>!*</code> data edges</p>
-</li>
-</ul>
-<h3>the <code>mtron::T</code> apply protocol</h3>
-<p><code>mtron::T</code> is the code-execution surface: ship an obj, the handler <strong>applies</strong> it, the result comes back. Both
-realizations are the same three lines — <code>mtron_wsHandler</code>'s <code>ON_MESSAGE</code> is <code>lhs.apply(noobj())</code> then
-<code>send(rhs)</code>; <code>mtron_httpHandler</code> does the same in <code>ON_GET</code>/<code>ON_POST</code>, with the request rec as the lhs argument.
-Everything else the protocol needs follows from that:</p>
-<ul>
-<li><strong>the incoming obj is the program.</strong> There is no command envelope. Shipped code derefs through the machine's
-own Router, so the handler never knows which space holds the data — <code>*&lt;http://…&gt;</code> from the console is this
-protocol.</li>
-<li><strong>failures are results.</strong> A thrown exception is sent as <code>fail(e)</code> — the wire carries <code>fail</code> objs like any obj.</li>
-<li><strong>the wire format is mtron text.</strong> Both handlers override <code>SEND</code> with <code>application/x-mtron</code> serialization.</li>
-</ul>
-<p>The carriers differ in one respect: http applies the body <em>to the request rec</em> (headers and params are visible to
-the code), while ws applies to <code>noobj()</code>. Code that must behave identically over both should be self-contained.</p>
-<h3>streaming a response (<code>sse::T</code>)</h3>
-<p>A mount is normally request/response — one body, then the handler closes. <code>sse::T</code> is the streaming exception: an
-http handler opens a chunked <code>text/event-stream</code> response and pushes any number of events before it closes. The
-primitive is <code>SseStream</code> (<code>isa/web/space/http/SseStream.java</code>), opened from an <code>HttpRec</code> subclass with <code>openSse()</code>:</p>
-<pre><code class="language-java">final SseStream sse = this.openSse();     // 200, text/event-stream, chunked (length 0)
-sse.send(&quot;message&quot;, &quot;{\&quot;ping\&quot;:true}&quot;); // event: message + data: {...}
-sse.comment(&quot;ping&quot;);                      // : ping   (heartbeat, ignored by clients)
-sse.close();                              // flush + end the stream
-</code></pre>
-<p>Each event is <code>event:</code>/<code>data:</code>/<code>:</code> lines terminated by a blank line; a multi-line payload becomes repeated <code>data:</code>
-fields. Writes are synchronized and flushed immediately, so a producing thread (<code>?subq</code>, a future LLM token stream)
-can push events across the handler thread.</p>
-<p>The first consumer is <code>mcp_httpHandler.doGet</code> — the Streamable-HTTP GET. It opens an <code>sse::T</code> stream (only for
-<code>Accept: text/event-stream</code>), drains the server's subscription outbox, and streams each
-<code>notifications/resources/updated</code> as an <code>event: message</code>, then holds the stream open with heartbeats until the
-client disconnects.</p>
-<h3>not available yet</h3>
-<ul>
-<li>the <strong>surface vocabulary</strong> — <code>*dr.as(mcp::T)</code>, <code>person::T.as(rest::T)</code> — needs <code>as</code> rows projecting an obj to a
-protocol surface; today <code>*dr.as(mcp::T)</code> fails with <em>&quot;agent … is not a protocol::T@/m/web/mcp&quot;</em>, which is why the
-projection chain above is spelled <code>.as(skill::T).as(mcp_server::T)</code>.</li>
-<li><strong>pattern route keys</strong> — the shape already exists in the type (<code>route::T</code>'s own doc example is
-<code>[/dr/+ =&gt; *dr.as(mcp::T), /docs/# =&gt; &lt;mfs:docs/website/#&gt;]</code>, and <code>webHelper.routeProblems(rec)</code> validates a
-table), but the carrier resolver still matches literal prefixes only. One route table shared by both carriers
-waits on the same missing piece: a resolver that checks a surface against the carrier, so http cannot mount a
-ws handler.</li>
+<li><strong>an endpoint's identity is its address, not its base type.</strong> <code>json::T</code> is a <em>str</em> refinement living at
+<code>/m/web/mime/json</code>; the cast that implements it names that address. A comparison that walks the tid's ancestry
+instead of the address will miss the cast — which is why an exact endpoint match is always admitted.</li>
+<li><strong>the relation analysis is nominal.</strong> Predicates do not split an edge: <code>int -&gt; nat</code> and <code>int -&gt; int</code> differ by
+vertex name only.</li>
+<li><strong><code>ambiguous</code> overlap is decided by graph reachability.</strong> Two same-rng doms count as overlapping when they
+share a base path and are linked by a cross-over path in the undirected type graph — the implementation's
+proxy for &quot;captures the same values&quot; (the intent is <code>∃T</code> refining both).</li>
+<li><strong>the refinement check is nominal <em>plus coefficient</em>, and predicate-blind.</strong> <code>refines(A, B)</code> is
+<code>A.testNominally(B) &amp;&amp; A.c().within(B.c())</code>, and root/generic endpoints never count as incomparable — which is
+why the generic tag casts are contested only by concrete siblings. (Edge <em>identity</em> remains coefficient-blind:
+<code>{4}int -&gt; int</code> and <code>int -&gt; int</code> are one edge.)</li>
+<li><strong>a predicated variant of a named type shares its name's address.</strong> Constructing <code>nat::T[is(gt(100))]</code> registers
+it at nat's own address, so it <em>replaces</em> nat rather than sitting beside it; give a distinct type its own base
+(<code>int::T[…]</code>) if it needs its own identity.</li>
+<li><strong>coefficients are not part of an edge's identity yet</strong>, so <code>{4}int -&gt; int</code> and <code>int -&gt; int</code> are one edge today.</li>
+<li><strong>surfaces have no edges yet.</strong> <code>as(mcp::T)</code> fails, which is why the projection chain is spelled
+<code>.as(skill::T).as(mcp_server::T)</code> — see <a href="web-instset-mtron.html">web instruction set</a>.</li>
 </ul>
 <h3>see also</h3>
 <ul>
-<li>the webSpace design record at <code>docs/design/webspace.md</code> — the lattice, the route contract, and the migration
-stages in full.</li>
-<li><a href="mcp-server-architecture.html">MCP server architecture</a> — <code>mcp_server</code>, tools, resources, notifications.</li>
-<li><a href="type-system-mtron.html">type system</a> — nominal vs structural typing, and why a union classifies values.</li>
+<li><a href="web-instset-mtron.html">web instruction set</a> — the MIME document types, their parse/serialize casts, and the
+projection chains that ride them.</li>
+<li><a href="type-system-mtron.html">mtron type system</a> — vid/tid, coefficients, refining predicates, nominal vs structural.</li>
 </ul>
 
     </div>

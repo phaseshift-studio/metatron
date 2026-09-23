@@ -26,8 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.REC_TID;
 import static studio.phaseshift.metatron.furi.QProc.Helper.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -67,7 +66,7 @@ public class QProcPipelineTest extends AbstractMetatronTest {
 
     @Test
     public void testEmptyQProcList_postRead() {
-        assertTrue(processPostRead(emptyQs, readQ, str("x")).isEmpty());
+        assertEquals(processPostRead(emptyQs, readQ, str("x")), str("x"));
     }
 
     @Test
@@ -97,7 +96,7 @@ public class QProcPipelineTest extends AbstractMetatronTest {
     @Test
     public void testNoQueryParams_postRead() {
         final Lst qs = lst(readQProc("read", null, (vid, obj) -> str("got")));
-        assertTrue(processPostRead(qs, noQ, str("x")).isEmpty());
+        assertEquals(processPostRead(qs, noQ, str("x")), str("x"));
     }
 
     // ── Matching QProc: preRead / preWrite ──
@@ -123,9 +122,9 @@ public class QProcPipelineTest extends AbstractMetatronTest {
     @Test
     public void testPostReadTransform() {
         final Lst qs = lst(readQProc("read", null, (vid, obj) -> jnt(99)));
-        final Optional<Obj> result = processPostRead(qs, readQ, str("original"));
-        assertTrue(result.isPresent());
-        assertEquals(jnt(99), result.get());
+        final Obj result = processPostRead(qs, readQ, str("original")).orElse(null);
+        assertNotNull(result);
+        assertEquals(jnt(99), result);
     }
 
     // ── QlessWrite fires regardless of query params ──

@@ -183,7 +183,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
     public Obj read(final fURI pattern) {
         return QProc.Helper.processPreRead(this.qs(), pattern).orElseGet(() -> {
             final Obj result = this.cache.read(pattern.one());
-            return QProc.Helper.processPostRead(this.qs(), pattern, result).orElse(result);
+            return QProc.Helper.processPostRead(this.qs(), pattern, result);
         });
     }
 

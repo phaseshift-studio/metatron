@@ -170,6 +170,14 @@ public class Graphitty {
     private StringBuilder linkBuffer;
 
     /**
+     * The target of the open link when the rule named one ({@code {{link:uri}}label{{/link}}}), or
+     * null when the label itself is the uri ({@code {{link}}uri{{/link}}}, which is the usual case).
+     * A label that is not a uri needs this: an instruction renders as its address, its type and its
+     * arguments, and the whole of that should answer a click while the target stays the address.
+     */
+    private String linkTarget;
+
+    /**
      * The rule that opens a link: {@code {{link}}uri{{/link}}}.
      */
     public static final String LINK_RULE = "link";
@@ -569,8 +577,9 @@ public class Graphitty {
                     // and it is BOTH the label and the target ("the wrapped text is the
                     // uri").  The tags are handled here, before the rule machinery, because
                     // a link is not a colour: it captures text instead of rewriting it.
-                    if (LINK_RULE.contentEquals(rule)) {
-                        this.openLink();
+                    if (LINK_RULE.contentEquals(rule) || 0 == rule.indexOf(LINK_RULE + ":")) {
+                        this.openLink(rule.length() > LINK_RULE.length()
+                                ? rule.substring(LINK_RULE.length() + 1) : null);
                         continue;
                     }
                     if (("/" + LINK_RULE).contentEquals(rule)) {
@@ -729,9 +738,10 @@ public class Graphitty {
     /**
      * Open a link, committing one already open: a link inside a link ends the outer.
      */
-    private void openLink() {
+    private void openLink(final String target) {
         this.commitLink();
         this.linkBuffer = new StringBuilder();
+        this.linkTarget = target;
     }
 
     /**
@@ -757,7 +767,9 @@ public class Graphitty {
         // is not part of the uri — validating the raw text rejects every colored link and draws it
         // plain, which is a uri on screen that no click can resolve.  The stripped text is the
         // target and the colored text is the label.
-        final String uri = strip(text);
+        // an explicit target wins: the label may be a rendered instruction rather than a uri
+        final String uri = null == this.linkTarget ? strip(text) : strip(this.linkTarget);
+        this.linkTarget = null;
         // Measuring renders no styling at all — the same reason the rule machinery below
         // runs only when ansiOn: strip() and viewLength() must see the text a reader sees,
         // not the escapes that make it a link.

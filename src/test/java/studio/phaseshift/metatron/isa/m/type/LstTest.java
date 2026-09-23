@@ -177,9 +177,9 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "[a,b,c,d,e]==[?<2 => * X, ?>=2 => * Y] % [a/X,b/X,c/Y,d/Y,e/Y]",
-            "[1,2,3,4,5]=?=[_ => ?>6]               % noobj",
-            "[1,2,3,4,5]=?=[_ => ?<6]               % [1,2,3,4,5]"
+            "[a,b,c,d,e]==[?<2 => * X, ?>=2 => * Y]                % [a/X,b/X,c/Y,d/Y,e/Y]",
+            "[1,2,3,4,5].as(rec::T)?[_ => ?>6].rng()               % noobj",
+            "[1,2,3,4,5].as(rec::T)?[_ => ?<6].rng()>-[,]          % [1,2,3,4,5]"
     }, delimiter = '%', quoteCharacter = '~')
     public void testSelect(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

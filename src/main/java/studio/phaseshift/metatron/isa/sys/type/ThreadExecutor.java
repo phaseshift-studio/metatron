@@ -126,6 +126,11 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
         return this;
     }
 
+    @Override
+    public String toString() {
+        return Obj.Helper.objToString(this);
+    }
+
     // ======================== ExecutorService delegation ========================
 
     @Override

@@ -26,9 +26,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * {@code {{link}}}...{@code {{/link}}} turns its text into an active link: text the furi
- * parser accepts renders as an OSC 8 hyperlink and an underline — clickable where a
- * terminal honors hyperlinks, legible as a link where one does not.  Text that is not a uri
- * is never rendered as a link: a dead link is worse than none.
+ * parser accepts renders as an OSC 8 hyperlink — clickable where a terminal honors
+ * hyperlinks.  The underline a link is drawn with is a visual affordance of its own: the
+ * console's {@code :links} setting turns it on and off (off is the default), and a link
+ * drawn without the underline is still a link a click resolves.  What never happens is a
+ * dead link: text that is not a uri, and a uri the console has made unclickable, are
+ * drawn as the text they are — a dead link is worse than none.
+ *
+ * <p>The underline is process-wide state, so every row that asserts it sets the setting it
+ * expects and restores the one it found — inheriting the flag from whatever test ran
+ * before is how a test like this one silently stops testing what it claims to.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -36,49 +43,85 @@ public class GraphittyLinkTest extends AbstractMetatronTest {
 
     /**
      * Exactly the bytes a link renders as: the OSC 8 open carrying the uri as its target,
-     * the underline, the text, the hyperlink close, and the restore that follows —
-     * {@code \033[m} when no rule encloses the link, or the enclosing rule with its
-     * underline dropped when one does.
+     * the underline when it is on, the text, the hyperlink close, and the restore that
+     * follows — {@code \033[m} when no rule encloses the link, or the enclosing rule with
+     * its underline dropped when one does.
      */
-    private static String render(final String uri, final String enclosing) {
+    private static String render(final String uri, final String enclosing, final boolean underline) {
         final String reset = enclosing.isEmpty()
                 ? "\033[m"
                 : enclosing.replace("\033[", "\033[0;");
-        return "\033]8;;" + uri + "\u0007\033[4m" + uri + "\033]8;;\u0007" + reset;
+        return "\033]8;;" + uri + "\u0007" + (underline ? "\033[4m" : "") + uri + "\033]8;;\u0007" + reset;
     }
 
-    private static String render(final String uri) {
-        return render(uri, "");
-    }
-
-    @ParameterizedTest()
-    @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
-            "/m/obj/a                          % the uri of a space object",
-            "/sys/thread/main                   % the uri of a thread",
-            "/usr/dr/message/+                  % a wildcard read over a collection",
-            "http://localhost:8777/hook         % a web uri carrying host and port",
-            "http://localhost:8777/hook?a=1&b=2 % a web uri carrying query parameters"})
-    public void testGoodLinkRendersAsHyperlink(final String uri, final String desc) {
-        assertEquals(render(uri), Graphitty.string("{{link}}" + uri + "{{/link}}"), desc);
+    /**
+     * The bytes a text span renders as with no link: the underline when it is on (a
+     * decoration in its own right), the text when it is not.
+     */
+    private static String plain(final String text, final boolean underline) {
+        return underline ? "\033[4m" + text + "\033[m" : text;
     }
 
     @ParameterizedTest()
     @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
-            "a&b       % a bare ampersand defeats the furi parser",
-            "a&&b      % a doubled ampersand defeats the furi parser"})
-    public void testBadLinkRendersAsPlainText(final String text, final String desc) {
-        assertEquals(text, Graphitty.string("{{link}}" + text + "{{/link}}"), desc);
+            "/m/obj/a                          % true  % the uri of a space object, underlined",
+            "/m/obj/a                          % false % the uri of a space object, the default visual",
+            "/sys/thread/main                   % true  % the uri of a thread, underlined",
+            "/sys/thread/main                   % false % the uri of a thread, the default visual",
+            "/usr/dr/message/+                  % true  % a wildcard read over a collection, underlined",
+            "/usr/dr/message/+                  % false % a wildcard read over a collection, the default visual",
+            "http://localhost:8777/hook         % true  % a web uri carrying host and port, underlined",
+            "http://localhost:8777/hook         % false % a web uri carrying host and port, the default visual",
+            "http://localhost:8777/hook?a=1&b=2 % true  % a web uri carrying query parameters, underlined",
+            "http://localhost:8777/hook?a=1&b=2 % false % a web uri carrying query parameters, the default visual"})
+    public void testGoodLinkRendersAsHyperlink(final String uri, final boolean underline, final String desc) {
+        final boolean previous = Graphitty.linkUnderline();
+        Graphitty.linkUnderline(underline);
+        try {
+            assertEquals(render(uri, "", underline), Graphitty.string("{{link}}" + uri + "{{/link}}"), desc);
+        } finally {
+            Graphitty.linkUnderline(previous);
+        }
     }
 
     @ParameterizedTest()
-    @CsvSource(value = {
-            "/m/obj/a % true  % a good link left open still commits",
-            "a&b      % false % a bad link left open stays plain"},
-            quoteCharacter = '"', delimiter = '%')
-    public void testUnclosedLinkStillCommits(final String uri, final boolean good, final String desc) {
-        assertEquals(good ? render(uri) : uri, Graphitty.string("{{link}}" + uri), desc);
+    @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
+            "a&b       % true  % a bare ampersand defeats the furi parser, underlined as decoration",
+            "a&b       % false % a bare ampersand defeats the furi parser, drawn as its own text",
+            "a&&b      % true  % a doubled ampersand defeats the furi parser, underlined as decoration",
+            "a&&b      % false % a doubled ampersand defeats the furi parser, drawn as its own text"})
+    public void testBadLinkRendersAsPlainText(final String text, final boolean underline, final String desc) {
+        final boolean previous = Graphitty.linkUnderline();
+        Graphitty.linkUnderline(underline);
+        try {
+            assertEquals(plain(text, underline), Graphitty.string("{{link}}" + text + "{{/link}}"), desc);
+        } finally {
+            Graphitty.linkUnderline(previous);
+        }
     }
 
+    @ParameterizedTest()
+    @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
+            "/m/obj/a % true  % a good link left open still commits, underlined",
+            "/m/obj/a % false % a good link left open still commits, the default visual",
+            "a&b      % true  % a bad link left open stays plain, underlined as decoration",
+            "a&b      % false % a bad link left open stays plain, the default visual"})
+    public void testUnclosedLinkStillCommits(final String uri, final boolean underline, final String desc) {
+        final boolean previous = Graphitty.linkUnderline();
+        Graphitty.linkUnderline(underline);
+        try {
+            assertEquals(Graphitty.linkable(uri) ? render(uri, "", underline) : plain(uri, underline),
+                    Graphitty.string("{{link}}" + uri), desc);
+        } finally {
+            Graphitty.linkUnderline(previous);
+        }
+    }
+
+    /**
+     * Measuring a link sees the text a reader sees: the underline setting is a rendering
+     * courtesy and must not change what strip() or viewLength() report — the same reason the
+     * rule machinery only runs at all when ansi is on.  No flag is set here on purpose.
+     */
     @ParameterizedTest()
     @CsvSource(value = {
             "/m/obj/a % 8 % the link is measured as its uri",
@@ -96,10 +139,17 @@ public class GraphittyLinkTest extends AbstractMetatronTest {
      */
     @ParameterizedTest()
     @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
-            "/m/obj/a % under the cyan"})
-    public void testLinkInsideColorKeepsColorRunning(final String uri, final String desc) {
-        assertEquals("\033[36m" + render(uri, "\033[36m") + "\033[m",
-                Graphitty.string("{{c}}{{link}}" + uri + "{{/link}}{{/c}}"), desc);
+            "/m/obj/a % true  % under the cyan, underlined",
+            "/m/obj/a % false % under the cyan, the default visual"})
+    public void testLinkInsideColorKeepsColorRunning(final String uri, final boolean underline, final String desc) {
+        final boolean previous = Graphitty.linkUnderline();
+        Graphitty.linkUnderline(underline);
+        try {
+            assertEquals("\033[36m" + render(uri, "\033[36m", underline) + "\033[m",
+                    Graphitty.string("{{c}}{{link}}" + uri + "{{/link}}{{/c}}"), desc);
+        } finally {
+            Graphitty.linkUnderline(previous);
+        }
     }
 
     /**
@@ -108,9 +158,39 @@ public class GraphittyLinkTest extends AbstractMetatronTest {
      */
     @ParameterizedTest()
     @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
-            "/m/obj/a % a rule between the tags closes the link"})
-    public void testARuleMidLinkCommitsIt(final String uri, final String desc) {
-        assertEquals(render(uri) + "\033[36mx\033[m",
-                Graphitty.string("{{link}}" + uri + "{{c}}x{{/c}}"), desc);
+            "/m/obj/a % true  % a rule between the tags closes the link, underlined",
+            "/m/obj/a % false % a rule between the tags closes the link, the default visual"})
+    public void testARuleMidLinkCommitsIt(final String uri, final boolean underline, final String desc) {
+        final boolean previous = Graphitty.linkUnderline();
+        Graphitty.linkUnderline(underline);
+        try {
+            assertEquals(render(uri, "", underline) + "\033[36mx\033[m",
+                    Graphitty.string("{{link}}" + uri + "{{c}}x{{/c}}"), desc);
+        } finally {
+            Graphitty.linkUnderline(previous);
+        }
+    }
+
+    /**
+     * Clicking off ({@code :link off} and friends): the uri is drawn as the text it is — no
+     * OSC 8 span for a click to resolve — and the underline, when on, is all the eye gets.
+     * The setting is checked where the link is built AND where a click is resolved, so the
+     * two can never disagree.
+     */
+    @ParameterizedTest()
+    @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
+            "/m/obj/a % true  % clicking off, the underline is the eye's only cue",
+            "/m/obj/a % false % clicking off, the uri is the text it is"})
+    public void testUnclickableLinkDrawsText(final String uri, final boolean underline, final String desc) {
+        final boolean previousClickable = Graphitty.linkClickable();
+        final boolean previousUnderline = Graphitty.linkUnderline();
+        Graphitty.linkClickable(false);
+        Graphitty.linkUnderline(underline);
+        try {
+            assertEquals(plain(uri, underline), Graphitty.string("{{link}}" + uri + "{{/link}}"), desc);
+        } finally {
+            Graphitty.linkClickable(previousClickable);
+            Graphitty.linkUnderline(previousUnderline);
+        }
     }
 }

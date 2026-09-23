@@ -25,6 +25,7 @@ import org.jline.terminal.Terminal;
 import org.jline.utils.AttributedString;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjLinkSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.web.parser.ObjPlainTextSerializer;
@@ -363,7 +364,9 @@ public class Highlighter implements org.jline.reader.Highlighter {
     private Highlighter(final SyntaxHighlighter syntaxHighlighter) {
         this.syntaxHighlighter = syntaxHighlighter;
         this.graphitty = new Graphitty(Map.of(), new ByteArrayOutputStream());
-        this.serializer = new ObjmtronSerializer(true);
+        // the link serializer, not the plain one: this is the instance every renderer formats
+        // objs with, and a uri reaches writeUri only if the serializer that draws it tags it
+        this.serializer = new ObjLinkSerializer();
     }
 
     public Highlighter(final ObjSerializer<String> serializer) {
@@ -420,29 +423,117 @@ public class Highlighter implements org.jline.reader.Highlighter {
         this.terminal = terminal;
     }
 
+    /**
+     * The line colored as syntax with its graphitty rules masked, ready for graphitty to resolve.
+     * <p>
+     * The highlighter cannot colour a line that still contains rules — it tokenizes the rule itself
+     * and graphitty then sees no rule at all — so each rule is replaced by a run of spaces: blanks
+     * occupy the same columns and leave the surrounding tokens alone, which a filler character does
+     * not (a control character broke every rule but the uri one, so a result came out with blue
+     * uris and everything else white).  The line is then coloured in one pass, and each masked span
+     * is put back as the rule it stood for.
+     */
+    private String colorMarkupMasked(final String str) {
+        final java.util.regex.Matcher m = this.GRAPHITTY_PATTERN.matcher(str);
+        final StringBuilder masked = new StringBuilder(str.length());
+        final java.util.List<int[]> spans = new java.util.ArrayList<>();   // visible start, width, source start
+        int last = 0;
+        while (m.find()) {
+            masked.append(str, last, m.start());
+            spans.add(new int[]{masked.length(), m.end() - m.start(), m.start()});
+            masked.append(" ".repeat(m.end() - m.start()));
+            last = m.end();
+        }
+        if (spans.isEmpty()) return this.highlight(null, str).toAnsi();
+        masked.append(str, last, str.length());
+        return this.spliceRules(this.highlight(null, masked.toString()).toAnsi(), spans, str);
+    }
+
+    /** The index just past the SGR sequence starting at {@code from} (see {@link #spliceRules}). */
+    private static int escapeEnd(final String text, final int from) {
+        final int end = text.indexOf('m', from);
+        return end < 0 ? text.length() : end + 1;
+    }
+
+    /**
+     * Put each rule back where its mask was: the coloured text is walked by visible column — escapes
+     * are copied through and do not count — and each masked span is replaced by the source it stood
+     * for, so the rules reach graphitty intact.
+     */
+    private String spliceRules(final String colored, final java.util.List<int[]> spans, final String source) {
+        final StringBuilder out = new StringBuilder(colored.length() + 64);
+        int visible = 0;
+        int at = 0;
+        int span = 0;
+        while (at < colored.length()) {
+            while (span < spans.size() && visible == spans.get(span)[0]) {
+                final int[] s = spans.get(span);
+                // The colouring pass styles the mask's columns too, and that styling belongs to the
+                // label against it: it is what carries the label's own color when the tokenizer
+                // attached the color to the mask rather than to the word (a label came out magenta
+                // where it should be blue, inheriting the color that preceded the link).
+                //
+                // It is written BEFORE the rule, never between the rules: anything inside
+                // {{link}}…{{/link}} is part of what that rule captures, and styling there is what
+                // left the span unlinkable so a click had nothing to resolve.
+                final StringBuilder kept = new StringBuilder();
+                int skipped = 0;
+                while (at < colored.length() && skipped < s[1]) {
+                    if ('\033' == colored.charAt(at)) {
+                        final int stop = escapeEnd(colored, at);
+                        kept.append(colored, at, stop);
+                        at = stop;
+                        continue;
+                    }
+                    at++;
+                    skipped++;
+                }
+                out.append(kept);
+                out.append(source, s[2], s[2] + s[1]);
+                visible += s[1];
+                span++;
+            }
+            if (at >= colored.length()) break;
+            if ('\033' == colored.charAt(at)) {
+                final int end = colored.indexOf('m', at);
+                out.append(colored, at, end < 0 ? colored.length() : end + 1);
+                at = end < 0 ? colored.length() : end + 1;
+                continue;
+            }
+            out.append(colored.charAt(at++));
+            visible++;
+        }
+        return out.toString();
+    }
+
     public String highlight(final Object object) {
         try {
             if (object instanceof Obj) {
-                final String serialized = this.serializer.write((Obj) object);
-                if (containsBoxDrawing(serialized))
-                    return this.preserveBoxDrawing(serialized);
-                // Graphitty markup ({{…}} tags, ``` fences) resolves to ANSI in one pass
-                // and is returned verbatim — the AttributedString round-trip
-                // (highlight → toAnsi) treats the escapes as plain text and drops the
-                // color, which is why a ``` fence serialized as an Obj rendered uncolored.
-                if (null != this.graphitty
-                        && (this.GRAPHITTY_PATTERN.matcher(serialized).find() || Graphitty.hasFence(serialized)))
-                    return this.graphitty.writeToString(serialized);
-                final AttributedString styled = this.highlight(null, serialized);
-                return this.terminal != null ? styled.toAnsi(this.terminal) : styled.toAnsi();
+                // Serialize, then format that text the way any other text is formatted.  An obj used
+                // to have a path of its own, and it went wrong in two ways: it short-circuited to
+                // graphitty whenever the serialization carried markup ({{…}} rules are how the mtron
+                // serializer draws plenty of values), so the tokens between the rules — a uri among
+                // them — were never colored; and it never tagged a uri, because the serializer it
+                // asked was the plain one.  The String path below does both: it lifts the markup
+                // out, colors what is between it, puts the rules back and lets graphitty resolve
+                // them, {{link}} included.
+                return this.highlight(this.serializer.write((Obj) object));
             } else {
                 final String str = object.toString();
                 if (containsBoxDrawing(str))
                     return this.preserveBoxDrawing(str);
-                return null != this.graphitty
-                        && (this.GRAPHITTY_PATTERN.matcher(str).find() || Graphitty.hasFence(str))
-                        ? this.graphitty.writeToString(str)
-                        : this.highlight(null, str).toAnsi();
+                if (null == this.graphitty)
+                    return this.highlight(null, str).toAnsi();
+                if (Graphitty.hasFence(str))
+                    return this.graphitty.writeToString(str);   // a fence is graphitty's to interpret
+                if (this.GRAPHITTY_PATTERN.matcher(str).find())
+                    // Markup AND color wanted: color the line in one pass with the rules masked, then
+                    // put them back and let graphitty resolve them.  Coloring each fragment between
+                    // rules on its own loses the color in the AttributedString round-trip, and letting
+                    // graphitty draw the raw text skips coloring altogether -- which is how a result
+                    // row came out white with nothing in it but link spans.
+                    return this.graphitty.writeToString(this.colorMarkupMasked(str));
+                return this.highlight(null, str).toAnsi();
             }
         } catch (final Exception e) {
             return object.toString();
@@ -480,6 +571,12 @@ public class Highlighter implements org.jline.reader.Highlighter {
         // not closed yet changes the line under the cursor), and the line re-flows mid-word.  The
         // markup still applies to whatever they SUBMIT — that is the echo and the results, which
         // go through format() instead.
-        return this.syntaxHighlighter.highlight(buffer);
+        // reset first: the highlighter is a streaming one, and a line coloured on a highlighter left
+        // mid-construct (the shared instance is used by renderers on many threads) comes back
+        // uncoloured — which is how a result row rendered white while the echo of the same text,
+        // coloured through another instance, looked right
+        synchronized (this.syntaxHighlighter) {
+            return this.syntaxHighlighter.reset().highlight(buffer);
+        }
     }
 }

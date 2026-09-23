@@ -379,7 +379,9 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
             return new LinkedHashSet<>(List.of(
                     //instC(AS_INST_TID.dom(STR_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())))),
                     instC(AS_INST_TID.dom(STR_TID).rng(Tokens.BYTES_TID), lst(BYTES_TYPE), (lhs, inst) -> bytes(ByteBuffer.wrap(lhs.strValue().getBytes()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
+                    //   Map.of(uri(INVERSE), uri(AS_INST_TID.dom(Tokens.BYTES_TID).rng(STR_TID)))),
                     instC(AS_INST_TID.dom(STR_TID).rng(Tokens.BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> bool(lhs.strValue().equalsIgnoreCase("true"), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
+                    //       Map.of(uri(INVERSE), uri(AS_INST_TID.dom(Tokens.BOOL_TID).rng(STR_TID)))),
                     instC(AS_INST_TID.dom(STR_TID).rng(Tokens.INT_TID), lst(INT_TYPE), (lhs, inst) -> {
                         final String lhsString = lhs.toCleanString().trim();
                         try {
@@ -388,19 +390,27 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                             return ObjmtronSerializer.parse(lhsString);
                         }
                     }),
+                    //Map.of(uri(INVERSE), uri(AS_INST_TID.dom(Tokens.INT_TID).rng(STR_TID)))),
                     instC(AS_INST_TID.dom(STR_TID).rng(Tokens.REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Double.parseDouble(lhs.strValue()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
+                    //  Map.of(uri(INVERSE), uri(AS_INST_TID.dom(Tokens.REAL_TID).rng(STR_TID)))),
                     instC(AS_INST_TID.dom(STR_TID).rng(Tokens.URI_TID), lst(URI_TYPE), (lhs, inst) -> uri(f(lhs.strValue()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
+                    //   Map.of(uri(INVERSE), uri(AS_INST_TID.dom(Tokens.URI_TID).rng(STR_TID)))),
                     instC(REVERSE_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.jvm(new StringBuilder(lhs.strValue()).reverse().toString())),
+                    //   Map.of(uri(LAW), laws(Category.Law.involution), uri(INVERSE), uri(REVERSE_INST_TID.dom(STR_TID).rng(STR_TID)))),
                     instC(ZERO_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.asStr().zero()),
+                    //    Map.of(uri(LAW), laws(Category.Law.unit, Category.Law.idempotent))),
                     docWrap(instC(HAS_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(T(STR_TID)), (lhs, inst) -> REGEX_CACHE.compute(inst.arg(0).strValue(), (k, v) -> null == v ? Pattern.compile(k) : v).matcher(lhs.strValue()).find() ? lhs : noobj()),
                             "an str to check", "whether the domain matches arg", Map.of(jnt(0), "the regex for matching"), "check whether the lhs str matches the regex arg"),
+                    //    Map.of(uri(LAW), laws(Category.Law.boolean_))),
                     // docWrap(instC(SPLIT_INST_TID.dom(STR_TID).rng(LST_TID), lst(T(STR_TID)), (lhs, inst) ->
                     //                 lst(Arrays.stream(lhs.strValue().split(inst.arg(0).strValue())).map(MStr::str).map(Obj::<Obj>as).toList())),
                     //         "a str to split", "the components of the split lhs str", Map.of(jnt(0), "a token to split on"), "split the lhs string according to the token arg and emit a stream of splits"),
                     docWrap(instC(SPLIT_INST_TID.dom(STR_TID).rng(Tokens.LST_TID), lst(STR_TYPE), (lhs, inst) -> Arrays.stream(lhs.strValue().split(inst.arg(0).strValue())).map(MStr::str).collect(new CommonUtil.LstCollector())),
                             "a str to split", "lst encoded components of the split lhs str", Map.of(jnt(0), "a token to split on"), "split the lhs string according to the token arg and insert components into an ordered lst"),
+                    //     Map.of(uri(INVERSE), uri(MERGE_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID)))),
                     docWrap(instC(MERGE_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.stream().map(Obj::<String>jvmAs).reduce((a, b) -> a + inst.arg(0).strValue() + b).orElse(""))),
                             "an str barrier", "the join of the str barrier", Map.of(jnt(0), "the join token"), "join the barrier given the str arg"),
+                    //    Map.of(uri(LAW), laws(Category.Law.monoidic), uri(INVERSE), uri(SPLIT_INST_TID.dom(STR_TID).rng(Tokens.LST_TID)))),
                     docWrap(instC(REGEX_INST_TID.dom(STR_TID).rng(Tokens.LST_TID), lst(T(STR_TID)), (lhs, inst) -> {
                                 final Pattern pattern = REGEX_CACHE.compute(inst.arg(0).strValue(), (k, v) -> null == v ? Pattern.compile(k) : v);
                                 final Matcher matcher = pattern.matcher(lhs.strValue());
@@ -427,15 +437,24 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                             "'241G'.regex('(\\d+)([KMGT])') [-- [['241G','241','G']] --]"),
 
                     instC(GT_INST_TID.dom(STR_TID).rng(Tokens.BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.strValue().compareTo(inst.arg(0).strValue()) > 0).isPresent())),
+                    //   Map.of(uri(LAW), laws(Category.Law.poset))),
                     instC(GTE_INST_TID.dom(STR_TID).rng(Tokens.BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.strValue().compareTo(inst.arg(0).strValue()) >= 0).isPresent())),
+                    //   Map.of(uri(LAW), laws(Category.Law.poset))),
                     instC(LT_INST_TID.dom(STR_TID).rng(Tokens.BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.strValue().compareTo(inst.arg(0).strValue()) < 0).isPresent())),
+                    //    Map.of(uri(LAW), laws(Category.Law.poset))),
                     instC(LTE_INST_TID.dom(STR_TID).rng(Tokens.BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.strValue().compareTo(inst.arg(0).strValue()) <= 0).isPresent())),
+                    //   Map.of(uri(LAW), laws(Category.Law.poset))),
                     instC(PLUS_INST_TID.dom(STR_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.jvm(lhs.strValue() + inst.arg(0).strValue())),
+                    //    Map.of(uri(LAW), laws(Category.Law.monoidic))),
                     instC(SUM_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID), lst(T(STR_TID.maybe())), (lhs, inst) -> str(lhs.stream().map(Obj::strValue).reduce(inst.arg(0).orElse(str("")).strValue(), (a, b) -> a + b))),
+                    //     Map.of(uri(LAW), laws(Category.Law.monoidic))),
                     instC(UCASE_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.strValue().toUpperCase())),
+                    //     Map.of(uri(LAW), laws(Category.Law.idempotent))),
                     instC(LCASE_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.strValue().toLowerCase())),
+                    //         Map.of(uri(LAW), laws(Category.Law.idempotent))),
                     instC(SELECT_INST_TID.dom(STR_TID).rng(STR_TID), lst(REC_TYPE), (lhs, inst) -> str(Str.Helper.project(lhs.strValue(), inst.arg(0)), lhs.tid(), lhs.vid())),
-                    instC(WHERE_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Str.Helper.project(lhs.strValue(), inst.arg(0).asRec()))),
+                    instC(HAS_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Str.Helper.project(lhs.strValue(), inst.arg(0).asRec()))),
+                    //      Map.of(uri(LAW), laws(Category.Law.boolean_))),
 
                     instC(WITHIN_INST_TID.dom(STR_TID).rng(B), lst(T(B)), (lhs, inst) -> Arrays.stream(lhs.strValue().split("")).map(s -> inst.arg(0).apply(str(s))).
                             map(o -> (PlusMonoid.O) o).

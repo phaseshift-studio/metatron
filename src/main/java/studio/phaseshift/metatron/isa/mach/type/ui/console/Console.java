@@ -1786,7 +1786,7 @@ public class Console extends MRec implements Closeable, Runnable {
             } catch (final UserInterruptException e) {
                 if (null != this.machine)
                     this.machine.stop();
-                LOG.warn(Graphitty.sillyPrint("machine interrupted", true, true));
+                LOG.none(Graphitty.sillyPrint("\n\rmachine interrupted\n\r", true, true));
             } catch (final EndOfFileException e) {
                 System.exit(0);
             } catch (final Exception e) {

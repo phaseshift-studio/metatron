@@ -220,6 +220,10 @@ public abstract class AbstractMetatronTest {
         }
     }
 
+    public static void checkBasicCodeParseApply(final GraphittyLogger LOG, final String code, final String expected) {
+        assertEquals(ObjmtronSerializer.parse(code).apply(), ObjmtronSerializer.parse(expected).apply());
+    }
+
     public static void checkCodeParseApply(final GraphittyLogger LOG, final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
             try {

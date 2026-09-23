@@ -461,6 +461,13 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[a=>1,b=>2]?[a=>?>0,b=>?>0,c=>?>0]              % false",
             "[a=>[b=>1,c=>2]]?[a=>rec::T]                    % true",
             "[a=>[b=>1,c=>2]]?[a=>lst::T]                    % false",
+            // filter: keeps matching
+            "[a=>1,b=>2]?[a=>1]                              % true",
+            // filter: non-matching → noobj
+            "[a=>1]?[a=>2]                                   % false",
+            // filter with instruction
+            "[a=>1]?[a=>?1]                                  % true",
+            "[a=>2]?[a=>?1]                                  % false",
     }, delimiter = '%', quoteCharacter = '~')
     public void testIsA(final String code, final boolean matches) {
         final Obj codeObj = ObjmtronSerializer.parse(code);
@@ -858,35 +865,17 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             assertEquals(expectedObj, result, expression);
     }
 
-    // ── =?= (WHERE) ──
-
-    @ParameterizedTest
-    @CsvSource(value = {
-            // filter: keeps matching
-            "[a=>1,b=>2] =?= [a=>1]                             % [a=>1,b=>2]",
-            // filter: non-matching → noobj
-            "[a=>1] =?= [a=>2]                                  % noobj",
-            // filter with instruction
-            "[a=>1] =?= [a=>?1]                                % [a=>1]",
-            "[a=>2] =?= [a=>?1]                                % noobj",
-    }, delimiter = '%')
-    public void testWhere(final String expression, final String expected) {
-        final Obj result = ObjmtronSerializer.parse(expression).apply();
-        final Obj expectedObj = ObjmtronSerializer.parse(expected);
-        assertEquals(expectedObj, result, expression);
-    }
-
     // ── Combo operators ──
 
     @ParameterizedTest
     @CsvSource(value = {
             // =?= filter then >>= update
-            "[a=>1,b=>2] =?= [a=>1] >>= [a=>+10]               % [a=>11,b=>2]",
-            "[a=>1,b=>2] =?= [a=>2] >>= [a=>+10]               % noobj",
+            "[a=>1,b=>2].?[a=>1] >>= [a=>+10]               % [a=>11,b=>2]",
+            "[a=>1,b=>2].?[a=>2] >>= [a=>+10]               % noobj",
             // split then merge
-            "[a=>1,b=>2] -<[>>a +1,>>b +1] >-                  % {2,3}",
+            "[a=>1,b=>2] -<[>>a +1,>>b +1] >-               % {2,3}",
             // =?= then -<
-            "[a=>1,b=>2] =?= [a=>1] -<[>>a,>>b]               % [1,2]",
+            "[a=>1,b=>2].?[a=>1] -<[>>a,>>b]                % [1,2]",
     }, delimiter = '%')
     public void testCombos(final String expression, final String expected) {
         final Obj result = ObjmtronSerializer.parse(expression).apply();

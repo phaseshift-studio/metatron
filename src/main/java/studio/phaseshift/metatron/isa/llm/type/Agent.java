@@ -737,7 +737,7 @@ public class Agent extends MRec {
         if (null != scan && !scan.isEmpty())
             result.put(WATERMARK, scan.list());
         this.currentResult = result;
-        this.logger().none("\n");
+        this.logger().none("\n\r");
         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_COMPLETE_RESPONSE, result));
         // Signal the waiting thread after all hooks have mutated the result
         latch.countDown();

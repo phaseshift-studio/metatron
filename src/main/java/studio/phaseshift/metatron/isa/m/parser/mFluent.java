@@ -83,9 +83,9 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.BLOCK_INST_TID, lst(obj)));
     }
 
-    public F where_(final Obj obj) {
-        return this.addInst(instB(mInstSet.WHERE_INST_TID, lst(obj)));
-    }
+    //  public F where_(final Obj obj) {
+    //      return this.addInst(instB(mInstSet.WHERE_INST_TID, lst(obj)));
+    //  }
 
     public F range_(final Obj start, final Obj end) {
         return this.addInst(instB(mInstSet.RANGE_INST_TID, lst(start, end)));
@@ -332,6 +332,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.TO_INST_TID, lst(obj)));
     }
 
+    public F to_(final fURI uri) {
+        return this.addInst(instB(mInstSet.TO_INST_TID, lst(uri(uri))));
+    }
+
     public F from_(final Obj obj) {
         return this.addInst(instB(mInstSet.FROM_INST_TID, lst(obj)));
     }
@@ -490,9 +494,9 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().block_(obj);
         }
 
-        public static <F extends mFluent<F>> F where_(final Obj obj) {
-            return new mFluent<F>().where_(obj);
-        }
+        // public static <F extends mFluent<F>> F where_(final Obj obj) {
+        //    return new mFluent<F>().where_(obj);
+        // }
 
         public static <F extends mFluent<F>> F else_(final Obj obj) {
             return new mFluent<F>().else_(obj);
@@ -659,6 +663,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().union_(obj);
         }
 
+        public static <F extends mFluent<F>> F union_(final List<Obj> unionList) {
+            return new mFluent<F>().addInst(instB(mInstSet.UNION_INST_TID, lst(unionList)));
+        }
+
         public static <F extends mFluent<F>> F split_(final Obj obj) {
             return new mFluent<F>().split_(obj);
         }
@@ -810,6 +818,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F at_(final Obj obj) {
             return new mFluent<F>().at_(obj);
+        }
+
+        public static <F extends mFluent<F>> F at_(final fURI id) {
+            return new mFluent<F>().at_(uri(id));
         }
 
         public static <F extends mFluent<F>> F ref_(final Obj obj) {
