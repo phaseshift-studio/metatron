@@ -359,7 +359,8 @@ agent::[
                                         /m/inst/web?str<=noobj{0}(url=>union(uri::T,str::T),native=>bool{?}::T){ *<url>.as(uri::T).*_.-<|[*mtron.else(false) => as(rec::T).as(str::T), _ => _]>> },
                                         !*bash?reject=['\brm\b','\bgit\b'],
                                         mcp_client::[host=><http://localhost:8777/mcp>],
-                                        forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }]],
+                                        forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }],
+                   to =>  inst(a=>rec::T){ @<audit_widget>>>=[body=>+("""{{r}}>>{{g}}${*a>>name}{{m}}({{/m}}${*a>>arguments}{{m}}){{/m}}{{/g}}\n${*a>>result}\n""")].display() }],
   cost_feature:::::::[rate          => [in  => usd_currency::0.435,
                                         out => usd_currency::0.870]],
   system_feature:::::[              => ]]]@<dr>; 

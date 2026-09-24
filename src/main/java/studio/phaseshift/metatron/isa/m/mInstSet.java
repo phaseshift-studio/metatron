@@ -534,12 +534,14 @@ public class mInstSet extends AbstractInstSet {
                                                 .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(ALL_TYPE)))).insts())
                                                 .repeat()
                                                 .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens nested map instructions"),
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_inst"),
+                       /* docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_inst"),
                                 code -> code.selfJVM(
                                         Rewriter.search(code.insts())
-                                                .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(M_ISA_INST_TID.extend("#"), lst(T(ALL.maybeSome()))))).insts())
+                                                .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(M_ISA_INST_TID.extend("#"), lst(T(ALL.maybeSome()))))).insts(), list -> {
+                                                    return list.stream().noneMatch(i -> i.dom().equals(LST_TYPE) || i.dom().equals(REC_TYPE));
+                                                })
                                                 .repeat()
-                                                .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens a mapping of an inst to the inst"),
+                                                .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens a mapping of an inst to the inst"),*/
                         // Eliminate else() after non-maybe instruction (dead code)
                         // Pattern: .count().else(x) → .count() (count always returns a value)
                         InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("else_after_count"),

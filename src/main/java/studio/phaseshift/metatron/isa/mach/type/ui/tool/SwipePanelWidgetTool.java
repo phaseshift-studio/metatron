@@ -99,14 +99,22 @@ public class SwipePanelWidgetTool extends AbstractWidget<SwipePanelWidgetTool> {
         terminal.puts(InfoCmp.Capability.cursor_invisible);
         terminal.writer().flush();
 
+        // The tool owns the terminal's rows from here: its frames redraw in place and
+        // the console's screen does not paint the region under them (the panel would
+        // double on every key otherwise).
+        this.beginToolRun();
         this.running = true;
         BindingReader bindingReader = new BindingReader(terminal.reader());
         KeyMap<Action> keyMap = buildKeyMap();
 
-        while (running) {
-            redraw();
-            Action action = bindingReader.readBinding(keyMap);
-            handleAction(action);
+        try {
+            while (running) {
+                redraw();
+                Action action = bindingReader.readBinding(keyMap);
+                handleAction(action);
+            }
+        } finally {
+            this.endToolRun(null);
         }
     }
 

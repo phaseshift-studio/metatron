@@ -1340,6 +1340,28 @@ public class Console extends MRec implements Closeable, Runnable {
     }
 
     /**
+     * An interactive tool (explain, tree select, …) takes over the terminal's rows.
+     * While it is up, the screen neither records its frames as transcript content for
+     * the painter nor repaints the region under them — the tool redrew in place with
+     * its own cursor math, and a paint in between moves the cursor it redraws against,
+     * which is how a table doubled itself on every key.  No-op outside screen mode.
+     */
+    public void beginInteractiveTool() {
+        this.screenView.enterTool();
+    }
+
+    /**
+     * The tool handed the terminal back: its last frame settles into the transcript
+     * (what the tool displayed is what the reader scrolls back to), and the region
+     * repaints from that content.
+     *
+     * @param finalFrame the tool's last frame, or null when it leaves no content
+     */
+    public void endInteractiveTool(final String finalFrame) {
+        this.screenView.exitTool(finalFrame);
+    }
+
+    /**
      * The console's screen (see {@link ConsoleScreen}) — for commands that report on it.
      */
     public ConsoleScreen getScreen() {

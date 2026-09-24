@@ -53,11 +53,9 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.JREService;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.type.Bool.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -225,14 +223,14 @@ public class sysInstSet extends AbstractInstSet {
                                     if (min < 0) min = 0;
                                     int max = inst.arg(MAX, 2).orElse(jnt(-1)).intValue().intValue();
                                     if (max < 0) max = -1;
-                                    if (min > max)
+                                    if (max != -1 && min > max)
                                         throw MTronException.of("read_file min=%d exceeds max=%d", min, max);
                                     final Obj fileObj = Router.readFromSpace(file);
                                     final int finalMin = min;
                                     if (fileObj.isStr()) {
                                         final List<String> startLines = new ArrayList<>(Arrays.asList(fileObj.strValue().split("\n")));
                                         return lst(IteratorUtil.indexedStream(startLines
-                                                        .subList(Math.min(min, startLines.size() - 1), Math.min(startLines.size(), max))
+                                                        .subList(Math.min(min, startLines.size() - 1), Math.min(startLines.size(), max == -1 ? Integer.MAX_VALUE : max))
                                                         .iterator())
                                                 .map(pair -> lst(jnt(pair.get0() + finalMin), str(pair.get1()))));
                                     } else {

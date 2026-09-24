@@ -449,7 +449,11 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     }),
                     instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().at(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),
                     //     Map.of(uri(LAW), laws(Category.Law.monoidic))),
-                    instC(MAPP_INST_TID.addQ(BLOCK).dom(REC_TID).rng(REC_TID), rec(uri(KEY), ALL_TYPE, uri(VALUE), ALL_TYPE), (lhs, inst) -> lhs.asRec().elements().map(r -> rel(inst.arg(KEY, 0).apply(r.first()), inst.arg(VALUE, 1).apply(r.second()))).collect(new CommonUtil.RecCollector())),
+                    //instC(MAP_INST_TID.dom(REC_TID).rng(REC_TID), rec(ALL_TYPE, ALL_TYPE), (lhs, inst) -> lhs.asRec().elements().map(e -> rel(inst.args().asRec().elements().findFirst().get().first().apply(e.first()), inst.args().asRec().elements().findFirst().get().second().apply(e.second()))).collect(new CommonUtil.RecCollector(lhs.tid(), lhs.vid()))),
+                    //instC(FILTER_INST_TID.dom(REC_TID).rng(REC_TID), rec(ALL_TYPE, ALL_TYPE), (lhs, inst) -> lhs.asRec().elements().filter(e -> inst.args().asRec().elements().findFirst().get().first().apply(e.first()).booleanCheck() && inst.args().asRec().elements().findFirst().get().second().apply(e.second()).booleanCheck()).collect(new CommonUtil.RecCollector(lhs.tid(), lhs.vid()))),
+
+
+                    //instC(MAPP_INST_TID.addQ(BLOCK).dom(REC_TID).rng(REC_TID), rec(uri(KEY), ALL_TYPE, uri(VALUE), ALL_TYPE), (lhs, inst) -> lhs.asRec().elements().map(r -> rel(inst.arg(KEY, 0).apply(r.first()), inst.arg(VALUE, 1).apply(r.second()))).collect(new CommonUtil.RecCollector())),
                     //instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> rec(Rec.Helper.project(lhs.asRec(), inst.arg(0).asRec(), false), inst.arg(0).tid(), inst.arg(0).vid())),
                     //instC(SELECT_INST_TID.dom(REC_TID).rng(ALL.maybe()), lst(URI_TYPE), (lhs, inst) -> lhs.asRec().at(inst.arg(0))),
                     //  instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(URI_TYPE.c(cInt.of(2,null)).asType()), (lhs, inst) -> inst.args().elements().map(u -> rel(u,lhs.asRec().at(u))).collect(new CommonUtil.RecCollector())),

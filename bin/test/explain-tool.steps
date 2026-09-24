@@ -1,0 +1,43 @@
+# ExplainTool screen contract — the tool owns the terminal's rows while it is up,
+# and hands them back cleanly on ctrl-d.
+#
+#   open:  type a code, tab opens the interactive explain table
+#   nav:   every key redraws in place — the old pointer row must not survive
+#   exit:  ctrl-d hands the terminal back; the screen repaints itself from its
+#          own content (a full repaint — boot text re-emitted), the final frame
+#          is the up-state one, and no stale frame lingers beside it
+#
+#   bin/metatron-docker build console --steps bin/test/explain-tool.steps
+
+WAIT_CONSOLE
+
+# --- the table opens on tab ---
+MARK open
+TYPE [1,2,3].map(x=>x+1)
+SLEEP 0.6
+KEY tab
+WAIT c_dom
+
+# --- down: the new frame replaces the old one in place ---
+MARK down
+KEY down
+WAIT_SINCE down ctrl-d:back
+SILENT down ">start" 2
+
+# --- up: and back again, one frame at a time ---
+MARK up
+KEY up
+WAIT_SINCE up ctrl-d:back
+SILENT up ">map" 2
+
+# --- ctrl-d: the tool leaves exactly one (last) frame in the transcript ---
+MARK exit
+KEY ctrl+d
+# a full repaint from content re-emits the boot banner; the exit is the moment
+# the screen reasserts ownership of what is on screen
+WAIT_SINCE exit metatron successfully booted 5
+WAIT_SINCE exit mtron>
+# the session ended on the up-state frame: its down-state twin must not linger
+SILENT exit ">map" 2
+
+SLEEP 1

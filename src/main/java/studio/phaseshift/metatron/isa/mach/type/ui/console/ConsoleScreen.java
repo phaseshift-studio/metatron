@@ -131,8 +131,12 @@ public final class ConsoleScreen {
      *
      * @param ansi resolved ANSI text (markup would be passed through untouched)
      */
-    public synchronized void appendAnsi(final String ansi) {
+    public synchronized void appendAnsi(String ansi) {
         if (null == ansi || ansi.isEmpty()) return;
+        // Never store terminal commands (cursor moves, line clears): a command kept
+        // inside a row would run mid-paint and erase what a frame had just written.
+        // Styling and links survive — they ARE the row.
+        ansi = ScreenPainter.noCommands(ansi);
         // Wrap row by row, then hand the rows to the buffer as ONE stream.
         //
         // Appending each row on its own would be wrong in a way that shows: a row handed
@@ -160,7 +164,9 @@ public final class ConsoleScreen {
 
     // ── bytes out ──────────────────────────────────────────────────
 
-    /** The bytes that bring the region up to date, or "" when nothing changed. */
+    /**
+     * The bytes that bring the region up to date, or "" when nothing changed.
+     */
     public synchronized String frame() {
         final long started = TRACE ? System.nanoTime() : 0;
         final List<String> window = this.buffer.visible(this.rows);
@@ -207,7 +213,9 @@ public final class ConsoleScreen {
         return sb.toString();
     }
 
-    /** Forget what is on screen, so the next frame repaints every row. */
+    /**
+     * Forget what is on screen, so the next frame repaints every row.
+     */
     public synchronized void invalidate() {
         this.painter.invalidate();
     }
@@ -236,7 +244,9 @@ public final class ConsoleScreen {
         return false;
     }
 
-    /** How many visible rows hold a link — what {@code :links} reports. */
+    /**
+     * How many visible rows hold a link — what {@code :links} reports.
+     */
     public synchronized int linkRows() {
         int n = 0;
         for (final String row : this.buffer.visible(this.rows))
@@ -244,7 +254,9 @@ public final class ConsoleScreen {
         return n;
     }
 
-    /** The rows the screen would show right now — what a frame paints. */
+    /**
+     * The rows the screen would show right now — what a frame paints.
+     */
     public synchronized List<String> visible() {
         return this.buffer.visible(this.rows);
     }

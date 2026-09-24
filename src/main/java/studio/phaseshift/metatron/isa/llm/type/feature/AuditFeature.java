@@ -21,7 +21,9 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
 import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
+import studio.phaseshift.metatron.isa.llm.type.feature.service.ToolService;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
@@ -31,7 +33,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -77,16 +79,16 @@ public class AuditFeature extends AbstractFeature {
                         uri("systemMsgs"), jnt(agent.hasFeature(LLM_SYSTEM_FEATURE_TID) ? agent.requireService(SystemService.class).getSystemMessages().size() : 0),
                         uri("userMessage"), str(null == agent.userMessage() ? "" : agent.userMessage())));
         final String promptText = agent.hasFeature(LLM_SYSTEM_FEATURE_TID) ? String.join("", agent.requireService(SystemService.class).getSystemMessages()) : "";
-        agent.feature(LLM_AUDIT_FEATURE_TID).asRec().at(TO).apply(str("""
-                                                                      {{_}}{{g}}system{{/g}}{{/_}}:\n%s
-                                                                      {{_}}{{g}}prompt{{/g}}{{/_}}: %s
-                                                                        {{b}}features:%d - tools:%d - skills:%d{{X}}
-                                                                      """.formatted(
+        this.handleTo(agent, str("""
+                                 {{_}}{{g}}system{{/g}}{{/_}}:\n%s
+                                 {{_}}{{g}}prompt{{/g}}{{/_}}: %s
+                                   {{b}}features:%d - tools:%d - skills:%d{{X}}
+                                 """.formatted(
                 promptText.replaceAll("---\\[([^\\-]*)]---", "{{c}}---[{{m}}$1{{/m}}]---{{/c}}"),
                 agent.userMessage(),
                 agent.features().lstValue().size(),
-                agent.feature(LLM_TOOL_FEATURE_TID).orElse(rec()).at(TOOL).orElse(lst()).count(),
-                agent.feature(LLM_SKILL_FEATURE_TID).orElse(rec()).at(SKILL).orElse(lst()).count()
+                agent.service(ToolService.class).map(ts -> ts.tools().count()).orElse(0L),
+                agent.service(SkillService.class).map(ss -> ss.skills().count()).orElse(0L)
         )));
         return noobj();
     }

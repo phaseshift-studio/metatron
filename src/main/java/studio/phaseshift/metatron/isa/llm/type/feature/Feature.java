@@ -28,7 +28,9 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.ROOT;
+import static studio.phaseshift.metatron.Tokens.TO;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -129,6 +131,14 @@ public interface Feature extends Rec {
     }
 
     default void onToolExecuted(final Agent agent, final Obj result) {
+    }
+
+    default void handleTo(final Agent agent, final Obj toObj) {
+        try {
+            if (this.has(TO)) this.at(TO).apply(toObj);
+        } catch (final Exception e) {
+            this.onError(agent, fail(e));
+        }
     }
 
     default <R extends Obj> R getRootObj(final Agent agent) {

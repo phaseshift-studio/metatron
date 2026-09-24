@@ -71,8 +71,6 @@ public class TokenCalculator implements ChatModelListener {
     /**
      * The message-result kind the request streams carry.
      */
-    public static final String TOOL_RESULT = "tool_result";
-
     private long inputTokens = 0;
     private long outputTokens = 0;
     private final Map<String, Long> estimates = new LinkedHashMap<>();

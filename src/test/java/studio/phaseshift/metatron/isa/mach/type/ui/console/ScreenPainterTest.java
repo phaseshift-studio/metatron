@@ -177,6 +177,24 @@ public class ScreenPainterTest extends AbstractMetatronTest {
                 description + ": the stored row still resolves its link for the click");
     }
 
+    // ── what a tool frame leaves behind is text, not commands ──────
+
+    @ParameterizedTest()
+    @CsvSource(value = {
+            "<E>[3Aop|dom             % op|dom               % cursor-up is a command, not content",
+            "<E>[2Kop|dom<E>[31m>      % op|dom<E>[31m>        % a line clear goes, the colour stays",
+            "<E>[10;1Hop|dom          % op|dom               % absolute positioning is a command too",
+            "<E>[mop<E>[31m>|dom<E>[0m  % <E>[mop<E>[31m>|dom<E>[0m % every SGR survives — it IS the row",
+            "<E>[J<E>[2Jdone          % done                 % a clear pair is a command, not a word",
+            "{{link}}/m/obj/a{{/link}} % {{link}}/m/obj/a{{/link}} % a link survives — the screen's clicks rely on it",
+            "plain                    % plain                % text without escapes passes whole",
+    }, delimiter = '%')
+    void testNoCommandsKeepsStylingDropsMotion(final String ansi, final String expected,
+                                               final String description) {
+        assertEquals(Graphitty.string(decode(expected)),
+                ScreenPainter.noCommands(Graphitty.string(decode(ansi))), description);
+    }
+
     // ── helpers ────────────────────────────────────────────────────    // ── helpers ────────────────────────────────────────────────────
 
     /** The row numbers a frame moved the cursor to, or {@code <none>} when it wrote nothing. */
