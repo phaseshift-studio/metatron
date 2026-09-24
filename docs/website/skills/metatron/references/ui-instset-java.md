@@ -25,22 +25,10 @@ isa.mach.type.ui.widget
   AbstractWidget.java       ← base for interactive widgets (raw mode, key handling)
   GridWidget.java           ← widget grid layout
   CardWidget.java           ← simple card
-  StackBarWidget.java       ← general single-line stacked bar: data sections by share, percent over context (or a composition), pre/post framing, per-section styling via a style.section rec of style::T
   WidgetCanvas.java         ← pane-bounded absolute/relative render helper
   Utilities.java            ← runCursorLessWidget, key constants
 isa.mach.type.ui.console
-  Console.java              ← facade: REPL run loop, boot/output funnel, delegates to the collaborators below
-  ReaderSetup.java          ← terminal + jline reader construction, parser, redraw hooks
-  ForegroundJobs.java       ← foreground watch loop (alt+b detach, ctrl-c, [q] cancel offer, detached-jobs list)
-  HumanBroker.java          ← :human readLine handoff (prompt/answer queue, System.in fallback)
-  PaneManager.java          ← pane tree: split/close/focus/cycle/resize + position walk
-  WidgetNavigator.java      ← widget focus/cycle/resize/scroll + builtin-key registry
-  Pointer.java              ← mouse click/drag on widgets, terminal mouse modes, pointer release/hand-back
-  ScreenView.java           ← transcript buffer + output capture + paint pass + link clicks + repair
-  Executor.java             ← execute(): parse → segments at end() → one machine per segment → result stream
-  ConsoleScreen.java        ← the screen buffer model (rows, layout, scroll, links)
-  ScreenPainter.java        ← row painting, link extraction/stripping (OSC8)
-  ScreenOutputStream.java   ← captured stdout/stderr into the screen
+  Console.java              ← REPL, terminal, pane tree, FloatingSurface integration
   StatusLine.java           ← terminal status bar
   Highlighter.java          ← syntax highlighting (language tokens + blocks) + visualLength/unformat
   Hotkeys.java              ← keystrokes typed while a job holds the console (alt+b, [q], type-ahead)
@@ -64,7 +52,6 @@ isa.mach.type.ui.tool
   TreeSelectTool.java      ← interactive tree browser with nested obj inspection
   SwipePanelWidgetTool.java ← left-right swipe panel for browsing a stream of objs
   ModalTool.java          ← modal popup panel (title + body), dismiss on space/enter/ctrl-d
-  TokenCounterTool.java   ← token-usage bar (extends StackBarWidget): est categories as its own colored sections (sys/ai/usr/tool) vs the context window (max), in/max %, unused tail, window size
 isa.mach.ui
   uiInstSet.java            ← mtron type/instruction registration for all UI types
 isa.m.type.reflect
@@ -1064,6 +1051,27 @@ private void redrawStack() {
 - **Relative** (no pane bounds): cursor-up to previous height → clear line → print → `\r\n`.  `previousHeight` is used
   to clear leftover lines from taller prior renders.
 
+### Owning the screen (full-terminal mode)
+
+With the console drawing its own screen (the default; `-Dmetatron.console.screen=false` opts out), every
+terminal-bound write funnels through the screen: the console records it as transcript rows and paints the
+region above the prompt with absolute positioning.  An in-place tool (the `redrawStack` pattern above)
+emits its own cursor math, so its frames must neither be recorded as content nor have the region repainted
+under them — do either one and the table doubles itself on every key (or the session dumps every frame the
+moment the tool closes).  The contract:
+
+- `beginToolRun()` / `endToolRun(finalFrame)` (`AbstractWidget`) bracket the tool's ownership of the terminal.
+  While active, the tool's frames reach the terminal raw (their cursor math IS the in-place redraw), nothing
+  is recorded, and the screen never repaints the region (a paint hands the cursor somewhere the tool did not
+  expect).  Wrap the input loop — `endToolRun` in a `finally`, so every exit, including an error, hands the
+  terminal back.
+- `endToolRun` settles the tool's last frame into the transcript — what the tool leaves on screen is what a
+  reader scrolls back to (the screen keeps text and styling and strips terminal commands,
+  `ScreenPainter.noCommands`) — then clears the screen and repaints fully from its own content, because the
+  tool's raw frames scrolled the terminal somewhere the painter cannot have followed.  Net effect: the tool
+  leaves exactly one copy of its final state, at the tail of the transcript.
+- Content-less tools (transient selections, swipes) pass `null`.
+
 ### Tool → Widget dependencies
 
 | Tool                   | Widgets used                                                     |
@@ -1119,8 +1127,8 @@ silently no-ops. The compiler can't catch this because `Style extends MRec exten
 ## 9. Graphitty — terminal markup DSL (`Graphitty.java`)
 
 Graphitty is a lightweight macro-to-ANSI preprocessor used throughout the UI layer. Tags are written `{{...}}` and are
-stripped by `Graphitty.strip()` for visual-length calculations. The DSL supports five families of tags: colour and effect,
-cursor and screen, chaining with `&`, `{{syntax:lang}}` blocks of foreign source, and `{{link}}` … `{{/link}}` uris.
+stripped by `Graphitty.strip()` for visual-length calculations. The DSL supports four families of tags: colour and effect,
+cursor and screen, chaining with `&`, and `{{syntax:lang}}` blocks of foreign source.
 
 ### Colour / effect tags
 
@@ -1218,28 +1226,6 @@ and a syntax file that colours trailing whitespace would otherwise paint it.
 
 `bin/test/console-syntax-block.steps` drives this in a real console — an accordion whose body is a block — and is the
 regression for the day a line-oriented pass split a block apart.
-
-### Links (`{{link}}` … `{{/link}}`)
-
-The text between the tags is a candidate uri. When `fURI.Singleton.f` accepts it, the text renders as an **OSC 8
-hyperlink** and an underline — `\033]8;;<uri>\a\033[4m<uri>\033]8;;\a` plus the enclosing-rule restore — so a terminal
-that honors hyperlinks (kitty, wezterm, iTerm2, VS Code) turns it into a clickable link. Text the furi parser rejects is
-emitted plain: a dead link is worse than none.
-
-```java
-// render an object's uri as an active link — click in the terminal, the uri opens:
-"{{link}}" + uri + "{{/link}}"
-```
-
-Rules of the road:
-
-- **The wrapped text is both the label and the target** — the tag names no uri, it wraps one.
-- **Measurement sees the text, not the escapes**: `Graphitty.strip()`, `viewLength()` and `Highlighter.visualLength()`
-  measure exactly the uri as drawn.
-- **A link left open** commits at the outermost parse, the way an open block flushes rather than throws.
-- **A rule mid-link** commits the link (its text is a link unto itself) and applies to whatever follows.
-- **A link inside a colour** leaves the colour running after it — the same restore every `{{/rule}}` performs.
-- Clicks on a committed link are terminal-side for now; routing the click back to a registered handler is the follow-up.
 
 ### Stack and chaining
 

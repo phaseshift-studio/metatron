@@ -42,7 +42,7 @@ mtron> *as?int<=str
 
 ```mtron
 mtron> *as?int<=str&asq
-==>as?rng=int&asq=[incomparable,coupling]&dom=str(int::T){<j>}
+==>fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/578
 ```
 * **the in-neighborhood** — every edge *into* an rng (`as?int<=` reads rng `int`, any dom):
 
@@ -63,40 +63,25 @@ mtron> *as?<=str
 ==>as?rng=int&dom=str(int::T){<j>}
 ==>as?rng=real&dom=str(real::T){<j>}
 ==>as?rng=uri&dom=str(uri::T){<j>}
-==>as?rng=datetime&dom=str(datetime::T){<j>}
-==>as?rng=java&dom=str(java::T){<j>}
-==>as?rng=xsv&dom=str(xsv::T){<j>}
-==>as?rng=csv&dom=str(csv::T){<j>}
+==>as?rng=rec&dom=str(rec::T){<j>}
+==>as?rng=datetime&dom=str(uri::T[/m/inst/pred?rng=#{?}&dom=#{?}(<#{*}>::T){<j>}]@datetime){<j>}
+==>as?rng=java&dom=str(str::T[/m/inst/pred?rng=#{?}&dom=#{?}(<#{*}>::T){<j>}]@java){<j>}
+==>as?rng=xsv&dom=str(str::T[/m/inst/pred?rng=#{?}&dom=#{?}(<#{*}>::T){<j>}]@xsv){<j>}
+==>as?rng=csv&dom=str(xsv::T[/m/inst/pred?rng=#{?}&dom=#{?}(<#{*}>::T){<j>}]@csv){<j>}
 ==>as?rng=noobj{0}&dom=A(){<j>}
 ==>as?rng=str&dom=A(str::T){<j>}
-==>as?rng=B&dom=A(#::T){<j>}
+==>as?rng=B&dom=A(<#>::T){<j>}
 ==>as?rng=B&dom=A(B::T){<j>}
 ```
 * **a neighborhood with its maps** — `?asq` on the set:
 
 ```mtron
 mtron> *as?int<=&asq
-==>as?rng=int&asq=[incomparable,coupling]&dom=bool(int::T){<j>}
-==>as?rng=int&asq=[incomparable,coupling]&dom=real(int::T){<j>}
-==>as?rng=int&asq=[incomparable,coupling]&dom=str(int::T){<j>}
-==>as?rng=int&asq=[incomparable,coupling]&dom=uri(int::T){<j>}
-==>as?rng=int&asq=[incomparable,isochain]&dom=datetime(int::T){<j>}
+==>fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/582
 ```
 ```mtron
 mtron> *as?<=str&asq
-==>as?asq=[incomparable,coupling]&rng=bytes&dom=str(bytes::T){<j>}
-==>as?asq=[incomparable,coupling]&rng=bool&dom=str(bool::T){<j>}
-==>as?asq=[incomparable,coupling]&rng=int&dom=str(int::T){<j>}
-==>as?asq=[incomparable,coupling]&rng=real&dom=str(real::T){<j>}
-==>as?asq=[incomparable,coupling]&rng=uri&dom=str(uri::T){<j>}
-==>as?asq=[incomparable,coupling]&rng=datetime&dom=str(datetime::T){<j>}
-==>as?asq=[incomparable,isochain]&rng=java&dom=str(java::T){<j>}
-==>as?asq=[incomparable]&rng=xsv&dom=str(xsv::T){<j>}
-==>as?asq=[incomparable]&rng=csv&dom=str(csv::T){<j>}
-==>as?asq=[incomparable]&rng=noobj{0}&dom=A(){<j>}
-==>as?asq=[incomparable]&rng=str&dom=A(str::T){<j>}
-==>as?asq=[duplicate]&rng=B&dom=A(#::T){<j>}
-==>as?asq=[duplicate]&rng=B&dom=A(B::T){<j>}
+==>fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/586
 ```
 Two things the neighborhood reads reveal. First, **endpoint queries resolve through refinement** — there is no edge
 declared for `nat`, yet `*as?uri<=nat` walks `nat`'s parent and returns the `int → uri` edge:
@@ -137,7 +122,7 @@ Metric and imperial each cast to the other, so each edge is a candidate isomorph
 
 ```mtron
 mtron> *as?metric<=imperial&asq
-==>as?rng=metric&asq=[coupling]&dom=imperial(metric::T){<j>}
+==>fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/590
 ```
 ### an incomparable sibling — and a map that carries two kinds
 
@@ -146,7 +131,7 @@ disjoint, so no input reaches both — dispatch stays total and the map says exa
 
 ```mtron
 mtron> *as?yaml<=json&asq
-==>as?rng=str&asq=[incomparable]&dom=A(str::T){<j>}
+==>fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/594
 ```
 `int` is the busier example: it casts to `bool`, `bytes`, `real`, `str` and `uri`. Every one of those edges also has
 an opposing edge, so the map reports the contest *and* the coupling — one kind for each relation the edge takes part
@@ -154,7 +139,7 @@ in:
 
 ```mtron
 mtron> *as?real<=int&asq
-==>as?rng=real&asq=[incomparable,coupling]&dom=int(real::T){<j>}
+==>fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/598
 ```
 ### an isochain — `bytes` and `int`
 
@@ -164,7 +149,7 @@ opposing pairs links them, so a round trip exists even though no direct one does
 
 ```mtron
 mtron> *as?bytes<=int&asq
-==>as?rng=bytes&asq=[incomparable,isochain]&dom=int(bytes::T){<j>}
+==>fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/602
 ```
 ### a retract — the self-loop
 
@@ -174,6 +159,7 @@ the map carries both kinds:
 
 ```mtron
 mtron> *as?int<=int&asq
+==>fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/606
 ```
 ## narrowing a map
 
@@ -182,10 +168,11 @@ when the intersection is empty there is no such edge property to read, so the re
 
 ```mtron
 mtron> *as?str<=int&asq=[coupling]
-==>as?rng=str&asq=[coupling]&dom=int(str::T){<j>}
+==>fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/610
 ```
 ```mtron
 mtron> *as?str<=int&asq=[duplicate]
+==>fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/614
 ```
 ## declared casts, and the tag that no one declares
 

@@ -268,6 +268,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -281,8 +282,6 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant">Modelfile.mtron-qwen-14b-assistant</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant-thinking">Modelfile.mtron-qwen-14b-assistant-thinking</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -412,14 +411,19 @@
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
  type=&gt;[
-  dckrspace::T,
-  resource::T,
-  image::T,
-  container_state::T,
-  container::T,
-  volume::T,
-  network::T,
-  compose::T]]@/m/dckr</code></pre>
+  space::T[?[{?}host=&gt;uri::T,{?}progress=&gt;rec::T]][ctor?dckrspace&lt;=#{?}(dckrspace::T)]@dckrspace,
+  rec::T[?[id=&gt;uri::T,{?}created=&gt;uri::T]]@resource,
+  resource::T[?[{?}repo_tags=&gt;[uri::T],{?}size=&gt;real::T@datasize,{?}container=&gt;&lt;#&gt;::T]]@image,
+  uri::T[?union(created,running,paused,restarting,exited,dead)]@container_state,
+  resource::T[?[
+  image=&gt;&lt;#&gt;::T,
+  {?}state=&gt;uri::T[?union(created,running,paused,restarting,exited,dead)]@container_state,
+  {?}ports=&gt;[uri::T],
+  {?}network=&gt;&lt;#&gt;::T,
+  {?}mount=&gt;&lt;#&gt;::T]]@container,
+  resource::T[?[{?}driver=&gt;uri::T,{?}mountpoint=&gt;uri::T,{?}container=&gt;&lt;#&gt;::T]]@volume,
+  resource::T[?[{?}driver=&gt;uri::T,{?}scope=&gt;uri::T,{?}container=&gt;&lt;#&gt;::T]]@network,
+  rec::T[?[services=&gt;[=&gt;]]]@compose]]@/m/dckr</code></pre>
                     </div>
                 </div>
             </div>
@@ -490,7 +494,7 @@
         </span>
         <small class="text-muted code">/m/dckr/compose</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[services=&gt;[=&gt;]]]@/m/dckr/compose</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[services=&gt;[=&gt;]]]@compose</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a docker compose stack — refines rec::T</p>
@@ -508,11 +512,11 @@ matches docker_compose::T</code></pre>
         <small class="text-muted code">/m/dckr/container</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">resource::T[?[
-  image=&gt;#::T,
-  {?}state=&gt;container_state::T,
+  image=&gt;&lt;#&gt;::T,
+  {?}state=&gt;uri::T[?union(created,running,paused,restarting,exited,dead)]@container_state,
   {?}ports=&gt;[uri::T],
-  {?}network=&gt;#::T,
-  {?}mount=&gt;#::T]]@/m/dckr/container</code></pre></div>
+  {?}network=&gt;&lt;#&gt;::T,
+  {?}mount=&gt;&lt;#&gt;::T]]@container</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__dckr__resource" class="code inherited-link">resource::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[id=&gt;uri::T,{?}created=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a docker container — refines docker_resource::T</p>
@@ -529,7 +533,7 @@ matches docker_container::T</code></pre>
         </span>
         <small class="text-muted code">/m/dckr/container_state</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?union(created,running,paused,restarting,exited,dead)]@/m/dckr/container_state</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?union(created,running,paused,restarting,exited,dead)]@container_state</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] docker container state — union of created|running|paused|restarting|exited|dead</p>
@@ -546,7 +550,7 @@ stopped.matches(docker_container_state::T)     [-- false --]</code></pre>
         </span>
         <small class="text-muted code">/m/dckr/image</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">resource::T[?[{?}repo_tags=&gt;[uri::T],{?}size=&gt;datasize::T,{?}container=&gt;#::T]]@/m/dckr/image</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">resource::T[?[{?}repo_tags=&gt;[uri::T],{?}size=&gt;real::T@datasize,{?}container=&gt;&lt;#&gt;::T]]@image</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__dckr__resource" class="code inherited-link">resource::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[id=&gt;uri::T,{?}created=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a docker image — refines docker_resource::T</p>
@@ -563,7 +567,7 @@ matches docker_image::T</code></pre>
         </span>
         <small class="text-muted code">/m/dckr/network</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">resource::T[?[{?}driver=&gt;uri::T,{?}scope=&gt;uri::T,{?}container=&gt;#::T]]@/m/dckr/network</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">resource::T[?[{?}driver=&gt;uri::T,{?}scope=&gt;uri::T,{?}container=&gt;&lt;#&gt;::T]]@network</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__dckr__resource" class="code inherited-link">resource::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[id=&gt;uri::T,{?}created=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a docker network — refines docker_resource::T</p>
@@ -576,7 +580,7 @@ matches docker_image::T</code></pre>
         </span>
         <small class="text-muted code">/m/dckr/resource</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[id=&gt;uri::T,{?}created=&gt;uri::T]]@/m/dckr/resource</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[id=&gt;uri::T,{?}created=&gt;uri::T]]@resource</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] base type for docker resources — id + created</p>
@@ -589,7 +593,7 @@ matches docker_image::T</code></pre>
         </span>
         <small class="text-muted code">/m/dckr/volume</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">resource::T[?[{?}driver=&gt;uri::T,{?}mountpoint=&gt;uri::T,{?}container=&gt;#::T]]@/m/dckr/volume</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">resource::T[?[{?}driver=&gt;uri::T,{?}mountpoint=&gt;uri::T,{?}container=&gt;&lt;#&gt;::T]]@volume</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__dckr__resource" class="code inherited-link">resource::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[id=&gt;uri::T,{?}created=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a docker volume — refines docker_resource::T</p>
@@ -602,10 +606,16 @@ matches docker_image::T</code></pre>
         <a href="m_dckr_space_dckrspace.html" class="code text-primary fw-bold text-decoration-none">dckrspace</a>
         <small class="text-muted code">/m/dckr/space/dckrspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}host=&gt;uri::T,{?}progress=&gt;rec::T]][ctor?dckrspace&lt;=#{?}(dckrspace::T)]@/m/dckr/space/dckrspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}host=&gt;uri::T,{?}progress=&gt;rec::T]][ctor?dckrspace&lt;=#{?}(dckrspace::T)]@dckrspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  pattern=&gt;uri::T,
- {?}q=&gt;[qproc{?}::T],
+ {?}q=&gt;[rec{?}::T[?[
+  pattern=&gt;uri::T,
+  {?}pre_write=&gt;inst::T,
+  {?}post_write=&gt;inst::T,
+  {?}qless_write=&gt;inst::T,
+  {?}pre_read=&gt;inst::T,
+  {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T)]@qproc],
  {?}route=&gt;[uri{?}::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">

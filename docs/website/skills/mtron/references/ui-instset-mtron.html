@@ -268,6 +268,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -281,8 +282,6 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant">Modelfile.mtron-qwen-14b-assistant</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant-thinking">Modelfile.mtron-qwen-14b-assistant-thinking</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -411,6 +410,7 @@ the pointer, belongs to the console (see <em>anchoring, and the pointer</em>).</
        ├─ panel_widget
        ├─ progress_table_widget
        ├─ selector_widget
+       ├─ stack_bar_widget
        ├─ swipe_panel_widget
        ├─ table_widget
        ├─ tree_select_widget
@@ -437,71 +437,71 @@ widget recs live at <code>/usr/uidoc/#</code>; the last block in this doc leaves
 <p>A widget type declares <strong>the keys its widget reads</strong> and carries the ctor that builds it, which makes the
 type readable as the contract:</p>
 <pre><code class="language-mtron">mtron&gt; */m/mach/ui/widget/panel_widget       [-- title and body, both optional; ctor?panel_widget&lt;=#{?} --]
-==&gt;widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?panel_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/panel_widget
+==&gt;widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?panel_widget&lt;=#{?}(#{*}::T)]@panel_widget
 mtron&gt; */m/mach/ui/widget/tree_widget        [-- root and max required; code/flatten/xref/expand optional --]
 ==&gt;widget::T[?[
      root=&gt;uri::T,
      max=&gt;int::T,
-     {?}code=&gt;#::T,
+     {?}code=&gt;&lt;#&gt;::T,
      {?}flatten=&gt;bool::T,
      {?}xref=&gt;rec::T,
-     {?}expand=&gt;uri{*}::T]][ctor?tree_widget&lt;=#{?}(#{*}::T)]@/m/mach/ui/widget/tree_widget
+     {?}expand=&gt;uri{*}::T]][ctor?tree_widget&lt;=#{?}(#{*}::T)]@tree_widget
 </code></pre>
 <p><code>*/m/mach/ui/widget?docq</code> is the catalog — one entry per widget type, each with its args, its dom/rng and
 its own example. It is the fastest way to answer &quot;what can I put in this thing&quot;, and it is generated from
 the same declarations the type checker uses:</p>
 <pre><code class="language-mtron">mtron&gt; */m/mach/ui/widget?docq
-==&gt;docs::[ obj=&gt;widget::T,
+==&gt;docs::[ obj=&gt;rec::T[?[{?}style=&gt;rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,...(9 more)]][ctor?style&lt;=#{?}(#{*}::T)]@style]]@widget,
     args=&gt;[{?}style=&gt;'the style specification for the widget'],
     desc=&gt;'[structural] the base widget type',
     accordion_widget=&gt;docs::[
-     obj=&gt;accordion_widget::T,
+     obj=&gt;widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?accordion_widget&lt;=#{?}(#{*}::T)]@accordion_widget,
      dom=&gt;'maybe an obj',
      rng=&gt;'an accordion obj',
-     args=&gt;[{?}title=&gt;'the title of the accordion',{?}body=&gt;'the body content of the accordion'],
+     args=&gt;[{?}body=&gt;'the body content of the accordion',{?}title=&gt;'the title of the accordion'],
      desc=&gt;'[structural] an expandable/collapsible accordion widget'],
     progress_table_widget=&gt;docs::[
-     obj=&gt;progress_table_widget::T,
+     obj=&gt;widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst::T]][ctor?progress_table_widget&lt;=#{?}(#{*}::T)]@progress_table_widget,
      desc=&gt;'[structural] a table of progress bars',
      example=&gt;[&quot;progress_table::[row=&gt;[[text=&gt;'layer1',percent=&gt;58.0],[text...&quot;]],
     table_widget=&gt;docs::[
-     obj=&gt;table_widget::T,
+     obj=&gt;widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst{*}::T,{?}metadata=&gt;lst{*}::T]][ctor?table_widget&lt;=#{?}(#{*}::T)]@table_widget,
      dom=&gt;'maybe an obj',
      rng=&gt;'a table widget',
-     args=&gt;[{?}row=&gt;'a lst of poly table rows',{?}metadata=&gt;'a lst of rows of data behind the display',{?}header=&gt;'a lst of obj table headers'],
+     args=&gt;[{?}header=&gt;'a lst of obj table headers',{?}row=&gt;'a lst of poly table rows',{?}metadata=&gt;'a lst of rows of data behind the display'],
      desc=&gt;'[structural] a tabular data widget'],
     tree_widget=&gt;docs::[
-     obj=&gt;tree_widget::T,
+     obj=&gt;widget::T[?[
+     root=&gt;uri::T,
+     max=&gt;int::T,
+     {?}code=&gt;&lt;#&gt;::T,
+     {?}flatten=&gt;bool::T,
+     {?}xref=&gt;rec::T,
+     {?}expand=&gt;uri{*}::T]][ctor?tree_widget&lt;=#{?}(#{*}::T)]@tree_widget,
      dom=&gt;'maybe an obj',
      rng=&gt;'a tree widget',
-     args=&gt;[
-      root=&gt;'the root uri to traverse from',
-      {?}code=&gt;'transform obj prior to insertion into tree (default _)',
-      {?}expand=&gt;'branch uris whose children are read regardless of max',
-      {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration',
-      max=&gt;'the max depth to traverse',
-      {?}flatten=&gt;'fold single-folder chains into one path row (default false)'],
+     args=&gt;[{?}code=&gt;'transform obj prior to insertion into tree (default _)',{?}expand=&gt;'branch uris whose children are read regardless of max',{?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration',max=&gt;'the max depth to traverse',{?}flatten=&gt;'fold single-folder chains into one path row (default false)',root=&gt;'the root uri to traverse from'],
      desc=&gt;'[structural] the root uri space is traversed to specified d...'],
     selector_widget=&gt;docs::[
-     obj=&gt;selector_widget::T,
+     obj=&gt;widget::T[?[=&gt;]][ctor?selector_widget&lt;=#{?}(#{*}::T)]@selector_widget,
      dom=&gt;'maybe an obj',
      rng=&gt;'a selector widget',
      desc=&gt;'[structural] an interactive item selector widget'],
     panel_widget=&gt;docs::[
-     obj=&gt;panel_widget{*}::T,
+     obj=&gt;widget{*}::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?panel_widget&lt;=#{?}(#{*}::T)]@panel_widget,
      dom=&gt;'rec',
      rng=&gt;'panel',
      args=&gt;[
-      title=&gt;'the title of the panel',
-      body=&gt;'the body content of the panel'],
+      body=&gt;'the body content of the panel',
+      title=&gt;'the title of the panel'],
      desc=&gt;'[structural] a simple bordered UI panel widget'],
     label_line_widget=&gt;docs::[
-     obj=&gt;label_line_widget::T,
+     obj=&gt;widget::T[?[{?}body=&gt;str::T,{?}key=&gt;uri::T,{?}on_key=&gt;&lt;#&gt;::T]][ctor?label_line_widget&lt;=#{?}(#{*}::T)]@label_line_widget,
      dom=&gt;'maybe an obj',
      rng=&gt;'a label line widget',
      args=&gt;[body=&gt;'the text body displayed on the label'],
      desc=&gt;'[structural] a single-line text label widget'],
-    ...(4 more)]
+    ...(5 more)]
 </code></pre>
 <table>
 <thead>
@@ -641,9 +641,13 @@ mtron&gt; accordion_widget::[title=&gt;'notes',body=&gt;&quot;l01\nl02\nl03&quot
    &quot;&quot;&quot;
 </code></pre>
 <pre><code class="language-mtron">mtron&gt; menu_bar_widget::[height=&gt;1,lines=&gt;[label_line_widget::[body=&gt;'File'],label_line_widget::[body=&gt;'Edit']]].as?str&lt;=widget(str::T)
-==&gt;ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3440
+==&gt;&quot;&quot;&quot;
+   File  Edit
+   &quot;&quot;&quot;
 mtron&gt; label_line_widget::[body=&gt;'a label line'].as?str&lt;=widget(str::T)
-==&gt;ERROR: unable to construct label_line_widget::T: fail::[inst apply failure: java.lang.IllegalStateException: Terminal has been closed]@/sys/fail/3448
+==&gt;&quot;&quot;&quot;
+   a label line
+   &quot;&quot;&quot;
 </code></pre>
 <h3>style</h3>
 <p><code>style::T</code> is a rec of presentation keys. The ones that change what you see:</p>

@@ -55,11 +55,11 @@ mtron> datetime_now()-<task::[done=>false,desc=>"review metatron docs",start=>_]
     task::[
      done=>false,
      desc=>'review metatron docs',
-     start=>datetime::<//2026.09:19/00/00/39/824?tz=-0600>],
+     start=>datetime::<//2026.09:23/22/53/49/521?tz=-0600>],
     task::[
      done=>false,
      desc=>'review metatron docs',
-     start=>datetime::<//2026.09:19/00/00/39/794?tz=-0600>]]@/usr/agent/todo
+     start=>datetime::<//2026.09:23/22/53/49/476?tz=-0600>]]@/usr/agent/todo
 ```
 The current time is split across the defined task. Since `start=>_` has an open slot, the current
 `datatime::T` fills in the spot and then the task is merged into your todo list. To get a structured understanding of
@@ -72,7 +72,7 @@ Have you completed a task? If so, mark it done.
 
 ```mtron
 mtron> @/usr/agent/todo/0 >>= [done=>true]
-==>fail::[inst apply failure: java.lang.ClassCastException: class studio.phaseshift.metatron.isa.m.type.impl.MRec cannot be cast to class studio.phaseshift.metatron.isa.m.type.Objs (studio.phaseshift.metatron.isa.m.type.impl.MRec and studio.phaseshift.metatron.isa.m.type.Objs are in unnamed module of loader 'app')]@/sys/fail/80
+==>fail::[inst apply failure: java.lang.ClassCastException: class studio.phaseshift.metatron.isa.m.type.impl.MRec cannot be cast to class studio.phaseshift.metatron.isa.m.type.Objs (studio.phaseshift.metatron.isa.m.type.impl.MRec and studio.phaseshift.metatron.isa.m.type.Objs are in unnamed module of loader 'app') (at /m/inst/update@1) [MObjs<332>]][unable to convert rec::T to objs [MObjs<332>]][class studio.phaseshift.metatron.isa.m.type.impl.MRec cannot be cast to class studio.phaseshift.metatron.isa.m.type.Objs (studio.phaseshift.metatron.isa.m.type.impl.MRec and studio.phaseshift.metatron.isa.m.type.Objs are in unnamed module of loader 'app')]@/sys/fail/80
 ```
 As you learn about metatron and the mtron language, you'll come up with clever ways to manipulate your `/usr/agent`
 space.

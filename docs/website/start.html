@@ -268,6 +268,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -281,8 +282,6 @@
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant">Modelfile.mtron-qwen-14b-assistant</a>
-                                <a class="skill-resource dropdown-item" href="skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant-thinking">Modelfile.mtron-qwen-14b-assistant-thinking</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -597,7 +596,7 @@ For now, create the following bootloader as plain text&#8201;&#8212;&#8201;it wi
     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
     space=&gt;[super=&gt;!*/m],
-    const=&gt;[[remote_console=&gt;inst()]@helper,[=&gt;]@obj_xml,obj_html::[=&gt;]@obj_html,obj_json::[
+    const=&gt;[[remote_console=&gt;inst()]@helper,obj_xml::[=&gt;]@obj_xml,obj_html::[=&gt;]@obj_html,obj_json::[
      density=&gt;OPAQUE,
      wrap_uri=&gt;true,
      bias_towards_uri=&gt;true,
@@ -615,10 +614,11 @@ For now, create the following bootloader as plain text&#8201;&#8212;&#8201;it wi
      wrap_uri=&gt;true,
      bias_towards_uri=&gt;true,
      bias_towards_objs=&gt;false]@obj_json,obj_bson::[=&gt;]@obj_bson,...(1 more)],
-    type=&gt;[mime::T,xml::T,html::T,json::T,yaml::T,xsv::T,csv::T,css::T,markdown::T,java::T,...(34 more)],
+    type=&gt;[uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@xml,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@html,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@json,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@yaml,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@xsv,xsv::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@csv,str::T@css,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@markdown,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@java,...(34 more)],
     inst=&gt;[ping?time&lt;=#{?}(uri::T),format?str&lt;=markdown(),as?skill&lt;=markdown(str::T),as?rec&lt;=json(rec::T),as?rec&lt;=yaml(rec::T),as?json&lt;=rec(json::T),as?rec&lt;=xml(rec::T),as?xml&lt;=rec(xml::T),as?rec&lt;=html(rec::T),as?html&lt;=rec(html::T),...(12 more)]]@/m/web
 memspace::[pattern  =&gt;/usr/#, q     =&gt;[docq::[=&gt;],subq::[=&gt;]]]@/sys/space/usr;
-==&gt;ERROR: unable to construct memspace::T: fail::[inst apply failure: java.lang.NullPointerException: Cannot invoke "dev.langchain4j.mcp.client.McpClient.listTools()" because "this.client" is null]@/sys/fail/1596
+==&gt;fail::[unable to construct memspace::T: fail::[inst apply failure: java.lang.NullPointerException: Cannot invoke "dev.langchain4j.mcp.client.McpClient.listTools()" because "this.client" is null (at /m/inst/ctor) [mcpClient&lt;163&gt;]][Cannot invoke "dev.langchain4j.mcp.client.McpClient.listTools()" because "this.client" is null [mcpClient&lt;163&gt;]]@/sys/fail/1514
+   	while parsing: memspace::[pattern  =&gt;/usr/#, q     =&gt;[docq::[=&gt;],subq::[=&gt;]]]@/sys/space/usr;]@/sys/fail/1516
 memspace::[pattern  =&gt;g:#,    q     =&gt;[subq::[=&gt;]]]           @/sys/space/graph;
 ==&gt;memspace::[
     pattern=&gt;g:#,
@@ -635,7 +635,10 @@ fsspace::[pattern   =&gt;local:#,route =&gt;[local: =&gt; &lt;~/&gt;]]       @/s
 httpspace::[pattern =&gt;http://#,
              host    =&gt;http://localhost:8765,
              route   =&gt;[/            =&gt;local:]]@/sys/space/http;
-==&gt;ERROR: unable to construct httpspace::T: fail::[inst apply failure: Address already in use[Net&lt;-2&gt;:Address already in use]]@/sys/fail/1598
+==&gt;fail::[unable to construct httpspace::T: fail::[inst apply failure: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]]@/sys/fail/1522
+   	while parsing: httpspace::[pattern =&gt;http://#,
+                host    =&gt;http://localhost:8765,
+                route   =&gt;[/            =&gt;local:]]@/sys/space/http;]@/sys/fail/1524
 console::[=&gt;]@/usr/ui/console;
 ==&gt;console::[=&gt;]@/usr/ui/console</code></pre>
 </div>

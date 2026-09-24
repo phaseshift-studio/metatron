@@ -268,6 +268,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -281,8 +282,6 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant">Modelfile.mtron-qwen-14b-assistant</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant-thinking">Modelfile.mtron-qwen-14b-assistant-thinking</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -426,11 +425,11 @@
   stdout?#{?}&lt;=#{?}(#{?}::T),
   stdin?str&lt;=#{?}()],
  type=&gt;[
-  fsspace::T,
-  serialspace::T,
-  dir::T,
-  file::T,
-  image::T]]@/m/sys</code></pre>
+  space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?fsspace&lt;=#{?}(#{*}::T)]@fsspace,
+  space::T[][ctor?serialspace&lt;=#{?}(#{*}::T)]@serialspace,
+  uri::T[][ctor?dir&lt;=#{?}(#{*}::T)]@dir,
+  uri::T[][ctor?file&lt;=#{?}(#{*}::T)]@file,
+  file::T@image]]@/m/sys</code></pre>
                     </div>
                 </div>
             </div>
@@ -509,7 +508,7 @@
         </span>
         <small class="text-muted code">/m/sys/dir</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][ctor?dir&lt;=#{?}(#{*}::T)]@/m/sys/dir</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][ctor?dir&lt;=#{?}(#{*}::T)]@dir</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__sys__file">
@@ -520,7 +519,7 @@
         </span>
         <small class="text-muted code">/m/sys/file</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][ctor?file&lt;=#{?}(#{*}::T)]@/m/sys/file</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][ctor?file&lt;=#{?}(#{*}::T)]@file</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__sys__file__image">
@@ -531,7 +530,7 @@
         </span>
         <small class="text-muted code">/m/sys/file/image</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">file::T@/m/sys/file/image</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">file::T@image</code></pre></div>
     
     
 </div>
@@ -542,10 +541,16 @@
         <a href="m_sys_space_fsspace.html" class="code text-primary fw-bold text-decoration-none">fsspace</a>
         <small class="text-muted code">/m/sys/space/fsspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?fsspace&lt;=#{?}(#{*}::T)]@/m/sys/space/fsspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?fsspace&lt;=#{?}(#{*}::T)]@fsspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  pattern=&gt;uri::T,
- {?}q=&gt;[qproc{?}::T],
+ {?}q=&gt;[rec{?}::T[?[
+  pattern=&gt;uri::T,
+  {?}pre_write=&gt;inst::T,
+  {?}post_write=&gt;inst::T,
+  {?}qless_write=&gt;inst::T,
+  {?}pre_read=&gt;inst::T,
+  {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T)]@qproc],
  {?}route=&gt;[uri{?}::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     
@@ -554,10 +559,16 @@
         <a href="m_sys_space_serialspace.html" class="code text-primary fw-bold text-decoration-none">serialspace</a>
         <small class="text-muted code">/m/sys/space/serialspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][ctor?serialspace&lt;=#{?}(#{*}::T)]@/m/sys/space/serialspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][ctor?serialspace&lt;=#{?}(#{*}::T)]@serialspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  pattern=&gt;uri::T,
- {?}q=&gt;[qproc{?}::T],
+ {?}q=&gt;[rec{?}::T[?[
+  pattern=&gt;uri::T,
+  {?}pre_write=&gt;inst::T,
+  {?}post_write=&gt;inst::T,
+  {?}qless_write=&gt;inst::T,
+  {?}pre_read=&gt;inst::T,
+  {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T)]@qproc],
  {?}route=&gt;[uri{?}::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     
@@ -581,10 +592,10 @@ note that this field is optional, so when in doubt, just don&#39;t fill it out
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a lst[str] of results" class="text-success">a lst[str] of results</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#cmd" class="text-light">cmd</a> <span class="text-light">=&gt;</span> <a href="#"the terminal command to evaluate (uses bash('-c',${cmd}) behind the scenes)"" class="text-info">&quot;the terminal command to evaluate (uses bash(&#39;-c&#39;,${cmd}) behind the scenes)&quot;</a>
-  <a href="#{?}timeout" class="text-light">{?}timeout</a> <span class="text-light">=&gt;</span> <a href="#"""a real number denoting timeout of the process (default: second::20.0000).
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}timeout" class="text-light">{?}timeout</a> <span class="text-light">=&gt;</span> <a href="#"""a real number denoting timeout of the process (default: second::20.0000).
 """" class="text-info">&quot;&quot;&quot;a real number denoting timeout of the process (default: second::20.0000).
 &quot;&quot;&quot;</a>
+  <a href="#cmd" class="text-light">cmd</a> <span class="text-light">=&gt;</span> <a href="#"the terminal command to evaluate (uses bash('-c',${cmd}) behind the scenes)"" class="text-info">&quot;the terminal command to evaluate (uses bash(&#39;-c&#39;,${cmd}) behind the scenes)&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -622,10 +633,10 @@ if both min and max are provided, then those lines are removed and the text is i
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] maybe an obj (optional)" class="text-info">[generic] maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a status report on the write" class="text-success">a status report on the write</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
-  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
   <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
   <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the text to add to the file'" class="text-info">&#39;the text to add to the file&#39;</a>
+  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__find_file?rng=__m__lst&dom=A{?}">
@@ -643,11 +654,11 @@ if both min and max are provided, then those lines are removed and the text is i
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] maybe an obj (optional)" class="text-info">[generic] maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a lst of all files whose path matches str regex" class="text-success">a lst of all files whose path matches str regex</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the max number of results to return (default: 50)'" class="text-info">&#39;the max number of results to return (default: 50)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a regex or plain string to match file paths against'" class="text-info">&#39;a regex or plain string to match file paths against&#39;</a>
+  <a href="#{?}depth" class="text-light">{?}depth</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to search directories (default: 50)'" class="text-info">&#39;the max depth to search directories (default: 50)&#39;</a>
+  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the max number of results to return (default: 50)'" class="text-info">&#39;the max number of results to return (default: 50)&#39;</a>
   <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root directory for searching (default: current working directory -- <mfs:.>)'" class="text-info">&#39;the root directory for searching (default: current working directory -- &lt;mfs:.&gt;)&#39;</a>
   <a href="#{?}regex" class="text-light">{?}regex</a> <span class="text-light">=&gt;</span> <a href="#'if the search string should be treated as a regex pattern (default: false)'" class="text-info">&#39;if the search string should be treated as a regex pattern (default: false)&#39;</a>
-  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a regex or plain string to match file paths against'" class="text-info">&#39;a regex or plain string to match file paths against&#39;</a>
-  <a href="#{?}depth" class="text-light">{?}depth</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to search directories (default: 50)'" class="text-info">&#39;the max depth to search directories (default: 50)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__read_file?rng=__m__lst&dom=A{?}">
@@ -668,9 +679,9 @@ if only a min is provided, then the file is read from that line till the end.
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] maybe an obj (optional)" class="text-info">[generic] maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#read file indexed lines" class="text-success">read file indexed lines</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}min" class="text-light">{?}min</a> <span class="text-light">=&gt;</span> <a href="#'the start line to read'" class="text-info">&#39;the start line to read&#39;</a>
-  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
   <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
+  <a href="#{?}min" class="text-light">{?}min</a> <span class="text-light">=&gt;</span> <a href="#'the start line to read'" class="text-info">&#39;the start line to read&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__redirect?rng=__m__rec[short=>uri,long=>uri]&dom=#{?}">
@@ -692,7 +703,7 @@ if only a min is provided, then the file is read from that line till the end.
         </span>
         <small class="text-muted code">/m/sys/inst/sleep?rng=A{?}&amp;dom=A{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__sleep?rng=A{?}&dom=A{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__sleep?rng=A{?}&dom=A{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sleep?rng=<span class="code text-info"><span class="code text-success">A{?}</span></span>&dom=<span class="code text-info"><span class="code text-success">A{?}</span></span>(time::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__sleep?rng=A{?}&dom=A{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__sleep?rng=A{?}&dom=A{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sleep?rng=<span class="code text-info"><span class="code text-success">A{?}</span></span>&dom=<span class="code text-info"><span class="code text-success">A{?}</span></span>(real::T@time){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">pauses the current thread for arg amount of time</p>
@@ -725,7 +736,7 @@ if only a min is provided, then the file is read from that line till the end.
         </span>
         <small class="text-muted code">/m/sys/inst/stdout?rng=#{?}&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__stdout?rng=#{?}&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__stdout?rng=#{?}&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">stdout?rng=<span class="code text-info"><span class="code text-success">#{?}</span></span>&dom=<span class="code text-info"><span class="code text-success">#{?}</span></span>(<span class="code text-info"><span class="code text-success">#{?}</span></span>::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__stdout?rng=#{?}&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__stdout?rng=#{?}&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">stdout?rng=<span class="code text-info"><span class="code text-success">#{?}</span></span>&dom=<span class="code text-info"><span class="code text-success">#{?}</span></span>(<<span class="code text-info"><span class="code text-success">#{?}</span></span>>::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">prints arg jvm object to the terminal and emits lhs obj as rhs obj</p>

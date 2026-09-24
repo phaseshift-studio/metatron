@@ -268,6 +268,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -281,8 +282,6 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant">Modelfile.mtron-qwen-14b-assistant</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant-thinking">Modelfile.mtron-qwen-14b-assistant-thinking</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -412,16 +411,33 @@
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
  type=&gt;[
-  space::T,
-  factory::T,
-  mfactory::T,
-  machine::T,
-  swarm::T,
-  thread_executor::T,
-  thread::T,
-  core::T,
-  virtual::T,
-  clstrspace::T],
+  rec::T[?[
+  pattern=&gt;uri::T,
+  {?}q=&gt;[rec{?}::T[?[
+  pattern=&gt;uri::T,
+  {?}pre_write=&gt;inst::T,
+  {?}post_write=&gt;inst::T,
+  {?}qless_write=&gt;inst::T,
+  {?}pre_read=&gt;inst::T,
+  {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T)]@qproc],
+  {?}route=&gt;[uri{?}::T=&gt;uri::T],
+  {?}schema=&gt;instset::T]]@space,
+  rec::T@factory,
+  factory::T[][ctor?mfactory&lt;=#{?}()]@mfactory,
+  virtual::T@machine,
+  machine::T[][ctor?swarm&lt;=#{?}(#{*}::T)]@swarm,
+  rec::T[?[run=&gt;[,],stop=&gt;[,]]]@thread_executor,
+  rec::T[?[
+  code=&gt;&lt;#&gt;::T,
+  {?}source=&gt;uri::T,
+  {?}runtime=&gt;real::T@time,
+  {?}yield=&gt;thread::T,
+  {?}loop=&gt;real::T@time,
+  {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
+  {?}result=&gt;&lt;#{*}&gt;::T]]@thread,
+  thread::T[][ctor?core&lt;=#{?}(rec::T)]@core,
+  thread::T[][ctor?virtual&lt;=#{?}(rec::T)]@virtual,
+  space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@authority=&gt;&lt;#&gt;::T]]][ctor?clstrspace&lt;=#{?}(#{*}::T)]@clstrspace],
  inst=&gt;[
   lift(#{?}::T),
   zero?A&lt;=A(),
@@ -513,10 +529,16 @@
         </span>
         <small class="text-muted code">/m/mach/clstrspace</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/uri/authority=&gt;#::T]]][ctor?clstrspace&lt;=#{?}(#{*}::T)]@/m/mach/clstrspace</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@authority=&gt;&lt;#&gt;::T]]][ctor?clstrspace&lt;=#{?}(#{*}::T)]@clstrspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  pattern=&gt;uri::T,
- {?}q=&gt;[qproc{?}::T],
+ {?}q=&gt;[rec{?}::T[?[
+  pattern=&gt;uri::T,
+  {?}pre_write=&gt;inst::T,
+  {?}post_write=&gt;inst::T,
+  {?}qless_write=&gt;inst::T,
+  {?}pre_read=&gt;inst::T,
+  {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T)]@qproc],
  {?}route=&gt;[uri{?}::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
@@ -536,15 +558,15 @@
         </span>
         <small class="text-muted code">/m/mach/thread/core</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][ctor?core&lt;=#{?}(rec::T)]@/m/mach/thread/core</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][ctor?core&lt;=#{?}(rec::T)]@core</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- code=&gt;#::T,
+ code=&gt;&lt;#&gt;::T,
  {?}source=&gt;uri::T,
- {?}runtime=&gt;time::T,
+ {?}runtime=&gt;real::T@time,
  {?}yield=&gt;thread::T,
- {?}loop=&gt;time::T,
+ {?}loop=&gt;real::T@time,
  {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
- {?}result=&gt;#{*}::T]</code></div></div>
+ {?}result=&gt;&lt;#{*}&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] run a concurrent core thread</p>
 </div><div class="card-body border-top py-2">
@@ -559,7 +581,7 @@
         </span>
         <small class="text-muted code">/m/mach/factory</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/mach/factory</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@factory</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__mach__machine">
@@ -570,15 +592,15 @@
         </span>
         <small class="text-muted code">/m/mach/machine</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">virtual::T@/m/mach/machine</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">virtual::T@machine</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- code=&gt;#::T,
+ code=&gt;&lt;#&gt;::T,
  {?}source=&gt;uri::T,
- {?}runtime=&gt;time::T,
+ {?}runtime=&gt;real::T@time,
  {?}yield=&gt;thread::T,
- {?}loop=&gt;time::T,
+ {?}loop=&gt;real::T@time,
  {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
- {?}result=&gt;#{*}::T]</code></div></div>
+ {?}result=&gt;&lt;#{*}&gt;::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__mach__mfactory">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -588,7 +610,7 @@
         </span>
         <small class="text-muted code">/m/mach/mfactory</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">factory::T[][ctor?mfactory&lt;=#{?}()]@/m/mach/mfactory</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">factory::T[][ctor?mfactory&lt;=#{?}()]@mfactory</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__mach__machine__swarm">
@@ -599,15 +621,15 @@
         </span>
         <small class="text-muted code">/m/mach/machine/swarm</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">machine::T[][ctor?swarm&lt;=#{?}(#{*}::T)]@/m/mach/machine/swarm</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">machine::T[][ctor?swarm&lt;=#{?}(#{*}::T)]@swarm</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- code=&gt;#::T,
+ code=&gt;&lt;#&gt;::T,
  {?}source=&gt;uri::T,
- {?}runtime=&gt;time::T,
+ {?}runtime=&gt;real::T@time,
  {?}yield=&gt;thread::T,
- {?}loop=&gt;time::T,
+ {?}loop=&gt;real::T@time,
  {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
- {?}result=&gt;#{*}::T]</code></div></div>
+ {?}result=&gt;&lt;#{*}&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a swarm machine makes use of a set of independently executing monads that move across the code inst chain.
 barriers serve as synchronization points where all running monads must aggregate before being released on the post-barrier segment of code.
@@ -627,24 +649,24 @@ the objs referenced by the monads that halt are the result of the machine execut
         <small class="text-muted code">/m/mach/thread</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  code=&gt;#::T,
+  code=&gt;&lt;#&gt;::T,
   {?}source=&gt;uri::T,
-  {?}runtime=&gt;time::T,
+  {?}runtime=&gt;real::T@time,
   {?}yield=&gt;thread::T,
-  {?}loop=&gt;time::T,
+  {?}loop=&gt;real::T@time,
   {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
-  {?}result=&gt;#{*}::T]]@/m/mach/thread</code></pre></div>
+  {?}result=&gt;&lt;#{*}&gt;::T]]@thread</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] the thread base type</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
-  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
-  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
   <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
   <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
   <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
+  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__thread_executor">
@@ -655,7 +677,7 @@ the objs referenced by the monads that halt are the result of the machine execut
         </span>
         <small class="text-muted code">/m/mach/thread_executor</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[run=&gt;[,],stop=&gt;[,]]]@/m/mach/thread_executor</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[run=&gt;[,],stop=&gt;[,]]]@thread_executor</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] the gateway interface for all threads in metatron</p>
@@ -668,15 +690,15 @@ the objs referenced by the monads that halt are the result of the machine execut
         </span>
         <small class="text-muted code">/m/mach/thread/virtual</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][ctor?virtual&lt;=#{?}(rec::T)]@/m/mach/thread/virtual</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][ctor?virtual&lt;=#{?}(rec::T)]@virtual</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- code=&gt;#::T,
+ code=&gt;&lt;#&gt;::T,
  {?}source=&gt;uri::T,
- {?}runtime=&gt;time::T,
+ {?}runtime=&gt;real::T@time,
  {?}yield=&gt;thread::T,
- {?}loop=&gt;time::T,
+ {?}loop=&gt;real::T@time,
  {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
- {?}result=&gt;#{*}::T]</code></div></div>
+ {?}result=&gt;&lt;#{*}&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] run a concurrent virtual thread</p>
 </div><div class="card-body border-top py-2">
@@ -694,7 +716,7 @@ the objs referenced by the monads that halt are the result of the machine execut
         </span>
         <small class="text-muted code">/m/mach/inst/inject?rng=#&amp;dom=#</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__inject?rng=#&dom=#-doc-0-tab').click();document.getElementById('__m__mach__inst__inject?rng=#&dom=#-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inject?rng=<span class="code text-info"><span class="code text-success">#</span></span>&dom=<span class="code text-info"><span class="code text-success">#</span></span>(int::T,<span class="code text-info"><span class="code text-success">#</span></span>::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__inject?rng=#&dom=#-doc-0-tab').click();document.getElementById('__m__mach__inst__inject?rng=#&dom=#-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inject?rng=<span class="code text-info"><span class="code text-success">#</span></span>&dom=<span class="code text-info"><span class="code text-success">#</span></span>(int::T,<<span class="code text-info"><span class="code text-success">#</span></span>>::T){<j>}</code></pre>
 </div>
     
 </div><div class="card mb-3" id="__m__mach__inst__lift?rng=__m__mach__monad&dom=#&monad=^">
@@ -705,7 +727,7 @@ the objs referenced by the monads that halt are the result of the machine execut
         </span>
         <small class="text-muted code">/m/mach/inst/lift?rng=/m/mach/monad&amp;dom=#&amp;monad=^</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__lift?rng=__m__mach__monad&dom=#&monad=^-doc-0-tab').click();document.getElementById('__m__mach__inst__lift?rng=__m__mach__monad&dom=#&monad=^-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">lift?rng=<a href="#__m__mach__monad" data-bs-toggle="tooltip" title="range" class="code text-success">monad</a>&dom=<span class="code text-info">#</span>&monad=^(<span class="code text-info">#</span>{?}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__lift?rng=__m__mach__monad&dom=#&monad=^-doc-0-tab').click();document.getElementById('__m__mach__inst__lift?rng=__m__mach__monad&dom=#&monad=^-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">lift?rng=<a href="#__m__mach__monad" data-bs-toggle="tooltip" title="range" class="code text-success">monad</a>&dom=<span class="code text-info">#</span>&monad=^(<<span class="code text-info">#</span>{?}>::T){<j>}</code></pre>
 </div>
     
 </div><div class="card mb-3" id="__m__mach__inst__ring__const__one?rng=A&dom=A">
