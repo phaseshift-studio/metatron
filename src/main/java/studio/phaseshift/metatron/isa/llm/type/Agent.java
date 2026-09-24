@@ -606,14 +606,8 @@ public class Agent extends MRec {
                 .maxToolCallingRoundTrips(this.feature(ToolFeature.class).map(ToolFeature::maxToolCalls).orElse(100))
                 .storeRetrievedContentInChatMemory(true)
                 .toolProvider(this.feature(ToolFeature.class).map(ToolFeature::getToolProvider).orElseGet(mToolProvider::new))
-                .toolExecutionErrorHandler((error, context) -> {
-                    if (this.has(TOOL) && this.feature(LLM_TOOL_FEATURE_TID).asRec().has(ON_ERROR)) {
-                        this.feature(LLM_TOOL_FEATURE_TID).asRec().at(ON_ERROR).asInst().args(lst(this, fail(error)));
-                    } else {
-                        LOG.error(error);
-                    }
-                    return new ToolErrorHandlerResult(error.getMessage());
-                }).toolArgumentsErrorHandler((error, context) ->
+                .compensateOnToolErrors(true)
+                .toolExecutionErrorHandler((error, context) -> new ToolErrorHandlerResult(error.getMessage())).toolArgumentsErrorHandler((error, context) ->
                         new ToolErrorHandlerResult("""
                                                    provided arguments do not match tool schema: %s
                                                    """.formatted(error)))
@@ -642,7 +636,6 @@ public class Agent extends MRec {
     private void onToolExecuted(final ToolExecution tool, final List<Obj> features,
                                 final AtomicReference<Set<String>> orphanToolRequests, final CountDownLatch latch) {
         StatusLine.message(str("\uD83D\uDD28 on_tool_execute: %s(%s) => %s".formatted(tool.request().name(), tool.request().arguments(), tool.result())));
-        if (this.isInterrupted()) latch.countDown();
         final Rec toolRec = rec(
                 uri(NAME), str(tool.request().name()),
                 uri(TOOL_ARGUMENTS), str(tool.request().arguments()),
@@ -650,6 +643,7 @@ public class Agent extends MRec {
                 uri(CONTENTS), str(tool.request().id()));
         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_TOOL_EXECUTED, toolRec));
         orphanToolRequests.get().remove(tool.request().id());
+        if (this.isInterrupted()) latch.countDown();
     }
 
     private void onPartialToolCall(final PartialToolCall partialToolCall, final List<Obj> features,
@@ -665,12 +659,10 @@ public class Agent extends MRec {
 
     private void onPartialResponse(final String s, final List<Obj> features, final CountDownLatch latch) {
         StatusLine.message(str("\uD83D\uDCAC on_partial_response"));
-        if (this.isInterrupted()) {
-            latch.countDown();
-            return;
-        }
         Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_RESPONSE, str(s)));
+        if (this.isInterrupted())
+            latch.countDown();
     }
 
     private void onPartialThinking(final PartialThinking t, final CountDownLatch latch) {
@@ -691,19 +683,20 @@ public class Agent extends MRec {
         final fURI currentFeature = this.currentHook.get().get0();
         final fURI currentStage = this.currentHook.get().get1();
         final String errorMessage = "[" + currentFeature + "][" + currentStage + "]";
-        LOG.error("%s: %s", errorMessage, e);
         isError.set(MTronException.of("%s: %s", errorMessage, e));
         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_ERROR));
-        latch.countDown();
+        // signal the waiting thread on every error: a failed turn has nothing left to await.
+        // countDown() is idempotent, so this also covers the interrupt case.  Gating it on
+        // isInterrupted() made a provider error park the agent's lifecycle thread forever
+        // at latch.await() — the thread never reached the isError throw in chat().
+        if (isInterrupted())
+            latch.countDown();
     }
+
 
     private void onCompleteResponse(final ChatResponse c, final Rec responseFormat, final List<Obj> features,
                                     final long startNanos, final CountDownLatch latch) {
         StatusLine.message(str("\uD83D\uDCE6 on_complete_response"));
-        if (this.isInterrupted()) {
-            latch.countDown();
-            return;
-        }
         final String fullText = null == c.aiMessage().text() ? "" : c.aiMessage().text();
         Router.global().stats().ioStats().incrBytesRecv(fullText.getBytes().length);
         // Parse response format if requested
@@ -738,8 +731,8 @@ public class Agent extends MRec {
         if (null != scan && !scan.isEmpty())
             result.put(WATERMARK, scan.list());
         this.currentResult = result;
-        this.logger().none("\n\r");
-        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_COMPLETE_RESPONSE, result));
+        this.logger().none("\n");
+        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_COMPLETE_RESPONSE, this.currentResult));
         // Signal the waiting thread after all hooks have mutated the result
         latch.countDown();
     }

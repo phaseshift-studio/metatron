@@ -22,7 +22,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.MODEL;
+import static studio.phaseshift.metatron.Tokens.RESPONSE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -107,7 +108,7 @@ public class ChatFeature extends AbstractFeature implements ChatService {
 
     @Override
     public void onPartialResponse(final Agent agent, final Str text) {
-        agent.feature(LLM_CHAT_FEATURE_TID).asRec().at(f(RESPONSE).extend(TO)).apply(text);
+        this.handleTo(agent, text);
     }
 
     @Override

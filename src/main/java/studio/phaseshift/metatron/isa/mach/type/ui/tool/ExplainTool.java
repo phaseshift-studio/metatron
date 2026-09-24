@@ -126,6 +126,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
     private Attributes savedAttributes;
     private boolean running = false;
     private int totalHeightUsed = 0;  // Track how many lines we've used
+    private String lastFrameMarkup = "";  // The last full frame, settled into the transcript on exit
 
     public ExplainTool(final Code code) {
         this.rootCode = code;
@@ -145,16 +146,26 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         // The row where we start drawing (below prompt)
         //int baseRow = 0;  // We'll draw relative to current position
 
+        // From here the tool owns the terminal's rows: its frames redraw in place
+        // (their own cursor math), and the console's screen does not paint the region
+        // under them — which is how the table used to double itself on every key.
+        this.beginToolRun();
         pushLevel(rootCode, 0, 0, -1, -1);  // Root has no parent spawn position
 
         // Main event loop
         this.running = true;
         BindingReader bindingReader = new BindingReader(this.terminal.reader());
         KeyMap<Action> keyMap = buildKeyMap();
-        while (this.running && !this.stack.isEmpty()) {
-            redrawStack();
-            Action action = bindingReader.readBinding(keyMap);
-            handleAction(action);
+        try {
+            while (this.running && !this.stack.isEmpty()) {
+                redrawStack();
+                Action action = bindingReader.readBinding(keyMap);
+                handleAction(action);
+            }
+        } finally {
+            // Hand the terminal back on every exit — the last frame settles into
+            // the transcript, and the screen's region repaints from it.
+            this.endToolRun(this.lastFrameMarkup);
         }
     }
 
@@ -580,6 +591,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         }
 
         totalHeightUsed = canvas.finish();
+        this.lastFrameMarkup = canvas.frameText();
     }
 
     /**

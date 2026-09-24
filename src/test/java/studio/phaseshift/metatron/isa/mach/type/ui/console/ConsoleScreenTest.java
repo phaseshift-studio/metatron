@@ -69,6 +69,64 @@ public class ConsoleScreenTest extends AbstractMetatronTest {
     }
 
     /**
+     * An interactive tool's frame arrives with its own cursor arithmetic — cursor-up,
+     * line clears, absolute positioning.  Recorded verbatim, that arithmetic would run
+     * mid-paint: a command inside a row moves the cursor while a frame is being written
+     * and erases whatever the painter had just drawn.  The screen records the text and
+     * the styling, and drops the commands.
+     */
+    @Test
+    void testAToolFrameRecordsTextNotCommand() {
+        final String warm = Graphitty.string("{{y}}");
+        // a tool frame as the funnel receives it: cursor-up, then a line each of
+        // erase-write and newline — three rows of content
+        final String frame = "\033[3A"
+                + "\033[2Kop|dom\033[0m\r\n"
+                + "\033[2K" + warm + "dom|rng\033[0m\r\n"
+                + "\033[2Kstatus\033[0m";
+        final ConsoleScreen screen = screen(3, 40);
+        screen.appendAnsi(frame);
+        final List<String> rows = screen.visible();
+        assertEquals(3, rows.size(), "a three-row screen shows exactly the frame's three rows");
+        assertEquals("op|dom", Graphitty.strip(rows.get(0)), "line one is line one, command-free");
+        assertEquals("dom|rng", Graphitty.strip(rows.get(1)), "line two is line two, command-free");
+        for (final String row : rows) {
+            final String readable = row.replace("\033", "<E>").replace("\007", "<BEL>");
+            assertEquals(false, hasCommand(row), "no terminal command may survive into a stored row: " + readable);
+        }
+        assertEquals(true, rows.get(1).startsWith(warm), "the styling the row carried is kept");
+    }
+
+    /** True when a row still holds a terminal command — a cursor mover or a line clear. */
+    private static boolean hasCommand(final String row) {
+        int i = 0;
+        while (i < row.length()) {
+            if ('\033' != row.charAt(i)) {
+                i++;
+                continue;
+            }
+            int end = row.length();
+            if (i + 1 < row.length() && '[' == row.charAt(i + 1)) {
+                for (int j = i + 2; j < row.length(); j++)
+                    if (row.charAt(j) >= 0x40 && row.charAt(j) <= 0x7e) {
+                        end = j + 1;
+                        break;
+                    }
+                final String seq = row.substring(i, end);
+                if ('m' != seq.charAt(seq.length() - 1)) return true;
+                i = end;
+                continue;
+            }
+            if (i + 1 < row.length() && ']' == row.charAt(i + 1)) {  // OSC — the screen's links
+                while (i < row.length() && 0x07 != row.charAt(i)) i++;
+                continue;
+            }
+            i += 2;
+        }
+        return false;
+    }
+
+    /**
      * The point of storing rows rather than text: a wrapped row keeps the styling
      * that was running where it broke, so it can be painted on its own.
      */

@@ -1382,9 +1382,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             lhs.asInst().apply(inst.args()) :
                             Router.readFromSpace(lhs.uriValue().basePath().extend("apply")).apply(inst.args())),
                     //instC(MAP_INST_TID.dom(A).rng(ALL.maybe()), lst(T(B)), (lhs, inst) -> inst.arg(0)),
-                    docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)), "maybe some obj", "the lhs obj applied to the arg obj", Map.of(jnt(0), "any obj"), "applies the lhs obj to the arg obj to yield the rhs obj"),
+                    docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)), "maybe some obj", "the lhs obj applied to the arg obj", Map.of(jnt(0), "any obj"), "applies the lhs obj to the arg obj to yield the rhs obj"),
                     // Map.of(uri(LAW), laws(Category.Law.right_distributive))),
-                    instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).booleanCheck() ? lhs : noobj()),
+                    instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs).booleanCheck() ? lhs : noobj()),
                     //  Map.of(uri(LAW), laws(Category.Law.idempotent, Category.Law.right_distributive, Category.Law.boolean_))),
                     docWrap(instC(SIDE_INST_TID.dom(A).rng(A), lst(ALL_TYPE), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
                             "any obj", "the lhs obj", Map.of(jnt(0), "any obj applied by lhs obj"), "passes lhs obj through after applying itself to inst arg obj", "1.side(plus(2).to(x)) [-- 1 [x=>3] --]"),

@@ -73,7 +73,7 @@ public class ObjLinkSerializer extends ObjmtronSerializer {
 
     @Override
     protected StringBuilder handleVID(final StringBuilder sb, final Obj obj) {
-        if (null == obj.vid())
+        if (!obj.hasVID())
             return sb;
         // through writeUri, not wrapUri: this is a uri written into the output, and a renderer tags
         // uris where the serializer writes them.  Going around it left every vid -- and every type
@@ -100,6 +100,8 @@ public class ObjLinkSerializer extends ObjmtronSerializer {
      */
     @Override
     public String writeInst(final Inst inst) {
+        if (inst.isNoObj())
+            return super.writeInst(inst);
         // The body is rendered by the PLAIN serializer, and the one link wraps all of it.  Rendering
         // it here would tag the uri and type inside the instruction, and a link inside a link ends
         // the outer one (graphitty's rule): the first inner link closed this wrapper, so the

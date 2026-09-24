@@ -369,6 +369,10 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     // ── Inst generation ──────────────────────────────────────────
 
     public StringBuilder generateInst(final StringBuilder sb, final Inst inst, final int depth, final int padding, boolean nested) {
+        if (inst.isNoObj()) {
+            sb.append(this.writeNoObj(noobj()));
+            return sb;
+        }
         if (null == inst.tid()) {
             sb.append("inst");
             renderInstArg(sb, depth + 1, padding, nested, inst.arg(0));

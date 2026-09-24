@@ -265,14 +265,22 @@ public class TypeDiffTool extends AbstractWidget<TypeDiffTool> {
 
         pushLevel("", 0, 0, -1, -1);
 
+        // The tool owns the terminal's rows from here: its frames redraw in place and
+        // the console's screen does not paint the region under them (the table would
+        // double on every key otherwise).
+        this.beginToolRun();
         this.running = true;
         BindingReader bindingReader = new BindingReader(terminal.reader());
         KeyMap<Action> keyMap = buildKeyMap();
 
-        while (running && !stack.isEmpty()) {
-            redrawStack();
-            Action action = bindingReader.readBinding(keyMap);
-            handleAction(action);
+        try {
+            while (running && !stack.isEmpty()) {
+                redrawStack();
+                Action action = bindingReader.readBinding(keyMap);
+                handleAction(action);
+            }
+        } finally {
+            this.endToolRun(null);
         }
     }
 

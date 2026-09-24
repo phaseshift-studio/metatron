@@ -133,6 +133,34 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> extends SpaceR
         return new WidgetCanvas(this, previousTotalHeight);
     }
 
+    /**
+     * A tool about to own the terminal's rows: the console's screen stops
+     * repainting the region under the tool's frames (a paint moves the cursor the
+     * tool redraws against) and stops treating the frames' cursor math as
+     * transcript content — which is what lets the in-place redraw stay in place
+     * instead of the table doubling on every key.  No-op without a console or
+     * with the screen mode off.
+     *
+     * <p>Pair with {@link #endToolRun(String)} — in a {@code finally}, so the
+     * terminal is handed back on every exit, including an error.
+     */
+    protected void beginToolRun() {
+        final Console console = Console.LOCAL_INSTANCE;
+        if (null != console) console.beginInteractiveTool();
+    }
+
+    /**
+     * A tool that has handed the terminal back: the console's screen resumes,
+     * the region repaints, and — when the tool left content on screen — that
+     * content becomes the transcript's tail.
+     *
+     * @param finalFrame the tool's last frame (markup or ANSI), or null
+     */
+    protected void endToolRun(final String finalFrame) {
+        final Console console = Console.LOCAL_INSTANCE;
+        if (null != console) console.endInteractiveTool(finalFrame);
+    }
+
     @Override
     public Style<W> getStyle() {
         return Style.from(this.get(this.read(), STYLE_KEY));

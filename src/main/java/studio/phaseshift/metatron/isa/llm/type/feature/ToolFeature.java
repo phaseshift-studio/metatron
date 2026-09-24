@@ -216,7 +216,7 @@ public class ToolFeature extends AbstractFeature implements ToolService {
                     Str.Helper.cleanString(r.at(uri(NAME))),
                     Str.Helper.cleanString(r.at(uri(TOOL_ARGUMENTS))),
                     CommonUtil.clipString(Str.Helper.cleanString(r.at(uri(RESULT))), 50, true));
-
+            this.handleTo(agent, r);
             // stage the result for the ai message parked on it — the pairing gate
             // is what writes the ledger (never this hook), so a result whose ai
             // side already published (an interrupted turn closed with a lost

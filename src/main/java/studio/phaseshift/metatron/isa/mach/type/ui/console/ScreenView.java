@@ -164,6 +164,17 @@ public final class ScreenView {
     }
 
     /**
+     * True while an interactive tool (explain, tree select, …) owns the terminal's rows.
+     * Its frames redraw in place with cursor math of their own, so the screen must neither
+     * record them as transcript content — every frame recorded would settle into the
+     * history at once on exit — nor repaint the region under them, which moves the cursor
+     * the tool redraws against; either is how a table used to double itself on every key.
+     * Its writes still reach the terminal raw, and at {@link #exitTool} only the frame the
+     * tool left on screen becomes the transcript's tail.
+     */
+    private final AtomicBoolean toolActive = new AtomicBoolean(false);
+
+    /**
      * True while the console is still filling the terminal, so its output is appended the
      * ordinary way instead of painted over rows.
      *
@@ -212,6 +223,43 @@ public final class ScreenView {
     }
 
     /**
+     * An interactive tool takes over the terminal.  From here until
+     * {@link #exitTool} the screen does not paint the region (a paint moves the
+     * cursor, which is the one thing the tool redraws against) and the tool's own
+     * frames are passed through to the terminal raw, which is how they redraw in
+     * place instead of piling up as transcript rows.
+     */
+    void enterTool() {
+        if (!Console.screenMode()) return;
+        this.toolActive.set(true);
+    }
+
+    /**
+     * The tool gave the terminal back: its last frame becomes the transcript's tail
+     * (what the tool displayed is what the reader scrolls back to), and the region
+     * repaints from that content.
+     *
+     * @param finalFrame the tool's last frame — markup or ANSI, either is resolved —
+     *                   or null when the tool leaves no visible content
+     */
+    void exitTool(final String finalFrame) {
+        if (!this.toolActive.getAndSet(false)) return;
+        if (null != finalFrame && !finalFrame.isEmpty())
+            this.screen.append(finalFrame);
+        // The tool's raw frames scrolled the terminal and parked the cursor where the
+        // painter cannot see it — the rows it thinks it knows are no longer where they
+        // were (a plain invalidate left the new frame painted directly on the border
+        // of the old one).  Clear the screen, re-anchor the region at the top, and let
+        // the next frame repaint every row from the content: one copy of the tool's
+        // final state, at the tail of the transcript, exactly as :clear does.
+        this.console.getFloatingSurface().writeToTerminal(CLEAR_SCREEN + "\033[H");
+        this.screenStart = 1;
+        this.screenAppended = false;
+        this.screen.invalidate();
+        this.requestScreenPaint();
+    }
+
+    /**
      * Where every console write lands: recorded in the screen, and — while the console is
      * still filling the terminal — also appended to it (see {@link #screenAppends()}).
      *
@@ -221,6 +269,17 @@ public final class ScreenView {
         if (null == ansi || ansi.isEmpty()) return;
         Console.linkTrace("out len=%d osc8=%b linkMarkup=%b | %s", ansi.length(), ansi.contains("\033]8;"),
                 ansi.contains("{{link}}"), Graphitty.strip(ansi).replace("\n", "\\n"));
+        // While a tool owns the rows: its frame goes to the terminal exactly as the tool
+        // built it (cursor math included — that IS its in-place redraw) and nothing is
+        // recorded — every frame the tool redraws is a replacement, not history, and
+        // recording them used to dump the whole session into the transcript on exit.
+        // The frame it LEAVES is what settles in at exitTool.  No region paint either:
+        // its cursor handoff would land under the tool's next redraw and the table
+        // would double again.
+        if (this.toolActive.get()) {
+            this.console.getFloatingSurface().writeToTerminal(ScreenPainter.withoutLinks(ansi));
+            return;
+        }
         // A clear-screen code ({{XX}} — and so :clear, and any print of it) is an ACTION, not
         // content: the terminal is cleared AND the screen's own rows are dropped with it.
         // Clearing only the terminal left every row in the buffer, so the next frame — or a
@@ -295,7 +354,10 @@ public final class ScreenView {
      * burst of writes paints on the last frame rather than once per line.
      */
     void requestScreenPaint() {
-        if (!Console.screenMode() || this.screenAppends()) return;
+        // While a tool owns the terminal a paint would move the cursor out from under the
+        // tool's next redraw — the table would double.  The rows stay recorded; the paint
+        // happens when the tool hands the terminal back (exitTool invalidates and asks).
+        if (!Console.screenMode() || this.toolActive.get() || this.screenAppends()) return;
         // Never drop a request: note that a paint is wanted, and let whoever is already
         // painting see it.  A dropped request is a row that stays blank until the next
         // prompt — which is exactly how a widget's erased box survived a quick drag.
@@ -374,6 +436,7 @@ public final class ScreenView {
      */
     void renderScreen(final boolean deferIfTyping) {
         if (!Console.screenMode()) return;
+        if (this.toolActive.get()) return;  // the tool owns the terminal's rows
         if (deferIfTyping && this.console.deferNonActivePaneRender()) return;
         // while the console is appending, the prompt the reader is looking at is jline's
         // and it is already exactly where the cursor is: nothing to paint, nothing to
@@ -418,6 +481,7 @@ public final class ScreenView {
      * Repaint the screen region now, without blocking the caller's interest in the result.
      */
     void repaintScreen() {
+        if (this.toolActive.get()) return;  // a tool is redrawing those rows itself
         this.console.getFloatingSurface().writeAndRender(this::screenFrame);
     }
 

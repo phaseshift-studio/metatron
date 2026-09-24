@@ -1051,6 +1051,27 @@ private void redrawStack() {
 - **Relative** (no pane bounds): cursor-up to previous height → clear line → print → `\r\n`.  `previousHeight` is used
   to clear leftover lines from taller prior renders.
 
+### Owning the screen (full-terminal mode)
+
+With the console drawing its own screen (the default; `-Dmetatron.console.screen=false` opts out), every
+terminal-bound write funnels through the screen: the console records it as transcript rows and paints the
+region above the prompt with absolute positioning.  An in-place tool (the `redrawStack` pattern above)
+emits its own cursor math, so its frames must neither be recorded as content nor have the region repainted
+under them — do either one and the table doubles itself on every key (or the session dumps every frame the
+moment the tool closes).  The contract:
+
+- `beginToolRun()` / `endToolRun(finalFrame)` (`AbstractWidget`) bracket the tool's ownership of the terminal.
+  While active, the tool's frames reach the terminal raw (their cursor math IS the in-place redraw), nothing
+  is recorded, and the screen never repaints the region (a paint hands the cursor somewhere the tool did not
+  expect).  Wrap the input loop — `endToolRun` in a `finally`, so every exit, including an error, hands the
+  terminal back.
+- `endToolRun` settles the tool's last frame into the transcript — what the tool leaves on screen is what a
+  reader scrolls back to (the screen keeps text and styling and strips terminal commands,
+  `ScreenPainter.noCommands`) — then clears the screen and repaints fully from its own content, because the
+  tool's raw frames scrolled the terminal somewhere the painter cannot have followed.  Net effect: the tool
+  leaves exactly one copy of its final state, at the tail of the transcript.
+- Content-less tools (transient selections, swipes) pass `null`.
+
 ### Tool → Widget dependencies
 
 | Tool                   | Widgets used                                                     |

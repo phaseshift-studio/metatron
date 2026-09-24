@@ -211,4 +211,13 @@ public final class WidgetCanvas {
     public int lineCount() {
         return currentLine;
     }
+
+    /**
+     * The frame built so far, unresolved — markup and escapes as the widget mixed
+     * them — for the owner to keep a copy of (a tool settles its last one into the
+     * transcript when it leaves the terminal).
+     */
+    public String frameText() {
+        return this.output.toString();
+    }
 }

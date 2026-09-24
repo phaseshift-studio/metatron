@@ -202,6 +202,37 @@ public final class ScreenPainter {
     }
 
     /**
+     * The row with its terminal commands gone — cursor moves, line clears, mode
+     * sets — keeping SGR styling and OSC sequences, which the screen stores and
+     * answers.
+     *
+     * <p>This is the row the screen records: a cursor move stored inside a row
+     * would run <em>mid-paint</em> — the terminal obeys it at the wrong moment —
+     * and a line clear would erase whatever the painter had just written, so
+     * every command a widget emitted is kept only as the motion it caused a
+     * live frame, never as content.
+     */
+    public static String noCommands(final String ansi) {
+        if (null == ansi || ansi.isEmpty() || ansi.indexOf('\033') < 0) return ansi;
+        final StringBuilder out = new StringBuilder(ansi.length());
+        int i = 0;
+        while (i < ansi.length()) {
+            if ('\033' != ansi.charAt(i)) {
+                out.append(ansi.charAt(i));
+                i++;
+                continue;
+            }
+            final int end = escapeEnd(ansi, i);
+            final String seq = ansi.substring(i, end);
+            final char kind = i + 1 < ansi.length() ? ansi.charAt(i + 1) : 0;
+            if (']' == kind || (kind == '[' && isSgr(seq)))
+                out.append(seq);
+            i = end;
+        }
+        return out.toString();
+    }
+
+    /**
      * The row with its OSC 8 hyperlink sequences removed — the uri survives only in the
      * stored row, for a click to read back out of it (see {@link #linkAt(String, int)}).
      */

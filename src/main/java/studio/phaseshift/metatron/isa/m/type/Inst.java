@@ -209,7 +209,9 @@ public interface Inst extends Call {
         final fURI base = this.tid().basePath();
         return base.equals(BLOCK_INST_TID) ||
                 // base.equals(AUTO_TID) ||
-                base.equals(MAPP_INST_TID) ||
+                // base.equals(MAPP_INST_TID) ||
+                //base.equals(MAP_INST_TID) ||
+                base.equals(FILTER_INST_TID) ||
                 base.equals(FORK_INST_TID) ||
                 base.equals(THREAD_INST_TID) ||
                 base.equals(ORDER_INST_TID) ||
