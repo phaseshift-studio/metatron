@@ -283,13 +283,15 @@ Custom types via `tid::T[predicate][constructor]@vid`:
 
 ```mtron
 mtron> int::T[is(gt(0))]@nat     [-- type nat, only positive ints --]
-==>int::T[is(gt(0))]@/m/math/nat
+==>int::T[is(gt(0))]@nat
 mtron> int::T[?>0]@nat           [-- syntax sugar on is(gt(0)) --]
-==>int::T[is(gt(0))]@/m/math/nat
+==>int::T[is(gt(0))]@nat
 mtron> nat::2                    [-- ok --]
 ==>nat::2
 mtron> nat::-1                   [-- <ERROR> --]
-==>ERROR: -1 is not a int::T[is(gt(0))]@/m/math/nat
+==>fail::[-1 is not a int::T[is(gt(0))]@nat
+   	while parsing: nat::-1
+   	at offset 19]@/sys/fail/1034
 ```
 ---
 
@@ -312,6 +314,7 @@ mtron> {1,2,3,4}.map(map(+2))           [-- nested --]
 ==>5
 ==>6
 mtron> {1,2,3}.where(gt(1))             [-- {2,3}  (filter: keep if predicate matches) --]
+==>fail{3}::[lhs range does not match inst domain: int::T => uri::T [where?rng=uri{?}&dom=uri(gt(1)){<j>}@<1>]]@/sys/fail/1046
 mtron> {1,2,3}.is(gt(1))                [-- {2,3}  (same, filter via is()) --]
 ==>2
 ==>3
@@ -337,13 +340,11 @@ mtron> [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3] --
 
 ```mtron
 mtron> {[a=>1],[a=>2],[a=>3]}.where([a=>is(gt(1))])               [-- {[a=>2],[a=>3]} --]
-==>[a=>2]
-==>[a=>3]
+==>fail{3}::[lhs range does not match inst domain: rec::T => uri::T [where?rng=uri{?}&dom=uri([a=>is(gt(1))]){<j>}@<1>]]@/sys/fail/1058
 mtron> {[a=>1],[a=>2],[a=>3]}=?=[a=>is(gt(1))]                    [-- syntax sugar for above --]
-==>[a=>2]
-==>[a=>3]
+==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at '=?=[a=>is(gt(1))]'
 mtron> [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   [-- [1,7,3] --]
-==>[1,7,3]
+==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at '=?=[_,is(gt(5)),_]'
 ```
 ---
 

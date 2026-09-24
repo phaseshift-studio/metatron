@@ -268,6 +268,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -281,8 +282,6 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant">Modelfile.mtron-qwen-14b-assistant</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant-thinking">Modelfile.mtron-qwen-14b-assistant-thinking</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -408,10 +407,16 @@ anywhere            ┌───────────────────
                method  =&gt; &gt;&gt;0 - &lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}${/}&gt;,
                params  =&gt; *message&gt;&gt;1].inst(payload=&gt;_){
                  *&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}&gt;&gt;&gt;send.apply(*payload)}}]
-==&gt;ERROR: [
- jsonrpc=&gt;'2.0',
- method=&gt;rshift(0).minus(&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}${/}&gt;),
- params=&gt;*message.rshift(1)] is not a str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/json
+==&gt;fail::[[
+    jsonrpc=&gt;'2.0',
+    method=&gt;rshift(0).minus(&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}${/}&gt;),
+    params=&gt;*message.rshift(1)] is not a str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@json
+   	while parsing: &lt;ws://localhost:8555/mcp/+/notifications/#?subq&gt; -&gt; sub::[
+             on_recv =&gt; inst?#&lt;=lst(message=&gt;?lst::T){
+               -&lt;json::[jsonrpc =&gt; '2.0',
+                  method  =&gt; &gt;&gt;0 - &lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}${/}&gt;,
+                  params  =&gt; *message&gt;&gt;1].inst(payload=&gt;_){
+                    *&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}&gt;&gt;&gt;send.apply(*payload)}}]]@/sys/fail/1768
 </code></pre>
 <p>This lives in <code>boot/boot.mtron</code> lines 82-88 and is injected at boot time.</p>
 <h3>Key Mechanics</h3>
@@ -440,9 +445,10 @@ Ensures JSON serialization (`{&quot;jsonrpc&quot;:&quot;2.0&quot;,...}`) rather 
 ```mtron
 mtron&gt; [-- WRONG — sends literal source code, not evaluated JSON --]
 mtron&gt; json::[jsonrpc =&gt; '2.0', params =&gt; *message&gt;&gt;1]
-==&gt;ERROR: [
- jsonrpc=&gt;'2.0',
- params=&gt;*message.rshift(1)] is not a str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/json
+==&gt;fail::[[
+    jsonrpc=&gt;'2.0',
+    params=&gt;*message.rshift(1)] is not a str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@json
+   	while parsing: json::[jsonrpc =&gt; '2.0', params =&gt; *message&gt;&gt;1]]@/sys/fail/1776
 ```**Symptom**: Client receives raw expression text instead of evaluated values.
 **Fix**: Use `-&lt;json::[...]` to force evaluation.
 

@@ -113,7 +113,7 @@ maven build commands are attached to the `project::T` for each of access.
 
 ```mtron
 mtron> <mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/scratch)
-==>fail::[inst apply failure: java.lang.ClassCastException: class studio.phaseshift.metatron.isa.m.type.impl.MCode cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MCode and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/248
+==>fail::[inst apply failure: java.lang.ClassCastException: class studio.phaseshift.metatron.isa.m.type.impl.MCode cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MCode and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app') (at /m/inst/as@1) [Project<84>]][unable to convert mcode to rec::T [Project<84>]][class studio.phaseshift.metatron.isa.m.type.impl.MCode cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MCode and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/248
 ```
 Now that the project is stored in space, build commands can be added and the project can be built.
 
@@ -138,9 +138,9 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
 mtron> */dev/scratch/command/mvn_clean
 ==>result{4}::[
     status=>success,
-    runtime=>millis::716.0000,
+    runtime=>millis::690.0000,
     command=>'mvn -f src/test/resources/scratch clean',
-    output=>!*/sys/tmp/b8f00169]
+    output=>!*/sys/tmp/e082b816]
 mtron> */dev/scratch/command/mvn_build>>output
 ==>{4}'WARNING: A terminally deprecated method in sun.misc.Unsafe has been called'
 ==>{4}'WARNING: sun.misc.Unsafe::staticFieldBase has been called by com.google.inject.internal.aop.HiddenClassDefiner (file:/home/killswitch/.sdkman/candidates/maven/current/lib/guice-5.1.0-classes.jar)'
@@ -158,8 +158,8 @@ mtron> */dev/scratch/command/mvn_build>>output
 ==>{4}'[INFO] Nothing to compile - all classes are up to date.'
 ==>{12}'[INFO] ------------------------------------------------------------------------'
 ==>{4}'[INFO] BUILD SUCCESS'
-==>{4}'[INFO] Total time:  0.226 s'
-==>{4}'[INFO] Finished at: 2026-09-19T00:00:50-06:00'
+==>{4}'[INFO] Total time:  0.234 s'
+==>{4}'[INFO] Finished at: 2026-09-23T22:54:01-06:00'
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.
 

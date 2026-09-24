@@ -268,6 +268,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -281,8 +282,6 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant">Modelfile.mtron-qwen-14b-assistant</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant-thinking">Modelfile.mtron-qwen-14b-assistant-thinking</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -412,10 +411,32 @@
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
  type=&gt;[
-  obj_ide_java::T,
-  java::T,
-  result::T,
-  project::T],
+  /m/ide/serializer::T[][ctor?obj_ide_java&lt;=#{?}(#{*}::T)]@obj_ide_java,
+  rec::T[?[
+  classes=&gt;[&lt;#&gt;::T=&gt;lst::T],
+  {?}package=&gt;str::T,
+  {?}imports=&gt;lst::T,
+  {?}preamble=&gt;str::T,
+  {?}postscript=&gt;str::T]]@java,
+  rec::T[?[
+  status=&gt;union(success,error,halted),
+  runtime=&gt;!*/m/math/time,
+  {?}command=&gt;str::T,
+  {?}project=&gt;project::T,
+  {?}result=&gt;str{*}::T,
+  {?}error=&gt;{?}[fail{?}::T]]]@result,
+  rec::T[?[
+  root=&gt;uri::T,
+  {?}name=&gt;str::T,
+  {?}desc=&gt;str::T,
+  {?}command=&gt;[uri::T=&gt;rec::T[?[
+  status=&gt;union(success,error,halted),
+  runtime=&gt;!*/m/math/time,
+  {?}command=&gt;str::T,
+  {?}project=&gt;project::T,
+  {?}result=&gt;str{*}::T,
+  {?}error=&gt;{?}[fail{?}::T]]]@result],
+  {?}code=&gt;&lt;#&gt;::T]]@project],
  inst=&gt;[
   as?project&lt;=uri(project::T),
   as?skill&lt;=project(#::T),
@@ -476,11 +497,11 @@
         <small class="text-muted code">/m/ide/java</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  classes=&gt;[#::T=&gt;lst::T],
+  classes=&gt;[&lt;#&gt;::T=&gt;lst::T],
   {?}package=&gt;str::T,
   {?}imports=&gt;lst::T,
   {?}preamble=&gt;str::T,
-  {?}postscript=&gt;str::T]]@/m/ide/java</code></pre></div>
+  {?}postscript=&gt;str::T]]@java</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a coarse rec encoding of a java source file optimized for semantic editing</p>
@@ -493,7 +514,7 @@
         </span>
         <small class="text-muted code">/m/ide/serializer/obj_ide_java</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/ide/serializer::T[][ctor?obj_ide_java&lt;=#{?}(#{*}::T)]@/m/ide/serializer/obj_ide_java</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/ide/serializer::T[][ctor?obj_ide_java&lt;=#{?}(#{*}::T)]@obj_ide_java</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__ide__project">
@@ -508,8 +529,14 @@
   root=&gt;uri::T,
   {?}name=&gt;str::T,
   {?}desc=&gt;str::T,
-  {?}command=&gt;[uri::T=&gt;result::T],
-  {?}code=&gt;#::T]]@/m/ide/project</code></pre></div>
+  {?}command=&gt;[uri::T=&gt;rec::T[?[
+  status=&gt;union(success,error,halted),
+  runtime=&gt;!*/m/math/time,
+  {?}command=&gt;str::T,
+  {?}project=&gt;project::T,
+  {?}result=&gt;str{*}::T,
+  {?}error=&gt;{?}[fail{?}::T]]]@result],
+  {?}code=&gt;&lt;#&gt;::T]]@project</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] the project descriptor (the pom.xml of a metatron ide) — a project.mtron file at the project root</p>
@@ -531,7 +558,7 @@
   {?}command=&gt;str::T,
   {?}project=&gt;project::T,
   {?}result=&gt;str{*}::T,
-  {?}error=&gt;{?}[fail{?}::T]]]@/m/ide/result</code></pre></div>
+  {?}error=&gt;{?}[fail{?}::T]]]@result</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] the standardized build/test/status outcome — rec::T with a union status verdict</p>

@@ -268,6 +268,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -281,8 +282,6 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant">Modelfile.mtron-qwen-14b-assistant</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant-thinking">Modelfile.mtron-qwen-14b-assistant-thinking</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -455,7 +454,7 @@ under <code>/m/math/+</code> and available via the standard type resolution syst
 <h5>construction</h5>
 <pre><code class="language-mtron">mtron&gt; [-- current system time --]
 mtron&gt; datetime_now()
-==&gt;datetime::&lt;//2026.09:19/00/01/14/169?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.09:23/22/54/39/536?tz=-0600&gt;
 mtron&gt; [-- from record (goes through .as(uri::T) first) --]
 mtron&gt; [host=&gt;&lt;2024.12&gt;,port=&gt;25,path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
         c=&gt;[min=&gt;1,max=&gt;1],q=&gt;[tz=&gt;'-0500']].as(uri::T).as(datetime::T)
@@ -527,14 +526,9 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)==[port=&gt;31]&g
 ==&gt;31
 mtron&gt; [-- where filter: match day 25 --]
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)=?=[port=&gt;25]
-==&gt;[
-    host=&gt;&lt;2024.12&gt;,
-    port=&gt;25,
-    authority=&gt;&lt;2024.12:25&gt;,
-    path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
-    c=&gt;[min=&gt;1,max=&gt;1],
-    q=&gt;[tz=&gt;'-0500']]
+==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '=?=[port=&gt;25]'
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)=?=[port=&gt;26]
+==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '=?=[port=&gt;26]'
 mtron&gt; [-- rec update: change timezone --]
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)&gt;&gt;=[q=&gt;[tz=&gt;'+0000']]&gt;&gt;q&gt;&gt;tz
 ==&gt;'+0000'
@@ -583,9 +577,13 @@ mtron&gt; 30000.0.as(minute::T)
 </code></pre>
 <p>Time units require a real-backed value — an int-backed time is a type violation:</p>
 <pre><code class="language-mtron">mtron&gt; day::2.as(millis::T)         [-- int-backed time (bad) --]
-==&gt;ERROR: 2 is not a time::T[][ctor?day&lt;=#{?}(#{*}::T)]@/m/math/time/day
+==&gt;fail::[2 is not a time::T[][ctor?day&lt;=#{?}(#{*}::T)]@day
+   	while parsing: day::2.as(millis::T)
+   	at offset 9]@/sys/fail/1752
 mtron&gt; hour::2.as(minute::T)        [-- int-backed time (bad) --]
-==&gt;ERROR: 2 is not a time::T[][ctor?hour&lt;=#{?}(#{*}::T)]@/m/math/time/hour
+==&gt;fail::[2 is not a time::T[][ctor?hour&lt;=#{?}(#{*}::T)]@hour
+   	while parsing: hour::2.as(minute::T)
+   	at offset 8]@/sys/fail/1760
 </code></pre>
 <h5>relational operators</h5>
 <p><code>eq</code>, <code>neq</code>, <code>lt</code>, <code>gt</code>, <code>lte</code>, and <code>gte</code> auto-convert across units before comparing:</p>
@@ -694,7 +692,7 @@ mtron&gt; kB::1024.0.lte(mB::1.0)
 mtron&gt; kB::1024.0.gte(mB::1.0)
 ==&gt;true
 </code></pre>
-<p>note: relational operators on non-exact unit conversions are a known bug (see the TODOs in <code>mathInstSetTest</code>).</p>
+<p>note: relational operators on non-exact unit conversions are a known bug (see the TODOs in <code>mathInstSetTest2</code>).</p>
 <h5>normalize</h5>
 <p><code>normalize()</code> cascades upward while the value reaches ~2× the next larger unit, until stable:</p>
 <table>

@@ -268,6 +268,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -281,8 +282,6 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant">Modelfile.mtron-qwen-14b-assistant</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant-thinking">Modelfile.mtron-qwen-14b-assistant-thinking</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -413,10 +412,12 @@
  space=&gt;[super=&gt;!*/m],
  constq=&gt;[/m/web/serializer/obj_tp3::[=&gt;]@/m/web/serializer/obj_tp3],
  type=&gt;[
-  elmt::T,
-  vrtx::T,
-  edge::T,
-  grphspace::T,
+  rec::T@elmt,
+  elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx,
+  elmt::T[?[
+  OUT=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx],
+  IN=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx]]]@edge,
+  space::T[?[{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(#{*}::T)]@instset,{?}config=&gt;rec::T]][ctor?grphspace&lt;=#{?}(rec::T)]@grphspace,
   modern::T],
  inst=&gt;[
   gremlin?#{*}&lt;=grphspace(str::T),
@@ -552,8 +553,8 @@
         <small class="text-muted code">/m/grph/edge</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T[?[
-  OUT=&gt;[uri::T=&gt;vrtx::T],
-  IN=&gt;[uri::T=&gt;vrtx::T]]]@/m/grph/edge</code></pre></div>
+  OUT=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx],
+  IN=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx]]]@edge</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a directed key/value attributed binary edge</p>
@@ -566,7 +567,7 @@
         </span>
         <small class="text-muted code">/m/grph/elmt</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/grph/elmt</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@elmt</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[nominal] </p>
@@ -592,7 +593,7 @@
         </span>
         <small class="text-muted code">/m/grph/vrtx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a key/value attributed vertex</p>
@@ -605,10 +606,16 @@
         <a href="m_grph_space_grphspace.html" class="code text-primary fw-bold text-decoration-none">grphspace</a>
         <small class="text-muted code">/m/grph/space/grphspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}schema=&gt;instset::T,{?}config=&gt;rec::T]][ctor?grphspace&lt;=#{?}(rec::T)]@/m/grph/space/grphspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(#{*}::T)]@instset,{?}config=&gt;rec::T]][ctor?grphspace&lt;=#{?}(rec::T)]@grphspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  pattern=&gt;uri::T,
- {?}q=&gt;[qproc{?}::T],
+ {?}q=&gt;[rec{?}::T[?[
+  pattern=&gt;uri::T,
+  {?}pre_write=&gt;inst::T,
+  {?}post_write=&gt;inst::T,
+  {?}qless_write=&gt;inst::T,
+  {?}pre_read=&gt;inst::T,
+  {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T)]@qproc],
  {?}route=&gt;[uri{?}::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
@@ -676,7 +683,7 @@
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[flatmapper] returns the lhs edge&#39;s head and tail vertices
-one-to-many obj transformation (domain coefficient is one, range &gt; 1)</p>
+one-to-many obj transformation (dom_c = 1, rng_c &gt; 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an edge" class="text-info">an edge</a> <span class="text-light">=&gt;</span> <a href="#both vertices" class="text-success">both vertices</a></pre>
 </div>
@@ -743,7 +750,7 @@ one-to-many obj transformation (domain coefficient is one, range &gt; 1)</p>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[mapper] returns the lhs edge head vertex
-one-to-one obj transformation (domain coefficient is one, range is one)</p>
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an edge" class="text-info">an edge</a> <span class="text-light">=&gt;</span> <a href="#the incoming vertex" class="text-success">the incoming vertex</a></pre>
 </div>
@@ -759,7 +766,7 @@ one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[mapper] returns the lhs element label (the tid)
-one-to-one obj transformation (domain coefficient is one, range is one)</p>
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an element" class="text-info">an element</a> <span class="text-light">=&gt;</span> <a href="#the element label" class="text-success">the element label</a></pre>
 </div>
@@ -811,7 +818,7 @@ one-to-one obj transformation (domain coefficient is one, range is one)</p>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[mapper] returns the lhs edge tail vertex
-one-to-one obj transformation (domain coefficient is one, range is one)</p>
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an edge" class="text-info">an edge</a> <span class="text-light">=&gt;</span> <a href="#the outgoing vertex" class="text-success">the outgoing vertex</a></pre>
 </div>
@@ -847,7 +854,7 @@ one-to-one obj transformation (domain coefficient is one, range is one)</p>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_count?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[filter] leverages gremlin&#39;s count()-reducer for vrtx/edge collections
-conditionally passes or drops objs (range coefficient is maybe)</p>
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
@@ -862,7 +869,7 @@ conditionally passes or drops objs (range coefficient is maybe)</p>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[filter] leverages gremlin&#39;s limit()-barrier for vrtx/edge collections
-conditionally passes or drops objs (range coefficient is maybe)</p>
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
@@ -877,7 +884,7 @@ conditionally passes or drops objs (range coefficient is maybe)</p>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_where?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[filter] leverages gremlin&#39;s has()-filtering for vrtx collections
-conditionally passes or drops objs (range coefficient is maybe)</p>
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
@@ -892,7 +899,7 @@ conditionally passes or drops objs (range coefficient is maybe)</p>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_where_count?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[filter] leverages gremlin&#39;s has().count() filtering-reduction for vrtx collections
-conditionally passes or drops objs (range coefficient is maybe)</p>
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
@@ -907,7 +914,7 @@ conditionally passes or drops objs (range coefficient is maybe)</p>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_where_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[filter] leverages gremlin&#39;s has().limit() filtering-barrier for vrtx collections
-conditionally passes or drops objs (range coefficient is maybe)</p>
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>

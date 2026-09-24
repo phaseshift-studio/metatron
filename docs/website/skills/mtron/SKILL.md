@@ -289,11 +289,9 @@ is structural validation during projection):
 
 ```mtron
 mtron> int::T[?>0]@nat
-==>int::T[is(gt(0))]@/m/math/nat
+==>int::T[is(gt(0))]@nat
 mtron> rec::T[?[name=>str::T, age=>nat::T]]@person
-==>rec::T[?[
-     name=>str::T,
-     age=>nat::T]]@person
+==>rec::T[?[name=>str::T,age=>int::T[is(gt(0))]@nat]]@person
 mtron> person::[name=>'marko', age=>29]
 ==>person::[name=>'marko',age=>29]
 ```
@@ -350,6 +348,10 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 * [math instruction set](references/math-instset-mtron.md) -- `/m/math`: the unit types (`time`, `datasize`,
   `currency`), the `datetime` uri and its construction/arithmetic, `normalize` and the trig/rounding instructions, and
   the `pi`/`e` constants.
+* [as-graph](references/as-graph-mtron.md) -- every `as` instruction read as a property-graph edge (label `as`,
+  outV the dom, inV the rng) and `?asq` as its property map: the six edge kinds and what each means when you add a
+  cast, how to read an edge that no row declares, the fully generic arg-type cast behind a plain tag, and the
+  implicit ancestor casts.
 * [web instruction set](references/web-instset-mtron.md) -- `/m/web`: the protocol surfaces and MIME document types,
   `route::T` mount tables and the literal-prefix rule, templated route values, mounting an obj, and what is not
   available yet.

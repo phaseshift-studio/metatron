@@ -268,6 +268,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -281,8 +282,6 @@
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant">Modelfile.mtron-qwen-14b-assistant</a>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant-thinking">Modelfile.mtron-qwen-14b-assistant-thinking</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -644,11 +643,9 @@ being <code>A</code> (i.e. <code>A{1}</code>) means the barrier is <em>reducing<
 <p><strong>Types and validation</strong> -- define a type, validate a value against it (<code>.as(type::T)</code>
 is structural validation during projection):</p>
 <pre><code class="language-mtron">mtron&gt; int::T[?&gt;0]@nat
-==&gt;int::T[is(gt(0))]@/m/math/nat
+==&gt;int::T[is(gt(0))]@nat
 mtron&gt; rec::T[?[name=&gt;str::T, age=&gt;nat::T]]@person
-==&gt;rec::T[?[
-     name=&gt;str::T,
-     age=&gt;nat::T]]@person
+==&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T[is(gt(0))]@nat]]@person
 mtron&gt; person::[name=&gt;'marko', age=&gt;29]
 ==&gt;person::[name=&gt;'marko',age=&gt;29]
 </code></pre>
@@ -700,6 +697,10 @@ pattern-based access, <code>lineq</code> line-level editing).</li>
 <li><a href="references/math-instset-mtron.html">math instruction set</a> -- <code>/m/math</code>: the unit types (<code>time</code>, <code>datasize</code>,
 <code>currency</code>), the <code>datetime</code> uri and its construction/arithmetic, <code>normalize</code> and the trig/rounding instructions, and
 the <code>pi</code>/<code>e</code> constants.</li>
+<li><a href="references/as-graph-mtron.html">as-graph</a> -- every <code>as</code> instruction read as a property-graph edge (label <code>as</code>,
+outV the dom, inV the rng) and <code>?asq</code> as its property map: the six edge kinds and what each means when you add a
+cast, how to read an edge that no row declares, the fully generic arg-type cast behind a plain tag, and the
+implicit ancestor casts.</li>
 <li><a href="references/web-instset-mtron.html">web instruction set</a> -- <code>/m/web</code>: the protocol surfaces and MIME document types,
 <code>route::T</code> mount tables and the literal-prefix rule, templated route values, mounting an obj, and what is not
 available yet.</li>

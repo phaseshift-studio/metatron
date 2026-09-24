@@ -268,6 +268,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -281,8 +282,6 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant">Modelfile.mtron-qwen-14b-assistant</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant-thinking">Modelfile.mtron-qwen-14b-assistant-thinking</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -413,7 +412,7 @@
  space=&gt;[super=&gt;!*/m],
  const=&gt;[
   [remote_console=&gt;inst()]@helper,
-  [=&gt;]@obj_xml,
+  obj_xml::[=&gt;]@obj_xml,
   obj_html::[=&gt;]@obj_html,
   obj_json::[
    density=&gt;OPAQUE,
@@ -441,50 +440,56 @@
   obj_bson::[=&gt;]@obj_bson,
   obj_xsv::[delimiter=&gt;&#39;,&#39;,header=&gt;false]@obj_xsv],
  type=&gt;[
-  mime::T,
-  xml::T,
-  html::T,
-  json::T,
-  yaml::T,
-  xsv::T,
-  csv::T,
-  css::T,
-  markdown::T,
-  java::T,
+  uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime,
+  str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@xml,
+  str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@html,
+  str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@json,
+  str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@yaml,
+  str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@xsv,
+  xsv::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@csv,
+  str::T@css,
+  str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@markdown,
+  str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@java,
   serializer::T,
-  obj_mtron::T,
-  obj_simple_json::T,
-  obj_bson::T,
-  obj_yaml::T,
-  obj_bytebuffer::T,
-  obj_xsv::T,
-  httpspace::T,
-  wsspace::T,
-  web_socket::T,
-  ws_handler::T,
-  ws_client::T,
-  mcp_ws::T,
-  mcp_emulator_ws::T,
-  mtron_ws::T,
-  http_socket::T,
-  http_handler::T,
-  http_client::T,
-  mcp_emulator_http::T,
-  mtron_http::T,
-  mcp_http::T,
-  web_http::T,
-  mcp_mtron::T,
-  mcp_server::T,
-  route::T,
-  http::T,
-  ws::T,
-  mcp::T,
-  rest::T,
-  mtron::T,
-  stream::T,
-  sse::T,
-  protocol::T,
-  mcp_client::T],
+  serializer::T[?[
+  clip=&gt;[{?}/m/rec=&gt;isa(int::T),{?}/m/lst=&gt;isa(int::T),{?}/m/str=&gt;isa(int::T),{?}/m/uri=&gt;isa(int::T),{?}/m/real=&gt;isa(int::T),{?}/m/bytes=&gt;isa(int::T),{?}/m/fail=&gt;isa(int::T)],
+  {?}justify=&gt;isa(bool::T)]][ctor?obj_mtron&lt;=#{?}(obj_mtron::T)]@obj_mtron,
+  serializer::T[?[{?}wrap_uri=&gt;isa(bool::T),{?}bias_towards_uri=&gt;isa(bool::T),{?}bias_towards_objs=&gt;isa(bool::T)]][ctor?obj_simple_json&lt;=#{?}(obj_simple_json::T)]@obj_simple_json,
+  serializer::T@obj_bson,
+  serializer::T[][ctor?obj_yaml&lt;=#{?}(obj_yaml::T)]@obj_yaml,
+  serializer::T[?[{?}pretty=&gt;bool::T,{?}indent=&gt;2]][ctor?obj_bytebuffer&lt;=#{?}(obj_bytebuffer::T)]@obj_bytebuffer,
+  serializer::T[?[{?}delimiter=&gt;isa(str::T),{?}header=&gt;isa(bool::T)]][ctor?obj_xsv&lt;=#{?}(obj_xsv::T)]@obj_xsv,
+  space::T[][ctor?httpspace&lt;=#{?}(#{*}::T)]@httpspace,
+  space::T[?[host=&gt;uri::T]][ctor?wsspace&lt;=#{?}(wsspace::T)]@wsspace,
+  rec::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}send=&gt;inst::T,{?}send_recv=&gt;inst::T,{?}on_open=&gt;&lt;#&gt;::T,{?}on_error=&gt;&lt;#&gt;::T,{?}on_message=&gt;&lt;#&gt;::T,{?}on_close=&gt;&lt;#&gt;::T]]@web_socket,
+  web_socket::T[][ctor?web_socket&lt;=#{?}(rec::T)]@ws_handler,
+  web_socket::T[][ctor?web_socket&lt;=#{?}(rec::T)]@ws_client,
+  mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?mcp_ws&lt;=#{?}(rec::T)]@mcp_ws,
+  mcp_ws::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?mcp_emulator_ws&lt;=#{?}(rec::T)]@mcp_emulator_ws,
+  mtron::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron)]][ctor?mtron_ws&lt;=#{?}(#{*}::T)]@mtron_ws,
+  rec::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}send=&gt;inst::T,{?}on_get=&gt;&lt;#&gt;::T,{?}on_post=&gt;&lt;#&gt;::T,{?}on_put=&gt;&lt;#&gt;::T,{?}on_delete=&gt;&lt;#&gt;::T,{?}on_patch=&gt;&lt;#&gt;::T,{?}on_head=&gt;&lt;#&gt;::T,{?}on_options=&gt;&lt;#&gt;::T,{?}on_error=&gt;&lt;#&gt;::T,{?}on_close=&gt;&lt;#&gt;::T]]@http_socket,
+  http_socket::T[][ctor?http_handler&lt;=#{?}(#{*}::T)]@http_handler,
+  http_socket::T[][ctor?http_client&lt;=#{?}(#{*}::T)]@http_client,
+  mcp_http::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?mcp_emulator_http&lt;=#{?}(rec::T)]@mcp_emulator_http,
+  mtron::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron)]][ctor?mtron_http&lt;=#{?}(rec::T)]@mtron_http,
+  mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?mcp_http&lt;=#{?}(rec::T)]@mcp_http,
+  rest::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron),{?}web_root=&gt;&lt;#&gt;::T,{?}default_page=&gt;&lt;#&gt;::T,{?}read_only=&gt;&lt;#&gt;::T]][ctor?web_http&lt;=#{?}(rec::T)]@web_http,
+  mcp_server::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?mcp_mtron&lt;=#{?}(rec::T)]@mcp_mtron,
+  mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?mcp_server&lt;=#{?}(rec::T)]@mcp_server,
+  rec::T@route,
+  protocol::T@http,
+  protocol::T@ws,
+  protocol::T@mcp,
+  http::T@rest,
+  protocol::T@mtron,
+  protocol::T@stream,
+  stream::T@sse,
+  rec::T[?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)]@protocol,
+  rec::T[?[{?}host=&gt;uri::T,{?}transport=&gt;uri::T,{?}command=&gt;lst::T,{?}env=&gt;[uri::T=&gt;&lt;#&gt;::T],{?}tool=&gt;[uri::T=&gt;rec::T[?[
+  inst=&gt;&lt;#&gt;::T,
+  name=&gt;uri::T,
+  desc=&gt;str::T,
+  {?}arg=&gt;&lt;#&gt;::T]]@tool],{?}status=&gt;bool::T]][ctor?mcp_client&lt;=#{?}(rec::T)]@mcp_client],
  inst=&gt;[
   ping?time&lt;=#{?}(uri::T),
   format?str&lt;=markdown(),
@@ -753,7 +758,7 @@
         <span class="code text-secondary fw-bold">obj_xml</span>
         <small class="text-muted code">/m/web/serializer/obj_xml</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">[=&gt;]@obj_xml</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_xml::[=&gt;]@obj_xml</code></pre></div>
     
 </div><div class="card mb-3" id="__m__web__serializer__obj_xsv">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -781,7 +786,7 @@
         </span>
         <small class="text-muted code">/m/web/mime/css</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T@/m/web/mime/css</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T@css</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[nominal] </p>
@@ -794,8 +799,8 @@
         </span>
         <small class="text-muted code">/m/web/mime/csv</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">xsv::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/csv</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__mime__xsv" class="code inherited-link">xsv::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">xsv::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@csv</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__mime__xsv" class="code inherited-link">xsv::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a csv verified str encoding of a comma-separated values document</p>
 </div>
@@ -807,7 +812,7 @@
         </span>
         <small class="text-muted code">/m/web/mime/html</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/html</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@html</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] an html verified str encoding of an html document</p>
@@ -823,8 +828,8 @@
         </span>
         <small class="text-muted code">/m/web/http</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">protocol::T@/m/web/http</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">protocol::T@http</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[nominal] </p>
 </div><div class="card-body border-top py-2">
@@ -839,8 +844,8 @@
         </span>
         <small class="text-muted code">/m/web/http/http_client</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">http_socket::T[][ctor?http_client&lt;=#{?}(#{*}::T)]@/m/web/http/http_client</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__http__http_socket" class="code inherited-link">http_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}on_get=&gt;#::T,{?}on_post=&gt;#::T,{?}on_put=&gt;#::T,{?}on_delete=&gt;#::T,{?}on_patch=&gt;#::T,{?}on_head=&gt;#::T,{?}on_options=&gt;#::T,{?}on_error=&gt;#::T,{?}on_close=&gt;#::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">http_socket::T[][ctor?http_client&lt;=#{?}(#{*}::T)]@http_client</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__http__http_socket" class="code inherited-link">http_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}send=&gt;inst::T,{?}on_get=&gt;&lt;#&gt;::T,{?}on_post=&gt;&lt;#&gt;::T,{?}on_put=&gt;&lt;#&gt;::T,{?}on_delete=&gt;&lt;#&gt;::T,{?}on_patch=&gt;&lt;#&gt;::T,{?}on_head=&gt;&lt;#&gt;::T,{?}on_options=&gt;&lt;#&gt;::T,{?}on_error=&gt;&lt;#&gt;::T,{?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] an http client which should be refined to implement protocol specs</p>
 </div>
@@ -852,8 +857,8 @@
         </span>
         <small class="text-muted code">/m/web/http/http_handler</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">http_socket::T[][ctor?http_handler&lt;=#{?}(#{*}::T)]@/m/web/http/http_handler</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__http__http_socket" class="code inherited-link">http_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}on_get=&gt;#::T,{?}on_post=&gt;#::T,{?}on_put=&gt;#::T,{?}on_delete=&gt;#::T,{?}on_patch=&gt;#::T,{?}on_head=&gt;#::T,{?}on_options=&gt;#::T,{?}on_error=&gt;#::T,{?}on_close=&gt;#::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">http_socket::T[][ctor?http_handler&lt;=#{?}(#{*}::T)]@http_handler</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__http__http_socket" class="code inherited-link">http_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}send=&gt;inst::T,{?}on_get=&gt;&lt;#&gt;::T,{?}on_post=&gt;&lt;#&gt;::T,{?}on_put=&gt;&lt;#&gt;::T,{?}on_delete=&gt;&lt;#&gt;::T,{?}on_patch=&gt;&lt;#&gt;::T,{?}on_head=&gt;&lt;#&gt;::T,{?}on_options=&gt;&lt;#&gt;::T,{?}on_error=&gt;&lt;#&gt;::T,{?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a http server which should be refined to implement protocol specs</p>
 </div>
@@ -865,7 +870,7 @@
         </span>
         <small class="text-muted code">/m/web/http/http_socket</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}on_get=&gt;#::T,{?}on_post=&gt;#::T,{?}on_put=&gt;#::T,{?}on_delete=&gt;#::T,{?}on_patch=&gt;#::T,{?}on_head=&gt;#::T,{?}on_options=&gt;#::T,{?}on_error=&gt;#::T,{?}on_close=&gt;#::T]]@/m/web/http/http_socket</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}send=&gt;inst::T,{?}on_get=&gt;&lt;#&gt;::T,{?}on_post=&gt;&lt;#&gt;::T,{?}on_put=&gt;&lt;#&gt;::T,{?}on_delete=&gt;&lt;#&gt;::T,{?}on_patch=&gt;&lt;#&gt;::T,{?}on_head=&gt;&lt;#&gt;::T,{?}on_options=&gt;&lt;#&gt;::T,{?}on_error=&gt;&lt;#&gt;::T,{?}on_close=&gt;&lt;#&gt;::T]]@http_socket</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a generic http obj which can be refined with useful behaviors</p>
@@ -878,7 +883,7 @@
         </span>
         <small class="text-muted code">/m/web/mime/java</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/java</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@java</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a str encoding of a java source file</p>
@@ -891,7 +896,7 @@
         </span>
         <small class="text-muted code">/m/web/mime/json</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/json</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@json</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a json document</p>
@@ -904,7 +909,7 @@
         </span>
         <small class="text-muted code">/m/web/mime/markdown</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/markdown</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@markdown</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a str encoding of a markdown document</p>
@@ -917,8 +922,8 @@
         </span>
         <small class="text-muted code">/m/web/mcp</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">protocol::T@/m/web/mcp</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">protocol::T@mcp</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[nominal] </p>
 </div><div class="card-body border-top py-2">
@@ -933,7 +938,11 @@
         </span>
         <small class="text-muted code">/m/web/mcp/mcp_client</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}host=&gt;uri::T,{?}transport=&gt;uri::T,{?}command=&gt;lst::T,{?}env=&gt;[uri::T=&gt;#::T],{?}tool=&gt;[uri::T=&gt;tool::T],{?}status=&gt;bool::T]][ctor?mcp_client&lt;=#{?}(rec::T)]@/m/web/mcp/mcp_client</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}host=&gt;uri::T,{?}transport=&gt;uri::T,{?}command=&gt;lst::T,{?}env=&gt;[uri::T=&gt;&lt;#&gt;::T],{?}tool=&gt;[uri::T=&gt;rec::T[?[
+  inst=&gt;&lt;#&gt;::T,
+  name=&gt;uri::T,
+  desc=&gt;str::T,
+  {?}arg=&gt;&lt;#&gt;::T]]@tool],{?}status=&gt;bool::T]][ctor?mcp_client&lt;=#{?}(rec::T)]@mcp_client</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a client implementing the model content protocol used by llms for the acquisition of tools and access to external software systems</p>
@@ -960,8 +969,8 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         </span>
         <small class="text-muted code">/m/web/mcp/mcp_emulator_http</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_http::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_emulator_http&lt;=#{?}(rec::T)]@/m/web/mcp/mcp_emulator_http</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__mcp__mcp_http" class="code inherited-link">mcp_http::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_http::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?mcp_emulator_http&lt;=#{?}(rec::T)]@mcp_emulator_http</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__mcp__mcp_http" class="code inherited-link">mcp_http::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] an http mcp emulator server that provides an agent a stateful environment of mcp server access</p>
 </div>
@@ -973,8 +982,8 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         </span>
         <small class="text-muted code">/m/web/mcp/mcp_emulator_ws</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_ws::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_emulator_ws&lt;=#{?}(rec::T)]@/m/web/mcp/mcp_emulator_ws</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__mcp__mcp_ws" class="code inherited-link">mcp_ws::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_ws::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?mcp_emulator_ws&lt;=#{?}(rec::T)]@mcp_emulator_ws</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__mcp__mcp_ws" class="code inherited-link">mcp_ws::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a websocket mcp emulator server that provides an agent a stateful environment of mcp server access</p>
 </div>
@@ -986,8 +995,8 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         </span>
         <small class="text-muted code">/m/web/mcp/mcp_http</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_http&lt;=#{?}(rec::T)]@/m/web/mcp/mcp_http</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?mcp_http&lt;=#{?}(rec::T)]@mcp_http</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] an abstract mcp http handler providing necessary json-rpc infrastructure for mcp servers to leverage</p>
 </div>
@@ -999,8 +1008,8 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         </span>
         <small class="text-muted code">/m/web/mcp/mcp_mtron</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_server::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_mtron&lt;=#{?}(rec::T)]@/m/web/mcp/mcp_mtron</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__mcp__mcp_server" class="code inherited-link">mcp_server::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_server::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?mcp_mtron&lt;=#{?}(rec::T)]@mcp_mtron</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__mcp__mcp_server" class="code inherited-link">mcp_server::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a transport-agnostic mcp server exposing metatron-native tools (eval_mtron, list_space, router_info, find_inst)</p>
 </div>
@@ -1012,16 +1021,16 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         </span>
         <small class="text-muted code">/m/web/mcp/mcp_server</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_server&lt;=#{?}(rec::T)]@/m/web/mcp/mcp_server</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?mcp_server&lt;=#{?}(rec::T)]@mcp_server</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] transport-agnostic mcp json-rpc protocol handler</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an mcp server specification" class="text-info">an mcp server specification</a> <span class="text-light">=&gt;</span> <a href="#a transport-agnostic mcp server" class="text-success">a transport-agnostic mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}prompt" class="text-light">{?}prompt</a> <span class="text-light">=&gt;</span> <a href="#'a collection of prompts (various obj types handled accordingly'" class="text-info">&#39;a collection of prompts (various obj types handled accordingly&#39;</a>
-  <a href="#{?}resource" class="text-light">{?}resource</a> <span class="text-light">=&gt;</span> <a href="#'a collection of obj references (various obj types handled accordingly)'" class="text-info">&#39;a collection of obj references (various obj types handled accordingly)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}resource" class="text-light">{?}resource</a> <span class="text-light">=&gt;</span> <a href="#'a collection of obj references (various obj types handled accordingly)'" class="text-info">&#39;a collection of obj references (various obj types handled accordingly)&#39;</a>
   <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'a collection of inst::T, tool::T, or skill::T objs'" class="text-info">&#39;a collection of inst::T, tool::T, or skill::T objs&#39;</a>
+  <a href="#{?}prompt" class="text-light">{?}prompt</a> <span class="text-light">=&gt;</span> <a href="#'a collection of prompts (various obj types handled accordingly'" class="text-info">&#39;a collection of prompts (various obj types handled accordingly&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__web__mcp__mcp_ws">
@@ -1032,8 +1041,8 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         </span>
         <small class="text-muted code">/m/web/mcp/mcp_ws</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;#::T,{?}prompt=&gt;#::T]][ctor?mcp_ws&lt;=#{?}(rec::T)]@/m/web/mcp/mcp_ws</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?mcp_ws&lt;=#{?}(rec::T)]@mcp_ws</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] an abstract mcp websocket handler providing necessary json-rpc infrastructure for mcp servers to leverage</p>
 </div>
@@ -1045,7 +1054,7 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         </span>
         <small class="text-muted code">/m/web/mime</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@/m/web/mime</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] indicates the media type of the data as specified by RFC-9110</p>
@@ -1058,8 +1067,8 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         </span>
         <small class="text-muted code">/m/web/mtron</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">protocol::T@/m/web/mtron</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">protocol::T@mtron</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[nominal] </p>
 </div><div class="card-body border-top py-2">
@@ -1074,8 +1083,8 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         </span>
         <small class="text-muted code">/m/web/http/mtron_http</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mtron::T[?[{?}in=&gt;isa(mime::T).else(application/x-mtron),{?}out=&gt;isa(mime::T).else(application/x-mtron)]][ctor?mtron_http&lt;=#{?}(rec::T)]@/m/web/http/mtron_http</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mtron::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron)]][ctor?mtron_http&lt;=#{?}(rec::T)]@mtron_http</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a simple http handler accepting mtron expressions and return mtron results</p>
 </div><div class="card-body border-top py-2">
@@ -1090,8 +1099,8 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         </span>
         <small class="text-muted code">/m/web/ws/mtron_ws</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mtron::T[?[{?}in=&gt;isa(mime::T).else(application/x-mtron),{?}out=&gt;isa(mime::T).else(application/x-mtron)]][ctor?mtron_ws&lt;=#{?}(rec::T)]@/m/web/ws/mtron_ws</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mtron::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron)]][ctor?mtron_ws&lt;=#{?}(#{*}::T)]@mtron_ws</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a simple websocket handler accepting mtron expressions and return mtron results</p>
 </div><div class="card-body border-top py-2">
@@ -1106,7 +1115,7 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         </span>
         <small class="text-muted code">/m/web/serializer/obj_bson</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T@/m/web/serializer/obj_bson</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T@obj_bson</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[nominal] </p>
@@ -1119,7 +1128,7 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
         </span>
         <small class="text-muted code">/m/web/serializer/obj_bytebuffer</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T[?[{?}pretty=&gt;bool::T,{?}indent=&gt;2]][ctor?obj_bytebuffer&lt;=#{?}(obj_bytebuffer::T)]@/m/web/serializer/obj_bytebuffer</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T[?[{?}pretty=&gt;bool::T,{?}indent=&gt;2]][ctor?obj_bytebuffer&lt;=#{?}(obj_bytebuffer::T)]@obj_bytebuffer</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] byte buffer serializer</p>
@@ -1138,7 +1147,7 @@ obj_bytebuffer::[=&gt;]</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T[?[
   clip=&gt;[{?}/m/rec=&gt;isa(int::T),{?}/m/lst=&gt;isa(int::T),{?}/m/str=&gt;isa(int::T),{?}/m/uri=&gt;isa(int::T),{?}/m/real=&gt;isa(int::T),{?}/m/bytes=&gt;isa(int::T),{?}/m/fail=&gt;isa(int::T)],
-  {?}justify=&gt;isa(bool::T)]][ctor?obj_mtron&lt;=#{?}(obj_mtron::T)]@/m/web/serializer/obj_mtron</code></pre></div>
+  {?}justify=&gt;isa(bool::T)]][ctor?obj_mtron&lt;=#{?}(obj_mtron::T)]@obj_mtron</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a serializer for converting objs to/from mtron string format</p>
@@ -1166,7 +1175,7 @@ obj_bytebuffer::[=&gt;]</code></pre>
         </span>
         <small class="text-muted code">/m/web/serializer/obj_simple_json</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T[?[{?}wrap_uri=&gt;isa(bool::T),{?}bias_towards_uri=&gt;isa(bool::T),{?}bias_towards_objs=&gt;isa(bool::T)]][ctor?obj_simple_json&lt;=#{?}(obj_simple_json::T)]@/m/web/serializer/obj_simple_json</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T[?[{?}wrap_uri=&gt;isa(bool::T),{?}bias_towards_uri=&gt;isa(bool::T),{?}bias_towards_objs=&gt;isa(bool::T)]][ctor?obj_simple_json&lt;=#{?}(obj_simple_json::T)]@obj_simple_json</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] obj_simple_json::[wrap_uri=&gt;true]</p>
@@ -1186,7 +1195,7 @@ obj_bytebuffer::[=&gt;]</code></pre>
         </span>
         <small class="text-muted code">/m/web/serializer/obj_xsv</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T[?[{?}delimiter=&gt;isa(str::T),{?}header=&gt;isa(bool::T)]][ctor?obj_xsv&lt;=#{?}(obj_xsv::T)]@/m/web/serializer/obj_xsv</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T[?[{?}delimiter=&gt;isa(str::T),{?}header=&gt;isa(bool::T)]][ctor?obj_xsv&lt;=#{?}(obj_xsv::T)]@obj_xsv</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] obj_xsv::[delimiter =&gt; &#39;,&#39;, header =&gt; true]</p>
@@ -1205,7 +1214,7 @@ obj_bytebuffer::[=&gt;]</code></pre>
         </span>
         <small class="text-muted code">/m/web/serializer/obj_yaml</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T[][ctor?obj_yaml&lt;=#{?}(obj_yaml::T)]@/m/web/serializer/obj_yaml</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T[][ctor?obj_yaml&lt;=#{?}(obj_yaml::T)]@obj_yaml</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a serializer for converting objs to/from yaml format</p>
@@ -1218,7 +1227,7 @@ obj_bytebuffer::[=&gt;]</code></pre>
         </span>
         <small class="text-muted code">/m/web/protocol</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)]@/m/web/protocol</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)]@protocol</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] the protocol-surface umbrella — the union of the protocol types, so it *classifies* rather than labels</p>
@@ -1235,8 +1244,8 @@ without the union, protocol::T would be purely nominal and could not decide an a
         </span>
         <small class="text-muted code">/m/web/http/rest</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">http::T@/m/web/http/rest</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">http::T@rest</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[nominal] </p>
 </div><div class="card-body border-top py-2">
@@ -1252,7 +1261,7 @@ web_http::T is a rest::T surface</code></pre>
         </span>
         <small class="text-muted code">/m/web/route</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/web/route</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@route</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[nominal] </p>
@@ -1282,8 +1291,8 @@ webHelper.routeProblems(rec) reports entries that cannot be mounted</code></pre>
         </span>
         <small class="text-muted code">/m/web/sse</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">stream::T@/m/web/sse</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">stream::T@sse</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[nominal] </p>
 </div><div class="card-body border-top py-2">
@@ -1298,8 +1307,8 @@ webHelper.routeProblems(rec) reports entries that cannot be mounted</code></pre>
         </span>
         <small class="text-muted code">/m/web/stream</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">protocol::T@/m/web/stream</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">protocol::T@stream</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[nominal] </p>
 </div>
@@ -1311,8 +1320,8 @@ webHelper.routeProblems(rec) reports entries that cannot be mounted</code></pre>
         </span>
         <small class="text-muted code">/m/web/http/web_http</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rest::T[?[{?}in=&gt;isa(mime::T).else(application/x-mtron),{?}out=&gt;isa(mime::T).else(application/x-mtron),{?}web_root=&gt;#::T,{?}default_page=&gt;#::T,{?}read_only=&gt;#::T]][ctor?web_http&lt;=#{?}(rec::T)]@/m/web/http/web_http</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rest::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron),{?}web_root=&gt;&lt;#&gt;::T,{?}default_page=&gt;&lt;#&gt;::T,{?}read_only=&gt;&lt;#&gt;::T]][ctor?web_http&lt;=#{?}(rec::T)]@web_http</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a http handler serving web content from a router-backed space</p>
 </div>
@@ -1324,7 +1333,7 @@ webHelper.routeProblems(rec) reports entries that cannot be mounted</code></pre>
         </span>
         <small class="text-muted code">/m/web/ws/web_socket</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}send_recv=&gt;inst::T,{?}on_open=&gt;#::T,{?}on_error=&gt;#::T,{?}on_message=&gt;#::T,{?}on_close=&gt;#::T]]@/m/web/ws/web_socket</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}send=&gt;inst::T,{?}send_recv=&gt;inst::T,{?}on_open=&gt;&lt;#&gt;::T,{?}on_error=&gt;&lt;#&gt;::T,{?}on_message=&gt;&lt;#&gt;::T,{?}on_close=&gt;&lt;#&gt;::T]]@web_socket</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a generic websocket obj which can be refined with useful behaviors</p>
@@ -1337,8 +1346,8 @@ webHelper.routeProblems(rec) reports entries that cannot be mounted</code></pre>
         </span>
         <small class="text-muted code">/m/web/ws</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">protocol::T@/m/web/ws</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,ws::T,mcp::T,rest::T,mtron::T,stream::T)</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">protocol::T@ws</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[nominal] </p>
 </div>
@@ -1350,8 +1359,8 @@ webHelper.routeProblems(rec) reports entries that cannot be mounted</code></pre>
         </span>
         <small class="text-muted code">/m/web/ws/ws_client</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">web_socket::T[][ctor?web_socket&lt;=#{?}(rec::T)]@/m/web/ws/ws_client</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__ws__web_socket" class="code inherited-link">web_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}send_recv=&gt;inst::T,{?}on_open=&gt;#::T,{?}on_error=&gt;#::T,{?}on_message=&gt;#::T,{?}on_close=&gt;#::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">web_socket::T[][ctor?web_socket&lt;=#{?}(rec::T)]@ws_client</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__ws__web_socket" class="code inherited-link">web_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}send=&gt;inst::T,{?}send_recv=&gt;inst::T,{?}on_open=&gt;&lt;#&gt;::T,{?}on_error=&gt;&lt;#&gt;::T,{?}on_message=&gt;&lt;#&gt;::T,{?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] an websocket client which should be refined to implement protocol specs</p>
 </div>
@@ -1363,8 +1372,8 @@ webHelper.routeProblems(rec) reports entries that cannot be mounted</code></pre>
         </span>
         <small class="text-muted code">/m/web/ws/ws_handler</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">web_socket::T[][ctor?web_socket&lt;=#{?}(rec::T)]@/m/web/ws/ws_handler</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__ws__web_socket" class="code inherited-link">web_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(mime::T),{?}out=&gt;isa(mime::T),{?}send=&gt;inst::T,{?}send_recv=&gt;inst::T,{?}on_open=&gt;#::T,{?}on_error=&gt;#::T,{?}on_message=&gt;#::T,{?}on_close=&gt;#::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">web_socket::T[][ctor?web_socket&lt;=#{?}(rec::T)]@ws_handler</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__ws__web_socket" class="code inherited-link">web_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}send=&gt;inst::T,{?}send_recv=&gt;inst::T,{?}on_open=&gt;&lt;#&gt;::T,{?}on_error=&gt;&lt;#&gt;::T,{?}on_message=&gt;&lt;#&gt;::T,{?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a websocket server which should be refined to implement protocol specs</p>
 </div>
@@ -1376,7 +1385,7 @@ webHelper.routeProblems(rec) reports entries that cannot be mounted</code></pre>
         </span>
         <small class="text-muted code">/m/web/mime/xml</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/xml</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@xml</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a xml verified str encoding of an xml document</p>
@@ -1389,7 +1398,7 @@ webHelper.routeProblems(rec) reports entries that cannot be mounted</code></pre>
         </span>
         <small class="text-muted code">/m/web/mime/xsv</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/xsv</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@xsv</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] an xsv verified str encoding of a {comma,tab,etc.}-separated values document</p>
@@ -1402,7 +1411,7 @@ webHelper.routeProblems(rec) reports entries that cannot be mounted</code></pre>
         </span>
         <small class="text-muted code">/m/web/mime/yaml</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(#{*}::T){&lt;j&gt;}]@/m/web/mime/yaml</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@yaml</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a yaml document</p>
@@ -1415,10 +1424,16 @@ webHelper.routeProblems(rec) reports entries that cannot be mounted</code></pre>
         <a href="m_web_space_httpspace.html" class="code text-primary fw-bold text-decoration-none">httpspace</a>
         <small class="text-muted code">/m/web/space/httpspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][ctor?httpspace&lt;=#{?}(#{*}::T)]@/m/web/space/httpspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][ctor?httpspace&lt;=#{?}(#{*}::T)]@httpspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  pattern=&gt;uri::T,
- {?}q=&gt;[qproc{?}::T],
+ {?}q=&gt;[rec{?}::T[?[
+  pattern=&gt;uri::T,
+  {?}pre_write=&gt;inst::T,
+  {?}post_write=&gt;inst::T,
+  {?}qless_write=&gt;inst::T,
+  {?}pre_read=&gt;inst::T,
+  {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T)]@qproc],
  {?}route=&gt;[uri{?}::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
@@ -1438,10 +1453,16 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
         <a href="m_web_space_wsspace.html" class="code text-primary fw-bold text-decoration-none">wsspace</a>
         <small class="text-muted code">/m/web/space/wsspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T]][ctor?wsspace&lt;=#{?}(wsspace::T)]@/m/web/space/wsspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T]][ctor?wsspace&lt;=#{?}(wsspace::T)]@wsspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  pattern=&gt;uri::T,
- {?}q=&gt;[qproc{?}::T],
+ {?}q=&gt;[rec{?}::T[?[
+  pattern=&gt;uri::T,
+  {?}pre_write=&gt;inst::T,
+  {?}post_write=&gt;inst::T,
+  {?}qless_write=&gt;inst::T,
+  {?}pre_read=&gt;inst::T,
+  {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T)]@qproc],
  {?}route=&gt;[uri{?}::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">

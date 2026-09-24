@@ -268,6 +268,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -281,8 +282,6 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant">Modelfile.mtron-qwen-14b-assistant</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/Modelfile.mtron-qwen-14b-assistant-thinking">Modelfile.mtron-qwen-14b-assistant-thinking</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
@@ -415,7 +414,7 @@ graph lives in space, every read shape works on it:</p>
 <li><strong>one edge with its map</strong> — <code>?asq</code> hands the edge back carrying its kind labels:</li>
 </ul>
 <pre><code class="language-mtron">mtron&gt; *as?int&lt;=str&amp;asq
-==&gt;as?rng=int&amp;asq=[incomparable,coupling]&amp;dom=str(int::T){&lt;j&gt;}
+==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/578
 </code></pre>
 <ul>
 <li><strong>the in-neighborhood</strong> — every edge <em>into</em> an rng (<code>as?int&lt;=</code> reads rng <code>int</code>, any dom):</li>
@@ -436,39 +435,24 @@ graph lives in space, every read shape works on it:</p>
 ==&gt;as?rng=int&amp;dom=str(int::T){&lt;j&gt;}
 ==&gt;as?rng=real&amp;dom=str(real::T){&lt;j&gt;}
 ==&gt;as?rng=uri&amp;dom=str(uri::T){&lt;j&gt;}
-==&gt;as?rng=datetime&amp;dom=str(datetime::T){&lt;j&gt;}
-==&gt;as?rng=java&amp;dom=str(java::T){&lt;j&gt;}
-==&gt;as?rng=xsv&amp;dom=str(xsv::T){&lt;j&gt;}
-==&gt;as?rng=csv&amp;dom=str(csv::T){&lt;j&gt;}
+==&gt;as?rng=rec&amp;dom=str(rec::T){&lt;j&gt;}
+==&gt;as?rng=datetime&amp;dom=str(uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime){&lt;j&gt;}
+==&gt;as?rng=java&amp;dom=str(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@java){&lt;j&gt;}
+==&gt;as?rng=xsv&amp;dom=str(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@xsv){&lt;j&gt;}
+==&gt;as?rng=csv&amp;dom=str(xsv::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@csv){&lt;j&gt;}
 ==&gt;as?rng=noobj{0}&amp;dom=A(){&lt;j&gt;}
 ==&gt;as?rng=str&amp;dom=A(str::T){&lt;j&gt;}
-==&gt;as?rng=B&amp;dom=A(#::T){&lt;j&gt;}
+==&gt;as?rng=B&amp;dom=A(&lt;#&gt;::T){&lt;j&gt;}
 ==&gt;as?rng=B&amp;dom=A(B::T){&lt;j&gt;}
 </code></pre>
 <ul>
 <li><strong>a neighborhood with its maps</strong> — <code>?asq</code> on the set:</li>
 </ul>
 <pre><code class="language-mtron">mtron&gt; *as?int&lt;=&amp;asq
-==&gt;as?rng=int&amp;asq=[incomparable,coupling]&amp;dom=bool(int::T){&lt;j&gt;}
-==&gt;as?rng=int&amp;asq=[incomparable,coupling]&amp;dom=real(int::T){&lt;j&gt;}
-==&gt;as?rng=int&amp;asq=[incomparable,coupling]&amp;dom=str(int::T){&lt;j&gt;}
-==&gt;as?rng=int&amp;asq=[incomparable,coupling]&amp;dom=uri(int::T){&lt;j&gt;}
-==&gt;as?rng=int&amp;asq=[incomparable,isochain]&amp;dom=datetime(int::T){&lt;j&gt;}
+==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/582
 </code></pre>
 <pre><code class="language-mtron">mtron&gt; *as?&lt;=str&amp;asq
-==&gt;as?asq=[incomparable,coupling]&amp;rng=bytes&amp;dom=str(bytes::T){&lt;j&gt;}
-==&gt;as?asq=[incomparable,coupling]&amp;rng=bool&amp;dom=str(bool::T){&lt;j&gt;}
-==&gt;as?asq=[incomparable,coupling]&amp;rng=int&amp;dom=str(int::T){&lt;j&gt;}
-==&gt;as?asq=[incomparable,coupling]&amp;rng=real&amp;dom=str(real::T){&lt;j&gt;}
-==&gt;as?asq=[incomparable,coupling]&amp;rng=uri&amp;dom=str(uri::T){&lt;j&gt;}
-==&gt;as?asq=[incomparable,coupling]&amp;rng=datetime&amp;dom=str(datetime::T){&lt;j&gt;}
-==&gt;as?asq=[incomparable,isochain]&amp;rng=java&amp;dom=str(java::T){&lt;j&gt;}
-==&gt;as?asq=[incomparable]&amp;rng=xsv&amp;dom=str(xsv::T){&lt;j&gt;}
-==&gt;as?asq=[incomparable]&amp;rng=csv&amp;dom=str(csv::T){&lt;j&gt;}
-==&gt;as?asq=[incomparable]&amp;rng=noobj{0}&amp;dom=A(){&lt;j&gt;}
-==&gt;as?asq=[incomparable]&amp;rng=str&amp;dom=A(str::T){&lt;j&gt;}
-==&gt;as?asq=[duplicate]&amp;rng=B&amp;dom=A(#::T){&lt;j&gt;}
-==&gt;as?asq=[duplicate]&amp;rng=B&amp;dom=A(B::T){&lt;j&gt;}
+==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/586
 </code></pre>
 <p>Two things the neighborhood reads reveal. First, <strong>endpoint queries resolve through refinement</strong> — there is no edge
 declared for <code>nat</code>, yet <code>*as?uri&lt;=nat</code> walks <code>nat</code>'s parent and returns the <code>int → uri</code> edge:</p>
@@ -503,40 +487,42 @@ the graph telling you the new cast is safe, <code>ambiguous</code> is it telling
 <h4>a coupling — <code>metric</code> and <code>imperial</code></h4>
 <p>Metric and imperial each cast to the other, so each edge is a candidate isomorphism:</p>
 <pre><code class="language-mtron">mtron&gt; *as?metric&lt;=imperial&amp;asq
-==&gt;as?rng=metric&amp;asq=[coupling]&amp;dom=imperial(metric::T){&lt;j&gt;}
+==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/590
 </code></pre>
 <h4>an incomparable sibling — and a map that carries two kinds</h4>
 <p><code>json</code> casts to <code>yaml</code>, and <code>json</code> also casts to <code>mcp_client</code>. Those two rngs are incomparable with each other and
 disjoint, so no input reaches both — dispatch stays total and the map says exactly that:</p>
 <pre><code class="language-mtron">mtron&gt; *as?yaml&lt;=json&amp;asq
-==&gt;as?rng=str&amp;asq=[incomparable]&amp;dom=A(str::T){&lt;j&gt;}
+==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/594
 </code></pre>
 <p><code>int</code> is the busier example: it casts to <code>bool</code>, <code>bytes</code>, <code>real</code>, <code>str</code> and <code>uri</code>. Every one of those edges also has
 an opposing edge, so the map reports the contest <em>and</em> the coupling — one kind for each relation the edge takes part
 in:</p>
 <pre><code class="language-mtron">mtron&gt; *as?real&lt;=int&amp;asq
-==&gt;as?rng=real&amp;asq=[incomparable,coupling]&amp;dom=int(real::T){&lt;j&gt;}
+==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/598
 </code></pre>
 <h4>an isochain — <code>bytes</code> and <code>int</code></h4>
 <p>No single cast maps <code>bytes</code> to <code>int</code> and back, yet they sit in the <em>reversible core</em> of the graph: a chain of
 opposing pairs links them, so a round trip exists even though no direct one does. The map names that shape
 <code>isochain</code>:</p>
 <pre><code class="language-mtron">mtron&gt; *as?bytes&lt;=int&amp;asq
-==&gt;as?rng=bytes&amp;asq=[incomparable,isochain]&amp;dom=int(bytes::T){&lt;j&gt;}
+==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/602
 </code></pre>
 <h4>a retract — the self-loop</h4>
 <p>An edge whose endpoints are the same type is the identity, and the identity is idempotent, so the edge is a retract
 of itself (not a coupling — that needs two types). Its outV is still contested by int's other casts, which is why
 the map carries both kinds:</p>
 <pre><code class="language-mtron">mtron&gt; *as?int&lt;=int&amp;asq
+==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/606
 </code></pre>
 <h3>narrowing a map</h3>
 <p><code>?asq=[kind,…]</code> asks for the edge's map <em>as far as those kinds are concerned</em>: the answer is the intersection, and
 when the intersection is empty there is no such edge property to read, so the read yields nothing at all.</p>
 <pre><code class="language-mtron">mtron&gt; *as?str&lt;=int&amp;asq=[coupling]
-==&gt;as?rng=str&amp;asq=[coupling]&amp;dom=int(str::T){&lt;j&gt;}
+==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/610
 </code></pre>
 <pre><code class="language-mtron">mtron&gt; *as?str&lt;=int&amp;asq=[duplicate]
+==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/614
 </code></pre>
 <h3>declared casts, and the tag that no one declares</h3>
 <p>A declared cast <em>does work</em>: <code>as?rec&lt;=json</code> parses a JSON document into a rec, <code>as?json&lt;=rec</code> serializes one back.
