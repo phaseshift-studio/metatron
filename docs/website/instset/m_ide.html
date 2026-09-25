@@ -174,6 +174,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m.html"><img
                             src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dckr.html"><img
+                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dcmnt.html"><img
                             src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
                             alt="dcmnt"/>/m/dcmnt</a></li>
@@ -198,6 +201,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math.html"><img
                             src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math_cat.html"><img
+                            src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_sys.html"><img
                             src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                             alt="sys"/>/m/sys</a></li>
@@ -268,7 +274,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -401,50 +407,7 @@
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[
- pattern=&gt;/m/ide/#,
- q=&gt;[docq::[
- pattern=&gt;docq,
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;!*/m],
- type=&gt;[
-  /m/ide/serializer::T[][ctor?obj_ide_java&lt;=#{?}(#{*}::T)]@obj_ide_java,
-  rec::T[?[
-  classes=&gt;[&lt;#&gt;::T=&gt;lst::T],
-  {?}package=&gt;str::T,
-  {?}imports=&gt;lst::T,
-  {?}preamble=&gt;str::T,
-  {?}postscript=&gt;str::T]]@java,
-  rec::T[?[
-  status=&gt;union(success,error,halted),
-  runtime=&gt;!*/m/math/time,
-  {?}command=&gt;str::T,
-  {?}project=&gt;project::T,
-  {?}result=&gt;str{*}::T,
-  {?}error=&gt;{?}[fail{?}::T]]]@result,
-  rec::T[?[
-  root=&gt;uri::T,
-  {?}name=&gt;str::T,
-  {?}desc=&gt;str::T,
-  {?}command=&gt;[uri::T=&gt;rec::T[?[
-  status=&gt;union(success,error,halted),
-  runtime=&gt;!*/m/math/time,
-  {?}command=&gt;str::T,
-  {?}project=&gt;project::T,
-  {?}result=&gt;str{*}::T,
-  {?}error=&gt;{?}[fail{?}::T]]]@result],
-  {?}code=&gt;&lt;#&gt;::T]]@project],
- inst=&gt;[
-  as?project&lt;=uri(project::T),
-  as?skill&lt;=project(#::T),
-  as?java&lt;=java(java::T),
-  as?java&lt;=java(java::T),
-  find?uri{*}&lt;=uri(class=&gt;uri::T,member=&gt;str{?}::T,text=&gt;str{?}::T),
-  search?uri{*}&lt;=uri(str::T),
-  command?inst&lt;=#{?}(command=&gt;str::T)]]@/m/ide</code></pre>
+                        <pre><code>instset::[pattern=&gt;/m/ide/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],type=&gt;[/m/ide/serializer::T[][ctor?rng=obj_ide_java&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@obj_ide_java,rec::T[?[classes=&gt;[&lt;#&gt;::T=&gt;lst::T],{?}package=&gt;str::T,{?}imports=&gt;lst::T,{?}preamble=&gt;str::T,{?}postscript=&gt;str::T]]@java,rec::T[?[status=&gt;union(success,error,halted),runtime=&gt;!*/m/math/time,{?}command=&gt;str::T,{?}project=&gt;project::T,{?}result=&gt;str{*}::T,{?}error=&gt;{?}[fail{?}::T]]]@result,rec::T[?[root=&gt;uri::T,{?}name=&gt;str::T,{?}desc=&gt;str::T,{?}command=&gt;[uri::T=&gt;rec::T[?[status=&gt;union(success,error,halted),runtime=&gt;!*/m/math/time,{?}command=&gt;str::T,{?}project=&gt;project::T,{?}result=&gt;str{*}::T,{?}error=&gt;{?}[fail{?}::T]]]@result],{?}code=&gt;&lt;#&gt;::T]]@project],inst=&gt;[as?rng=project&amp;dom=uri(rec::T[?[root=&gt;uri::T,{?}name=&gt;str::T,{?}desc=&gt;str::T,{?}command=&gt;[uri::T=&gt;rec::T[?[status=&gt;union(success,error,halted),runtime=&gt;!*/m/math/time,{?}command=&gt;str::T,{?}project=&gt;project::T,{?}result=&gt;str{*}::T,{?}error=&gt;{?}[fail{?}::T]]]@result],{?}code=&gt;&lt;#&gt;::T]]@project){&lt;j&gt;},as?rng=skill&amp;dom=project(&lt;#&gt;::T){&lt;j&gt;},as?rng=java&amp;dom=java(rec::T[?[classes=&gt;[&lt;#&gt;::T=&gt;lst::T],{?}package=&gt;str::T,{?}imports=&gt;lst::T,{?}preamble=&gt;str::T,{?}postscript=&gt;str::T]]@java){&lt;j&gt;},as?rng=java&amp;dom=java(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@java){&lt;j&gt;},find?rng=uri{*}&amp;dom=uri(class=&gt;uri::T,member=&gt;str{?}::T,text=&gt;str{?}::T){&lt;j&gt;},search?rng=uri{*}&amp;dom=uri(str::T){&lt;j&gt;},command?rng=inst&amp;dom=#{?}(command=&gt;str::T){&lt;j&gt;}]]@/m/ide</code></pre>
                     </div>
                 </div>
             </div>
@@ -496,12 +459,7 @@
         </span>
         <small class="text-muted code">/m/ide/java</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  classes=&gt;[&lt;#&gt;::T=&gt;lst::T],
-  {?}package=&gt;str::T,
-  {?}imports=&gt;lst::T,
-  {?}preamble=&gt;str::T,
-  {?}postscript=&gt;str::T]]@java</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[classes=&gt;[&lt;#&gt;::T=&gt;lst::T],{?}package=&gt;str::T,{?}imports=&gt;lst::T,{?}preamble=&gt;str::T,{?}postscript=&gt;str::T]]@java</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a coarse rec encoding of a java source file optimized for semantic editing</p>
@@ -514,7 +472,7 @@
         </span>
         <small class="text-muted code">/m/ide/serializer/obj_ide_java</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/ide/serializer::T[][ctor?obj_ide_java&lt;=#{?}(#{*}::T)]@obj_ide_java</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/ide/serializer::T[][ctor?rng=obj_ide_java&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@obj_ide_java</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__ide__project">
@@ -525,18 +483,7 @@
         </span>
         <small class="text-muted code">/m/ide/project</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  root=&gt;uri::T,
-  {?}name=&gt;str::T,
-  {?}desc=&gt;str::T,
-  {?}command=&gt;[uri::T=&gt;rec::T[?[
-  status=&gt;union(success,error,halted),
-  runtime=&gt;!*/m/math/time,
-  {?}command=&gt;str::T,
-  {?}project=&gt;project::T,
-  {?}result=&gt;str{*}::T,
-  {?}error=&gt;{?}[fail{?}::T]]]@result],
-  {?}code=&gt;&lt;#&gt;::T]]@project</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[root=&gt;uri::T,{?}name=&gt;str::T,{?}desc=&gt;str::T,{?}command=&gt;[uri::T=&gt;rec::T[?[status=&gt;union(success,error,halted),runtime=&gt;!*/m/math/time,{?}command=&gt;str::T,{?}project=&gt;project::T,{?}result=&gt;str{*}::T,{?}error=&gt;{?}[fail{?}::T]]]@result],{?}code=&gt;&lt;#&gt;::T]]@project</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] the project descriptor (the pom.xml of a metatron ide) — a project.mtron file at the project root</p>
@@ -552,13 +499,7 @@
         </span>
         <small class="text-muted code">/m/ide/result</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
-  status=&gt;union(success,error,halted),
-  runtime=&gt;!*/m/math/time,
-  {?}command=&gt;str::T,
-  {?}project=&gt;project::T,
-  {?}result=&gt;str{*}::T,
-  {?}error=&gt;{?}[fail{?}::T]]]@result</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[status=&gt;union(success,error,halted),runtime=&gt;!*/m/math/time,{?}command=&gt;str::T,{?}project=&gt;project::T,{?}result=&gt;str{*}::T,{?}error=&gt;{?}[fail{?}::T]]]@result</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] the standardized build/test/status outcome — rec::T with a union status verdict</p>

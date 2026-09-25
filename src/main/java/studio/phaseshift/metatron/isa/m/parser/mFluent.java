@@ -567,7 +567,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         }
 
         public static <F extends mFluent<F>> F obj_() {
-            return new mFluent<F>().addInst(instC(M_ISA_INST_TID.addQ(MONAD), lst(), (lhs, inst) -> lhs));
+            return new mFluent<F>().addInst(instC(M_ISA_INST_TID.q(MONAD_IN, "obj"), lst(), (lhs, inst) -> lhs));
         }
 
 

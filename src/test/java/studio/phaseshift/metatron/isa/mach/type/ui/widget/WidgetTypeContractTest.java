@@ -35,6 +35,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_GRID_TID;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_LABEL_LINE_TID;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_MENU_BAR_TID;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_PANEL_TID;
@@ -127,6 +128,28 @@ public class WidgetTypeContractTest extends AbstractInstSetTest {
             jvm.put(uri(METADATA), lst(lst(jnt(1), str("behind"))));
         assertDoesNotThrow(() -> new TableWidget(jvm, UI_TABLE_TID, null).format(),
                 description + ": a table written this way must satisfy /m/mach/ui/widget/table_widget");
+    }
+
+    /**
+     * A grid's {@code grid} key is declared a {@code lst} — a lst of rows, each a lst of cell
+     * widgets.  The shape every writer (mtron, a tool, a test) actually writes must be accepted,
+     * and a non-list grid refused.
+     */
+    @Test
+    void testGridTypeAcceptsRowsOfCellWidgets() {
+        assertDoesNotThrow(() -> {
+            final GridWidget grid = new GridWidget(2, 2);
+            grid.cell(0, 0, new AccordionWidget("alpha")).cell(0, 1, new AccordionWidget("beta"));
+            grid.cell(1, 0, new AccordionWidget("gamma")).cell(1, 1, new AccordionWidget("delta"));
+            grid.format();
+        }, "a grid written as rows of cell widgets must satisfy /m/mach/ui/widget/grid_widget");
+    }
+
+    @Test
+    void testGridTypeRejectsANonLstGrid() {
+        final Map<Obj, Obj> jvm = mutableMap(uri("grid"), (Obj) str("not a lst of rows"));
+        assertThrows(TypeMismatchException.class, () -> new GridWidget(jvm, UI_GRID_TID, null),
+                "the grid key is declared a lst; a bare str is not one");
     }
 
     /**

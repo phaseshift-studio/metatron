@@ -64,7 +64,7 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
         });
 
         this.subsSelector = ((Selector) new Selector().style().pointer("{{r}}>").attachment(this.subsTable, true).applyStyle()).onSelect((s, r, c) -> {
-            this.grid.currentFocus(0);
+            // the selection is reflected in the attached table; the grid mirrors it
         });
         this.spaceSelector = ((Selector) new Selector().style()
                 .pointer("{{r}}>")
@@ -100,7 +100,7 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
                         // do nothing
                     }
                 });
-        this.grid = (GridWidget) new GridWidget(List.of(this.spaceSelector, this.subsSelector), 1).style().border(Border.none).applyStyle();
+        this.grid = new GridWidget(2, 1).cell(0, 0, this.spaceSelector).cell(1, 0, this.subsSelector).style().border(Border.none).applyStyle();
         // this.grid.currentFocus(0);
         this.style().attachment(this.grid, true).applyStyle();
     }

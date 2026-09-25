@@ -226,7 +226,7 @@ public class MIME {
         public static final String VALUE = "Content-Type";
 
         public ObjSerializer<?> serializer() {
-            if (this.isMtron()) return ObjmtronSerializer.singleNoClip();
+            if (this.isMtron()) return ObjmtronSerializer.single();
             if (this.isJson()) return ObjJSONSerializer.web();
             if (this.isYaml()) return ObjYAMLSerializer.single();
             if (this.isHtml()) return ObjHTMLSerializer.single();

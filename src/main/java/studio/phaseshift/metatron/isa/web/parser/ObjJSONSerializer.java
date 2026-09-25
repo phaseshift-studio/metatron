@@ -64,7 +64,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
     public static final fURI OBJ_JSON_SERIALIZER_VID = OBJ_JSON_SERIALIZER_TID;
 
     private static final GraphittyLogger LOG = Graphitty.log(ObjJSONSerializer.class);
-    private static final ObjmtronSerializer SERIALIZER = new ObjmtronSerializer();
+    private static final ObjmtronSerializer SERIALIZER = ObjmtronSerializer.single();
     private static final Pattern HEX_PATTERN = Pattern.compile("^0x[0-9a-fA-F]+$");
 
     public enum Density {

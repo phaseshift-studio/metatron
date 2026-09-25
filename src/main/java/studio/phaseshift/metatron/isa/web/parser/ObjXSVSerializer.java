@@ -172,7 +172,7 @@ public class ObjXSVSerializer extends AbstractObjSerializer<String> {
     }
 
     private String writeCell(final Obj obj) {
-        return obj.isNoObj() ? "" : ObjmtronSerializer.compact().write(obj);
+        return obj.isNoObj() ? "" : ObjmtronSerializer.single().write(obj);
     }
 
     /// //////////////////////////////

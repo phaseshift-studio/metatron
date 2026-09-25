@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>as-graph · PhaseShift Studio</title>
+    <title>cat-instset · PhaseShift Studio</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -174,6 +174,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m.html"><img
                             src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dckr.html"><img
+                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dcmnt.html"><img
                             src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
                             alt="dcmnt"/>/m/dcmnt</a></li>
@@ -198,6 +201,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math.html"><img
                             src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math_cat.html"><img
+                            src="../../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_sys.html"><img
                             src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                             alt="sys"/>/m/sys</a></li>
@@ -268,7 +274,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -381,201 +387,121 @@
     })();
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
-        <h1 class="skill-title mb-1">as-graph</h1>
-        <small>The as-graph: every as instruction is an edge — label as, outV its dom, inV its rng — and ?asq reads an edge's labels within duplicate, ambiguous, incomparable, coupling, isochain, retract). The graph reads like a space: *as is the whole graph, *as?rng<=dom a single edge, *as?rng<= the in-neighborhood, *as?<=dom the out-neighborhood. TRIGGER: When casting or parsing an obj through as(type::T), when a cast seems to do nothing, when adding an as edge (a dom → rng morphism), when asking whether two casts to the same rng can collide, when traversing the graph (whole-graph, single-edge, or neighborhood reads), or when reading an edge with ?asq.</small><br/>
-        <a href="as-graph-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>as-graph-mtron.md</a>
+        <h1 class="skill-title mb-1">cat-instset</h1>
+        <small>The category graph at /m/math/cat: every type is an **object** (a vertex) and every inst is a **morphism** (an edge). Lift a type with .as(object::T) to read the morphisms incident to it (morphed_to out-edges, morphed_from in-edges); lift an inst with .as(morphism::T) to read its endpoints (src dom, trgt rng) and its whole-graph analysis (family, contested, orbit, position, inverse). TRIGGER: When reading a type's incident morphisms or a morphism's endpoints, when reasoning about a morphism's siblings / inverse / connected component, when classifying an edge's coefficient shape (form) or its declared process laws (law), or when wiring the algebraic theories (ring / group / monoid).</small><br/>
+        <a href="cat-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>cat-instset-mtron.md</a>
     </div>
     <div class="markdown-body">
-<h2>the as-graph (<code>?asq</code>)</h2>
-<p><code>as</code> is a single instruction family whose declared casts say which obj types may be cast to which:
-<code>as?int&lt;=bool</code> maps a <code>bool</code> to an <code>int</code>. Read that family as a <strong>property graph</strong> and the casts stop being a
-list:</p>
-<ul>
-<li>the <strong>label</strong> is <code>as</code> — every cast is the same instruction, so the family is one edge label;</li>
-<li>the <strong>outV</strong> is the edge's dom — what goes in;</li>
-<li>the <strong>inV</strong> is the edge's rng — what comes out;</li>
-<li>the <strong>edge property map</strong> is <code>?asq</code>: the kinds of relation that edge takes part in.</li>
-</ul>
-<p>The organizing idea is that <strong>an edge is named by its endpoints, not by an address</strong>. <code>*as?int&lt;=str&amp;asq</code> asks
-about the edge <em>str → int</em>, and the map is <em>derived from the endpoints' place in the graph</em> — opposing edges,
-contested siblings, reachability — not read from any one cast. An undeclared pair reads as noobj: the graph only
-speaks for edges that exist.</p>
-<h3>reading the graph</h3>
-<p><code>inst?rng&lt;=dom</code> reads rng first, then <code>&lt;=</code>, then dom — so <code>as?int&lt;=str</code> is the edge <strong>str → int</strong>. Because the
-graph lives in space, every read shape works on it:</p>
-<ul>
-<li><strong>the whole graph</strong> — <code>*as</code> is the edge set, every declared morphism at once.</li>
-<li><strong>one edge</strong> — the endpoint-pair query:</li>
-</ul>
-<pre><code class="language-mtron">mtron&gt; *as?int&lt;=str
-==&gt;as?rng=int&amp;dom=str(int::T){&lt;j&gt;}
+<h2>the category graph (<code>/m/math/cat</code>)</h2>
+<p><code>/m/math/cat</code> realizes types and insts as a <strong>category</strong>: types are the objects (the vertices), insts are the
+morphisms (the edges), and an inst's dom/rng are its endpoints. The lift is a type constructor, not a query
+processor — cast a type to a vertex, cast an inst to an edge:</p>
+<pre><code class="language-mtron">mtron&gt; int::T.as(object::T)&gt;&gt;obj
 </code></pre>
-<ul>
-<li><strong>one edge with its map</strong> — <code>?asq</code> hands the edge back carrying its kind labels:</li>
-</ul>
-<pre><code class="language-mtron">mtron&gt; *as?int&lt;=str&amp;asq
-==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/578
+<pre><code class="language-mtron">mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)&gt;&gt;form
+==&gt;fail::[inst apply failure: plus?rng=int&amp;dom=int(int::T) is not a morphism::T [nominal] (at /m/inst/as@1)]@/sys/fail/622
 </code></pre>
-<ul>
-<li><strong>the in-neighborhood</strong> — every edge <em>into</em> an rng (<code>as?int&lt;=</code> reads rng <code>int</code>, any dom):</li>
-</ul>
-<pre><code class="language-mtron">mtron&gt; *as?int&lt;=
-==&gt;as?rng=int&amp;dom=bool(int::T){&lt;j&gt;}
-==&gt;as?rng=int&amp;dom=real(int::T){&lt;j&gt;}
-==&gt;as?rng=int&amp;dom=str(int::T){&lt;j&gt;}
-==&gt;as?rng=int&amp;dom=uri(int::T){&lt;j&gt;}
-==&gt;as?rng=int&amp;dom=datetime(int::T){&lt;j&gt;}
-</code></pre>
-<ul>
-<li><strong>the out-neighborhood</strong> — every edge <em>out of</em> a dom (<code>as?&lt;=str</code> reads dom <code>str</code>, any rng):</li>
-</ul>
-<pre><code class="language-mtron">mtron&gt; *as?&lt;=str
-==&gt;as?rng=bytes&amp;dom=str(bytes::T){&lt;j&gt;}
-==&gt;as?rng=bool&amp;dom=str(bool::T){&lt;j&gt;}
-==&gt;as?rng=int&amp;dom=str(int::T){&lt;j&gt;}
-==&gt;as?rng=real&amp;dom=str(real::T){&lt;j&gt;}
-==&gt;as?rng=uri&amp;dom=str(uri::T){&lt;j&gt;}
-==&gt;as?rng=rec&amp;dom=str(rec::T){&lt;j&gt;}
-==&gt;as?rng=datetime&amp;dom=str(uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime){&lt;j&gt;}
-==&gt;as?rng=java&amp;dom=str(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@java){&lt;j&gt;}
-==&gt;as?rng=xsv&amp;dom=str(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@xsv){&lt;j&gt;}
-==&gt;as?rng=csv&amp;dom=str(xsv::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@csv){&lt;j&gt;}
-==&gt;as?rng=noobj{0}&amp;dom=A(){&lt;j&gt;}
-==&gt;as?rng=str&amp;dom=A(str::T){&lt;j&gt;}
-==&gt;as?rng=B&amp;dom=A(&lt;#&gt;::T){&lt;j&gt;}
-==&gt;as?rng=B&amp;dom=A(B::T){&lt;j&gt;}
-</code></pre>
-<ul>
-<li><strong>a neighborhood with its maps</strong> — <code>?asq</code> on the set:</li>
-</ul>
-<pre><code class="language-mtron">mtron&gt; *as?int&lt;=&amp;asq
-==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/582
-</code></pre>
-<pre><code class="language-mtron">mtron&gt; *as?&lt;=str&amp;asq
-==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/586
-</code></pre>
-<p>Two things the neighborhood reads reveal. First, <strong>endpoint queries resolve through refinement</strong> — there is no edge
-declared for <code>nat</code>, yet <code>*as?uri&lt;=nat</code> walks <code>nat</code>'s parent and returns the <code>int → uri</code> edge:</p>
-<pre><code class="language-mtron">mtron&gt; *as?uri&lt;=nat
-==&gt;as?rng=uri&amp;dom=int(uri::T){&lt;j&gt;}
-</code></pre>
-<p>Second, <strong>the generic casts appear in every neighborhood</strong>. The tag casts (<code>as?rng=B&amp;dom=A</code>, <code>as?rng=str&amp;dom=A</code>,
-<code>as?rng=noobj{0}&amp;dom=A</code>) have generic endpoints, so <code>*as?&lt;=str</code> returns them alongside str's concrete out-edges —
-their maps say <code>duplicate</code> (the two <code>B←A</code> casts do the same work) and <code>incomparable</code> (a tag is a conversion, never
-a re-tag).</p>
-<p>A read never writes back: what comes back is a plain uri whose <code>?asq=</code> says what the edge is. The map is derived,
-not stored — it is recomputed from the graph and dropped when a new <code>as</code> cast is written, so a live graph never
-hands out a stale answer.</p>
-<h3>the edge kinds</h3>
+<p>Every registered inst is a morphism and every type an object — the graph is emergent, not declared edge-by-edge.</p>
+<h3>the two blocks</h3>
+<h4>the object block — <code>object::T</code> (a vertex)</h4>
 <table>
 <thead>
-<tr><th>kind</th><th>the relation between the edge and the graph</th><th>what it means for you</th></tr>
+<tr><th>field</th><th>what it is</th></tr>
 </thead>
 <tbody>
-<tr><td><code>duplicate</code></td><td>another <code>as</code> cast maps this edge's outV to its inV</td><td>a redundant edge — two casts do the same work; drop one</td></tr>
-<tr><td><code>ambiguous</code></td><td>this edge's outV (or inV) is contested by an incomparable sibling that <em>overlaps</em> it</td><td>a future input could match both with no most-specific winner: dispatch is not deterministic, so refine one dom</td></tr>
-<tr><td><code>incomparable</code></td><td>this edge's outV (or inV) is contested by a sibling that is incomparable and <strong>disjoint</strong></td><td>benign — no input matches both, so dispatch stays total; no action</td></tr>
-<tr><td><code>coupling</code></td><td>an opposing edge exists: this edge's inV casts back to its outV</td><td>a candidate isomorphism/retraction — the round trip is available</td></tr>
-<tr><td><code>isochain</code></td><td>no direct opposing edge, but the endpoints are linked by a chain of them</td><td>the endpoints sit in the reversible core of the graph: you can navigate between them</td></tr>
-<tr><td><code>retract</code></td><td>the endpoints are mutually reachable (a round trip exists, not a pair)</td><td>the round trip is an <em>idempotent</em>: the cast lands in a subobject, so it is lossy rather than reversible</td></tr>
+<tr><td><code>obj</code></td><td>the type itself — the down-elevator to the vertex's source type</td></tr>
+<tr><td><code>morphed_to</code></td><td>the morphisms <strong>sourced from</strong> this object (the OUT edges)</td></tr>
+<tr><td><code>morphed_from</code></td><td>the morphisms <strong>targeted at</strong> this object (the IN edges)</td></tr>
+<tr><td><code>law</code></td><td>the structural theories this object models (see <em>theories</em>)</td></tr>
 </tbody>
 </table>
-<p>The three relation kinds are exclusive and reported at the tightest one — a coupling is not also reported as a
-retract, though it certainly is one. The contest kinds are what to watch when adding a cast: <code>incomparable</code> is
-the graph telling you the new cast is safe, <code>ambiguous</code> is it telling you an input can reach two instructions.</p>
-<h3>one edge per kind</h3>
-<h4>a coupling — <code>metric</code> and <code>imperial</code></h4>
-<p>Metric and imperial each cast to the other, so each edge is a candidate isomorphism:</p>
-<pre><code class="language-mtron">mtron&gt; *as?metric&lt;=imperial&amp;asq
-==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/590
+<h4>the morphism block — <code>morphism::T</code> (an edge)</h4>
+<table>
+<thead>
+<tr><th>field</th><th>what it is</th></tr>
+</thead>
+<tbody>
+<tr><td><code>form</code></td><td>the n-tid coefficient shape (<code>mapper</code>, <code>filter</code>, <code>reducer</code>, <code>flatmapper</code>, …)</td></tr>
+<tr><td><code>src</code></td><td>the source object (the morphism's dom)</td></tr>
+<tr><td><code>trgt</code></td><td>the target object (the morphism's rng)</td></tr>
+<tr><td><code>law</code></td><td>the declared <strong>process</strong> laws the morphism obeys (see <em>laws</em>)</td></tr>
+<tr><td><code>analysis</code></td><td>a lazy sub-block of whole-graph stats — see below</td></tr>
+</tbody>
+</table>
+<h3>incidence — the dual</h3>
+<p><code>src</code>/<code>trgt</code> and <code>morphed_to</code>/<code>morphed_from</code> are the same relation seen from opposite sides:</p>
+<table>
+<thead>
+<tr><th>from</th><th>dom side (out)</th><th>rng side (in)</th></tr>
+</thead>
+<tbody>
+<tr><td>an object</td><td><code>morphed_to</code></td><td><code>morphed_from</code></td></tr>
+<tr><td>a morphism</td><td><code>src</code></td><td><code>trgt</code></td></tr>
+</tbody>
+</table>
+<p><code>morphed_to(A)</code> is <code>{ f : src(f) = A }</code>; <code>morphed_from(A)</code> is <code>{ f : trgt(f) = A }</code>. Composing them round-trips —
+from an object to its edges and back, or from an edge to its endpoints and back.</p>
+<h3>the <code>analysis</code> sub-block</h3>
+<p><code>analysis</code> is one lazy <code>auto()</code> — it stays a single <code>{&lt;j&gt;}</code> marker at level 1 until you <code>&gt;&gt;analysis</code>, so the
+morphism block reads small. Inside it, each stat is itself lazy:</p>
+<table>
+<thead>
+<tr><th>field</th><th>what it is</th></tr>
+</thead>
+<tbody>
+<tr><td><code>family</code></td><td>the same-name siblings: <code>{ g : op(g) = op(f) }</code> — every registration of the same operator</td></tr>
+<tr><td><code>contested</code></td><td>the witness edges behind the <code>ambiguous</code> / <code>incomparable</code> labels — the competing siblings</td></tr>
+<tr><td><code>orbit</code></td><td>the reversible-core component of the dom — everything reachable by a chain of opposing edges</td></tr>
+<tr><td><code>position</code></td><td>the edge's place among its siblings (a subset of the six kinds below)</td></tr>
+<tr><td><code>inverse</code></td><td>the opposing edge <code>f^{-1}</code> with <code>f · f^{-1} = 1</code> (only when a declared inverse exists)</td></tr>
+</tbody>
+</table>
+<h3>the six edge kinds</h3>
+<p><code>position</code> classifies an edge against the rest of the graph into up to six labels:</p>
+<table>
+<thead>
+<tr><th>kind</th><th>the relation to the graph</th></tr>
+</thead>
+<tbody>
+<tr><td><code>duplicate</code></td><td>another morphism of the same family maps the same dom to the same rng</td></tr>
+<tr><td><code>ambiguous</code></td><td>contested by an incomparable sibling that <em>overlaps</em> it — dispatch has no winner</td></tr>
+<tr><td><code>incomparable</code></td><td>contested by an incomparable, <em>disjoint</em> sibling — dispatch stays total</td></tr>
+<tr><td><code>coupling</code></td><td>an opposing edge exists — a candidate inverse pair</td></tr>
+<tr><td><code>isochain</code></td><td>endpoints linked by a chain of couplings — one orbit of the reversible core</td></tr>
+<tr><td><code>retract</code></td><td>mutually reachable and round-trip idempotent — a subobject retraction</td></tr>
+</tbody>
+</table>
+<p><code>orbit</code> is the transitive closure of <code>coupling</code> — the connected component of the <em>reversible core</em> (the subgraph of
+edges that have an opposing edge). It is a reachability class, coarser than isomorphism (which needs the round trip
+to be idempotent → <code>retract</code>) and finer than raw incidence.</p>
+<h3>the algebraic theories — laws of structure</h3>
+<p>An object can model several algebraic structures; <code>object::T&gt;&gt;law</code> is a rec keyed by the name you give each
+instance. <code>algebraic_theory::T</code> is the nominal super-type grouping them:</p>
+<table>
+<thead>
+<tr><th>type</th><th>roles (field → op-tid)</th><th>what it asserts</th></tr>
+</thead>
+<tbody>
+<tr><td><code>ring_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code>, <code>one</code></td><td><code>+</code> an abelian group, <code>·</code> a monoid, <code>a(b+c) = ab+ac</code></td></tr>
+<tr><td><code>group_theory</code></td><td><code>op</code>, <code>id</code>, <code>inv</code></td><td><code>g · g^{-1} = g^{-1} · g = 1</code></td></tr>
+<tr><td><code>monoid_theory</code></td><td><code>op</code>, <code>id</code></td><td><code>m · 1 = 1 · m = m</code> and associativity</td></tr>
+</tbody>
+</table>
+<h3>process laws — <code>morphism::T&gt;&gt;law</code></h3>
+<p>The morphism's <code>law</code> field is a set of <strong>process</strong> law labels served from <code>CatLawTable</code> (the <code>declared ∩ process</code>
+cell):</p>
+<pre><code class="language-mtron">mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)&gt;&gt;law
+==&gt;fail::[inst apply failure: plus?rng=int&amp;dom=int(int::T) is not a morphism::T [nominal] (at /m/inst/as@1)]@/sys/fail/650
 </code></pre>
-<h4>an incomparable sibling — and a map that carries two kinds</h4>
-<p><code>json</code> casts to <code>yaml</code>, and <code>json</code> also casts to <code>mcp_client</code>. Those two rngs are incomparable with each other and
-disjoint, so no input reaches both — dispatch stays total and the map says exactly that:</p>
-<pre><code class="language-mtron">mtron&gt; *as?yaml&lt;=json&amp;asq
-==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/594
-</code></pre>
-<p><code>int</code> is the busier example: it casts to <code>bool</code>, <code>bytes</code>, <code>real</code>, <code>str</code> and <code>uri</code>. Every one of those edges also has
-an opposing edge, so the map reports the contest <em>and</em> the coupling — one kind for each relation the edge takes part
-in:</p>
-<pre><code class="language-mtron">mtron&gt; *as?real&lt;=int&amp;asq
-==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/598
-</code></pre>
-<h4>an isochain — <code>bytes</code> and <code>int</code></h4>
-<p>No single cast maps <code>bytes</code> to <code>int</code> and back, yet they sit in the <em>reversible core</em> of the graph: a chain of
-opposing pairs links them, so a round trip exists even though no direct one does. The map names that shape
-<code>isochain</code>:</p>
-<pre><code class="language-mtron">mtron&gt; *as?bytes&lt;=int&amp;asq
-==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/602
-</code></pre>
-<h4>a retract — the self-loop</h4>
-<p>An edge whose endpoints are the same type is the identity, and the identity is idempotent, so the edge is a retract
-of itself (not a coupling — that needs two types). Its outV is still contested by int's other casts, which is why
-the map carries both kinds:</p>
-<pre><code class="language-mtron">mtron&gt; *as?int&lt;=int&amp;asq
-==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/606
-</code></pre>
-<h3>narrowing a map</h3>
-<p><code>?asq=[kind,…]</code> asks for the edge's map <em>as far as those kinds are concerned</em>: the answer is the intersection, and
-when the intersection is empty there is no such edge property to read, so the read yields nothing at all.</p>
-<pre><code class="language-mtron">mtron&gt; *as?str&lt;=int&amp;asq=[coupling]
-==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/610
-</code></pre>
-<pre><code class="language-mtron">mtron&gt; *as?str&lt;=int&amp;asq=[duplicate]
-==&gt;fail::[inst apply failure: no asq query processor attached to /m/space/memspace [+/#] (at /m/inst/from@0)]@/sys/fail/614
-</code></pre>
-<h3>declared casts, and the tag that no one declares</h3>
-<p>A declared cast <em>does work</em>: <code>as?rec&lt;=json</code> parses a JSON document into a rec, <code>as?json&lt;=rec</code> serializes one back.
-The str-refinement document types under <code>/m/web/mime/+</code> are declared in pairs like that (<code>json</code>, <code>yaml</code>, <code>xml</code>,
-<code>html</code>, <code>markdown</code>, <code>csv</code>, <code>xsv</code>).</p>
-<p>A cast to a type nobody declares is still legal — it is a <strong>tag</strong>, and it is served by one fully generic cast whose
-whole job is <em>&quot;the lhs obj as the arg type&quot;</em>:</p>
-<pre><code class="language-java">instC(AS_INST_TID.dom(A).rng(B), lst(ALL_TYPE), (lhs, inst) -&gt; inst.arg(0).isType()
-        ? lhs.as(inst.arg(0).asType())
-        : fail(MTronException.of(&quot;%s is not a %s&quot;, lhs, inst.arg(0))))
-</code></pre>
-<p><code>'{&quot;a&quot;:1}'.as(json::T)</code> retags the text as JSON without touching it, and adding <code>.as(rec::T)</code> then hits
-the declared parse cast:</p>
-<pre><code class="language-mtron">mtron&gt; '{&quot;a&quot;:1}'.as(json::T)                                 [-- a tag: the generic arg-type cast --]
-==&gt;json::'{&quot;a&quot;:1}'
-</code></pre>
-<pre><code class="language-mtron">mtron&gt; '{&quot;a&quot;:1}'.as(json::T).as(rec::T)                      [-- the tag, then the declared parse cast --]
-==&gt;[a=&gt;1]
-</code></pre>
-<p>That division is worth knowing: <strong>the tag is generic and structural, the conversion is declared per pair</strong> -- which
-is why <code>.as(html::T).as(rec::T)</code> parses HTML and <code>.as(rec::T).as(html::T)</code> serializes it, while a tag on its own
-changes only what the obj claims to be.</p>
-<h3>the implicit as-graph</h3>
-<p>Most casts are never written down. If <code>stockholmare</code> refines <code>human</code>, then a <code>stockholmare</code> <em>is</em> a <code>human</code> and the
-cast is just dropping the constraint that distinguishes them — no edge needed. <code>AsQ.implicit()</code> manifests those
-ancestor casts from the hierarchy of the types already in the graph, which is the set of edges the as-graph would
-carry if every refinement were written out.</p>
-<h3>caveats</h3>
-<ul>
-<li><strong>an endpoint's identity is its address, not its base type.</strong> <code>json::T</code> is a <em>str</em> refinement living at
-<code>/m/web/mime/json</code>; the cast that implements it names that address. A comparison that walks the tid's ancestry
-instead of the address will miss the cast — which is why an exact endpoint match is always admitted.</li>
-<li><strong>the relation analysis is nominal.</strong> Predicates do not split an edge: <code>int -&gt; nat</code> and <code>int -&gt; int</code> differ by
-vertex name only.</li>
-<li><strong><code>ambiguous</code> overlap is decided by graph reachability.</strong> Two same-rng doms count as overlapping when they
-share a base path and are linked by a cross-over path in the undirected type graph — the implementation's
-proxy for &quot;captures the same values&quot; (the intent is <code>∃T</code> refining both).</li>
-<li><strong>the refinement check is nominal <em>plus coefficient</em>, and predicate-blind.</strong> <code>refines(A, B)</code> is
-<code>A.testNominally(B) &amp;&amp; A.c().within(B.c())</code>, and root/generic endpoints never count as incomparable — which is
-why the generic tag casts are contested only by concrete siblings. (Edge <em>identity</em> remains coefficient-blind:
-<code>{4}int -&gt; int</code> and <code>int -&gt; int</code> are one edge.)</li>
-<li><strong>a predicated variant of a named type shares its name's address.</strong> Constructing <code>nat::T[is(gt(100))]</code> registers
-it at nat's own address, so it <em>replaces</em> nat rather than sitting beside it; give a distinct type its own base
-(<code>int::T[…]</code>) if it needs its own identity.</li>
-<li><strong>coefficients are not part of an edge's identity yet</strong>, so <code>{4}int -&gt; int</code> and <code>int -&gt; int</code> are one edge today.</li>
-<li><strong>surfaces have no edges yet.</strong> <code>as(mcp::T)</code> fails, which is why the projection chain is spelled
-<code>.as(skill::T).as(mcp_server::T)</code> — see <a href="web-instset-mtron.html">web instruction set</a>.</li>
-</ul>
+<p>Examples: <code>commutative</code> (<code>f(x,y) = f(y,x)</code>), <code>right_distributive</code>, <code>action</code>, <code>monoidic</code>, <code>involution</code>, <code>absorbing</code>,
+<code>idempotent</code>. A law has a <em>provenance</em> tier (<code>syntactic</code> — derived from the n-tid, <code>declared</code> — proved once per
+family, <code>semantic</code> — apply-and-test) and a <em>kind</em> (<code>structure</code> → the object theories, <code>process</code> → these morphism
+labels).</p>
 <h3>see also</h3>
 <ul>
-<li><a href="web-instset-mtron.html">web instruction set</a> — the MIME document types, their parse/serialize casts, and the
-projection chains that ride them.</li>
-<li><a href="type-system-mtron.html">mtron type system</a> — vid/tid, coefficients, refining predicates, nominal vs structural.</li>
+<li><a href="type-system-mtron.html">mtron type system</a> — vid/tid, coefficients, nominal vs structural, casting.</li>
+<li><a href="language-reference-mtron.html">mtron language reference</a> — <code>.as(type::T)</code>, <code>&gt;&gt;</code> rshift, coefficients.</li>
+<li><a href="math-instset-mtron.html">math instruction set</a> — <code>/m/math</code>, where the category and its theories live.</li>
 </ul>
 
     </div>

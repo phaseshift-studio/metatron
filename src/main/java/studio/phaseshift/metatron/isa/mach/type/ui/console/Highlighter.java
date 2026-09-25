@@ -25,8 +25,8 @@ import org.jline.terminal.Terminal;
 import org.jline.utils.AttributedString;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjLinkSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.web.parser.ObjPlainTextSerializer;
 
@@ -63,7 +63,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
      * the characters they typed rather than an instruction.
      */
     private static final Highlighter LINE =
-            new Highlighter(new ObjmtronSerializer(true), true);
+            new Highlighter(ObjmtronSerializer.single(), true);
 
     /**
      * The user's own text — the line they are editing, and the echo of the line they submitted —
@@ -366,7 +366,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
         this.graphitty = new Graphitty(Map.of(), new ByteArrayOutputStream());
         // the link serializer, not the plain one: this is the instance every renderer formats
         // objs with, and a uri reaches writeUri only if the serializer that draws it tags it
-        this.serializer = new ObjLinkSerializer();
+        this.serializer = ObjmtronUISerializer.linkBodies();
     }
 
     public Highlighter(final ObjSerializer<String> serializer) {
@@ -385,11 +385,6 @@ public class Highlighter implements org.jline.reader.Highlighter {
         this.syntaxHighlighter = SyntaxHighlighter.build(Highlighter.configurations.getConfig("jnanorc"), "mtron");
         this.graphitty = ignoreGraphitty ? null : new Graphitty(Map.of(), new ByteArrayOutputStream());
         this.serializer = serializer;
-    }
-
-    public Highlighter justify(final boolean leftJustify) {
-        this.serializer = new ObjmtronSerializer(leftJustify);
-        return this;
     }
 
     public String write(final Object object) {
@@ -424,6 +419,35 @@ public class Highlighter implements org.jline.reader.Highlighter {
     }
 
     /**
+     * The source span of each {@code {{syntax:…}}} block — its open tag, its code, and its close —
+     * each open paired with the first close of the SAME language it is followed by.
+     * <p>
+     * Masking the whole span (not just the two tags) keeps the line syntax away from the
+     * block's code.  The code is foreign source its own nanorc colorizes, and colorizing it
+     * TWICE — the line syntax first, the block's language over the result — is what leaves
+     * visible SGR garbage: a second {@code toAnsi()} pass runs over text that already carries
+     * escapes and rewrites them lossily, so they split in the middle and the fragments
+     * ({@code 34m}, {@code 32m}, …) print as literal text at the left of the block's lines.
+     */
+    private static final java.util.regex.Pattern SYNTAX_OPEN_TAG =
+            java.util.regex.Pattern.compile("\\{\\{syntax:([^{}]*)}}");
+
+    private static java.util.List<int[]> syntaxBlocks(final String str) {
+        final java.util.List<int[]> spans = new java.util.ArrayList<>();   // source start, end
+        final java.util.regex.Matcher m = SYNTAX_OPEN_TAG.matcher(str);
+        int from = 0;
+        while (m.find(from)) {
+            final String closeTag = "{{/syntax:" + m.group(1) + "}}";
+            final int closeStart = str.indexOf(closeTag, m.end());
+            if (closeStart < 0)
+                return spans;   // left open: its tags mask individually as plain rules
+            spans.add(new int[]{m.start(), closeStart + closeTag.length()});
+            from = closeStart + closeTag.length();
+        }
+        return spans;
+    }
+
+    /**
      * The line colored as syntax with its graphitty rules masked, ready for graphitty to resolve.
      * <p>
      * The highlighter cannot colour a line that still contains rules — it tokenizes the rule itself
@@ -432,17 +456,33 @@ public class Highlighter implements org.jline.reader.Highlighter {
      * not (a control character broke every rule but the uri one, so a result came out with blue
      * uris and everything else white).  The line is then coloured in one pass, and each masked span
      * is put back as the rule it stood for.
+     * <p>
+     * A {@code {{syntax:…}}} block is one span of its own — open tag, code, close — rather than
+     * its two tags masked as rules around code the line syntax colors in the meantime; see
+     * {@link #syntaxBlocks(String)}.
      */
     private String colorMarkupMasked(final String str) {
+        final java.util.List<int[]> blocks = syntaxBlocks(str);
+        final java.util.List<int[]> ranges = new java.util.ArrayList<>();   // source start, end
+        ranges.addAll(blocks);
         final java.util.regex.Matcher m = this.GRAPHITTY_PATTERN.matcher(str);
+        while (m.find()) {
+            boolean insideBlock = false;
+            for (final int[] b : blocks)
+                if (m.start() >= b[0] && m.end() <= b[1])
+                    insideBlock = true;
+            if (!insideBlock)
+                ranges.add(new int[]{m.start(), m.end()});
+        }
+        ranges.sort((x, y) -> Integer.compare(x[0], y[0]));
         final StringBuilder masked = new StringBuilder(str.length());
         final java.util.List<int[]> spans = new java.util.ArrayList<>();   // visible start, width, source start
         int last = 0;
-        while (m.find()) {
-            masked.append(str, last, m.start());
-            spans.add(new int[]{masked.length(), m.end() - m.start(), m.start()});
-            masked.append(" ".repeat(m.end() - m.start()));
-            last = m.end();
+        for (final int[] r : ranges) {
+            masked.append(str, last, r[0]);
+            spans.add(new int[]{masked.length(), r[1] - r[0], r[0]});
+            masked.append(" ".repeat(r[1] - r[0]));
+            last = r[1];
         }
         if (spans.isEmpty()) return this.highlight(null, str).toAnsi();
         masked.append(str, last, str.length());

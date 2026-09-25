@@ -180,7 +180,7 @@ public class mParserTest extends AbstractMetatronTest {
         };
         for (final String input : inputs) {
             final Obj firstParse = ObjmtronSerializer.parse(input);
-            final String serialized = new ObjmtronSerializer().write(firstParse);
+            final String serialized = ObjmtronSerializer.single().write(firstParse);
             final Obj secondParse = ObjmtronSerializer.parse(serialized);
             assertEquals((Object) firstParse.jvm(), secondParse.jvm(),
                     "Round-trip failed for input: " + input + " → serialized: " + serialized);

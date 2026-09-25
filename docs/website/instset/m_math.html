@@ -174,6 +174,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m.html"><img
                             src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dckr.html"><img
+                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dcmnt.html"><img
                             src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
                             alt="dcmnt"/>/m/dcmnt</a></li>
@@ -198,6 +201,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math.html"><img
                             src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math_cat.html"><img
+                            src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_sys.html"><img
                             src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                             alt="sys"/>/m/sys</a></li>
@@ -268,7 +274,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -401,82 +407,7 @@
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[
- pattern=&gt;/m/math/#,
- q=&gt;[docq::[
- pattern=&gt;docq,
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;!*/m],
- type=&gt;[
-  int::T[is(gt(0))]@nat,
-  real::T@datasize,
-  uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime,
-  datasize::T[][ctor?bB&lt;=#{?}(#{*}::T)]@bB,
-  datasize::T[][ctor?kB&lt;=#{?}(#{*}::T)]@kB,
-  datasize::T[][ctor?mB&lt;=#{?}(#{*}::T)]@mB,
-  datasize::T[][ctor?gB&lt;=#{?}(#{*}::T)]@gB,
-  datasize::T[][ctor?tB&lt;=#{?}(#{*}::T)]@tB,
-  datasize::T[][ctor?pB&lt;=#{?}(#{*}::T)]@pB,
-  real::T@currency,
-  currency::T@usd,
-  currency::T@euro,
-  real::T@time,
-  time::T[][ctor?millis&lt;=#{?}(#{*}::T)]@millis,
-  time::T[][ctor?second&lt;=#{?}(#{*}::T)]@second,
-  time::T[][ctor?minute&lt;=#{?}(#{*}::T)]@minute,
-  time::T[][ctor?hour&lt;=#{?}(#{*}::T)]@hour,
-  time::T[][ctor?day&lt;=#{?}(#{*}::T)]@day,
-  real::T@metric,
-  metric::T[][ctor?mm&lt;=#{?}(#{*}::T)]@mm,
-  metric::T[][ctor?cm&lt;=#{?}(#{*}::T)]@cm,
-  metric::T[][ctor?dm&lt;=#{?}(#{*}::T)]@dm,
-  metric::T[][ctor?meter&lt;=#{?}(#{*}::T)]@meter,
-  metric::T[][ctor?km&lt;=#{?}(#{*}::T)]@km,
-  real::T@imperial,
-  imperial::T[][ctor?inch&lt;=#{?}(#{*}::T)]@inch,
-  imperial::T[][ctor?foot&lt;=#{?}(#{*}::T)]@foot,
-  imperial::T[][ctor?yard&lt;=#{?}(#{*}::T)]@yard,
-  imperial::T[][ctor?mile&lt;=#{?}(#{*}::T)]@mile],
- inst=&gt;[
-  datetime_now?datetime&lt;=#{?}(),
-  plus?time&lt;=time(time::T),
-  plus?metric&lt;=metric(metric::T),
-  plus?imperial&lt;=imperial(imperial::T),
-  as?time&lt;=time(time::T),
-  plus?datetime&lt;=datetime(time::T),
-  minus?datetime&lt;=datetime(time::T),
-  minus?time&lt;=datetime(datetime::T),
-  as?datetime&lt;=uri(uri::T),
-  as?int&lt;=datetime(int::T),
-  as?str&lt;=datetime(str::T),
-  as?datetime&lt;=str(datetime::T),
-  normalize?time&lt;=time(),
-  normalize?datasize&lt;=datasize(),
-  normalize?metric&lt;=metric(),
-  normalize?imperial&lt;=imperial(),
-  as?metric&lt;=metric(metric::T),
-  as?imperial&lt;=imperial(imperial::T),
-  as?imperial&lt;=metric(imperial::T),
-  as?metric&lt;=imperial(metric::T),
-  cos?real&lt;=#{?}(as(real::T)),
-  sin?real&lt;=#{?}(real::T),
-  tan?real&lt;=#{?}(real::T),
-  sqrt?real&lt;=#{?}(real::T),
-  atan?real&lt;=#{?}(real::T),
-  atan2?real&lt;=#{?}(real{2}::T),
-  log?real&lt;=#{?}(real::T),
-  log10?real&lt;=#{?}(real::T),
-  exp?real&lt;=#{?}(real::T),
-  abs?real&lt;=#{?}(real::T),
-  ceil?real&lt;=#{?}(real::T),
-  floor?real&lt;=#{?}(real::T),
-  round?int&lt;=#{?}(real::T)],
- const=&gt;[
-  2.7183@/m/math/e?constq,
-  3.1416@/m/math/pi?constq]]@/m/math</code></pre>
+                        <pre><code>instset::[pattern=&gt;/m/math/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],type=&gt;[int::T[is(gt(0))]@nat,real::T@datasize,uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime,datasize::T[][ctor?rng=bB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@bB,datasize::T[][ctor?rng=kB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@kB,datasize::T[][ctor?rng=mB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mB,datasize::T[][ctor?rng=gB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@gB,datasize::T[][ctor?rng=tB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@tB,datasize::T[][ctor?rng=pB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@pB,real::T@currency,currency::T@usd,currency::T@euro,real::T@time,time::T[][ctor?rng=millis&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@millis,time::T[][ctor?rng=second&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@second,time::T[][ctor?rng=minute&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@minute,time::T[][ctor?rng=hour&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@hour,time::T[][ctor?rng=day&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@day,real::T@metric,metric::T[][ctor?rng=mm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mm,metric::T[][ctor?rng=cm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@cm,metric::T[][ctor?rng=dm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@dm,metric::T[][ctor?rng=meter&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@meter,metric::T[][ctor?rng=km&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@km,real::T@imperial,imperial::T[][ctor?rng=inch&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@inch,imperial::T[][ctor?rng=foot&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@foot,imperial::T[][ctor?rng=yard&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@yard,imperial::T[][ctor?rng=mile&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mile],inst=&gt;[datetime_now?rng=datetime&amp;dom=#{?}(){&lt;j&gt;},plus?rng=time&amp;dom=time(real::T@time){&lt;j&gt;},plus?rng=metric&amp;dom=metric(real::T@metric){&lt;j&gt;},plus?rng=imperial&amp;dom=imperial(real::T@imperial){&lt;j&gt;},as?rng=time&amp;dom=time(real::T@time){&lt;j&gt;},plus?rng=datetime&amp;dom=datetime(real::T@time){&lt;j&gt;},minus?rng=datetime&amp;dom=datetime(real::T@time){&lt;j&gt;},minus?rng=time&amp;dom=datetime(uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime){&lt;j&gt;},as?rng=datetime&amp;dom=uri(uri::T){&lt;j&gt;},as?rng=int&amp;dom=datetime(int::T){&lt;j&gt;},as?rng=str&amp;dom=datetime(str::T){&lt;j&gt;},as?rng=datetime&amp;dom=str(uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime){&lt;j&gt;},normalize?rng=time&amp;dom=time(){&lt;j&gt;},normalize?rng=datasize&amp;dom=datasize(){&lt;j&gt;},normalize?rng=metric&amp;dom=metric(){&lt;j&gt;},normalize?rng=imperial&amp;dom=imperial(){&lt;j&gt;},as?rng=metric&amp;dom=metric(real::T@metric){&lt;j&gt;},as?rng=imperial&amp;dom=imperial(real::T@imperial){&lt;j&gt;},as?rng=imperial&amp;dom=metric(real::T@imperial){&lt;j&gt;},as?rng=metric&amp;dom=imperial(real::T@metric){&lt;j&gt;},cos?rng=real&amp;dom=#{?}(as(real::T)){&lt;j&gt;},sin?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},tan?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},sqrt?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},atan?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},atan2?rng=real&amp;dom=#{?}(real{2}::T){&lt;j&gt;},log?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},log10?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},exp?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},abs?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},ceil?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},floor?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},round?rng=int&amp;dom=#{?}(real::T){&lt;j&gt;}],const=&gt;[2.718281828459045@/m/math/e?constq,3.141592653589793@/m/math/pi?constq]]@/m/math</code></pre>
                     </div>
                 </div>
             </div>
@@ -645,14 +576,14 @@
         <span class="code text-secondary fw-bold">e</span>
         <small class="text-muted code">/m/math/e?constq</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">2.7183@/m/math/e?constq</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">2.718281828459045@/m/math/e?constq</code></pre></div>
     
 </div><div class="card mb-3" id="__m__math__pi?constq">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">pi</span>
         <small class="text-muted code">/m/math/pi?constq</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">3.1416@/m/math/pi?constq</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">3.141592653589793@/m/math/pi?constq</code></pre></div>
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
@@ -665,7 +596,7 @@
         </span>
         <small class="text-muted code">/m/math/datasize/bB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?bB&lt;=#{?}(#{*}::T)]@bB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?rng=bB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@bB</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a byte of data</p>
@@ -678,7 +609,7 @@
         </span>
         <small class="text-muted code">/m/math/metric/cm</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?cm&lt;=#{?}(#{*}::T)]@cm</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?rng=cm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@cm</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a centimeter of distance (10 millimeters)</p>
@@ -728,7 +659,7 @@
         </span>
         <small class="text-muted code">/m/math/time/day</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?day&lt;=#{?}(#{*}::T)]@day</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?rng=day&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@day</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a day of time (24 hours)</p>
@@ -741,7 +672,7 @@
         </span>
         <small class="text-muted code">/m/math/metric/dm</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?dm&lt;=#{?}(#{*}::T)]@dm</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?rng=dm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@dm</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a decimeter of distance (10 centimeters)</p>
@@ -767,7 +698,7 @@
         </span>
         <small class="text-muted code">/m/math/imperial/foot</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?foot&lt;=#{?}(#{*}::T)]@foot</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?rng=foot&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@foot</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a foot of distance (12 inches)</p>
@@ -780,7 +711,7 @@
         </span>
         <small class="text-muted code">/m/math/datasize/gB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?gB&lt;=#{?}(#{*}::T)]@gB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?rng=gB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@gB</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a gigabyte (1024 megabytes) of data</p>
@@ -793,7 +724,7 @@
         </span>
         <small class="text-muted code">/m/math/time/hour</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?hour&lt;=#{?}(#{*}::T)]@hour</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?rng=hour&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@hour</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] an hour of time (60 minutes)</p>
@@ -819,7 +750,7 @@
         </span>
         <small class="text-muted code">/m/math/imperial/inch</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?inch&lt;=#{?}(#{*}::T)]@inch</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?rng=inch&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@inch</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] an inch of distance (25.4 millimeters)</p>
@@ -832,7 +763,7 @@
         </span>
         <small class="text-muted code">/m/math/datasize/kB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?kB&lt;=#{?}(#{*}::T)]@kB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?rng=kB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@kB</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a kilobyte (1024 bytes) of data</p>
@@ -845,7 +776,7 @@
         </span>
         <small class="text-muted code">/m/math/metric/km</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?km&lt;=#{?}(#{*}::T)]@km</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?rng=km&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@km</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a kilometer of distance (1000 meters)</p>
@@ -858,7 +789,7 @@
         </span>
         <small class="text-muted code">/m/math/datasize/mB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?mB&lt;=#{?}(#{*}::T)]@mB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?rng=mB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mB</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a megabyte (1024 kilobytes) of data</p>
@@ -871,7 +802,7 @@
         </span>
         <small class="text-muted code">/m/math/metric/meter</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?meter&lt;=#{?}(#{*}::T)]@meter</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?rng=meter&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@meter</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a meter of distance (100 centimeters)</p>
@@ -897,7 +828,7 @@
         </span>
         <small class="text-muted code">/m/math/imperial/mile</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?mile&lt;=#{?}(#{*}::T)]@mile</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?rng=mile&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mile</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a mile of distance (1760 yards)</p>
@@ -910,7 +841,7 @@
         </span>
         <small class="text-muted code">/m/math/time/millis</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?millis&lt;=#{?}(#{*}::T)]@millis</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?rng=millis&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@millis</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a millisecond of time</p>
@@ -923,7 +854,7 @@
         </span>
         <small class="text-muted code">/m/math/time/minute</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?minute&lt;=#{?}(#{*}::T)]@minute</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?rng=minute&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@minute</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a minute of time (60 seconds)</p>
@@ -936,7 +867,7 @@
         </span>
         <small class="text-muted code">/m/math/metric/mm</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?mm&lt;=#{?}(#{*}::T)]@mm</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?rng=mm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mm</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a millimeter of distance</p>
@@ -962,7 +893,7 @@
         </span>
         <small class="text-muted code">/m/math/datasize/pB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?pB&lt;=#{?}(#{*}::T)]@pB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?rng=pB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@pB</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a petabyte (1024 terabytes) of data</p>
@@ -975,7 +906,7 @@
         </span>
         <small class="text-muted code">/m/math/time/second</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?second&lt;=#{?}(#{*}::T)]@second</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?rng=second&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@second</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a second of time (1000 millis)</p>
@@ -988,7 +919,7 @@
         </span>
         <small class="text-muted code">/m/math/datasize/tB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?tB&lt;=#{?}(#{*}::T)]@tB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?rng=tB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@tB</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a terabyte (1024 gigabytes) of data</p>
@@ -1027,7 +958,7 @@
         </span>
         <small class="text-muted code">/m/math/imperial/yard</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?yard&lt;=#{?}(#{*}::T)]@yard</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?rng=yard&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@yard</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a yard of distance (3 feet)</p>

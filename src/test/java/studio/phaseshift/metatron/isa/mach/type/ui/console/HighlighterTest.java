@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -159,6 +160,30 @@ public class HighlighterTest extends AbstractMetatronTest {
      * own pass over the composed string can see a block whole; expanding one end of it
      * here would drop the tag or leave its end tag with nothing to close.
      */
+    /**
+     * A {@code {{syntax:…}}} block in the shape the serializer's string output takes — a
+     * tagged, quoted multi-line value in a markup context — must be colorized by its own
+     * nanorc and NOBODY ELSE'S.  The old path colored the code with the line's syntax
+     * first and the block's language second, and a second {@code toAnsi()} pass over text
+     * that already carries escapes rewrites them lossily: escapes split in the middle and
+     * their fragments ({@code 34m}, {@code 32m}, …) print as literal text at the left of
+     * the block's lines — the "funny characters" a highlighted HTML page used to start
+     * with.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "html % <html lang=\"en\"><head><title>Marko A. Rodriguez</title></head><body>42</body></html>",
+            "java % class Answer { int x = 42; }",
+    }, delimiter = '%')
+    void testSyntaxBlockInAMarkupContextKeepsItsEscapesIntact(final String language, final String code) {
+        final String str = "{{syntax:" + language + "}}\n" + code + "\n{{/syntax:" + language + "}}\n";
+        final String rendered = Highlighter.format(str);
+        assertFalse(rendered.replaceAll("\u001B\\[[0-9;]*[a-zA-Z]", "").contains("\u001B"),
+                "no escape may be split or naked: " + rendered.replace("\u001B", "\\e"));
+        assertEquals("\n" + code + "\n\n", Highlighter.unformat(rendered),
+                "the block's code — and nothing else — is what a reader sees: " + rendered.replace("\u001B", "\\e"));
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             "txt        % {{b}}bold{{X}}",

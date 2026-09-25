@@ -174,6 +174,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m.html"><img
                             src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dckr.html"><img
+                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dcmnt.html"><img
                             src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
                             alt="dcmnt"/>/m/dcmnt</a></li>
@@ -198,6 +201,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math.html"><img
                             src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math_cat.html"><img
+                            src="../../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_sys.html"><img
                             src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                             alt="sys"/>/m/sys</a></li>
@@ -268,7 +274,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -407,16 +413,13 @@ anywhere            ┌───────────────────
                method  =&gt; &gt;&gt;0 - &lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}${/}&gt;,
                params  =&gt; *message&gt;&gt;1].inst(payload=&gt;_){
                  *&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}&gt;&gt;&gt;send.apply(*payload)}}]
-==&gt;fail::[[
-    jsonrpc=&gt;'2.0',
-    method=&gt;rshift(0).minus(&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}${/}&gt;),
-    params=&gt;*message.rshift(1)] is not a str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@json
+==&gt;fail::[[jsonrpc=&gt;'2.0',method=&gt;rshift(0).minus(&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}${/}&gt;),params=&gt;*message.rshift(1)] is not a str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@json
    	while parsing: &lt;ws://localhost:8555/mcp/+/notifications/#?subq&gt; -&gt; sub::[
              on_recv =&gt; inst?#&lt;=lst(message=&gt;?lst::T){
                -&lt;json::[jsonrpc =&gt; '2.0',
                   method  =&gt; &gt;&gt;0 - &lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}${/}&gt;,
                   params  =&gt; *message&gt;&gt;1].inst(payload=&gt;_){
-                    *&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}&gt;&gt;&gt;send.apply(*payload)}}]]@/sys/fail/1768
+                    *&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}&gt;&gt;&gt;send.apply(*payload)}}]]@/sys/fail/1820
 </code></pre>
 <p>This lives in <code>boot/boot.mtron</code> lines 82-88 and is injected at boot time.</p>
 <h3>Key Mechanics</h3>
@@ -445,10 +448,8 @@ Ensures JSON serialization (`{&quot;jsonrpc&quot;:&quot;2.0&quot;,...}`) rather 
 ```mtron
 mtron&gt; [-- WRONG — sends literal source code, not evaluated JSON --]
 mtron&gt; json::[jsonrpc =&gt; '2.0', params =&gt; *message&gt;&gt;1]
-==&gt;fail::[[
-    jsonrpc=&gt;'2.0',
-    params=&gt;*message.rshift(1)] is not a str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@json
-   	while parsing: json::[jsonrpc =&gt; '2.0', params =&gt; *message&gt;&gt;1]]@/sys/fail/1776
+==&gt;fail::[[jsonrpc=&gt;'2.0',params=&gt;*message.rshift(1)] is not a str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@json
+   	while parsing: json::[jsonrpc =&gt; '2.0', params =&gt; *message&gt;&gt;1]]@/sys/fail/1824
 ```**Symptom**: Client receives raw expression text instead of evaluated values.
 **Fix**: Use `-&lt;json::[...]` to force evaluation.
 

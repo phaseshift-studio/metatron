@@ -28,6 +28,7 @@ import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.io.IOException;
@@ -94,7 +95,7 @@ public final class ReaderSetup {
      * history, the serializer-aware highlighter, and the console's completer.
      */
     public static LineReader buildReader(final DefaultParser parser, final Terminal terminal, final Console console) {
-        final Highlighter highlighter = new Highlighter(new ObjConsoleSerializer(), true);
+        final Highlighter highlighter = new Highlighter(ObjmtronUISerializer.single(), true);
         highlighter.setTerminal(terminal);
         Highlighter.single().setTerminal(terminal);
         return LineReaderBuilder.builder()

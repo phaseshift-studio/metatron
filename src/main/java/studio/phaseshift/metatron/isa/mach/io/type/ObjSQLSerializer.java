@@ -97,7 +97,7 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
         return OBJ_SQL_SERIALIZER_VID;
     }
 
-    private static final ObjmtronSerializer MTRON = ObjmtronSerializer.compact();
+    private static final ObjmtronSerializer MTRON = ObjmtronSerializer.single();
 
     @Override
     public ByteBuffer outputBytes(final Obj obj) throws MTronException {
@@ -435,7 +435,7 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
                 return ObjJSONSerializer.simple().inputBytes(value);
             } catch (final Exception jsonEx) {
                 try {
-                    return ObjmtronSerializer.compact().inputBytes(value.getBytes());
+                    return ObjmtronSerializer.single().inputBytes(value.getBytes());
                 } catch (final Exception mtronEx) {
                     return str(value);
                 }

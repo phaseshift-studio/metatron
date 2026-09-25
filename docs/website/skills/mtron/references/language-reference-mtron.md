@@ -16,7 +16,7 @@ inst, code, bytes, etc. Expressions chain left-to-right: `lhs.inst(rhs)`.
 mtron> 1           [-- int (64-bit signed) --]
 ==>1
 mtron> 1.0         [-- real (double) --]
-==>1.0000
+==>1.0
 mtron> true        [-- bool --]
 ==>true
 mtron> false       [-- bool --]
@@ -291,7 +291,7 @@ mtron> nat::2                    [-- ok --]
 mtron> nat::-1                   [-- <ERROR> --]
 ==>fail::[-1 is not a int::T[is(gt(0))]@nat
    	while parsing: nat::-1
-   	at offset 19]@/sys/fail/1034
+   	at offset 19]@/sys/fail/1086
 ```
 ---
 
@@ -314,7 +314,7 @@ mtron> {1,2,3,4}.map(map(+2))           [-- nested --]
 ==>5
 ==>6
 mtron> {1,2,3}.where(gt(1))             [-- {2,3}  (filter: keep if predicate matches) --]
-==>fail{3}::[lhs range does not match inst domain: int::T => uri::T [where?rng=uri{?}&dom=uri(gt(1)){<j>}@<1>]]@/sys/fail/1046
+==>fail{3}::[lhs range does not match inst domain: int::T => uri::T [where?rng=uri{?}&dom=uri(gt(1)){<j>}@<1>]]@/sys/fail/1094
 mtron> {1,2,3}.is(gt(1))                [-- {2,3}  (same, filter via is()) --]
 ==>2
 ==>3
@@ -340,7 +340,7 @@ mtron> [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3] --
 
 ```mtron
 mtron> {[a=>1],[a=>2],[a=>3]}.where([a=>is(gt(1))])               [-- {[a=>2],[a=>3]} --]
-==>fail{3}::[lhs range does not match inst domain: rec::T => uri::T [where?rng=uri{?}&dom=uri([a=>is(gt(1))]){<j>}@<1>]]@/sys/fail/1058
+==>fail{3}::[lhs range does not match inst domain: rec::T => uri::T [where?rng=uri{?}&dom=uri([a=>is(gt(1))]){<j>}@<1>]]@/sys/fail/1106
 mtron> {[a=>1],[a=>2],[a=>3]}=?=[a=>is(gt(1))]                    [-- syntax sugar for above --]
 ==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at '=?=[a=>is(gt(1))]'
 mtron> [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   [-- [1,7,3] --]
@@ -531,11 +531,11 @@ Embedded mathematical expressions:
 
 ```mtron
 mtron> math('1+2')                           [-- 3.0 --]
-==>3.0000
+==>3.0
 mtron> 10.to(a).math('a^2')                  [-- 100.0 --]
-==>100.0000
+==>100.0
 mtron> 10.to(a).plus(10).to(b).math('a+b')   [-- 30.0 --]
-==>30.0000
+==>30.0
 ```
 ---
 

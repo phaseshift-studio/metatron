@@ -173,11 +173,17 @@ public interface Stylable<T extends Stylable<T>> {
         }
 
         public Border border() {
-            return this.at("border").isUri() ? Border.parse(this.at("border").uriValue().toString()) : Border.none;
+            final Obj b = this.at("border");
+            if (b.isUri()) return Border.parse(b.uriValue().toString());
+            if (b.isStr()) return Border.parse(b.strValue());
+            return Border.none;
         }
 
         public Style<T> border(final Border border) {
-            this.jvm().put(uri("border"), uri(border.toString()));
+            // a str, not a uri: the glyph template carries ';', which the reader treats
+            // as a statement separator, so a uri value could never be written and read
+            // back.  Border.parse handles both the named and the raw template forms.
+            this.jvm().put(uri("border"), str(border.toString()));
             return this;
         }
 

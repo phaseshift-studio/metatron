@@ -372,7 +372,7 @@ public final class ScreenPainter {
      * with {@link #linkAt} exactly.
      * <p>
      * One source only: a span the console's serializer tagged.  A uri becomes clickable because
-     * {@code ObjConsoleSerializer.writeUri} wrapped it in {@code {{link}}}, which renders as OSC 8 —
+     * {@code ObjmtronUISerializer.writeUri} wrapped it in {@code {{link}}}, which renders as OSC 8 —
      * i.e. because the console <em>serialized a uri</em>.  Text that merely resembles one is text:
      * the console does not parse its own output as objs, so a path written into a string, a log
      * message or an echoed line is left for the reader to select and copy.

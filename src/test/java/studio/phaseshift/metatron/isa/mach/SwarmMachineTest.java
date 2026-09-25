@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
@@ -30,6 +31,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -50,6 +52,30 @@ public class SwarmMachineTest extends AbstractMetatronTest {
 
         assertFalse(result.isNoObj(), "expected non-noobj result from 1+2");
         assertTrue(result.toString().contains("3"), "expected result to contain 3");
+    }
+
+    // ======================== Opt-in path tracking ========================
+
+    @Test
+    public void testPathAccrualIsOptIn() {
+        // code without path(): resolve must not tag ?path, and stepping must not accrue a path
+        final SwarmMachine mach = SwarmMachine.of(ObjmtronSerializer.parse("1.plus(2)").as());
+        mach.resolve(noobj());
+        final PCMonad monad = mach.running().elements().findFirst().orElseThrow().as();
+        assertFalse(monad.code().tid().hasQ(PATH), "code without path() must not be tagged ?path");
+        final PCMonad stepped = monad.next(jnt(3));
+        assertTrue(stepped.state().at(uri(PATH)).isNoObj(), "monad state must not gather a path when path() is absent");
+    }
+
+    @Test
+    public void testPathAccruesWhenRead() {
+        // code with path(): resolve must tag ?path, and stepping must accrue a path
+        final SwarmMachine mach = SwarmMachine.of(ObjmtronSerializer.parse("1.plus(2).path()").as());
+        mach.resolve(noobj());
+        final PCMonad monad = mach.running().elements().findFirst().orElseThrow().as();
+        assertTrue(monad.code().tid().hasQ(PATH), "code with path() must be tagged ?path");
+        final PCMonad stepped = monad.next(jnt(3));
+        assertFalse(stepped.state().at(uri(PATH)).isNoObj(), "monad state must gather a path when path() is read");
     }
 
     // ======================== Monadic queues in jvm ========================

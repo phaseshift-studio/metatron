@@ -482,22 +482,6 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-    @Disabled
-    @ParameterizedTest
-    @CsvSource(value = {
-            "a ->> _                                                  % *a             % a",
-            "a ->> |(* b)                                             % *a             % a/b",
-            "a ->> |-<[_,_]                                           % *a             % [a/b,a/b]",
-            "a ->> 1                                                  % *a             % 1",
-            "a ->> |+2                                                % *a             % 3",
-            "a ->> |+5                                                % *a             % 8",
-            "a ->> (*a + 2)                                           % *a             % 10",
-            "a ->  (*a + 2)                                           % *a             % 12"
-    }, delimiter = '%')
-    public void testRefApply(final String code, final String fetch, final String expected) {
-        AbstractMetatronTest.checkCodeEvaluate(LOG, code, fetch, expected);
-    }
-
     @ParameterizedTest
     @TestData(value = {"[a=>1,b=>2,c=>[d=>3,e=>[4,5,6,7]]]@xyz"})
     @CsvSource(value = {
@@ -643,6 +627,20 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.repeat(code=>_.repeat(code=>_.repeat(code=>plus(1),until=>loop().is(eq(2))),until=>loop().is(eq(2))),until=>loop().is(eq(2)))    % 9",
     }, delimiter = '%')
     public void testRepeat(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @Disabled
+    @CsvSource(value = {
+            // the walked path is [inst, obj, inst, obj, ...] — one pair per instruction, seeded by start
+            "1.path()>>.count()                                                      % 2",
+            "1.plus(2).path()>>.count()                                              % 4",
+            "1.plus(2).plus(5).path()>>.count()                                      % 6",
+            "1.plus(2).plus(5).plus(1).path()>>.count()                              % 8",
+            //"1.repeat(code=>plus(1),until=>loop()?>10).path()>>.count()              % 22"
+    }, delimiter = '%')
+    public void testPath(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
@@ -951,19 +949,6 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-    @Disabled
-    @ParameterizedTest
-    @CsvSource(value = {
-            "*/m/inst/as?str<=int.count()                                      % 1",
-            "*/m/inst/as.count().gt(1)                                         % true",
-            "*as?str<=int.count()                                              % 1",
-            "*as.count().gt(1)                                                 % true",
-            "noobj                                 % true"
-    }, delimiter = '%')
-    public void testAsQ(final String code, final String expected) {
-        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
-    }
-
     @ParameterizedTest
     @TestData(value = {
             "a -> [x=>!*b]",
@@ -1013,18 +998,6 @@ public class mInstSetTest extends AbstractInstSetTest {
             "*a>>x>>x.plus(4)                             % 10",
     }, delimiter = '%')
     public void testAutoFrom(final String code, final String expected) throws Exception {
-        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
-    }
-
-    @Disabled
-    @ParameterizedTest
-    @CsvSource(value = {
-            "1.?num::T                                    % 1",
-            "\"1\".?num::T                                % noobj",
-            "1.0.?num::T                                  % 1.0",
-            "true.?num::T                                 % noobj",
-    }, delimiter = '%')
-    public void testMarkerTypes(final String code, final String expected) throws Exception {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 

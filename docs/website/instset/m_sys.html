@@ -174,6 +174,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m.html"><img
                             src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dckr.html"><img
+                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dcmnt.html"><img
                             src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
                             alt="dcmnt"/>/m/dcmnt</a></li>
@@ -198,6 +201,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math.html"><img
                             src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math_cat.html"><img
+                            src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_sys.html"><img
                             src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                             alt="sys"/>/m/sys</a></li>
@@ -268,7 +274,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -401,35 +407,7 @@
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[
- pattern=&gt;/m/sys/#,
- q=&gt;[docq::[
- pattern=&gt;docq,
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;!*/m],
- const=&gt;[thread_executor::[stop=&gt;[,],run=&gt;[!*/sys/thread/main]]@/sys/thread/executor],
- inst=&gt;[
-  as?bytes&lt;=uri(bytes::T),
-  as?image&lt;=bytes(image::T,else(1.0000)),
-  close?noobj&lt;=#{?}(),
-  redirect?rec[short=&gt;uri,long=&gt;uri]&lt;=#{?}(uri::T),
-  sys_stat?rec&lt;=#{?}(),
-  find_file?lst&lt;=A{?}(name=&gt;str::T,{?}root=&gt;uri::T,regex{?}=&gt;bool::T,{?}max=&gt;int::T,{?}depth=&gt;int::T),
-  read_file?lst&lt;=A{?}(file=&gt;uri::T,{?}min=&gt;int::T,{?}max=&gt;int::T),
-  edit_file?rec&lt;=A{?}(file=&gt;uri::T,text=&gt;str::T,min=&gt;int::T,{?}max=&gt;int::T),
-  bash?lst[str]&lt;=#{?}(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)),
-  sleep?A{?}&lt;=A{?}(time::T),
-  stdout?#{?}&lt;=#{?}(#{?}::T),
-  stdin?str&lt;=#{?}()],
- type=&gt;[
-  space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?fsspace&lt;=#{?}(#{*}::T)]@fsspace,
-  space::T[][ctor?serialspace&lt;=#{?}(#{*}::T)]@serialspace,
-  uri::T[][ctor?dir&lt;=#{?}(#{*}::T)]@dir,
-  uri::T[][ctor?file&lt;=#{?}(#{*}::T)]@file,
-  file::T@image]]@/m/sys</code></pre>
+                        <pre><code>instset::[pattern=&gt;/m/sys/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],inst=&gt;[as?rng=bytes&amp;dom=uri(bytes::T){&lt;j&gt;},as?rng=image&amp;dom=bytes(image::T,else(1.0)){&lt;j&gt;},close?rng=noobj&amp;dom=#{?}(){&lt;j&gt;},redirect?rng=rec[short=&gt;uri,long=&gt;uri]&amp;dom=#{?}(uri::T){&lt;j&gt;},sys_stat?rng=rec&amp;dom=#{?}(){&lt;j&gt;},find_file?rng=lst&amp;dom=A{?}(name=&gt;str::T,{?}root=&gt;uri::T,regex{?}=&gt;bool::T,{?}max=&gt;int::T,{?}depth=&gt;int::T){&lt;j&gt;},read_file?rng=lst&amp;dom=A{?}(file=&gt;uri::T,{?}min=&gt;int::T,{?}max=&gt;int::T){&lt;j&gt;},edit_file?rng=rec&amp;dom=A{?}(file=&gt;uri::T,text=&gt;str::T,min=&gt;int::T,{?}max=&gt;int::T){&lt;j&gt;},bash?rng=lst[str]&amp;dom=#{?}(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},sleep?rng=A{?}&amp;dom=A{?}(real::T@time){&lt;j&gt;},stdout?rng=#{?}&amp;dom=#{?}(&lt;#{?}&gt;::T){&lt;j&gt;},stdin?rng=str&amp;dom=#{?}(){&lt;j&gt;}],type=&gt;[space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?rng=fsspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@fsspace,space::T[][ctor?rng=serialspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@serialspace,uri::T[][ctor?rng=dir&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@dir,uri::T[][ctor?rng=file&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@file,file::T@image],const=&gt;[thread_executor::[stop=&gt;[,],run=&gt;[!*/sys/thread/main]]@/sys/thread/executor]]@/m/sys</code></pre>
                     </div>
                 </div>
             </div>
@@ -508,7 +486,7 @@
         </span>
         <small class="text-muted code">/m/sys/dir</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][ctor?dir&lt;=#{?}(#{*}::T)]@dir</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][ctor?rng=dir&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@dir</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__sys__file">
@@ -519,7 +497,7 @@
         </span>
         <small class="text-muted code">/m/sys/file</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][ctor?file&lt;=#{?}(#{*}::T)]@file</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][ctor?rng=file&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@file</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__sys__file__image">
@@ -541,36 +519,16 @@
         <a href="m_sys_space_fsspace.html" class="code text-primary fw-bold text-decoration-none">fsspace</a>
         <small class="text-muted code">/m/sys/space/fsspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?fsspace&lt;=#{?}(#{*}::T)]@fsspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- pattern=&gt;uri::T,
- {?}q=&gt;[rec{?}::T[?[
-  pattern=&gt;uri::T,
-  {?}pre_write=&gt;inst::T,
-  {?}post_write=&gt;inst::T,
-  {?}qless_write=&gt;inst::T,
-  {?}pre_read=&gt;inst::T,
-  {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T)]@qproc],
- {?}route=&gt;[uri{?}::T=&gt;uri::T],
- {?}schema=&gt;instset::T]</code></div></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?rng=fsspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@fsspace</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,{?}pre_write=&gt;inst::T,{?}post_write=&gt;inst::T,{?}qless_write=&gt;inst::T,{?}pre_read=&gt;inst::T,{?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@qproc],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__sys__space__serialspace">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <a href="m_sys_space_serialspace.html" class="code text-primary fw-bold text-decoration-none">serialspace</a>
         <small class="text-muted code">/m/sys/space/serialspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][ctor?serialspace&lt;=#{?}(#{*}::T)]@serialspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- pattern=&gt;uri::T,
- {?}q=&gt;[rec{?}::T[?[
-  pattern=&gt;uri::T,
-  {?}pre_write=&gt;inst::T,
-  {?}post_write=&gt;inst::T,
-  {?}qless_write=&gt;inst::T,
-  {?}pre_read=&gt;inst::T,
-  {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T)]@qproc],
- {?}route=&gt;[uri{?}::T=&gt;uri::T],
- {?}schema=&gt;instset::T]</code></div></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][ctor?rng=serialspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@serialspace</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,{?}pre_write=&gt;inst::T,{?}post_write=&gt;inst::T,{?}qless_write=&gt;inst::T,{?}pre_read=&gt;inst::T,{?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@qproc],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
     
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
@@ -592,10 +550,10 @@ note that this field is optional, so when in doubt, just don&#39;t fill it out
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a lst[str] of results" class="text-success">a lst[str] of results</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}timeout" class="text-light">{?}timeout</a> <span class="text-light">=&gt;</span> <a href="#"""a real number denoting timeout of the process (default: second::20.0000).
-"""" class="text-info">&quot;&quot;&quot;a real number denoting timeout of the process (default: second::20.0000).
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#cmd" class="text-light">cmd</a> <span class="text-light">=&gt;</span> <a href="#"the terminal command to evaluate (uses bash('-c',${cmd}) behind the scenes)"" class="text-info">&quot;the terminal command to evaluate (uses bash(&#39;-c&#39;,${cmd}) behind the scenes)&quot;</a>
+  <a href="#{?}timeout" class="text-light">{?}timeout</a> <span class="text-light">=&gt;</span> <a href="#"""a real number denoting timeout of the process (default: second::20.0).
+"""" class="text-info">&quot;&quot;&quot;a real number denoting timeout of the process (default: second::20.0).
 &quot;&quot;&quot;</a>
-  <a href="#cmd" class="text-light">cmd</a> <span class="text-light">=&gt;</span> <a href="#"the terminal command to evaluate (uses bash('-c',${cmd}) behind the scenes)"" class="text-info">&quot;the terminal command to evaluate (uses bash(&#39;-c&#39;,${cmd}) behind the scenes)&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -633,10 +591,10 @@ if both min and max are provided, then those lines are removed and the text is i
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] maybe an obj (optional)" class="text-info">[generic] maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a status report on the write" class="text-success">a status report on the write</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
-  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
   <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the text to add to the file'" class="text-info">&#39;the text to add to the file&#39;</a>
   <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
+  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__find_file?rng=__m__lst&dom=A{?}">

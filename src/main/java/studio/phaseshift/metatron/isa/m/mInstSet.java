@@ -158,6 +158,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI CLOSE_INST_TID = M_ISA_INST_TID.extend("close");
     public static final fURI REPEAT_INST_TID = M_ISA_INST_TID.extend("repeat");
     public static final fURI LOOP_INST_TID = M_ISA_INST_TID.extend("loop");
+    public static final fURI PATH_INST_TID = M_ISA_INST_TID.extend("path");
     public static final fURI AT_INST_TID = M_ISA_INST_TID.extend("at");
     public static final fURI IS_INST_TID = M_ISA_INST_TID.extend("is");
     public static final fURI ISA_INST_TID = M_ISA_INST_TID.extend("isa");
@@ -534,14 +535,12 @@ public class mInstSet extends AbstractInstSet {
                                                 .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(ALL_TYPE)))).insts())
                                                 .repeat()
                                                 .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens nested map instructions"),
-                       /* docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_inst"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_inst"),
                                 code -> code.selfJVM(
                                         Rewriter.search(code.insts())
-                                                .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(M_ISA_INST_TID.extend("#"), lst(T(ALL.maybeSome()))))).insts(), list -> {
-                                                    return list.stream().noneMatch(i -> i.dom().equals(LST_TYPE) || i.dom().equals(REC_TYPE));
-                                                })
+                                                .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(M_ISA_INST_TID.extend("#"), lst(T(ALL.maybeSome()))))).insts())
                                                 .repeat()
-                                                .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens a mapping of an inst to the inst"),*/
+                                                .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens a mapping of an inst to the inst"),
                         // Eliminate else() after non-maybe instruction (dead code)
                         // Pattern: .count().else(x) → .count() (count always returns a value)
                         InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("else_after_count"),
@@ -824,7 +823,13 @@ public class mInstSet extends AbstractInstSet {
                                             instC(M_ISA_INST_TID.extend("explain_compute").dom(NOOBJ_TID.zero()).rng(STR_TID),
                                                     lst(block_(precedingCode).tryToInst()),
                                                     (lhs, inst) -> str(explainTable(inst.arg(0).asCode()))))).asCode();
-                                }), "rewrites a().b().c().explain() to explain_rewrite(a().b().c())")))));
+                                }), "rewrites a().b().c().explain() to explain_rewrite(a().b().c())"))
+                /*uri(SUGAR), lst(sugars().stream()
+                        .map(s -> rec(
+                                START, null == s.getStartToken() ? noobj() : str(s.getStartToken()),
+                                END, null == s.getEndToken() ? noobj() : str(s.getEndToken()),
+                                ARGS, jnt(s.getArgCount()),
+                                PATTERN, s.getInstChain().stream().map(fURI::toUri).collect(new CommonUtil.LstCollector()))))*/)));
         docWrap(this, "the core instruction set of metatron containing the base types and useful instructions to manipulate them");
         super.setup();
     }
@@ -884,7 +889,7 @@ public class mInstSet extends AbstractInstSet {
                 //   Sugar.prefix("=?=", List.of(WHERE_INST_TID), 1),
                 Sugar.prefix("%==", List.of(GROUP_INST_TID), 1),
                 Sugar.prefix("==", List.of(SELECT_INST_TID), 1),
-                Sugar.prefix("?~", List.of(IS_INST_TID, MATCHES_INST_TID), 1),
+                Sugar.prefix("?~", List.of(IS_INST_TID, SORTA_INST_TID), 1),
                 Sugar.prefix("?=", List.of(IS_INST_TID, EQ_INST_TID), 1),
                 Sugar.prefix("?>=", List.of(IS_INST_TID, GTE_INST_TID), 1),
                 Sugar.prefix("?>", List.of(IS_INST_TID, GT_INST_TID), 1),

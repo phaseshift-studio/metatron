@@ -28,7 +28,8 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.Tokens.MONAD;
+import static studio.phaseshift.metatron.Tokens.MONAD_IN;
+import static studio.phaseshift.metatron.Tokens.MONAD_OUT;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
@@ -104,8 +105,12 @@ public class ScoringInstResolver implements InstResolver {
 
         final fURI basePath = userInst.tid().basePath();
         Obj fetched = noobj();
-        if (lhs.isRec())
-            fetched = lhs.asRec().at(basePath);
+        if (lhs.isRec()) {
+            fetched = lhs.asRec().atDirect(basePath);
+            fetched = Obj.Helper.getAuto(fetched).orElse(Obj.Helper.isAutoPointer(fetched) ? fetched : null);
+            if (null != fetched && fetched.isObjInst())
+                return fetched.asInst();
+        }
         if (null == fetched || fetched.isNoObj()) // TODO: can't figure out why grphspace is yielding a null
             fetched = Router.readFromSpace(basePath);
 
@@ -165,7 +170,7 @@ public class ScoringInstResolver implements InstResolver {
                 .filter(Obj::isObjInst)
                 .map(Obj::asInst)
                 .filter(i -> (userInst.tid().basePath().equals(AS_INST_TID) && 1 == i.args().count() && userInst.args().count() == 1) ||
-                        i.tid().hasQ(MONAD) ||
+                        (i.tid().hasQ(MONAD_IN) || i.tid().hasQ(MONAD_OUT)) ||
                         this.checkArgs(userInst.args(), i.args()))
                 //.filter(i -> (i.args().isEmpty() && userInst.args().isEmpty()) || i.args().count() >= userInst.args().count())
                 .filter(i -> !lhs.isInst() || (i.dom().baseTypeID().equals(Tokens.M_ISA_INST_TID)))

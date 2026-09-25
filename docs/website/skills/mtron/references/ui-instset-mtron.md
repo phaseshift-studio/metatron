@@ -32,6 +32,7 @@ mtron> tree_widget::[root=>/m/mach/ui, max=>2].as?str<=widget(str::T)
    ├─ style
    └─ widget
        ├─ accordion_widget
+       ├─ grid_widget
        ├─ label_line_widget
        ├─ menu_bar_widget
        ├─ modal_widget
@@ -66,15 +67,9 @@ type readable as the contract:
 
 ```mtron
 mtron> */m/mach/ui/widget/panel_widget       [-- title and body, both optional; ctor?panel_widget<=#{?} --]
-==>widget::T[?[{?}title=>str::T,{?}body=>str{*}::T]][ctor?panel_widget<=#{?}(#{*}::T)]@panel_widget
+==>widget::T[?[{?}title=>str::T,{?}body=>str{*}::T]][ctor?rng=panel_widget&dom=#{?}(<#{*}>::T){<j>}]@panel_widget
 mtron> */m/mach/ui/widget/tree_widget        [-- root and max required; code/flatten/xref/expand optional --]
-==>widget::T[?[
-     root=>uri::T,
-     max=>int::T,
-     {?}code=><#>::T,
-     {?}flatten=>bool::T,
-     {?}xref=>rec::T,
-     {?}expand=>uri{*}::T]][ctor?tree_widget<=#{?}(#{*}::T)]@tree_widget
+==>widget::T[?[root=>uri::T,max=>int::T,{?}code=><#>::T,{?}flatten=>bool::T,{?}xref=>rec::T,{?}expand=>uri{*}::T]][ctor?rng=tree_widget&dom=#{?}(<#{*}>::T){<j>}]@tree_widget
 ```
 `*/m/mach/ui/widget?docq` is the catalog — one entry per widget type, each with its args, its dom/rng and
 its own example. It is the fastest way to answer "what can I put in this thing", and it is generated from
@@ -82,57 +77,7 @@ the same declarations the type checker uses:
 
 ```mtron
 mtron> */m/mach/ui/widget?docq
-==>docs::[ obj=>rec::T[?[{?}style=>rec::T[?[{?}border=>uri::T,{?}background=>str::T,{?}foreground=>str::T,{?}divider=>str::T,{?}headerDivider=>str::T,{?}pointer=>str::T,{?}leftMargin=>int::T,{?}rightMargin=>int::T,{?}topMargin=>int::T,{?}bottomMargin=>int::T,...(9 more)]][ctor?style<=#{?}(#{*}::T)]@style]]@widget,
-    args=>[{?}style=>'the style specification for the widget'],
-    desc=>'[structural] the base widget type',
-    accordion_widget=>docs::[
-     obj=>widget::T[?[{?}title=>str::T,{?}body=>str{*}::T]][ctor?accordion_widget<=#{?}(#{*}::T)]@accordion_widget,
-     dom=>'maybe an obj',
-     rng=>'an accordion obj',
-     args=>[{?}body=>'the body content of the accordion',{?}title=>'the title of the accordion'],
-     desc=>'[structural] an expandable/collapsible accordion widget'],
-    progress_table_widget=>docs::[
-     obj=>widget::T[?[{?}header=>lst::T,{?}row=>lst::T]][ctor?progress_table_widget<=#{?}(#{*}::T)]@progress_table_widget,
-     desc=>'[structural] a table of progress bars',
-     example=>["progress_table::[row=>[[text=>'layer1',percent=>58.0],[text..."]],
-    table_widget=>docs::[
-     obj=>widget::T[?[{?}header=>lst::T,{?}row=>lst{*}::T,{?}metadata=>lst{*}::T]][ctor?table_widget<=#{?}(#{*}::T)]@table_widget,
-     dom=>'maybe an obj',
-     rng=>'a table widget',
-     args=>[{?}header=>'a lst of obj table headers',{?}row=>'a lst of poly table rows',{?}metadata=>'a lst of rows of data behind the display'],
-     desc=>'[structural] a tabular data widget'],
-    tree_widget=>docs::[
-     obj=>widget::T[?[
-     root=>uri::T,
-     max=>int::T,
-     {?}code=><#>::T,
-     {?}flatten=>bool::T,
-     {?}xref=>rec::T,
-     {?}expand=>uri{*}::T]][ctor?tree_widget<=#{?}(#{*}::T)]@tree_widget,
-     dom=>'maybe an obj',
-     rng=>'a tree widget',
-     args=>[{?}code=>'transform obj prior to insertion into tree (default _)',{?}expand=>'branch uris whose children are read regardless of max',{?}xref=>'xref=>[max=>N, code=><call>] cross-reference decoration',max=>'the max depth to traverse',{?}flatten=>'fold single-folder chains into one path row (default false)',root=>'the root uri to traverse from'],
-     desc=>'[structural] the root uri space is traversed to specified d...'],
-    selector_widget=>docs::[
-     obj=>widget::T[?[=>]][ctor?selector_widget<=#{?}(#{*}::T)]@selector_widget,
-     dom=>'maybe an obj',
-     rng=>'a selector widget',
-     desc=>'[structural] an interactive item selector widget'],
-    panel_widget=>docs::[
-     obj=>widget{*}::T[?[{?}title=>str::T,{?}body=>str{*}::T]][ctor?panel_widget<=#{?}(#{*}::T)]@panel_widget,
-     dom=>'rec',
-     rng=>'panel',
-     args=>[
-      body=>'the body content of the panel',
-      title=>'the title of the panel'],
-     desc=>'[structural] a simple bordered UI panel widget'],
-    label_line_widget=>docs::[
-     obj=>widget::T[?[{?}body=>str::T,{?}key=>uri::T,{?}on_key=><#>::T]][ctor?label_line_widget<=#{?}(#{*}::T)]@label_line_widget,
-     dom=>'maybe an obj',
-     rng=>'a label line widget',
-     args=>[body=>'the text body displayed on the label'],
-     desc=>'[structural] a single-line text label widget'],
-    ...(5 more)]
+==>docs::[obj=>rec::T[?[{?}style=>rec::T[?[{?}border=>str::T,{?}background=>str::T,{?}foreground=>str::T,{?}divider=>str::T,{?}headerDivider=>str::T,{?}pointer=>str::T,{?}leftMargin=>int::T,{?}rightMargin=>int::T,{?}topMargin=>int::T,{?}bottomMargin=>int::T,{?}anchor=>uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=>int::T,{?}height=>int::T,{?}top=>int::T,{?}left=>int::T,{?}zIndex=>int::T,{?}scroll=><#>::T,{?}scrollX=>int::T,{?}scrollY=>int::T]][ctor?rng=style&dom=#{?}(<#{*}>::T){<j>}]@style]]@widget,args=>[{?}style=>'the style specification for the widget'],desc=>'[structural] the base widget type',accordion_widget=>docs::[obj=>widget::T[?[{?}title=>str::T,{?}body=>str{*}::T]][ctor?rng=accordion_widget&dom=#{?}(<#{*}>::T){<j>}]@accordion_widget,dom=>'maybe an obj',rng=>'an accordion obj',args=>[{?}title=>'the title of the accordion',{?}body=>'the body content of the accordion'],desc=>'[structural] an expandable/collapsible accordion widget'],progress_table_widget=>docs::[obj=>widget::T[?[{?}header=>lst::T,{?}row=>lst::T]][ctor?rng=progress_table_widget&dom=#{?}(<#{*}>::T){<j>}]@progress_table_widget,desc=>'[structural] a table of progress bars',example=>["progress_table::[row=>[[text=>'layer1',percent=>58.0],[text=>'layer2',percent=>23.0]]].run()"]],table_widget=>docs::[obj=>widget::T[?[{?}header=>lst::T,{?}row=>lst{*}::T,{?}metadata=>lst{*}::T]][ctor?rng=table_widget&dom=#{?}(<#{*}>::T){<j>}]@table_widget,dom=>'maybe an obj',rng=>'a table widget',args=>[{?}metadata=>'a lst of rows of data behind the display',{?}header=>'a lst of obj table headers',{?}row=>'a lst of poly table rows'],desc=>'[structural] a tabular data widget'],tree_widget=>docs::[obj=>widget::T[?[root=>uri::T,max=>int::T,{?}code=><#>::T,{?}flatten=>bool::T,{?}xref=>rec::T,{?}expand=>uri{*}::T]][ctor?rng=tree_widget&dom=#{?}(<#{*}>::T){<j>}]@tree_widget,dom=>'maybe an obj',rng=>'a tree widget',args=>[{?}code=>'transform obj prior to insertion into tree (default _)',{?}expand=>'branch uris whose children are read regardless of max',{?}xref=>'xref=>[max=>N, code=><call>] cross-reference decoration',max=>'the max depth to traverse',{?}flatten=>'fold single-folder chains into one path row (default false)',root=>'the root uri to traverse from'],desc=>'[structural] the root uri space is traversed to specified depth generating a tree data structure'],selector_widget=>docs::[obj=>widget::T[?[=>]][ctor?rng=selector_widget&dom=#{?}(<#{*}>::T){<j>}]@selector_widget,dom=>'maybe an obj',rng=>'a selector widget',desc=>'[structural] an interactive item selector widget'],panel_widget=>docs::[obj=>widget{*}::T[?[{?}title=>str::T,{?}body=>str{*}::T]][ctor?rng=panel_widget&dom=#{?}(<#{*}>::T){<j>}]@panel_widget,dom=>'rec',rng=>'panel',args=>[title=>'the title of the panel',body=>'the body content of the panel'],desc=>'[structural] a simple bordered UI panel widget'],grid_widget=>docs::[obj=>widget::T[?[{?}grid=>lst::T]][ctor?rng=grid_widget&dom=#{?}(<#{*}>::T){<j>}]@grid_widget,dom=>'maybe an obj',rng=>'a grid of widgets',args=>[grid=>'a lst of rows, each row a lst of cell widgets'],desc=>'[structural] a grid of rows x cols of embedded, runnable widgets'],label_line_widget=>docs::[obj=>widget::T[?[{?}body=>str::T,{?}key=>uri::T,{?}on_key=><#>::T]][ctor?rng=label_line_widget&dom=#{?}(<#{*}>::T){<j>}]@label_line_widget,dom=>'maybe an obj',rng=>'a label line widget',args=>[body=>'the text body displayed on the label'],desc=>'[structural] a single-line text label widget'],menu_bar_widget=>docs::[obj=>widget::T[?[{?}height=>int::T,{?}lines=>lst::T]][ctor?rng=menu_bar_widget&dom=#{?}(<#{*}>::T){<j>}]@menu_bar_widget,dom=>'maybe an obj',rng=>'a menu bar widget',args=>[lines=>'a lst of line widgets laid out across the bar',height=>'the interior height of the menu bar in rows'],desc=>'[structural] a menu bar pinned to the top of the terminal'],tree_select_widget=>docs::[obj=>widget::T[?[root=>uri::T,max=>int::T,{?}on_select=><#>::T,{?}label=><#>::T]][ctor?rng=tree_select_widget&dom=#{?}(<#{*}>::T){<j>}]@tree_select_widget,dom=>'maybe an obj',rng=>'a tree select tool',args=>[{?}label=>"instruction called on each tree node's obj to produce a suffix label (default: identity)",root=>'the root uri to traverse from',max=>'the max depth to traverse',{?}on_select=>"instruction called on Enter with the selected node's rel::T (default: identity)"],desc=>'[structural] an interactive tree browser: arrow keys navigate, Enter fires on_select on selected node, right/left expand/contract, label suffixes each node'],swipe_panel_widget=>docs::[obj=>widget::T[?[{?}obj=>lst::T]][ctor?rng=swipe_panel_widget&dom=#{?}(<#{*}>::T){<j>}]@swipe_panel_widget,dom=>'lst of objs',rng=>'a swipe panel widget tool',args=>[obj=>'the list of objs to swipe through'],desc=>'[structural] a left-right swipe panel: arrow keys navigate, pgup/pgdn jump ±5, ctrl-d quits; displays each obj in a PanelWidget with docq+Highlighter formatting'],modal_widget=>docs::[obj=>widget::T[?[{?}title=>str::T,{?}body=>str{*}::T]][ctor?rng=modal_widget&dom=#{?}(<#{*}>::T){<j>}]@modal_widget,dom=>'rec',rng=>'modal',args=>[title=>'the title of the modal',body=>'the body content of the modal'],desc=>'[structural] a modal popup panel: space/enter/ctrl-d dismisses'],stack_bar_widget=>docs::[obj=>widget::T[?[{?}data=>rec::T,{?}context=>int::T,{?}total=>int::T]][ctor?rng=stack_bar_widget&dom=#{?}(<#{*}>::T){<j>}]@stack_bar_widget,dom=>'maybe an obj',rng=>'a stack bar widget',args=>[{?}data=>"the sections: [key => int], each labelled by its key and drawn smallest first, largest last; the reserved key <> (the empty uri) is the what-is-left section — drawn last, wearing the unused section's style (dark by default)",{?}context=>'the denominator: the bar spans it, the rest is the unused tail, and total/context is the percent; absent = a composition (the data fills the bar, no percent, no tail)',{?}total=>'the numerator of the percent (default: the sum of the data)'],desc=>'[structural] a general single-line stacked bar; only the data is specified — the rec is open world: pre=/post= framing content (a str, or a dereference such as post=>!*/usr/dr/context_window), style.width the width of the bar, and style.section the per-section styles: [name => style::T] (body => the label painted, else the key name; foreground/background the fragments around it; width its own width) — the reserved key unused styles the unused / what-is-left section']]
 ```
 | widget type                | keys it reads                                                 |
 |----------------------------|---------------------------------------------------------------|
@@ -155,34 +100,19 @@ and it is readable as data:
 ```mtron
 mtron> accordion_widget::[title=>'notes',
                           body=>"l01\nl02\nl03"]@/usr/uidoc/notes
-==>accordion_widget::[
-    title=>'notes',
-    body=>'l01
+==>accordion_widget::[title=>'notes',body=>'l01
 l02
-l03',
-    style=>style::[
-     border=>┌;┐;└;┘;│;│;─;─;┬;┴;├;┤,
-     foreground=>'']]@/usr/uidoc/notes
+l03',style=>style::[border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤',foreground=>'']]@/usr/uidoc/notes
 mtron> @/usr/uidoc/notes >>= [body=>"l01\nl02\nl03\nl04"]              [-- the update carries the insts with it --]
-==>accordion_widget::[
-    style=>style::[
-     border=>┌;┐;└;┘;│;│;─;─;┬;┴;├;┤,
-     foreground=>''],
-    body=>'l01
+==>accordion_widget::[style=>style::[border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤',foreground=>''],body=>'l01
 l02
 l03
-l04',
-    title=>'notes']
+l04',title=>'notes']
 mtron> */usr/uidoc/notes                                               [-- the widget, as the rec it is --]
-==>accordion_widget::[
-    style=>style::[
-     border=>┌;┐;└;┘;│;│;─;─;┬;┴;├;┤,
-     foreground=>''],
-    body=>'l01
+==>accordion_widget::[style=>style::[border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤',foreground=>''],body=>'l01
 l02
 l03
-l04',
-    title=>'notes']
+l04',title=>'notes']
 ```
 ## a widget is a rec — state lives in the map
 
@@ -192,11 +122,8 @@ console is showing:
 
 ```mtron
 mtron> panel_widget::[title=>'note',body=>"alpha\nbeta"]@/usr/uidoc/panel
-==>panel_widget::[
-    title=>'note',
-    body=>'alpha
-beta',
-    style=>style::[border=>┌;┐;└;┘;│;│;─;─;┬;┴;├;┤]]@/usr/uidoc/panel
+==>panel_widget::[title=>'note',body=>'alpha
+beta',style=>style::[border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']]@/usr/uidoc/panel
 mtron> */usr/uidoc/panel/title
 ==>'note'
 mtron> */usr/uidoc/panel/body
@@ -206,13 +133,10 @@ The style is a key like any other, so a widget's look is set by writing one:
 
 ```mtron
 mtron> @/usr/uidoc/panel >>= [style=>[anchor=>top_left,width=>20,foreground=>'']]
-==>panel_widget::[
-    title=>'note',
-    body=>'alpha
-beta',
-    style=>style::[border=>┌;┐;└;┘;│;│;─;─;┬;┴;├;┤]]
+==>panel_widget::[title=>'note',body=>'alpha
+beta',style=>style::[border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']]
 mtron> */usr/uidoc/panel/style
-==>style::[border=>┌;┐;└;┘;│;│;─;─;┬;┴;├;┤]
+==>style::[border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']
 ```
 ## rendering a widget inline
 

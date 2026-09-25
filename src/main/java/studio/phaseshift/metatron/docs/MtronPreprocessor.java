@@ -110,7 +110,7 @@ public final class MtronPreprocessor {
     private static final ObjmtronSerializer SER;
 
     static {
-        SER = new ObjmtronSerializer();
+        SER = ObjmtronSerializer.single();
         SER.at(uri("clip"), rec("str", jnt(35), "rec", jnt(7), "lst", jnt(7)), MUTABLE);
     }
 
@@ -266,7 +266,7 @@ public final class MtronPreprocessor {
             final var outputs = new ArrayList<String>();
             try {
                 TypeCheck.disable(TypeCheck.code_resolve, TypeCheck.inst_rng);
-                final Obj input = ObjmtronSerializer.singleNoClip().read(expr);
+                final Obj input = ObjmtronSerializer.single().read(expr);
                 final Obj result = ObjmtronSerializer.eval(expr);
                 if (result.isFail() && !error) {
                     LOG.error("no [ERROR] modifier in code block (docs are buggy): %s\n\t[{{r}}bad expression{{X}}]: %s\n", result, expr);
@@ -280,7 +280,7 @@ public final class MtronPreprocessor {
                     outputs.add("==>" + SER.write(input).replace("\n", "\n   ")); // replacement so second+ lines are indented past the result prompt
                 }
                 // Clear fail stack so errors don't leak across blocks
-                if (!hidden) ObjmtronSerializer.singleNoClip().inputBytes("/sys/fail/+ -> noobj").apply();
+                if (!hidden) ObjmtronSerializer.single().inputBytes("/sys/fail/+ -> noobj").apply();
             } catch (final Exception e) {
                 if (!hidden) outputs.add("==>ERROR: " + e.getMessage());
             }

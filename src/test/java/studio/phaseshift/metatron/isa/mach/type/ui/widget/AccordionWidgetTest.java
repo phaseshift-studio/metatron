@@ -5,11 +5,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractWidgetTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.ui.uiInstSet;
 
 import java.util.Map;
 
@@ -22,9 +24,20 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_ACCORDION_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-public class AccordionWidgetTest extends AbstractMetatronTest {
+public class AccordionWidgetTest extends AbstractWidgetTest {
 
     private static final fURI TID = f("/m/mach/ui/widget/accordion");
+
+    public AccordionWidgetTest() {
+        super(uiInstSet::new);
+    }
+
+    @Override
+    protected Object sampleWidget() {
+        return new AccordionWidget(mutableMap(
+                uri("title"), str("round-trip"),
+                uri("body"), str("the mtron construction contract")), UI_ACCORDION_TID, null);
+    }
 
     @Test
     public void shouldRenderTitleFromJvm() {

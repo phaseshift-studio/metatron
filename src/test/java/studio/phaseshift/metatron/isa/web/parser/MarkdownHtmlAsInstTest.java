@@ -53,7 +53,7 @@ public class MarkdownHtmlAsInstTest extends AbstractMetatronTest {
 
     @SuppressWarnings("unchecked")
     private static <O extends Obj> O eval(final String mtronExpr) {
-        return (O) ObjmtronSerializer.singleNoClip().parse(mtronExpr).apply();
+        return (O) ObjmtronSerializer.single().parse(mtronExpr).apply();
     }
 
     @Test

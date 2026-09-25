@@ -22,7 +22,7 @@ import org.jline.utils.AttributedString;
 import org.jline.utils.WCWidth;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjLinkSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.util.MTronException;
@@ -307,7 +307,7 @@ public class Graphitty {
     public String writeToString(final String f, final Object... args) {
         final Object[] args2 = new Object[args.length];
         for (int i = 0; i < args.length; i++) {
-            args2[i] = args[i] instanceof Obj ? ObjLinkSerializer.single().write((Obj) args[i]) : args[i];
+            args2[i] = args[i] instanceof Obj ? ObjmtronUISerializer.linkBodies().write((Obj) args[i]) : args[i];
         }
         this.parseDSL(f.formatted(args2));
         final String result = new String(((ByteArrayOutputStream) this.out).toByteArray(), StandardCharsets.UTF_8);
@@ -324,7 +324,7 @@ public class Graphitty {
         // "logging must never break its caller" tests catch exactly this).
         final Object[] args2 = new Object[args.length];
         for (int i = 0; i < args.length; i++) {
-            args2[i] = args[i] instanceof Obj ? ObjLinkSerializer.single().write((Obj) args[i]) : args[i];
+            args2[i] = args[i] instanceof Obj ? ObjmtronUISerializer.linkBodies().write((Obj) args[i]) : args[i];
         }
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             final Graphitty temp = new Graphitty(out);

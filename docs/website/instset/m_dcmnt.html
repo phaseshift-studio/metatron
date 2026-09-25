@@ -174,6 +174,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m.html"><img
                             src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dckr.html"><img
+                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dcmnt.html"><img
                             src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
                             alt="dcmnt"/>/m/dcmnt</a></li>
@@ -198,6 +201,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math.html"><img
                             src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math_cat.html"><img
+                            src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_sys.html"><img
                             src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                             alt="sys"/>/m/sys</a></li>
@@ -268,7 +274,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -401,43 +407,7 @@
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[
- pattern=&gt;/m/dcmnt/#,
- q=&gt;[docq::[
- pattern=&gt;docq,
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;!*/m],
- constq=&gt;[
-  obj_json::[
-   density=&gt;OPAQUE,
-   wrap_uri=&gt;true,
-   bias_towards_uri=&gt;true,
-   bias_towards_objs=&gt;false]@obj_json,
-  _id@/m/dcmnt/_id],
- type=&gt;[
-  uri::T@collection,
-  space::T[?[
-  pattern=&gt;uri::T,
-  host=&gt;uri::T,
-  {?}serializer=&gt;uri::T,
-  route=&gt;[uri::T=&gt;uri::T],
-  {?}root=&gt;/m/type::T,
-  {?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(#{*}::T)]@instset]][inst?dcmntspace&lt;=#{?}(rec::T)]@dcmntspace],
- inst=&gt;[
-  mql?rec{*}&lt;=dcmntspace(uri::T,rec::T),
-  mql?rec{*}&lt;=collection(rec::T)],
- rewrite=&gt;[
-  /m/dcmnt/inst/rewrite/mql_count?code{?}&lt;=code(),
-  /m/dcmnt/inst/rewrite/mql_sum?code{?}&lt;=code(),
-  /m/dcmnt/inst/rewrite/mql_mean?code{?}&lt;=code(),
-  /m/dcmnt/inst/rewrite/mql_limit?code{?}&lt;=code(),
-  /m/dcmnt/inst/rewrite/mql_where?code{?}&lt;=code(),
-  /m/dcmnt/inst/rewrite/mql_where_count?code{?}&lt;=code(),
-  /m/dcmnt/inst/rewrite/mql_where_limit?code{?}&lt;=code(),
-  /m/dcmnt/inst/rewrite/mql_select?code{?}&lt;=code()]]@/m/dcmnt</code></pre>
+                        <pre><code>instset::[pattern=&gt;/m/dcmnt/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],constq=&gt;[obj_json::[density=&gt;OPAQUE,wrap_uri=&gt;true,bias_towards_uri=&gt;true,bias_towards_objs=&gt;false]@obj_json,_id@/m/dcmnt/_id],type=&gt;[uri::T@collection,space::T[?[pattern=&gt;uri::T,host=&gt;uri::T,{?}serializer=&gt;uri::T,route=&gt;[uri::T=&gt;uri::T],{?}root=&gt;/m/type::T,{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset]][inst?rng=dcmntspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@dcmntspace],inst=&gt;[mql?rng=rec{*}&amp;dom=dcmntspace(uri::T,rec::T){&lt;j&gt;},mql?rng=rec{*}&amp;dom=collection(rec::T){&lt;j&gt;}],rewrite=&gt;[/m/dcmnt/inst/rewrite/mql_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_sum?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_mean?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_where?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_where_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_where_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_select?rng=code{?}&amp;dom=code(){&lt;j&gt;}]]@/m/dcmnt</code></pre>
                     </div>
                 </div>
             </div>
@@ -534,35 +504,19 @@
         <a href="m_dcmnt_space_dcmntspace.html" class="code text-primary fw-bold text-decoration-none">dcmntspace</a>
         <small class="text-muted code">/m/dcmnt/space/dcmntspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[
-  pattern=&gt;uri::T,
-  host=&gt;uri::T,
-  {?}serializer=&gt;uri::T,
-  route=&gt;[uri::T=&gt;uri::T],
-  {?}root=&gt;/m/type::T,
-  {?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(#{*}::T)]@instset]][inst?dcmntspace&lt;=#{?}(rec::T)]@dcmntspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- pattern=&gt;uri::T,
- {?}q=&gt;[rec{?}::T[?[
-  pattern=&gt;uri::T,
-  {?}pre_write=&gt;inst::T,
-  {?}post_write=&gt;inst::T,
-  {?}qless_write=&gt;inst::T,
-  {?}pre_read=&gt;inst::T,
-  {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T)]@qproc],
- {?}route=&gt;[uri{?}::T=&gt;uri::T],
- {?}schema=&gt;instset::T]</code></div></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[pattern=&gt;uri::T,host=&gt;uri::T,{?}serializer=&gt;uri::T,route=&gt;[uri::T=&gt;uri::T],{?}root=&gt;/m/type::T,{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset]][inst?rng=dcmntspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@dcmntspace</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,{?}pre_write=&gt;inst::T,{?}post_write=&gt;inst::T,{?}qless_write=&gt;inst::T,{?}pre_read=&gt;inst::T,{?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@qproc],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] an interface to document-oriented databases (MongoDB wire protocol)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a rec describing a document database connection" class="text-info">a rec describing a document database connection</a> <span class="text-light">=&gt;</span> <a href="#a rec with fields for configuring a document database connection" class="text-success">a rec with fields for configuring a document database connection</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}schema" class="text-light">{?}schema</a> <span class="text-light">=&gt;</span> <a href="#'an instset of collection types auto-discovered from the live database'" class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</a>
-  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'connection uri (mongodb:____host:port__database?options)'" class="text-info">database?options)&#39;</a>
-  <a href="#pattern" class="text-light">pattern</a> <span class="text-light">=&gt;</span> <a href="#'the pattern for accessing documents'" class="text-info">&#39;the pattern for accessing documents&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#pattern" class="text-light">pattern</a> <span class="text-light">=&gt;</span> <a href="#'the pattern for accessing documents'" class="text-info">&#39;the pattern for accessing documents&#39;</a>
   <a href="#{?}serializer" class="text-light">{?}serializer</a> <span class="text-light">=&gt;</span> <a href="#'the serializer for BSON documents'" class="text-info">&#39;the serializer for BSON documents&#39;</a>
   <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#'the route for accessing documents'" class="text-info">&#39;the route for accessing documents&#39;</a>
   <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root type constraint — writes at document root must satisfy this type; defaults to rec::T'" class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</a>
+  <a href="#{?}schema" class="text-light">{?}schema</a> <span class="text-light">=&gt;</span> <a href="#'an instset of collection types auto-discovered from the live database'" class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'connection uri (mongodb:____host:port__database?options)'" class="text-info">database?options)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>

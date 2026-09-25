@@ -162,7 +162,6 @@ public final class CommandPalette extends MRec {
                     .addRow(List.of("{{[g]&w}}tools", "{{[g]&w}}"))
                     .addRow(List.of(cc(":subs"), "browse active subscriptions"))
                     .addRow(List.of(cc(":subq [uri]"), "change pane subscription URI"))
-                    .addRow(List.of(cc(":justify [left|right]"), "justify nested poly output"))
                     .addRow(List.of(cc(":top"), "system process monitor"))
                     .addRow(List.of(cc(":less"), "obj string pager"))
                     .addRow(List.of(cc(":state [level]"), "set status line state (trace|debug|info|warn|error)"))
@@ -289,14 +288,6 @@ public final class CommandPalette extends MRec {
             final SubsWidget selector = new SubsWidget(console);
             selector.run();
             selector.close();
-            return noobj();
-        }), MUTABLE);
-
-        // ===== justify =====
-        this.at("justify", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-            final boolean leftJustify = lhs.isStr() && lhs.strValue().equalsIgnoreCase("left");
-            ((Highlighter) console.getReader().getHighlighter()).justify(leftJustify);
-            this.console.logger().info("%s justifying nested polys", leftJustify ? "{{y}}left{{X}}" : "{{y}}right{{X}}");
             return noobj();
         }), MUTABLE);
 

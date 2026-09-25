@@ -21,21 +21,34 @@ package studio.phaseshift.metatron.isa.llm.type;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.AbstractWidgetTest;
 import studio.phaseshift.metatron.isa.llm.llmInstSet;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class TokenCounterToolTest extends AbstractInstSetTest {
+public class TokenCounterToolTest extends AbstractWidgetTest {
 
     public TokenCounterToolTest() {
         super(llmInstSet::new);
+    }
+
+    @Override
+    protected Object sampleWidget() {
+        return new TokenCounterTool(mutableMap(
+                uri("in"), jnt(12606),
+                uri("max"), jnt(100000),
+                uri("est"), rec(mutableMap(uri("system"), jnt(1414), uri("ai"), jnt(4153),
+                        uri("tool"), jnt(1786), uri("user"), jnt(311)))));
     }
 
     private static TokenCounterTool parse(final String code) {

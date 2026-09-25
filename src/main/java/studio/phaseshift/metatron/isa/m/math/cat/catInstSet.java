@@ -38,6 +38,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -55,11 +56,12 @@ public class catInstSet extends AbstractInstSet {
     public static final fURI CAT_ISA_TID = MATH_ISA_TID.extend("cat");
     public static final fURI CATEGORY_TID = CAT_ISA_TID.extend("category");
     public static final fURI MORPHISM_TID = CATEGORY_TID.extend("morphism");
-    public static final fURI OBJECT_TID = CAT_ISA_TID.extend("object");
-    public static final fURI ALGEBRAIC_THEORY_TID = CAT_ISA_TID.extend("algebraic_theory");
-    public static final fURI RING_THEORY_TID = CAT_ISA_TID.extend("ring_theory");
-    public static final fURI GROUP_THEORY_TID = CAT_ISA_TID.extend("group_theory");
-    public static final fURI MONOID_THEORY_TID = CAT_ISA_TID.extend("monoid_theory");
+    public static final fURI OBJECT_TID = CATEGORY_TID.extend("object");
+    public static final fURI THEORY_TID = CAT_ISA_TID.extend("theory");
+    public static final fURI RING_THEORY_TID = THEORY_TID.extend("ring_theory");
+    public static final fURI GROUP_THEORY_TID = THEORY_TID.extend("group_theory");
+    public static final fURI MONOID_THEORY_TID = THEORY_TID.extend("monoid_theory");
+    public static final fURI LAW_TID = CAT_ISA_TID.extend("law");
 
 
     public catInstSet() {
@@ -79,9 +81,9 @@ public class catInstSet extends AbstractInstSet {
     // is the nominal (structure-blind) super-type grouping them for bookkeeping and inference
 
     /**
-     * {@code algebraic_theory::T} — nominal super-type of the algebraic theories
+     * {@code theory::T} — nominal super-type of the algebraic theories
      */
-    public static Type ALGEBRAIC_THEORY;
+    public static Type THEORY_TYPE;
 
     /**
      * {@code ring_theory::T} — (add, mul, zero, one): additive and multiplicative ops with their identities
@@ -97,6 +99,11 @@ public class catInstSet extends AbstractInstSet {
      * {@code monoid_theory::T} — (op, id): an associative operation with its identity
      */
     public static Type MONOID_THEORY_TYPE;
+
+    /**
+     * {@code law::T} — the process-law union: one label from the morphism's declared process laws
+     */
+    public static Type LAW_TYPE;
 
     /**
      * {@code object::T} — the vertex block: the algebraic theories the object models, keyed by the
@@ -115,91 +122,125 @@ public class catInstSet extends AbstractInstSet {
                 uri(PATTERN), uri(CAT_ISA_TID.extend(ALL)),
                 uri(TYPE), lst(
                         docWrap(CATEGORY_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(CATEGORY_TID)
+                                        .isaPredicate(rec(
+                                                uri(OBJ), ALL_TYPE,
+                                                uri(INSTSET).maybe(), lst(URI_TYPE),
+                                                uri(ORBIT).maybe(), T(CATEGORY_TID)))
+                                        .create(), Map.of(
+                                        uri(OBJ), "the type \\(X\\) lifted to a vertex: \\(\\mathrm{obj} = X\\)",
+                                        uri(INSTSET).maybe(), "uri patterns \\(P\\) selecting the instsets \\(\\mathcal{S}\\) from which the category's morphisms are generated",
+                                        uri(ORBIT).maybe(), "the reversible-core component: \\(\\mathrm{orbit}(X) = \\{Y : X \\sim^{*} Y\\}\\), where \\(X \\sim Y \\iff X \\to Y \\wedge Y \\to X\\)"),
+                                "a categorical structure to be refined into an object or morphism"),
+                        docWrap(LAW_TYPE = Type.Builder.build()
                                 .tid(REC_TID)
-                                .vid(CATEGORY_TID)
-                                .isaPredicate(rec(
-                                        uri(OBJ), ALL_TYPE,
-                                        uri(ORBIT).maybe(), T(ALL_STAR)))
-                                .create(), "the base morphism block: an obj and its reversible orbit"),
+                                .vid(LAW_TID)
+                                .isaPredicate(union_(Arrays.stream(Law.values()).map(e -> (Obj) uri(e.name())).toList()).tryToInst())
+                                .create(), "the process laws a morphism obeys — the union of the process-law labels"),
                         docWrap(MORPHISM_TYPE = Type.Builder.build()
-                                .tid(CATEGORY_TID)
-                                .vid(MORPHISM_TID)
-                                .isaPredicate(rec(
-                                        uri(FORM), union_(Arrays.stream(Inst.Form.values()).map(e -> (Obj) uri(e.name())).toList()).tryToInst(),
-                                        uri(POSITION).maybe(), lst(union_(Arrays.stream(Position.values()).map(e -> (Obj) uri(e.name())).toList()).tryToInst().c(cInt.SOME())),
-                                        uri(CONTESTED).maybe(), lst(INST_TYPE),
-                                        uri(FAMILY).maybe(), lst(INST_TYPE),
-                                        uri(LAW).maybe(), lst(union_(Arrays.stream(Law.values()).map(e -> (Obj) uri(e.label())).toList()).tryToInst().c(cInt.SOME())),
-                                        uri(INVERSE).maybe(), URI_TYPE))
-                                .constructor(arg -> {
-                                    final Rec objInstRec = arg.isRec() && arg.asRec().has(OBJ) ? arg.asRec() : rec(uri(OBJ), arg);
-                                    final Inst inst = objInstRec.at(OBJ).asInst();
-                                    final Map<Obj, Obj> block = new LinkedHashMap<>();
-                                    block.put(uri(FORM), uri(Inst.Form.of(inst).name()));
-                                    block.put(uri(POSITION), auto_(instLambda(inst.tid(), ALL, o -> catInstSet.position(inst))).tryToInst());
-                                    block.put(uri(CONTESTED), auto_(instLambda(inst.tid(), ALL, o -> catInstSet.contested(inst))).tryToInst());
-                                    block.put(uri(ORBIT), auto_(instLambda(inst.tid(), ALL, o -> catInstSet.orbit(inst))).tryToInst());
-                                    block.put(uri(FAMILY), auto_(instLambda(inst.tid(), ALL, o -> catInstSet.family(inst))).tryToInst());
-                                    block.putAll(objInstRec.jvm());
-                                    final CatLawTable.Entry entry = CatLawTable.lookup(inst.tid());
-                                    if (null != entry) {
-                                        if (!entry.laws().isEmpty())
-                                            block.put(uri(LAW), entry.laws());
-                                        if (null != entry.inverse())
-                                            block.put(uri(INVERSE), uri(entry.inverse()));
-                                    }
-                                    final Rec morphRec = rec();
-                                    morphRec.jvm().putAll(block);
-                                    return morphRec;
-                                })
-                                .create(), "the morphism-graph edge block: the form, position, contested witnesses, orbit, family, laws, and inverse of an instruction"),
+                                        .tid(CATEGORY_TID)
+                                        .vid(MORPHISM_TID)
+                                        .isaPredicate(rec(
+                                                uri(OBJ), INST_TYPE,
+                                                uri(FORM), union_(Arrays.stream(Inst.Form.values()).map(e -> (Obj) uri(e.name())).toList()).tryToInst(),
+                                                uri(SRC).maybe(), T(OBJECT_TID),
+                                                uri(TRGT).maybe(), T(OBJECT_TID),
+                                                uri(ANALYSIS).maybe(), T(REC_TID),
+                                                uri(LAW).maybe(), lst(LAW_TYPE.c(cInt.SOME()))))
+                                        .constructor(arg -> {
+                                            final Rec objInstRec = arg.isRec() && arg.asRec().has(OBJ) ? arg.asRec() : rec(uri(OBJ), arg);
+                                            final Inst inst = objInstRec.at(OBJ).asInst();
+                                            final CatLawTable.Entry entry = CatLawTable.lookup(inst.tid());
+                                            final Map<Obj, Obj> block = new LinkedHashMap<>();
+                                            block.put(uri(FORM), uri(Inst.Form.of(inst).name()));
+                                            block.put(uri(SRC), instLambda(inst.tid(), ALL, o -> rec(mutableMap(uri(OBJ), inst.dom()), OBJECT_TID, null)).tryToInst());
+                                            block.put(uri(TRGT), instLambda(inst.tid(), ALL, o -> rec(mutableMap(uri(OBJ), inst.rng()), OBJECT_TID, null)).tryToInst());
+                                            block.put(uri(ANALYSIS), auto_(instLambda(inst.tid(), ALL, o -> {
+                                                final Map<Obj, Obj> analysis = new LinkedHashMap<>();
+                                                analysis.put(uri(FAMILY), instLambda(inst.tid(), ALL, o2 -> catInstSet.family(inst)).tryToInst());
+                                                analysis.put(uri(CONTESTED), instLambda(inst.tid(), ALL, o2 -> catInstSet.contested(inst)).tryToInst());
+                                                analysis.put(uri(ORBIT), instLambda(inst.tid(), ALL, o2 -> catInstSet.orbit(inst)).tryToInst());
+                                                analysis.put(uri(POSITION), instLambda(inst.tid(), ALL, o2 -> catInstSet.position(inst)).tryToInst());
+                                                if (null != entry && null != entry.inverse())
+                                                    analysis.put(uri(INVERSE), uri(entry.inverse()));
+                                                return rec(analysis);
+                                            })).tryToInst());
+                                            block.putAll(objInstRec.jvm());
+                                            if (null != entry && !entry.laws().isEmpty())
+                                                block.put(uri(LAW), entry.laws());
+                                            return rec(block);
+                                        })
+                                        .create(),
+                                Map.of(uri(FORM), "the n-tid coefficient shape \\((c_{\\mathrm{dom}}, c_{\\mathrm{rng}})\\) in regex notation: \\(\\mathrm{mapper} = (1,1),\\; \\mathrm{filter} = (1, ?),\\; \\mathrm{reducer} = (^{\\ast}, 1),\\; \\mathrm{flatmapper} = (1, ^{+}),\\; \\ldots\\)",
+                                        uri(SRC), "the source object the morphism leaves: \\(\\mathrm{src}(f) = \\mathrm{dom}(f)\\)",
+                                        uri(TRGT), "the target object the morphism enters: \\(\\mathrm{trgt}(f) = \\mathrm{rng}(f)\\)",
+                                        uri("analysis/position").maybe(), "the edge's place among its siblings: \\(\\mathrm{position}(f) \\subseteq \\{\\mathrm{duplicate}, \\mathrm{ambiguous}, \\mathrm{incomparable}, \\mathrm{coupling}, \\mathrm{isochain}, \\mathrm{retract}\\}\\)",
+                                        uri("analysis/contested").maybe(), "the witness edges behind the ambiguous/incomparable labels: \\(\\mathrm{contested}(f) = \\{g : \\mathrm{trgt}(g) = \\mathrm{trgt}(f) \\wedge \\mathrm{src}(g) \\perp \\mathrm{src}(f)\\} \\cup \\{g : \\mathrm{src}(g) = \\mathrm{src}(f) \\wedge \\mathrm{trgt}(g) \\perp \\mathrm{trgt}(f)\\}\\)",
+                                        uri("analysis/orbit").maybe(), "the reversible-core component of the morphism's dom: \\(\\mathrm{orbit}(f) = \\{X : \\mathrm{dom}(f) \\sim^{*} X\\}\\)",
+                                        uri("analysis/family").maybe(), "the same-name siblings: \\(\\mathrm{family}(f) = \\{g : \\mathrm{op}(g) = \\mathrm{op}(f)\\}\\)",
+                                        uri("analysis/inverse").maybe(), "the opposing edge \\(f^{-1}\\) with \\(f \\cdot f^{-1} = 1\\)",
+                                        uri(LAW), "the declared process laws \\(\\mathcal{L}\\) the morphism obeys, e.g. \\(\\mathrm{commutative}: f(x,y) = f(y,x)\\)"),
+                                "an inst as a categorical morphism incident to a source object (dom) and a target object (rng)"),
                         docWrap(OBJECT_TYPE = Type.Builder.build()
-                                .tid(CATEGORY_TID)
-                                .vid(OBJECT_TID)
-                                .isaPredicate(rec(uri("morphed_by").maybe().asUri(), lst(MORPHISM_TYPE), uri(LAW).maybe().asUri(), rec(URI_TYPE, ALGEBRAIC_THEORY)))
-                                .constructor(arg -> {
-                                    final Rec object = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
-                                    final Obj obj = object.at(OBJ);
-                                    return object.at("morphed_by", auto_(instLambda(obj.vid(), ALL, o -> {
-                                        final Obj insts = Router.readFromSpace(f("/m/inst/+").dom(obj.vid()));
-                                        return objs(insts.stream().map(m -> (Obj) rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));
-                                    })).tryToInst(), MUTABLE);
-                                })
-                                .create(), "the morphism-graph vertex block: the incoming and outgoing edges of a type"),
-                        docWrap(ALGEBRAIC_THEORY = Type.Builder.build()
+                                        .tid(CATEGORY_TID)
+                                        .vid(OBJECT_TID)
+                                        .isaPredicate(rec(
+                                                uri(OBJ), TYPE_TYPE,
+                                                uri(MORPHED_TO).maybe().asUri(), lst(T(MORPHISM_TID)),
+                                                uri(MORPHED_FROM).maybe().asUri(), lst(T(MORPHISM_TID)),
+                                                uri(LAW).maybe().asUri(), rec(URI_TYPE, THEORY_TYPE)))
+                                        .constructor(arg -> {
+                                            final Rec object = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
+                                            final Obj obj = object.at(OBJ);
+                                            object.at(LAW, CoreMaker.typeLaws(obj.asType()), MUTABLE);
+                                            object.at(MORPHED_TO, auto_(instLambda(obj.vid(), ALL, (ignore, i) -> {
+                                                final Obj insts = Router.readFromSpace(f("/m/inst/+").dom(obj.vid()));//.rng(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())); // TODO: constrain to instset
+                                                return objs(insts.stream().map(Obj::asInst).filter(m -> !m.tid().dom().isGeneric() && !m.tid().rng().isGeneric()).map(m -> rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));
+                                            })).tryToInst(), MUTABLE);
+                                            object.at(MORPHED_FROM, auto_(instLambda(obj.vid(), ALL, (o, i) -> {
+                                                final Obj insts = Router.readFromSpace(f("/m/inst/+")/*.dom(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())*/.rng(obj.vid())); // TODO: constrain to instset
+                                                return objs(insts.stream().map(Obj::asInst).filter(m -> !m.tid().dom().isGeneric() && !m.tid().rng().isGeneric()).map(m -> rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));
+                                            })).tryToInst(), MUTABLE);
+                                            return object;
+                                        })
+                                        .create(), Map.of(
+                                        uri(MORPHED_TO), "the morphisms sourced from this object (out-edges): \\(\\mathrm{morphed\\_to}(A) = \\{f : \\mathrm{src}(f) = A\\}\\)",
+                                        uri(MORPHED_FROM), "the morphisms targeted at this object (in-edges): \\(\\mathrm{morphed\\_from}(A) = \\{f : \\mathrm{trgt}(f) = A\\}\\)",
+                                        uri(LAW), "the structural theories \\(\\mathcal{T}\\) the object models"),
+                                "a type as a categorical object incident to targeting morphisms and sourcing morphisms"),
+                        docWrap(THEORY_TYPE = Type.Builder.build()
                                 .tid(REC_TID)
-                                .vid(ALGEBRAIC_THEORY_TID)
+                                .vid(THEORY_TID)
                                 .isaPredicate(rec())
-                                .create(), "the nominal super-type of the algebraic theories: a theory names its operations by role"),
+                                .create(), "the nominal super-type of the algebraic theories: a theory names its operations by role, e.g. \\(\\mathrm{ring} \\mapsto \\{\\mathrm{add}, \\mathrm{mul}, \\mathrm{zero}, \\mathrm{one}\\}\\)"),
                         docWrap(RING_THEORY_TYPE = Type.Builder.build()
-                                .tid(ALGEBRAIC_THEORY_TID)
+                                .tid(THEORY_TID)
                                 .vid(RING_THEORY_TID)
                                 .isaPredicate(rec(
                                         uri(ADD), INST_TYPE,
                                         uri(MUL), INST_TYPE,
                                         uri(ZERO), INST_TYPE,
                                         uri(ONE), INST_TYPE))
-                                .create(), "the theory of rings: the add and mul operations with their zero and one identities"),
+                                .create(), "the theory of rings \\(\\langle R, +, \\cdot, 0, 1 \\rangle\\): \\(+\\) an abelian group, \\(\\cdot\\) a monoid, and \\(a \\cdot (b + c) = a \\cdot b + a \\cdot c\\)"),
                         docWrap(GROUP_THEORY_TYPE = Type.Builder.build()
-                                .tid(ALGEBRAIC_THEORY_TID)
+                                .tid(THEORY_TID)
                                 .vid(GROUP_THEORY_TID)
                                 .isaPredicate(rec(
                                         uri(OP), INST_TYPE,
                                         uri(ID), INST_TYPE,
                                         uri(INV), INST_TYPE))
-                                .create(), "the theory of groups: the op with its id and inv"),
+                                .create(), "the theory of groups \\(\\langle G, \\cdot, 1, {}^{-1} \\rangle\\): \\(g \\cdot g^{-1} = g^{-1} \\cdot g = 1\\)"),
                         docWrap(MONOID_THEORY_TYPE = Type.Builder.build()
-                                .tid(ALGEBRAIC_THEORY_TID)
+                                .tid(THEORY_TID)
                                 .vid(MONOID_THEORY_TID)
                                 .isaPredicate(rec(
-                                        uri(OP), URI_TYPE,
-                                        uri(ID), URI_TYPE))
-                                .create(), "the theory of monoids: the op with its id")
-
-
-                ),
-                uri(INST), lst())));
-        CoreMaker.processInt();
+                                        uri(OP), INST_TYPE,
+                                        uri(ID), INST_TYPE))
+                                .create(), "the theory of monoids \\(\\langle M, \\cdot, 1 \\rangle\\): \\(m \\cdot 1 = 1 \\cdot m = m\\) and \\((m \\cdot n) \\cdot p = m \\cdot (n \\cdot p)\\)")),
+                uri(INST), lst(
+                        instC(AS_INST_TID.dom(ALL).rng(MORPHISM_TID), lst(MORPHISM_TYPE), (lhs, inst) -> MORPHISM_TYPE.constructor().apply(lhs)),
+                        instC(AS_INST_TID.dom(ALL).rng(OBJECT_TID), lst(OBJECT_TYPE), (lhs, inst) -> OBJECT_TYPE.constructor().apply(lhs))))));
         docWrap(this, "categorical realization of types and insts as objects and morphisms");
         super.setup();
     }
@@ -207,151 +248,115 @@ public class catInstSet extends AbstractInstSet {
 
     private static class CoreMaker {
 
-        public static void processInt() {
-            catWrap(INT_TYPE, mutableMap(
-                    uri("ring"), rec(mutableMap(
-                                    uri(ADD), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                    uri(MUL), auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                    uri(Tokens.ZERO), auto_from_(ZERO_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                    uri(Tokens.ONE), auto_from_(ONE_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
-                            RING_THEORY_TID, null),
-                    uri("add_group"), rec(mutableMap(
-                                    uri(OP), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                    uri(ID), auto_from_(ZERO_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                    uri(INV), auto_from_(NEG_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
-                            GROUP_THEORY_TID, null),
-                    uri("add_monoid"), rec(mutableMap(
-                                    uri(OP), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                    uri(ID), auto_from_(ZERO_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
-                            MONOID_THEORY_TID, null),
-                    uri("mult_monoid"), rec(mutableMap(
-                                    uri(OP), auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                    uri(ID), auto_from_(ONE_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
-                            MONOID_THEORY_TID, null)));
+        public static Rec typeLaws(final Type type) {
+            if (type.tid().basePath().equals(INT_TID)) {
+                return rec(mutableMap(
+                        uri("ring"), rec(mutableMap(
+                                        uri(ADD), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                        uri(MUL), auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                        uri(Tokens.ZERO), auto_from_(ZERO_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                        uri(Tokens.ONE), auto_from_(ONE_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
+                                RING_THEORY_TID, null),
+                        uri("add_group"), rec(mutableMap(
+                                        uri(OP), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                        uri(ID), auto_from_(ZERO_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                        uri(INV), auto_from_(NEG_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
+                                GROUP_THEORY_TID, null),
+                        uri("add_monoid"), rec(mutableMap(
+                                        uri(OP), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                        uri(ID), auto_from_(ZERO_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
+                                MONOID_THEORY_TID, null),
+                        uri("mult_monoid"), rec(mutableMap(
+                                        uri(OP), auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                        uri(ID), auto_from_(ONE_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
+                                MONOID_THEORY_TID, null)));
+            }
+            return rec0();
         }
     }
 
     /**
-     * The law axis: the algebraic laws a morphism obeys. {@code boolean_} is the one keyword exception —
-     * its mtron label is {@code boolean}.
+     * The law axis: the process laws a morphism obeys — a property of the operation itself, never the whole
+     * algebra (those are the theory types on {@code object::T}).
      */
+    // NOTES: the structural laws — semilattice, boolean, near_ring, ring, group — are not process laws:
+    // they name an algebraic *structure*, so they are theory types on object::T (ring_theory::T, group_theory::T,
+    // monoid_theory::T exist; semilattice_theory::T, boolean_theory::T, near_ring_theory::T are future). The former
+    // provenance axis (syntactic/declared/semantic) is dropped too: CatLawTable serves the declared process laws;
+    // the rest are derived (syntactic) or computed (semantic) when wired.
     public enum Law {
-        // syntactic — derived from the n-tid
         /**
          * an annihilator: {@code a·x = a} for every {@code x} (absorbing element of the operation)
          */
-        absorbing(Law.Tier.syntactic),
+        absorbing,
         /**
          * the reflexive-transitive iterate — {@code aⁿ} over the operation (a Kleene closure)
          */
-        kleene(Law.Tier.syntactic),
+        kleene,
         /**
          * pass-through-or-drop ({0,1}); the optional/zeroable lift of a value
          */
-        partial(Law.Tier.syntactic),
+        partial,
         /**
          * commutes through the stream ring's parallel/serial structure — the coefficient floats off F\Fr
          */
-        floatable(Law.Tier.syntactic),
+        floatable,
         /**
          * cannot float past a barrier — a reduce anchors the coefficient in place
          */
-        blocked(Law.Tier.syntactic),
-        // declared — proved once, registered per family
-        /**
-         * an associative binary op with an identity element
-         */
-        monoidic(Law.Tier.declared),
-        /**
-         * an associative, commutative, idempotent join/meet
-         */
-        semilattice(Law.Tier.declared),
-        /**
-         * the Boolean-algebra structure of the filter family ({@code ∧=·}, {@code ∨=a+b−ab}, {@code ¬=ā})
-         */
-        boolean_(Law.Tier.declared),
-        /**
-         * a ring where only one distributivity side holds
-         */
-        near_ring(Law.Tier.declared),
-        /**
-         * two binary ops — a commutative group under {@code +} and a monoid under {@code ·} that distributes
-         */
-        ring(Law.Tier.declared),
-        /**
-         * a monoid where every element has an inverse
-         */
-        group(Law.Tier.declared),
+        blocked,
         /**
          * a monoid/group acting on a carrier — {@code f(gh)x = f(g)f(h)x}
          */
-        action(Law.Tier.declared),
+        action,
         /**
          * an atomic/indecomposable element — no nontrivial factorization
          */
-        prime(Law.Tier.declared),
+        prime,
         /**
          * distributes over {@code +} on the left — {@code a(b+c) = ab+ac}
          */
-        left_distributive(Law.Tier.declared),
+        left_distributive,
         /**
          * distributes over {@code +} on the right — {@code (a+b)c = ac+bc}
          */
-        right_distributive(Law.Tier.declared),
+        right_distributive,
+        /**
+         * an associative binary op with an identity element
+         */
+        monoidic,
         /**
          * {@code a·b = b·a}
          */
-        commutative(Law.Tier.declared),
+        commutative,
         /**
          * the carrier is partially ordered, and these insts are its comparisons
          */
-        poset(Law.Tier.declared),
-        // semantic — apply-and-test on canonical objs
+        poset,
         /**
          * the identity element — {@code e·x = x·e = x}
          */
-        unit(Law.Tier.semantic),
+        unit,
         /**
          * self-inverse — {@code f(f(x)) = x} (period two)
          */
-        involution(Law.Tier.semantic),
+        involution,
         /**
          * {@code f(f(x)) = f(x)}
          */
-        idempotent(Law.Tier.semantic),
+        idempotent,
         /**
          * some power is zero — {@code fⁿ = 0}
          */
-        nilpotent(Law.Tier.semantic),
+        nilpotent,
         /**
          * nonzero {@code a} with {@code a·b = 0} for some nonzero {@code b}
          */
-        zero_divisor(Law.Tier.semantic),
+        zero_divisor,
         /**
          * generated by one element — every value is a power of a single generator
          */
-        cyclic(Law.Tier.semantic);
-
-        public enum Tier {
-            syntactic, declared, semantic;
-        }
-
-        private final Law.Tier tier;
-
-        Law(final Law.Tier tier) {
-            this.tier = tier;
-        }
-
-        public Law.Tier tier() {
-            return this.tier;
-        }
-
-        /**
-         * the mtron label — {@code name()} save the {@code boolean} keyword collision
-         */
-        public String label() {
-            return this.name().equals("boolean_") ? "boolean" : this.name();
-        }
+        cyclic;
     }
 
     /**
@@ -359,7 +364,7 @@ public class catInstSet extends AbstractInstSet {
      * {@code laws(Law.commutative, Law.right_distributive)}.
      */
     public static Lst laws(final Law... laws) {
-        return lst(Arrays.stream(laws).map(l -> (Obj) uri(l.label())).toList());
+        return lst(Arrays.stream(laws).map(l -> (Obj) uri(l.name())).toList());
     }
 
     /**
@@ -457,10 +462,7 @@ public class catInstSet extends AbstractInstSet {
      * generics, the root, and noobj are not objects of the category — only named types are
      */
     private static boolean degenerate(final Type type) {
-        if (type.isGeneric() || type.isRootType())
-            return true;
-        final String name = object(type).name();
-        return "noobj".equals(name) || "#".equals(name);
+        return type.isGeneric() || type.isRootType();
     }
 
     /**
@@ -668,8 +670,7 @@ public class catInstSet extends AbstractInstSet {
     }
 
     /**
-     * Audit the cast subgraph for the requested {@link Position kinds}. The former {@code ?asq} checker,
-     * generalized to the category: {@code duplicate} casts, {@code ambiguous}/{@code incomparable} contesting
+     * Audit the cast subgraph for the requested {@link Position kinds}: {@code duplicate} casts, {@code ambiguous}/{@code incomparable} contesting
      * doms, and {@code coupling}/{@code isochain}/{@code retract} reversibility — each at its tightest kind,
      * with a reason.
      *

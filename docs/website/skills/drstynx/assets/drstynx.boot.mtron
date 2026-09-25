@@ -94,7 +94,6 @@ httpspace::[host     => !*<boot/args/external/web/http>,
                          /docker    => docker:,
                          /usr       => /usr,
                          /mfs       => mfs:,
-                         http://    => http://,
                          /message   => mcp_message,
                          /          => mfs:docs/website/]]@/sys/space/web/http;   
 
@@ -360,7 +359,16 @@ agent::[
                                         !*bash?reject=['\brm\b','\bgit\b'],
                                         mcp_client::[host=><http://localhost:8777/mcp>],
                                         forget?noobj{0}<=noobj{0}(){ /usr/dr/message/+ -> noobj }],
-                   to =>  inst(a=>rec::T){ @<audit_widget>>>=[body=>+("""{{r}}>>{{g}}${*a>>name}{{m}}({{/m}}${*a>>arguments}{{m}}){{/m}}{{/g}}\n${*a>>result}\n""")].display() }],
+                   to =>  inst(a=>rec::T){ @<tool_widget>.else(
+                                             grid_widget::[grid=>[,],
+                                                           style=>[anchor=>bottom_middle,
+                                                                   border=>continuous,
+                                                                   height=>30,
+                                                                   width=>100]].to(tool_widget)).
+                                           side(w -> -<accordion_widget::[title=>"""{{r}}>>{{g}}${*a>>name}{{m}}({{/m}}${*a>>arguments}{{m}})""",
+                                                                          body=>"""{{/m}}{{/g}}${*a>>result}"""]).
+                                           @<tool_widget/grid> >>=(+(-<[-<[ !*w ]]))                          
+                                           .side(@tool_widget.display()) }],
   cost_feature:::::::[rate          => [in  => usd_currency::0.435,
                                         out => usd_currency::0.870]],
   system_feature:::::[              => ]]]@<dr>; 

@@ -33,12 +33,11 @@ import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.laws;
 /**
  * The declared process laws of the base types' operations, in one table.
  *
- * <p>Laws split two ways: by <i>provenance</i> — {@code syntactic} (read off the coefficient),
- * {@code declared} (proved once, registered per family), {@code semantic} (apply-and-test) — and by
- * <i>kind</i> — {@code structure} (the whole algebra, riding on {@code object::T} as theory recs) vs
- * {@code process} (a single operation, riding on {@code morphism::T} as labels). Only the
- * {@code declared ∩ process} cell cannot be derived, so only it lives here. The operation's inverse is a
- * relation, not a law, so it is a paired field on the entry rather than mixed into the law list.
+ * <p>The {@code law::T} union holds the process laws a morphism obeys; the declared ones — proved once,
+ * registered per family — cannot be derived, so only they live here. The structural laws (ring, group,
+ * monoid, …) are theory types on {@code object::T}, and the syntactic / semantic laws are derived or computed
+ * when wired. The operation's inverse is a relation, not a law, so it is a paired field on the entry rather
+ * than mixed into the law list.
  *
  * <p>The base types' laws never (or rarely) change, so a single table beats declarations scattered across
  * the type classes.

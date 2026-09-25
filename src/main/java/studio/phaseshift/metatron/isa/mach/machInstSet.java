@@ -184,8 +184,8 @@ public class machInstSet extends AbstractInstSet {
                                 a peer is a wsclient to a mtron_ws handler. 
                                 *x and x->y are the respective read/write insts sent to the peer for evaluation.
                                 """)),
-                uri(INST), lst(Stream.concat(Router.RouterType.insts().stream(), Stream.of(instC(LIFT_INST_TID.dom(ALL).rng(MACH_MONAD_TID).q(MONAD, "^"), lst(T(ALL.maybe())), (lhs, inst) -> {
-                            final PCMonad monad = lhs.asMonad();
+                uri(INST), lst(Stream.concat(Router.RouterType.insts().stream(), Stream.of(instC(LIFT_INST_TID.dom(ALL).rng(MACH_MONAD_TID).q(MONAD_IN, "+").q(MONAD_OUT, "+"), lst(T(ALL.maybe())), (lhs, inst) -> {
+                            final PCMonad monad = PCMonad.of(lhs);
                             if (!inst.arg(0).isNoObj())
                                 return inst.arg(0).apply(monad);
                             else

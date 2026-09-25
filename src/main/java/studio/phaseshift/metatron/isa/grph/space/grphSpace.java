@@ -73,7 +73,7 @@
   */
  public class grphSpace extends AbstractDataPathSpace<GraphTraversalSource> implements SchemaSpace {
 
-     public static final ObjSerializer<String> SERIALIZER = ObjmtronSerializer.singleNoClip();
+     public static final ObjSerializer<String> SERIALIZER = ObjmtronSerializer.single();
      protected static ObjFactory FACTORY = null;
 
      protected static final String AUTO_TX = "auto_tx";

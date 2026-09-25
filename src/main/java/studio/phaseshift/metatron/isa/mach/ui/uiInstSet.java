@@ -89,6 +89,8 @@ public class uiInstSet extends AbstractInstSet {
     public static Type UI_SELECTOR_TYPE;
     public static final fURI UI_PANEL_TID = UI_WIDGET_TID.extend("panel_widget");
     public static Type UI_PANEL_TYPE;
+    public static final fURI UI_GRID_TID = UI_WIDGET_TID.extend("grid_widget");
+    public static Type UI_GRID_TYPE;
     public static final fURI UI_LABEL_LINE_TID = UI_WIDGET_TID.extend("label_line_widget");
     public static Type UI_LABEL_LINE_TYPE;
     public static final fURI UI_MENU_BAR_TID = UI_WIDGET_TID.extend("menu_bar_widget");
@@ -142,7 +144,7 @@ public class uiInstSet extends AbstractInstSet {
                                         .tid(REC_TID)
                                         .vid(UI_STYLE_TID)
                                         .isaPredicate(rec(
-                                                uri("border").maybe().asUri(), URI_TYPE,
+                                                uri("border").maybe().asUri(), STR_TYPE,
                                                 uri("background").maybe(), STR_TYPE,
                                                 uri("foreground").maybe(), STR_TYPE,
                                                 uri("divider").maybe(), STR_TYPE,
@@ -265,6 +267,15 @@ public class uiInstSet extends AbstractInstSet {
                                         uri(TITLE), "the title of the panel",
                                         uri(BODY), "the body content of the panel"),
                                 "a simple bordered UI panel widget"),
+                        docWrap(UI_GRID_TYPE = Type.Builder.build()
+                                        .tid(UI_WIDGET_TID)
+                                        .vid(UI_GRID_TID)
+                                        .isaPredicate(rec(
+                                                (Obj) uri("grid").maybe(), LST_TYPE))
+                                        .constructor(arg -> new GridWidget(arg.asRec().jvm(), UI_GRID_TID, arg.vid()))
+                                        .create(), "maybe an obj", "a grid of widgets", Map.of(
+                                        uri("grid"), "a lst of rows, each row a lst of cell widgets"),
+                                "a grid of rows x cols of embedded, runnable widgets"),
                         docWrap(UI_LABEL_LINE_TYPE = Type.Builder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_LABEL_LINE_TID)
