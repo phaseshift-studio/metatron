@@ -93,6 +93,7 @@ public final class Tokens {
     public static final String REQUIRED = "required";
     public static final String EMBED = "embed";
     public static final String SRC = "src";
+    public static final String TRGT = "trgt";
     public static final String TARGET = "target";
     public static final String CLASS = "class";
     public static final String MEMBER = "member";
@@ -187,6 +188,8 @@ public final class Tokens {
     public static final String EMIT = "emit";
     public static final String LOOPBACK = "loopback";
     public static final String MONAD = "monad";
+    public static final String MONAD_IN = "monad_in";
+    public static final String MONAD_OUT = "monad_out";
     public static final String REPEAT = "repeat";
     public static final String SHORT = "short";
     public static final String LONG = "long";
@@ -334,7 +337,10 @@ public final class Tokens {
     public static final String QUANT = "quant";
     public static final String TIMEOUT = "timeout";
     public static final String FAMILY = "family";
+    public static final String ANALYSIS = "analysis";
     public static final String MORPH = "morph";
+    public static final String MORPHED_FROM = "morphed_from";
+    public static final String MORPHED_TO = "morphed_to";
     public static final String FORM = "form";
     public static final String POSITION = "position";
     public static final String CONTESTED = "contested";

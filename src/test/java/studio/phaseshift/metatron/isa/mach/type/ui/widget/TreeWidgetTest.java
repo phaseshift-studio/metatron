@@ -143,7 +143,7 @@ public class TreeWidgetTest extends AbstractMetatronTest {
     /**
      * Diagnostic: find where box-drawing glyphs (├ ─ │) get downgraded to ASCII
      * (+ - |) on the `.as(str::T)` echo path.  `.display()` writes format()
-     * raw; the REPL echo of an as-str passes through ObjConsoleSerializer and
+     * raw; the REPL echo of an as-str passes through ObjmtronUISerializer and
      * then Highlighter (JLine SyntaxHighlighter).
      */
     /**

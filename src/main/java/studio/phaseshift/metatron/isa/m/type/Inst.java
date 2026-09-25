@@ -40,6 +40,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -344,7 +345,7 @@ public interface Inst extends Call {
 
     @Override
     default Obj apply(final Obj lhs) {
-        final boolean isMonadicInst = this.tid().hasQ(MONAD);
+        final boolean isMonadicInst = this.tid().hasQ(MONAD_IN) || this.tid().hasQ(MONAD_OUT);
         //final String monadUpDown = this.tid().queryValue(fURI.of(MONAD), String.class);
         Obj clhs = lhs;
         //boolean reself = !this.args().isEmpty() && this.args().argElements().noneMatch(e -> e.vid() != null || e.isObjCall());
@@ -875,7 +876,9 @@ public interface Inst extends Call {
     public static final class InstType {
 
         public static Set<Inst> insts() {
-            return new LinkedHashSet<>(List.of(instC(ARGS_INST_TID.dom(M_ISA_INST_TID).rng(LST_TID), lst(), (lhs, inst) -> inst.args())));
+            return new LinkedHashSet<>(List.of(
+                    instC(ARGS_INST_TID.dom(M_ISA_INST_TID).rng(LST_TID), lst(), (lhs, inst) -> inst.args()),
+                    instC(AS_INST_TID.dom(INST_TID).rng(CODE_TID), lst(CODE_TYPE), (lhs, inst) -> code(List.of(lhs.asInst())))));
             //instC(LSHIFT_INST_TID.dom(INST_TID).rng(ALL), lst(), (lhs, inst) -> lhs.dom()),
                     /*instC(RSHIFT_INST_TID.dom(INST_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(ONE_WILD_STRING)).stream().map(u ->
                             rec(uri(ARGS), lhs.asInst().args(),

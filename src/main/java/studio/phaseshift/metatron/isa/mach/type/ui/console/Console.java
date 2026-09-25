@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
@@ -97,7 +98,7 @@ public class Console extends MRec implements Closeable, Runnable {
      * {@code ObjConsoleSerializer}) because that is where a uri becomes a {@code {{link}}} — a
      * plain serializer writes the uri and nothing downstream can tell it apart from text.
      */
-    public ObjSerializer<String> serializer = new ObjConsoleSerializer();
+    public ObjSerializer<String> serializer = new ObjmtronUISerializer();
     public Inst statusLine = instLambda((lhs, inst) -> {
         StatusLine.message(inst.arg(0));
         return noobj();
@@ -272,7 +273,7 @@ public class Console extends MRec implements Closeable, Runnable {
     /**
      * The console's own input, as the stream {@link mSystem#in()} hands out.
      * <p>
-     * Each read is one line, asked of the console's reader (see {@link #readHumanLine}), which is
+     * Each read is one line, asked of the console's reader, which is
      * what keeps the console one way of using metatron rather than a special case: whoever wants a
      * line — {@code sys:stdin}, a human chat model, any instruction — reads the terminal the console
      * owns, and none of them mentions the console.
@@ -1050,7 +1051,7 @@ public class Console extends MRec implements Closeable, Runnable {
      * anything written straight to the terminal — an answer echoed while a job held the console —
      * leaves that idea wrong, and the next paint then fights the write that follows it.
      * <p>
-     * Only the forgetting happens here.  {@link #requestScreenPaint()} runs the paint pass on
+     * Only the forgetting happens here.  requestScreenPaint() runs the paint pass on
      * whatever thread asks, and this is called from the reader: a frame drawn there waits on the
      * render lock while holding the reader, which is a console that stops responding until the
      * terminal gives up on it.  Marking the rows unknown is enough — the next output or prompt
@@ -1515,7 +1516,7 @@ public class Console extends MRec implements Closeable, Runnable {
      * while we wait — {@code <alt>+b} detaches, ctrl-c stops, {@code [q]}
      * cancels once the offer has been printed, other keystrokes are kept for
      * the next prompt.  The protocol itself lives on
-     * {@link ForegroundJobs#awaitForeground(Machine, Object, String)}.
+     * {@link ForegroundJobs#awaitForeground(Machine, FutureObj, String)}.
      *
      * @return true when the job was detached with {@code <alt>+b} (it is still
      * running — the console returns to the prompt)

@@ -60,7 +60,7 @@ mtron> /a/b/c   -> |plus(2)
 mtron> /a/b/d   -> 'm'
 ==>'m'
 mtron> /a/b/d/e -> [1.0,0xa5,true]
-==>[1.0000,0xa5,true]
+==>[1.0,0xa5,true]
 ```
 To retrieve stored objs, dereference their uris. The uri is the **reference**, the obj is the **referent** and the
 process of moving from one to the other is called **dereferencing** (also known as **resolving**).
@@ -71,14 +71,11 @@ mtron> */a
 mtron> */a/x
 ==>1
 mtron> */a/b
-==>[
-    q=>r,
-    c=>plus(2),
-    d=>[e=>[1.0000,0xa5,true]]]
+==>[q=>r,c=>plus(2),d=>[e=>[1.0,0xa5,true]]]
 mtron> */a/b/c
 ==>plus(2)
 mtron> */a/b/d
-==>[e=>[1.0000,0xa5,true]]
+==>[e=>[1.0,0xa5,true]]
 ```
 Of particular significance is the result of `*/a/b`: polys (`lst`, `rec`, `rel`)
 maintain an internal uri scheme that interacts with the outer space's uri scheme. That interplay recurs throughout
@@ -302,27 +299,12 @@ processor. **Read the documentation of the code you are about to execute.**
 
 ```mtron
 mtron> *plus?docq
-==>docs::[
-    obj=>plus?int<=int(int::T),
-    dom=>'the lhs int',
-    rng=>'the result of the addition',
-    args=>[int::T=>'the int to add to the lhs'],
-    desc=>"""[mapper] add the argument int to the lhs int
-   one-to-one obj...""",
-    example=>[
-     '1.plus(2)          [-- 3                    --]',
-     "1+2                [-- 3 sugar'd form       --]",
-     '1.plus(plus(1))    [-- 3 nested application --]',
-     '1+(+1)             [-- 3 sugar nested form  --]']]
+==>docs::[obj=>plus?rng=int&dom=int(int::T){<j>},dom=>'the lhs int',rng=>'the result of the addition',args=>[int::T=>'the int to add to the lhs'],desc=>"""[mapper] add the argument int to the lhs int
+   one-to-one obj transformation (dom_c = rng_c = 1)""",example=>['1.plus(2)          [-- 3                    --]',"1+2                [-- 3 sugar'd form       --]",'1.plus(plus(1))    [-- 3 nested application --]','1+(+1)             [-- 3 sugar nested form  --]']]
 mtron> *select?docq
-==>docs::[
-    desc=>'no documentation available',
-    obj=>{select?rng=str&dom=str(rec::T){<j>},select?rng=uri&dom=uri(rec::T){<j>},select?rng=rel{?}&dom=rel(rel::T){<j>},select?rng=B{*}&dom=lst(A{+}::T){<j>},select?rng=lst{?}&dom=lst(lst::T){<j>},select?rng=lst&dom=lst(rec::T){<j>},select?rng=B{*}&dom=rec(A{+}::T){<j>},select?rng=rec{?}&dom=rec(rec::T){<j>}}]
+==>docs::[desc=>'no documentation available',obj=>{select?rng=str&dom=str(rec::T){<j>},select?rng=uri&dom=uri(rec::T){<j>},select?rng=rel{?}&dom=rel(rel::T){<j>},select?rng=B{*}&dom=lst(A{+}::T){<j>},select?rng=lst{?}&dom=lst(lst::T){<j>},select?rng=lst&dom=lst(rec::T){<j>},select?rng=B{*}&dom=rec(A{+}::T){<j>},select?rng=rec{?}&dom=rec(rec::T){<j>}}]
 mtron> */a/b?docq
-==>[
-    q=>r,
-    c=>plus(2),
-    d=>[e=>[1.0000,0xa5,true]]]
+==>[q=>r,c=>plus(2),d=>[e=>[1.0,0xa5,true]]]
 ```
 ## references
 
@@ -348,7 +330,7 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 * [math instruction set](references/math-instset-mtron.md) -- `/m/math`: the unit types (`time`, `datasize`,
   `currency`), the `datetime` uri and its construction/arithmetic, `normalize` and the trig/rounding instructions, and
   the `pi`/`e` constants.
-* [as-graph](references/as-graph-mtron.md) -- every `as` instruction read as a property-graph edge (label `as`,
+* [as-graph](references/cat-instset-mtron.md) -- every `as` instruction read as a property-graph edge (label `as`,
   outV the dom, inV the rng) and `?asq` as its property map: the six edge kinds and what each means when you add a
   cast, how to read an edge that no row declares, the fully generic arg-type cast behind a plain tag, and the
   implicit ancestor casts.

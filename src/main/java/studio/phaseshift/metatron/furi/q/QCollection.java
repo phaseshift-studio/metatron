@@ -842,6 +842,11 @@ public final class QCollection {
         return type;
     }
 
+    public static Type docWrap(final Type type, final Map<Obj, String> predicateDescription, final String description, final String... examples) {
+        internalDocWrap(type, null, null, predicateDescription, type.isNominal() ? "[nominal] " : "[structural] " + description, examples);
+        return type;
+    }
+
     public static InstSet docWrap(final InstSet instSet, final String description, final String... examples) {
         internalDocWrap(instSet, null, null, null, description, examples);
         return instSet;

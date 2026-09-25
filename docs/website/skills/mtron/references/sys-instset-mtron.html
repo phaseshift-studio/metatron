@@ -174,6 +174,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m.html"><img
                             src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dckr.html"><img
+                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dcmnt.html"><img
                             src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
                             alt="dcmnt"/>/m/dcmnt</a></li>
@@ -198,6 +201,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math.html"><img
                             src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math_cat.html"><img
+                            src="../../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_sys.html"><img
                             src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                             alt="sys"/>/m/sys</a></li>
@@ -268,7 +274,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -409,26 +415,26 @@ metatron's data structures. <code>cmd</code> is the terminal command, evaluated 
 <code>time::T</code> (<code>millis::1000.0</code>, <code>second::1.0</code>, ...) with a 30-second default. The result is a <code>lst[str::T]</code>, one
 entry per stdout line; a non-zero exit is a <code>fail::T</code>.</p>
 <pre><code class="language-mtron">mtron&gt; bash('ls')
-==&gt;['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE',...(13 more)]
+==&gt;['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE','metatron.ide.mtron','mvnw','mvnw.cmd','node_modules','pom.xml','README.md','RELEASE.md','REVIEW-FULL.md','REVIEW-FULL.md.bak','REVIEW-METATRON.md','src','target']
 mtron&gt; bash(cmd=&gt;'whoami', timeout=&gt;second::5.0)
 ==&gt;['killswitch']
 </code></pre>
 <p>Batch over a rec (indexed) or a lst (flat):</p>
 <pre><code class="language-mtron">mtron&gt; {&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;}.-&lt;[_ =&gt; _]==[_ =&gt; bash(_)]   [-- rec of cmds =&gt; rec of result lsts --]
-==&gt;['ls'=&gt;['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE',...(13 more)]]
+==&gt;['ls'=&gt;['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE','metatron.ide.mtron','mvnw','mvnw.cmd','node_modules','pom.xml','README.md','RELEASE.md','REVIEW-FULL.md','REVIEW-FULL.md.bak','REVIEW-METATRON.md','src','target']]
 ==&gt;['whoami'=&gt;['killswitch']]
-==&gt;['df -h'=&gt;['Filesystem             Size  Used Avail Use% Mounted on','tmpfs                  6.1G  6.1M  6.1G   1% /run','efivarfs               128K   42K   82K  34% /sys/firmware/...','/dev/nvme1n1p2         916G  497G  373G  58% /','tmpfs                   31G   37M   31G   1% /dev/shm','tmpfs                  5.0M   20K  5.0M   1% /run/lock','tmpfs                   31G     0   31G   0% /run/qemu','/dev/nvme1n1p1         511M  6.2M  505M   2% /boot/efi','tmpfs                  6.1G  244K  6.1G   1% /run/user/1000','/dev/nvme0n1p2         932G  240G  692G  26% /media/hdd0',...(1 more)]]
+==&gt;['df -h'=&gt;['Filesystem             Size  Used Avail Use% Mounted on','tmpfs                  6.1G  6.3M  6.1G   1% /run','efivarfs               128K   42K   82K  34% /sys/firmware/efi/efivars','/dev/nvme1n1p2         916G  501G  369G  58% /','tmpfs                   31G  222M   31G   1% /dev/shm','tmpfs                  5.0M   20K  5.0M   1% /run/lock','tmpfs                   31G     0   31G   0% /run/qemu','/dev/nvme1n1p1         511M  6.2M  505M   2% /boot/efi','tmpfs                  6.1G  252K  6.1G   1% /run/user/1000','/dev/nvme0n1p2         932G  240G  692G  26% /media/hdd0','//192.168.1.72/beast1  1.8T  1.7T  145G  93% /srv/beast/hdd1']]
 mtron&gt; [&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;].mapp(-&lt;[_ =&gt; bash(_)]).sum() [-- flatten to one lst --]
-==&gt;fail::[lhs range does not match inst domain: fail::T =&gt; lst{*}::T [sum?rng=lst&amp;dom=lst{*}(){&lt;j&gt;}@&lt;2&gt;]]@/sys/fail/1818
+==&gt;fail::[lhs range does not match inst domain: fail::T =&gt; lst{*}::T [sum?rng=lst&amp;dom=lst{*}(){&lt;j&gt;}@&lt;2&gt;]]@/sys/fail/1862
 </code></pre>
 <p>Pipe a follow-up command over each result — <code>&gt;&gt;</code> drains the list, <code>${_}</code> binds the current element; <code>.mapp</code>
 maps explicitly (and, with a lambda, indexes by the current element):</p>
 <pre><code class="language-mtron">mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat -c 'U' ${_}&quot;)            [-- drain: owners coalesce to a multiset --]
-==&gt;{23}['U']
+==&gt;{22}['U']
 mtron&gt; bash('ls').mapp(bash(&quot;stat -c 'U' ${_}&quot;))         [-- map: one result lst per file --]
-==&gt;fail::[unable to locate inst-f of mapp(bash(&quot;stat -c 'U' ${_}&quot;))@&lt;1&gt;]@/sys/fail/1846
+==&gt;fail::[unable to locate inst-f of mapp(bash(&quot;stat -c 'U' ${_}&quot;))@&lt;1&gt;]@/sys/fail/1890
 mtron&gt; bash('ls').mapp(-&lt;[_=&gt;bash(&quot;stat -c 'U' ${_}&quot;)])  [-- indexed map: file =&gt; owner --]
-==&gt;fail::[unable to locate inst-f of mapp(split([id()=&gt;bash(&quot;stat -c 'U' ${_}&quot;)]))@&lt;1&gt;]@/sys/fail/1850
+==&gt;fail::[unable to locate inst-f of mapp(split([id()=&gt;bash(&quot;stat -c 'U' ${_}&quot;)]))@&lt;1&gt;]@/sys/fail/1894
 </code></pre>
 <h4>security modulators (q-params)</h4>
 <p><code>bash</code> is hardened at the <em>instruction</em> level, not the call site. <code>allow</code>/<code>reject</code>/<code>env</code>/<code>dir</code> attach as query
@@ -475,107 +481,19 @@ stdin()              [-- block for one line, emit it as a str --]
 mtron&gt; */sys/thread/+.=?=[state=&gt;run]       [-- number of active threads --]
 ==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '=?=[state=&gt;run]'
 mtron&gt; */sys/thread/+?docq                  [-- thread documentation     --]
-==&gt;docs::[
-    obj=&gt;core::[
-     code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-     state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.09:23/22/54/13/124?tz=-0600&gt;,
-     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-     result=&gt;noobj]@/sys/thread/502693e7,
-    desc=&gt;'metatron-thread']
-==&gt;docs::[
-    obj=&gt;core::[
-     code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-     state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.09:23/22/54/13/136?tz=-0600&gt;,
-     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-     result=&gt;noobj]@/sys/thread/ab81e3dd,
-    desc=&gt;'metatron-thread']
-==&gt;docs::[
-    obj=&gt;core::[
-     code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-     state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.09:23/22/54/13/111?tz=-0600&gt;,
-     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-     result=&gt;noobj]@/sys/thread/51a7d6d8,
-    desc=&gt;'metatron-thread']
-==&gt;docs::[
-    obj=&gt;core::[
-     code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-     state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.09:23/22/54/13/141?tz=-0600&gt;,
-     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-     result=&gt;noobj]@/sys/thread/de7c2815,
-    desc=&gt;'metatron-thread']
-==&gt;docs::[
-    obj=&gt;core::[
-     code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-     state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.09:23/22/54/13/143?tz=-0600&gt;,
-     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-     result=&gt;noobj]@/sys/thread/34df9199,
-    desc=&gt;'metatron-thread']
-==&gt;docs::[
-    obj=&gt;core::[
-     code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-     state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.09:23/22/54/13/135?tz=-0600&gt;,
-     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-     result=&gt;noobj]@/sys/thread/b21f0a89,
-    desc=&gt;'metatron-thread']
-==&gt;docs::[
-    obj=&gt;core::[
-     code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-     source=&gt;!*/sys/thread/main,
-     state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.09:23/22/54/13/093?tz=-0600&gt;,
-     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-     result=&gt;noobj]@/sys/thread/8c051df2,
-    desc=&gt;'metatron-thread']
-==&gt;docs::[
-    obj=&gt;core::[
-     code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-     start=&gt;noobj,
-     state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.09:23/22/53/46/377?tz=-0600&gt;,
-     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-     result=&gt;noobj]@/sys/thread/main,
-    desc=&gt;'this root thread waits till all child threads are complete ...']
-==&gt;docs::[
-    obj=&gt;core::[
-     code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-     source=&gt;!*/sys/thread/main,
-     state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.09:23/22/54/13/139?tz=-0600&gt;,
-     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-     result=&gt;noobj]@/sys/thread/f66494fa,
-    desc=&gt;'metatron-thread']
-==&gt;docs::[
-    obj=&gt;core::[
-     code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-     state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.09:23/22/54/13/114?tz=-0600&gt;,
-     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-     result=&gt;noobj]@/sys/thread/21589fac,
-    desc=&gt;'metatron-thread']
-==&gt;docs::[
-    obj=&gt;core::[
-     code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-     source=&gt;!*/sys/thread/main,
-     state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.09:23/22/54/13/121?tz=-0600&gt;,
-     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-     result=&gt;noobj]@/sys/thread/46865e45,
-    desc=&gt;'metatron-thread']
-==&gt;docs::[
-    obj=&gt;core::[
-     code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-     source=&gt;!*/sys/thread/main,
-     state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.09:23/22/54/13/132?tz=-0600&gt;,
-     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-     result=&gt;noobj]@/sys/thread/56b3d827,
-   ...
+==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},source=&gt;!*/sys/thread/main,state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/688?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/e6c46929,desc=&gt;'metatron-thread']
+==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},start=&gt;noobj,state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/47/48/261?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/main,desc=&gt;'this root thread waits till all child threads are complete and then releases a latch to initiate metatron shutdown procedure']
+==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/679?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/95f054eb,desc=&gt;'metatron-thread']
+==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/699?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/1f48b4e0,desc=&gt;'metatron-thread']
+==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/693?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/9d8e346b,desc=&gt;'metatron-thread']
+==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/668?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/62eeaa16,desc=&gt;'metatron-thread']
+==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/691?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/a61703a2,desc=&gt;'metatron-thread']
+==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},source=&gt;!*/sys/thread/main,state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/695?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/208f7b1c,desc=&gt;'metatron-thread']
+==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/697?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/1e6fa8e6,desc=&gt;'metatron-thread']
+==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},source=&gt;!*/sys/thread/main,state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/677?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/a8668665,desc=&gt;'metatron-thread']
+==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},source=&gt;!*/sys/thread/main,state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/650?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/d1b68533,desc=&gt;'metatron-thread']
+==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/681?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/f978cc81,desc=&gt;'metatron-thread']
+==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/670?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/a37def8e,desc=&gt;'metatron-thread']
 </code></pre>
 <h2>file system space (fsspace::T)</h2>
 <p>An <code>fsspace::T</code> mounts a subset of a file system into the metatron graph. Files are addressed via the space's
@@ -589,17 +507,7 @@ as is, but <code>&lt;/a/b/c.txt&gt;</code> requires angle brackets.</p>
          pattern =&gt; &lt;mfs:#&gt;,
          q       =&gt; [mimeq::[=&gt;], lineq::[=&gt;]],
          route   =&gt; [mfs: =&gt; &lt;~/software/metatron&gt;]]@/sys/space/fs/mfs
-==&gt;fsspace::[
-    pattern=&gt;mfs:#,
-    q=&gt;[
-     mimeq::[
-      pattern=&gt;mimeq,
-      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
-     lineq::[
-      pattern=&gt;lineq,
-      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
-    route=&gt;[mfs:=&gt;/home/killswitch/software/metatron]]@/sys/space/fs/mfs
+==&gt;fsspace::[pattern=&gt;mfs:#,q=&gt;[mimeq::[pattern=&gt;mimeq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}],lineq::[pattern=&gt;lineq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}]],route=&gt;[mfs:=&gt;/home/killswitch/software/metatron]]@/sys/space/fs/mfs
 </code></pre>
 <ul>
 <li><strong><code>pattern</code></strong> — the URI pattern this space handles (<code>mfs:#</code> matches <code>&lt;mfs:file.txt&gt;</code>, <code>&lt;mfs:sub/dir/file.md&gt;</code>,
@@ -686,26 +594,26 @@ mtron&gt; *&lt;mfs:docs/website/index.html?mimeq=text/html&gt;
    ...
 mtron&gt; [-- structural parse via application/x-mtron --]
 mtron&gt; *&lt;mfs:docs/website/index.html?mimeq=application/x-mtron&gt;
-==&gt;[html=&gt;[
-    head=&gt;[
-     title=&gt;'metatron',
-     out=&gt;[[tag=&gt;meta,charset=&gt;'utf-8'],[
-      tag=&gt;meta,
-      name=&gt;'viewport',
-      content=&gt;'width=device-width, initial-scale=1.0'],[
-      tag=&gt;meta,
-      name=&gt;'keywords',
-      content=&gt;'metatron programming data graph database llm'],[
-      tag=&gt;meta,
-      name=&gt;'description',
-      content=&gt;'Next Generation Data Technologies'],[
-      tag=&gt;meta,
-      name=&gt;'theme-color',
-      content=&gt;'#ffffff'],[
-      tag=&gt;link,
-      rel=&gt;'apple-touch-icon',
-      sizes=&gt;'114x114',
-      href=&gt;&lt;images/apple-touch-icon.png&gt;],[
+==&gt;[html=&gt;[head=&gt;[title=&gt;'metatron',out=&gt;[[tag=&gt;meta,charset=&gt;'utf-8'],[tag=&gt;meta,name=&gt;'viewport',content=&gt;'width=device-width, initial-scale=1.0'],[tag=&gt;meta,name=&gt;'keywords',content=&gt;'metatron programming data graph database llm'],[tag=&gt;meta,name=&gt;'description',content=&gt;'Next Generation Data Technologies'],[tag=&gt;meta,name=&gt;'theme-color',content=&gt;'#ffffff'],[tag=&gt;link,rel=&gt;'apple-touch-icon',sizes=&gt;'114x114',href=&gt;&lt;images/apple-touch-icon.png&gt;],[tag=&gt;link,rel=&gt;'icon',type=&gt;'image/png',sizes=&gt;'32x32',href=&gt;&lt;images/favicon-32x32.png&gt;],[tag=&gt;link,rel=&gt;'icon',type=&gt;'image/png',sizes=&gt;'16x16',href=&gt;&lt;images/favicon-16x16.png&gt;],[tag=&gt;link,rel=&gt;'mask-icon',href=&gt;&lt;images/safari-pinned-tab.svg&gt;,color=&gt;'#5bbad5'],[tag=&gt;link,rel=&gt;'preconnect',href=&gt;&lt;https://fonts.googleapis.com&gt;],[tag=&gt;link,rel=&gt;'preconnect',href=&gt;&lt;https://fonts.gstatic.com&gt;,crossorigin=&gt;''],[tag=&gt;link,href=&gt;&lt;https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400;JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400;Oswald:wght@400;500;600;700&amp;display=swap&gt;,rel=&gt;'stylesheet'],[tag=&gt;link,href=&gt;&lt;https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css&gt;,rel=&gt;'stylesheet'],[tag=&gt;link,href=&gt;&lt;https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css&gt;,rel=&gt;'stylesheet'],[tag=&gt;link,href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,rel=&gt;'stylesheet'],[tag=&gt;link,href=&gt;&lt;css/bootstrap.min.css&gt;,rel=&gt;'stylesheet'],[tag=&gt;link,href=&gt;&lt;https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css&gt;,rel=&gt;'stylesheet'],[tag=&gt;script,src=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,src=&gt;&lt;highlight/highlight.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,src=&gt;&lt;https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,src=&gt;&lt;highlight/languages/mtron.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,src=&gt;&lt;highlight/languages/java.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,src=&gt;&lt;highlight/languages/bash.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,src=&gt;&lt;highlight/languages/sql.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,src=&gt;&lt;highlight/languages/json.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,src=&gt;&lt;https://code.jquery.com/jquery-3.4.1.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,async=&gt;'',src=&gt;&lt;https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js&gt;,type=&gt;'text/javascript'],[tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet'],[tag=&gt;style,data=&gt;&quot;&quot;&quot;
+           .hidden {
+               display: none;
+           }
+   
+           .switch {
+               border-width: 1px 1px 0 1px;
+               border-style: solid;
+               border-color: #7a2518;
+               display: inline-block;
+               border-radius: 4px 4px 0 0;
+           }
+   
+           .switch--item {
+               padding: 4px 14px;
+               font-size: 0.85rem;
+               background-color: #ffffff;
+               color: #7a2518;
+               display: inline-block;
+               cursor: pointer;
    ...
 </code></pre>
 <p><code>mimeq</code> is implemented in <code>QCollection.mimeQ()</code> as a space-level <code>postRead</code> query processor. It:</p>
@@ -732,25 +640,8 @@ mtron&gt; *&lt;mfs:README.md&gt;
 <h4>reading with structural parse</h4>
 <pre><code class="language-mtron">mtron&gt; [-- Read markdown as a rec::T structure --]
 mtron&gt; *&lt;mfs:README.md?mimeq=application/x-mtron&gt;
-==&gt;[
-    type=&gt;doc,
-    out=&gt;[
-     [
-      type=&gt;head,
-      level=&gt;1,
-      text=&gt;'metatron',
-      out=&gt;[[type=&gt;text,content=&gt;'metatron']]],
-     [
-      type=&gt;p,
-      text=&gt;'&lt;a href=&quot;http://metatron.phaseshift.studio&quot;&gt;&lt;img src=&quot;http:...',
-      out=&gt;[
-       [
-        type=&gt;html_inline,
-        html=&gt;'&lt;a href=&quot;http://metatron.phaseshift.studio&quot;&gt;'],
-       [
-        type=&gt;html_inline,
-        html=&gt;'&lt;img src=&quot;http://metatron.phaseshift.studio/images/metatron...'],
-       [type=&gt;html_inline,html=&gt;'&lt;/a&gt;']]]]]
+==&gt;[type=&gt;doc,out=&gt;[[type=&gt;head,level=&gt;1,text=&gt;'metatron',out=&gt;[[type=&gt;text,content=&gt;'metatron']]],[type=&gt;p,text=&gt;&quot;&quot;&quot;&lt;a href=&quot;http://metatron.phaseshift.studio&quot;&gt;&lt;img src=&quot;http://metatron.phaseshift.studio/images/metatron-character.png&quot; width=&quot;200px&quot;&gt;&lt;/a&gt;
+   &quot;&quot;&quot;,out=&gt;[[type=&gt;html_inline,html=&gt;'&lt;a href=&quot;http://metatron.phaseshift.studio&quot;&gt;'],[type=&gt;html_inline,html=&gt;'&lt;img src=&quot;http://metatron.phaseshift.studio/images/metatron-character.png&quot; width=&quot;200px&quot;&gt;'],[type=&gt;html_inline,html=&gt;'&lt;/a&gt;']]]]]
 mtron&gt; [-- Read JSON, then walk into rec fields --]
 mtron&gt; *&lt;mfs:config.json?mimeq=application/x-mtron&gt;/database/host
 ==&gt;/database/host
@@ -760,7 +651,7 @@ mtron&gt; *&lt;mfs:config.json?mimeq=application/x-mtron&gt;/database/host
 are treated as <code>inst::T</code> and can be invoked directly:</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:script.sh&gt;        [-- bytes::T if binary, str::T if text                    --]
 mtron&gt; &lt;mfs:script.sh&gt;()       [-- execute (shell scripts, via application/x-mtron exec) --]
-==&gt;fail::[unable to locate inst-f of mfs:script.sh()@&lt;0&gt;]@/sys/fail/1858
+==&gt;fail::[unable to locate inst-f of mfs:script.sh()@&lt;0&gt;]@/sys/fail/1902
 </code></pre>
 <h3>pattern-based access</h3>
 <p>fsSpace supports wildcard patterns in reads:</p>
@@ -869,41 +760,31 @@ mtron&gt; *&lt;mfs:+/&gt;
    ...
 mtron&gt; [-- Read all .txt files --]
 mtron&gt; *&lt;mfs:+/+&gt;.where([name =&gt; -&lt;'.'&gt;&gt;1.is('txt')])
-==&gt;fail::[inst apply failure: java.io.UncheckedIOException: java.nio.file.AccessDeniedException: /backends (at /m/inst/from@0) [UnixException&lt;90&gt;]][java.nio.file.AccessDeniedException: /backends [UnixException&lt;90&gt;]]@/sys/fail/2320
+==&gt;fail::[inst apply failure: java.io.UncheckedIOException: java.nio.file.AccessDeniedException: /backends (at /m/inst/from@0) [UnixException&lt;90&gt;]][java.nio.file.AccessDeniedException: /backends [UnixException&lt;90&gt;]]@/sys/fail/2378
 </code></pre>
 <h3>Line-Level Editing with <code>lineq</code></h3>
 <p>The <code>lineq</code> query processor enables reading and editing specific line ranges within text files, useful for targeted
 edits without loading the entire file:</p>
 <pre><code class="language-mtron">mtron&gt; [-- Read lines 10-20 of a file --]
 mtron&gt; *&lt;mfs:src/main.java?lineq=10..20&gt;
-==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;10..20&quot; (at /m/inst/from@0) [NumberFormatException&lt;67&gt;]][For input string: &quot;10..20&quot; [NumberFormatException&lt;67&gt;]]@/sys/fail/2324
+==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;10..20&quot; (at /m/inst/from@0) [NumberFormatException&lt;67&gt;]][For input string: &quot;10..20&quot; [NumberFormatException&lt;67&gt;]]@/sys/fail/2382
 mtron&gt; [-- Replace lines 5-10 with new content --]
 mtron&gt; &lt;mfs:src/main.java?lineq=5..10&gt; -&gt; &quot;&quot;&quot;
          public void newMethod() {
            // new implementation
          }
        &quot;&quot;&quot;
-==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;5..10&quot; (at /m/inst/ref@1) [NumberFormatException&lt;67&gt;]][For input string: &quot;5..10&quot; [NumberFormatException&lt;67&gt;]]@/sys/fail/2328
+==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;5..10&quot; (at /m/inst/ref@1) [NumberFormatException&lt;67&gt;]][For input string: &quot;5..10&quot; [NumberFormatException&lt;67&gt;]]@/sys/fail/2386
 </code></pre>
 <h4>boot configuration example</h4>
 <pre><code class="language-mtron">mtron&gt; fsspace::[
          pattern =&gt; &lt;local:#&gt;,
          q       =&gt; [mimeq::[=&gt;], lineq::[=&gt;]],
          route   =&gt; [local: =&gt; ~/src]]@/sys/space/fs/src
-==&gt;fsspace::[
-    pattern=&gt;local:#,
-    q=&gt;[
-     mimeq::[
-      pattern=&gt;mimeq,
-      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
-     lineq::[
-      pattern=&gt;lineq,
-      post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
-    route=&gt;[local:=&gt;/m/inst/thread(/src)]]@/sys/space/fs/src
+==&gt;fsspace::[pattern=&gt;local:#,q=&gt;[mimeq::[pattern=&gt;mimeq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}],lineq::[pattern=&gt;lineq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}]],route=&gt;[local:=&gt;/m/inst/thread(/src)]]@/sys/space/fs/src
 mtron&gt; [-- Then use in expressions: --]
 mtron&gt; *&lt;local:Main.java?lineq=1..50&gt;
-==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;1..50&quot; (at /m/inst/from@0) [NumberFormatException&lt;67&gt;]][For input string: &quot;1..50&quot; [NumberFormatException&lt;67&gt;]]@/sys/fail/2332
+==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;1..50&quot; (at /m/inst/from@0) [NumberFormatException&lt;67&gt;]][For input string: &quot;1..50&quot; [NumberFormatException&lt;67&gt;]]@/sys/fail/2390
 mtron&gt; &lt;local:index.html?mimeq=application/x-mtron&gt;/html/head/title
 ==&gt;ERROR: monad obj coefficient is greater than inst dom coefficient:
 	&lt;local:index.html?mimeq=application/x-mtron&gt; [{1} X=&gt; {0}] start?rng=A{**}&amp;dom=noobj{0}(/html/head/title){&lt;j&gt;}@&lt;1&gt;
@@ -914,12 +795,12 @@ mtron&gt; &lt;local:index.html?mimeq=application/x-mtron&gt;/html/head/title
 mtron&gt; &lt;local:page.html&gt; -&gt; *&lt;local:page.html?mimeq=application/x-mtron&gt;
          .at(html/head/title -&gt; 'New Title')
          .as(html::T)
-==&gt;fail::[inst apply failure: 'New Title' [str::T] unable to convert uri::T (at /m/inst/at@2)]@/sys/fail/2354
+==&gt;fail::[inst apply failure: 'New Title' [str::T] unable to convert uri::T (at /m/inst/at@2)]@/sys/fail/2428
 mtron&gt; [-- Read JSON config, modify a value, write back --]
 mtron&gt; &lt;local:config.json&gt; -&gt; *&lt;local:config.json?mimeq=application/x-mtron&gt;
          .at(database/host -&gt; 'new-host')
          .as(json::T)
-==&gt;fail::[inst apply failure: 'new-host' [str::T] unable to convert uri::T (at /m/inst/at@2)]@/sys/fail/2374
+==&gt;fail::[inst apply failure: 'new-host' [str::T] unable to convert uri::T (at /m/inst/at@2)]@/sys/fail/2464
 </code></pre>
 <p>The <code>.as(html::T)</code> / <code>.as(json::T)</code> serialization passes through <code>ObjHTMLSerializer.write()</code> /
 <code>ObjJSONSerializer.write()</code> which handle both <code>str::T</code> (pass-through) and <code>rec::T</code> (structural render).</p>

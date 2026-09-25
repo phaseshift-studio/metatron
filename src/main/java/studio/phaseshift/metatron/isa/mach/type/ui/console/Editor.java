@@ -78,7 +78,7 @@ public class Editor {
     public static File createObjFile(final Obj obj) {
         try {
             final File objFile = File.createTempFile("console-", ".mtron");
-            final ObjmtronSerializer serializer = new ObjmtronSerializer();
+            final ObjmtronSerializer serializer = ObjmtronSerializer.single();
             Files.writeString(objFile.toPath(), Highlighter.unformat(serializer.write(obj)));
             return objFile;
         } catch (final Exception e) {

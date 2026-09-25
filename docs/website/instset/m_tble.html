@@ -174,6 +174,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m.html"><img
                             src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dckr.html"><img
+                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dcmnt.html"><img
                             src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
                             alt="dcmnt"/>/m/dcmnt</a></li>
@@ -198,6 +201,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math.html"><img
                             src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math_cat.html"><img
+                            src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_sys.html"><img
                             src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                             alt="sys"/>/m/sys</a></li>
@@ -268,7 +274,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -401,37 +407,7 @@
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[
- pattern=&gt;/m/tble/#,
- q=&gt;[docq::[
- pattern=&gt;docq,
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;!*/m],
- const=&gt;[[llm_chat_schema=&gt;inst?#{*}&lt;=#{*}()]@helper],
- type=&gt;[space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=#{?}(rec::T)]@tblespace],
- inst=&gt;[sql?rec{*}&lt;=tblespace(str::T)],
- rewrite=&gt;[
-  /m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_offset?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_offset_limit?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where_order?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where_order_offset?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where_limit?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where_offset?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_where_offset_limit?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_select?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_order?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/sql_distinct?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/kv_count?code{?}&lt;=code(),
-  /m/tble/inst/rewrite/kv_limit?code{?}&lt;=code()]]@/m/tble</code></pre>
+                        <pre><code>instset::[pattern=&gt;/m/tble/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],const=&gt;[[llm_chat_schema=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]@helper],type=&gt;[space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?rng=tblespace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@tblespace],inst=&gt;[sql?rng=rec{*}&amp;dom=tblespace(str::T){&lt;j&gt;}],rewrite=&gt;[/m/tble/inst/rewrite/sql_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_sum?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_mean?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_offset?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_offset_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_order?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_order_offset?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_offset?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_offset_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_select?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_order?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_distinct?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/kv_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/kv_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;}]]@/m/tble</code></pre>
                     </div>
                 </div>
             </div>
@@ -528,7 +504,7 @@
         <span class="code text-secondary fw-bold">helper</span>
         <small class="text-muted code">/m/tble/helper</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">[llm_chat_schema=&gt;inst?#{*}&lt;=#{*}()]@helper</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">[llm_chat_schema=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]@helper</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a collection of tble related utilities</p>
 </div>
@@ -540,18 +516,8 @@
         <a href="m_tble_space_tblespace.html" class="code text-primary fw-bold text-decoration-none">tblespace</a>
         <small class="text-muted code">/m/tble/space/tblespace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=#{?}(rec::T)]@tblespace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- pattern=&gt;uri::T,
- {?}q=&gt;[rec{?}::T[?[
-  pattern=&gt;uri::T,
-  {?}pre_write=&gt;inst::T,
-  {?}post_write=&gt;inst::T,
-  {?}qless_write=&gt;inst::T,
-  {?}pre_read=&gt;inst::T,
-  {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T)]@qproc],
- {?}route=&gt;[uri{?}::T=&gt;uri::T],
- {?}schema=&gt;instset::T]</code></div></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?rng=tblespace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@tblespace</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,{?}pre_write=&gt;inst::T,{?}post_write=&gt;inst::T,{?}qless_write=&gt;inst::T,{?}pre_read=&gt;inst::T,{?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@qproc],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a metatron realization of a relational database</p>
 </div><div class="card-body border-top py-2">

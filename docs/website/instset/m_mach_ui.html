@@ -174,6 +174,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m.html"><img
                             src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dckr.html"><img
+                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dcmnt.html"><img
                             src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
                             alt="dcmnt"/>/m/dcmnt</a></li>
@@ -198,6 +201,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math.html"><img
                             src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math_cat.html"><img
+                            src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_sys.html"><img
                             src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                             alt="sys"/>/m/sys</a></li>
@@ -268,7 +274,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -401,47 +407,7 @@
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[
- pattern=&gt;/m/mach/ui/#,
- q=&gt;[docq::[
- pattern=&gt;docq,
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;!*/m/mach],
- inst=&gt;[
-  as?str&lt;=widget(str::T),
-  display?noobj{0}&lt;=widget(),
-  nano?#{?}&lt;=#{?}(),
-  less?noobj{0}&lt;=str(isa(int::T).else(10))],
- type=&gt;[
-  rec::T[][ctor?console&lt;=#{?}(#{*}::T)]@console,
-  uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,
-  rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@style,
-  rec::T[?[{?}style=&gt;rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@style]]@widget,
-  widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?accordion_widget&lt;=#{?}(#{*}::T)]@accordion_widget,
-  widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst::T]][ctor?progress_table_widget&lt;=#{?}(#{*}::T)]@progress_table_widget,
-  widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst{*}::T,{?}metadata=&gt;lst{*}::T]][ctor?table_widget&lt;=#{?}(#{*}::T)]@table_widget,
-  widget::T[?[
-  root=&gt;uri::T,
-  max=&gt;int::T,
-  {?}code=&gt;&lt;#&gt;::T,
-  {?}flatten=&gt;bool::T,
-  {?}xref=&gt;rec::T,
-  {?}expand=&gt;uri{*}::T]][ctor?tree_widget&lt;=#{?}(#{*}::T)]@tree_widget,
-  widget::T[?[=&gt;]][ctor?selector_widget&lt;=#{?}(#{*}::T)]@selector_widget,
-  widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?panel_widget&lt;=#{?}(#{*}::T)]@panel_widget,
-  widget::T[?[{?}body=&gt;str::T,{?}key=&gt;uri::T,{?}on_key=&gt;&lt;#&gt;::T]][ctor?label_line_widget&lt;=#{?}(#{*}::T)]@label_line_widget,
-  widget::T[?[{?}height=&gt;int::T,{?}lines=&gt;lst::T]][ctor?menu_bar_widget&lt;=#{?}(#{*}::T)]@menu_bar_widget,
-  widget::T[?[
-  root=&gt;uri::T,
-  max=&gt;int::T,
-  {?}on_select=&gt;&lt;#&gt;::T,
-  {?}label=&gt;&lt;#&gt;::T]][ctor?tree_select_widget&lt;=#{?}(#{*}::T)]@tree_select_widget,
-  widget::T[?[{?}obj=&gt;lst::T]][ctor?swipe_panel_widget&lt;=#{?}(#{*}::T)]@swipe_panel_widget,
-  widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?modal_widget&lt;=#{?}(#{*}::T)]@modal_widget,
-  widget::T[?[{?}data=&gt;rec::T,{?}context=&gt;int::T,{?}total=&gt;int::T]][ctor?stack_bar_widget&lt;=#{?}(#{*}::T)]@stack_bar_widget]]@/m/mach/ui</code></pre>
+                        <pre><code>instset::[pattern=&gt;/m/mach/ui/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m/mach],inst=&gt;[as?rng=str&amp;dom=widget(str::T){&lt;j&gt;},display?rng=noobj{0}&amp;dom=widget(){&lt;j&gt;},nano?rng=#{?}&amp;dom=#{?}(){&lt;j&gt;},less?rng=noobj{0}&amp;dom=str(isa(int::T).else(10)){&lt;j&gt;}],type=&gt;[rec::T[][ctor?rng=console&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@console,uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style,rec::T[?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]]@widget,widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?rng=accordion_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@accordion_widget,widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst::T]][ctor?rng=progress_table_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@progress_table_widget,widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst{*}::T,{?}metadata=&gt;lst{*}::T]][ctor?rng=table_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@table_widget,widget::T[?[root=&gt;uri::T,max=&gt;int::T,{?}code=&gt;&lt;#&gt;::T,{?}flatten=&gt;bool::T,{?}xref=&gt;rec::T,{?}expand=&gt;uri{*}::T]][ctor?rng=tree_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@tree_widget,widget::T[?[=&gt;]][ctor?rng=selector_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@selector_widget,widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?rng=panel_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@panel_widget,widget::T[?[{?}grid=&gt;lst::T]][ctor?rng=grid_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@grid_widget,widget::T[?[{?}body=&gt;str::T,{?}key=&gt;uri::T,{?}on_key=&gt;&lt;#&gt;::T]][ctor?rng=label_line_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@label_line_widget,widget::T[?[{?}height=&gt;int::T,{?}lines=&gt;lst::T]][ctor?rng=menu_bar_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@menu_bar_widget,widget::T[?[root=&gt;uri::T,max=&gt;int::T,{?}on_select=&gt;&lt;#&gt;::T,{?}label=&gt;&lt;#&gt;::T]][ctor?rng=tree_select_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@tree_select_widget,widget::T[?[{?}obj=&gt;lst::T]][ctor?rng=swipe_panel_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@swipe_panel_widget,widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?rng=modal_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@modal_widget,widget::T[?[{?}data=&gt;rec::T,{?}context=&gt;int::T,{?}total=&gt;int::T]][ctor?rng=stack_bar_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@stack_bar_widget]]@/m/mach/ui</code></pre>
                     </div>
                 </div>
             </div>
@@ -449,7 +415,7 @@
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">16</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">17</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -470,6 +436,9 @@
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">widget</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__ui__widget__accordion_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">accordion_widget</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__ui__widget__grid_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">grid_widget</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__mach__ui__widget__label_line_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">label_line_widget</span>
@@ -520,7 +489,7 @@
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">16</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">17</span></h3>
     <div class="card mb-3" id="__m__mach__ui__widget__accordion_widget">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -529,8 +498,8 @@
         </span>
         <small class="text-muted code">/m/mach/ui/widget/accordion_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?accordion_widget&lt;=#{?}(#{*}::T)]@accordion_widget</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@style]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?rng=accordion_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@accordion_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] an expandable/collapsible accordion widget</p>
 </div><div class="card-body py-2">
@@ -561,10 +530,28 @@
         </span>
         <small class="text-muted code">/m/mach/ui/console</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[][ctor?console&lt;=#{?}(#{*}::T)]@console</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[][ctor?rng=console&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@console</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a terminal user interface</p>
+</div>
+</div><div class="card mb-3" id="__m__mach__ui__widget__grid_widget">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">grid_widget::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__ui__widget" class="instset-doc-small-code text-info code">/m/mach/ui/widget::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/widget/grid_widget</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}grid=&gt;lst::T]][ctor?rng=grid_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@grid_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] a grid of rows x cols of embedded, runnable widgets</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a grid of widgets" class="text-success">a grid of widgets</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#grid" class="text-light">grid</a> <span class="text-light">=&gt;</span> <a href="#'a lst of rows, each row a lst of cell widgets'" class="text-info">&#39;a lst of rows, each row a lst of cell widgets&#39;</a>
+</pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__label_line_widget">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -574,8 +561,8 @@
         </span>
         <small class="text-muted code">/m/mach/ui/widget/label_line_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}body=&gt;str::T,{?}key=&gt;uri::T,{?}on_key=&gt;&lt;#&gt;::T]][ctor?label_line_widget&lt;=#{?}(#{*}::T)]@label_line_widget</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@style]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}body=&gt;str::T,{?}key=&gt;uri::T,{?}on_key=&gt;&lt;#&gt;::T]][ctor?rng=label_line_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@label_line_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a single-line text label widget</p>
 </div><div class="card-body py-2">
@@ -592,8 +579,8 @@
         </span>
         <small class="text-muted code">/m/mach/ui/widget/menu_bar_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}height=&gt;int::T,{?}lines=&gt;lst::T]][ctor?menu_bar_widget&lt;=#{?}(#{*}::T)]@menu_bar_widget</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@style]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}height=&gt;int::T,{?}lines=&gt;lst::T]][ctor?rng=menu_bar_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@menu_bar_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a menu bar pinned to the top of the terminal</p>
 </div><div class="card-body py-2">
@@ -611,8 +598,8 @@
         </span>
         <small class="text-muted code">/m/mach/ui/widget/modal_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?modal_widget&lt;=#{?}(#{*}::T)]@modal_widget</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@style]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?rng=modal_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@modal_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a modal popup panel: space/enter/ctrl-d dismisses</p>
 </div><div class="card-body py-2">
@@ -630,8 +617,8 @@
         </span>
         <small class="text-muted code">/m/mach/ui/widget/panel_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?panel_widget&lt;=#{?}(#{*}::T)]@panel_widget</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@style]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?rng=panel_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@panel_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a simple bordered UI panel widget</p>
 </div><div class="card-body py-2">
@@ -649,8 +636,8 @@
         </span>
         <small class="text-muted code">/m/mach/ui/widget/progress_table_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst::T]][ctor?progress_table_widget&lt;=#{?}(#{*}::T)]@progress_table_widget</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@style]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst::T]][ctor?rng=progress_table_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@progress_table_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a table of progress bars</p>
 </div><div class="card-body border-top py-2">
@@ -665,8 +652,8 @@
         </span>
         <small class="text-muted code">/m/mach/ui/widget/selector_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[=&gt;]][ctor?selector_widget&lt;=#{?}(#{*}::T)]@selector_widget</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@style]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[=&gt;]][ctor?rng=selector_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@selector_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] an interactive item selector widget</p>
 </div><div class="card-body py-2">
@@ -680,16 +667,16 @@
         </span>
         <small class="text-muted code">/m/mach/ui/widget/stack_bar_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}data=&gt;rec::T,{?}context=&gt;int::T,{?}total=&gt;int::T]][ctor?stack_bar_widget&lt;=#{?}(#{*}::T)]@stack_bar_widget</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@style]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}data=&gt;rec::T,{?}context=&gt;int::T,{?}total=&gt;int::T]][ctor?rng=stack_bar_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@stack_bar_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a general single-line stacked bar; only the data is specified — the rec is open world: pre=/post= framing content (a str, or a dereference such as post=&gt;!*/usr/dr/context_window), style.width the width of the bar, and style.section the per-section styles: [name =&gt; style::T] (body =&gt; the label painted, else the key name; foreground/background the fragments around it; width its own width) — the reserved key unused styles the unused / what-is-left section</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a stack bar widget" class="text-success">a stack bar widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#'the denominator: the bar spans it, the rest is the unused tail, and total__context is the percent; absent = a composition (the data fills the bar, no percent, no tail)'" class="text-info">context is the percent; absent = a composition (the data fills the bar, no percent, no tail)&#39;</a>
-  <a href="#{?}data" class="text-light">{?}data</a> <span class="text-light">=&gt;</span> <a href="#"the sections: [key => int], each labelled by its key and drawn smallest first, largest last; the reserved key <> (the empty uri) is the what-is-left section — drawn last, wearing the unused section's style (dark by default)"" class="text-info">&quot;the sections: [key =&gt; int], each labelled by its key and drawn smallest first, largest last; the reserved key &lt;&gt; (the empty uri) is the what-is-left section — drawn last, wearing the unused section&#39;s style (dark by default)&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}data" class="text-light">{?}data</a> <span class="text-light">=&gt;</span> <a href="#"the sections: [key => int], each labelled by its key and drawn smallest first, largest last; the reserved key <> (the empty uri) is the what-is-left section — drawn last, wearing the unused section's style (dark by default)"" class="text-info">&quot;the sections: [key =&gt; int], each labelled by its key and drawn smallest first, largest last; the reserved key &lt;&gt; (the empty uri) is the what-is-left section — drawn last, wearing the unused section&#39;s style (dark by default)&quot;</a>
   <a href="#{?}total" class="text-light">{?}total</a> <span class="text-light">=&gt;</span> <a href="#'the numerator of the percent (default: the sum of the data)'" class="text-info">&#39;the numerator of the percent (default: the sum of the data)&#39;</a>
+  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#'the denominator: the bar spans it, the rest is the unused tail, and total__context is the percent; absent = a composition (the data fills the bar, no percent, no tail)'" class="text-info">context is the percent; absent = a composition (the data fills the bar, no percent, no tail)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__style">
@@ -700,7 +687,7 @@
         </span>
         <small class="text-muted code">/m/mach/ui/style</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@style</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a widget style specification</p>
@@ -736,8 +723,8 @@
         </span>
         <small class="text-muted code">/m/mach/ui/widget/swipe_panel_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}obj=&gt;lst::T]][ctor?swipe_panel_widget&lt;=#{?}(#{*}::T)]@swipe_panel_widget</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@style]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}obj=&gt;lst::T]][ctor?rng=swipe_panel_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@swipe_panel_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a left-right swipe panel: arrow keys navigate, pgup/pgdn jump ±5, ctrl-d quits; displays each obj in a PanelWidget with docq+Highlighter formatting</p>
 </div><div class="card-body py-2">
@@ -754,8 +741,8 @@
         </span>
         <small class="text-muted code">/m/mach/ui/widget/table_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst{*}::T,{?}metadata=&gt;lst{*}::T]][ctor?table_widget&lt;=#{?}(#{*}::T)]@table_widget</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@style]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst{*}::T,{?}metadata=&gt;lst{*}::T]][ctor?rng=table_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@table_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a tabular data widget</p>
 </div><div class="card-body py-2">
@@ -774,21 +761,17 @@
         </span>
         <small class="text-muted code">/m/mach/ui/widget/tree_select_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[
-  root=&gt;uri::T,
-  max=&gt;int::T,
-  {?}on_select=&gt;&lt;#&gt;::T,
-  {?}label=&gt;&lt;#&gt;::T]][ctor?tree_select_widget&lt;=#{?}(#{*}::T)]@tree_select_widget</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@style]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[root=&gt;uri::T,max=&gt;int::T,{?}on_select=&gt;&lt;#&gt;::T,{?}label=&gt;&lt;#&gt;::T]][ctor?rng=tree_select_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@tree_select_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] an interactive tree browser: arrow keys navigate, Enter fires on_select on selected node, right/left expand/contract, label suffixes each node</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a tree select tool" class="text-success">a tree select tool</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
-  <a href="#{?}label" class="text-light">{?}label</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on each tree node's obj to produce a suffix label (default: identity)"" class="text-info">&quot;instruction called on each tree node&#39;s obj to produce a suffix label (default: identity)&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}label" class="text-light">{?}label</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on each tree node's obj to produce a suffix label (default: identity)"" class="text-info">&quot;instruction called on each tree node&#39;s obj to produce a suffix label (default: identity)&quot;</a>
   <a href="#{?}on_select" class="text-light">{?}on_select</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on Enter with the selected node's rel::T (default: identity)"" class="text-info">&quot;instruction called on Enter with the selected node&#39;s rel::T (default: identity)&quot;</a>
   <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
+  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__tree_widget">
@@ -799,25 +782,19 @@
         </span>
         <small class="text-muted code">/m/mach/ui/widget/tree_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[
-  root=&gt;uri::T,
-  max=&gt;int::T,
-  {?}code=&gt;&lt;#&gt;::T,
-  {?}flatten=&gt;bool::T,
-  {?}xref=&gt;rec::T,
-  {?}expand=&gt;uri{*}::T]][ctor?tree_widget&lt;=#{?}(#{*}::T)]@tree_widget</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@style]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[root=&gt;uri::T,max=&gt;int::T,{?}code=&gt;&lt;#&gt;::T,{?}flatten=&gt;bool::T,{?}xref=&gt;rec::T,{?}expand=&gt;uri{*}::T]][ctor?rng=tree_widget&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@tree_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] the root uri space is traversed to specified depth generating a tree data structure</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a tree widget" class="text-success">a tree widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}xref" class="text-light">{?}xref</a> <span class="text-light">=&gt;</span> <a href="#'xref=>[max=>N, code=><call>] cross-reference decoration'" class="text-info">&#39;xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration&#39;</a>
-  <a href="#{?}expand" class="text-light">{?}expand</a> <span class="text-light">=&gt;</span> <a href="#'branch uris whose children are read regardless of max'" class="text-info">&#39;branch uris whose children are read regardless of max&#39;</a>
-  <a href="#{?}code" class="text-light">{?}code</a> <span class="text-light">=&gt;</span> <a href="#'transform obj prior to insertion into tree (default _)'" class="text-info">&#39;transform obj prior to insertion into tree (default _)&#39;</a>
-  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
   <a href="#{?}flatten" class="text-light">{?}flatten</a> <span class="text-light">=&gt;</span> <a href="#'fold single-folder chains into one path row (default false)'" class="text-info">&#39;fold single-folder chains into one path row (default false)&#39;</a>
   <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
+  <a href="#{?}xref" class="text-light">{?}xref</a> <span class="text-light">=&gt;</span> <a href="#'xref=>[max=>N, code=><call>] cross-reference decoration'" class="text-info">&#39;xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration&#39;</a>
+  <a href="#{?}expand" class="text-light">{?}expand</a> <span class="text-light">=&gt;</span> <a href="#'branch uris whose children are read regardless of max'" class="text-info">&#39;branch uris whose children are read regardless of max&#39;</a>
+  <a href="#{?}code" class="text-light">{?}code</a> <span class="text-light">=&gt;</span> <a href="#'transform obj prior to insertion into tree (default _)'" class="text-info">&#39;transform obj prior to insertion into tree (default _)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget">
@@ -828,7 +805,7 @@
         </span>
         <small class="text-muted code">/m/mach/ui/widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}style=&gt;rec::T[?[{?}border=&gt;uri::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?style&lt;=#{?}(#{*}::T)]@style]]@widget</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]]@widget</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] the base widget type</p>

@@ -57,7 +57,7 @@ public class ioInstSet extends AbstractInstSet {
         this.jvm().putAll(new LinkedHashMap<>(Map.of(
                 uri(TYPE), lst(OBJ_SERIALIZER_TYPE),
                 uri(CONST), lst(
-                        new ObjmtronSerializer(),
+                        ObjmtronSerializer.single(),
                         new ObjByteBufferSerializer(),
                         new ObjJSONSerializer(),
                         new ObjBSONSerializer(),

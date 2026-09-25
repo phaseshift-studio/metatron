@@ -43,7 +43,7 @@ public class fURIAwareIndexedSchema implements TableSchema {
 
     private static final int MAX_SEGMENTS = 7;
     private static final String TABLE_NAME = "kv_store";
-    private static final ObjmtronSerializer SERIALIZER = ObjmtronSerializer.singleNoClip();
+    private static final ObjmtronSerializer SERIALIZER = ObjmtronSerializer.single();
 
     @Override
     public void initialize(final Connection conn) throws SQLException {

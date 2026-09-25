@@ -531,6 +531,17 @@
             </resource>
             <!-- META-INF/services handled via bin/metatron classpath (src/main/resources) -->
         </resources>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <!-- the scratch fixture's prebuilt classes would land in test-classes, where the test
+                     scanner tries to load them by path and dies (wrong binary name); the fixture is
+                     source-addressed (src/test/resources/scratch), so keep its build out of the test classpath -->
+                <excludes>
+                    <exclude>scratch/target/**</exclude>
+                </excludes>
+            </testResource>
+        </testResources>
         <!--
         ####################################################################################################
         ####################################################################################################
@@ -684,8 +695,10 @@
                                 <!-- generate instset docs -->
                                 <argument>/m</argument>
                                 <argument>/m/sys</argument>
+                                <argument>/m/dckr</argument>
                                 <argument>/m/mach</argument>
                                 <argument>/m/math</argument>
+                                <argument>/m/math/cat</argument>
                                 <argument>/m/mach/ui</argument>
                                 <argument>/m/web</argument>
                                 <argument>/m/iot</argument>

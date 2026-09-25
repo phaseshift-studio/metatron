@@ -212,7 +212,7 @@ public class uiInstSetTest extends AbstractInstSetTest {
         final ModalTool modal = (ModalTool) ObjmtronSerializer.parse(
                 "modal_widget::[title => 'agent response',\n" +
                         "        body  => 'x',\n" +
-                        "        style => style::[border    =>continuous,\n" +
+                        "        style => style::[border    =>'continuous',\n" +
                         "                         background=>\"{{[k]}}\",\n" +
                         "                         foreground=>\"{{b}}\",\n" +
                         "                         zIndex    => 100,\n" +
@@ -244,8 +244,8 @@ public class uiInstSetTest extends AbstractInstSetTest {
     @Test
     public void shouldApplyModalStyleFromMtron() {
         for (final String code : new String[]{
-                "modal_widget::[title=>'x',body=>'y',style=>style::[border=>continuous,anchor=>middle]]",
-                "modal_widget::[title=>'x',body=>'y',style=>[border=>continuous,anchor=>middle]]"
+                "modal_widget::[title=>'x',body=>'y',style=>style::[border=>'continuous',anchor=>middle]]",
+                "modal_widget::[title=>'x',body=>'y',style=>[border=>'continuous',anchor=>middle]]"
         }) {
             final Obj obj = ObjmtronSerializer.parse(code);
             assertTrue(obj instanceof ModalTool,

@@ -199,7 +199,7 @@ public class SummarizeFeature extends AbstractFeature {
                 if (!applied.isNoObj() && !applied.isFail() && agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
                     final Obj briefing = this.buildBriefing(agent, applied.asRec());
                     if (!briefing.isNoObj())
-                        agent.requireService(SystemService.class).addSystemMessage(ObjmtronSerializer.compact().write(briefing));
+                        agent.requireService(SystemService.class).addSystemMessage(ObjmtronSerializer.single().write(briefing));
                 }
             } catch (final Exception e) {
                 LOG.warn("summarize briefing unavailable: %s", e.getMessage());

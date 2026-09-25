@@ -231,18 +231,29 @@ public class SwarmMachine extends VirtualThread implements Machine {
     public SwarmMachine resolve(final Obj lhs) {
         final Obj resolveLhs = lhs.isMonad() ? lhs.asMonad().obj() : lhs;
         final Code resolvedCode = this.code().resolve(resolveLhs);
-        final SwarmMachine mach = this.code(resolvedCode);
+        // boolean-switch: if any inst reads the walked path (?monad_in=state/path), tag the code
+        // with ?path so the monads it mints accrue the path (looked up via the shared code, not
+        // copied into each monad's state).
+        final Code code = this.computesPath(resolvedCode) ? resolvedCode.tid(resolvedCode.tid().addQ(PATH)) : resolvedCode;
+        final SwarmMachine mach = this.code(code);
         for (final Inst inst : mach.code().jvm()) {
             if (inst.isInitial()) {
                 LOG.trace("  {{g}}==>{{/g}} creating {{y}}initial{{/y}} monad at %s", inst);
-                this.running().append(pcmonad(noobj(), inst, lhs.isMonad() ? lhs.asMonad().state() : rec0(), resolvedCode));
+                this.running().append(pcmonad(noobj(), inst, lhs.isMonad() ? lhs.asMonad().state() : rec0(), code));
             } else if (inst.isGather()) {
                 LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", inst);
-                final PCMonad m = pcmonad(objs0(), inst, lhs.isMonad() ? lhs.asMonad().state() : rec0(), resolvedCode);
+                final PCMonad m = pcmonad(objs0(), inst, lhs.isMonad() ? lhs.asMonad().state() : rec0(), code);
                 mach.barriers().<LinkedList<Obj>>jvmAs().add(m);
             }
         }
         return mach;
+    }
+
+    /**
+     * true when any instruction in {@code code} reads the walked path ({@code monad_in=state/path}).
+     */
+    private static boolean computesPath(final Code code) {
+        return code.insts().stream().anyMatch(i -> i.tid().hasQ(MONAD_IN) && "path".equals(f(i.tid().q(MONAD_IN)).name()));
     }
 
     // ======================== Execution ========================

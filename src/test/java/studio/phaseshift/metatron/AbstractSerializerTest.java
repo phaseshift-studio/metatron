@@ -131,7 +131,7 @@ public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
      */
     @SuppressWarnings("unchecked")
     protected <O extends Obj> O eval(final String mtronExpr) {
-        return (O) ObjmtronSerializer.singleNoClip().parse(mtronExpr).apply();
+        return (O) ObjmtronSerializer.single().parse(mtronExpr).apply();
     }
 
     /**

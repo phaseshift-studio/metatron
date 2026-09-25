@@ -656,7 +656,6 @@ public class llmInstSet extends AbstractInstSet {
                                         .vid(LLM_THINK_FEATURE_TID)
                                         .constructor(arg -> createStageLambdas(new ThinkFeature(arg.asRec().jvm(), LLM_THINK_FEATURE_TID, arg.vid())))
                                         .create(),
-                                null, null,
                                 mutableMap(),
                                 "think feature captures thinking text during response generation"),
                         docWrap(Type.Builder.build()
@@ -664,7 +663,6 @@ public class llmInstSet extends AbstractInstSet {
                                         .vid(LLM_MIDCHAT_FEATURE_TID)
                                         .constructor(arg -> createStageLambdas(new MidChatFeature(arg.asRec().jvm(), LLM_MIDCHAT_FEATURE_TID, arg.vid())))
                                         .create(),
-                                null, null,
                                 Map.of(),
                                 "the mid-chat channel: relays what the model says to the user mid-iteration, and carries what the user says back through the tool result of the call it answered"),
                         docWrap(Type.Builder.build()
@@ -672,7 +670,6 @@ public class llmInstSet extends AbstractInstSet {
                                         .vid(LLM_TAGGING_CONCEPT_FEATURE_TID)
                                         .constructor(arg -> createStageLambdas(new TaggingConceptFeature(arg.asRec().jvm(), LLM_TAGGING_CONCEPT_FEATURE_TID, arg.vid())))
                                         .create(),
-                                null, null,
                                 mutableMap(),
                                 "extracts concepts from the agent response and thinking stream by parsing inline <<concept:>> tags"),
                         docWrap(Type.Builder.build()

@@ -174,6 +174,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="instset/m.html"><img
                             src="images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_dckr.html"><img
+                            src="images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_dcmnt.html"><img
                             src="images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
                             alt="dcmnt"/>/m/dcmnt</a></li>
@@ -198,6 +201,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_math.html"><img
                             src="images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_math_cat.html"><img
+                            src="images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_sys.html"><img
                             src="images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                             alt="sys"/>/m/sys</a></li>
@@ -268,7 +274,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -684,11 +690,13 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |&lt;1&gt;?int&lt;=#{?}(){1}@&lt;1&gt;   [-- 1 --]
 ==&gt;1?rng=int&amp;dom=#{?}(){1}@<i class="conum" data-value="1"></i><b>(1)</b>
 mtron&gt; &lt;1&gt;()                     [-- 2 --]
-==&gt;1
 mtron&gt; 10.&lt;1&gt;()                  [-- 3 --]
-==&gt;1
+==&gt;fail::[unable to determine inst function:
+   	10          =&gt; 1?dom=int()@&lt;1&gt;   | [inst]
+   	int::T      =&gt; int::T   |  \_dom
+   	int::T     ==&gt; [,]   |  \_args]@/sys/fail/500
 mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
-==&gt;24</code></pre>
+==&gt;fail::[args do not match inst args: expected /m/lst (got [1?dom=int()])]@/sys/fail/508</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -727,48 +735,34 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;+/#/&gt;
 ==&gt;boot/args/boot=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;
-==&gt;boot/args=&gt;[
-    log=&gt;info,
-    boot=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;,
-    local=&gt;booger]
-==&gt;&lt;1/x/total&gt;=&gt;15.0000
+==&gt;boot/args=&gt;[log=&gt;info,boot=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;,local=&gt;booger]
+==&gt;&lt;1/x/total&gt;=&gt;15.0
 ==&gt;v5/name=&gt;'ripple'
 ==&gt;boot/args/local=&gt;booger
 ==&gt;animal=&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T]]@animal
 ==&gt;v6/age=&gt;35
-==&gt;&lt;1/x&gt;=&gt;[
-    item=&gt;'book',
-    total=&gt;15.0000,
-    seller=&gt;!*g:V/4]@&lt;1/x&gt;
-==&gt;&lt;1&gt;=&gt;plus?rng=int&amp;dom=int(12){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
+==&gt;&lt;1/x&gt;=&gt;[item=&gt;'book',total=&gt;15.0,seller=&gt;!*g:V/4]@&lt;1/x&gt;
+==&gt;&lt;1&gt;=&gt;plus?rng=int&amp;dom=int(fail::[unable to determine inst function:
+   	12          =&gt; 1?dom=int()   | [inst]
+   	int::T      =&gt; int::T   |  \_dom
+   	int::T     ==&gt; [,]   |  \_args]@/sys/fail/506){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;v5/lang=&gt;java
 ==&gt;knows=&gt;edge::T[?[weight=&gt;real::T]]@knows
 ==&gt;person=&gt;vrtx::T[?[name=&gt;str::T,age=&gt;int::T]]@person
-==&gt;animals=&gt;rec::T[?[
-     __mtron_tid=&gt;str::T,
-     name=&gt;str::T,
-     age=&gt;int::T,
-     {?}shelter=&gt;rec::T]]@animals
-==&gt;v1/outE_=&gt;[knows=&gt;{[weight=&gt;0.5000,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5000,inV_=&gt;!*v4,outV_=&gt;!*v1]}]
+==&gt;animals=&gt;rec::T[?[__mtron_tid=&gt;str::T,name=&gt;str::T,age=&gt;int::T,{?}shelter=&gt;rec::T]]@animals
+==&gt;v1/outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}]
 ==&gt;v2/name=&gt;'vadas'
-==&gt;v1/created=&gt;[weight=&gt;0.2000,inV_=&gt;!*v3,outV_=&gt;!*v1]
+==&gt;v1/created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]
 ==&gt;created=&gt;edge::T[?[weight=&gt;real::T]]@created
 ==&gt;v4=&gt;[name=&gt;'lop']
-==&gt;v1=&gt;[
-    name=&gt;'marko',
-    age=&gt;29,
-    outE_=&gt;[knows=&gt;{[weight=&gt;0.5000,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5000,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
-    created=&gt;[weight=&gt;0.2000,inV_=&gt;!*v3,outV_=&gt;!*v1]]
+==&gt;v1=&gt;[name=&gt;'marko',age=&gt;29,outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]
 ==&gt;v6/out_=&gt;[created=&gt;!*v4]
 ==&gt;v1/name=&gt;'marko'
 ==&gt;chicken=&gt;animal::T@chicken
 ==&gt;boot/file=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;@boot/file
 ==&gt;equipment=&gt;rec{*}::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment
 ==&gt;&lt;1/x/item&gt;=&gt;'book'
-==&gt;v6=&gt;[
-    name=&gt;'peter',
-    age=&gt;35,
-    out_=&gt;[created=&gt;!*v4]]
+==&gt;v6=&gt;[name=&gt;'peter',age=&gt;35,out_=&gt;[created=&gt;!*v4]]
 ==&gt;v2=&gt;[name=&gt;'vadas']
 ==&gt;v4/name=&gt;'lop'
 ==&gt;v1/age=&gt;29
@@ -1159,7 +1153,7 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)     ​1​</code></pre>
 mtron&gt; 10.is_divisible(2)
 ==&gt;true
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[inst apply failure: 'abc' [value] unable to convert str::T (at /m/inst/mod@1)]@/sys/fail/680</code></pre>
+==&gt;fail::[inst apply failure: 'abc' [value] unable to convert str::T (at /m/inst/mod@1)]@/sys/fail/736</code></pre>
 </div>
 </div>
 </div>
@@ -1214,7 +1208,7 @@ This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> p
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​1​
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]]@/sys/fail/684
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]]@/sys/fail/740
 mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​2​
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
 mtron&gt; *trpl     ​3​
@@ -1565,34 +1559,18 @@ mtron&gt; httpspace::[host     =&gt; http://localhost:8777,
                    pattern  =&gt; &lt;http://#&gt;,
                    route    =&gt; [/mcp     =&gt; mcp_mtron_http,
                                 /       =&gt; &lt;&gt;]]@/sys/space/web/http
-==&gt;fail::[unable to construct httpspace::T: fail::[inst apply failure: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]]@/sys/fail/810
+==&gt;fail::[unable to construct httpspace::T: fail::[inst apply failure: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]]@/sys/fail/866
    	while parsing: httpspace::[host     =&gt; http://localhost:8777,
                       q        =&gt; [mimeq::[=&gt;]],
                       pattern  =&gt; &lt;http://#&gt;,
                       route    =&gt; [/mcp     =&gt; mcp_mtron_http,
-                                   /       =&gt; &lt;&gt;]]@/sys/space/web/http]@/sys/fail/812
+                                   /       =&gt; &lt;&gt;]]@/sys/space/web/http]@/sys/fail/868
 mtron&gt; wsspace::[host     =&gt; ws://localhost:8555,
                  pattern  =&gt; &lt;ws://#&gt;,
                  q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
                  route    =&gt; [/mtron  =&gt; mtron_ws,
                               /mcp    =&gt; mcp_mtron_ws]]@/sys/space/web/ws
-==&gt;wsspace::[
-    host=&gt;ws://localhost:8555,
-    pattern=&gt;ws://#,
-    q=&gt;[
-     docq::[
-      pattern=&gt;docq,
-      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
-     subq::[
-      pattern=&gt;subq,
-      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      obj=&gt;[,]]],
-    route=&gt;[/mtron=&gt;mtron_ws,/mcp=&gt;mcp_mtron_ws]]@/sys/space/web/ws
+==&gt;wsspace::[host=&gt;ws://localhost:8555,pattern=&gt;ws://#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],subq::[pattern=&gt;subq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},qless_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;[,]]],route=&gt;[/mtron=&gt;mtron_ws,/mcp=&gt;mcp_mtron_ws]]@/sys/space/web/ws
 mtron&gt; fsspace::[pattern  =&gt; fs:#,
                  route    =&gt; [fs:=&gt;&lt;.metatron&gt;]]@/sys/space/fs
 ==&gt;fsspace::[pattern=&gt;fs:#,route=&gt;[fs:=&gt;&lt;.metatron&gt;]]@/sys/space/fs</code></pre>
@@ -1661,19 +1639,7 @@ MCP servers and their tools offer numerous ways by which LLMs can interact with 
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/llm/model
-==&gt;rec::T[?[
-     {?}provider=&gt;uri::T,
-     host=&gt;uri::T,
-     protocol=&gt;uri::T,
-     llm=&gt;uri::T,
-     {?}api_key=&gt;str::T,
-     {?}timeout=&gt;!*/m/math/time,
-     {?}size=&gt;!*/m/math/datasize,
-     {?}quant=&gt;int::T,
-     {?}context=&gt;int::T,
-     {?}cost=&gt;{?}[
-      in=&gt;!*/m/math/currency,
-      out=&gt;!*/m/math/currency]]][ctor?model&lt;=#{?}(#{*}::T)]@model</code></pre>
+==&gt;rec::T[?[{?}provider=&gt;uri::T,host=&gt;uri::T,protocol=&gt;uri::T,llm=&gt;uri::T,{?}api_key=&gt;str::T,{?}timeout=&gt;!*/m/math/time,{?}size=&gt;!*/m/math/datasize,{?}quant=&gt;int::T,{?}context=&gt;int::T,{?}cost=&gt;{?}[in=&gt;!*/m/math/currency,out=&gt;!*/m/math/currency]]][ctor?rng=model&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@model</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1686,26 +1652,13 @@ Two example models are provided below.</p>
                protocol =&gt; ollama,
                host     =&gt; http://localhost:11434,
                llm      =&gt; &lt;qwen3.5:4b&gt;]
-==&gt;model::[
-    skill=&gt;[completion,vision,tools,thinking],
-    size=&gt;gB::3.1572,
-    context=&gt;262144,
-    provider=&gt;ollama,
-    protocol=&gt;ollama,
-    host=&gt;http://localhost:11434,
-    llm=&gt;&lt;qwen3.5:4b&gt;]
+==&gt;model::[skill=&gt;[completion,vision,tools,thinking],size=&gt;gB::3.157168379984796,context=&gt;262144,provider=&gt;ollama,protocol=&gt;ollama,host=&gt;http://localhost:11434,llm=&gt;&lt;qwen3.5:4b&gt;]
 mtron&gt; model::[host     =&gt; &lt;https://api.deepseek.com/v1&gt;,
                api_key  =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
                provider =&gt; deepseek,
                protocol =&gt; openai,
                llm      =&gt; &lt;deepseek-v4-pro&gt;]
-==&gt;model::[
-    name=&gt;deepseek-v4-pro,
-    host=&gt;&lt;https://api.deepseek.com/v1&gt;,
-    api_key=&gt;!*/sys/env/DEEPSEEK_API_KEY,
-    provider=&gt;deepseek,
-    protocol=&gt;openai,
-    llm=&gt;deepseek-v4-pro]</code></pre>
+==&gt;model::[name=&gt;deepseek-v4-pro,host=&gt;&lt;https://api.deepseek.com/v1&gt;,api_key=&gt;!*/sys/env/DEEPSEEK_API_KEY,provider=&gt;deepseek,protocol=&gt;openai,llm=&gt;deepseek-v4-pro]</code></pre>
 </div>
 </div>
 <!--
@@ -1834,32 +1787,32 @@ These types are distributed in the <code>/m/math</code> instruction set and impo
 ==&gt;int::T[is(gt(0))]@nat
 ==&gt;real::T@datasize
 ==&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime
-==&gt;datasize::T[][ctor?bB&lt;=#{?}(#{*}::T)]@bB
-==&gt;datasize::T[][ctor?kB&lt;=#{?}(#{*}::T)]@kB
-==&gt;datasize::T[][ctor?mB&lt;=#{?}(#{*}::T)]@mB
-==&gt;datasize::T[][ctor?gB&lt;=#{?}(#{*}::T)]@gB
-==&gt;datasize::T[][ctor?tB&lt;=#{?}(#{*}::T)]@tB
-==&gt;datasize::T[][ctor?pB&lt;=#{?}(#{*}::T)]@pB
+==&gt;datasize::T[][ctor?rng=bB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@bB
+==&gt;datasize::T[][ctor?rng=kB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@kB
+==&gt;datasize::T[][ctor?rng=mB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mB
+==&gt;datasize::T[][ctor?rng=gB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@gB
+==&gt;datasize::T[][ctor?rng=tB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@tB
+==&gt;datasize::T[][ctor?rng=pB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@pB
 ==&gt;real::T@currency
 ==&gt;currency::T@usd
 ==&gt;currency::T@euro
 ==&gt;real::T@time
-==&gt;time::T[][ctor?millis&lt;=#{?}(#{*}::T)]@millis
-==&gt;time::T[][ctor?second&lt;=#{?}(#{*}::T)]@second
-==&gt;time::T[][ctor?minute&lt;=#{?}(#{*}::T)]@minute
-==&gt;time::T[][ctor?hour&lt;=#{?}(#{*}::T)]@hour
-==&gt;time::T[][ctor?day&lt;=#{?}(#{*}::T)]@day
+==&gt;time::T[][ctor?rng=millis&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@millis
+==&gt;time::T[][ctor?rng=second&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@second
+==&gt;time::T[][ctor?rng=minute&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@minute
+==&gt;time::T[][ctor?rng=hour&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@hour
+==&gt;time::T[][ctor?rng=day&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@day
 ==&gt;real::T@metric
-==&gt;metric::T[][ctor?mm&lt;=#{?}(#{*}::T)]@mm
-==&gt;metric::T[][ctor?cm&lt;=#{?}(#{*}::T)]@cm
-==&gt;metric::T[][ctor?dm&lt;=#{?}(#{*}::T)]@dm
-==&gt;metric::T[][ctor?meter&lt;=#{?}(#{*}::T)]@meter
-==&gt;metric::T[][ctor?km&lt;=#{?}(#{*}::T)]@km
+==&gt;metric::T[][ctor?rng=mm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mm
+==&gt;metric::T[][ctor?rng=cm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@cm
+==&gt;metric::T[][ctor?rng=dm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@dm
+==&gt;metric::T[][ctor?rng=meter&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@meter
+==&gt;metric::T[][ctor?rng=km&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@km
 ==&gt;real::T@imperial
-==&gt;imperial::T[][ctor?inch&lt;=#{?}(#{*}::T)]@inch
-==&gt;imperial::T[][ctor?foot&lt;=#{?}(#{*}::T)]@foot
-==&gt;imperial::T[][ctor?yard&lt;=#{?}(#{*}::T)]@yard
-==&gt;imperial::T[][ctor?mile&lt;=#{?}(#{*}::T)]@mile</code></pre>
+==&gt;imperial::T[][ctor?rng=inch&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@inch
+==&gt;imperial::T[][ctor?rng=foot&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@foot
+==&gt;imperial::T[][ctor?rng=yard&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@yard
+==&gt;imperial::T[][ctor?rng=mile&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mile</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1873,11 +1826,11 @@ These types are distributed in the <code>/m/math</code> instruction set and impo
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; gB::500.0.as(mB::T)     ​1​
-==&gt;mB::512000.0000
+==&gt;mB::512000.0
 mtron&gt; gB::500.0.as(kB::T)     ​2​
-==&gt;kB::524288000.0000
+==&gt;kB::5.24288E8
 mtron&gt; tB::1.0.as(mB::T)     ​3​
-==&gt;mB::1048576.0000</code></pre>
+==&gt;mB::1048576.0</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2001,7 +1954,16 @@ Over the remainder of this documentation, each of the components of Dr.Stynx&#82
                                         !*bash?reject=['\brm\b','\bgit\b'],
                                         mcp_client::[host=&gt;&lt;http://localhost:8777/mcp&gt;],
                                         forget?noobj{0}&lt;=noobj{0}(){ /usr/dr/message/+ -&gt; noobj }],
-                   to =&gt;  inst(a=&gt;rec::T){ @&lt;audit_widget&gt;&gt;&gt;=[body=&gt;+("""{{r}}&gt;&gt;{{g}}${*a&gt;&gt;name}{{m}}({{/m}}${*a&gt;&gt;arguments}{{m}}){{/m}}{{/g}}\n${*a&gt;&gt;result}\n""")].display() }],
+                   to =&gt;  inst(a=&gt;rec::T){ @&lt;tool_widget&gt;.else(
+                                             grid_widget::[grid=&gt;[,],
+                                                           style=&gt;[anchor=&gt;bottom_middle,
+                                                                   border=&gt;continuous,
+                                                                   height=&gt;30,
+                                                                   width=&gt;100]].to(tool_widget)).
+                                           side(w -&gt; -&lt;accordion_widget::[title=&gt;"""{{r}}&gt;&gt;{{g}}${*a&gt;&gt;name}{{m}}({{/m}}${*a&gt;&gt;arguments}{{m}})""",
+                                                                          body=&gt;"""{{/m}}{{/g}}${*a&gt;&gt;result}"""]).
+                                           @&lt;tool_widget/grid&gt; &gt;&gt;=(+(-&lt;[-&lt;[ !*w ]]))                          
+                                           .side(@tool_widget.display()) }],
   cost_feature:::::::[rate          =&gt; [in  =&gt; usd_currency::0.435,
                                         out =&gt; usd_currency::0.870]],
   system_feature:::::[              =&gt; ]]]@&lt;dr&gt;; </code></pre>
@@ -2041,7 +2003,7 @@ mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*eval],
           response  => [to=>_]]]
-==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/822
+==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/874
 ----
 
 [source,mtron]
@@ -2063,23 +2025,7 @@ mtron> wsspace::[host     => ws://localhost:8555,
                  pattern  => ws://#,
                  q        => [docq::[=>],subq::[=>]],
                  route    => [/mcp => mcp_mtron_ws]]@/sys/space/web/ws
-==>wsspace::[
-    host=>ws://localhost:8555,
-    pattern=>ws://#,
-    q=>[
-     docq::[
-      pattern=>docq,
-      pre_read=>inst?#{*}<=#{?}(uri::T),
-      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
-      obj=>memspace::[pattern=><#>],
-      inst=>instset::[pattern=><#>]],
-     subq::[
-      pattern=>subq,
-      pre_read=>inst?#{*}<=#{?}(uri::T),
-      pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
-      qless_write=>inst?#{*}<=#{?}(uri::T,#::T),
-      obj=>[,]]],
-    route=>[/mcp=>mcp_mtron_ws]]@/sys/space/web/ws
+==>wsspace::[host=>ws://localhost:8555,pattern=>ws://#,q=>[docq::[pattern=>docq,pre_read=>inst?rng=#{*}&dom=#{?}(uri::T){<j>},pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,<#>::T){<j>},obj=>memspace::[pattern=><#>],inst=>instset::[pattern=><#>]],subq::[pattern=>subq,pre_read=>inst?rng=#{*}&dom=#{?}(uri::T){<j>},pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,<#>::T){<j>},qless_write=>inst?rng=#{*}&dom=#{?}(uri::T,<#>::T){<j>},obj=>[,]]],route=>[/mcp=>mcp_mtron_ws]]@/sys/space/web/ws
 ----
 
 The `/m/web` instruction set realizes an MCP tool as a refinement of `inst`.
@@ -2089,13 +2035,13 @@ As such, an MCP client has an natural mapping to an LLM tool feature.
 [source,mtron]
 ----
 mtron> mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
-==>fail::[unable to construct mcp_client::T: fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]][java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]][][]@/sys/fail/828
-   	while parsing: mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron]@/sys/fail/830
+==>fail::[unable to construct mcp_client::T: fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]][java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]][][]@/sys/fail/880
+   	while parsing: mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron]@/sys/fail/882
 mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*/usr/ai/mcp/mtron],
           response  => [to=>_]]]
-==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/838
+==>fail::[unable to locate inst-f of doc_model(aix)@<0>]@/sys/fail/886
 ----
 
 Given that an `mcp_client::T` is an index of `insts`.
@@ -2166,7 +2112,7 @@ mtron> *ollama:+.
               think    => print(_),
               response => [to=>to(/usr/ai/response)]]].
         to(aix)
-==>fail::[lhs range does not match inst domain: fail::T => lst{*}::T [take?rng=lst{*}&dom=lst{*}(1){<j>}@<4>]]@/sys/fail/886
+==>fail::[lhs range does not match inst domain: fail::T => lst{*}::T [take?rng=lst{*}&dom=lst{*}(1){<j>}@<4>]]@/sys/fail/934
 ----
 
 <1> create a `lst` to server as the an ordered sequence of chat interactions.
@@ -2414,7 +2360,7 @@ Note the use of the tools provided to the agent.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *instset
-==&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(#{*}::T)]@instset</code></pre>
+==&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset</code></pre>
 </div>
 </div>
 <div class="stemblock">
@@ -2610,20 +2556,7 @@ mtron&gt; throw('bad').catch(cause())     ​3​</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/math)
-==&gt;instset::[
-    pattern=&gt;/m/math/#,
-    q=&gt;[docq::[
-    pattern=&gt;docq,
-    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-    space=&gt;[super=&gt;!*/m],
-    type=&gt;[int::T[is(gt(0))]@nat,real::T@datasize,uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime,datasize::T[][ctor?bB&lt;=#{?}(#{*}::T)]@bB,datasize::T[][ctor?kB&lt;=#{?}(#{*}::T)]@kB,datasize::T[][ctor?mB&lt;=#{?}(#{*}::T)]@mB,datasize::T[][ctor?gB&lt;=#{?}(#{*}::T)]@gB,datasize::T[][ctor?tB&lt;=#{?}(#{*}::T)]@tB,datasize::T[][ctor?pB&lt;=#{?}(#{*}::T)]@pB,real::T@currency,...(19 more)],
-    inst=&gt;[datetime_now?datetime&lt;=#{?}(),plus?time&lt;=time(time::T),plus?metric&lt;=metric(metric::T),plus?imperial&lt;=imperial(imperial::T),as?time&lt;=time(time::T),plus?datetime&lt;=datetime(time::T),minus?datetime&lt;=datetime(time::T),minus?time&lt;=datetime(datetime::T),as?datetime&lt;=uri(uri::T),as?int&lt;=datetime(int::T),...(23 more)],
-    const=&gt;[
-     2.7183@/m/math/e?constq,
-     3.1416@/m/math/pi?constq]]@/m/math
+==&gt;instset::[pattern=&gt;/m/math/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],type=&gt;[int::T[is(gt(0))]@nat,real::T@datasize,uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime,datasize::T[][ctor?rng=bB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@bB,datasize::T[][ctor?rng=kB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@kB,datasize::T[][ctor?rng=mB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mB,datasize::T[][ctor?rng=gB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@gB,datasize::T[][ctor?rng=tB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@tB,datasize::T[][ctor?rng=pB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@pB,real::T@currency,currency::T@usd,currency::T@euro,real::T@time,time::T[][ctor?rng=millis&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@millis,time::T[][ctor?rng=second&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@second,time::T[][ctor?rng=minute&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@minute,time::T[][ctor?rng=hour&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@hour,time::T[][ctor?rng=day&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@day,real::T@metric,metric::T[][ctor?rng=mm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mm,metric::T[][ctor?rng=cm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@cm,metric::T[][ctor?rng=dm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@dm,metric::T[][ctor?rng=meter&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@meter,metric::T[][ctor?rng=km&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@km,real::T@imperial,imperial::T[][ctor?rng=inch&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@inch,imperial::T[][ctor?rng=foot&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@foot,imperial::T[][ctor?rng=yard&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@yard,imperial::T[][ctor?rng=mile&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mile],inst=&gt;[datetime_now?rng=datetime&amp;dom=#{?}(){&lt;j&gt;},plus?rng=time&amp;dom=time(real::T@time){&lt;j&gt;},plus?rng=metric&amp;dom=metric(real::T@metric){&lt;j&gt;},plus?rng=imperial&amp;dom=imperial(real::T@imperial){&lt;j&gt;},as?rng=time&amp;dom=time(real::T@time){&lt;j&gt;},plus?rng=datetime&amp;dom=datetime(real::T@time){&lt;j&gt;},minus?rng=datetime&amp;dom=datetime(real::T@time){&lt;j&gt;},minus?rng=time&amp;dom=datetime(uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime){&lt;j&gt;},as?rng=datetime&amp;dom=uri(uri::T){&lt;j&gt;},as?rng=int&amp;dom=datetime(int::T){&lt;j&gt;},as?rng=str&amp;dom=datetime(str::T){&lt;j&gt;},as?rng=datetime&amp;dom=str(uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime){&lt;j&gt;},normalize?rng=time&amp;dom=time(){&lt;j&gt;},normalize?rng=datasize&amp;dom=datasize(){&lt;j&gt;},normalize?rng=metric&amp;dom=metric(){&lt;j&gt;},normalize?rng=imperial&amp;dom=imperial(){&lt;j&gt;},as?rng=metric&amp;dom=metric(real::T@metric){&lt;j&gt;},as?rng=imperial&amp;dom=imperial(real::T@imperial){&lt;j&gt;},as?rng=imperial&amp;dom=metric(real::T@imperial){&lt;j&gt;},as?rng=metric&amp;dom=imperial(real::T@metric){&lt;j&gt;},cos?rng=real&amp;dom=#{?}(as(real::T)){&lt;j&gt;},sin?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},tan?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},sqrt?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},atan?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},atan2?rng=real&amp;dom=#{?}(real{2}::T){&lt;j&gt;},log?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},log10?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},exp?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},abs?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},ceil?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},floor?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},round?rng=int&amp;dom=#{?}(real::T){&lt;j&gt;}],const=&gt;[2.718281828459045@/m/math/e?constq,3.141592653589793@/m/math/pi?constq]]@/m/math
 mtron&gt; int::T[?&gt;0]@nat
 ==&gt;int::T[is(gt(0))]@nat</code></pre>
 </div>
@@ -2716,7 +2649,7 @@ mtron&gt; int::-4     ​3​
 ==&gt;-4
 mtron&gt; nat::-4     ​4​
 ==&gt;fail::[-4 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-4]@/sys/fail/1706
+   	while parsing: nat::-4]@/sys/fail/1750
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;int::T]]@chicken     ​5​
 ==&gt;animal::T[?[name=&gt;str::T,age=&gt;int::T]]@chicken
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​6​
@@ -2726,11 +2659,9 @@ mtron&gt; chicken::[name=&gt;'punky',age=&gt;'four']     ​7​
      [name=&gt;'punky',age=&gt;'four']
          X=&gt;
      animal::T[?[name=&gt;str::T,age=&gt;int::T]]@chicken
-     ----------------------------------------------
-     [
-      name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,
-      age=&gt;(/=&gt;age)=&gt;'four'=&gt;X=&gt;int::T]
-   	while parsing: chicken::[name=&gt;'punky',age=&gt;'four']]@/sys/fail/1714</code></pre>
+     ----------------------------------------------------------------------
+     [name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,age=&gt;(/=&gt;age)=&gt;'four'=&gt;X=&gt;int::T]
+   	while parsing: chicken::[name=&gt;'punky',age=&gt;'four']]@/sys/fail/1754</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2795,28 +2726,21 @@ mtron&gt; nat::T[?&lt;120]@age     ​2​
 mtron&gt; 21.as(int::T).as(nat::T).as(age::T)     ​3​
 ==&gt;age::21
 mtron&gt; -21.as(int::T).as(nat::T).as(age::T)     ​4​
-==&gt;fail::[inst apply failure: -21 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@2)]@/sys/fail/1722
+==&gt;fail::[inst apply failure: -21 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@2)]@/sys/fail/1758
 mtron&gt; 121.as(int::T).as(nat::T).as(age::T)     ​5​
-==&gt;fail::[inst apply failure: nat::121 is not a nat::T[is(lt(120))]@age [structural] (at /m/inst/as@3)]@/sys/fail/1726
+==&gt;fail::[inst apply failure: nat::121 is not a nat::T[is(lt(120))]@age [structural] (at /m/inst/as@3)]@/sys/fail/1762
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;age::T]]@chicken     ​6​
-==&gt;animal::T[?[
-     name=&gt;str::T,
-     age=&gt;nat::T[is(lt(120))]@age]]@chicken
+==&gt;animal::T[?[name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age]]@chicken
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​7​
 ==&gt;chicken::[name=&gt;'snowbutt',age=&gt;7]
 mtron&gt; chicken::[name=&gt;'punky',age=&gt;444]     ​8​
 ==&gt;fail::[obj does not match chicken::T
      [name=&gt;'punky',age=&gt;444]
          X=&gt;
-     animal::T[?[
-       name=&gt;str::T,
-       age=&gt;nat::T[is(lt(120))]@age]]@chicken
-     ----------------------------------------
-     [
-      name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,
-      age=&gt;(/=&gt;age)=&gt;444=&gt;X=&gt;age::T,
-      age=&gt;(==&gt;age)=&gt;444=&gt;==&gt;int::T]
-   	while parsing: chicken::[name=&gt;'punky',age=&gt;444]]@/sys/fail/1730</code></pre>
+     animal::T[?[name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age]]@chicken
+     -------------------------------------------------------------------------------------------------
+     [name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,age=&gt;(/=&gt;age)=&gt;444=&gt;X=&gt;age::T,age=&gt;(==&gt;age)=&gt;444=&gt;==&gt;int::T]
+   	while parsing: chicken::[name=&gt;'punky',age=&gt;444]]@/sys/fail/1766</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2928,23 +2852,19 @@ For those situations when the value has no other discriminating qualities for a 
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;age::T]]@being     ​1​
-==&gt;rec::T[?[
-     name=&gt;str::T,
-     age=&gt;nat::T[is(lt(120))]@age]]@being
+==&gt;rec::T[?[name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age]]@being
 mtron&gt; being::T@human     ​2​
 ==&gt;being::T@human
 mtron&gt; being::T@chicken     ​3​
-==&gt;animal::T[?[
-     name=&gt;str::T,
-     age=&gt;nat::T[is(lt(120))]@age]]@chicken
+==&gt;animal::T[?[name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age]]@chicken
 mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T)     ​4​
 ==&gt;chicken::[name=&gt;'marko',age=&gt;29]
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7].as(human::T)     ​5​
-==&gt;fail::[inst apply failure: chicken::[name=&gt;'snowbutt',age=&gt;7] is not a being::T@human [nominal] (at /m/inst/as@1)]@/sys/fail/1738
+==&gt;fail::[inst apply failure: chicken::[name=&gt;'snowbutt',age=&gt;7] is not a being::T@human [nominal] (at /m/inst/as@1)]@/sys/fail/1770
 mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)     ​6​
 ==&gt;chicken::[name=&gt;'fuzzy feet',age=&gt;2]
 mtron&gt; 'punky'.as(chicken::T)     ​7​
-==&gt;fail::[inst apply failure: java.lang.NullPointerException: Cannot invoke "studio.phaseshift.metatron.isa.m.type.Call.apply(studio.phaseshift.metatron.isa.m.type.Obj)" because the return value of "studio.phaseshift.metatron.isa.m.type.Type.constructor()" is null (at /m/inst/as@1) [Rec$RecType&lt;390&gt;]][Cannot invoke "studio.phaseshift.metatron.isa.m.type.Call.apply(studio.phaseshift.metatron.isa.m.type.Obj)" because the return value of "studio.phaseshift.metatron.isa.m.type.Type.constructor()" is null [Rec$RecType&lt;390&gt;]]@/sys/fail/1742</code></pre>
+==&gt;fail::[inst apply failure: java.lang.NullPointerException: Cannot invoke "studio.phaseshift.metatron.isa.m.type.Call.apply(studio.phaseshift.metatron.isa.m.type.Obj)" because the return value of "studio.phaseshift.metatron.isa.m.type.Type.constructor()" is null (at /m/inst/as@1) [Rec$RecType&lt;390&gt;]][Cannot invoke "studio.phaseshift.metatron.isa.m.type.Call.apply(studio.phaseshift.metatron.isa.m.type.Obj)" because the return value of "studio.phaseshift.metatron.isa.m.type.Type.constructor()" is null [Rec$RecType&lt;390&gt;]]@/sys/fail/1774</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3053,13 +2973,13 @@ mtron&gt; nat::2     ​3​
 ==&gt;nat::2
 mtron&gt; nat::-2     ​4​
 ==&gt;fail::[-2 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-2]@/sys/fail/1746
+   	while parsing: nat::-2]@/sys/fail/1778
 mtron&gt; 2.as(nat::T)     ​5​
 ==&gt;nat::2
 mtron&gt; -2.as(nat::T)     ​6​
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/1754
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/1782
 mtron&gt; nat::2 * -1     ​7​
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@nat (at /m/inst/mult@1)]@/sys/fail/1758</code></pre>
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@nat (at /m/inst/mult@1)]@/sys/fail/1786</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3086,7 +3006,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{c}}m{{m}}e{{b}}T{{y}}A{{m}}T{{y}}R{{m}}o{{y}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{c}}M{{r}}e{{b}}T{{b}}a{{r}}T{{r}}R{{c}}o{{c}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3155,7 +3075,7 @@ mtron&gt; true + false     ​2​
 mtron&gt; 1 + 2     ​3​
 ==&gt;3
 mtron&gt; 1.34 + 2.45     ​4​
-==&gt;3.7900
+==&gt;3.79
 mtron&gt; "abc" + "def"     ​5​
 ==&gt;'abcdef'
 mtron&gt; a/b/c * d/e/f     ​6​
@@ -3181,7 +3101,7 @@ mtron&gt; a/b/c * d/e/f     ​6​
 ==&gt;0x6d65746174726f6e
 mtron&gt; bytes::'48656c6c6f'     ​2​
 ==&gt;fail::['48656c6c6f' [string] is not a bytes::T
-   	while parsing: bytes::'48656c6c6f']@/sys/fail/1786</code></pre>
+   	while parsing: bytes::'48656c6c6f']@/sys/fail/1814</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3205,13 +3125,13 @@ mtron&gt; bytes::'48656c6c6f'     ​2​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; kB::1024.0.as(mB::T)     ​1​
-==&gt;mB::1.0000
+==&gt;mB::1.0
 mtron&gt; mB::1.0.as(kB::T)     ​2​
-==&gt;kB::1024.0000
+==&gt;kB::1024.0
 mtron&gt; gB::5.0.as(mB::T)     ​3​
-==&gt;mB::5120.0000
+==&gt;mB::5120.0
 mtron&gt; pB::1.0.as(tB::T)     ​4​
-==&gt;tB::1024.0000</code></pre>
+==&gt;tB::1024.0</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3737,9 +3657,9 @@ mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
 ==&gt;fail::[-10 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-10]@/sys/fail/1908
+   	while parsing: nat::-10]@/sys/fail/1932
 mtron&gt; int::-10.as(nat::T)
-==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/1916</code></pre>
+==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/1936</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3839,9 +3759,9 @@ mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
 ==&gt;fail::[-10 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-10]@/sys/fail/1920
+   	while parsing: nat::-10]@/sys/fail/1940
 mtron&gt; int::-10.as(nat::T)
-==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/1928</code></pre>
+==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/1944</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3866,15 +3786,15 @@ mtron&gt; int::T
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat::125
 ==&gt;fail::[125 is not a int::T[is(lt(120))]@nat
-   	while parsing: nat::125]@/sys/fail/1932
+   	while parsing: nat::125]@/sys/fail/1948
 mtron&gt; age::125
 ==&gt;fail::[125 is not a int::T[is(lt(120))]@nat
-   	while parsing: age::125]@/sys/fail/1940
+   	while parsing: age::125]@/sys/fail/1952
 mtron&gt; nat::125.as(age::T)
 ==&gt;fail::[125 is not a int::T[is(lt(120))]@nat
-   	while parsing: nat::125.as(age::T)]@/sys/fail/1948
+   	while parsing: nat::125.as(age::T)]@/sys/fail/1956
 mtron&gt; 125.as(nat::T).as(age::T)
-==&gt;fail::[inst apply failure: 125 is not a int::T[is(lt(120))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/1956</code></pre>
+==&gt;fail::[inst apply failure: 125 is not a int::T[is(lt(120))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/1960</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -3884,13 +3804,7 @@ mtron&gt; 125.as(nat::T).as(age::T)
 mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
                            age   =&gt; age::T,
                            knows =&gt; personx{*}::T]]
-==&gt;rec::T[?[
-     name=&gt;str::T,
-     age=&gt;int::T[is(lt(120))]@nat,
-     knows=&gt;rec{*}::T[?[
-     name=&gt;str::T,
-     age=&gt;int::T[is(lt(120))]@nat,
-     knows=&gt;personx{*}::T]]]]
+==&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T[is(lt(120))]@nat,knows=&gt;rec{*}::T[?[name=&gt;str::T,age=&gt;int::T[is(lt(120))]@nat,knows=&gt;personx{*}::T]]]]
 mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 ==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 mtron&gt; grant -&gt; personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
@@ -4014,53 +3928,7 @@ mtron&gt; *#.as[name      =&gt; _,
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/mach)
-==&gt;instset::[
-    pattern=&gt;/m/mach/#,
-    q=&gt;[docq::[
-    pattern=&gt;docq,
-    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-    space=&gt;[super=&gt;!*/m],
-    type=&gt;[
-     rec{*}::T[?[
-     pattern=&gt;uri::T,
-     {?}q=&gt;[rec{?}::T[?[
-     pattern=&gt;uri::T,
-     {?}pre_write=&gt;inst::T,
-     {?}post_write=&gt;inst::T,
-     {?}qless_write=&gt;inst::T,
-     {?}pre_read=&gt;inst::T,
-     {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T)]@qproc],
-     {?}route=&gt;[uri{?}::T=&gt;uri::T],
-     {?}schema=&gt;instset::T]]@space,
-     rec::T@factory,
-     factory::T[][ctor?mfactory&lt;=#{?}()]@mfactory,
-     virtual::T@machine,
-     machine::T[][ctor?swarm&lt;=#{?}(#{*}::T)]@swarm,
-     rec::T[?[run=&gt;[,],stop=&gt;[,]]]@thread_executor,
-     rec::T[?[
-     code=&gt;&lt;#&gt;::T,
-     {?}source=&gt;uri::T,
-     {?}runtime=&gt;real::T@time,
-     {?}yield=&gt;thread::T,
-     {?}loop=&gt;real::T@time,
-     {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
-     {?}result=&gt;&lt;#{*}&gt;::T]]@thread,
-     thread::T[][ctor?core&lt;=#{?}(rec::T)]@core,
-     thread::T[][ctor?virtual&lt;=#{?}(rec::T)]@virtual,
-     space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@authority=&gt;&lt;#&gt;::T]]][ctor?clstrspace&lt;=#{?}(#{*}::T)]@clstrspace],
-    inst=&gt;[
-     lift(#{?}::T),
-     zero?A&lt;=A(),
-     one?A&lt;=A(),
-     which(uri::T),
-     inject(int::T,#::T),
-     /m/inst/thread?thread&lt;=#{?}(#::T),
-     stop?thread&lt;=thread(),
-     pause?thread&lt;=thread(),
-     resume?thread&lt;=thread()]]@/m/mach
+==&gt;instset::[pattern=&gt;/m/mach/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],type=&gt;[rec{*}::T[?[pattern=&gt;uri::T,{?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,{?}pre_write=&gt;inst::T,{?}post_write=&gt;inst::T,{?}qless_write=&gt;inst::T,{?}pre_read=&gt;inst::T,{?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@qproc],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]]@space,rec::T@factory,factory::T[][ctor?rng=mfactory&amp;dom=#{?}(){&lt;j&gt;}]@mfactory,virtual::T@machine,machine::T[][ctor?rng=swarm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@swarm,rec::T[?[run=&gt;[,],stop=&gt;[,]]]@thread_executor,rec::T[?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),{?}result=&gt;&lt;#{*}&gt;::T]]@thread,thread::T[][ctor?rng=core&amp;dom=#{?}(rec::T){&lt;j&gt;}]@core,thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual,space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@authority=&gt;&lt;#&gt;::T]]][ctor?rng=clstrspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@clstrspace],inst=&gt;[lift?monad_out=+&amp;rng=/m/mach/monad&amp;dom=#&amp;monad_in=+(&lt;#{?}&gt;::T){&lt;j&gt;},zero?rng=A&amp;dom=A(){&lt;j&gt;},one?rng=A&amp;dom=A(){&lt;j&gt;},which?rng=A&amp;dom=#(uri::T){&lt;j&gt;},inject?rng=#&amp;dom=#(int::T,&lt;#&gt;::T){&lt;j&gt;},/m/inst/thread?rng=thread&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},stop?rng=thread&amp;dom=thread(){&lt;j&gt;},pause?rng=thread&amp;dom=thread(){&lt;j&gt;},resume?rng=thread&amp;dom=thread(){&lt;j&gt;}]]@/m/mach
 mtron&gt; memspace::[
         pattern   =&gt; /usr/#,
         q         =&gt; [
@@ -4069,32 +3937,7 @@ mtron&gt; memspace::[
          docq::[=&gt;],
          subq::[=&gt;],
          incrq::[=&gt;]]]@/sys/space/usr
-==&gt;memspace::[
-    pattern=&gt;/usr/#,
-    q=&gt;[
-     typeq::[
-      pattern=&gt;&lt;T&gt;,
-      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
-     mintq::[
-      pattern=&gt;mintq,
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)],
-     docq::[
-      pattern=&gt;docq,
-      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
-     subq::[
-      pattern=&gt;subq,
-      pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-      obj=&gt;[,]],
-     incrq::[
-      pattern=&gt;incrq,
-      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]]]@/sys/space/usr</code></pre>
+==&gt;memspace::[pattern=&gt;/usr/#,q=&gt;[typeq::[pattern=&gt;&lt;T&gt;,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},qless_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}],mintq::[pattern=&gt;mintq,pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}],docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],subq::[pattern=&gt;subq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},qless_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;[,]],incrq::[pattern=&gt;incrq,pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}]]]@/sys/space/usr</code></pre>
 </div>
 </div>
 </div>
@@ -4246,7 +4089,7 @@ together. Via the colocation of two objs within the confines of a <code>poly</co
 mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-     ​2​
 ==&gt;1
 mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-.map(&lt;${g:V/_}&gt;)&gt;&gt;+     ​3​
-==&gt;fail::[inst apply failure: unable to parse ${g to a furi: ${g (at /m/inst/rshift@4)]@/sys/fail/1288</code></pre>
+==&gt;fail::[inst apply failure: unable to parse ${g to a furi: ${g (at /m/inst/rshift@4)]@/sys/fail/1340</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5066,9 +4909,7 @@ Given this rule, the following metatron <code>rec</code></p>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x0 -&gt; [a=&gt;[b=&gt;[c=&gt;1,d=&gt;2],
                   e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
               g=&gt;[b=&gt;[c=&gt;6]]]
-==&gt;[
-    a=&gt;[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
-    g=&gt;[b=&gt;[c=&gt;6]]]</code></pre>
+==&gt;[a=&gt;[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],g=&gt;[b=&gt;[c=&gt;6]]]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5096,25 +4937,14 @@ mtron> x1 -> [a/b => [c=>1,d=>2],
               a/e/d => 4,
               a/e/f => 5,
               g/b => [c=>6]]
-==>[
-    a/b=>[c=>1,d=>2],
-    a/e/c=>3,
-    a/e/d=>4,
-    a/e/f=>5,
-    g/b=>[c=>6]]
+==>[a/b=>[c=>1,d=>2],a/e/c=>3,a/e/d=>4,a/e/f=>5,g/b=>[c=>6]]
 mtron> x2 -> [a/b/c => 1,
               a/b/d => 2,
               a/e/c => 3,
               a/e/d => 4,
               a/e/f => 5,
               g/b/c => 6]
-==>[
-    a/b/c=>1,
-    a/b/d=>2,
-    a/e/c=>3,
-    a/e/d=>4,
-    a/e/f=>5,
-    g/b/c=>6]
+==>[a/b/c=>1,a/b/d=>2,a/e/c=>3,a/e/d=>4,a/e/f=>5,g/b/c=>6]
 ----
 
 [source,mtron]
@@ -5126,58 +4956,19 @@ mtron> [x0,x1,x2]>-.-<[*(* a/b/+)]
 mtron> [x0,x1,x2]>-.-<[*(* a/+/+)]
 ==>{3}[{2,1,3,4,5}]
 mtron> [x0,x1,x2]>-.-<[*(* +/b/+)]
-==>[{[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],[b=>[c=>6]],[
-    a=>[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],
-    g=>[b=>[c=>6]]]}]
-==>[{[
-    a/b=>[c=>1,d=>2],
-    a/e/c=>3,
-    a/e/d=>4,
-    a/e/f=>5,
-    g/b=>[c=>6]],[c=>6],5,[c=>1,d=>2],3,4}]
-==>[{4,[
-    a/b/c=>1,
-    a/b/d=>2,
-    a/e/c=>3,
-    a/e/d=>4,
-    a/e/f=>5,
-    g/b/c=>6],1,2,3,5,6}]
+==>[{[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],[b=>[c=>6]],[a=>[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],g=>[b=>[c=>6]]]}]
+==>[{[a/b=>[c=>1,d=>2],a/e/c=>3,a/e/d=>4,a/e/f=>5,g/b=>[c=>6]],[c=>6],5,[c=>1,d=>2],3,4}]
+==>[{4,[a/b/c=>1,a/b/d=>2,a/e/c=>3,a/e/d=>4,a/e/f=>5,g/b/c=>6],1,2,3,5,6}]
 mtron> [x0,x1,x2]>-.-<[*(* +/b/c)]
-==>[{[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],[b=>[c=>6]],[
-    a=>[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],
-    g=>[b=>[c=>6]]]}]
-==>[{[
-    a/b=>[c=>1,d=>2],
-    a/e/c=>3,
-    a/e/d=>4,
-    a/e/f=>5,
-    g/b=>[c=>6]],[c=>6],5,[c=>1,d=>2],3,4}]
-==>[{4,[
-    a/b/c=>1,
-    a/b/d=>2,
-    a/e/c=>3,
-    a/e/d=>4,
-    a/e/f=>5,
-    g/b/c=>6],1,2,3,5,6}]
+==>[{[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],[b=>[c=>6]],[a=>[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],g=>[b=>[c=>6]]]}]
+==>[{[a/b=>[c=>1,d=>2],a/e/c=>3,a/e/d=>4,a/e/f=>5,g/b=>[c=>6]],[c=>6],5,[c=>1,d=>2],3,4}]
+==>[{4,[a/b/c=>1,a/b/d=>2,a/e/c=>3,a/e/d=>4,a/e/f=>5,g/b/c=>6],1,2,3,5,6}]
 mtron> [x0,x1,x2]>-.-<[*(* a/+/c)]
 ==>{3}[{1,3}]
 mtron> [x0,x1,x2]>-.-<[*(* +/+/c)]
-==>[{[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],[b=>[c=>6]],[
-    a=>[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],
-    g=>[b=>[c=>6]]]}]
-==>[{[
-    a/b=>[c=>1,d=>2],
-    a/e/c=>3,
-    a/e/d=>4,
-    a/e/f=>5,
-    g/b=>[c=>6]],[c=>6],5,[c=>1,d=>2],3,4}]
-==>[{4,[
-    a/b/c=>1,
-    a/b/d=>2,
-    a/e/c=>3,
-    a/e/d=>4,
-    a/e/f=>5,
-    g/b/c=>6],1,2,3,5,6}]
+==>[{[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],[b=>[c=>6]],[a=>[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],g=>[b=>[c=>6]]]}]
+==>[{[a/b=>[c=>1,d=>2],a/e/c=>3,a/e/d=>4,a/e/f=>5,g/b=>[c=>6]],[c=>6],5,[c=>1,d=>2],3,4}]
+==>[{4,[a/b/c=>1,a/b/d=>2,a/e/c=>3,a/e/d=>4,a/e/f=>5,g/b/c=>6],1,2,3,5,6}]
 mtron> [x0,x1,x2]>-.-<[*(* g/+/+)]
 ==>{3}[6]
 mtron> -->
@@ -5831,9 +5622,7 @@ Given this rule, the following metatron `rec`
 mtron> x0 -> [a=>[b=>[c=>1,d=>2],
                   e=>[c=>3,d=>4,f=>5]],
               g=>[b=>[c=>6]]]
-==>[
-    a=>[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],
-    g=>[b=>[c=>6]]]
+==>[a=>[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],g=>[b=>[c=>6]]]
 ----
 
 ...
@@ -5862,25 +5651,14 @@ mtron> x0 -> [a=>[b=>[c=>1,d=>2],
               a/e/d =&gt; 4,
               a/e/f =&gt; 5,
               g/b =&gt; [c=&gt;6]]
-==&gt;[
-    a/b=&gt;[c=&gt;1,d=&gt;2],
-    a/e/c=&gt;3,
-    a/e/d=&gt;4,
-    a/e/f=&gt;5,
-    g/b=&gt;[c=&gt;6]]
+==&gt;[a/b=&gt;[c=&gt;1,d=&gt;2],a/e/c=&gt;3,a/e/d=&gt;4,a/e/f=&gt;5,g/b=&gt;[c=&gt;6]]
 mtron&gt; x2 -&gt; [a/b/c =&gt; 1,
               a/b/d =&gt; 2,
               a/e/c =&gt; 3,
               a/e/d =&gt; 4,
               a/e/f =&gt; 5,
               g/b/c =&gt; 6]
-==&gt;[
-    a/b/c=&gt;1,
-    a/b/d=&gt;2,
-    a/e/c=&gt;3,
-    a/e/d=&gt;4,
-    a/e/f=&gt;5,
-    g/b/c=&gt;6]</code></pre>
+==&gt;[a/b/c=&gt;1,a/b/d=&gt;2,a/e/c=&gt;3,a/e/d=&gt;4,a/e/f=&gt;5,g/b/c=&gt;6]</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -5892,58 +5670,19 @@ mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a/b/+)]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a/+/+)]
 ==&gt;{3}[{2,1,3,4,5}]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* +/b/+)]
-==&gt;[{[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],[b=&gt;[c=&gt;6]],[
-    a=&gt;[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
-    g=&gt;[b=&gt;[c=&gt;6]]]}]
-==&gt;[{[
-    a/b=&gt;[c=&gt;1,d=&gt;2],
-    a/e/c=&gt;3,
-    a/e/d=&gt;4,
-    a/e/f=&gt;5,
-    g/b=&gt;[c=&gt;6]],[c=&gt;6],5,[c=&gt;1,d=&gt;2],3,4}]
-==&gt;[{4,[
-    a/b/c=&gt;1,
-    a/b/d=&gt;2,
-    a/e/c=&gt;3,
-    a/e/d=&gt;4,
-    a/e/f=&gt;5,
-    g/b/c=&gt;6],1,2,3,5,6}]
+==&gt;[{[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],[b=&gt;[c=&gt;6]],[a=&gt;[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],g=&gt;[b=&gt;[c=&gt;6]]]}]
+==&gt;[{[a/b=&gt;[c=&gt;1,d=&gt;2],a/e/c=&gt;3,a/e/d=&gt;4,a/e/f=&gt;5,g/b=&gt;[c=&gt;6]],[c=&gt;6],5,[c=&gt;1,d=&gt;2],3,4}]
+==&gt;[{4,[a/b/c=&gt;1,a/b/d=&gt;2,a/e/c=&gt;3,a/e/d=&gt;4,a/e/f=&gt;5,g/b/c=&gt;6],1,2,3,5,6}]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* +/b/c)]
-==&gt;[{[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],[b=&gt;[c=&gt;6]],[
-    a=&gt;[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
-    g=&gt;[b=&gt;[c=&gt;6]]]}]
-==&gt;[{[
-    a/b=&gt;[c=&gt;1,d=&gt;2],
-    a/e/c=&gt;3,
-    a/e/d=&gt;4,
-    a/e/f=&gt;5,
-    g/b=&gt;[c=&gt;6]],[c=&gt;6],5,[c=&gt;1,d=&gt;2],3,4}]
-==&gt;[{4,[
-    a/b/c=&gt;1,
-    a/b/d=&gt;2,
-    a/e/c=&gt;3,
-    a/e/d=&gt;4,
-    a/e/f=&gt;5,
-    g/b/c=&gt;6],1,2,3,5,6}]
+==&gt;[{[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],[b=&gt;[c=&gt;6]],[a=&gt;[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],g=&gt;[b=&gt;[c=&gt;6]]]}]
+==&gt;[{[a/b=&gt;[c=&gt;1,d=&gt;2],a/e/c=&gt;3,a/e/d=&gt;4,a/e/f=&gt;5,g/b=&gt;[c=&gt;6]],[c=&gt;6],5,[c=&gt;1,d=&gt;2],3,4}]
+==&gt;[{4,[a/b/c=&gt;1,a/b/d=&gt;2,a/e/c=&gt;3,a/e/d=&gt;4,a/e/f=&gt;5,g/b/c=&gt;6],1,2,3,5,6}]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a/+/c)]
 ==&gt;{3}[{1,3}]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* +/+/c)]
-==&gt;[{[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],[b=&gt;[c=&gt;6]],[
-    a=&gt;[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
-    g=&gt;[b=&gt;[c=&gt;6]]]}]
-==&gt;[{[
-    a/b=&gt;[c=&gt;1,d=&gt;2],
-    a/e/c=&gt;3,
-    a/e/d=&gt;4,
-    a/e/f=&gt;5,
-    g/b=&gt;[c=&gt;6]],[c=&gt;6],5,[c=&gt;1,d=&gt;2],3,4}]
-==&gt;[{4,[
-    a/b/c=&gt;1,
-    a/b/d=&gt;2,
-    a/e/c=&gt;3,
-    a/e/d=&gt;4,
-    a/e/f=&gt;5,
-    g/b/c=&gt;6],1,2,3,5,6}]
+==&gt;[{[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],[b=&gt;[c=&gt;6]],[a=&gt;[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],g=&gt;[b=&gt;[c=&gt;6]]]}]
+==&gt;[{[a/b=&gt;[c=&gt;1,d=&gt;2],a/e/c=&gt;3,a/e/d=&gt;4,a/e/f=&gt;5,g/b=&gt;[c=&gt;6]],[c=&gt;6],5,[c=&gt;1,d=&gt;2],3,4}]
+==&gt;[{4,[a/b/c=&gt;1,a/b/d=&gt;2,a/e/c=&gt;3,a/e/d=&gt;4,a/e/f=&gt;5,g/b/c=&gt;6],1,2,3,5,6}]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* g/+/+)]
 ==&gt;{3}[6]
 mtron&gt; --&gt;
@@ -6698,9 +6437,7 @@ Given this rule, the following metatron `rec`
 <p>mtron&gt; x0 &#8594; [a&#8658;[b&#8658;[c&#8658;1,d&#8658;2],
                   e&#8658;[c&#8658;3,d&#8658;4,f&#8658;5]],
               g&#8658;[b&#8658;[c&#8658;6]]]
-=&#8658;[
-    a&#8658;[b&#8658;[c&#8658;1,d&#8658;2],e&#8658;[c&#8658;3,d&#8658;4,f&#8658;5]],
-    g&#8658;[b&#8658;[c&#8658;6]]]</p>
+=&#8658;[a&#8658;[b&#8658;[c&#8658;1,d&#8658;2],e&#8658;[c&#8658;3,d&#8658;4,f&#8658;5]],g&#8658;[b&#8658;[c&#8658;6]]]</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -6730,25 +6467,14 @@ Common left side variables amongst summed components can be factored to the left
               a/e/d &#8658; 4,
               a/e/f &#8658; 5,
               g/b &#8658; [c&#8658;6]]
-=&#8658;[
-    a/b&#8658;[c&#8658;1,d&#8658;2],
-    a/e/c&#8658;3,
-    a/e/d&#8658;4,
-    a/e/f&#8658;5,
-    g/b&#8658;[c&#8658;6]]
+=&#8658;[a/b&#8658;[c&#8658;1,d&#8658;2],a/e/c&#8658;3,a/e/d&#8658;4,a/e/f&#8658;5,g/b&#8658;[c&#8658;6]]
 mtron&gt; x2 &#8594; [a/b/c &#8658; 1,
               a/b/d &#8658; 2,
               a/e/c &#8658; 3,
               a/e/d &#8658; 4,
               a/e/f &#8658; 5,
               g/b/c &#8658; 6]
-=&#8658;[
-    a/b/c&#8658;1,
-    a/b/d&#8658;2,
-    a/e/c&#8658;3,
-    a/e/d&#8658;4,
-    a/e/f&#8658;5,
-    g/b/c&#8658;6]</p>
+=&#8658;[a/b/c&#8658;1,a/b/d&#8658;2,a/e/c&#8658;3,a/e/d&#8658;4,a/e/f&#8658;5,g/b/c&#8658;6]</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -6763,58 +6489,19 @@ mtron&gt; [x0,x1,x2]&gt;-.-&lt;[<strong>(</strong> a/b/)]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a//)]
 ==&gt;{3}[{2,1,3,4,5}]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* +/b/)]
-=&#8658;[{[b&#8658;[c&#8658;1,d&#8658;2],e&#8658;[c&#8658;3,d&#8658;4,f&#8658;5]],[b&#8658;[c&#8658;6]],[
-    a&#8658;[b&#8658;[c&#8658;1,d&#8658;2],e&#8658;[c&#8658;3,d&#8658;4,f&#8658;5]],
-    g&#8658;[b&#8658;[c&#8658;6]]]}]
-=&#8658;[{[
-    a/b&#8658;[c&#8658;1,d&#8658;2],
-    a/e/c&#8658;3,
-    a/e/d&#8658;4,
-    a/e/f&#8658;5,
-    g/b&#8658;[c&#8658;6]],[c&#8658;6],5,[c&#8658;1,d&#8658;2],3,4}]
-=&#8658;[{4,[
-    a/b/c&#8658;1,
-    a/b/d&#8658;2,
-    a/e/c&#8658;3,
-    a/e/d&#8658;4,
-    a/e/f&#8658;5,
-    g/b/c&#8658;6],1,2,3,5,6}]
+=&#8658;[{[b&#8658;[c&#8658;1,d&#8658;2],e&#8658;[c&#8658;3,d&#8658;4,f&#8658;5]],[b&#8658;[c&#8658;6]],[a&#8658;[b&#8658;[c&#8658;1,d&#8658;2],e&#8658;[c&#8658;3,d&#8658;4,f&#8658;5]],g&#8658;[b&#8658;[c&#8658;6]]]}]
+=&#8658;[{[a/b&#8658;[c&#8658;1,d&#8658;2],a/e/c&#8658;3,a/e/d&#8658;4,a/e/f&#8658;5,g/b&#8658;[c&#8658;6]],[c&#8658;6],5,[c&#8658;1,d&#8658;2],3,4}]
+=&#8658;[{4,[a/b/c&#8658;1,a/b/d&#8658;2,a/e/c&#8658;3,a/e/d&#8658;4,a/e/f&#8658;5,g/b/c&#8658;6],1,2,3,5,6}]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[<strong>(</strong> /b/c)]
-==&gt;[{[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],[b=&gt;[c=&gt;6]],[
-    a=&gt;[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
-    g=&gt;[b=&gt;[c=&gt;6]]]}]
-==&gt;[{[
-    a/b=&gt;[c=&gt;1,d=&gt;2],
-    a/e/c=&gt;3,
-    a/e/d=&gt;4,
-    a/e/f=&gt;5,
-    g/b=&gt;[c=&gt;6]],[c=&gt;6],5,[c=&gt;1,d=&gt;2],3,4}]
-==&gt;[{4,[
-    a/b/c=&gt;1,
-    a/b/d=&gt;2,
-    a/e/c=&gt;3,
-    a/e/d=&gt;4,
-    a/e/f=&gt;5,
-    g/b/c=&gt;6],1,2,3,5,6}]
+==&gt;[{[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],[b=&gt;[c=&gt;6]],[a=&gt;[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],g=&gt;[b=&gt;[c=&gt;6]]]}]
+==&gt;[{[a/b=&gt;[c=&gt;1,d=&gt;2],a/e/c=&gt;3,a/e/d=&gt;4,a/e/f=&gt;5,g/b=&gt;[c=&gt;6]],[c=&gt;6],5,[c=&gt;1,d=&gt;2],3,4}]
+==&gt;[{4,[a/b/c=&gt;1,a/b/d=&gt;2,a/e/c=&gt;3,a/e/d=&gt;4,a/e/f=&gt;5,g/b/c=&gt;6],1,2,3,5,6}]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a//c)]
 =&#8658;{3}[{1,3}]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[<strong>(</strong> //c)]
-=&#8658;[{[b&#8658;[c&#8658;1,d&#8658;2],e&#8658;[c&#8658;3,d&#8658;4,f&#8658;5]],[b&#8658;[c&#8658;6]],[
-    a&#8658;[b&#8658;[c&#8658;1,d&#8658;2],e&#8658;[c&#8658;3,d&#8658;4,f&#8658;5]],
-    g&#8658;[b&#8658;[c&#8658;6]]]}]
-=&#8658;[{[
-    a/b&#8658;[c&#8658;1,d&#8658;2],
-    a/e/c&#8658;3,
-    a/e/d&#8658;4,
-    a/e/f&#8658;5,
-    g/b&#8658;[c&#8658;6]],[c&#8658;6],5,[c&#8658;1,d&#8658;2],3,4}]
-=&#8658;[{4,[
-    a/b/c&#8658;1,
-    a/b/d&#8658;2,
-    a/e/c&#8658;3,
-    a/e/d&#8658;4,
-    a/e/f&#8658;5,
-    g/b/c&#8658;6],1,2,3,5,6}]
+=&#8658;[{[b&#8658;[c&#8658;1,d&#8658;2],e&#8658;[c&#8658;3,d&#8658;4,f&#8658;5]],[b&#8658;[c&#8658;6]],[a&#8658;[b&#8658;[c&#8658;1,d&#8658;2],e&#8658;[c&#8658;3,d&#8658;4,f&#8658;5]],g&#8658;[b&#8658;[c&#8658;6]]]}]
+=&#8658;[{[a/b&#8658;[c&#8658;1,d&#8658;2],a/e/c&#8658;3,a/e/d&#8658;4,a/e/f&#8658;5,g/b&#8658;[c&#8658;6]],[c&#8658;6],5,[c&#8658;1,d&#8658;2],3,4}]
+=&#8658;[{4,[a/b/c&#8658;1,a/b/d&#8658;2,a/e/c&#8658;3,a/e/d&#8658;4,a/e/f&#8658;5,g/b/c&#8658;6],1,2,3,5,6}]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[<strong>(</strong> g//)]
 =&#8658;{3}[6]
 mtron&gt; -&#8594;
@@ -6897,53 +6584,7 @@ See <code>docs/design/ring-uri.md</code> for the full theory.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/mach)
-==&gt;instset::[
-    pattern=&gt;/m/mach/#,
-    q=&gt;[docq::[
-    pattern=&gt;docq,
-    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-    space=&gt;[super=&gt;!*/m],
-    type=&gt;[
-     rec{*}::T[?[
-     pattern=&gt;uri::T,
-     {?}q=&gt;[rec{?}::T[?[
-     pattern=&gt;uri::T,
-     {?}pre_write=&gt;inst::T,
-     {?}post_write=&gt;inst::T,
-     {?}qless_write=&gt;inst::T,
-     {?}pre_read=&gt;inst::T,
-     {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T)]@qproc],
-     {?}route=&gt;[uri{?}::T=&gt;uri::T],
-     {?}schema=&gt;instset::T]]@space,
-     rec::T@factory,
-     factory::T[][ctor?mfactory&lt;=#{?}()]@mfactory,
-     virtual::T@machine,
-     machine::T[][ctor?swarm&lt;=#{?}(#{*}::T)]@swarm,
-     rec::T[?[run=&gt;[,],stop=&gt;[,]]]@thread_executor,
-     rec::T[?[
-     code=&gt;&lt;#&gt;::T,
-     {?}source=&gt;uri::T,
-     {?}runtime=&gt;real::T@time,
-     {?}yield=&gt;thread::T,
-     {?}loop=&gt;real::T@time,
-     {?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),
-     {?}result=&gt;&lt;#{*}&gt;::T]]@thread,
-     thread::T[][ctor?core&lt;=#{?}(rec::T)]@core,
-     thread::T[][ctor?virtual&lt;=#{?}(rec::T)]@virtual,
-     space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@authority=&gt;&lt;#&gt;::T]]][ctor?clstrspace&lt;=#{?}(#{*}::T)]@clstrspace],
-    inst=&gt;[
-     lift(#{?}::T),
-     zero?A&lt;=A(),
-     one?A&lt;=A(),
-     which(uri::T),
-     inject(int::T,#::T),
-     /m/inst/thread?thread&lt;=#{?}(#::T),
-     stop?thread&lt;=thread(),
-     pause?thread&lt;=thread(),
-     resume?thread&lt;=thread()]]@/m/mach</code></pre>
+==&gt;instset::[pattern=&gt;/m/mach/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],type=&gt;[rec{*}::T[?[pattern=&gt;uri::T,{?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,{?}pre_write=&gt;inst::T,{?}post_write=&gt;inst::T,{?}qless_write=&gt;inst::T,{?}pre_read=&gt;inst::T,{?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@qproc],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]]@space,rec::T@factory,factory::T[][ctor?rng=mfactory&amp;dom=#{?}(){&lt;j&gt;}]@mfactory,virtual::T@machine,machine::T[][ctor?rng=swarm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@swarm,rec::T[?[run=&gt;[,],stop=&gt;[,]]]@thread_executor,rec::T[?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),{?}result=&gt;&lt;#{*}&gt;::T]]@thread,thread::T[][ctor?rng=core&amp;dom=#{?}(rec::T){&lt;j&gt;}]@core,thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual,space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@authority=&gt;&lt;#&gt;::T]]][ctor?rng=clstrspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@clstrspace],inst=&gt;[lift?monad_out=+&amp;rng=/m/mach/monad&amp;dom=#&amp;monad_in=+(&lt;#{?}&gt;::T){&lt;j&gt;},zero?rng=A&amp;dom=A(){&lt;j&gt;},one?rng=A&amp;dom=A(){&lt;j&gt;},which?rng=A&amp;dom=#(uri::T){&lt;j&gt;},inject?rng=#&amp;dom=#(int::T,&lt;#&gt;::T){&lt;j&gt;},/m/inst/thread?rng=thread&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},stop?rng=thread&amp;dom=thread(){&lt;j&gt;},pause?rng=thread&amp;dom=thread(){&lt;j&gt;},resume?rng=thread&amp;dom=thread(){&lt;j&gt;}]]@/m/mach</code></pre>
 </div>
 </div>
 </div>
@@ -6957,12 +6598,7 @@ See <code>docs/design/ring-uri.md</code> for the full theory.</p>
                  route    =&gt; [fs:m =&gt; &lt;~/software/metatron&gt;,
                               fs:  =&gt; &lt;~/&gt; ],
                  script   =&gt; !*boot/script]@/sys/space/localfs     ​1​
-==&gt;fsspace::[
-    pattern=&gt;fs:#,
-    route=&gt;[
-     fs:m=&gt;/home/killswitch/software/metatron,
-     fs:=&gt;/home/killswitch/],
-    script=&gt;!*boot/script]@/sys/space/localfs</code></pre>
+==&gt;fsspace::[pattern=&gt;fs:#,route=&gt;[fs:m=&gt;/home/killswitch/software/metatron,fs:=&gt;/home/killswitch/],script=&gt;!*boot/script]@/sys/space/localfs</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6988,12 +6624,7 @@ See <code>docs/design/ring-uri.md</code> for the full theory.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
-==&gt;fsspace::[
-    pattern=&gt;fs:#,
-    route=&gt;[
-     fs:m=&gt;/home/killswitch/software/metatron,
-     fs:=&gt;/home/killswitch/],
-    script=&gt;!*boot/script]@/sys/space/localfs
+==&gt;fsspace::[pattern=&gt;fs:#,route=&gt;[fs:m=&gt;/home/killswitch/software/metatron,fs:=&gt;/home/killswitch/],script=&gt;!*boot/script]@/sys/space/localfs
 mtron&gt; *fs:software/metatron     ​2​
 ==&gt;fs:m
 mtron&gt; *fs:m     ​3​
@@ -7019,22 +6650,12 @@ mtron&gt; *fs:m     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
-==&gt;fsspace::[
-    pattern=&gt;fs:#,
-    route=&gt;[
-     fs:m=&gt;/home/killswitch/software/metatron,
-     fs:=&gt;/home/killswitch/],
-    script=&gt;!*boot/script]@/sys/space/localfs
+==&gt;fsspace::[pattern=&gt;fs:#,route=&gt;[fs:m=&gt;/home/killswitch/software/metatron,fs:=&gt;/home/killswitch/],script=&gt;!*boot/script]@/sys/space/localfs
 mtron&gt; */sys/space/localfs/script     ​2​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
 ==&gt;/sys/space/localfs/exec/metatron?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
-==&gt;docs::[
-    obj=&gt;as?bytes&lt;=inst(bytes::T),
-    dom=&gt;'/m/inst',
-    rng=&gt;'/m/bytes',
-    args=&gt;[0=&gt;'/m/bytes'],
-    desc=&gt;'&lt;no description&gt;']
+==&gt;docs::[obj=&gt;as?rng=bytes&amp;dom=inst(bytes::T){&lt;j&gt;},dom=&gt;'/m/inst',rng=&gt;'/m/bytes',args=&gt;[0=&gt;'/m/bytes'],desc=&gt;'&lt;no description&gt;']
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 ==&gt;"{obj=as?rng=bytes&amp;dom=inst(bytes::T){&lt;j&gt;}, dom='/m/inst', rng='/m/bytes', args=[0=&gt;'/m/bytes'], desc='&lt;no description&gt;'}"</code></pre>
 </div>
@@ -7082,16 +6703,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355856       6308   6349548   1% /run'
+==&gt;'tmpfs                    6355856       6624   6349232   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2         959786032  520573056 390384768  58% /'
-==&gt;'tmpfs                   31779272      36936  31742336   1% /dev/shm'
+==&gt;'/dev/nvme1n1p2         959786032  524301756 386656068  58% /'
+==&gt;'tmpfs                   31779272     221428  31557844   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779272          0  31779272   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        244   6355608   1% /run/user/1000'
+==&gt;'tmpfs                    6355852        252   6355600   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1769037472 152171072  93% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1769666664 151541880  93% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
@@ -7108,7 +6729,6 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;'mvnw.cmd'
 ==&gt;node_modules
 ==&gt;'pom.xml'
-==&gt;'__probe_from_bash.txt'
 ==&gt;'README.md'
 ==&gt;'RELEASE.md'
 ==&gt;'REVIEW-FULL.md'
@@ -7117,7 +6737,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;671</code></pre>
+==&gt;658</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7137,19 +6757,7 @@ the location of the respective script engine. If found, then what were originall
                      perl   =&gt; /usr/bin/perl,
                      mtron  =&gt; /bin/metatron],
            route =&gt; [local: =&gt; &lt;~&gt;]]@&lt;/sys/space/fs/local&gt;
-==&gt;fsspace::[
-    pattern=&gt;local:#,
-    q=&gt;[mimeq::[
-    pattern=&gt;mimeq,
-    post_read=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T)]],
-    script=&gt;[
-     sh=&gt;/bin/sh,
-     bash=&gt;/bin/bash,
-     zsh=&gt;/bin/zsh,
-     python=&gt;/usr/bin/python3,
-     perl=&gt;/usr/bin/perl,
-     mtron=&gt;/bin/metatron],
-    route=&gt;[local:=&gt;/home/killswitch]]@/sys/space/fs/local</code></pre>
+==&gt;fsspace::[pattern=&gt;local:#,q=&gt;[mimeq::[pattern=&gt;mimeq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}]],script=&gt;[sh=&gt;/bin/sh,bash=&gt;/bin/bash,zsh=&gt;/bin/zsh,python=&gt;/usr/bin/python3,perl=&gt;/usr/bin/perl,mtron=&gt;/bin/metatron],route=&gt;[local:=&gt;/home/killswitch]]@/sys/space/fs/local</code></pre>
 </div>
 </div>
 <h3 id="sec-directories-as-navigable-polys" class="discrete">Directories as Navigable Polys</h3>
@@ -7242,23 +6850,23 @@ A brief, example driven overview of these subspaces is provided below.</p>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; millis::T
-==&gt;time::T[][ctor?millis&lt;=#{?}(#{*}::T)]@millis
+==&gt;time::T[][ctor?rng=millis&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@millis
 mtron&gt; second::T
-==&gt;time::T[][ctor?second&lt;=#{?}(#{*}::T)]@second
+==&gt;time::T[][ctor?rng=second&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@second
 mtron&gt; minute::T
-==&gt;time::T[][ctor?minute&lt;=#{?}(#{*}::T)]@minute
+==&gt;time::T[][ctor?rng=minute&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@minute
 mtron&gt; hour::T
-==&gt;time::T[][ctor?hour&lt;=#{?}(#{*}::T)]@hour</code></pre>
+==&gt;time::T[][ctor?rng=hour&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@hour</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; millis::1000.0.as(second::T)
-==&gt;second::1.0000
+==&gt;second::1.0
 mtron&gt; hour::1.5.as(minute::T)
-==&gt;minute::90.0000
+==&gt;minute::90.0
 mtron&gt; minute::60.0.as(hour::T)
-==&gt;hour::1.0000
+==&gt;hour::1.0
 mtron&gt; minute::1.0.gt(second::61.0)
 ==&gt;false
 mtron&gt; second::1.0.lt(millis::2000.0)
@@ -7279,27 +6887,27 @@ mtron&gt; second::1.0.lt(millis::2000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bB::T
-==&gt;datasize::T[][ctor?bB&lt;=#{?}(#{*}::T)]@bB
+==&gt;datasize::T[][ctor?rng=bB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@bB
 mtron&gt; kB::T
-==&gt;datasize::T[][ctor?kB&lt;=#{?}(#{*}::T)]@kB
+==&gt;datasize::T[][ctor?rng=kB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@kB
 mtron&gt; mB::T
-==&gt;datasize::T[][ctor?mB&lt;=#{?}(#{*}::T)]@mB
+==&gt;datasize::T[][ctor?rng=mB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mB
 mtron&gt; gB::T
-==&gt;datasize::T[][ctor?gB&lt;=#{?}(#{*}::T)]@gB
+==&gt;datasize::T[][ctor?rng=gB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@gB
 mtron&gt; tB::T
-==&gt;datasize::T[][ctor?tB&lt;=#{?}(#{*}::T)]@tB
+==&gt;datasize::T[][ctor?rng=tB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@tB
 mtron&gt; pB::T
-==&gt;datasize::T[][ctor?pB&lt;=#{?}(#{*}::T)]@pB</code></pre>
+==&gt;datasize::T[][ctor?rng=pB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@pB</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bB::1024.0.as(kB::T)
-==&gt;kB::1.0000
+==&gt;kB::1.0
 mtron&gt; kB::1.5.as(mB::T)
-==&gt;mB::0.0015
+==&gt;mB::0.00146484375
 mtron&gt; mB::1000.0.as(tB::T)
-==&gt;tB::0.0010
+==&gt;tB::9.5367431640625E-4
 mtron&gt; mB::1.0.gt(bB::600.0)
 ==&gt;true
 mtron&gt; gB::1.0.lt(kB::12000000.0)
@@ -7329,7 +6937,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.09:23/22/53/02/730?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.09:25/06/21/27/012?tz=-0600&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7342,13 +6950,13 @@ mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;{hour,minu
 ==&gt;9
 ==&gt;{3}0
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;host     ​7​
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt; (at /m/inst/rshift@1)]@/sys/fail/1070
+==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt; (at /m/inst/rshift@1)]@/sys/fail/1118
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;port     ​8​
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt; (at /m/inst/rshift@1)]@/sys/fail/1098
+==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt; (at /m/inst/rshift@1)]@/sys/fail/1146
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;path&gt;&gt;0     ​9​
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/path?tz=-0500&gt; (at /m/inst/rshift@1)]@/sys/fail/1126
+==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/path?tz=-0500&gt; (at /m/inst/rshift@1)]@/sys/fail/1174
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;==[port=&gt;+1]&gt;&gt;port     ​10​
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:26/09/00/00/000/port?tz=-0500&gt; (at /m/inst/rshift@2)]@/sys/fail/1154
+==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:26/09/00/00/000/port?tz=-0500&gt; (at /m/inst/rshift@2)]@/sys/fail/1202
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;=?=[port=&gt;25]     ​11​
 ==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '=?=[port=&gt;25]'
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)&gt;&gt;=[q=&gt;[tz=&gt;'+0000']].as(datetime::T)     ​12​
@@ -7451,33 +7059,7 @@ mtron&gt; '2024-12-25T09:00:00Z'.as(datetime::T)&gt;&gt;{year,month,day}     ​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/grph)
-==&gt;instset::[
-    pattern=&gt;/m/grph/#,
-    q=&gt;[docq::[
-    pattern=&gt;docq,
-    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-    space=&gt;[super=&gt;!*/m],
-    constq=&gt;[/m/web/serializer/obj_tp3::[=&gt;]@/m/web/serializer/obj_tp3],
-    type=&gt;[
-     rec::T@elmt,
-     elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx,
-     elmt::T[?[
-     OUT=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx],
-     IN=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx]]]@edge,
-     space::T[?[{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(#{*}::T)]@instset,{?}config=&gt;rec::T]][ctor?grphspace&lt;=#{?}(rec::T)]@grphspace,
-     modern::T],
-    inst=&gt;[gremlin?#{*}&lt;=grphspace(str::T),label?uri&lt;=rec(),values?#{*}&lt;=rec(uri{*}::T),inV?vrtx&lt;=edge(),outV?vrtx&lt;=edge(),bothV?vrtx{2}&lt;=edge(),out?vrtx{*}&lt;=vrtx(uri{*}::T),in?vrtx{*}&lt;=vrtx(uri{*}::T),both?vrtx{*}&lt;=vrtx(uri{*}::T),outE?edge{*}&lt;=vrtx(uri{*}::T),...(3 more)],
-    rewrite=&gt;[
-     /m/grph/inst/rewrite/gremlin_count?code{?}&lt;=code(),
-     /m/grph/inst/rewrite/gremlin_limit?code{?}&lt;=code(),
-     /m/grph/inst/rewrite/gremlin_where?code{?}&lt;=code(),
-     /m/grph/inst/rewrite/gremlin_where_count?code{?}&lt;=code(),
-     /m/grph/inst/rewrite/gremlin_where_limit?code{?}&lt;=code(),
-     /m/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(),
-     /m/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code()]]@/m/grph</code></pre>
+==&gt;instset::[pattern=&gt;/m/grph/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],constq=&gt;[/m/web/serializer/obj_tp3::[=&gt;]@/m/web/serializer/obj_tp3],type=&gt;[rec::T@elmt,elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx,elmt::T[?[OUT=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx],IN=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx]]]@edge,space::T[?[{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset,{?}config=&gt;rec::T]][ctor?rng=grphspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@grphspace,modern::T],inst=&gt;[gremlin?rng=#{*}&amp;dom=grphspace(str::T){&lt;j&gt;},label?rng=uri&amp;dom=rec(){&lt;j&gt;},values?rng=#{*}&amp;dom=rec(uri{*}::T){&lt;j&gt;},inV?rng=vrtx&amp;dom=edge(){&lt;j&gt;},outV?rng=vrtx&amp;dom=edge(){&lt;j&gt;},bothV?rng=vrtx{2}&amp;dom=edge(){&lt;j&gt;},out?rng=vrtx{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;},in?rng=vrtx{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;},both?rng=vrtx{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;},outE?rng=edge{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;},inE?rng=edge{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;},bothE?rng=edge{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;},addE?rng=edge&amp;dom=vrtx(uri::T,rec{+}::T,rec{?}::T){&lt;j&gt;}],rewrite=&gt;[/m/grph/inst/rewrite/gremlin_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/grph/inst/rewrite/gremlin_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/grph/inst/rewrite/gremlin_where?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/grph/inst/rewrite/gremlin_where_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/grph/inst/rewrite/gremlin_where_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/grph/inst/rewrite/out_incident_adjacent?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/grph/inst/rewrite/in_incident_adjacent?rng=code{?}&amp;dom=code(){&lt;j&gt;}]]@/m/grph</code></pre>
 </div>
 </div>
 </div>
@@ -7541,28 +7123,7 @@ the demarcation of metatron path collections.</p>
            dataset         =&gt; &lt;org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN&gt;,
            &lt;gremlin.graph&gt; =&gt; &lt;org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph&gt;]
          ]@&lt;/sys/space/grph/modern&gt;;     ​1​
-==&gt;grphspace::[
-    pattern=&gt;g:#,
-    route=&gt;[g:=&gt;&lt;&gt;],
-    config=&gt;[
-     dataset=&gt;&lt;org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN&gt;,
-     &lt;gremlin.graph&gt;=&gt;&lt;org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph&gt;],
-    schema=&gt;instset::[
-     pattern=&gt;/sys/space/grph/modern/instset/#,
-     type=&gt;[
-      vrtx::T@V,
-      edge::T@E,
-      vrtx::T[?[name=&gt;str::T,age=&gt;int::T]]@person,
-      vrtx::T[?[name=&gt;str::T,lang=&gt;str::T]]@software,
-      edge::T[?[weight=&gt;real::T]]@knows,
-      edge::T[?[weight=&gt;real::T]]@created],
-     q=&gt;[docq::[
-    pattern=&gt;docq,
-    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-     space=&gt;[super=&gt;!*/sys/space/sys]]@/sys/space/grph/modern/instset]@/sys/space/grph/modern
+==&gt;grphspace::[pattern=&gt;g:#,route=&gt;[g:=&gt;&lt;&gt;],config=&gt;[dataset=&gt;&lt;org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN&gt;,&lt;gremlin.graph&gt;=&gt;&lt;org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph&gt;],schema=&gt;instset::[pattern=&gt;/sys/space/grph/modern/instset/#,type=&gt;[vrtx::T@V,edge::T@E,vrtx::T[?[name=&gt;str::T,age=&gt;int::T]]@person,vrtx::T[?[name=&gt;str::T,lang=&gt;str::T]]@software,edge::T[?[weight=&gt;real::T]]@knows,edge::T[?[weight=&gt;real::T]]@created],q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/sys/space/sys]]@/sys/space/grph/modern/instset]@/sys/space/grph/modern
 mtron&gt; *g:+     ​2​
 ==&gt;edge::T[?[weight=&gt;real::T]]@knows
 ==&gt;vrtx::T[?[name=&gt;str::T,age=&gt;int::T]]@person
@@ -7650,11 +7211,11 @@ The same traversals expressed using both forms:</p>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
 ==&gt;person::[name=&gt;marko,age=&gt;29]
 mtron&gt; *g:V/1/OUT     ​2​
-==&gt;created::[weight=&gt;0.4000]@g:E/9
-==&gt;knows::[weight=&gt;0.5000]@g:E/7
-==&gt;knows::[weight=&gt;1.0000]@g:E/8
+==&gt;created::[weight=&gt;0.4]@g:E/9
+==&gt;knows::[weight=&gt;0.5]@g:E/7
+==&gt;knows::[weight=&gt;1.0]@g:E/8
 mtron&gt; *g:V/1/OUT/created     ​3​
-==&gt;created::[weight=&gt;0.4000]
+==&gt;created::[weight=&gt;0.4]
 mtron&gt; *g:V/1/OUT/created/IN     ​4​
 ==&gt;software::[lang=&gt;java,name=&gt;lop]
 mtron&gt; *g:V/1/OUT/knows/IN/name     ​5​
@@ -7857,12 +7418,7 @@ In this way, mtron conveniently supports space agnostic retrieval of data across
                    route   =&gt; [&lt;acme:&gt;=&gt;&lt;&gt;],
                    table   =&gt; [,],
                    driver  =&gt; &lt;org.mariadb.jdbc.Driver&gt;]@/sys/space/acme;
-==&gt;tblespace::[
-    pattern=&gt;acme:#,
-    host=&gt;mariadb://localhost:3306/acme?user=mtron&amp;password=mtron,
-    route=&gt;[acme:=&gt;&lt;&gt;],
-    table=&gt;[,],
-    driver=&gt;&lt;org.mariadb.jdbc.Driver&gt;]@/sys/space/acme</code></pre>
+==&gt;tblespace::[pattern=&gt;acme:#,host=&gt;mariadb://localhost:3306/acme?user=mtron&amp;password=mtron,route=&gt;[acme:=&gt;&lt;&gt;],table=&gt;[,],driver=&gt;&lt;org.mariadb.jdbc.Driver&gt;]@/sys/space/acme</code></pre>
 </div>
 </div>
 <div class="exampleblock primary">
@@ -8202,20 +7758,13 @@ The vertex does not know the difference — <code>*/g/V/1/OUT/+</code> returns a
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; memspace::[pattern  =&gt; &lt;/te/hot/#&gt;,
                   route    =&gt; [/te/hot/  =&gt; &lt;&gt;]]@/sys/space/hot
-==&gt;memspace::[
-    pattern=&gt;/te/hot/#,
-    route=&gt;[/te/hot/=&gt;&lt;&gt;]]@/sys/space/hot
+==&gt;memspace::[pattern=&gt;/te/hot/#,route=&gt;[/te/hot/=&gt;&lt;&gt;]]@/sys/space/hot
 mtron&gt; tblespace::[pattern =&gt; &lt;/te/cold/#&gt;,
                    route   =&gt; [/te/cold/ =&gt; &lt;&gt;],
                    table   =&gt; [,],
                    driver  =&gt; &lt;org.sqlite.JDBC&gt;,
                    host    =&gt; &lt;sqlite:/tmp/cold.db&gt;]@/sys/space/cold
-==&gt;tblespace::[
-    pattern=&gt;/te/cold/#,
-    route=&gt;[/te/cold/=&gt;&lt;&gt;],
-    table=&gt;[,],
-    driver=&gt;&lt;org.sqlite.JDBC&gt;,
-    host=&gt;&lt;sqlite:/tmp/cold.db&gt;]@/sys/space/cold</code></pre>
+==&gt;tblespace::[pattern=&gt;/te/cold/#,route=&gt;[/te/cold/=&gt;&lt;&gt;],table=&gt;[,],driver=&gt;&lt;org.sqlite.JDBC&gt;,host=&gt;&lt;sqlite:/tmp/cold.db&gt;]@/sys/space/cold</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8226,18 +7775,12 @@ mtron&gt; tblespace::[pattern =&gt; &lt;/te/cold/#&gt;,
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; /te/hot/1/a  -&gt; [item   =&gt; 'laptop',
                        total=&gt;1200.0,
                        owner  =&gt; !*g:V/2]
-==&gt;[
-    item=&gt;'laptop',
-    total=&gt;1200.0000,
-    owner=&gt;!*g:V/2]
+==&gt;[item=&gt;'laptop',total=&gt;1200.0,owner=&gt;!*g:V/2]
 mtron&gt; /te/hot/1/b  -&gt; [item   =&gt; 'mouse',total=&gt;25.0]
-==&gt;[item=&gt;'mouse',total=&gt;25.0000]
+==&gt;[item=&gt;'mouse',total=&gt;25.0]
 mtron&gt; /te/cold/1/x -&gt; [item   =&gt; 'book',total=&gt;15.0,
                        seller =&gt; !*g:V/4]
-==&gt;[
-    item=&gt;'book',
-    total=&gt;15.0000,
-    seller=&gt;!*g:V/4]</code></pre>
+==&gt;[item=&gt;'book',total=&gt;15.0,seller=&gt;!*g:V/4]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8263,14 +7806,10 @@ mtron&gt; *g:V/1/OUT/te:hot/a/owner/name     ​3​
      [age=&gt;27,name=&gt;vadas]
          X=&gt;
      vrtx::T[?[name=&gt;str::T,age=&gt;int::T]]@person
-     ----------------------------------------------------
-     [
-      name=&gt;(/=&gt;name)=&gt;vadas=&gt;X=&gt;str::T,
-      age=&gt;(==&gt;age)=&gt;27=&gt;==&gt;int::T,
-      noobj=&gt;(==&gt;{?}OUT)=&gt;noobj=&gt;/=&gt;[uri::T=&gt;edge{*}::T],
-      noobj=&gt;(==&gt;{?}IN)=&gt;noobj=&gt;/=&gt;[uri::T=&gt;edge{*}::T]] (at /m/inst/auto_from) (at /m/inst/from@0)]@/sys/fail/300
+     ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+     [name=&gt;(/=&gt;name)=&gt;vadas=&gt;X=&gt;str::T,age=&gt;(==&gt;age)=&gt;27=&gt;==&gt;int::T,noobj=&gt;(==&gt;{?}OUT)=&gt;noobj=&gt;/=&gt;[uri::T=&gt;edge{*}::T],noobj=&gt;(==&gt;{?}IN)=&gt;noobj=&gt;/=&gt;[uri::T=&gt;edge{*}::T]] (at /m/inst/auto_from) (at /m/inst/from@0)]@/sys/fail/300
 mtron&gt; *g:V/1/OUT/te:cold/x/total     ​4​
-==&gt;15.0000
+==&gt;15.0
 mtron&gt; *g:V/1/OUT/knows.count()     ​5​
 ==&gt;{2}1</code></pre>
 </div>
@@ -8511,41 +8050,26 @@ knows              │
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; v1 -&gt; [name=&gt;'marko',age=&gt;29,
               out_=&gt;[knows=&gt;{!*v2, !*v3},created=&gt;!*v4]]
-==&gt;[
-    name=&gt;'marko',
-    age=&gt;29,
-    out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
+==&gt;[name=&gt;'marko',age=&gt;29,out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
 mtron&gt; v2 -&gt; [name=&gt;'vadas',age=&gt;27]
 ==&gt;[name=&gt;'vadas',age=&gt;27]
 mtron&gt; v3 -&gt; [name=&gt;'josh',age=&gt;32,
               out_=&gt;[created=&gt;{!*v4, !*v5}]]
-==&gt;[
-    name=&gt;'josh',
-    age=&gt;32,
-    out_=&gt;[created=&gt;{!*v4,!*v5}]]
+==&gt;[name=&gt;'josh',age=&gt;32,out_=&gt;[created=&gt;{!*v4,!*v5}]]
 mtron&gt; v4 -&gt; [name=&gt;'lop',lang=&gt;java]
 ==&gt;[name=&gt;'lop',lang=&gt;java]
 mtron&gt; v5 -&gt; [name=&gt;'ripple',lang=&gt;java]
 ==&gt;[name=&gt;'ripple',lang=&gt;java]
 mtron&gt; v6 -&gt; [name=&gt;'peter',age=&gt;35,
               out_=&gt;[created=&gt;{!*v4}]]
-==&gt;[
-    name=&gt;'peter',
-    age=&gt;35,
-    out_=&gt;[created=&gt;!*v4]]
+==&gt;[name=&gt;'peter',age=&gt;35,out_=&gt;[created=&gt;!*v4]]
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
-==&gt;[
-    name=&gt;'marko',
-    age=&gt;29,
-    out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
+==&gt;[name=&gt;'marko',age=&gt;29,out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
 mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows     ​3​
 ==&gt;[name=&gt;'vadas',age=&gt;27]
-==&gt;[
-    name=&gt;'josh',
-    age=&gt;32,
-    out_=&gt;[created=&gt;{!*v4,!*v5}]]
+==&gt;[name=&gt;'josh',age=&gt;32,out_=&gt;[created=&gt;{!*v4,!*v5}]]
 mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows.&gt;&gt;out_.&gt;&gt;created     ​4​
 ==&gt;[name=&gt;'lop',lang=&gt;java]
 ==&gt;[name=&gt;'ripple',lang=&gt;java]
@@ -8554,10 +8078,7 @@ mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows.&gt;&gt;out_.&gt;&gt;created.&gt;&gt;na
 ==&gt;'ripple'
 mtron&gt; *v1.&gt;&gt;out_/knows     ​3​
 ==&gt;[name=&gt;'vadas',age=&gt;27]
-==&gt;[
-    name=&gt;'josh',
-    age=&gt;32,
-    out_=&gt;[created=&gt;{!*v4,!*v5}]]
+==&gt;[name=&gt;'josh',age=&gt;32,out_=&gt;[created=&gt;{!*v4,!*v5}]]
 mtron&gt; *v1.&gt;&gt;out_/knows.&gt;&gt;out_/created     ​4​
 ==&gt;[name=&gt;'lop',lang=&gt;java]
 ==&gt;[name=&gt;'ripple',lang=&gt;java]
@@ -8598,10 +8119,7 @@ knows  vadas       │          ripple
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
-==&gt;[
-    name=&gt;'marko',
-    age=&gt;29,
-    out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
+==&gt;[name=&gt;'marko',age=&gt;29,out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
 mtron&gt; *v1.outE(knows)     ​3​
 mtron&gt; *v1.outE(knows).outE(created)     ​4​
 mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     ​5​</code></pre>
@@ -8631,11 +8149,7 @@ For the sake of brevity, only vertex 1 and its incident edges will be developed 
          outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2, outV_=&gt;!*v1],
                          [weight=&gt;0.5,inV_=&gt;!*v4, outV_=&gt;!*v1]}],
                  created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3, outV_=&gt;!*v1]]
-==&gt;[
-    name=&gt;'marko',
-    age=&gt;29,
-    outE_=&gt;[knows=&gt;{[weight=&gt;0.5000,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5000,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
-    created=&gt;[weight=&gt;0.2000,inV_=&gt;!*v3,outV_=&gt;!*v1]]
+==&gt;[name=&gt;'marko',age=&gt;29,outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]
 mtron&gt; v2 -&gt; [name=&gt;'vadas']
 ==&gt;[name=&gt;'vadas']
 mtron&gt; v3 -&gt; [name=&gt;'josh']
@@ -8645,11 +8159,7 @@ mtron&gt; v4 -&gt; [name=&gt;'lop']
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
-==&gt;[
-    name=&gt;'marko',
-    age=&gt;29,
-    outE_=&gt;[knows=&gt;{[weight=&gt;0.5000,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5000,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
-    created=&gt;[weight=&gt;0.2000,inV_=&gt;!*v3,outV_=&gt;!*v1]]
+==&gt;[name=&gt;'marko',age=&gt;29,outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]
 mtron&gt; *v1.&gt;&gt;outE_.&gt;&gt;knows.&gt;&gt;inV_     ​3​
 ==&gt;[name=&gt;'vadas']
 ==&gt;[name=&gt;'lop']
@@ -8688,11 +8198,7 @@ knows     0.5    └────┘
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
-==&gt;[
-    name=&gt;'marko',
-    age=&gt;29,
-    outE_=&gt;[knows=&gt;{[weight=&gt;0.5000,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5000,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
-    created=&gt;[weight=&gt;0.2000,inV_=&gt;!*v3,outV_=&gt;!*v1]]
+==&gt;[name=&gt;'marko',age=&gt;29,outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]
 mtron&gt; *v1.out(knows)     ​3​
 mtron&gt; *v1.out(knows).out(created)     ​4​
 mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
@@ -8937,7 +8443,7 @@ The vertex&#8217;s <code>OUT</code> traversal remains a single expression regard
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *virtual
-==&gt;thread::T[][ctor?virtual&lt;=#{?}(rec::T)]@virtual
+==&gt;thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual
 mtron&gt; *machine
 ==&gt;virtual::T@machine</code></pre>
 </div>
@@ -8992,9 +8498,9 @@ mtron&gt; *machine
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *virtual
-==&gt;thread::T[][ctor?virtual&lt;=#{?}(rec::T)]@virtual
+==&gt;thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual
 mtron&gt; *core
-==&gt;thread::T[][ctor?core&lt;=#{?}(rec::T)]@core</code></pre>
+==&gt;thread::T[][ctor?rng=core&amp;dom=#{?}(rec::T){&lt;j&gt;}]@core</code></pre>
 </div>
 </div>
 <h3 id="sec-type-structure" class="discrete">Type Structure</h3>
@@ -9177,64 +8683,20 @@ mtron&gt; */sys/thread/executor/stop/+/source/source</code></pre>
 mtron&gt; virtual::[code  =&gt; @ab + 'B',
                  loop  =&gt; second::1.0,
                  state =&gt; pause]@/sys/thread/b     ​3​
-==&gt;virtual::[
-    code=&gt;at(ab).plus('B'),
-    loop=&gt;second::1.0000,
-    state=&gt;run,
-    source=&gt;!*/sys/thread/main,
-    start=&gt;[
-     code=&gt;at(ab).plus('B'),
-     loop=&gt;second::1.0000,
-     state=&gt;pause]@/sys/thread/b,
-    time=&gt;datetime::&lt;//2026.09:23/22/53/11/335?tz=-0600&gt;,
-    runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T)]@/sys/thread/b
+==&gt;fail::[fail [LinkedHashMap$LinkedHashIterator&lt;1024&gt;]][]@/sys/fail/1742
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
                  yield =&gt; !*/sys/thread/b]@/sys/thread/a     ​4​
-==&gt;fail::[fail [LinkedHashMap$LinkedHashIterator&lt;1024&gt;]][]@/sys/fail/1698
+==&gt;virtual::[code=&gt;at(ab).plus('A'),loop=&gt;second::1.0,yield=&gt;!*/sys/thread/b,source=&gt;!*/sys/thread/main,start=&gt;[code=&gt;at(ab).plus('A'),loop=&gt;second::1.0,yield=&gt;!*/sys/thread/b]@/sys/thread/a,state=&gt;run,time=&gt;datetime::&lt;//2026.09:25/06/21/36/030?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;'BBA'@ab]@/sys/thread/a
 mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
-==&gt;virtual::[
-    code=&gt;at(ab).plus('B'),
-    loop=&gt;second::1.0000,
-    state=&gt;run,
-    source=&gt;!*/sys/thread/main,
-    start=&gt;[
-     code=&gt;at(ab).plus('B'),
-     loop=&gt;second::1.0000,
-     state=&gt;pause]@/sys/thread/b,
-    time=&gt;datetime::&lt;//2026.09:23/22/53/11/335?tz=-0600&gt;,
-    runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-    result=&gt;'B'@ab]@/sys/thread/b
+==&gt;virtual::[code=&gt;at(ab).plus('B'),loop=&gt;second::1.0,state=&gt;run,source=&gt;!*/sys/thread/main,start=&gt;[code=&gt;at(ab).plus('B'),loop=&gt;second::1.0,state=&gt;pause]@/sys/thread/b,time=&gt;datetime::&lt;//2026.09:25/06/21/35/985?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;'BB'@ab]@/sys/thread/b
 mtron&gt; sleep(second::5.0)
 mtron&gt; */sys/thread/b.stop()
-==&gt;virtual::[
-    code=&gt;at(ab).plus('B'),
-    loop=&gt;second::1.0000,
-    state=&gt;stop,
-    source=&gt;!*/sys/thread/main,
-    start=&gt;[
-     code=&gt;at(ab).plus('B'),
-     loop=&gt;second::1.0000,
-     state=&gt;pause]@/sys/thread/b,
-    time=&gt;datetime::&lt;//2026.09:23/22/53/11/335?tz=-0600&gt;,
-    runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-    result=&gt;fail::[fail [VirtualThread&lt;982&gt;]]@/sys/fail/1702[...]]@/sys/thread/b
+==&gt;virtual::[code=&gt;at(ab).plus('B'),loop=&gt;second::1.0,state=&gt;stop,source=&gt;!*/sys/thread/main,start=&gt;[code=&gt;at(ab).plus('B'),loop=&gt;second::1.0,state=&gt;pause]@/sys/thread/b,time=&gt;datetime::&lt;//2026.09:25/06/21/35/985?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;fail::[fail [VirtualThread&lt;982&gt;]][]@/sys/fail/1744]@/sys/thread/b
 mtron&gt; */sys/thread/a.stop()
-==&gt;virtual::[
-    code=&gt;at(ab).plus('A'),
-    loop=&gt;second::1.0000,
-    yield=&gt;!*/sys/thread/b,
-    source=&gt;!*/sys/thread/main,
-    start=&gt;[
-     code=&gt;at(ab).plus('A'),
-     loop=&gt;second::1.0000,
-     yield=&gt;!*/sys/thread/b]@/sys/thread/a,
-    state=&gt;stop,
-    time=&gt;datetime::&lt;//2026.09:23/22/53/11/365?tz=-0600&gt;,
-    runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-    result=&gt;'BABABABABABABABABABABAA'@ab]@/sys/thread/a
+==&gt;virtual::[code=&gt;at(ab).plus('A'),loop=&gt;second::1.0,yield=&gt;!*/sys/thread/b,source=&gt;!*/sys/thread/main,start=&gt;[code=&gt;at(ab).plus('A'),loop=&gt;second::1.0,yield=&gt;!*/sys/thread/b]@/sys/thread/a,state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/21/36/030?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;fail::[fail [VirtualThread&lt;982&gt;]][]@/sys/fail/1746]@/sys/thread/a
 mtron&gt; *ab
-==&gt;'BABABABABABABABABABABAA'</code></pre>
+==&gt;'BBAABBAABBAABBAABBAABBAABBAABBAABBAABBAABBA'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9263,37 +8725,13 @@ mtron&gt; *ab
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; virtual::[code=&gt;print('.'),loop=&gt;second::2.5]@/sys/thread/example     ​1​
-==&gt;virtual::[
-    code=&gt;print('.'),
-    loop=&gt;second::2.5000,
-    source=&gt;!*/sys/thread/main,
-    start=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example,
-    state=&gt;run,
-    time=&gt;datetime::&lt;//2026.09:23/22/53/21/560?tz=-0600&gt;,
-    runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-    result=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example]@/sys/thread/example
+==&gt;virtual::[code=&gt;print('.'),loop=&gt;second::2.5,source=&gt;!*/sys/thread/main,start=&gt;[code=&gt;print('.'),loop=&gt;second::2.5]@/sys/thread/example,state=&gt;run,time=&gt;datetime::&lt;//2026.09:25/06/21/46/234?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;[code=&gt;print('.'),loop=&gt;second::2.5]@/sys/thread/example]@/sys/thread/example
 mtron&gt; */sys/thread/example.pause()     ​2​
-==&gt;virtual::[
-    code=&gt;print('.'),
-    loop=&gt;second::2.5000,
-    source=&gt;!*/sys/thread/main,
-    start=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example,
-    state=&gt;pause,
-    time=&gt;datetime::&lt;//2026.09:23/22/53/21/560?tz=-0600&gt;,
-    runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-    result=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example]@/sys/thread/example
+==&gt;virtual::[code=&gt;print('.'),loop=&gt;second::2.5,source=&gt;!*/sys/thread/main,start=&gt;[code=&gt;print('.'),loop=&gt;second::2.5]@/sys/thread/example,state=&gt;pause,time=&gt;datetime::&lt;//2026.09:25/06/21/46/234?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;[code=&gt;print('.'),loop=&gt;second::2.5]@/sys/thread/example]@/sys/thread/example
 mtron&gt; */sys/thread/example/state     ​3​
 ==&gt;pause
 mtron&gt; */sys/thread/example.resume()     ​4​
-==&gt;virtual::[
-    code=&gt;print('.'),
-    loop=&gt;second::2.5000,
-    source=&gt;!*/sys/thread/main,
-    start=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example,
-    state=&gt;run,
-    time=&gt;datetime::&lt;//2026.09:23/22/53/21/560?tz=-0600&gt;,
-    runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T),
-    result=&gt;[code=&gt;print('.'),loop=&gt;second::2.5000]@/sys/thread/example]@/sys/thread/example
+==&gt;virtual::[code=&gt;print('.'),loop=&gt;second::2.5,source=&gt;!*/sys/thread/main,start=&gt;[code=&gt;print('.'),loop=&gt;second::2.5]@/sys/thread/example,state=&gt;run,time=&gt;datetime::&lt;//2026.09:25/06/21/46/234?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;[code=&gt;print('.'),loop=&gt;second::2.5]@/sys/thread/example]@/sys/thread/example
 mtron&gt; */sys/thread/example/state     ​5​
 ==&gt;run</code></pre>
 </div>
@@ -9332,19 +8770,9 @@ mtron&gt; */sys/thread/example/state     ​5​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/thread/main
-==&gt;core::[
-    code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-    state=&gt;stop,
-    time=&gt;datetime::&lt;//2026.09:23/22/52/43/283?tz=-0600&gt;,
-    runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T)]
+==&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/21/04/896?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}]
 mtron&gt; */sys/thread/main?docq
-==&gt;docs::[
-    obj=&gt;core::[
-     code=&gt;inst?#{*}&lt;=#{?}(#{*}::T),
-     state=&gt;stop,
-     time=&gt;datetime::&lt;//2026.09:23/22/52/43/283?tz=-0600&gt;,
-     runtime=&gt;!inst?#{*}&lt;=#{?}(#{*}::T)],
-    desc=&gt;'this root thread waits till all child threads are complete ...']</code></pre>
+==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/21/04/896?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],desc=&gt;'this root thread waits till all child threads are complete and then releases a latch to initiate metatron shutdown procedure']</code></pre>
 </div>
 </div>
 </div>
@@ -9376,11 +8804,7 @@ mtron&gt; catalog::[host         =&gt; &lt;http://localhost:1234/v1&gt;,
                  pattern      =&gt; &lt;lmstudio:#&gt;,
                  name         =&gt; &lt;openai&gt;,
                  route        =&gt; [&lt;lmstudio:&gt;=&gt;&lt;&gt;]]@/sys/space/lmstudio
-==&gt;catalog::[
-    host=&gt;http://localhost:1234/v1,
-    pattern=&gt;lmstudio:#,
-    name=&gt;openai,
-    route=&gt;[lmstudio:=&gt;&lt;&gt;]]@/sys/space/lmstudio</code></pre>
+==&gt;catalog::[host=&gt;http://localhost:1234/v1,pattern=&gt;lmstudio:#,name=&gt;openai,route=&gt;[lmstudio:=&gt;&lt;&gt;]]@/sys/space/lmstudio</code></pre>
 </div>
 </div>
 </div>
@@ -9410,7 +8834,7 @@ When <code><a href="http://#" class="bare">http://#</a></code> is the pattern, t
                      /docs    =&gt; target/docs,
                      /console =&gt; src/main/resources/web/console]
        ]@/sys/space/web/http
-==&gt;fail::[unable to construct httpspace::T: fail::[inst apply failure: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]]@/sys/fail/2100
+==&gt;fail::[unable to construct httpspace::T: fail::[inst apply failure: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]]@/sys/fail/2104
    	while parsing: httpspace::[
            host     =&gt; http://localhost:8777,
            pattern  =&gt; http://#,
@@ -9418,7 +8842,7 @@ When <code><a href="http://#" class="bare">http://#</a></code> is the pattern, t
                         /mcp     =&gt; mcp_mtron_http,
                         /docs    =&gt; target/docs,
                         /console =&gt; src/main/resources/web/console]
-          ]@/sys/space/web/http]@/sys/fail/2102</code></pre>
+          ]@/sys/space/web/http]@/sys/fail/2106</code></pre>
 </div>
 </div>
 <h3 id="sec-html-type" class="discrete">HTML Type</h3>
@@ -9447,75 +8871,13 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
    &lt;/html&gt;
    """
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​3​
-==&gt;[html=&gt;[
-    head=&gt;[
-     title=&gt;'PhaseShift Studio',
-     out=&gt;[
-      [
-       tag=&gt;link,
-       href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
-       rel=&gt;'stylesheet'],
-      [
-       tag=&gt;link,
-       href=&gt;&lt;css/metatron.css&gt;,
-       rel=&gt;'stylesheet']]],
-    body=&gt;[
-     out=&gt;[
-      [tag=&gt;p],
-      [
-       tag=&gt;h1,
-       style=&gt;'padding-left:125px;color:var(--primary)',
-       text=&gt;'PhaseShift Studio'],
-      [
-       tag=&gt;img,
-       style=&gt;'padding-left:100px',
-       src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
-       width=&gt;'500px'],
-      [
-       tag=&gt;script,
-       type=&gt;'module',
-       src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495&gt;,
-       integrity=&gt;'sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWc...',
-       data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2ed4d310d5f64c4a9118e02b0e0...',
-       crossorigin=&gt;'anonymous']],
-     style=&gt;'background-color: black;']]]
+==&gt;[html=&gt;[head=&gt;[title=&gt;'PhaseShift Studio',out=&gt;[[tag=&gt;link,href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,rel=&gt;'stylesheet'],[tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet']]],body=&gt;[out=&gt;[[tag=&gt;p],[tag=&gt;h1,style=&gt;'padding-left:125px;color:var(--primary)',text=&gt;'PhaseShift Studio'],[tag=&gt;img,style=&gt;'padding-left:100px',src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,width=&gt;'500px'],[tag=&gt;script,type=&gt;'module',src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495&gt;,integrity=&gt;'sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==',data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2ed4d310d5f64c4a9118e02b0e07c623","r":1,"spa":2}',crossorigin=&gt;'anonymous']],style=&gt;'background-color: black;']]]
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)/html/head/title     ​4​
 ==&gt;/html/head/title
 mtron&gt; *&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt;     ​5​
 ==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from@0)]@/sys/fail/2112
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​6​
-==&gt;[html=&gt;[
-    head=&gt;[
-     title=&gt;'PhaseShift Studio',
-     out=&gt;[
-      [
-       tag=&gt;link,
-       href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
-       rel=&gt;'stylesheet'],
-      [
-       tag=&gt;link,
-       href=&gt;&lt;css/metatron.css&gt;,
-       rel=&gt;'stylesheet']]],
-    body=&gt;[
-     out=&gt;[
-      [tag=&gt;p],
-      [
-       tag=&gt;h1,
-       style=&gt;'padding-left:125px;color:var(--primary)',
-       text=&gt;'PhaseShift Studio'],
-      [
-       tag=&gt;img,
-       style=&gt;'padding-left:100px',
-       src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
-       width=&gt;'500px'],
-      [
-       tag=&gt;script,
-       type=&gt;'module',
-       src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495&gt;,
-       integrity=&gt;'sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWc...',
-       data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2ed4d310d5f64c4a9118e02b0e0...',
-       crossorigin=&gt;'anonymous']],
-     style=&gt;'background-color: black;']]]</code></pre>
+==&gt;[html=&gt;[head=&gt;[title=&gt;'PhaseShift Studio',out=&gt;[[tag=&gt;link,href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,rel=&gt;'stylesheet'],[tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet']]],body=&gt;[out=&gt;[[tag=&gt;p],[tag=&gt;h1,style=&gt;'padding-left:125px;color:var(--primary)',text=&gt;'PhaseShift Studio'],[tag=&gt;img,style=&gt;'padding-left:100px',src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,width=&gt;'500px'],[tag=&gt;script,type=&gt;'module',src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495&gt;,integrity=&gt;'sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==',data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2ed4d310d5f64c4a9118e02b0e07c623","r":1,"spa":2}',crossorigin=&gt;'anonymous']],style=&gt;'background-color: black;']]]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9565,107 +8927,7 @@ mtron&gt; *&lt;http://localhost:11434/api/tags&gt;     ​2​
 mtron&gt; *&lt;http://localhost:11434/api/tags?mimeq=application/x-mtron&gt;     ​3​
 ==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from@0)]@/sys/fail/2116
 mtron&gt; *&lt;http://localhost:11434/api/tags&gt;.as(rec::T)     ​4​
-==&gt;[models=&gt;[[
-    name=&gt;&lt;qwen3.5:4b&gt;,
-    model=&gt;&lt;qwen3.5:4b&gt;,
-    modified_at=&gt;&lt;2026-06-28T00:25:31.583735-06:00&gt;,
-    size=&gt;3389983735,
-    digest=&gt;&lt;2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd&gt;,
-    details=&gt;[
-     format=&gt;gguf,
-     family=&gt;qwen35,
-     families=&gt;[qwen35],
-     parameter_size=&gt;&lt;4.7B&gt;,
-     quantization_level=&gt;Q4_K_M,
-     context_length=&gt;262144,
-     embedding_length=&gt;2560],
-    capabilities=&gt;[vision,completion,tools,thinking]],[
-    name=&gt;&lt;dr.stynx:latest&gt;,
-    model=&gt;&lt;dr.stynx:latest&gt;,
-    modified_at=&gt;&lt;2026-06-13T12:19:21.4935225-06:00&gt;,
-    size=&gt;17690513930,
-    digest=&gt;&lt;8b8560aa375897345cc5213cc8b953ce0e77758527421aa087afa374d4f4b36d&gt;,
-    details=&gt;[
-     parent_model=&gt;danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth:latest,
-     format=&gt;gguf,
-     family=&gt;qwen3moe,
-     families=&gt;[qwen3moe],
-     parameter_size=&gt;&lt;30.5B&gt;,
-     quantization_level=&gt;Q4_K_M,
-     context_length=&gt;1048576,
-     embedding_length=&gt;2048],
-    capabilities=&gt;[completion,tools]],[
-    name=&gt;hengwen/DeepSeek-R1-Distill-Qwen-14B:q8_0,
-    model=&gt;hengwen/DeepSeek-R1-Distill-Qwen-14B:q8_0,
-    modified_at=&gt;&lt;2026-05-20T03:50:17.3003242-06:00&gt;,
-    size=&gt;15701597480,
-    digest=&gt;ed6b8c52bf980271969bffe42db30569937922207469ffa9bb0c30513a5ca8d2,
-    details=&gt;[
-     parent_model=&gt;/home/test/ollama/models/blobs/sha256-b6b2172e953e1cd9b32f6a061b1855b1751b365ab5c7b67c7bd4862480a48ac3,
-     format=&gt;gguf,
-     family=&gt;qwen2,
-     families=&gt;[qwen2],
-     parameter_size=&gt;&lt;14.8B&gt;,
-     quantization_level=&gt;Q8_0,
-     context_length=&gt;131072,
-     embedding_length=&gt;5120],
-    capabilities=&gt;[completion]],[
-    name=&gt;&lt;qwen2.5-coder:32b&gt;,
-    model=&gt;&lt;qwen2.5-coder:32b&gt;,
-    modified_at=&gt;&lt;2026-05-20T03:48:28.2625806-06:00&gt;,
-    size=&gt;19851349898,
-    digest=&gt;b92d6a0bd47ee79114298de0177bf920c05a706d12633950b3936778492bef41,
-    details=&gt;[
-     format=&gt;gguf,
-     family=&gt;qwen2,
-     families=&gt;[qwen2],
-     parameter_size=&gt;&lt;32.8B&gt;,
-     quantization_level=&gt;Q4_K_M,
-     context_length=&gt;32768,
-     embedding_length=&gt;5120],
-    capabilities=&gt;[completion,tools,insert]],[
-    name=&gt;deepseek-r1:14b,
-    model=&gt;deepseek-r1:14b,
-    modified_at=&gt;&lt;2026-05-14T00:23:01.4598875-06:00&gt;,
-    size=&gt;8988112209,
-    digest=&gt;c333b7232bdb521236694ffbb5f5a6b11cc45d98e9142c73123b670fca400b09,
-    details=&gt;[
-     format=&gt;gguf,
-     family=&gt;qwen2,
-     families=&gt;[qwen2],
-     parameter_size=&gt;&lt;14.8B&gt;,
-     quantization_level=&gt;Q4_K_M,
-     context_length=&gt;131072,
-     embedding_length=&gt;5120],
-    capabilities=&gt;[completion,thinking]],[
-    name=&gt;&lt;qwen2.5-coder:7b&gt;,
-    model=&gt;&lt;qwen2.5-coder:7b&gt;,
-    modified_at=&gt;&lt;2026-05-12T21:08:02.3143859-06:00&gt;,
-    size=&gt;4683087561,
-    digest=&gt;dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364,
-    details=&gt;[
-     format=&gt;gguf,
-     family=&gt;qwen2,
-     families=&gt;[qwen2],
-     parameter_size=&gt;&lt;7.6B&gt;,
-     quantization_level=&gt;Q4_K_M,
-     context_length=&gt;32768,
-     embedding_length=&gt;3584],
-    capabilities=&gt;[completion,tools,insert]],[
-    name=&gt;qwen3-embedding:8b,
-    model=&gt;qwen3-embedding:8b,
-    modified_at=&gt;&lt;2026-05-10T15:16:25.3309793-06:00&gt;,
-    size=&gt;4676805193,
-    digest=&gt;&lt;64b933495768fbd3b87c20583d379728a07471e0c66733a9df87cd1901b3c44b&gt;,
-    details=&gt;[
-     parent_model=&gt;&lt;/Users/ollama/.ollama/models/blobs/sha256-3fcd3febec8b3fd64435204db75bf0dd73b91e8d0661e0331acfe7e7c3120b85&gt;,
-     format=&gt;gguf,
-     family=&gt;qwen3,
-     families=&gt;[qwen3],
-     parameter_size=&gt;&lt;7.6B&gt;,
-     quantization_level=&gt;Q4_K_M,
-     context_length=&gt;40960,
-   ...</code></pre>
+==&gt;[models=&gt;[[name=&gt;&lt;qwen3.5:4b&gt;,model=&gt;&lt;qwen3.5:4b&gt;,modified_at=&gt;&lt;2026-06-28T00:25:31.583735-06:00&gt;,size=&gt;3389983735,digest=&gt;&lt;2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd&gt;,details=&gt;[format=&gt;gguf,family=&gt;qwen35,families=&gt;[qwen35],parameter_size=&gt;&lt;4.7B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;262144,embedding_length=&gt;2560],capabilities=&gt;[vision,completion,tools,thinking]],[name=&gt;&lt;dr.stynx:latest&gt;,model=&gt;&lt;dr.stynx:latest&gt;,modified_at=&gt;&lt;2026-06-13T12:19:21.4935225-06:00&gt;,size=&gt;17690513930,digest=&gt;&lt;8b8560aa375897345cc5213cc8b953ce0e77758527421aa087afa374d4f4b36d&gt;,details=&gt;[parent_model=&gt;danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth:latest,format=&gt;gguf,family=&gt;qwen3moe,families=&gt;[qwen3moe],parameter_size=&gt;&lt;30.5B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;1048576,embedding_length=&gt;2048],capabilities=&gt;[completion,tools]],[name=&gt;hengwen/DeepSeek-R1-Distill-Qwen-14B:q8_0,model=&gt;hengwen/DeepSeek-R1-Distill-Qwen-14B:q8_0,modified_at=&gt;&lt;2026-05-20T03:50:17.3003242-06:00&gt;,size=&gt;15701597480,digest=&gt;ed6b8c52bf980271969bffe42db30569937922207469ffa9bb0c30513a5ca8d2,details=&gt;[parent_model=&gt;/home/test/ollama/models/blobs/sha256-b6b2172e953e1cd9b32f6a061b1855b1751b365ab5c7b67c7bd4862480a48ac3,format=&gt;gguf,family=&gt;qwen2,families=&gt;[qwen2],parameter_size=&gt;&lt;14.8B&gt;,quantization_level=&gt;Q8_0,context_length=&gt;131072,embedding_length=&gt;5120],capabilities=&gt;[completion]],[name=&gt;&lt;qwen2.5-coder:32b&gt;,model=&gt;&lt;qwen2.5-coder:32b&gt;,modified_at=&gt;&lt;2026-05-20T03:48:28.2625806-06:00&gt;,size=&gt;19851349898,digest=&gt;b92d6a0bd47ee79114298de0177bf920c05a706d12633950b3936778492bef41,details=&gt;[format=&gt;gguf,family=&gt;qwen2,families=&gt;[qwen2],parameter_size=&gt;&lt;32.8B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;32768,embedding_length=&gt;5120],capabilities=&gt;[completion,tools,insert]],[name=&gt;deepseek-r1:14b,model=&gt;deepseek-r1:14b,modified_at=&gt;&lt;2026-05-14T00:23:01.4598875-06:00&gt;,size=&gt;8988112209,digest=&gt;c333b7232bdb521236694ffbb5f5a6b11cc45d98e9142c73123b670fca400b09,details=&gt;[format=&gt;gguf,family=&gt;qwen2,families=&gt;[qwen2],parameter_size=&gt;&lt;14.8B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;131072,embedding_length=&gt;5120],capabilities=&gt;[completion,thinking]],[name=&gt;&lt;qwen2.5-coder:7b&gt;,model=&gt;&lt;qwen2.5-coder:7b&gt;,modified_at=&gt;&lt;2026-05-12T21:08:02.3143859-06:00&gt;,size=&gt;4683087561,digest=&gt;dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364,details=&gt;[format=&gt;gguf,family=&gt;qwen2,families=&gt;[qwen2],parameter_size=&gt;&lt;7.6B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;32768,embedding_length=&gt;3584],capabilities=&gt;[completion,tools,insert]],[name=&gt;qwen3-embedding:8b,model=&gt;qwen3-embedding:8b,modified_at=&gt;&lt;2026-05-10T15:16:25.3309793-06:00&gt;,size=&gt;4676805193,digest=&gt;&lt;64b933495768fbd3b87c20583d379728a07471e0c66733a9df87cd1901b3c44b&gt;,details=&gt;[parent_model=&gt;&lt;/Users/ollama/.ollama/models/blobs/sha256-3fcd3febec8b3fd64435204db75bf0dd73b91e8d0661e0331acfe7e7c3120b85&gt;,format=&gt;gguf,family=&gt;qwen3,families=&gt;[qwen3],parameter_size=&gt;&lt;7.6B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;40960,embedding_length=&gt;4096],capabilities=&gt;[embedding]],[name=&gt;&lt;batiai/qwen3.6-27b:iq3&gt;,model=&gt;&lt;batiai/qwen3.6-27b:iq3&gt;,modified_at=&gt;&lt;2026-05-10T01:44:06.5919578-06:00&gt;,size=&gt;11186372790,digest=&gt;a785b19cc583791ed62e5ed102a047056083bde4f9870a2d8ea6d3250f84638b,details=&gt;[parent_model=&gt;&lt;/usr/share/ollama/.ollama/models/blobs/sha256-d548ae2bfa257199e3240994d038693a4392941819934854772e6c95591f9d87&gt;,format=&gt;gguf,family=&gt;qwen35,families=&gt;[qwen35],parameter_size=&gt;&lt;26.9B&gt;,quantization_level=&gt;unknown,context_length=&gt;262144,embedding_length=&gt;5120],capabilities=&gt;[completion,tools,thinking]],[name=&gt;&lt;qwen3.6:27b&gt;,model=&gt;&lt;qwen3.6:27b&gt;,modified_at=&gt;&lt;2026-05-09T21:07:13.4279469-06:00&gt;,size=&gt;17420432739,digest=&gt;a50eda8ed977ab48a12431878896b27ffd5cef552c17af3317d9623b939a7f1e,details=&gt;[format=&gt;gguf,family=&gt;qwen35,families=&gt;[qwen35],parameter_size=&gt;&lt;27.8B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;262144,embedding_length=&gt;5120],capabilities=&gt;[vision,completion,tools,thinking]],[name=&gt;&lt;qwen3.5:27b&gt;,model=&gt;&lt;qwen3.5:27b&gt;,modified_at=&gt;&lt;2026-05-03T16:06:35.5354596-06:00&gt;,size=&gt;17420432728,digest=&gt;&lt;7653528ba5cba4dd8e19da24aaddc7f4d0b5ecd93571c0825dfd4137958ec06e&gt;,details=&gt;[format=&gt;gguf,family=&gt;qwen35,families=&gt;[qwen35],parameter_size=&gt;&lt;27.8B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;262144,embedding_length=&gt;5120],capabilities=&gt;[vision,completion,tools,thinking]],[name=&gt;danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth:latest,model=&gt;danielsheep/Qwen3-Coder-30B-A3B-Instruct-1M-Unsloth:latest,modified_at=&gt;&lt;2026-05-02T23:38:06.0644134-06:00&gt;,size=&gt;17690513537,digest=&gt;&lt;56720d55401ef206408d20f25505eda128d8e357e8c90435adbdd240f73f334c&gt;,details=&gt;[format=&gt;gguf,family=&gt;qwen3moe,families=&gt;[qwen3moe],parameter_size=&gt;&lt;30.5B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;1048576,embedding_length=&gt;2048],capabilities=&gt;[completion,tools]],[name=&gt;MeetSolanki/MeetAISmall:latest,model=&gt;MeetSolanki/MeetAISmall:latest,modified_at=&gt;&lt;2026-04-23T18:26:05.0225546-06:00&gt;,size=&gt;522654409,digest=&gt;f2122a60667ba6d277ecc10eb3406c41e53f81167d002d2de476ca4150be7972,details=&gt;[parent_model=&gt;&lt;qwen3:0.6b&gt;,format=&gt;gguf,family=&gt;qwen3,families=&gt;[qwen3],parameter_size=&gt;&lt;751.63M&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;40960,embedding_length=&gt;1024],capabilities=&gt;[completion,tools,thinking]],[name=&gt;nebulamodules/nebula-small:latest,model=&gt;nebulamodules/nebula-small:latest,modified_at=&gt;&lt;2026-04-23T18:26:01.0975908-06:00&gt;,size=&gt;2620788570,digest=&gt;&lt;37fecda4b4c4c8ba75c8746f0f89afef9cbd0a57ce33dfec7684025d6b3ca333&gt;,details=&gt;[parent_model=&gt;qwen3:4b,format=&gt;gguf,family=&gt;qwen3,families=&gt;[qwen3],parameter_size=&gt;&lt;4.0B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;40960,embedding_length=&gt;2560],capabilities=&gt;[completion,tools,thinking]],[name=&gt;&lt;smollm:1.7b&gt;,model=&gt;&lt;smollm:1.7b&gt;,modified_at=&gt;&lt;2026-04-23T18:21:20.6643201-06:00&gt;,size=&gt;990741362,digest=&gt;&lt;95f6557a0f0f1e1d08ba0d426e50de0927dd2b0861a384b193802c551b298c28&gt;,details=&gt;[format=&gt;gguf,family=&gt;llama,families=&gt;[llama],parameter_size=&gt;&lt;1.7B&gt;,quantization_level=&gt;Q4_0,context_length=&gt;2048,embedding_length=&gt;2048],capabilities=&gt;[completion]],[name=&gt;devstral-small-2:latest,model=&gt;devstral-small-2:latest,modified_at=&gt;&lt;2026-04-18T21:14:33.8707012-06:00&gt;,size=&gt;15177374099,digest=&gt;&lt;24277f07f62db8f9cb68e9dfc679ea1818a7fbac47a50eff0a701d3f645b63c8&gt;,details=&gt;[format=&gt;gguf,family=&gt;mistral3,families=&gt;[mistral3],parameter_size=&gt;&lt;24.0B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;393216,embedding_length=&gt;5120],capabilities=&gt;[vision,completion,tools]],[name=&gt;&lt;glm-4.7-flash:latest&gt;,model=&gt;&lt;glm-4.7-flash:latest&gt;,modified_at=&gt;&lt;2026-03-28T10:16:41.8924486-06:00&gt;,size=&gt;19019270852,digest=&gt;d1a8a26252f18b34301218d22abd2620a65b85ba4b78987842eb157e01321222,details=&gt;[format=&gt;gguf,family=&gt;glm4moelite,families=&gt;[glm4moelite],parameter_size=&gt;&lt;29.9B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;202752,embedding_length=&gt;2048],capabilities=&gt;[completion,tools,thinking]],[name=&gt;qwen3:8b,model=&gt;qwen3:8b,modified_at=&gt;&lt;2026-03-03T15:06:29.9259633-07:00&gt;,size=&gt;5225388164,digest=&gt;&lt;500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41&gt;,details=&gt;[format=&gt;gguf,family=&gt;qwen3,families=&gt;[qwen3],parameter_size=&gt;&lt;8.2B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;40960,embedding_length=&gt;4096],capabilities=&gt;[completion,tools,thinking]],[name=&gt;&lt;maternion/sweep-next-edit-1.5B:latest&gt;,model=&gt;&lt;maternion/sweep-next-edit-1.5B:latest&gt;,modified_at=&gt;&lt;2026-03-03T14:50:08.2074942-07:00&gt;,size=&gt;1537271675,digest=&gt;&lt;6a6bbfafb2cf6a24ad3bae58997a95f70799550b4d262e4f4cbcc16817e8c0df&gt;,details=&gt;[parent_model=&gt;&lt;/usr/share/ollama/.ollama/models/blobs/sha256-1321ea5e5d7529e60f9770c6a0b3a965f89542d16cf4ae51bab267f6a88150da&gt;,format=&gt;gguf,family=&gt;qwen2,families=&gt;[qwen2],parameter_size=&gt;&lt;1.4B&gt;,quantization_level=&gt;Q8_0,context_length=&gt;32768,embedding_length=&gt;1536],capabilities=&gt;[completion,tools]],[name=&gt;&lt;tomasmcm/undi95-meta-llama-3.1-8b-claude:q5_K_M&gt;,model=&gt;&lt;tomasmcm/undi95-meta-llama-3.1-8b-claude:q5_K_M&gt;,modified_at=&gt;&lt;2026-02-27T13:35:04.7281519-07:00&gt;,size=&gt;5733002850,digest=&gt;&lt;284ae9e1633bc76204c639964ef01d6257136d60bc4f76025810bdbe82f00db2&gt;,details=&gt;[parent_model=&gt;&lt;/Users/tomasmcm/.ollama/models/blobs/sha256-0b74617f79db8400aa7459067f53547d0643bd7b7235437f3f14a19f12599699&gt;,format=&gt;gguf,family=&gt;llama,families=&gt;[llama],parameter_size=&gt;&lt;8.0B&gt;,quantization_level=&gt;Q5_K_M,context_length=&gt;131072,embedding_length=&gt;4096],capabilities=&gt;[completion,tools]],[name=&gt;&lt;minimax-m2.5:cloud&gt;,model=&gt;&lt;minimax-m2.5:cloud&gt;,remote_model=&gt;&lt;minimax-m2.5&gt;,remote_host=&gt;&lt;https://ollama.com:443&gt;,modified_at=&gt;&lt;2026-02-27T12:51:12.1390208-07:00&gt;,size=&gt;337,digest=&gt;c0d5751c800fd16b7cd21fce68e99e0db6d489d7196794f9a46b97b2f97036f5,details=&gt;[context_length=&gt;202752],capabilities=&gt;[completion,tools,thinking]],[name=&gt;qwen3-coder-next:latest,model=&gt;qwen3-coder-next:latest,modified_at=&gt;&lt;2026-02-07T23:26:00.5694139-07:00&gt;,size=&gt;51741611823,digest=&gt;ca06e9e4087c714d44355bf954099187890e63084b4a632b8e9956c4b9492074,details=&gt;[format=&gt;gguf,family=&gt;qwen3next,families=&gt;[qwen3next],parameter_size=&gt;&lt;79.7B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;262144,embedding_length=&gt;2048],capabilities=&gt;[completion,tools]],[name=&gt;qwen3:latest,model=&gt;qwen3:latest,modified_at=&gt;&lt;2025-11-25T18:24:39.7052749-07:00&gt;,size=&gt;5225388164,digest=&gt;&lt;500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41&gt;,details=&gt;[format=&gt;gguf,family=&gt;qwen3,families=&gt;[qwen3],parameter_size=&gt;&lt;8.2B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;40960,embedding_length=&gt;4096],capabilities=&gt;[completion,tools,thinking]],[name=&gt;deepcoder:latest,model=&gt;deepcoder:latest,modified_at=&gt;&lt;2025-11-18T16:09:56.9797731-07:00&gt;,size=&gt;8988113141,digest=&gt;&lt;12bdda054d2380ce5c86dcea8a033db5a018d799af359b953ac0ce0c739da9c7&gt;,details=&gt;[format=&gt;gguf,family=&gt;qwen2,families=&gt;[qwen2],parameter_size=&gt;&lt;14.8B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;131072,embedding_length=&gt;5120],capabilities=&gt;[completion]],[name=&gt;tinyllama:latest,model=&gt;tinyllama:latest,modified_at=&gt;&lt;2025-11-18T12:02:00.7121561-07:00&gt;,size=&gt;637700138,digest=&gt;&lt;2644915ede352ea7bdfaff0bfac0be74c719d5d5202acb63a6fb095b52f394a4&gt;,details=&gt;[format=&gt;gguf,family=&gt;llama,families=&gt;[llama],parameter_size=&gt;&lt;1B&gt;,quantization_level=&gt;Q4_0,context_length=&gt;2048,embedding_length=&gt;2048],capabilities=&gt;[completion]],[name=&gt;ben1t0/tiny-llm:latest,model=&gt;ben1t0/tiny-llm:latest,modified_at=&gt;&lt;2025-11-18T03:40:58.4420944-07:00&gt;,size=&gt;5676399,digest=&gt;&lt;52b027121460505eb3ddcaa93b6bfff130e2f41d325d5f03ddd9ae354b42a21e&gt;,details=&gt;[format=&gt;gguf,family=&gt;llama,families=&gt;[llama],parameter_size=&gt;&lt;4.62M&gt;,quantization_level=&gt;Q8_0,context_length=&gt;2048,embedding_length=&gt;64],capabilities=&gt;[completion]],[name=&gt;&lt;hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:latest&gt;,model=&gt;&lt;hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:latest&gt;,modified_at=&gt;&lt;2025-11-14T00:24:11.6136623-07:00&gt;,size=&gt;807696561,digest=&gt;&lt;042cf58aa32fa6ce631caff838fc9efd05313a629530756ccf59308eaa49b8aa&gt;,details=&gt;[format=&gt;gguf,family=&gt;llama,families=&gt;[llama],parameter_size=&gt;&lt;1.24B&gt;,quantization_level=&gt;Q4_K_M,context_length=&gt;131072,embedding_length=&gt;2048],capabilities=&gt;[completion,tools]],[name=&gt;llama3-groq-tool-use:latest,model=&gt;llama3-groq-tool-use:latest,modified_at=&gt;&lt;2025-11-10T19:57:21.4196747-07:00&gt;,size=&gt;4661257688,digest=&gt;&lt;36211dad2b153f09fe2b0c5f3e4e82ee83d27db68e3a00006cd934dfdc5057a4&gt;,details=&gt;[format=&gt;gguf,family=&gt;llama,families=&gt;[llama],parameter_size=&gt;&lt;8.0B&gt;,quantization_level=&gt;Q4_0,context_length=&gt;8192,embedding_length=&gt;4096],capabilities=&gt;[completion,tools]],[name=&gt;llava:latest,model=&gt;llava:latest,modified_at=&gt;&lt;2025-11-09T12:22:07.147987-07:00&gt;,size=&gt;4733363377,digest=&gt;&lt;8dd30f6b0cb19f555f2c7a7ebda861449ea2cc76bf1f44e262931f45fc81d081&gt;,details=&gt;[format=&gt;gguf,family=&gt;llama,families=&gt;[llama,clip],parameter_size=&gt;&lt;7B&gt;,quantization_level=&gt;Q4_0,context_length=&gt;32768,embedding_length=&gt;4096],capabilities=&gt;[completion,vision]],[name=&gt;gpt-oss:latest,model=&gt;gpt-oss:latest,modified_at=&gt;&lt;2025-11-09T11:52:38.0566449-07:00&gt;,size=&gt;13793441244,digest=&gt;&lt;17052f91a42e97930aa6e28a6c6c06a983e6a58dbb00434885a0cf5313e376f7&gt;,details=&gt;[format=&gt;gguf,family=&gt;gptoss,families=&gt;[gptoss],parameter_size=&gt;&lt;20.9B&gt;,quantization_level=&gt;MXFP4,context_length=&gt;131072,embedding_length=&gt;2880],capabilities=&gt;[completion,tools,thinking]]]]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9696,19 +8958,7 @@ For this example, that <code>instset</code> is <code>/m/llm</code>.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/llm/model
-==&gt;rec::T[?[
-     {?}provider=&gt;uri::T,
-     host=&gt;uri::T,
-     protocol=&gt;uri::T,
-     llm=&gt;uri::T,
-     {?}api_key=&gt;str::T,
-     {?}timeout=&gt;!*/m/math/time,
-     {?}size=&gt;!*/m/math/datasize,
-     {?}quant=&gt;int::T,
-     {?}context=&gt;int::T,
-     {?}cost=&gt;{?}[
-      in=&gt;!*/m/math/currency,
-      out=&gt;!*/m/math/currency]]][ctor?model&lt;=#{?}(#{*}::T)]@model
+==&gt;rec::T[?[{?}provider=&gt;uri::T,host=&gt;uri::T,protocol=&gt;uri::T,llm=&gt;uri::T,{?}api_key=&gt;str::T,{?}timeout=&gt;!*/m/math/time,{?}size=&gt;!*/m/math/datasize,{?}quant=&gt;int::T,{?}context=&gt;int::T,{?}cost=&gt;{?}[in=&gt;!*/m/math/currency,out=&gt;!*/m/math/currency]]][ctor?rng=model&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@model
 mtron&gt; */m/llm/inst/+?dom=model
 ==&gt;embed?rng=/m/vec/vec&amp;dom=model(&lt;#&gt;::T){&lt;j&gt;}</code></pre>
 </div>
@@ -9880,43 +9130,7 @@ This triggers Predicate validation (e.g., <code>html::T</code> validates the str
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/dcmnt)
-==&gt;instset::[
-    pattern=&gt;/m/dcmnt/#,
-    q=&gt;[docq::[
-    pattern=&gt;docq,
-    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-    space=&gt;[super=&gt;!*/m],
-    constq=&gt;[
-     obj_json::[
-      density=&gt;OPAQUE,
-      wrap_uri=&gt;true,
-      bias_towards_uri=&gt;true,
-      bias_towards_objs=&gt;false]@obj_json,
-     _id@/m/dcmnt/_id],
-    type=&gt;[
-     uri::T@collection,
-     space::T[?[
-     pattern=&gt;uri::T,
-     host=&gt;uri::T,
-     {?}serializer=&gt;uri::T,
-     route=&gt;[uri::T=&gt;uri::T],
-     {?}root=&gt;/m/type::T,
-     {?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(#{*}::T)]@instset]][inst?dcmntspace&lt;=#{?}(rec::T)]@dcmntspace],
-    inst=&gt;[
-     mql?rec{*}&lt;=dcmntspace(uri::T,rec::T),
-     mql?rec{*}&lt;=collection(rec::T)],
-    rewrite=&gt;[
-     /m/dcmnt/inst/rewrite/mql_count?code{?}&lt;=code(),
-     /m/dcmnt/inst/rewrite/mql_sum?code{?}&lt;=code(),
-     /m/dcmnt/inst/rewrite/mql_mean?code{?}&lt;=code(),
-     /m/dcmnt/inst/rewrite/mql_limit?code{?}&lt;=code(),
-     /m/dcmnt/inst/rewrite/mql_where?code{?}&lt;=code(),
-     /m/dcmnt/inst/rewrite/mql_where_count?code{?}&lt;=code(),
-     /m/dcmnt/inst/rewrite/mql_where_limit?code{?}&lt;=code(),
-     /m/dcmnt/inst/rewrite/mql_select?code{?}&lt;=code()]]@/m/dcmnt</code></pre>
+==&gt;instset::[pattern=&gt;/m/dcmnt/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],constq=&gt;[obj_json::[density=&gt;OPAQUE,wrap_uri=&gt;true,bias_towards_uri=&gt;true,bias_towards_objs=&gt;false]@obj_json,_id@/m/dcmnt/_id],type=&gt;[uri::T@collection,space::T[?[pattern=&gt;uri::T,host=&gt;uri::T,{?}serializer=&gt;uri::T,route=&gt;[uri::T=&gt;uri::T],{?}root=&gt;/m/type::T,{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset]][inst?rng=dcmntspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@dcmntspace],inst=&gt;[mql?rng=rec{*}&amp;dom=dcmntspace(uri::T,rec::T){&lt;j&gt;},mql?rng=rec{*}&amp;dom=collection(rec::T){&lt;j&gt;}],rewrite=&gt;[/m/dcmnt/inst/rewrite/mql_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_sum?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_mean?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_where?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_where_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_where_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_select?rng=code{?}&amp;dom=code(){&lt;j&gt;}]]@/m/dcmnt</code></pre>
 </div>
 </div>
 </div>
@@ -9988,13 +9202,7 @@ This triggers Predicate validation (e.g., <code>html::T</code> validates the str
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/dcmnt/space/dcmntspace
-==&gt;space::T[?[
-     pattern=&gt;uri::T,
-     host=&gt;uri::T,
-     {?}serializer=&gt;uri::T,
-     route=&gt;[uri::T=&gt;uri::T],
-     {?}root=&gt;/m/type::T,
-     {?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(#{*}::T)]@instset]][inst?dcmntspace&lt;=#{?}(rec::T)]@dcmntspace</code></pre>
+==&gt;space::T[?[pattern=&gt;uri::T,host=&gt;uri::T,{?}serializer=&gt;uri::T,route=&gt;[uri::T=&gt;uri::T],{?}root=&gt;/m/type::T,{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset]][inst?rng=dcmntspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@dcmntspace</code></pre>
 </div>
 </div>
 <table class="tableblock frame-all grid-all stretch table-bordered center">
@@ -10013,7 +9221,7 @@ the root is <code>rec::T[?[collection_name=&gt;collection_type{*}::T]]</code>.</
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *instset
-==&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(#{*}::T)]@instset</code></pre>
+==&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -10028,10 +9236,7 @@ mtron&gt; chicken   -&gt; animal::T@chicken     ​2​
 mtron&gt; equipment -&gt; rec::T[?[model=&gt;uri::T, year=&gt;int::T]]@equipment     ​3​
 ==&gt;rec::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment
 mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schema/farmset     ​4​
-==&gt;farmset::[type=&gt;[
-    rec::T[?[name=&gt;str::T,age=&gt;int::T]]@animal,
-    rec::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment,
-    animal::T@chicken]]@/m/dcmnt/schema/farmset</code></pre>
+==&gt;farmset::[type=&gt;[rec::T[?[name=&gt;str::T,age=&gt;int::T]]@animal,rec::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment,animal::T@chicken]]@/m/dcmnt/schema/farmset</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -10062,30 +9267,7 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schem
                     root        =&gt; rec::T[?[animals   =&gt; animal{*}::T,
                                             equipment =&gt; equipment{*}::T]],
                     route       =&gt; [farm:=&gt;&lt;&gt;]]@/sys/space/farm
-==&gt;dcmntspace::[
-    pattern=&gt;farm:#,
-    host=&gt;mongodb://localhost:27017/farm,
-    schema=&gt;instset::[
-     pattern=&gt;/sys/space/farm/instset/#,
-     type=&gt;[rec::T[?[
-     __mtron_tid=&gt;str::T,
-     name=&gt;str::T,
-     age=&gt;int::T,
-     {?}shelter=&gt;rec::T]]@animals],
-     q=&gt;[docq::[
-    pattern=&gt;docq,
-    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-     space=&gt;[super=&gt;!*/sys/space/sys]]@/sys/space/farm/instset,
-    root=&gt;rec::T[?[{?}animals=&gt;rec::T[?[
-     __mtron_tid=&gt;str::T,
-     name=&gt;str::T,
-     age=&gt;int::T,
-     {?}shelter=&gt;rec::T]]@animals]],
-    route=&gt;[farm:=&gt;&lt;&gt;],
-    native=&gt;[connack=&gt;mongoclientimpl::[=&gt;]]]@/sys/space/farm</code></pre>
+==&gt;dcmntspace::[pattern=&gt;farm:#,host=&gt;mongodb://localhost:27017/farm,schema=&gt;instset::[pattern=&gt;/sys/space/farm/instset/#,type=&gt;[rec::T[?[__mtron_tid=&gt;str::T,name=&gt;str::T,age=&gt;int::T,{?}shelter=&gt;rec::T]]@animals],q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/sys/space/sys]]@/sys/space/farm/instset,root=&gt;rec::T[?[{?}animals=&gt;rec::T[?[__mtron_tid=&gt;str::T,name=&gt;str::T,age=&gt;int::T,{?}shelter=&gt;rec::T]]@animals]],route=&gt;[farm:=&gt;&lt;&gt;],native=&gt;[connack=&gt;mongoclientimpl::[=&gt;]]]@/sys/space/farm</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -10099,11 +9281,7 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schem
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; farm:animals/1 -&gt; 'a chicken named trill'     ​1​
-==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;rec::T[?[
-     __mtron_tid=&gt;str::T,
-     name=&gt;str::T,
-     age=&gt;int::T,
-     {?}shelter=&gt;rec::T]]@animals]] at root; got str::T]@/sys/fail/94
+==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;rec::T[?[__mtron_tid=&gt;str::T,name=&gt;str::T,age=&gt;int::T,{?}shelter=&gt;rec::T]]@animals]] at root; got str::T]@/sys/fail/94
 mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​2​
 ==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1     ​3​
@@ -10188,15 +9366,9 @@ mtron&gt; *farm:animals/1     ​4​
 ==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1/shelter     ​5​
 mtron&gt; farm:animals/2 -&gt; chicken::[name=&gt;'cluck',age=&gt;3,shelter=&gt;!*loc:barns/1]     ​6​
-==&gt;chicken::[
-    name=&gt;'cluck',
-    age=&gt;3,
-    shelter=&gt;!*loc:barns/1]
+==&gt;chicken::[name=&gt;'cluck',age=&gt;3,shelter=&gt;!*loc:barns/1]
 mtron&gt; *farm:animals/2     ​7​
-==&gt;chicken::[
-    name=&gt;'cluck',
-    age=&gt;3,
-    shelter=&gt;!*loc:barns/1]
+==&gt;chicken::[name=&gt;'cluck',age=&gt;3,shelter=&gt;!*loc:barns/1]
 mtron&gt; *farm:animals/2/shelter     ​8​
 ==&gt;[label=&gt;'old_red_barn',capacity=&gt;12]</code></pre>
 </div>
@@ -10310,19 +9482,7 @@ if one is found, the reference is routed to the named scheme&#8217;s space.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/tble)
-==&gt;instset::[
-    pattern=&gt;/m/tble/#,
-    q=&gt;[docq::[
-    pattern=&gt;docq,
-    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-    space=&gt;[super=&gt;!*/m],
-    const=&gt;[[llm_chat_schema=&gt;inst?#{*}&lt;=#{*}()]@helper],
-    type=&gt;[space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=#{?}(rec::T)]@tblespace],
-    inst=&gt;[sql?rec{*}&lt;=tblespace(str::T)],
-    rewrite=&gt;[/m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_offset?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_offset_limit?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_order?code{?}&lt;=code(),/m/tble/inst/rewrite/sql_where_order_offset?code{?}&lt;=code(),...(8 more)]]@/m/tble</code></pre>
+==&gt;instset::[pattern=&gt;/m/tble/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],const=&gt;[[llm_chat_schema=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]@helper],type=&gt;[space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?rng=tblespace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@tblespace],inst=&gt;[sql?rng=rec{*}&amp;dom=tblespace(str::T){&lt;j&gt;}],rewrite=&gt;[/m/tble/inst/rewrite/sql_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_sum?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_mean?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_offset?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_offset_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_order?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_order_offset?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_offset?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_offset_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_select?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_order?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_distinct?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/kv_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/kv_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;}]]@/m/tble</code></pre>
 </div>
 </div>
 </div>
@@ -10345,7 +9505,7 @@ rows. In metatron, a relational database is a <strong>tblespace</strong> backed 
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *tblespace
-==&gt;space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=#{?}(rec::T)]@tblespace</code></pre>
+==&gt;space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?rng=tblespace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@tblespace</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -10357,11 +9517,7 @@ rows. In metatron, a relational database is a <strong>tblespace</strong> backed 
                    host    =&gt; &lt;sqlite:target/test&gt;,
                    driver  =&gt; &lt;org.sqlite.JDBC&gt;,
                    route   =&gt; [lite:=&gt;&lt;&gt;]]@/sys/space/lite     ​1​
-==&gt;tblespace::[
-    pattern=&gt;lite:#,
-    host=&gt;sqlite:target/test,
-    driver=&gt;&lt;org.sqlite.JDBC&gt;,
-    route=&gt;[lite:=&gt;&lt;&gt;]]@/sys/space/lite
+==&gt;tblespace::[pattern=&gt;lite:#,host=&gt;sqlite:target/test,driver=&gt;&lt;org.sqlite.JDBC&gt;,route=&gt;[lite:=&gt;&lt;&gt;]]@/sys/space/lite
 mtron&gt; lite:person/1 -&gt; [name=&gt;'marko', age=&gt;29]     ​2​
 ==&gt;[name=&gt;'marko',age=&gt;29]
 mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
@@ -10480,9 +9636,9 @@ l└─ └───┘└───┘└───┘└───┘└───
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:kv/single -&gt; 651.02
-==&gt;651.0200
+==&gt;651.02
 mtron&gt; *lite:kv/single
-==&gt;651.0200</code></pre>
+==&gt;651.02</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -10612,21 +9768,7 @@ whose values happen to match <code>person.name</code> — the link is purely alg
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @/sys/space/lite &gt;&gt;= [table=&gt;[person,score]]     ​1​
-==&gt;tblespace::[
-    pattern=&gt;lite:#,
-    host=&gt;sqlite:target/test,
-    driver=&gt;&lt;org.sqlite.JDBC&gt;,
-    route=&gt;[lite:=&gt;&lt;&gt;],
-    schema=&gt;instset::[
-     pattern=&gt;/sys/space/lite/instset/#,
-     type=&gt;[,],
-     q=&gt;[docq::[
-    pattern=&gt;docq,
-    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-     space=&gt;[super=&gt;!*/sys/space/sys]]@/sys/space/lite/instset]@/sys/space/lite
+==&gt;tblespace::[pattern=&gt;lite:#,host=&gt;sqlite:target/test,driver=&gt;&lt;org.sqlite.JDBC&gt;,route=&gt;[lite:=&gt;&lt;&gt;],schema=&gt;instset::[pattern=&gt;/sys/space/lite/instset/#,type=&gt;[,],q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/sys/space/sys]]@/sys/space/lite/instset]@/sys/space/lite
 mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     ​2​
 ==&gt;[player=&gt;'marko',points=&gt;42]
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     ​3​
@@ -10670,36 +9812,14 @@ Unlike a matching column value, the pointer encodes the full address of the link
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @/sys/space/lite &gt;&gt;= [table=&gt;[person,score,award]];     ​1​
-==&gt;tblespace::[
-    pattern=&gt;lite:#,
-    host=&gt;sqlite:target/test,
-    driver=&gt;&lt;org.sqlite.JDBC&gt;,
-    route=&gt;[lite:=&gt;&lt;&gt;],
-    schema=&gt;instset::[
-     pattern=&gt;/sys/space/lite/instset/#,
-     type=&gt;[rec::T[?[{?}name=&gt;str::T,{?}age=&gt;int::T,{?}skill=&gt;uri::T]]@/sys/space/lite/instset/person],
-     q=&gt;[docq::[
-    pattern=&gt;docq,
-    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-     space=&gt;[super=&gt;!*/sys/space/sys]]@/sys/space/lite/instset]@/sys/space/lite
+==&gt;tblespace::[pattern=&gt;lite:#,host=&gt;sqlite:target/test,driver=&gt;&lt;org.sqlite.JDBC&gt;,route=&gt;[lite:=&gt;&lt;&gt;],schema=&gt;instset::[pattern=&gt;/sys/space/lite/instset/#,type=&gt;[rec::T[?[{?}name=&gt;str::T,{?}age=&gt;int::T,{?}skill=&gt;uri::T]]@/sys/space/lite/instset/person],q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/sys/space/sys]]@/sys/space/lite/instset]@/sys/space/lite
 mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]     ​2​
-==&gt;[
-    trophy=&gt;'gold',
-    recipient=&gt;!*lite:person/1]
+==&gt;[trophy=&gt;'gold',recipient=&gt;!*lite:person/1]
 mtron&gt; lite:award/2 -&gt; [trophy=&gt;'silver', recipient=&gt;!*lite:person/2]     ​3​
-==&gt;[
-    trophy=&gt;'silver',
-    recipient=&gt;!*lite:person/2]
+==&gt;[trophy=&gt;'silver',recipient=&gt;!*lite:person/2]
 mtron&gt; *lite:award/+     ​4​
-==&gt;[
-    trophy=&gt;'gold',
-    recipient=&gt;!*lite:person/1]
-==&gt;[
-    trophy=&gt;'silver',
-    recipient=&gt;!*lite:person/2]
+==&gt;[trophy=&gt;'gold',recipient=&gt;!*lite:person/1]
+==&gt;[trophy=&gt;'silver',recipient=&gt;!*lite:person/2]
 mtron&gt; *lite:award/1/recipient     ​5​
 ==&gt;[name=&gt;'marko',age=&gt;29]</code></pre>
 </div>
@@ -10740,23 +9860,7 @@ Below, a <code>memspace</code> holds a venue <code>rec</code>, and a <code>lite:
 mtron&gt; area:V/1 -&gt; [label=&gt;'downtown',capacity=&gt;5000]     ​2​
 ==&gt;[label=&gt;'downtown',capacity=&gt;5000]
 mtron&gt; @/sys/space/lite &gt;&gt;= [table=&gt;[person,score,award,venue]];     ​3​
-==&gt;tblespace::[
-    pattern=&gt;lite:#,
-    host=&gt;sqlite:target/test,
-    driver=&gt;&lt;org.sqlite.JDBC&gt;,
-    route=&gt;[lite:=&gt;&lt;&gt;],
-    schema=&gt;instset::[
-     pattern=&gt;/sys/space/lite/instset/#,
-     type=&gt;[
-      rec::T[?[{?}name=&gt;str::T,{?}age=&gt;int::T,{?}skill=&gt;uri::T]]@/sys/space/lite/instset/person,
-      rec::T[?[{?}player=&gt;str::T,{?}points=&gt;int::T]]@/sys/space/lite/instset/score],
-     q=&gt;[docq::[
-    pattern=&gt;docq,
-    pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
-    pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
-    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-     space=&gt;[super=&gt;!*/sys/space/sys]]@/sys/space/lite/instset]@/sys/space/lite
+==&gt;tblespace::[pattern=&gt;lite:#,host=&gt;sqlite:target/test,driver=&gt;&lt;org.sqlite.JDBC&gt;,route=&gt;[lite:=&gt;&lt;&gt;],schema=&gt;instset::[pattern=&gt;/sys/space/lite/instset/#,type=&gt;[rec::T[?[{?}name=&gt;str::T,{?}age=&gt;int::T,{?}skill=&gt;uri::T]]@/sys/space/lite/instset/person,rec::T[?[{?}player=&gt;str::T,{?}points=&gt;int::T]]@/sys/space/lite/instset/score],q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/sys/space/sys]]@/sys/space/lite/instset]@/sys/space/lite
 mtron&gt; lite:venue/1 -&gt; [name=&gt;'main_stage',location=&gt;!*area:V/1,parent=&gt;none]     ​4​
 ==&gt;[name=&gt;'main_stage',location=&gt;!*area:V/1]
 mtron&gt; *lite:venue/1     ​5​
@@ -10800,15 +9904,9 @@ pointing back at the row&#8217;s own table.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:venue/2 -&gt; [name=&gt;'side_hall',location=&gt;!*g:V/1,parent=&gt;!*lite:venue/1]     ​1​
-==&gt;[
-    name=&gt;'side_hall',
-    location=&gt;!*g:V/1,
-    parent=&gt;!*lite:venue/1]
+==&gt;[name=&gt;'side_hall',location=&gt;!*g:V/1,parent=&gt;!*lite:venue/1]
 mtron&gt; *lite:venue/2     ​2​
-==&gt;[
-    name=&gt;'side_hall',
-    location=&gt;!*area:V/1,
-    parent=&gt;1]
+==&gt;[name=&gt;'side_hall',location=&gt;!*area:V/1,parent=&gt;1]
 mtron&gt; *lite:venue/2/parent/location     ​3​
 ==&gt;1</code></pre>
 </div>

@@ -254,7 +254,7 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 * [math instruction set](references/math-instset-mtron.md) -- `/m/math`: the unit types (`time`, `datasize`,
   `currency`), the `datetime` uri and its construction/arithmetic, `normalize` and the trig/rounding instructions, and
   the `pi`/`e` constants.
-* [as-graph](references/as-graph-mtron.md) -- every `as` instruction read as a property-graph edge (label `as`,
+* [as-graph](references/cat-instset-mtron.md) -- every `as` instruction read as a property-graph edge (label `as`,
   outV the dom, inV the rng) and `?asq` as its property map: the six edge kinds and what each means when you add a
   cast, how to read an edge that no row declares, the fully generic arg-type cast behind a plain tag, and the
   implicit ancestor casts.

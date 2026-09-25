@@ -10,44 +10,64 @@ description: |
 
 # web instruction set (`/m/web`)
 
-`/m/web` is the vocabulary the web carriers speak: the *types* that say what a protocol surface is, the MIME
-types that say what a document is, and `route::T`, which types a mount table. The spaces themselves live
-elsewhere — `/sys/space/web/http` (`httpspace`) and `/sys/space/web/ws` (`wsspace`) — each carrying a `route` rec of
-mounts and reading that vocabulary.
+`/m/web` is the instruction set has web *transport protocol* types, *MIME*
+types, and *endpoint* types to provide server logic. The two spaces of `/m/web` are
+`httpspace` and `wsspace` — each carrying a `route::T` rec for routing connections to mounted services.
+
+```mtron_pre
+[HIDDEN] /sys/space/web/http -> noobj       
+[HIDDEN] /sys/space/web/ws   -> noobj
+httpspace::[pattern=> http://#,                    /
+            host   => http://localhost:8777,       /
+            route  => [/mcp       => mcp_mtron,    /
+                       /docker    => docker:,      /
+                       /usr       => /usr,         /
+                       /mfs       => mfs:,         /
+                       /          => mfs:docs/website/]]@/sys/space/web/http
+wsspace::[pattern=> ws:#,                          /
+          host   => ws://localhost:8555            /
+          route  => [/drstynx   => *dr.as(skill::T).as(mcp_server::T)]]@/sys/space/web/ws
+```
 
 The organizing idea is that **a protocol is a projection of an obj, not a copy of it**. An `mcp_server` rides http,
-websockets and stdio alike; a str that is css is `css::T` whoever asks for it. A mount then only has to say *which
-obj* and *which surface*.
+websockets and stdio alike; a `str` that is css is `css::T` whoever asks for it. A mount then only has to say which
+obj and which encoding. Below is metatron accessing this document.
+
+```mtron_pre
+[MAXOUTPUT 10] *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>
+[MAXOUTPUT 10] *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>.as(html::T)
+[MAXOUTPUT 10] *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>.as(html::T).as(rec::T)
+```
 
 ## the space these examples use
 
 A mount is only as real as the space behind it, so this document builds one first. Everything below addresses
-`/data/person/1` and `/data/person/2`, and every block after this one runs against these objs. (`mtron_pre`
+`/usr/person/1` and `/usr/person/2`, and every block after this one runs against these objs. (`mtron_pre`
 blocks are executed by the docs pipeline and inlined with their results; a plain `mtron` block is only shown.)
 
 ```mtron_pre
-memspace::[pattern=>/data/#]@/sys/space/data
-person::[name=>'marko',age=>29]@/data/person/1
-person::[name=>'grant',age=>25]@/data/person/2
+memspace::[pattern=>/usr/#]@/sys/space/usr
+person::[name=>'marko',age=>29]@/usr/person/1
+person::[name=>'grant',age=>25]@/usr/person/2
 ```
 
 ## types
 
-| type                      | vid                                            | refines       | meaning                                                                    |
-|---------------------------|------------------------------------------------|---------------|----------------------------------------------------------------------------|
-| `protocol::T`             | `/m/web/protocol`                              | —             | the umbrella: **a union** of the surfaces below, so it classifies *values* |
-| `http::T`                 | `/m/web/http`                                  | `protocol::T` | the http vocabulary                                                        |
+| type                      | vid                                            | refines       | meaning                                                                               |
+|---------------------------|------------------------------------------------|---------------|---------------------------------------------------------------------------------------|
+| `protocol::T`             | `/m/web/protocol`                              |               | the umbrella: **a union** of the surfaces below, so it classifies *values*            |
+| `http::T`                 | `/m/web/http`                                  | `protocol::T` | the http vocabulary                                                                   |
 | `rest::T`                 | `/m/web/http/rest`                             | `http::T`     | a REST surface — get reads, put replaces, patch updates, delete unlinks, post creates |
-| `ws::T`                   | `/m/web/ws`                                    | `protocol::T` | the websocket vocabulary                                                   |
-| `mcp::T`                  | `/m/web/mcp`                                   | `protocol::T` | an MCP surface                                                             |
-| `mtron::T`                | `/m/web/mtron`                                 | `protocol::T` | the mtron-eval surface — ship an obj, it is applied, the result returns    |
-| `stream::T`               | `/m/web/stream`                                | `protocol::T` | the raw byte / server-sent-event stream surface                            |
-| `sse::T`                  | `/m/web/sse`                                   | `stream::T`   | a server-sent-events response — a chunked `text/event-stream` over http    |
-| `mcp_server::T`           | `/m/web/mcp/mcp_server`                        | `mcp::T`      | an MCP server obj — **transport-agnostic**                                 |
-| `web_http`                | `/m/web/http/web_http`                         | `rest::T`     | the handler that serves a web root                                         |
-| `mcp_http` / `mcp_ws`     | `/m/web/mcp/mcp_http`, `/m/web/mcp/mcp_ws`     | `mcp::T`      | an `mcp_server` bound to a carrier                                         |
-| `mtron_http` / `mtron_ws` | `/m/web/http/mtron_http`, `/m/web/ws/mtron_ws` | `mtron::T`    | the mtron-eval surface on each carrier                                     |
-| `route::T`                | `/m/web/route`                                 | `rec::T`      | a mount table: `uri => target`                                             |
+| `ws::T`                   | `/m/web/ws`                                    | `protocol::T` | the websocket vocabulary                                                              |
+| `mcp::T`                  | `/m/web/mcp`                                   | `protocol::T` | an MCP surface                                                                        |
+| `mtron::T`                | `/m/web/mtron`                                 | `protocol::T` | the mtron-eval surface — ship an obj, it is applied, the result returns               |
+| `stream::T`               | `/m/web/stream`                                | `protocol::T` | the raw byte / server-sent-event stream surface                                       |
+| `sse::T`                  | `/m/web/sse`                                   | `stream::T`   | a server-sent-events response — a chunked `text/event-stream` over http               |
+| `mcp_server::T`           | `/m/web/mcp/mcp_server`                        | `mcp::T`      | an MCP server obj — **transport-agnostic**                                            |
+| `web_http`                | `/m/web/http/web_http`                         | `rest::T`     | the handler that serves a web root                                                    |
+| `mcp_http` / `mcp_ws`     | `/m/web/mcp/mcp_http`, `/m/web/mcp/mcp_ws`     | `mcp::T`      | an `mcp_server` bound to a carrier                                                    |
+| `mtron_http` / `mtron_ws` | `/m/web/http/mtron_http`, `/m/web/ws/mtron_ws` | `mtron::T`    | the mtron-eval surface on each carrier                                                |
+| `route::T`                | `/m/web/route`                                 | `rec::T`      | a mount table: `uri => target`                                                        |
 
 Two ways to ask "is this a protocol surface?", and they are not interchangeable:
 
@@ -80,10 +100,10 @@ rule has two halves, because either alone leaves a hole:
 
 The rendering is chosen per request with `?mimeq=<media type>`:
 
-```mtron
-/docker/image?mimeq=application/json     [-- the docker images as JSON --]
-/docker/image?mimeq=text/plain           [-- the same objs, mtron-typed, as plain text --]
-/docker/image                            [-- the native mtron rendering --]
+```mtron_pre
+http://localhost:8777/docker/image?mimeq=application/json      [-- the docker images as JSON --]
+*/docker/image?mimeq=text/plain                                [-- the same objs, mtron-typed, as plain text --]
+*/docker/image                                                 [-- the native mtron rendering --]
 ```
 
 `application/x-mtron` is the **structural parse gate**: it asks for the content parsed into mtron objs rather than
@@ -112,14 +132,14 @@ A `route` rec maps a request path to a target. Four rules:
   consumed the path and nothing is appended:
 
 ```mtron_pre
-/person/1.map(</data/person/${name()}>)                  [-- the tail segment --]
+/person/1.map(</usr/person/${name()}>)                  [-- the tail segment --]
 ```
 
 ```mtron_pre
-/person/1.map(</data/person/${as(rec::T).>>path/2}>)     [-- the same, positionally --]
+/person/1.map(</usr/person/${as(rec::T).>>path/2}>)     [-- the same, positionally --]
 ```
 
-Both are `/data/person/1`: segment *n* is `path/(n+1)`, the path being 0-indexed with an empty leading element.
+Both are `/usr/person/1`: segment *n* is `path/(n+1)`, the path being 0-indexed with an empty leading element.
 The expressions see the whole request uri, so the pattern never has to carry the capture — there is no capture
 binding step, and a route is debuggable by looking at the request uri.
 
@@ -127,14 +147,10 @@ binding step, and a route is debuggable by looking at the request uri.
   client, resolved *target*) — never per address, since a templated mount resolves a different address per
   request while the same protocol engine serves them all.
 
-So a mount over it:
-
-```mtron
-/person => </data/person/${name()}>
-```
-
 ```mtron_pre
-*</data/person/1>
+*/usr/person/1
+*http://localhost:8777/usr/person/1
+*http://localhost:8777/usr/person/1?mimeq=application/json
 ```
 
 `/person/1` serves that obj and `/person/2` serves the other, through the *same* handler — and `/person/3` is a 404,
@@ -149,13 +165,13 @@ rebuilt on every request.
 Whatever a key mounts, the value is an *obj applied to the request uri* — and per the rule above, only templated
 values re-resolve per request; the rest resolve once at mount time. The live carriers use five shapes:
 
-| value | example | what it mounts |
-| --- | --- | --- |
-| identity path | `/usr => /usr` | this machine's own space, under its own address |
-| scheme namespace | `/mfs => mfs:`, `/docker => docker:` | another space, addressed by scheme |
-| short name | `/mcp => mcp_mtron` | the router's redirect table — a *type with a constructor*, built on demand |
-| evaluated expression | `/drstynx => *dr.as(skill::T).as(mcp_server::T)` | the result, mounted as an obj |
-| fallback | `/ => mfs:docs/website/` | every request no more-specific key caught |
+| value                | example                                          | what it mounts                                                             |
+|----------------------|--------------------------------------------------|----------------------------------------------------------------------------|
+| identity path        | `/usr => /usr`                                   | this machine's own space, under its own address                            |
+| scheme namespace     | `/mfs => mfs:`, `/docker => docker:`             | another space, addressed by scheme                                         |
+| short name           | `/mcp => mcp_mtron`                              | the router's redirect table — a *type with a constructor*, built on demand |
+| evaluated expression | `/drstynx => *dr.as(skill::T).as(mcp_server::T)` | the result, mounted as an obj                                              |
+| fallback             | `/ => mfs:docs/website/`                         | every request no more-specific key caught                                  |
 
 A scheme-keyed entry (`http: => http:`) is the sixth shape: an identity on the scheme itself, which is how
 `httpSpace` serves *and* fetches — outbound `http://` derefs stay in the carrier.
@@ -218,9 +234,15 @@ primitive is `SseStream` (`isa/web/space/http/SseStream.java`), opened from an `
 
 ```java
 final SseStream sse = this.openSse();     // 200, text/event-stream, chunked (length 0)
-sse.send("message", "{\"ping\":true}"); // event: message + data: {...}
-sse.comment("ping");                      // : ping   (heartbeat, ignored by clients)
-sse.close();                              // flush + end the stream
+sse.
+
+send("message","{\"ping\":true}"); // event: message + data: {...}
+sse.
+
+comment("ping");                      // : ping   (heartbeat, ignored by clients)
+sse.
+
+close();                              // flush + end the stream
 ```
 
 Each event is `event:`/`data:`/`:` lines terminated by a blank line; a multi-line payload becomes repeated `data:`
@@ -231,7 +253,6 @@ The first consumer is `mcp_httpHandler.doGet` — the Streamable-HTTP GET. It op
 `Accept: text/event-stream`), drains the server's subscription outbox, and streams each
 `notifications/resources/updated` as an `event: message`, then holds the stream open with heartbeats until the
 client disconnects.
-
 
 ## not available yet
 

@@ -74,6 +74,7 @@ public class WidgetStateDisciplineTest extends AbstractInstSetTest {
         return Stream.of(
                 Arguments.of("accordion_widget", AccordionWidget.class),
                 Arguments.of("panel_widget", PanelWidget.class),
+                Arguments.of("grid_widget", GridWidget.class),
                 Arguments.of("progress_table_widget", ProgressTableWidget.class),
                 Arguments.of("table_widget", TableWidget.class),
                 Arguments.of("tree_widget", TreeWidget.class),

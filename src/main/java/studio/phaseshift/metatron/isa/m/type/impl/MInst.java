@@ -37,6 +37,7 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 public class MInst extends MObj implements Inst {
     public MInst(final Triplet<Poly, Inst.f, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, null == tid ? Tokens.M_ISA_INST_TID : tid, vid);
+        // T(INST_TID, this.tid(), null, null);
         //if (this.tid().name().equals("inst"))
         //    this.selfTID(this.tid().dom(ALL.maybe()).rng(ALL.maybeSome()));
     }
@@ -90,7 +91,7 @@ public class MInst extends MObj implements Inst {
     }
 
     public static Inst instLambda(final BiFunction<Obj, Inst, Obj> f) {
-        return instLambda(lst(T(ALL.maybeSome())), f);
+        return instLambda(lst(), f);
     }
 
     public static Inst instLambda(final Lst args, final BiFunction<Obj, Inst, Obj> f) {
@@ -98,7 +99,7 @@ public class MInst extends MObj implements Inst {
     }
 
     public static Inst instLambda(final fURI dom, final fURI rng, final BiFunction<Obj, Inst, Obj> f) {
-        return instC(Tokens.M_ISA_INST_TID.dom(dom).rng(rng), lst(T(ALL.maybeSome())), f);
+        return instC(Tokens.M_ISA_INST_TID.dom(dom).rng(rng), lst(), f);
     }
 
     /**

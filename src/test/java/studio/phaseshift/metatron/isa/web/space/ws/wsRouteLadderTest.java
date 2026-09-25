@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.web.space.ws;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.parallel.Isolated;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -52,6 +53,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * collides with a running server.
  */
 @Timeout(60)
+@Isolated
 class wsRouteLadderTest extends AbstractWebSocketServerIntegrationTest {
 
     private static final String INITIALIZE =

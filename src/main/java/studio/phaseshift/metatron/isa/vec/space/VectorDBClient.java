@@ -74,7 +74,7 @@ public interface VectorDBClient {
                 final List<Float> emb = embeddings != null && i < embeddings.size() ? embeddings.get(i) : List.of();
                 result.add(new EntityData(
                         f(ids.get(i)),
-                        ObjmtronSerializer.singleNoClip().read(doc),
+                        ObjmtronSerializer.single().read(doc),
                         rec0(),
                         lst(emb.stream().map(r -> (Obj) real(r)).toList())));
             }
@@ -175,7 +175,7 @@ public interface VectorDBClient {
         }
 
         default Lst embedToLst(final Obj obj) {
-            final double[] embedding = this.embed(ObjmtronSerializer.singleNoClip().write(obj).getBytes());
+            final double[] embedding = this.embed(ObjmtronSerializer.single().write(obj).getBytes());
             final List<Real> reals = new ArrayList<>(embedding.length);
             for (int i = 0; i < embedding.length; i++) {
                 reals.add(real(embedding[i]));

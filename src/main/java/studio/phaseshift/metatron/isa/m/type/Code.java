@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import org.jspecify.annotations.NonNull;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
@@ -30,11 +31,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static studio.phaseshift.metatron.Tokens.MONAD;
+import static studio.phaseshift.metatron.Tokens.MONAD_IN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
@@ -56,7 +58,7 @@ public interface Code extends Call {
     }
 
     @Override
-    default Iterator<Obj> iterator() {
+    default @NonNull Iterator<Obj> iterator() {
         return this.apply().iterator();
     }
 
@@ -111,6 +113,11 @@ public interface Code extends Call {
     }
 
     @Override
+    default Inst asInst() {
+        return instLambda(this);
+    }
+
+    @Override
     default Code vid(final fURI vid) {
         return this.clone(this.jvm(), this.tid(), vid);
     }
@@ -146,7 +153,7 @@ public interface Code extends Call {
             return SwarmMachine.of(lhs, code.as()).apply(lhs.isMonad() ? lhs : noobj());
         // single inst: dispatch by the inst's own monad flag. A monadic inst (loop())
         // receives the monad; a value inst is resolved and applied against the monad's obj.
-        final boolean monadic = code.isInst() && code.resolve(lhs).tid().hasQ(MONAD);
+        final boolean monadic = code.isInst() && code.resolve(lhs).tid().hasQ(MONAD_IN);
         final Obj arg = lhs.isMonad() && !monadic ? lhs.asMonad().obj() : lhs;
         return code.resolve(arg).apply(arg);
     }
@@ -158,7 +165,10 @@ public interface Code extends Call {
         }
 
         public static Set<Inst> insts() {
-            return new LinkedHashSet<>(List.of(instC(AS_INST_TID.dom(Tokens.CODE_TID).rng(Tokens.LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asCode().codeValue().stream().map(Obj::<Obj>as).toList()).c(c -> c.mult(lhs.c())))));
+            return new LinkedHashSet<>(List.of(
+                    instC(AS_INST_TID.dom(Tokens.CODE_TID).rng(Tokens.LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asCode().codeValue().stream().map(Obj::<Obj>as).toList()).c(c -> c.mult(lhs.c()))),
+                    instC(AS_INST_TID.dom(Tokens.CODE_TID).rng(Tokens.INST_TID), lst(INST_TYPE), (lhs, inst) -> instLambda(lhs.asCode()).c(c -> c.mult(lhs.c())))));
+
         }
 
     }

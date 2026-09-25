@@ -174,6 +174,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m.html"><img
                             src="../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_dckr.html"><img
+                            src="../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_dcmnt.html"><img
                             src="../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
                             alt="dcmnt"/>/m/dcmnt</a></li>
@@ -198,6 +201,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_math.html"><img
                             src="../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_math_cat.html"><img
+                            src="../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_sys.html"><img
                             src="../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                             alt="sys"/>/m/sys</a></li>
@@ -268,7 +274,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -403,32 +409,18 @@ please. To understand the underlying storage mechanisms of your space, you can l
 <p>You can create a <strong>todo list</strong> to help you organize your time. The most barebones way to do it is to make a <code>lst</code> of
 <code>str</code>ings. When a task is complete, set it to <code>none</code>.</p>
 <pre><code class="language-mtron">mtron&gt; [&quot;review metatron docs&quot;,&quot;review mtron docs&quot;]@/usr/agent/todo
-==&gt;[
-    'review metatron docs',
-    'review mtron docs']@/usr/agent/todo
+==&gt;['review metatron docs','review mtron docs']@/usr/agent/todo
 mtron&gt; @/usr/agent/todo &gt;&gt;= [0=&gt;none]
 ==&gt;[,]
 </code></pre>
 <p>A more interesting way to approach the problem involves defining a <code>task</code> type.</p>
 <pre><code class="language-mtron">mtron&gt; rec::T[done=&gt;bool::T,desc=&gt;str::T,start{?}::T,end{?}::T]@/usr/agent/task
 ==&gt;ERROR: monad obj coefficient is greater than inst dom coefficient:
-	rec::T [{1} X=&gt; {0}] start?rng=A{**}&amp;dom=noobj{0}([
-  done=&gt;bool::T,
-  desc=&gt;str::T,
-  start{?}::T,
-  end{?}::T]@/usr/agent/task){&lt;j&gt;}@&lt;1&gt;
+	rec::T [{1} X=&gt; {0}] start?rng=A{**}&amp;dom=noobj{0}([done=&gt;bool::T,desc=&gt;str::T,start{?}::T,end{?}::T]@/usr/agent/task){&lt;j&gt;}@&lt;1&gt;
 mtron&gt; [,]@/usr/agent/todo
 ==&gt;[,]@/usr/agent/todo
 mtron&gt; datetime_now()-&lt;task::[done=&gt;false,desc=&gt;&quot;review metatron docs&quot;,start=&gt;_]&gt;-@/usr/agent/todo
-==&gt;[
-    task::[
-     done=&gt;false,
-     desc=&gt;'review metatron docs',
-     start=&gt;datetime::&lt;//2026.09:23/22/53/49/521?tz=-0600&gt;],
-    task::[
-     done=&gt;false,
-     desc=&gt;'review metatron docs',
-     start=&gt;datetime::&lt;//2026.09:23/22/53/49/476?tz=-0600&gt;]]@/usr/agent/todo
+==&gt;[task::[done=&gt;false,desc=&gt;'review metatron docs',start=&gt;datetime::&lt;//2026.09:25/06/47/51/571?tz=-0600&gt;],task::[done=&gt;false,desc=&gt;'review metatron docs',start=&gt;datetime::&lt;//2026.09:25/06/47/51/540?tz=-0600&gt;]]@/usr/agent/todo
 </code></pre>
 <p>The current time is split across the defined task. Since <code>start=&gt;_</code> has an open slot, the current
 <code>datatime::T</code> fills in the spot and then the task is merged into your todo list. To get a structured understanding of

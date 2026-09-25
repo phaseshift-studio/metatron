@@ -557,10 +557,11 @@ corresponding file:
    clearly mechanical (adding a new class to an existing package map). For substantive documentation rewrites, confirm
    with the user first.
 
-**IMPORTANT**: human-oriented documentation (adocs), metatron api reference docs (instset), and agent-oriented skills
-(markdown) are built from base documentation source at `docs/website/adoc/`, source code instruction set, `docs/skills`.
-Never change the compiled source files as they are overwritten with each new doc build. Edit the documentation source
-files. Finally, note that `docs/skills` is symlinked via `.metatron/skills`.
+**IMPORTANT**: everything under `docs/website/` — **except `docs/website/adoc/`** — is generated on build and
+overwritten each run; never edit it by hand. The hand-authored sources are exactly three: the human-oriented adocs at
+`docs/website/adoc/`, the metatron API reference (`instset`) derived from source-code instruction sets, and the
+agent-oriented skills at `docs/skills/` (markdown). So `docs/website/skills/` is built from `docs/skills/`; edit the
+source, not the website copy. (`docs/skills` is also symlinked via `.metatron/skills`.)
 
 ### Existing Docs
 

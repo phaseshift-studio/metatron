@@ -32,9 +32,7 @@ You can create a **todo list** to help you organize your time. The most barebone
 
 ```mtron
 mtron> ["review metatron docs","review mtron docs"]@/usr/agent/todo
-==>[
-    'review metatron docs',
-    'review mtron docs']@/usr/agent/todo
+==>['review metatron docs','review mtron docs']@/usr/agent/todo
 mtron> @/usr/agent/todo >>= [0=>none]
 ==>[,]
 ```
@@ -43,23 +41,11 @@ A more interesting way to approach the problem involves defining a `task` type.
 ```mtron
 mtron> rec::T[done=>bool::T,desc=>str::T,start{?}::T,end{?}::T]@/usr/agent/task
 ==>ERROR: monad obj coefficient is greater than inst dom coefficient:
-	rec::T [{1} X=> {0}] start?rng=A{**}&dom=noobj{0}([
-  done=>bool::T,
-  desc=>str::T,
-  start{?}::T,
-  end{?}::T]@/usr/agent/task){<j>}@<1>
+	rec::T [{1} X=> {0}] start?rng=A{**}&dom=noobj{0}([done=>bool::T,desc=>str::T,start{?}::T,end{?}::T]@/usr/agent/task){<j>}@<1>
 mtron> [,]@/usr/agent/todo
 ==>[,]@/usr/agent/todo
 mtron> datetime_now()-<task::[done=>false,desc=>"review metatron docs",start=>_]>-@/usr/agent/todo
-==>[
-    task::[
-     done=>false,
-     desc=>'review metatron docs',
-     start=>datetime::<//2026.09:23/22/53/49/521?tz=-0600>],
-    task::[
-     done=>false,
-     desc=>'review metatron docs',
-     start=>datetime::<//2026.09:23/22/53/49/476?tz=-0600>]]@/usr/agent/todo
+==>[task::[done=>false,desc=>'review metatron docs',start=>datetime::<//2026.09:25/06/47/51/571?tz=-0600>],task::[done=>false,desc=>'review metatron docs',start=>datetime::<//2026.09:25/06/47/51/540?tz=-0600>]]@/usr/agent/todo
 ```
 The current time is split across the defined task. Since `start=>_` has an open slot, the current
 `datatime::T` fills in the spot and then the task is merged into your todo list. To get a structured understanding of

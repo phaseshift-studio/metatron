@@ -129,7 +129,7 @@ public class InstSetDocGenerator {
 
         if (!anyVid) {
             instsetVids.addAll(List.of(
-                    "/m", "/m/sys", "/m/mach", "/m/math", "/m/web", "/m/iot",
+                    "/m", "/m/sys", "/m/dckr", "/m/mach", "/m/math", "/m/math/cat", "/m/web", "/m/iot",
                     "/m/llm", "/m/tble", "/m/dcmnt", "/m/grph",
                     "/m/vec"
             ));
@@ -149,7 +149,7 @@ public class InstSetDocGenerator {
         LOG.info("booting metatron VM ...");
         boot(bootFile);
 
-        SER = ObjmtronSerializer.singleNoClip();
+        SER = ObjmtronSerializer.single();
         final String depth = relativeDepth;
         try {
             final List<Meta> metas = new ArrayList<>();

@@ -419,7 +419,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     // =========================================================================
 
     protected static Obj parseObj(final String encoded) {
-        return ObjmtronSerializer.singleNoClip().read(encoded);
+        return ObjmtronSerializer.single().read(encoded);
     }
 
     // =========================================================================

@@ -442,7 +442,7 @@ public class dckrSpace extends AbstractMemorySpace {
         String s;
         if (obj.isStr()) s = Str.Helper.cleanString(obj, true);
         else if (obj.isUri()) s = Str.Helper.cleanString(obj, true);
-        else s = new String(ObjmtronSerializer.compact().outputBytes(obj).array());
+        else s = new String(ObjmtronSerializer.single().outputBytes(obj).array());
         // Docker prefixes container names with a leading slash (e.g. "/sqlite").
         // Don't strip if the value contains ':' — those are bind-mount paths
         // ("/host/path:/container/path") or image references ("nginx:alpine").

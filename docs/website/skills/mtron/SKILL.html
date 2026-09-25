@@ -174,6 +174,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m.html"><img
                             src="../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_dckr.html"><img
+                            src="../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_dcmnt.html"><img
                             src="../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
                             alt="dcmnt"/>/m/dcmnt</a></li>
@@ -198,6 +201,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_math.html"><img
                             src="../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_math_cat.html"><img
+                            src="../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_sys.html"><img
                             src="../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                             alt="sys"/>/m/sys</a></li>
@@ -268,7 +274,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -430,7 +436,7 @@ mtron&gt; /a/b/c   -&gt; |plus(2)
 mtron&gt; /a/b/d   -&gt; 'm'
 ==&gt;'m'
 mtron&gt; /a/b/d/e -&gt; [1.0,0xa5,true]
-==&gt;[1.0000,0xa5,true]
+==&gt;[1.0,0xa5,true]
 </code></pre>
 <p>To retrieve stored objs, dereference their uris. The uri is the <strong>reference</strong>, the obj is the <strong>referent</strong> and the
 process of moving from one to the other is called <strong>dereferencing</strong> (also known as <strong>resolving</strong>).</p>
@@ -439,14 +445,11 @@ process of moving from one to the other is called <strong>dereferencing</strong>
 mtron&gt; */a/x
 ==&gt;1
 mtron&gt; */a/b
-==&gt;[
-    q=&gt;r,
-    c=&gt;plus(2),
-    d=&gt;[e=&gt;[1.0000,0xa5,true]]]
+==&gt;[q=&gt;r,c=&gt;plus(2),d=&gt;[e=&gt;[1.0,0xa5,true]]]
 mtron&gt; */a/b/c
 ==&gt;plus(2)
 mtron&gt; */a/b/d
-==&gt;[e=&gt;[1.0000,0xa5,true]]
+==&gt;[e=&gt;[1.0,0xa5,true]]
 </code></pre>
 <p>Of particular significance is the result of <code>*/a/b</code>: polys (<code>lst</code>, <code>rec</code>, <code>rel</code>)
 maintain an internal uri scheme that interacts with the outer space's uri scheme. That interplay recurs throughout
@@ -653,27 +656,12 @@ mtron&gt; person::[name=&gt;'marko', age=&gt;29]
 <p>Do not guess at instruction signatures. Every instruction ships with documentation attached via the <code>?docq</code> query
 processor. <strong>Read the documentation of the code you are about to execute.</strong></p>
 <pre><code class="language-mtron">mtron&gt; *plus?docq
-==&gt;docs::[
-    obj=&gt;plus?int&lt;=int(int::T),
-    dom=&gt;'the lhs int',
-    rng=&gt;'the result of the addition',
-    args=&gt;[int::T=&gt;'the int to add to the lhs'],
-    desc=&gt;&quot;&quot;&quot;[mapper] add the argument int to the lhs int
-   one-to-one obj...&quot;&quot;&quot;,
-    example=&gt;[
-     '1.plus(2)          [-- 3                    --]',
-     &quot;1+2                [-- 3 sugar'd form       --]&quot;,
-     '1.plus(plus(1))    [-- 3 nested application --]',
-     '1+(+1)             [-- 3 sugar nested form  --]']]
+==&gt;docs::[obj=&gt;plus?rng=int&amp;dom=int(int::T){&lt;j&gt;},dom=&gt;'the lhs int',rng=&gt;'the result of the addition',args=&gt;[int::T=&gt;'the int to add to the lhs'],desc=&gt;&quot;&quot;&quot;[mapper] add the argument int to the lhs int
+   one-to-one obj transformation (dom_c = rng_c = 1)&quot;&quot;&quot;,example=&gt;['1.plus(2)          [-- 3                    --]',&quot;1+2                [-- 3 sugar'd form       --]&quot;,'1.plus(plus(1))    [-- 3 nested application --]','1+(+1)             [-- 3 sugar nested form  --]']]
 mtron&gt; *select?docq
-==&gt;docs::[
-    desc=&gt;'no documentation available',
-    obj=&gt;{select?rng=str&amp;dom=str(rec::T){&lt;j&gt;},select?rng=uri&amp;dom=uri(rec::T){&lt;j&gt;},select?rng=rel{?}&amp;dom=rel(rel::T){&lt;j&gt;},select?rng=B{*}&amp;dom=lst(A{+}::T){&lt;j&gt;},select?rng=lst{?}&amp;dom=lst(lst::T){&lt;j&gt;},select?rng=lst&amp;dom=lst(rec::T){&lt;j&gt;},select?rng=B{*}&amp;dom=rec(A{+}::T){&lt;j&gt;},select?rng=rec{?}&amp;dom=rec(rec::T){&lt;j&gt;}}]
+==&gt;docs::[desc=&gt;'no documentation available',obj=&gt;{select?rng=str&amp;dom=str(rec::T){&lt;j&gt;},select?rng=uri&amp;dom=uri(rec::T){&lt;j&gt;},select?rng=rel{?}&amp;dom=rel(rel::T){&lt;j&gt;},select?rng=B{*}&amp;dom=lst(A{+}::T){&lt;j&gt;},select?rng=lst{?}&amp;dom=lst(lst::T){&lt;j&gt;},select?rng=lst&amp;dom=lst(rec::T){&lt;j&gt;},select?rng=B{*}&amp;dom=rec(A{+}::T){&lt;j&gt;},select?rng=rec{?}&amp;dom=rec(rec::T){&lt;j&gt;}}]
 mtron&gt; */a/b?docq
-==&gt;[
-    q=&gt;r,
-    c=&gt;plus(2),
-    d=&gt;[e=&gt;[1.0000,0xa5,true]]]
+==&gt;[q=&gt;r,c=&gt;plus(2),d=&gt;[e=&gt;[1.0,0xa5,true]]]
 </code></pre>
 <h3>references</h3>
 <p>The entry doc above is deliberately brief. These are the deep dives, keyed by task. Point: every one of them begins with
@@ -697,7 +685,7 @@ pattern-based access, <code>lineq</code> line-level editing).</li>
 <li><a href="references/math-instset-mtron.html">math instruction set</a> -- <code>/m/math</code>: the unit types (<code>time</code>, <code>datasize</code>,
 <code>currency</code>), the <code>datetime</code> uri and its construction/arithmetic, <code>normalize</code> and the trig/rounding instructions, and
 the <code>pi</code>/<code>e</code> constants.</li>
-<li><a href="references/as-graph-mtron.html">as-graph</a> -- every <code>as</code> instruction read as a property-graph edge (label <code>as</code>,
+<li><a href="references/cat-instset-mtron.html">as-graph</a> -- every <code>as</code> instruction read as a property-graph edge (label <code>as</code>,
 outV the dom, inV the rng) and <code>?asq</code> as its property map: the six edge kinds and what each means when you add a
 cast, how to read an edge that no row declares, the fully generic arg-type cast behind a plain tag, and the
 implicit ancestor casts.</li>

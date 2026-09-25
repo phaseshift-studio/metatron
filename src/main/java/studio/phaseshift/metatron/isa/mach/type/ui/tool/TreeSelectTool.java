@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -161,7 +161,8 @@ public class TreeSelectTool extends AbstractWidget<TreeSelectTool> {
             this.spawnRow = spawnRow;
             this.spawnCol = spawnCol;
 
-            final String formatted = ObjmtronSerializer.single().write(obj);
+            // the UI serializer: a tool body is a reader's rendering — clipped and tagged, not code
+            final String formatted = ObjmtronUISerializer.single().write(obj);
             final Map<Obj, Obj> jvm = mutableMap(
                     uri(TITLE), str(" " + objUri + " "),
                     uri(BODY), str(formatted));

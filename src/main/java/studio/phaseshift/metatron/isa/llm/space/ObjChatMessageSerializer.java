@@ -389,7 +389,7 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
         // parse it back if readMaybeJSON returned a plain Str.
         if (trObj.isStr()) {
             try {
-                trObj = ObjmtronSerializer.compact().inputBytes(trObj.strValue().getBytes(StandardCharsets.UTF_8));
+                trObj = ObjmtronSerializer.single().inputBytes(trObj.strValue().getBytes(StandardCharsets.UTF_8));
             } catch (final Exception ignored) { /* leave as-is */ }
         }
         if (!trObj.isLst())
@@ -464,7 +464,7 @@ public class ObjChatMessageSerializer extends AbstractObjSerializer<ChatMessage>
             final char first = raw.charAt(0);
             if (first != '\'' && first != '"') break;
             try {
-                final Obj parsed = ObjmtronSerializer.singleNoClip().inputBytes(raw);
+                final Obj parsed = ObjmtronSerializer.single().inputBytes(raw);
                 if (parsed.isFail()) break;
                 final String decoded = Str.Helper.cleanString(parsed, true);
                 if (decoded.equals(raw)) break; // stable — prevent infinite loop

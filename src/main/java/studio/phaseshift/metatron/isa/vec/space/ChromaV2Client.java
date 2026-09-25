@@ -150,7 +150,7 @@ public class ChromaV2Client implements VectorDBClient {
         Arrays.stream(entities).forEach(entity -> {
             final List<Double> embedding = embeddingFunction.apply(entity.obj()).lstValue().stream().map(r -> r.asReal().realValue()).toList();
             aggregate.get(0).add(entity.id().toString());
-            aggregate.get(1).add(ObjmtronSerializer.singleNoClip().write(entity.obj()));
+            aggregate.get(1).add(ObjmtronSerializer.single().write(entity.obj()));
             aggregate.get(2).add(entity.metadata().elements().map(r -> new AbstractMap.SimpleEntry<>(Str.Helper.cleanString(r.first()), Str.Helper.cleanString(r.second()))).collect(Collectors.toMap(a -> a, b -> b)));
             aggregate.get(3).add(embedding);
         });

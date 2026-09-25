@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjYAMLSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.web.parser.*;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
@@ -309,10 +310,11 @@ public class webInstSet extends AbstractInstSet {
                                                         uri(REAL_TID).maybe(), isa_(INT_TYPE).orElse(jnt(4)),
                                                         uri(BYTES_TID).maybe(), isa_(INT_TYPE).orElse(jnt(60)),
                                                         uri(FAIL_TID).maybe(), isa_(INT_TYPE).orElse(jnt(60))),
-                                                uri(JUSTIFY).maybe(), isa_(BOOL_TYPE).orElse(BOOL_TRUE)))
-                                        .constructor(instC(INST_CTOR_TID.rng(OBJ_MTRON_SERIALIZER_TID), lst(T(OBJ_MTRON_SERIALIZER_TID)), (lhs, inst) -> ObjmtronSerializer.of(inst.arg(0).asRec(), inst.arg(0).vid())))
+                                                uri("pointer").maybe(), isa_(STR_TYPE).orElse(str("address")),
+                                                uri("pager").maybe(), isa_(BOOL_TYPE).orElse(BOOL_TRUE)))
+                                        .constructor(instC(INST_CTOR_TID.rng(OBJ_MTRON_SERIALIZER_TID), lst(T(OBJ_MTRON_SERIALIZER_TID)), (lhs, inst) -> ObjmtronUISerializer.of(inst.arg(0).asRec(), inst.arg(0).vid())))
                                         .create(), "mtron string serializer",
-                                "a serializer with configurable clipping for console display and data marshalling",
+                                "the UI serializer: the mtron string format rendered for a reader — clipped, indented, uris tagged as links",
                                 mutableMap(
                                         uri(f(CLIP).extend(REC_TID)).maybe().asUri(), "the max number of relations",
                                         uri(f(CLIP).extend(LST_TID)).maybe().asUri(), "the max number of elements",
@@ -323,7 +325,8 @@ public class webInstSet extends AbstractInstSet {
                                         uri(f(CLIP).extend(FAIL_TID)).maybe().asUri(), "the max number of characters for a fail message",
                                         // uri(f(CLIP).extend(INST_TID)).maybe().asUri(), "the max number of instructions to display",
                                         // uri(f(CLIP).extend(CODE_TID)).maybe().asUri(), "the max number of code statements to display",
-                                        uri(JUSTIFY).maybe(), "whether to justify the text left"),
+                                        uri("pointer").maybe(), "how auto-pointer instructions are drawn: address (the console REPL style) or body (wrapped in one link)",
+                                        uri("pager").maybe(), "whether a render longer than the terminal opens the pager"),
                                 "a serializer for converting objs to/from mtron string format",
                                 "obj_mtron::[clip=>[m=>[rec=>10]]]"),
                         docWrap(OBJ_SIMPLE_JSON_SERIALIZER_TYPE = Type.Builder.build()

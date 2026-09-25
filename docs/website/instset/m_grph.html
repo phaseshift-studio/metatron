@@ -174,6 +174,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m.html"><img
                             src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dckr.html"><img
+                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dcmnt.html"><img
                             src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
                             alt="dcmnt"/>/m/dcmnt</a></li>
@@ -198,6 +201,9 @@
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math.html"><img
                             src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math_cat.html"><img
+                            src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_sys.html"><img
                             src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                             alt="sys"/>/m/sys</a></li>
@@ -268,7 +274,7 @@
                         <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/as-graph-mtron.html">as-graph-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
@@ -401,46 +407,7 @@
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[
- pattern=&gt;/m/grph/#,
- q=&gt;[docq::[
- pattern=&gt;docq,
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;!*/m],
- constq=&gt;[/m/web/serializer/obj_tp3::[=&gt;]@/m/web/serializer/obj_tp3],
- type=&gt;[
-  rec::T@elmt,
-  elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx,
-  elmt::T[?[
-  OUT=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx],
-  IN=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx]]]@edge,
-  space::T[?[{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(#{*}::T)]@instset,{?}config=&gt;rec::T]][ctor?grphspace&lt;=#{?}(rec::T)]@grphspace,
-  modern::T],
- inst=&gt;[
-  gremlin?#{*}&lt;=grphspace(str::T),
-  label?uri&lt;=rec(),
-  values?#{*}&lt;=rec(uri{*}::T),
-  inV?vrtx&lt;=edge(),
-  outV?vrtx&lt;=edge(),
-  bothV?vrtx{2}&lt;=edge(),
-  out?vrtx{*}&lt;=vrtx(uri{*}::T),
-  in?vrtx{*}&lt;=vrtx(uri{*}::T),
-  both?vrtx{*}&lt;=vrtx(uri{*}::T),
-  outE?edge{*}&lt;=vrtx(uri{*}::T),
-  inE?edge{*}&lt;=vrtx(uri{*}::T),
-  bothE?edge{*}&lt;=vrtx(uri{*}::T),
-  addE?edge&lt;=vrtx(uri::T,rec{+}::T,rec{?}::T)],
- rewrite=&gt;[
-  /m/grph/inst/rewrite/gremlin_count?code{?}&lt;=code(),
-  /m/grph/inst/rewrite/gremlin_limit?code{?}&lt;=code(),
-  /m/grph/inst/rewrite/gremlin_where?code{?}&lt;=code(),
-  /m/grph/inst/rewrite/gremlin_where_count?code{?}&lt;=code(),
-  /m/grph/inst/rewrite/gremlin_where_limit?code{?}&lt;=code(),
-  /m/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(),
-  /m/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code()]]@/m/grph</code></pre>
+                        <pre><code>instset::[pattern=&gt;/m/grph/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],constq=&gt;[/m/web/serializer/obj_tp3::[=&gt;]@/m/web/serializer/obj_tp3],type=&gt;[rec::T@elmt,elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx,elmt::T[?[OUT=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx],IN=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx]]]@edge,space::T[?[{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset,{?}config=&gt;rec::T]][ctor?rng=grphspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@grphspace,modern::T],inst=&gt;[gremlin?rng=#{*}&amp;dom=grphspace(str::T){&lt;j&gt;},label?rng=uri&amp;dom=rec(){&lt;j&gt;},values?rng=#{*}&amp;dom=rec(uri{*}::T){&lt;j&gt;},inV?rng=vrtx&amp;dom=edge(){&lt;j&gt;},outV?rng=vrtx&amp;dom=edge(){&lt;j&gt;},bothV?rng=vrtx{2}&amp;dom=edge(){&lt;j&gt;},out?rng=vrtx{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;},in?rng=vrtx{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;},both?rng=vrtx{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;},outE?rng=edge{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;},inE?rng=edge{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;},bothE?rng=edge{*}&amp;dom=vrtx(uri{*}::T){&lt;j&gt;},addE?rng=edge&amp;dom=vrtx(uri::T,rec{+}::T,rec{?}::T){&lt;j&gt;}],rewrite=&gt;[/m/grph/inst/rewrite/gremlin_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/grph/inst/rewrite/gremlin_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/grph/inst/rewrite/gremlin_where?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/grph/inst/rewrite/gremlin_where_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/grph/inst/rewrite/gremlin_where_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/grph/inst/rewrite/out_incident_adjacent?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/grph/inst/rewrite/in_incident_adjacent?rng=code{?}&amp;dom=code(){&lt;j&gt;}]]@/m/grph</code></pre>
                     </div>
                 </div>
             </div>
@@ -552,9 +519,7 @@
         </span>
         <small class="text-muted code">/m/grph/edge</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T[?[
-  OUT=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx],
-  IN=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx]]]@edge</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T[?[OUT=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx],IN=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx]]]@edge</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a directed key/value attributed binary edge</p>
@@ -606,18 +571,8 @@
         <a href="m_grph_space_grphspace.html" class="code text-primary fw-bold text-decoration-none">grphspace</a>
         <small class="text-muted code">/m/grph/space/grphspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?instset&lt;=#{?}(#{*}::T)]@instset,{?}config=&gt;rec::T]][ctor?grphspace&lt;=#{?}(rec::T)]@grphspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- pattern=&gt;uri::T,
- {?}q=&gt;[rec{?}::T[?[
-  pattern=&gt;uri::T,
-  {?}pre_write=&gt;inst::T,
-  {?}post_write=&gt;inst::T,
-  {?}qless_write=&gt;inst::T,
-  {?}pre_read=&gt;inst::T,
-  {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T)]@qproc],
- {?}route=&gt;[uri{?}::T=&gt;uri::T],
- {?}schema=&gt;instset::T]</code></div></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset,{?}config=&gt;rec::T]][ctor?rng=grphspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@grphspace</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,{?}pre_write=&gt;inst::T,{?}post_write=&gt;inst::T,{?}qless_write=&gt;inst::T,{?}pre_read=&gt;inst::T,{?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@qproc],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a space for graph traversal</p>
 </div>

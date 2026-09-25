@@ -121,7 +121,7 @@ public class memSpace extends AbstractMemorySpace {
                 // TopicTrie.forEach() iterates all entries across all nodes
                 this.sjvm().forEach((key, value) -> {
                     try {
-                        out.write((key + " ->(" + ObjmtronSerializer.singleNoClip().write(value) + ");\n").getBytes(StandardCharsets.UTF_8));
+                        out.write((key + " ->(" + ObjmtronSerializer.single().write(value) + ");\n").getBytes(StandardCharsets.UTF_8));
                     } catch (IOException e) {
                         throw MTronException.of(e);
                     }

@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.AbstractWidgetTest;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.ui.uiInstSet;
@@ -31,16 +31,28 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * The general stacked bar: the data contract (widths, percent, framing) in
  * tabular rows, the per-section style entries in dedicated tests — the rows
  * stay quote-free on purpose, since a CSV field keeps its quotes verbatim.
  */
-public class StackBarWidgetTest extends AbstractInstSetTest {
+public class StackBarWidgetTest extends AbstractWidgetTest {
 
     public StackBarWidgetTest() {
         super(uiInstSet::new);
+    }
+
+    @Override
+    protected Object sampleWidget() {
+        return new StackBarWidget(mutableMap(
+                uri("data"), rec(mutableMap(uri("ai"), jnt(345), uri("user"), jnt(3234), uri("sys"), jnt(2434))),
+                uri("context"), jnt(262144),
+                uri("total"), jnt(12606)));
     }
 
     private static StackBarWidget parse(final String code) {

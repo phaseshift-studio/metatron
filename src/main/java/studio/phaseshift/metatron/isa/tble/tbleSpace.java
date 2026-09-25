@@ -244,11 +244,11 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
         this.backend = dbProductName;
         if (dbProductName.contains(MARIADB) || dbProductName.contains(MYSQL)) {
             this.schema = new fURIAwareIndexedSchema();
-            this.serializer = this.at(SERIALIZER).orElse(ObjmtronSerializer.singleNoClip());
+            this.serializer = this.at(SERIALIZER).orElse(ObjmtronSerializer.single());
             LOG.info("detected {{b}}mariadb/mysql{{X}} using {{y}}mqtt{{X}} schema {{g}}[{{b}}serializer: {{y}}%s{{g}}]", this.serializer.typeId());
         } else {
             this.schema = new TypedKeyValueSchema();
-            this.serializer = this.at(SERIALIZER).orElse(ObjmtronSerializer.singleNoClip());
+            this.serializer = this.at(SERIALIZER).orElse(ObjmtronSerializer.single());
             LOG.info("detected {{b}}%s{{X}} using {{y}}typed{{X}} schema {{g}}[{{b}}serializer: {{y}}%s{{g}}]", dbProductName, this.serializer.typeId());
         }
         this.schema.initialize(conn);
