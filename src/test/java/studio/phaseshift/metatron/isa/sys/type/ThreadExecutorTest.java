@@ -283,7 +283,7 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
         final fURI vid = CommonUtil.mintShortUUID(f("/sys/thread"), true);
 
         // Verify CoreThread.apply() routes through ThreadExecutor.
-        // CoreThread's createTask uses SwarmMachine internally; test that
+        // CoreThread's createTask uses SwarmProcessor internally; test that
         // the thread is tracked by the executor regardless of computation result.
         final studio.phaseshift.metatron.isa.mach.type.thread.CoreThread thread =
                 studio.phaseshift.metatron.isa.mach.type.thread.CoreThread.core(

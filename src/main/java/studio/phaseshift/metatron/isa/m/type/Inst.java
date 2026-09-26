@@ -771,7 +771,7 @@ public interface Inst extends Call {
                 result = result.dom(userInstTid.dom());
 
             } else if (apiInstTid.dom().one().isGeneric()) {
-                result = result.dom(bindings.getOrDefault(apiInstTid.dom().one(), apiInstTid.dom())).c(apiInstTid.dom().c());
+                result = result.dom(bindings.getOrDefault(apiInstTid.dom().one(), apiInstTid.dom()).c(apiInstTid.dom().c()));
             }
             /// /////
             if (userInstTid.hasRng()) {
@@ -780,9 +780,9 @@ public interface Inst extends Call {
                 result = result.rng(userInstTid.rng());
 
             } else if (apiInstTid.rng().one().isGeneric()) {
-                result = result.rng(bindings.getOrDefault(apiInstTid.rng().one(), apiInstTid.rng())).c(apiInstTid.dom().c());
+                result = result.rng(bindings.getOrDefault(apiInstTid.rng().one(), apiInstTid.rng()).c(apiInstTid.rng().c()));
             } else if (result.dom().one().isGeneric()) {
-                result = result.dom(bindings.getOrDefault(result.dom().one(), result.dom())).c(result.dom().c());
+                result = result.dom(bindings.getOrDefault(result.dom().one(), result.dom()).c(result.dom().c()));
             }
             return result;
         }

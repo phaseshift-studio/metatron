@@ -106,7 +106,9 @@ public class Utilities {
     /**
      * Clip text to {@code maxW} visible columns, appending {@code …} when
      * truncated.  Preserves leading Graphitty codes so the clip marker inherits
-     * the same colour.  A {@code maxW <= 0} means no clipping.
+     * the same colour — and pulls the closers for those codes FORWARD, so a colour
+     * the author opened is not left running past the end of the clipped text
+     * (see {@link #pulledClosers}).  A {@code maxW <= 0} means no clipping.
      *
      * @param text the text to clip (may contain Graphitty markup)
      * @param maxW maximum visible columns before the ellipsis
@@ -120,7 +122,113 @@ public class Utilities {
         final String leadIn = m.find() ? m.group() : "";
         final String rest = leadIn.isEmpty() ? collapsed : collapsed.substring(leadIn.length());
         final String stripped = Highlighter.unformat(rest);
-        return leadIn + Graphitty.viewPrefix(stripped, Math.max(1, maxW - 1)) + "…";
+        return leadIn + Graphitty.viewPrefix(stripped, Math.max(1, maxW - 1)) + "…"
+                + pulledClosers(leadIn, rest);
+    }
+
+    /** One Graphitty rule — {@code {{g}}}, {@code {{/g}}}, {@code {{b&amp;[k]}}} — and its pieces. */
+    private static final Pattern RULE = Pattern.compile("\\{\\{([^{}]*)}}");
+
+    /** The rule that opens a link, which captures text rather than colour. */
+    private static final String LINK_RULE = "link";
+
+    /**
+     * The rules {@code markup} leaves OPEN, outermost first: a piece opens, {@code /name}
+     * closes the rule it names, and {@code X} — the reset — closes everything at once.
+     * A {@code link}, a {@code syntax:…} block and an emoji shortcode are not colours and
+     * are ignored, exactly as the renderer ignores them.
+     */
+    private static List<String> openRules(final String markup) {
+        final List<String> open = new ArrayList<>();
+        final Matcher m = RULE.matcher(markup);
+        while (m.find()) {
+            for (final String piece : m.group(1).split("&")) {
+                if (piece.isEmpty()) continue;
+                if ("X".equals(piece)) {
+                    open.clear();   // the reset closes every rule at once
+                } else if (piece.startsWith("/")) {
+                    final String name = piece.substring(1);
+                    // the renderer pops the TOP rule and drops a close that names another
+                    if (!open.isEmpty() && open.get(open.size() - 1).equals(name))
+                        open.remove(open.size() - 1);
+                } else if (!piece.equals(LINK_RULE) && !piece.startsWith(LINK_RULE + ":")
+                        && !piece.startsWith(Graphitty.SYNTAX_RULE_PREFIX)
+                        && !(piece.length() > 2 && ':' == piece.charAt(0) && piece.endsWith(":"))) {
+                    open.add(piece);
+                }
+            }
+        }
+        return open;
+    }
+
+    /**
+     * The closers a clipped string still owes: the rules its kept markup leaves open
+     * ({@code leadIn}) whose close the clip cut away.
+     *
+     * <p>The author's own close is pulled FORWARD rather than a reset being invented —
+     * {@code {{b}}a title too long…{{/b}}} keeps its blue to the title and no further —
+     * so a clip neither leaks a colour past the ellipsis into the rest of the box nor
+     * writes a tag the author did not.  {@code {{X}}}, the reset, is a close as well and
+     * settles every open rule at once, which is the form most of this codebase writes.
+     * A rule the author never closed anywhere is left as authored: that leak is in the
+     * source, and the unclipped render has it too.
+     *
+     * <p>Closers come out in the order they appear in the discarded text, which for
+     * well-formed markup is the inside-out order the opens need.
+     */
+    private static String pulledClosers(final String leadIn, final String discarded) {
+        final List<String> open = openRules(leadIn);
+        if (open.isEmpty()) return "";
+        final StringBuilder closers = new StringBuilder();
+        final Set<String> pulled = new HashSet<>();
+        final Matcher m = RULE.matcher(discarded);
+        while (pulled.size() < open.size() && m.find()) {
+            for (final String piece : m.group(1).split("&")) {
+                if ("X".equals(piece)) return closers.append("{{X}}").toString();
+                if (!piece.startsWith("/")) continue;
+                final String name = piece.substring(1);
+                if (open.contains(name) && pulled.add(name))
+                    closers.append("{{/").append(name).append("}}");
+            }
+        }
+        return closers.toString();
+    }
+
+    /**
+     * A bordered box's title, clipped to the columns the box leaves it.
+     *
+     * <p>An explicit {@code style=>[width=>x]} is the box's width, and of
+     * everything a box draws the title is the one thing that can be arbitrarily
+     * long — so it is the thing that gives way, clipped with an ellipsis, rather
+     * than the title widening the box past the width it was told to be.  Every
+     * titled box computes its own numbers and clips through here
+     * ({@link AccordionWidget}, {@link PanelWidget}, {@link CardWidget}), so the
+     * rule is stated once and the boxes cannot drift apart on it.
+     *
+     * <p>A title is ONE line by definition, so newlines are flattened to spaces: a
+     * title carrying one cannot break the box it sits in.  A title that opens a
+     * colour and closes it later is clipped as {@code {{b}}the title…{{/b}}} — the
+     * close is pulled forward with the rest of the clip (see {@link #textClip}), so
+     * the colour stops at the title instead of running on into the box border.
+     *
+     * @param title  the title as authored (may carry Graphitty markup; the leading
+     *               codes are kept so the clip marker inherits the title's colour)
+     * @param width  the width the box was told to be — {@code <= 0} when it sizes to
+     *               its content, in which case the title comes back whole (a
+     *               content-sized box has the columns its title needs)
+     * @param chrome the columns of {@code width} the box spends on anything that is
+     *               NOT the title: its border sides, its margins, and any glyph it
+     *               draws beside the title
+     * @return the title as the box draws it — empty when what is left is not enough
+     *         for even one column of it (the box's own chrome wins: a toggle glyph
+     *         and a border are what the box is FOR)
+     */
+    public static String titleClip(final String title, final int width, final int chrome) {
+        if (null == title || title.isEmpty()) return "";
+        final String oneLine = title.replace("\r\n", " ").replace('\n', ' ').replace('\r', ' ');
+        if (width <= 0) return oneLine;
+        final int room = width - chrome;
+        return room <= 0 ? "" : textClip(oneLine, room);
     }
 
     public static void runCursorLessWidget(final Widget<?> widget, final boolean close) {

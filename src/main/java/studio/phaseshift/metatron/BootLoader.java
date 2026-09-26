@@ -131,6 +131,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
         boolean generateMode = false;
         boolean pipeMode = false;
         boolean quiet = false;
+        boolean mcp = false;
         boolean showVersion = false;
         boolean showHelp = args.length == 0;
         String legacyArgs = null;
@@ -186,6 +187,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     }
                     generateMode = true;
                 }
+                case "--mcp" -> mcp = true;
                 case "-p", "--pipe" -> pipeMode = true;
                 case "-q", "--quiet" -> quiet = true;
                 case "-v", "--version" -> showVersion = true;
@@ -210,6 +212,17 @@ public class BootLoader implements Rec, Feature.SelfClone {
             i++;
         }
 
+        // --- stdio MCP mode ---------------------------------------------------
+        // --mcp claims stdin and stdout for the protocol, so it can not share them with a mode that reads
+        // stdin (-p) or prints one result and exits (-e/-f/-c), nor with a websocket client run (-w).
+        if (mcp && (evalExpr != null || filePath != null || pipeMode || generateMode || null != webSocket)) {
+            System.err.println("metatron: --mcp can not be combined with -e/-f/-c/-p/-g/-w (it owns stdin and stdout)");
+            EXIT_HANDLER.accept(1);
+        }
+        // take stdout before anything can write to it: fd 1 is the mcp wire on a stdio session
+        if (mcp)
+            studio.phaseshift.metatron.isa.web.space.stdio.StdioProtocol.install();
+
         // --- Immediate-exit flags -------------------------------------------
         if (showVersion) {
             System.out.println("metatron " + METATRON_VERSION);
@@ -229,6 +242,9 @@ public class BootLoader implements Rec, Feature.SelfClone {
         // --- Boot file resolution: -b flag -> $METATRON_BOOT env -> null ----
         if (bootFile == null)
             bootFile = System.getenv("METATRON_BOOT");
+        // an stdio session with no profile of its own gets the portless one
+        if (bootFile == null && mcp)
+            bootFile = "boot/mcp.boot.mtron";
 
         // --- Suppress diagnostic output for eval/piping mode -----------------
         if (quiet || evalExpr != null || filePath != null)
@@ -259,8 +275,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // -b flag takes priority over any boot in extraArgs
             if (bootFile != null)
                 ARGS.jvm().put(uri(BOOT), uri(bootFile));
-            if (evalExpr != null || filePath != null || quiet)
-                ARGS.jvm().put(uri("log"), uri("error"));
+            if (evalExpr != null || filePath != null || quiet || mcp)
+                ARGS.jvm().putIfAbsent(uri("log"), uri("error"));
+            if (mcp)
+                ARGS.jvm().put(uri(MCP), uri(STDIO));
         }
 
         // --- Parse boot-file header for embedded args -----------------------
@@ -275,7 +293,13 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     if (argsEnd != -1) {
                         final List<String> bootArgs = bootLines.subList(argsStart + 1, argsEnd);
                         if (!quiet) LOG.info("header boot args:\n%s", String.join("\n", bootArgs));
-                        ARGS.jvm().putAll(ObjmtronSerializer.parse(String.join("\n", bootArgs)).as().jvmAs());
+                        // a header block is a rec of args; anything else (say, a stray semicolon making it a
+                        // lst of statements) is reported and skipped rather than cast-failing the boot
+                        final Obj bootArgsObj = ObjmtronSerializer.parse(String.join("\n", bootArgs));
+                        if (bootArgsObj.isRec())
+                            ARGS.jvm().putAll(bootArgsObj.asRec().jvm());
+                        else
+                            LOG.warn("boot args block did not parse as a rec — ignoring: %s", bootArgsObj);
                     } else {
                         LOG.warn("boot args section not properly closed in %s", bootPath);
                     }
@@ -285,6 +309,11 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 EXIT_HANDLER.accept(1);
             }
         }
+
+        // a profile can declare `mcp => stdio` itself (so `-b boot/mcp.boot.mtron` behaves like the flag):
+        // the header args are parsed by now, and fd 1 has to be claimed before the profile prints anything
+        if (!mcp && ARGS.has(uri(MCP)))
+            studio.phaseshift.metatron.isa.web.space.stdio.StdioProtocol.install();
 
         if (null != webSocket) {
             final WebSocketRecClient client = new WebSocketRecClient(new WebSocketRec(mutableMap(uri(HOST), uri(webSocket)), WS_CLIENT_TID, null));
@@ -349,8 +378,12 @@ public class BootLoader implements Rec, Feature.SelfClone {
         }
 
         // --- Headless mode: signal restart via exit code -----------------
-        if (RESET)
+        // not while serving a stdio session: exiting 100 makes bin/metatron swap the JVM under a live pipe,
+        // which strands in-flight requests and answers a strict client's next initialize with silence
+        if (RESET && !mcp)
             System.exit(EXIT_RESET);
+        else if (RESET)
+            LOG.warn("reset ignored while serving mcp stdio — restart the harness to reboot the vm");
     }
 
     private static void printHelp() {
@@ -367,6 +400,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                               -f, --file <file>       Evaluate an mtron source file
                               -g, --generate <file>   Generate a custom mtron boot
                               -p, --pipe              Read stdin as pipe input
+                              --mcp                   Serve MCP on stdin/stdout (implies -b boot/mcp.boot.mtron)
                               -q, --quiet             Suppress diagnostic output (for piping)
                               -v, --version           Print version and exit
                               -h, --help              Show this help message
@@ -535,6 +569,22 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     EXIT_HANDLER.accept(0);
                 }
                 LOG.info("\t {{m}}END:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
+            }
+            // a stdio session was asked for and the profile did not mount a carrier — attach the default
+            // one. Idempotent by construction (mcp_stdioHandler.serving()), so a profile that DID mount one
+            // wins and --mcp stays sugar over the profile rather than a competing code path.
+            if (args.has(uri(MCP)) && !studio.phaseshift.metatron.isa.web.space.stdio.handler.mcp_stdioHandler.serving()) {
+                LOG.info("attaching the default mcp stdio carrier");
+                // a fallback must never take the boot down with it: a profile that failed to mount its own
+                // carrier still deserves to report why, rather than dying with no output at all (2026-09-26)
+                try {
+                    final Obj attached = studio.phaseshift.metatron.isa.web.space.stdio.handler.mcp_stdioHandler.of(
+                            rec(mutableMap(uri(HOST), uri("mcp_mtron"))));
+                    if (attached.isFail())
+                        LOG.error("unable to attach the default mcp stdio carrier: %s", attached);
+                } catch (final Throwable e) {
+                    LOG.error("unable to attach the default mcp stdio carrier: %s", null == e.getMessage() ? e.getClass().getName() : e.getMessage());
+                }
             }
             final Obj log = Router.writeToSpace(LogObj.of(rec(args.at(LOGG).orElse(uri(TRACE.levelStr)), lst(uri(ALL))), SYS_VID.extend(LOGG)));
             LOG.info("logging now handled by %s", log);

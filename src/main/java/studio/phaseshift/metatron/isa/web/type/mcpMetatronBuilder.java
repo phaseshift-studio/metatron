@@ -168,7 +168,7 @@ public final class mcpMetatronBuilder {
 
                             }), "noobj lhs", "the result of the code evaluation",
                     Map.of(uri(CODE), "mtron code to evaluate",
-                            uri(NATIVE).maybe(), "convert result to mtron expression (a string)"),
+                            uri(NATIVE).maybe(), "return result in native mtron format"),
                     "returns the result of evaluating the provided mtron expression"), MUTABLE);
             // list_space — return an index of currently accessible spaces
             tools.at(uri(mTool.toolName(toolTid("list_space"))), docWrap(instC(

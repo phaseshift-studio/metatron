@@ -92,17 +92,17 @@ public class mInstSetTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "'123'.regex('\\d')                                                             % ['1','2','3']",
-            "'abcd'.regex('[a-z]{2}')                                                       % ['ab','cd']",
-            "'ab3cd'.regex('([a-z]+)(\\d?)([a-z]?)')                                        % [['ab3c','ab','3','c'],['d','d','','']]",
-            "'ab3cd'.regex('(?<a>[a-z]+)(?<b>\\d?)(?<c>[a-z]?)')                            % [['ab3c','ab','3','c'],['d','d','','']]",
-            "'ab3cd'.regex('\\d*')                                                          % ['','','3','','','']",
-            "'ab3cd'.regex('\\d+')                                                          % ['3']",
-            "'ab3cd'.regex('\\d{2}')                                                        % [,]",
-            "'241G'.regex('(\\d+)([KMGT])')                                                  % [['241G','241','G']]",
-            "'241G 502G'.regex('(\\d+)([KMGT])')                                             % [['241G','241','G'],['502G','502','G']]",
-            "'foo:bar'.regex('(\\w+):(\\w+)')                                                % [['foo:bar','foo','bar']]",
-            "'a1b2c3'.regex('([a-z])(\\d)')                                                  % [['a1','a','1'],['b2','b','2'],['c3','c','3']]",
+            "'123'.select('\\d')                                                             % ['1','2','3']",
+            "'abcd'.select('[a-z]{2}')                                                       % ['ab','cd']",
+            "'ab3cd'.select('([a-z]+)(\\d?)([a-z]?)')                                        % [['ab3c','ab','3','c'],['d','d','','']]",
+            "'ab3cd'.select('(?<a>[a-z]+)(?<b>\\d?)(?<c>[a-z]?)')                            % [['ab3c','ab','3','c'],['d','d','','']]",
+            "'ab3cd'.select('\\d*')                                                          % ['','','3','','','']",
+            "'ab3cd'.select('\\d+')                                                          % ['3']",
+            "'ab3cd'.select('\\d{2}')                                                        % [,]",
+            "'241G'.select('(\\d+)([KMGT])')                                                  % [['241G','241','G']]",
+            "'241G 502G'.select('(\\d+)([KMGT])')                                             % [['241G','241','G'],['502G','502','G']]",
+            "'foo:bar'.select('(\\w+):(\\w+)')                                                % [['foo:bar','foo','bar']]",
+            "'a1b2c3'.select('([a-z])(\\d)')                                                  % [['a1','a','1'],['b2','b','2'],['c3','c','3']]",
     }, delimiter = '%', quoteCharacter = '~')
     public void testStrCode(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -131,6 +131,10 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{int{2}::1,2,3,4,5}.skip(2).take(2)                                            % {2,3}",
             "{int{3}::1,2,3,4,5}.skip(2).take(2).count()                                    % 2",
             /// ////////////////////////////////////////////////////////////////////////////////////////////
+            "{1,2,3,4}.filter(gt(2)).count()                                                % 2",
+            "{1,2,3,4}.filter(gt(2)).take(1)                                                % {3}",
+            "{1,2,3,4}.filter(gt(2)).take(2)                                                % {3,4}",
+            /// ////////////////////////////////////////////////////////////////////////////////////////////
             "{1,1}.inst?int<=int{2}(){ sum() }                                              % 2",
             "{1,1,1,1}.inst?int<=int{2}(){ sum() }                                          % int{2}::2",
             "{1,1,2,3}.inst?int<=int{2}(){ sum() }                                          % {2,5}",
@@ -147,6 +151,17 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,1,2,2,3,3,4,4}.inst?int<=int{2}(){ sum() }.catch(10)                        % {2,4,6,8}",
     }, delimiter = '%')
     public void testSkipLimitCode(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @TestData(value = {"1@take/a", "2@take/b", "3@take/c"})
+    @ParameterizedTest
+    @CsvSource(value = {
+            "from(take/+).count()                                                         % 3",
+            "from(take/+).filter(gt(1)).count()                                           % 2",
+            "from(take/+).filter(gt(1)).take(1).count()                                   % 1",
+    }, delimiter = '%')
+    public void testGatherAfterRead(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 

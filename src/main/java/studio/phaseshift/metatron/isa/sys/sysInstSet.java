@@ -194,10 +194,10 @@ public class sysInstSet extends AbstractInstSet {
                         docWrap(instC(SYS_INST_TID.extend("find_file").dom(A.maybe()).rng(LST_TID), rec(
                                         uri(NAME), STR_TYPE,
                                         uri(ROOT).maybe(), URI_TYPE,
-                                        uri(f(REGEX_INST_TID.name()).maybe()), BOOL_TYPE,
+                                        uri(PATTERN), BOOL_TYPE,
                                         uri(MAX).maybe(), INT_TYPE,
                                         uri(DEPTH).maybe(), INT_TYPE), (lhs, inst) -> {
-                                    final boolean regex = inst.arg(REGEX_INST_TID.name(), 2).orElse(BOOL_FALSE).boolValue();
+                                    final boolean regex = inst.arg(PATTERN, 2).orElse(BOOL_FALSE).boolValue();
                                     final Pattern pattern = regex ? Pattern.compile(inst.arg(NAME, 0).strValue()) : null;
                                     try (final Stream<Obj> uris = start_(inst.arg(ROOT, 1).orElse(uri("<mfs:.>"))).repeat_(rshift_(), loop_().is_(gt_(inst.arg(DEPTH, 4).orElse(jnt(MAX_DIRECTORY_DEPTH)))), BOOL_TRUE).apply().stream()
                                             .filter(p -> regex ? pattern.matcher(p.uriValue().toString()).find() : p.uriValue().toString().contains(inst.arg(NAME, 0).strValue()))
@@ -210,7 +210,7 @@ public class sysInstSet extends AbstractInstSet {
                                 }), "maybe an obj (optional)", "a lst of all files whose path matches str regex",
                                 Map.of(uri(NAME), "a regex or plain string to match file paths against",
                                         uri(ROOT).maybe(), "the root directory for searching (default: current working directory -- <mfs:.>)",
-                                        uri(REGEX_INST_TID.name()).maybe(), "if the search string should be treated as a regex pattern (default: false)",
+                                        uri(PATTERN).maybe(), "if the search string should be treated as a regex pattern (default: false)",
                                         uri(MAX).maybe(), "the max number of results to return (default: 50)",
                                         uri(DEPTH).maybe(), "the max depth to search directories (default: 50)"),
                                 "recursively search directory for named file by regex or partial string match"),

@@ -185,14 +185,20 @@ public class PanelWidget extends SpaceRec<PanelWidget> implements Widget<PanelWi
         // ONE anchored read for the whole pass (fields and style both come from it)
         final Map<Obj, Obj> fields = this.read();
         final Style<PanelWidget> style = Style.from(this.get(fields, STYLE_KEY));
-        final String title = this.getStr(fields, K_TITLE);
+
+        // Word-wrap the body when the style carries a width (see maxWidth()) — and
+        // clip the title to that same width: the body gives way to it, and so does
+        // the title, otherwise a long title is the one thing that still widens a
+        // panel past the width it was told to be.
+        final int maxWidth = style.width();
+        // A panel's declared width is its CONTENT width (the border sides sit outside
+        // it), so none of it is chrome — see Utilities.titleClip.
+        final String title = Utilities.titleClip(this.getStr(fields, K_TITLE), maxWidth, 0);
         // a body is a str or a list of lines — both are lines here
         final List<String> rawLines = this.getLines(fields, K_BODY).stream()
                 .map(l -> l.endsWith("\r") ? l.substring(0, l.length() - 1) : l)
                 .toList();
 
-        // Word-wrap when the style carries a width (see maxWidth())
-        final int maxWidth = style.width();
         final List<String> lines;
         if (maxWidth > 0) {
             lines = new ArrayList<>();

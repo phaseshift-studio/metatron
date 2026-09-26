@@ -23,8 +23,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -103,5 +105,57 @@ public class PanelWidgetTest extends AbstractMetatronTest {
                 "a narrow panel breaks the line: " + wrapped);
         assertTrue(wrapped.lines().filter(l -> l.startsWith("│")).count() > 1,
                 "a narrow panel wraps the body over several rows: " + wrapped);
+    }
+
+    // ── the declared width is the panel's width, title included ────
+
+    /**
+     * The body gives way to {@code maxWidth} by wrapping; the title gives way to it by
+     * being clipped.  A panel whose title is the longest thing in it — a URI, say — is
+     * exactly the case that used to draw wider than the width it was handed.
+     *
+     * <p>A panel sizes to its content, so a declared width is a limit and not a fill:
+     * the box is as wide as what it holds, and never wider than the width it was given.
+     */
+    @ParameterizedTest()
+    @CsvSource(value = {
+            "36 % 30 % clipped % a title wider than the panel is clipped to it",
+            "28 % 30 % intact  % a title the panel's width has room for is drawn whole",
+            "4  % 30 % intact  % a short title is untouched",
+    }, delimiter = '%')
+    void testTitleIsClippedToTheDeclaredWidth(final int titleLength, final int width,
+                                              final String expectation, final String description) {
+        final String title = "t".repeat(titleLength);
+        final PanelWidget p = panel(str("body"));
+        p.setTitle(title);
+        p.maxWidth(width);
+        final List<String> lines = p.format().lines().toList();
+        for (final String line : lines)
+            assertTrue(Highlighter.visualLength(line) <= width + 2,
+                    "no row is wider than the declared width plus the two border sides: %s "
+                            .formatted(line) + "(width %d, title %d — %s)".formatted(width, titleLength, description));
+        if ("clipped".equals(expectation.trim())) {
+            assertTrue(lines.get(0).contains("…"), "the clipped title is marked as clipped: " + lines.get(0));
+            assertEquals(width + 2, Highlighter.visualLength(lines.get(0)),
+                    "and the clip fills the room it was given exactly: " + lines.get(0));
+        } else
+            assertTrue(lines.get(0).contains(title), "a title that fits is drawn whole: " + lines.get(0));
+    }
+
+    /**
+     * The modal renders through a panel, so it inherits the clip — it constrains the
+     * panel to the terminal it is running in, and a modal title must not push the box
+     * past that.
+     */
+    @Test
+    public void shouldClipAModalTitleToThePanelItRendersThrough() {
+        final PanelWidget p = new PanelWidget("a confirmation title nobody would fit in 24 columns",
+                "Do you want to proceed?");
+        p.maxWidth(24);
+        final List<String> lines = p.format().lines().toList();
+        for (final String line : lines)
+            assertTrue(Highlighter.visualLength(line) <= 26,
+                    "the modal's box stays within the width its panel was given: " + line);
+        assertTrue(lines.get(0).contains("…"), "and its title says so: " + lines.get(0));
     }
 }

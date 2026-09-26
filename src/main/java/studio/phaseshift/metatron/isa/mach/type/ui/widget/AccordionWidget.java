@@ -163,13 +163,21 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
      * the border cell, a space, the title and another space (see
      * {@link #buildTitleBar}).
      *
+     * <p>The title measured here is the one the header actually DRAWS
+     * ({@link #drawnTitle}) — a clipped title is shorter, which moves the glyph
+     * left, and a target computed from the full title would sit past the end of
+     * the header and fold nothing.
+     *
      * <p>Anywhere else — including the header — is none of this widget's
      * business: the click falls through and the console focuses the widget.
      */
     @Override
     public boolean onClick(final int row, final int col) {
         if (row != 0) return false;
-        final int start = 3 + Highlighter.visualLength(this.title());
+        final Map<Obj, Obj> fields = this.read();   // the same anchored read the render draws from
+        final String ind = indicator(this.getBool(fields, K_EXP, true), this.getLines(fields, K_BODY));
+        final int start = 3 + Highlighter.visualLength(this.drawnTitle(this.getStr(fields, K_TITLE),
+                ind, Style.from(this.get(fields, STYLE_KEY)).width()));
         if (col < start || col >= start + INDICATOR_WIDTH) return false;
         this.toggle();
         return true;
@@ -251,12 +259,9 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
         final List<String> body = this.getLines(fields, K_BODY);
         final Style<AccordionWidget> style = Style.from(this.get(fields, STYLE_KEY));
 
-        // A folded accordion shows nothing but its header, so the header says
-        // how much it is holding: a folded box with text in it and a box with
-        // an empty body must not look the same ("where did my text go" is
-        // otherwise indistinguishable from "the text never arrived").
-        final String ind = expanded ? EXPAND_INDICATOR
-                : (body.isEmpty() ? COLLAPSE_INDICATOR : COLLAPSE_INDICATOR + " " + body.size());
+        // A folded accordion shows nothing but its header, so the header says how
+        // much it is holding (see indicator()).
+        final String ind = indicator(expanded, body);
 
         // Latch instructions and style from JVM on first render
         if (!this.read().containsKey(K_TOGGLE)) {
@@ -284,7 +289,6 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
             }), MUTABLE);
         }
 
-        // Width: use floatWidth from style if set, else compute from content
         final int floatW = style.width();
         // Height: an explicit style height grows the box past its content (the
         // body is padded with blank rows), so a vertical resize enlarges the
@@ -296,11 +300,17 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
             studio.phaseshift.metatron.isa.mach.type.ui.console.Console.rawErr().println("[render]   acc anchored-read=" + (__p1 - __p0) / 1_000_000
                     + "ms body=" + (__p2 - __p1) / 1_000_000 + "ms lines=" + displayLines.size());
         final int bodyWidth = displayLines.stream().map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
-        final int titleW = Highlighter.visualLength(title) + Highlighter.visualLength(ind) + 3;
-        // Width: an explicit style width makes the box that wide — the body and
-        // title pad to it — so the box fills its footprint instead of leaving a
-        // blank gap and, for a right/middle anchor, sliding instead of resizing.
-        final int width = floatW > 0 ? Math.max(titleW, floatW - 2)
+        // The title as the header will draw it.  Read once, here, so the render and
+        // the pointer's toggle target (onClick) cannot disagree about where the
+        // glyph sits — and so the width below is measured on what is drawn.
+        final String header = this.drawnTitle(title, ind, floatW);
+        final int titleW = Highlighter.visualLength(header) + Highlighter.visualLength(ind) + 3;
+        // Width: an explicit style width IS the box's width — the body pads to it and
+        // the header clips its title to fit (see drawnTitle) — so the box fills its
+        // footprint instead of growing past the width it was told to be.  A width too
+        // small even for the header's own chrome is raised to it: the toggle glyph is
+        // what the header is for, and a title is what gives way.
+        final int width = floatW > 0 ? Math.max(headerChrome(ind), floatW - 2)
                 : Math.max(titleW, bodyWidth + 3);
 
         final Border border = style.border() == Border.none ? Border.continuous : style.border();
@@ -309,7 +319,7 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
         final StringBuilder sb = new StringBuilder();
 
         if (expanded && !displayLines.isEmpty()) {
-            buildTitleBar(sb, border, title, ind, width);
+            buildTitleBar(sb, border, header, ind, width);
             sb.append("\n");
             for (final String line : displayLines) {
                 sb.append(Widget.X).append(border.leftSide()).append(Widget.X)
@@ -325,7 +335,7 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
                     .append(border.bottomSide().repeat(width))
                     .append(border.bottomRightCorner()).append(Widget.X);
         } else {
-            buildTitleBar(sb, border, title, ind, width);
+            buildTitleBar(sb, border, header, ind, width);
             sb.append("\n");
             // collapsed (or empty): the box is just its header + bottom border —
             // no height padding, so collapsing after a resize shrinks the border
@@ -335,6 +345,45 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
                     .append(border.bottomRightCorner()).append(Widget.X);
         }
         return sb.toString();
+    }
+
+    /**
+     * The columns the header's own chrome occupies — the two spaces and the
+     * {@code [-]} / {@code [+]} glyph around a title, e.g. {@code " [-] "}.
+     */
+    private static int headerChrome(final String ind) {
+        return Highlighter.visualLength(ind) + 3;
+    }
+
+    /**
+     * The header's toggle glyph: {@code [-]} while expanded, {@code [+]} while
+     * folded — and, folded, how many body lines the box is holding.
+     *
+     * <p>A folded accordion shows nothing but its header, so the header says how
+     * much it is holding: a folded box with text in it and a box with an empty
+     * body must not look the same ("where did my text go" is otherwise
+     * indistinguishable from "the text never arrived").  An empty body has
+     * nothing to report and so carries no count.
+     */
+    private static String indicator(final boolean expanded, final List<String> body) {
+        if (expanded) return EXPAND_INDICATOR;
+        return body.isEmpty() ? COLLAPSE_INDICATOR : COLLAPSE_INDICATOR + " " + body.size();
+    }
+
+    /**
+     * The title exactly as the header draws it — the value the render and the
+     * pointer's toggle target both measure, so the two cannot disagree about
+     * where the glyph sits.
+     *
+     * <p>The clipping rule is {@link Utilities#titleClip}; an accordion's own
+     * numbers are the box's two border sides and its header chrome
+     * ({@code " [-] "}), and its declared width is the whole box
+     * ({@code style=>[width=>x]} is the width it draws at, borders included).
+     *
+     * @param floatW the style width, {@code 0} when the box sizes to its content
+     */
+    private String drawnTitle(final String title, final String ind, final int floatW) {
+        return Utilities.titleClip(title, floatW, 2 + headerChrome(ind));
     }
 
     /**

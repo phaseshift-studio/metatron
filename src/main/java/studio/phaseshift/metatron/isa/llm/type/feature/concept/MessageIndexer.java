@@ -70,7 +70,7 @@ public class MessageIndexer implements AutoCloseable {
             this.writer = new IndexWriter(this.directory, config);
             this.writer.commit();
         } catch (final IOException e) {
-            throw MTronException.of("failed to create message index: %s", e);
+            throw MTronException.of("failed to create message index: %s", MTronException.translateMessage(e));
         }
     }
 

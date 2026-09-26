@@ -56,6 +56,19 @@ public class ExecutionStack {
     // clip frame text so the fail message stays readable
     private static final int MAX_FRAME_LEN = 120;
 
+    /**
+     * Cumulative work budget per top-level expression. The depth cap
+     * (MAX_FRAMES) bounds how *deep* the pipeline may nest, but not how much
+     * work one expression may do: a self-referential space (insts whose tids
+     * reference each other) spins flat, within depth, indefinitely — the
+     * 140%-CPU freeze. Counted per top-level expression: the first push onto
+     * an empty stack starts a fresh count. Overridable with
+     * -Dmetatron.execution.workBudget when a legitimate read is simply big.
+     */
+    static final long DEFAULT_WORK_BUDGET = 50_000_000L;
+    static volatile long workBudget = Long.getLong("metatron.execution.workBudget", DEFAULT_WORK_BUDGET);
+    private static final ThreadLocal<Long> OPS = ThreadLocal.withInitial(() -> 0L);
+
     private static final ThreadLocal<Deque<ExecutionState>> STACK = new ThreadLocal<>();
 
     public record ExecutionState(ExState state, String message, Obj obj, Obj... objs) {
@@ -84,10 +97,22 @@ public class ExecutionStack {
      * the push is skipped (and reported to the caller, so it will not later
      * pop a frame that never landed) — the cap bounds the rendered fail
      * message against runaway depth, and the pop-for-push invariant holds
-     * either way.
+     * either way. Every push attempt also charges the expression's cumulative
+     * work budget; a flat spin (a self-referential read that never gets
+     * deeper, just repeats) trips it with a named failure instead of running
+     * the core to death.
      */
     public static boolean push(final ExecutionState state) {
         final Deque<ExecutionState> stack = stack();
+        final long ops = stack.isEmpty() ? 1L : OPS.get() + 1;
+        if (ops > workBudget) {
+            // reset so a surviving frame left over from this failure does not
+            // poison the next expression on this thread with an inherited
+            // count — the next push starts a fresh budget
+            OPS.set(0L);
+            throw MTronException.of("computation budget exceeded (%d frame operations in one expression) — unbounded work, likely a self-referential read; name a bounded subpath or a specific inst", workBudget);
+        }
+        OPS.set(ops);
         if (stack.size() < MAX_FRAMES) {
             stack.push(state);
             return true;

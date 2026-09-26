@@ -214,7 +214,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                     }
                 }
             } catch (Exception e) {
-                throw MTronException.of("Failed to expand template ${%s}: %s", exprStr, e.getMessage());
+                throw MTronException.of("failed to expand template ${%s}: %s", exprStr, MTronException.translateMessage(e));
             }
         }
 

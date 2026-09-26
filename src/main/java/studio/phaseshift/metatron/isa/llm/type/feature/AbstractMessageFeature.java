@@ -290,7 +290,7 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
                 Router.writeToSpace(sessionID, session.selfVID(sessionID));
             return chatId;
         } catch (final Exception e) {
-            throw MTronException.of("unable to setup session: %s", e);
+            throw MTronException.of("unable to setup session: %s", MTronException.translateMessage(e));
         }
     }
 
@@ -310,7 +310,7 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
             final int max = session.at(ALGORITHM).asRec().at(MAX).orElse(jnt(50)).intValue().intValue();
             this.memory = this.buildMemory(sessionID, max, this.store);
         } catch (final Exception e) {
-            throw MTronException.of("unable to setup session: %s", e);
+            throw MTronException.of("unable to setup session: %s", MTronException.translateMessage(e));
         }
         // the prompt has been accepted and the calculator recounted from zero:
         // drop the bar to the fresh-chat state (0% of the window, empty bar)

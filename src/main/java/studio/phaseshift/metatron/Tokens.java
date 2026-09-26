@@ -76,6 +76,7 @@ public final class Tokens {
     public static final String ANTHROPIC = "anthropic";
     public static final String OLLAMA = "ollama";
     public static final String RESULT = "result";
+    public static final String MACHINE = "machine";
     public static final String CMD = "cmd";
     public static final String ALLOW = "allow";
     public static final String REJECT = "reject";

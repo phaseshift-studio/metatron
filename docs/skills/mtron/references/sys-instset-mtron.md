@@ -315,6 +315,72 @@ the scratch directory goes with `bash`, the tool that made it:
 bash('rm -rf /tmp/mtron-docs-scratch')
 ```
 
+## failure contract
+
+Every failure from this surface names **what** happened. Only if it knows do
+it add **where**, then the **suspected cause**, then a hint. Raw java — a
+`Throwable.toString`, a `java.lang` class name, a `cannot be cast to` — never
+reaches the fail text.
+
+The grammar, as it has settled across the code:
+
+```
+phenomenon (bounds) — suspected cause [; remediation hint]  (at <inst location>)
+```
+
+The `(at …)` origin is appended exactly once, by the funnel, at the failing
+instruction — a message that already carries one is forwarded untouched, so a
+nested failure never names two places.
+
+Failures as they actually read today:
+
+```
+inst apply failure: unable to convert mfail to bool (at /m/inst/is@1)
+
+clone depth limit exceeded (128) — self-referential obj at !*<#{?}>::T
+
+computation budget exceeded (50000000 frame operations in one expression) —
+unbounded work, likely a self-referential read; name a bounded subpath or a
+specific inst
+
+execution state stack corrupted — pop on empty stack (thread: main)
+
+token list end — asked for token 5 of 3 (a malformed parse structure)
+
+parse error at line 1, col 2:
+  1e
+   ^
+  unexpected 'e' — two adjacent terms need an operator or sugar between them (e.g. 1 + 2)
+```
+
+The last three lines of a parse failure are the designed text — the bracket
+heuristics (`unclosed '[' — missing ']'?`), the content rules above, and the
+quote rules (`unclosed single-quote — missing closing '''`) replace what the
+parser's raw failures used to be.
+
+### the self-referential inst space
+
+The inst namespace references itself — an inst whose tid is
+`?rng=#{*}&dom=#{?}` is an inst containing itself. A deep read of the whole
+namespace (`!*/m`, `*/m.as(rec::T)`) walks that graph, and four guards stand
+between that walk and a hung machine:
+
+1. the **frame cap** (64) — the rendered trace cannot grow;
+2. the **clone gauge** (128, in objClone) — the deep read fails with
+   `clone depth limit exceeded` instead of a stack overflow;
+3. the **work budget** — a walk that spins flat, within the depth cap, is
+   caught by the per-expression frame-operation count
+   (`-Dmetatron.execution.workBudget` to raise it for a legitimately big read);
+4. the **×N collapse** in the rendered trace — the repeated frames render as
+   `… (×63 more — same frame repeated: …)`, so the loop reads as a loop.
+
+A bounded subpath (`!*/m/math/cat`) or a named inst stays well-formed; the
+whole namespace does not, and the failures above say exactly that.
+
+The texts are produced at `MTronException` (funnel, translator),
+`ExecutionStack` (cap, budget, pop guard, render), `mParser` (designed parse
+text), and `objClone` (the gauge) — a new throw site belongs to this grammar.
+
 ## see also
 
 * [mtron type system](type-system-mtron.md) — vid/tid, coefficients, `.as(type::T)`.

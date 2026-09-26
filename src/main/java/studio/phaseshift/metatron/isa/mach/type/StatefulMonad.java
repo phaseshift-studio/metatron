@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad;
+import studio.phaseshift.metatron.isa.mach.type.monad.BasicStatefulMonad;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.ArrayList;
@@ -42,40 +42,19 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
 
-public interface PCMonad extends Monad<Lst> {
+public interface StatefulMonad extends Monad<Lst> {
 
     @Override
-    PCMonad clone(final Object jvm, final fURI tid, final fURI vid);
+    StatefulMonad clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
     Lst jvm();
 
-   /* @Override
-    default PCMonad neg() {
-        return this.c(cInt::neg);
-    }
-
-    @Override
-    default PCMonad mult(final PCMonad rhs) {
-        return (PCMonad)this.apply(rhs).c(c -> c.mult(rhs.c()));
-    }
-
-    @Override
-    default PCMonad one() {
-        return this.c(cInt.ONE());
-    }
-
-    @Override
-    default PCMonad zero() {
-        return this.c(cInt.ZERO());
-    }*/
-
-
-    default PCMonad nextInst() {
+    default StatefulMonad nextInst() {
         return this.jvm(lst(CommonUtil.arrayList(this.obj(), this.code().nextInst(this.inst()), this.state(), this.code())));
     }
 
-    default PCMonad next(final Obj obj) {
+    default StatefulMonad next(final Obj obj) {
         final Code code = this.code();
         final Rec state = code.tid().hasQ(PATH) ? this.accruePath(obj) : this.state();
         return this.jvm(lst(CommonUtil.arrayList(obj, code.nextInst(this.inst()), state, code)));
@@ -98,7 +77,7 @@ public interface PCMonad extends Monad<Lst> {
         return stack.isEmpty() ? jnt(0) : jnt(stack.get(stack.size() - 1).intValue());
     }
 
-    default PCMonad incrLoop(final int incr) {
+    default StatefulMonad incrLoop(final int incr) {
         final List<Obj> stack = new ArrayList<>(this.loopStack().jvm());
         if (stack.isEmpty())
             stack.add(jnt(incr));
@@ -107,7 +86,7 @@ public interface PCMonad extends Monad<Lst> {
         return this.state(this.state().at(uri(LOOP), lst(stack)).as());
     }
 
-    default PCMonad pushLoop() {
+    default StatefulMonad pushLoop() {
         final List<Obj> stack = new ArrayList<>(this.loopStack().jvm());
         stack.add(jnt(0));
         return this.state(this.state().at(uri(LOOP), lst(stack)).as());
@@ -117,7 +96,7 @@ public interface PCMonad extends Monad<Lst> {
      * Pop the loop counter stack — called when a repeat invocation exits so a
      * chained repeat starts its counter at 0.
      */
-    default PCMonad popLoop() {
+    default StatefulMonad popLoop() {
         final List<Obj> stack = new ArrayList<>(this.loopStack().jvm());
         if (!stack.isEmpty())
             stack.remove(stack.size() - 1);
@@ -128,7 +107,7 @@ public interface PCMonad extends Monad<Lst> {
         return this.state().at(uri(LOOPBACK)).orElse(BOOL_FALSE).boolValue();
     }
 
-    default PCMonad loopback(final boolean loopback) {
+    default StatefulMonad loopback(final boolean loopback) {
         return this.state(this.state().at(uri(LOOPBACK), bool(loopback)).as());
     }
 
@@ -190,9 +169,9 @@ public interface PCMonad extends Monad<Lst> {
      * {@link #component(fURI) component("+")}. This is the only way a {@code monad_in=+} lens
      * hands an instruction the monad's parts (as a plain list) without exposing the {@code PCMonad}.
      */
-    static PCMonad of(final Obj contents) {
+    static StatefulMonad of(final Obj contents) {
         final Lst jvm = contents.asLst();
-        return BasicPCMonad.pcmonad(
+        return BasicStatefulMonad.statefulMonad(
                 jvm.jvm().getFirst(),
                 jvm.jvm().get(1).as(),
                 jvm.jvm().get(2).orElse(rec()),
@@ -201,32 +180,32 @@ public interface PCMonad extends Monad<Lst> {
 
 
     @Override
-    PCMonad tid(final fURI tid);
+    StatefulMonad tid(final fURI tid);
 
     @Override
-    default PCMonad c(final cInt c) {
-        return (PCMonad) Monad.super.c(c);
+    default StatefulMonad c(final cInt c) {
+        return (StatefulMonad) Monad.super.c(c);
     }
 
     @Override
-    default PCMonad c(final Function<cInt, cInt> func) {
-        return (PCMonad) Monad.super.c(func);
+    default StatefulMonad c(final Function<cInt, cInt> func) {
+        return (StatefulMonad) Monad.super.c(func);
     }
 
     @Override
-    default PCMonad c(final Long exact) {
+    default StatefulMonad c(final Long exact) {
         return this.c(cInt.of(exact));
     }
 
-    default PCMonad obj(final Obj obj) {
+    default StatefulMonad obj(final Obj obj) {
         return this.clone(lst(obj, this.inst(), this.state(), this.code()), this.tid(), this.vid());
     }
 
-    default PCMonad inst(final Inst inst) {
+    default StatefulMonad inst(final Inst inst) {
         return this.clone(lst(this.obj(), inst, this.state(), this.code()), this.tid(), this.vid());
     }
 
-    default PCMonad state(final Rec state) {
+    default StatefulMonad state(final Rec state) {
         return this.clone(lst(this.obj(), this.inst(), state, this.code()), this.tid(), this.vid());
     }
 
@@ -242,7 +221,7 @@ public interface PCMonad extends Monad<Lst> {
     }
 
     @Override
-    PCMonad clone();
+    StatefulMonad clone();
 
     @Override
     default Obj apply() {

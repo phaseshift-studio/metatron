@@ -22,9 +22,9 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.PCMonad;
-import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
+import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 
 import java.util.Map;
 
@@ -35,17 +35,17 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * Verifies that SwarmMachine's monadic state (running, barriers, halted)
+ * Verifies that SwarmProcessor's monadic state (running, barriers, halted)
  * lives in the jvm map, survives pause/resume, and is cloneable.
  */
-public class SwarmMachineTest extends AbstractMetatronTest {
+public class SwarmProcessorTest extends AbstractMetatronTest {
 
     // ======================== Sync execution ========================
 
     @Test
     public void testSyncApplyReturnsExpectedResult() {
         final Code code = ObjmtronSerializer.parse("1.plus(2)").as();
-        final SwarmMachine mach = SwarmMachine.of(code);
+        final SwarmProcessor mach = SwarmProcessor.of(code);
 
         final Obj result = mach.apply(noobj());
         System.out.println("result: " + result);
@@ -59,22 +59,22 @@ public class SwarmMachineTest extends AbstractMetatronTest {
     @Test
     public void testPathAccrualIsOptIn() {
         // code without path(): resolve must not tag ?path, and stepping must not accrue a path
-        final SwarmMachine mach = SwarmMachine.of(ObjmtronSerializer.parse("1.plus(2)").as());
+        final SwarmProcessor mach = SwarmProcessor.of(ObjmtronSerializer.parse("1.plus(2)").as());
         mach.resolve(noobj());
-        final PCMonad monad = mach.running().elements().findFirst().orElseThrow().as();
+        final StatefulMonad monad = mach.running().elements().findFirst().orElseThrow().as();
         assertFalse(monad.code().tid().hasQ(PATH), "code without path() must not be tagged ?path");
-        final PCMonad stepped = monad.next(jnt(3));
+        final StatefulMonad stepped = monad.next(jnt(3));
         assertTrue(stepped.state().at(uri(PATH)).isNoObj(), "monad state must not gather a path when path() is absent");
     }
 
     @Test
     public void testPathAccruesWhenRead() {
         // code with path(): resolve must tag ?path, and stepping must accrue a path
-        final SwarmMachine mach = SwarmMachine.of(ObjmtronSerializer.parse("1.plus(2).path()").as());
+        final SwarmProcessor mach = SwarmProcessor.of(ObjmtronSerializer.parse("1.plus(2).path()").as());
         mach.resolve(noobj());
-        final PCMonad monad = mach.running().elements().findFirst().orElseThrow().as();
+        final StatefulMonad monad = mach.running().elements().findFirst().orElseThrow().as();
         assertTrue(monad.code().tid().hasQ(PATH), "code with path() must be tagged ?path");
-        final PCMonad stepped = monad.next(jnt(3));
+        final StatefulMonad stepped = monad.next(jnt(3));
         assertFalse(stepped.state().at(uri(PATH)).isNoObj(), "monad state must gather a path when path() is read");
     }
 
@@ -83,7 +83,7 @@ public class SwarmMachineTest extends AbstractMetatronTest {
     @Test
     public void testMachineStateIsInJvm() {
         final Code code = ObjmtronSerializer.parse("1.plus(2)").as();
-        final SwarmMachine mach = SwarmMachine.of(code);
+        final SwarmProcessor mach = SwarmProcessor.of(code);
 
         // Before execution: defaults exist
         final Map<Obj, Obj> jvmBefore = mach.jvm();
@@ -107,11 +107,11 @@ public class SwarmMachineTest extends AbstractMetatronTest {
     @Test
     public void testClonePreservesMachineState() {
         final Code code = ObjmtronSerializer.parse("1.plus(2)").as();
-        final SwarmMachine mach = SwarmMachine.of(code);
+        final SwarmProcessor mach = SwarmProcessor.of(code);
         mach.apply(noobj());
 
         // Clone with the same jvm
-        final SwarmMachine clone = mach.clone(mach.jvm(), mach.tid(), mach.vid());
+        final SwarmProcessor clone = mach.clone(mach.jvm(), mach.tid(), mach.vid());
 
         // Clone should have same halted result
         assertFalse(clone.halted().isNoObj(), "clone should preserve halted");
@@ -122,7 +122,7 @@ public class SwarmMachineTest extends AbstractMetatronTest {
 
         // Clone should be independently executable with new code
         final Code newCode = ObjmtronSerializer.parse("3.plus(4)").as();
-        final SwarmMachine reclone = clone.code(newCode);
+        final SwarmProcessor reclone = clone.code(newCode);
         final Obj result = reclone.apply(noobj());
         assertFalse(result.isNoObj(), "reclone with new code should execute");
     }
@@ -132,7 +132,7 @@ public class SwarmMachineTest extends AbstractMetatronTest {
     @Test
     public void testPauseAndResumePreservesState() {
         final Code code = ObjmtronSerializer.parse("1.plus(2)").as();
-        final SwarmMachine mach = SwarmMachine.of(code);
+        final SwarmProcessor mach = SwarmProcessor.of(code);
 
         // Pause before execution sets STATE=PAUSE in jvm
         mach.pause();
@@ -150,9 +150,10 @@ public class SwarmMachineTest extends AbstractMetatronTest {
     @Test
     public void testPauseMidExecutionPreservesQueues() throws Exception {
         final Code code = ObjmtronSerializer.parse("{1,2,3,4,5,6,7,8,9}.repeat(code=>+1,until=>?>200).count()").as();
-        final SwarmMachine mach = SwarmMachine.of(code);
+        final SwarmProcessor mach = SwarmProcessor.of(code);
 
-        record Snap(String phase, long running, long barriers, long halted, String state, String result) {}
+        record Snap(String phase, long running, long barriers, long halted, String state, String result) {
+        }
         final var snaps = new java.util.ArrayList<Snap>();
 
         // --- before ---
@@ -205,7 +206,7 @@ public class SwarmMachineTest extends AbstractMetatronTest {
     @Test
     public void testStopSetsStateToStop() {
         final Code code = ObjmtronSerializer.parse("1.plus(2)").as();
-        final SwarmMachine mach = SwarmMachine.of(code);
+        final SwarmProcessor mach = SwarmProcessor.of(code);
 
         mach.stop();
         assertEquals(uri(STOP), mach.jvm().get(uri(STATE)), "state should be STOP after stop()");
@@ -214,7 +215,7 @@ public class SwarmMachineTest extends AbstractMetatronTest {
     @Test
     public void testPausedMachineCanBeCloned() {
         final Code code = ObjmtronSerializer.parse("1.plus(2)").as();
-        final SwarmMachine mach = SwarmMachine.of(code);
+        final SwarmProcessor mach = SwarmProcessor.of(code);
 
         // Execute to populate halted, then pause
         mach.apply(noobj());
@@ -225,7 +226,7 @@ public class SwarmMachineTest extends AbstractMetatronTest {
         System.out.printf("paused clone: halted=%d%n", haltedCount);
 
         // Clone the paused machine
-        final SwarmMachine clone = mach.clone(mach.jvm(), mach.tid(), mach.vid());
+        final SwarmProcessor clone = mach.clone(mach.jvm(), mach.tid(), mach.vid());
         assertEquals(uri(PAUSE), clone.jvm().get(uri(STATE)),
                 "clone should preserve PAUSE state");
 
@@ -239,7 +240,7 @@ public class SwarmMachineTest extends AbstractMetatronTest {
     @Test
     public void testMachineHasThreadLifecycle() {
         final Code code = ObjmtronSerializer.parse("1.plus(2)").as();
-        final SwarmMachine mach = SwarmMachine.of(code);
+        final SwarmProcessor mach = SwarmProcessor.of(code);
 
         // Machine has thread lifecycle operations
         assertNotNull(mach.state(), "machine should have thread state");
@@ -250,7 +251,7 @@ public class SwarmMachineTest extends AbstractMetatronTest {
     @Test
     public void testAsyncExecutionProducesResult() throws Exception {
         final Code code = ObjmtronSerializer.parse("1.plus(2)").as();
-        final SwarmMachine mach = SwarmMachine.of(code);
+        final SwarmProcessor mach = SwarmProcessor.of(code);
 
         // Async execution
         mach.applyAsync(noobj());

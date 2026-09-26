@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.isa.mach.io.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.PCMonad;
+import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -64,7 +64,7 @@ public interface ObjSerializer<T> extends Rec, Serializer<Obj, T> {
                 case Str objs -> this.writeStr(objs);
                 case Uri objs -> this.writeUri(objs);
                 case Rel objs -> this.writeRel(objs);
-                case PCMonad objs -> this.writeMonad(objs);
+                case StatefulMonad objs -> this.writeMonad(objs);
                 case Lst objs -> this.writeLst(objs);
                 case Rec objs -> this.writeRec(objs);
                 case Inst objs -> this.writeInst(objs);
@@ -144,7 +144,7 @@ public interface ObjSerializer<T> extends Rec, Serializer<Obj, T> {
         return this.write(t);
     }
 
-    default T writeMonad(final PCMonad m) {
+    default T writeMonad(final StatefulMonad m) {
         return this.write(m);
     }
 

@@ -705,6 +705,11 @@ public interface Type extends Obj {
                 return lhs.test(rhs);
             }
         }
+
+        public static void typeCheck(final Obj checkObj, final Type requiredType) {
+            if (!checkObj.test(requiredType))
+                throw MTronException.of("%s is not a %s", Obj.Helper.specificTypeId(checkObj), requiredType.vid());
+        }
     }
 
     final class TypeType {

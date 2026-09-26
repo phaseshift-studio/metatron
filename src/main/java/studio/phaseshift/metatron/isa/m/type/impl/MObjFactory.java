@@ -21,8 +21,8 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.PCMonad;
-import studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad;
+import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
+import studio.phaseshift.metatron.isa.mach.type.monad.BasicStatefulMonad;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.FACTORY_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
-import static studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad.MACH_BASIC_MONAD_TID;
+import static studio.phaseshift.metatron.isa.mach.type.monad.BasicStatefulMonad.MACH_BASIC_MONAD_TID;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -64,6 +64,7 @@ public class MObjFactory extends MRec implements ObjFactory {
     public static final Type M_FACTORY_TYPE = Type.Builder.build()
             .tid(FACTORY_TID)
             .vid(OBJ_FACTORY_TID)
+            .constructor(MObjFactory::of)
             .constructor(MObjFactory::of)
             .create();
 
@@ -197,8 +198,8 @@ public class MObjFactory extends MRec implements ObjFactory {
             return (OBJ) new MFail((Throwable) value, null == tid ? Tokens.FAIL_TID : tid, vid);
         else if (NoObj.class.isAssignableFrom(objClass))
             return (OBJ) NoObj.noobj();
-        else if (PCMonad.class.isAssignableFrom(objClass))
-            return (OBJ) new BasicPCMonad(lst((List<Obj>) value), null == tid ? MACH_BASIC_MONAD_TID : tid, vid);
+        else if (StatefulMonad.class.isAssignableFrom(objClass))
+            return (OBJ) new BasicStatefulMonad(lst((List<Obj>) value), null == tid ? MACH_BASIC_MONAD_TID : tid, vid);
         else
             throw MTronException.of("provided class has not obj equivalent: %s", objClass);
     }

@@ -249,6 +249,17 @@ public class MTronExceptionTest extends AbstractMetatronTest {
     }
 
     @Test
+    public void testTranslateMessageCoversNullMessages() {
+        // the setup-failure sites (Agent, SkillFeature, MessageIndexer, …) now
+        // embed translateMessage — a null throwable/message must become the
+        // bare 'fail', never the text 'null'
+        assertEquals("fail", MTronException.translateMessage(null),
+                "a null throwable must translate to the bare 'fail'");
+        assertEquals("fail", MTronException.translateMessage(new RuntimeException((String) null)),
+                "a null message must translate to the bare 'fail' — never the text 'null'");
+    }
+
+    @Test
     public void testRetriedPipelineReportsOneTrace() {
         Tracer.enable(Tracer.mtron_stack);
         final int before = MTronException.mtronTracesEmitted();

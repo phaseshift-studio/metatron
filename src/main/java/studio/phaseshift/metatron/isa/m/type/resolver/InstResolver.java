@@ -122,8 +122,8 @@ public interface InstResolver {
                     // the 0 wing ({0,n} → {n,n}) for compile-time typing only, leaving rng() itself maybe
                     // so isFilter()/isPredicate()/gather-classification still read the filter cardinality.
                     token = resolvedInst.isFilter() ? resolvedInst.rng().c(resolvedInst.c().max()) : resolvedInst.rng();
-                    // isGather() = dom().c().max() == null — the reduce/flatmap boundary. SwarmMachine seeds a
-                    // gather as a barrier monad (SwarmMachine:239-242) that accumulates every incoming object
+                    // isGather() = dom().c().max() == null — the reduce/flatmap boundary. SwarmProcessor seeds a
+                    // gather as a barrier monad (SwarmProcessor:239-242) that accumulates every incoming object
                     // into one Objs and applies only once the stream is drained, so a gather swallows the whole
                     // upstream pipeline. Prefer pointwise map/filter doms to keep insts per-object.
                     if (resolvedInst.isGather()) {

@@ -275,6 +275,9 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 
 **Protocol & services**
 
+* [llm instruction set](references/llm-instset-mtron.md) -- `/m/llm`: agents, models, features, skills and tools, and
+  the Model Context Protocol on both sides -- `mcp_client::T` over streamable-http + sse, websockets or stdio, and
+  `mcp_server::T` carried by http, ws or the process's own stdio (`bin/metatron --mcp`).
 * [MCP Server Architecture](references/mcp-server-architecture.md) -- building MCP servers in mtron: `mcp_wsHandler` /
   `mcp_mtron_wsHandler`, websocket routing, tool registration, `SpaceChatMemoryStore`, and the agent memory flow.
 * [MCP Server Notifications](references/mcp-server-notifications.md) -- server-to-client push via a `?subq` subscription

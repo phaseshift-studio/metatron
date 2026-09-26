@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.Stats;
-import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
+import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -241,7 +241,7 @@ public interface Space extends Rec, Closeable {
 
         public static Obj resolveApply(final Space space, final Obj rhs) {
             if (rhs.isCode()) {
-                return SwarmMachine.of(rhs.as()).apply();
+                return SwarmProcessor.of(rhs.as()).apply();
             } else if (rhs.isInst()) {
                 return rhs.<Inst>as().apply();
             } else {

@@ -109,6 +109,92 @@ public class AccordionWidgetTest extends AbstractWidgetTest {
                 "an explicit width makes the box that wide — padding, not a content-sized box with a gap");
     }
 
+    // ── the set width wins over a long title ───────────────────────
+
+    /**
+     * A title is the one thing in the header that can be arbitrarily long, so it is
+     * the one thing that gives way to {@code style=>[width=>x]}: the box stays the
+     * width it was told to be and the title is clipped, rather than the title
+     * widening the box past that width.
+     */
+    @ParameterizedTest()
+    @CsvSource(value = {
+            "40 % 30 % clipped % a title wider than the box is clipped to it",
+            "23 % 30 % clipped % one column past the header's room is already too much",
+            "22 % 30 % intact  % a title exactly filling the header is left whole",
+            "5  % 30 % intact  % a short title is untouched",
+            "12 % 10 % clipped % a box near its own floor still clips rather than grows",
+    }, delimiter = '%')
+    void testTitleIsClippedToTheStyleWidth(final int titleLength, final int width,
+                                           final String expectation, final String description) {
+        final String title = "t".repeat(titleLength);
+        final AccordionWidget a = new AccordionWidget(title, "one");
+        a.expand();
+        a.style().width(width).applyStyle();
+        final String[] lines = a.format().split("\n", -1);
+        for (final String line : lines)
+            assertEquals(width, Graphitty.viewLength(line),
+                    "every row is the width the box was given: %s (width %d, title %d — %s)"
+                            .formatted(line, width, titleLength, description));
+        if ("clipped".equals(expectation.trim()))
+            assertTrue(lines[0].contains("…"), "the clipped title is marked as clipped: " + lines[0]);
+        else {
+            assertTrue(lines[0].contains(title), "a title that fits is drawn whole: " + lines[0]);
+            assertFalse(lines[0].contains("…"), "and carries no clip marker: " + lines[0]);
+        }
+    }
+
+    /**
+     * The clip moves the glyph left, and the pointer's target moves with it: a target
+     * computed from the full title would sit past the end of the drawn header.
+     */
+    @Test
+    public void shouldPutTheToggleWhereTheClippedTitleEnds() {
+        final AccordionWidget a = new AccordionWidget("a title far longer than the box it is drawn in", "one");
+        a.expand();
+        a.style().width(30).applyStyle();
+        final String header = Graphitty.strip(a.format().split("\n", -1)[0]);
+        final int glyph = header.indexOf("[-]");
+        assertTrue(glyph > 0, "the header draws the toggle glyph inside the box: " + header);
+        assertEquals(30, Graphitty.viewLength(header), "and inside the set width: " + header);
+        assertFalse(a.onClick(0, glyph - 1), "the space before the glyph is header, not glyph — it focuses, not folds");
+        assertTrue(a.isExpanded(), "an unhandled click changes nothing");
+        assertTrue(a.onClick(0, glyph), "the clipped header's glyph still folds the box: " + header);
+        assertFalse(a.isExpanded(), "clicked [-] → collapsed");
+    }
+
+    /** A box too narrow even for its own glyph keeps the glyph and drops the title. */
+    @Test
+    public void shouldKeepTheToggleWhenTheWidthLeavesNoRoomForATitle() {
+        final AccordionWidget a = new AccordionWidget("a title with no room at all", "one");
+        a.expand();
+        a.style().width(6).applyStyle();
+        final String header = Graphitty.strip(a.format().split("\n", -1)[0]);
+        assertTrue(header.contains("[-]"), "the glyph is what the header is for: " + header);
+        assertFalse(header.contains("a title"), "and the title is what gives way: " + header);
+        assertFalse(header.contains("…"), "nothing was drawn of the title, so there is nothing to elide: " + header);
+    }
+
+    /**
+     * A clip keeps the color codes leading the title, so the title's own close can end up
+     * beyond the clip.  It is pulled forward with it: the color stops at the title instead
+     * of running on into the rest of the header and the box border.
+     */
+    @Test
+    public void shouldCloseAColoredTitleWhereItIsClipped() {
+        final AccordionWidget a = new AccordionWidget(
+                "{{b}}a title far longer than the box it is drawn in{{/b}}", "one");
+        a.expand();
+        a.style().width(30).applyStyle();
+        final String header = a.format().split("\n", -1)[0];
+        assertTrue(header.contains("…"), "the title is clipped: " + header);
+        final int closed = header.indexOf("{{/b}}");
+        assertTrue(closed > 0 && closed < header.indexOf("[-]"),
+                "and its color is closed before the rest of the header is drawn: " + header);
+        assertEquals(30, Graphitty.viewLength(header),
+                "a tag draws nothing, so the box is still exactly the width it was given: " + header);
+    }
+
     @Test
     public void shouldToggleState() {
         final AccordionWidget a = new AccordionWidget(mutableMap(), TID, null);

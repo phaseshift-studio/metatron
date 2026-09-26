@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.MonadProcessor;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
@@ -54,7 +54,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /**
  * A Pane is a leaf node in the pane tree - an actual terminal region with:
  * - Output buffer (thread-safe, for parallel output from background threads)
- * - Machine reference (for interruption)
+ * - Processor reference (for interruption)
  * - Style support (border, foreground color, etc.)
  *
  * <pre>
@@ -76,7 +76,7 @@ public class Pane implements PaneNode, Stylable<Pane> {
     private static final Logger log = LoggerFactory.getLogger(Pane.class);
 
     private final int id;
-    private Machine machine;
+    private MonadProcessor machine;
     private final List<String> outputBuffer;
     private final int maxOutputLines;
     private volatile boolean needsRedraw = false;
@@ -181,11 +181,11 @@ public class Pane implements PaneNode, Stylable<Pane> {
         return this.id;
     }
 
-    public Machine machine() {
+    public MonadProcessor machine() {
         return this.machine;
     }
 
-    public Pane machine(final Machine machine) {
+    public Pane machine(final MonadProcessor machine) {
         this.machine = machine;
         return this;
     }

@@ -23,8 +23,8 @@ import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
+import studio.phaseshift.metatron.isa.mach.type.MonadProcessor;
+import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.util.MTronException;
@@ -45,7 +45,7 @@ import org.slf4j.event.Level;
 /**
  * The console's execution engine: takes one prompt line, parses its
  * segments at {@code end()} boundaries, runs each through a
- * {@link SwarmMachine} (foreground, backgrounded on {@code alt}+b, or
+ * {@link SwarmProcessor} (foreground, backgrounded on {@code alt}+b, or
  * through the console's input instruction), and streams the results back
  * through the console.
  * <p>
@@ -93,7 +93,7 @@ public final class Executor {
         }
         if (segments.isEmpty()) return;
 
-        // 3. Execute each segment with its own SwarmMachine, chaining running state
+        // 3. Execute each segment with its own SwarmProcessor, chaining running state
         boolean backgrounded = false;
         for (final Code segment : segments) {
             try {
@@ -108,7 +108,7 @@ public final class Executor {
                 });
                 final AtomicReference<Obj> computeResult = new AtomicReference<>(noobj());
                 if (this.console.input.isNoObj()) {
-                    final Machine mach = SwarmMachine.of(resolvedResult.as());
+                    final MonadProcessor mach = SwarmProcessor.of(resolvedResult.as());
                     final Consumer<Obj> defaultOnHalt = mach.onHalt(); // accumulate into HALTED
                     mach.onHalt(o -> {
                         defaultOnHalt.accept(o);  // persist in HALTED collection

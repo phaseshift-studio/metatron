@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.MonadProcessor;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -130,7 +130,7 @@ public final class ForegroundJobs {
      * job is untouched — its own thread keeps updating widgets — this list only
      * tracks it so its result can be printed when it halts.
      */
-    private final List<Machine> backgroundJobs = java.util.Collections.synchronizedList(new ArrayList<>());
+    private final List<MonadProcessor> backgroundJobs = java.util.Collections.synchronizedList(new ArrayList<>());
 
     public ForegroundJobs(final Console console) {
         this.console = console;
@@ -190,7 +190,7 @@ public final class ForegroundJobs {
      * @return true when the job was detached with {@code <alt>+b} (it is still
      * running — the console returns to the prompt)
      */
-    public boolean awaitForeground(final Machine mach, final FutureObj<Obj> future, final String line) {
+    public boolean awaitForeground(final MonadProcessor mach, final FutureObj<Obj> future, final String line) {
         long offerAtMs = System.currentTimeMillis() + CANCEL_OFFER_MS;
         this.detachRequested.set(false);
         this.cancelRequested.set(false);
@@ -368,7 +368,7 @@ public final class ForegroundJobs {
      * returning prompt cannot kill it.  A collector thread prints its result
      * when it halts.
      */
-    private void detachForegroundJob(final Machine mach, final FutureObj<Obj> future, final String line) {
+    private void detachForegroundJob(final MonadProcessor mach, final FutureObj<Obj> future, final String line) {
         this.backgroundJobs.add(mach);
         // the turn no longer owns this machine: clear both places the interrupt
         // paths read (the ctrl-c signal handler and UserInterrupt handling)
@@ -390,7 +390,7 @@ public final class ForegroundJobs {
      * Print the result of a detached job, once its future resolves.  Runs on
      * the job's collector thread.
      */
-    private void printBackgroundResult(final Machine mach, final FutureObj<Obj> future) {
+    private void printBackgroundResult(final MonadProcessor mach, final FutureObj<Obj> future) {
         final Obj result;
         try {
             result = future.get();
@@ -412,7 +412,7 @@ public final class ForegroundJobs {
     /**
      * a machine's thread vid, when it has one — every machine is a rec at run-time
      */
-    private static fURI vidOf(final Machine mach) {
+    private static fURI vidOf(final MonadProcessor mach) {
         return (mach instanceof Obj obj) ? obj.vid() : null;
     }
 
@@ -420,7 +420,7 @@ public final class ForegroundJobs {
      * @return the jobs detached with {@code <alt>+b} that have not yet halted,
      * in detach order
      */
-    public List<Machine> backgroundJobs() {
+    public List<MonadProcessor> backgroundJobs() {
         synchronized (this.backgroundJobs) {
             return List.copyOf(this.backgroundJobs);
         }
@@ -433,7 +433,7 @@ public final class ForegroundJobs {
     public List<fURI> backgroundJobVids() {
         final List<fURI> vids = new ArrayList<>();
         synchronized (this.backgroundJobs) {
-            for (final Machine job : this.backgroundJobs) {
+            for (final MonadProcessor job : this.backgroundJobs) {
                 final fURI vid = vidOf(job);
                 if (null != vid)
                     vids.add(vid);
@@ -446,8 +446,8 @@ public final class ForegroundJobs {
      * Stop every detached job.  Returns the number of jobs stopped.
      */
     public int stopBackgroundJobs() {
-        final List<Machine> jobs = this.backgroundJobs();
-        jobs.forEach(Machine::stop);
+        final List<MonadProcessor> jobs = this.backgroundJobs();
+        jobs.forEach(MonadProcessor::stop);
         synchronized (this.backgroundJobs) {
             this.backgroundJobs.clear();
         }

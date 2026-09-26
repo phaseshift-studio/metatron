@@ -615,6 +615,19 @@ widget's rec — the space, for a store-backed widget — so it survives the age
 (verified in `bin/test/console-widget-mouse.steps`, which folds, writes more body, and checks the
 fold held).
 
+**A title never widens its box** — `Utilities.titleClip(title, width, chrome)` is the one rule the
+titled boxes clip through: an explicit `style=>[width=>x]` is the box's width, the box spends its
+own chrome first (border sides, margins, and any glyph drawn beside the title), and the title — the
+one thing in a header that can be arbitrarily long — is what gives way, clipped with `…`.  The call
+sites differ only in their numbers: `AccordionWidget` (the declared width is the whole box; chrome
+is the two border sides plus `" [-] "`, and the clip feeds `onClick` too, so the toggle glyph's
+target moves with it), `PanelWidget` (the declared width IS the content width, so chrome is 0 —
+this is what `ModalTool`, the `CardUtil` popups and `TreeSelectTool` render through, all of which
+constrain the panel to the terminal), and `CardWidget` (a declared width is a cap, not a fill: a
+small card keeps its natural size, and its body wraps when the cap bites).  A title is one line by
+definition, so newlines are flattened to spaces on the way through — a title carrying one cannot
+break the box it sits in.
+
 A click costs **one render pass**: `Console.clickAt` renders the focus change and, when the
 widget also acted, the affordance (the surface coalesces the two), and it never blocks the
 console thread — `focusWidget` renders fire-and-forget.  (It used to `renderNow()`, which

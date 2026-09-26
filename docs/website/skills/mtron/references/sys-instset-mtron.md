@@ -51,8 +51,8 @@ The signature is not a memory exercise; the inst carries its own doc:
 
 ```mtron
 mtron> *bash?docq
-==>docs::[obj=>bash?rng=lst[str]&dom=#{?}(cmd=>str::T,{?}timeout=>union(time::T,int::T)){<j>},dom=>'maybe an obj',rng=>'a lst[str] of results',args=>[cmd=>"the terminal command to evaluate (uses bash('-c',${cmd}) behind the scenes)",{?}timeout=>"""a real number denoting timeout of the process (default: /m/math/time/second::20.0).
-   """],desc=>"""evaluate bash command. *important* the timeout argument takes a real not an int -- e.g. millis::1000.0 or second::1.0.
+==>docs::[obj=>bash?rng=lst[str]&dom=#{?}(cmd=>str::T,{?}timeout=>union(time::T,int::T)){<j>},dom=>'maybe an obj',rng=>'a lst[str] of results',args=>[{?}timeout=>"""a real number denoting timeout of the process (default: /m/math/time/second::20.0).
+   """,cmd=>"the terminal command to evaluate (uses bash('-c',${cmd}) behind the scenes)"],desc=>"""evaluate bash command. *important* the timeout argument takes a real not an int -- e.g. millis::1000.0 or second::1.0.
    note that this field is optional, so when in doubt, just don't fill it out
    """,example=>["""bash('ls')                                           [-- return lst containing each file/dir as str::T --]
    {"ls","whoami","df -h"}.-<[_ => _]==[_ => bash(_)]   [-- batch bash results indexed by cmd             --]
@@ -61,22 +61,22 @@ mtron> *bash?docq
 ```
 ```mtron
 mtron> bash('ls')
-==>['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE','metatron.ide.mtron','mvnw','mvnw.cmd','node_modules','pom.xml','README.md','RELEASE.md','REVIEW-FULL.md','REVIEW-FULL.md.bak','REVIEW-METATRON.md','src','target']
+==>['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE','mvnw','mvnw.cmd','node_modules','pom.xml','README.md','RELEASE.md','src','target']
 mtron> bash(cmd=>'whoami')
 ==>['ubuntu']
 mtron> bash('df -h')
-==>['Filesystem      Size  Used Avail Use% Mounted on','overlay         916G  496G  374G  58% /','tmpfs            64M     0   64M   0% /dev','shm              64M     0   64M   0% /dev/shm','/dev/nvme1n1p2  916G  496G  374G  58% /work','tmpfs            31G     0   31G   0% /proc/acpi','tmpfs            31G     0   31G   0% /proc/asound','tmpfs            31G     0   31G   0% /proc/scsi','tmpfs            31G     0   31G   0% /sys/devices/virtual/powercap','tmpfs            31G     0   31G   0% /sys/firmware']
+==>['Filesystem      Size  Used Avail Use% Mounted on','overlay         916G  497G  373G  58% /','tmpfs            64M     0   64M   0% /dev','shm              64M     0   64M   0% /dev/shm','/dev/nvme1n1p2  916G  497G  373G  58% /work','tmpfs            31G     0   31G   0% /proc/acpi','tmpfs            31G     0   31G   0% /proc/asound','tmpfs            31G     0   31G   0% /proc/scsi','tmpfs            31G     0   31G   0% /sys/devices/virtual/powercap','tmpfs            31G     0   31G   0% /sys/firmware']
 ```
 A timeout and a failed exit are both fails, and both are inspectable:
 
 ```mtron
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
-==>fail::[inst apply failure: org.buildobjects.process.TimeoutException: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/78
+==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/78
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: org.buildobjects.process.ExternalProcessFailureException: External process `bash` terminated with unexpected exit status 2 after 3ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 10ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 3ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 10ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder<228>]]@/sys/fail/82
@@ -88,10 +88,10 @@ the same `==` projection:
 
 ```mtron
 mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of result lsts --]
-==>['ls'=>['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE','metatron.ide.mtron','mvnw','mvnw.cmd','node_modules','pom.xml','README.md','RELEASE.md','REVIEW-FULL.md','REVIEW-FULL.md.bak','REVIEW-METATRON.md','src','target']]
+==>['ls'=>['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE','mvnw','mvnw.cmd','node_modules','pom.xml','README.md','RELEASE.md','src','target']]
 ==>['whoami'=>['ubuntu']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
-==>['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE','metatron.ide.mtron','mvnw','mvnw.cmd','node_modules','pom.xml','README.md','RELEASE.md','REVIEW-FULL.md','REVIEW-FULL.md.bak','REVIEW-METATRON.md','src','target','ubuntu']
+==>['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE','mvnw','mvnw.cmd','node_modules','pom.xml','README.md','RELEASE.md','src','target','ubuntu']
 ```
 `==` is a **select** — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:
@@ -113,11 +113,11 @@ The projection can do the work: first stat line of each entry, nothing else:
 
 ```mtron
 mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `File:` line --]
-==>['  File: AGENTS.md','  File: bin','  File: boot','  File: conf','  File: CONTRIBUTING.md','  File: dist','  File: docs','  File: dsh-plugins','  File: language.properties','  File: LICENSE','  File: metatron.ide.mtron','  File: mvnw','  File: mvnw.cmd','  File: node_modules','  File: pom.xml','  File: README.md','  File: RELEASE.md','  File: REVIEW-FULL.md','  File: REVIEW-FULL.md.bak','  File: REVIEW-METATRON.md','  File: src','  File: target']
+==>['  File: AGENTS.md','  File: bin','  File: boot','  File: conf','  File: CONTRIBUTING.md','  File: dist','  File: docs','  File: dsh-plugins','  File: language.properties','  File: LICENSE','  File: mvnw','  File: mvnw.cmd','  File: node_modules','  File: pom.xml','  File: README.md','  File: RELEASE.md','  File: src','  File: target']
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md','  Size: 34192     	Blocks: 72         IO Block: 4096   regular file','Device: 259,3	Inode: 26348579    Links: 1','Access: (0664/-rw-rw-r--)  Uid: ( 1000/  ubuntu)   Gid: ( 1000/  ubuntu)','Access: 2026-09-25 19:17:42.070049402 +0000','Modify: 2026-09-24 18:53:23.043502578 +0000','Change: 2026-09-24 18:53:23.044502554 +0000',' Birth: 2026-09-24 18:53:23.043502578 +0000']
-==>['  File: bin','  Size: 4096      	Blocks: 8          IO Block: 4096   directory','Device: 259,3	Inode: 22826424    Links: 5','Access: (0775/drwxrwxr-x)  Uid: ( 1000/  ubuntu)   Gid: ( 1000/  ubuntu)','Access: 2026-09-25 00:07:43.360888917 +0000','Modify: 2026-09-20 22:31:57.121101695 +0000','Change: 2026-09-20 22:31:57.121101695 +0000',' Birth: 2025-11-08 21:38:11.425442859 +0000']
-==>['  File: boot','  Size: 4096      	Blocks: 8          IO Block: 4096   directory','Device: 259,3	Inode: 28469828    Links: 4','Access: (0775/drwxrwxr-x)  Uid: ( 1000/  ubuntu)   Gid: ( 1000/  ubuntu)','Access: 2026-09-25 17:46:46.398082694 +0000','Modify: 2026-09-14 02:30:49.310909041 +0000','Change: 2026-09-14 02:30:49.310909041 +0000',' Birth: 2026-01-16 18:53:47.513549189 +0000']
+==>['  File: bin','  Size: 4096      	Blocks: 8          IO Block: 4096   directory','Device: 259,3	Inode: 22826424    Links: 5','Access: (0775/drwxrwxr-x)  Uid: ( 1000/  ubuntu)   Gid: ( 1000/  ubuntu)','Access: 2026-09-26 00:08:03.603631173 +0000','Modify: 2026-09-20 22:31:57.121101695 +0000','Change: 2026-09-20 22:31:57.121101695 +0000',' Birth: 2025-11-08 21:38:11.425442859 +0000']
+==>['  File: boot','  Size: 4096      	Blocks: 8          IO Block: 4096   directory','Device: 259,3	Inode: 28469828    Links: 4','Access: (0775/drwxrwxr-x)  Uid: ( 1000/  ubuntu)   Gid: ( 1000/  ubuntu)','Access: 2026-09-26 03:26:59.039161993 +0000','Modify: 2026-09-26 03:26:45.197389704 +0000','Change: 2026-09-26 03:26:45.197389704 +0000',' Birth: 2026-01-16 18:53:47.513549189 +0000']
 ==>['  File: conf','  Size: 4096      	Blocks: 8          IO Block: 4096   directory','Device: 259,3	Inode: 23107074    Links: 3','Access: (0775/drwxrwxr-x)  Uid: ( 1000/  ubuntu)   Gid: ( 1000/  ubuntu)','Access: 2026-09-25 17:46:46.399082679 +0000','Modify: 2026-09-14 05:55:17.159928081 +0000','Change: 2026-09-14 05:55:17.159928081 +0000',' Birth: 2026-05-04 22:27:26.799073113 +0000']
 ==>['  File: CONTRIBUTING.md','  Size: 6984      	Blocks: 16         IO Block: 4096   regular file','Device: 259,3	Inode: 22879108    Links: 1','Access: (0664/-rw-rw-r--)  Uid: ( 1000/  ubuntu)   Gid: ( 1000/  ubuntu)','Access: 2026-09-24 18:43:26.827307490 +0000','Modify: 2026-07-29 14:27:08.684000000 +0000','Change: 2026-08-19 19:14:16.914365198 +0000',' Birth: 2026-06-05 04:49:54.746480453 +0000']
    ...
@@ -130,7 +130,7 @@ converts against itself, so no `awk`, `grep`, or `du`:
 
 ```mtron
 mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"')>>0.as?int<=str(int::T).as(bB::T)]
-==>[bB::34192.0,bB::4096.0,bB::4096.0,bB::4096.0,bB::6984.0,bB::4096.0,bB::4096.0,bB::4096.0,bB::7304.0,bB::34523.0,bB::107.0,bB::11790.0,bB::8481.0,bB::4096.0,bB::50823.0,bB::150.0,bB::2624.0,bB::76171.0,bB::66247.0,bB::16576.0,bB::4096.0,bB::4096.0]
+==>[bB::34192.0,bB::4096.0,bB::4096.0,bB::4096.0,bB::6984.0,bB::4096.0,bB::4096.0,bB::4096.0,bB::7304.0,bB::34523.0,bB::11790.0,bB::8481.0,bB::4096.0,bB::50823.0,bB::150.0,bB::2624.0,bB::4096.0,bB::4096.0]
 ```
 Unit values test against each other's units:
 
@@ -164,9 +164,9 @@ fired:
 
 ```mtron
 mtron> bash?reject=['\brm\b']("rm -rf /tmp/never-created-here")  [-- the policy, not the file system, stops it --]
-==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/910
+==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/782
 mtron> bash?allow=['ls']("whoami")                                [-- allow is whole-command: `whoami` is not `ls` --]
-==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/914
+==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/786
 ```
 The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the process:
 
@@ -369,6 +369,72 @@ mtron> /sys/space/mfs     -> noobj
 mtron> bash('rm -rf /tmp/mtron-docs-scratch')
 ==>['']
 ```
+## failure contract
+
+Every failure from this surface names **what** happened. Only if it knows do
+it add **where**, then the **suspected cause**, then a hint. Raw java — a
+`Throwable.toString`, a `java.lang` class name, a `cannot be cast to` — never
+reaches the fail text.
+
+The grammar, as it has settled across the code:
+
+```
+phenomenon (bounds) — suspected cause [; remediation hint]  (at <inst location>)
+```
+
+The `(at …)` origin is appended exactly once, by the funnel, at the failing
+instruction — a message that already carries one is forwarded untouched, so a
+nested failure never names two places.
+
+Failures as they actually read today:
+
+```
+inst apply failure: unable to convert mfail to bool (at /m/inst/is@1)
+
+clone depth limit exceeded (128) — self-referential obj at !*<#{?}>::T
+
+computation budget exceeded (50000000 frame operations in one expression) —
+unbounded work, likely a self-referential read; name a bounded subpath or a
+specific inst
+
+execution state stack corrupted — pop on empty stack (thread: main)
+
+token list end — asked for token 5 of 3 (a malformed parse structure)
+
+parse error at line 1, col 2:
+  1e
+   ^
+  unexpected 'e' — two adjacent terms need an operator or sugar between them (e.g. 1 + 2)
+```
+
+The last three lines of a parse failure are the designed text — the bracket
+heuristics (`unclosed '[' — missing ']'?`), the content rules above, and the
+quote rules (`unclosed single-quote — missing closing '''`) replace what the
+parser's raw failures used to be.
+
+### the self-referential inst space
+
+The inst namespace references itself — an inst whose tid is
+`?rng=#{*}&dom=#{?}` is an inst containing itself. A deep read of the whole
+namespace (`!*/m`, `*/m.as(rec::T)`) walks that graph, and four guards stand
+between that walk and a hung machine:
+
+1. the **frame cap** (64) — the rendered trace cannot grow;
+2. the **clone gauge** (128, in objClone) — the deep read fails with
+   `clone depth limit exceeded` instead of a stack overflow;
+3. the **work budget** — a walk that spins flat, within the depth cap, is
+   caught by the per-expression frame-operation count
+   (`-Dmetatron.execution.workBudget` to raise it for a legitimately big read);
+4. the **×N collapse** in the rendered trace — the repeated frames render as
+   `… (×63 more — same frame repeated: …)`, so the loop reads as a loop.
+
+A bounded subpath (`!*/m/math/cat`) or a named inst stays well-formed; the
+whole namespace does not, and the failures above say exactly that.
+
+The texts are produced at `MTronException` (funnel, translator),
+`ExecutionStack` (cap, budget, pop guard, render), `mParser` (designed parse
+text), and `objClone` (the gauge) — a new throw site belongs to this grammar.
+
 ## see also
 
 * [mtron type system](type-system-mtron.md) — vid/tid, coefficients, `.as(type::T)`.

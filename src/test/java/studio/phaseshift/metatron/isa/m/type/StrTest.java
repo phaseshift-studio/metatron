@@ -84,27 +84,27 @@ public class StrTest extends AbstractAlgebraTest<Str> {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "'123'.regex('\\d')                                                             % ['1','2','3']",
-            "'abcd'.regex('[a-z]{2}')                                                       % ['ab','cd']",
-            "'ab3cd'.regex('([a-z]+)(\\d?)([a-z]?)')                                        % [['ab3c','ab','3','c'],['d','d','','']]",
-            "'ab3cd'.regex('(?<a>[a-z]+)(?<b>\\d?)(?<c>[a-z]?)')                            % [['ab3c','ab','3','c'],['d','d','','']]",
-            "'ab3cd'.regex('\\d*')                                                          % ['','','3','','','']",
-            "'ab3cd'.regex('\\d+')                                                          % ['3']",
-            "'ab3cd'.regex('\\d{2}')                                                        % [,]",
-            "'241G'.regex('(\\d+)([KMGT])')                                                  % [['241G','241','G']]",
-            "'241G 502G'.regex('(\\d+)([KMGT])')                                             % [['241G','241','G'],['502G','502','G']]",
-            "'foo:bar'.regex('(\\w+):(\\w+)')                                                % [['foo:bar','foo','bar']]",
-            "'a1b2c3'.regex('([a-z])(\\d)')                                                  % [['a1','a','1'],['b2','b','2'],['c3','c','3']]",
+            "'123'=='\\d'                                                              % ['1','2','3']",
+            "'abcd'=='[a-z]{2}'                                                        % ['ab','cd']",
+            "'ab3cd'=='([a-z]+)(\\d?)([a-z]?)'                                         % [['ab3c','ab','3','c'],['d','d','','']]",
+            "'ab3cd'=='(?<a>[a-z]+)(?<b>\\d?)(?<c>[a-z]?)'                             % [['ab3c','ab','3','c'],['d','d','','']]",
+            "'ab3cd'=='\\d*'                                                           % ['','','3','','','']",
+            "'ab3cd'.select('\\d+')                                                    % ['3']",
+            "'ab3cd'.select('\\d{2}')                                                  % [,]",
+            "'241G'.select('(\\d+)([KMGT])')                                           % [['241G','241','G']]",
+            "'241G 502G'==('(\\d+)([KMGT])')                                           % [['241G','241','G'],['502G','502','G']]",
+            "'foo:bar'.select('(\\w+):(\\w+)')                                         % [['foo:bar','foo','bar']]",
+            "'a1b2c3'=='([a-z])(\\d)'                                                  % [['a1','a','1'],['b2','b','2'],['c3','c','3']]",
     }, delimiter = '%', quoteCharacter = '~')
-    public void testRegexInst(final String code, final String expected) {
+    public void testSelectInst(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
     @CsvSource(value = {
-            "'abc de fgh'==['bc' => 'xx', 'f[a-z]{2}' => +'XYZ', '\\s.{2}\\s' => -<''>-.count().as(str::T)]        % 'axx4fghXYZ'"
+            "'abc de fgh'>>=['bc' => 'xx', 'f[a-z]{2}' => +'XYZ', '\\s.{2}\\s' => -<''>-.count().as(str::T)]        % 'axx4fghXYZ'"
     }, delimiter = '%', quoteCharacter = '~')
-    public void testSelectInst(final String code, final String expected) {
+    public void testUpdateInst(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
