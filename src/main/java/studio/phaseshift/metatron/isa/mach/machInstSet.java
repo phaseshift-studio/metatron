@@ -68,16 +68,11 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_MACHINE_TID = MACH_ISA_TID.extend("machine");
     public static final fURI MACH_MONAD_TID = MACH_ISA_TID.extend("monad");
     public static final fURI MACH_INST_TID = MACH_ISA_TID.extend("inst");
-    public static final fURI LIFT_INST_TID = MACH_INST_TID.extend("lift");
     public static final fURI MACH_THREAD_TID = MACH_ISA_TID.extend("thread");
     public static final fURI MACH_VIRTUAL_THREAD_TID = MACH_THREAD_TID.extend("virtual");
     public static final fURI MACH_CORE_THREAD_TID = MACH_THREAD_TID.extend("core");
     public static final fURI DROP_TID = MACH_INST_TID.extend("drop");
-    public static final fURI INJECT_TID = MACH_INST_TID.extend("inject"); // inj ?
-    public static final fURI RING_ZERO_TID = MACH_INST_TID.extend("ring").extend("const").extend("zero");
-    public static final fURI RING_ONE_TID = MACH_INST_TID.extend("ring").extend("const").extend("one");
     public static final fURI RING_BINARY = MACH_INST_TID.extend("ring").extend("op").extend("+");
-    public static final fURI WHICH_INST_TID = MACH_INST_TID.extend("which");
     public static final fURI CLSTR_SPACE_TID = MACH_ISA_TID.extend("clstrspace");
     public static Type CLSTR_SPACE_TYPE;
     public static final fURI FACTORY_TID = MACH_ISA_TID.extend("factory");
@@ -111,6 +106,19 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_SWARM_MACHINE_TID = MACH_MACHINE_TID.extend("swarm");
     public static Type MACH_SWARM_MACHINE_TYPE;
 
+    // the processor family — structural apply(code)->obj contract, then nominal monad marker, then concrete strategies
+    public static final fURI MACH_PROCESSOR_TID = MACH_ISA_TID.extend("processor");
+    public static final fURI MACH_MONAD_PROCESSOR_TID = MACH_PROCESSOR_TID.extend("monad");
+    public static final fURI MACH_SWARM_PROCESSOR_TID = MACH_MONAD_PROCESSOR_TID.extend("swarm");
+    public static Type MACH_PROCESSOR_TYPE;
+    public static Type MACH_MONAD_PROCESSOR_TYPE;
+    public static Type MACH_SWARM_PROCESSOR_TYPE;
+    // the compiler family — structural apply(code)->code contract, then concrete strategies
+    public static final fURI MACH_COMPILER_TID = MACH_ISA_TID.extend("compiler");
+    public static final fURI MACH_FIXPOINT_COMPILER_TID = MACH_COMPILER_TID.extend("fixpoint");
+    public static Type MACH_COMPILER_TYPE;
+    public static Type MACH_FIXPOINT_COMPILER_TYPE;
+
 
     public machInstSet() {
         super(mutableMap(uri(PATTERN), uri(MACH_ISA_TID.extend(ALL))), INSTSET_TID, MACH_ISA_TID);
@@ -126,21 +134,50 @@ public class machInstSet extends AbstractInstSet {
                         FACTORY_TYPE,
                         M_FACTORY_TYPE,
                         /////////////////////////
-                        MACH_MACHINE_TYPE = Type.Builder.build()
-                                .tid(MACH_VIRTUAL_THREAD_TID)
-                                .vid(MACH_MACHINE_TID)
+                        // the processor family — structural apply(code)->obj contract, nominal monad marker, concrete swarm strategy
+                        MACH_PROCESSOR_TYPE = Type.Builder.build()
+                                .tid(REC_TID)
+                                .vid(MACH_PROCESSOR_TID)
+                                .isaPredicate(rec(
+                                        uri(STATE).maybe().asUri(), is_(or_(eq_(uri(STOP)), eq_(uri(RUN)), eq_(uri(PAUSE)))),
+                                        uri(RESULT).maybe(), T(ALL.maybeSome())))
                                 .create(),
+                        MACH_MONAD_PROCESSOR_TYPE = Type.Builder.build()
+                                .tid(MACH_PROCESSOR_TID)
+                                .vid(MACH_MONAD_PROCESSOR_TID)
+                                .create(),
+                        MACH_SWARM_PROCESSOR_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_MONAD_PROCESSOR_TID)
+                                        .vid(MACH_SWARM_PROCESSOR_TID)
+                                        .constructor(machine -> SwarmMachine.machine(machine.jvm(), machine.tid(), machine.vid()))
+                                        .create(), null, null, Map.of(uri(CODE), "the code the processor will evaluate"),
+                                "a swarm processor schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result"),
+                        // the compiler family — structural apply(code)->code contract, concrete fixpoint strategy
+                        MACH_COMPILER_TYPE = Type.Builder.build()
+                                .tid(REC_TID)
+                                .vid(MACH_COMPILER_TID)
+                                .isaPredicate(rec(uri(INSTSET).maybe().asUri(), T(INSTSET_TID)))
+                                .create(),
+                        MACH_FIXPOINT_COMPILER_TYPE = Type.Builder.build()
+                                .tid(MACH_COMPILER_TID)
+                                .vid(MACH_FIXPOINT_COMPILER_TID)
+                                .create(),
+                        // machine::T — the container: an ISA + a compiler + a processor
+                        MACH_MACHINE_TYPE = Type.Builder.build()
+                                .tid(REC_TID)
+                                .vid(MACH_MACHINE_TID)
+                                .isaPredicate(rec(
+                                        uri(INSTSET).maybe().asUri(), T(INSTSET_TID),
+                                        uri(COMPILER).maybe().asUri(), T(MACH_COMPILER_TID),
+                                        uri(PROCESSOR).maybe().asUri(), T(MACH_PROCESSOR_TID)))
+                                .create(),
+                        // the old swarm_machine::T — transition alias, re-parented under monad_processor
                         MACH_SWARM_MACHINE_TYPE = docWrap(Type.Builder.build()
-                                        .tid(MACH_MACHINE_TID)
+                                        .tid(MACH_MONAD_PROCESSOR_TID)
                                         .vid(MACH_SWARM_MACHINE_TID)
-                                        //  .isaPredicate(rec()) // uri(CODE), T(ALL))
                                         .constructor(machine -> SwarmMachine.machine(machine.jvm(), machine.tid(), machine.vid()))
                                         .create(), null, null, Map.of(uri(CODE), "the code the machine will evaluate"),
-                                """
-                                a swarm machine makes use of a set of independently executing monads that move across the code inst chain.
-                                barriers serve as synchronization points where all running monads must aggregate before being released on the post-barrier segment of code.
-                                the objs referenced by the monads that halt are the result of the machine execution.
-                                """),
+                                "a swarm machine makes use of a set of independently executing monads that move across the code inst chain. barriers serve as synchronization points where all running monads must aggregate before being released on the post-barrier segment of code. the objs referenced by the monads that halt are the result of the machine execution."),
                         /// /////////////////////
                         THREAD_EXECUTOR_TYPE = docWrap(Type.Builder.build()
                                         .tid(REC_TID)
@@ -184,32 +221,7 @@ public class machInstSet extends AbstractInstSet {
                                 a peer is a wsclient to a mtron_ws handler. 
                                 *x and x->y are the respective read/write insts sent to the peer for evaluation.
                                 """)),
-                uri(INST), lst(Stream.concat(Router.RouterType.insts().stream(), Stream.of(instC(LIFT_INST_TID.dom(ALL).rng(MACH_MONAD_TID).q(MONAD_IN, "+").q(MONAD_OUT, "+"), lst(T(ALL.maybe())), (lhs, inst) -> {
-                            final PCMonad monad = PCMonad.of(lhs);
-                            if (!inst.arg(0).isNoObj())
-                                return inst.arg(0).apply(monad);
-                            else
-                                return monad;
-                        }),
-                        /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                        instC(RING_ZERO_TID.dom(A).rng(A), lst(), (lhs, inst) -> ((PlusMonoid.O<?>) lhs).zero()),
-                        instC(RING_ONE_TID.dom(A).rng(A), lst(), (lhs, inst) -> ((MultMonoid.O<?>) lhs).one()),
-                        // instC(RING_BINARY.dom(A).rng(ALL.dom(A).rng(A)), lst(), (lhs, inst) -> instB(mtronInstSet.INST_TID.extend(inst.tid().name()), lst(lhs.type())).resolve(lhs)),
-                        //instC(RING_BINARY.dom(A).rng(ALL.dom(A).rng(A)), lst(T(A)), (lhs, inst) -> instB(mtronInstSet.INST_TID.extend(inst.tid().name()), inst.args()).apply(lhs)),
-                        instC(WHICH_INST_TID.dom(ALL).rng(A), lst(URI_TYPE), (lhs, inst) -> {
-                            if (inst.arg(0).uriValue().big().equals(SPACE_TID))
-                                return null == lhs.vid() ? noobjSpace.single() : Router.global().getSpaceFor(lhs.vid());
-                            else
-                                throw MTronException.of("unsupported which %s for %s", inst.arg(0), lhs);
-                        }),
-                        instC(INJECT_TID.dom(ALL).rng(ALL), lst(T(INT_TID), T(ALL)), (lhs, inst) -> {
-                            if (lhs.jvm() instanceof Tuple)
-                                return lhs.jvm(lhs.<Tuple>jvmAs().inject(inst.arg(0).intValue().intValue(), inst.arg(1)));
-                            else if (inst.arg(0).intValue() == 0)
-                                return lhs.jvm(inst.arg(1).jvm());
-                            else
-                                throw MTronException.of("injection larger than tuple: 1 < %d", inst.arg(0).intValue().intValue());
-                        }),
+                uri(INST), lst(Stream.concat(Router.RouterType.insts().stream(), Stream.of(
                         instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
                             final fURI baseVID = f("/sys/thread");
                             final VirtualThread thread = new VirtualThread(mutableMap(uri(CODE), inst.arg(0)), MACH_VIRTUAL_THREAD_TID, CommonUtil.mintShortUUID(baseVID, true));
@@ -239,8 +251,6 @@ public class machInstSet extends AbstractInstSet {
 
     @Override
     public Set<Sugar> sugars() {
-        return new LinkedHashSet<>(List.of(
-                Sugar.prefix("^", List.of(LIFT_INST_TID), 0)
-        ));
+        return new LinkedHashSet<>();
     }
 }

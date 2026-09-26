@@ -1,280 +1,323 @@
 ---
 name: sys instruction set
-description: file system, bash, sleep, process i/o
+description: >
+  The `/m/sys` instruction set and the `fsspace::T` half of the same doc: a guarded
+    `bash` whose allow/reject/env/dir policy is baked into the inst's own tid,
+    `sleep`/`stdout`/`stdin`, the `sys_stat` thread summary, and the file family
+    `read_file`/`edit_file`. The second half is the `fsspace::T` tour, mounted on the
+    metatron project root: typed reads by MIME, `?mimeq` tagging and structural parse,
+    line addressing, tree walking, and text work on a scratch mount. TRIGGER: when
+    shelling out (bash guard, timeout), reading or editing file lines, mounting a
+    directory as a space, or discovering what a file is before reading it.
 ---
 
-# system instruction set (`/m/sys`)
+# sys instruction set (`/m/sys`)
 
-`/sys` is a required system space — created at boot, it holds the system objs (router, typer,
-rewriter, env, thread). The sys instset (`/m/sys`) is its instruction companion: a guarded `bash` shell and
-the `sleep`/`stdout`/`stdin` I/O primitives. Instructions live under `/m/sys/inst/...`; read any of them with
-`?docq` before use.
+`/sys` is the required system space — created at boot, it holds the system objs
+(router, typer, rewriter, environment, thread registry). The sys instset is its
+instruction companion: a guarded `bash`, the blocking I/O primitives `sleep`,
+`stdout`, and `stdin`, the `sys_stat` thread summary, and a file family —
+`read_file`, `edit_file` — that operates on files mounted by a `fsspace::T`.
+
+The `fsspace::T` half occupies the rest of the doc: a directory, mounted and given the
+mime and line query processors, becomes a **typed** file system.
+
+Nothing here presumes a boot-time space. Each space the examples need is loaded by the
+doc itself, in the block that introduces it — read those blocks the way the examples
+read them.
 
 ## instructions
 
-| inst     | dom → rng         | arg               | description                                    |
-|----------|-------------------|-------------------|------------------------------------------------|
-| `bash`   | `#{?} → lst[str]` | `cmd`, `timeout?` | guarded shell (`bash -c`), stdout split to lst |
-| `sleep`  | `A{?} → A{?}`     | `time`            | pause the current thread, pass lhs through     |
-| `stdout` | `A{?} → A{?}`     | `#{?}`            | print the arg's jvm obj, pass lhs through      |
-| `stdin`  | `A{?} → str`      | —                 | read one line from the terminal                |
+| inst       | dom → rng           | args                                       | what it does                                |
+|------------|---------------------|--------------------------------------------|---------------------------------------------|
+| `bash`     | `#{?} → lst[str]`   | `cmd`, `timeout?`                          | guarded shell (`bash -c`), stdout as lines  |
+| `sleep`    | `A{?} → A{?}`       | `time`                                     | pause the thread, pass lhs through          |
+| `stdout`   | `#{?} → #{?}`       | `obj`                                      | print the arg's jvm obj, pass lhs through   |
+| `stdin`    | `#{?} → str`        | —                                          | read one line from terminal input           |
+| `sys_stat` | `#{?} → rec`        | —                                          | the thread executor's own summary           |
+| `read_file`| `#{?} → lst`        | `file`, `min?`, `max?`                     | a file's lines, indexed, or the `min..max` slice |
+| `edit_file`| `#{?} → rec`        | `file`, `text`, `min`, `max?`              | insert at `min` (or replace `min..max`), and report |
 
 ## bash (`/m/sys/inst/bash`)
 
-The shell instruction — the function-call primitive: reach into the shell with `bash`, shape the result with
-metatron's data structures. `cmd` is the terminal command, evaluated with `bash -c`. `timeout` is an optional
-`time::T` (`millis::1000.0`, `second::1.0`, ...) with a 30-second default. The result is a `lst[str::T]`, one
-entry per stdout line; a non-zero exit is a `fail::T`.
+The function-call primitive: reach into the shell with `bash`, shape the result with
+metatron's data structures. `cmd` runs under `bash -c`, in the VM's working directory —
+in the docs build that is the metatron project root — and returns a `lst[str]`, one
+entry per stdout line. A non-zero exit is a `fail::T` that carries the process's stderr
+in its message. `timeout` takes a time type — `second::5.0`, `millis::1000.0` — or a
+bare int, which is seconds; the default is `second::20.0`.
+
+The signature is not a memory exercise; the inst carries its own doc:
+
+```mtron_pre
+*bash?docq
+```
 
 ```mtron_pre
 bash('ls')
-bash(cmd=>'whoami', timeout=>second::5.0)
+bash(cmd=>'whoami')
+bash('df -h')
 ```
 
-Batch over a rec (indexed) or a lst (flat):
+A timeout and a failed exit are both fails, and both are inspectable:
 
 ```mtron_pre
-{"ls","whoami","df -h"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of result lsts --]
-["ls","whoami","df -h"].mapp(-<[_ => bash(_)]).sum() [-- flatten to one lst --]
+[ERROR] bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
+[ERROR] bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
 ```
 
-Pipe a follow-up command over each result — `>>` drains the list, `${_}` binds the current element; `.mapp`
-maps explicitly (and, with a lambda, indexes by the current element):
+### batch
+
+A rec of commands maps to a rec of results, indexed by command; a lst of commands takes
+the same `==` projection:
 
 ```mtron_pre
-bash('ls').>>.bash("stat -c '%U' ${_}")            [-- drain: owners coalesce to a multiset --]
-bash('ls').mapp(bash("stat -c '%U' ${_}"))         [-- map: one result lst per file --]
-bash('ls').mapp(-<[_=>bash("stat -c '%U' ${_}")])  [-- indexed map: file => owner --]
+{"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of result lsts --]
+["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
+```
+
+`==` is a **select** — one branch per slot of the poly, the rec's value the projection
+applied to each. The glyphs are the actions, and the sugar says so in plain sight:
+
+```mtron_pre
+["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()
+```
+
+### pipe over the results
+
+`>>` moves right along the data — one step per element; `${_}` binds the current one.
+The projection can do the work: first stat line of each entry, nothing else:
+
+```mtron_pre
+bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `File:` line --]
+[MAXOUTPUT 5] bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
+```
+
+### a shape of its own
+
+`bash` supplies the functions; metatron supplies the shape. Each top-level entry's
+`Size`, extracted and typed `bB::T`, then converted to `kB::T` — the unit system
+converts against itself, so no `awk`, `grep`, or `du`:
+
+```mtron_pre
+bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"')>>0.as?int<=str(int::T).as(bB::T)]
+```
+
+Unit values test against each other's units:
+
+```mtron_pre
+bB::34192.0.gt(kB::30.0)
+```
+
+And they filter a lst by the same predicate — the branches that fail are dropped:
+
+```mtron_pre
+[bB::34192.0, bB::100.0]==[_ => ?>kB::30.0]==[_ => else(none)]
 ```
 
 ### security modulators (q-params)
 
-`bash` is hardened at the *instruction* level, not the call site. `allow`/`reject`/`env`/`dir` attach as query
-parameters on the tid, so a tool registration bakes the policy in once — `!*bash?reject=['\brm\b']` — rather
-than trusting the caller.
+`bash` is hardened at the **instruction**, not the call site: `allow`, `reject`,
+`env`, and `dir` attach as query parameters on the inst's own tid — a policy baked in
+once rather than negotiated per call. Query parameters are metatron's way of
+annotating an inst at its tid; `?*` is the door, and these are the ones agents meet
+first.
 
-| q-param  | type            | semantics                                              |
-|----------|-----------------|--------------------------------------------------------|
-| `allow`  | `lst[str::T]`   | whitelist regexes, matched whole-command (`matches()`) |
-| `reject` | `lst[str::T]`   | blacklist regexes, matched anywhere (`find()`)         |
-| `env`    | `rec[uri=>str]` | environment vars injected into the process             |
-| `dir`    | `str`           | working directory of the process                       |
+| q-param  | type            | semantics                                                |
+|----------|-----------------|----------------------------------------------------------|
+| `allow`  | `lst[str]`      | whitelist regexes, matched whole-command (`matches()`)   |
+| `reject` | `lst[str]`      | blacklist regexes, matched anywhere (`find()`)           |
+| `env`    | `rec[str=>str]` | environment variables injected into the process          |
+| `dir`    | `str`           | the process's working directory                           |
 
-`allow`, when non-empty, requires the command to match at least one pattern; `reject` fails when any pattern
-matches anywhere. Both apply before the process spawns.
+Each guard fails before the process spawns, and the failure names the pattern that
+fired:
 
-```mtron
-!*bash?reject=['\brm\b']      [-- a bash that refuses rm --]
-!*bash?env=[USER=>'metatron'] [-- a bash with a fixed env --]
+```mtron_pre
+[ERROR] bash?reject=['\brm\b']("rm -rf /tmp/never-created-here")  [-- the policy, not the file system, stops it --]
+[ERROR] bash?allow=['ls']("whoami")                                [-- allow is whole-command: `whoami` is not `ls` --]
 ```
 
-### worked example — bash + the graph
+The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the process:
 
-The split in one line: `bash` supplies the function (`ls`, `stat`), metatron the shape — find the `Size` line,
-regex out its byte count, type it `bB::T`, and keep the files over 30 kB. The unit types auto-convert, so `bB`
-compares against `kB` directly (no `awk`, no `grep`, no `du`).
-
-```mtron
-bash('ls').mapp(-<[_=>bash("stat ${_}")]).>>.==[_=> >>.has("Size").regex('\s*(\d+)')>><0/0>.as?int<=str(int::T).as(bB::T)]==[_=>?>kB::30.0]
+```mtron_pre
+bash?allow=['ls .+']('ls AGENTS.md')
+bash?env=[CI => 'docs']('echo CI=$CI')
 ```
 
 ## sleep / stdout / stdin
 
-```mtron
-sleep(second::1.0)   [-- pause, pass lhs through --]
-stdout('hello')      [-- print to the terminal, pass lhs through --]
-stdin()              [-- block for one line, emit it as a str --]
+```mtron_pre
+sleep(second::1.0)                       [-- one second, then lhs passes through --]
+stdout("the sleep above took one second")
 ```
 
-## mounted state
-
-Two recs are mounted under `/sys` at boot — not instructions, but read like any other space:
-
-- **`/sys/env`** — the process environment, one `KEY => str` per variable.
-- **`/sys/thread`** — the thread registry, one `id => thread` per thread, each documented via `?docq`.
+`stdin()` blocks for one line of terminal input. In the headless docs build there is
+no input to take, so it is shown rather than run:
 
 ```mtron
-*/sys/env              [-- the environment as a rec --]
-*/sys/env/HOME         [-- one variable --]
+stdin()    [-- block for one line, emit it as str::T --]
 ```
+
+## the registry under /sys
+
+One read each: the environment, the thread count, and the executor's own summary —
+`sys_stat` answers with running vs stopped, no introspection ceremony:
 
 ```mtron_pre
-*/sys/thread/+.count()               [-- number of threads        --]
-*/sys/thread/+.=?=[state=>run]       [-- number of active threads --]
-*/sys/thread/+?docq                  [-- thread documentation     --]
+*/sys/env/HOME
+*/sys/thread/+.count()
+sys_stat()
 ```
 
-# file system space (fsspace::T)
+# file system space (`fsspace::T`)
 
-An `fsspace::T` mounts a subset of a file system into the metatron graph. Files are addressed via the space's
-scheme and path prefix.
+An `fsspace::T` mounts a directory into the metatron graph. A file's uri is
+`<scheme:path>`; a read returns the file's content **typed by its MIME** — the type is
+a predicate on the content.
 
-**IMPORTANT**: Every uri can be wrapped in angle brackets `< >`, but it is only required for those uris that have `.`
-(periods), ` ` (spaces), and/or special characters such as `~` (tildes) in them. For instance, `/a/b/c` can be written
-as is, but `</a/b/c.txt>` requires angle brackets.
+**IMPORTANT**: any uri may be wrapped in `< >`, but the brackets are *required* when
+the uri carries a `.`, a space, a `~`, or a `?`. `/a/b/c` writes bare;
+`<mfs:pom.xml>` and `<mfs:AGENTS.md?lineq=1-3>` must be bracketed.
 
-## Configuration
+## the space these examples use
 
-A typical `fsspace` definition:
+The examples read the live metatron project — this very tree — and never write to it.
+The route anchors on `<.>`, the cwd of the process, which in the docs build is the
+project root:
 
 ```mtron_pre
 fsspace::[/
   pattern => <mfs:#>, /
-  q       => [mimeq::[=>], lineq::[=>]],/
-  route   => [mfs: => <~/software/metatron>]]@/sys/space/fs/mfs
+  q       => [mimeq::[=>], lineq::[=>]], /
+  route   => [mfs: => <.>]]@/sys/space/mfs
 ```
 
-- **`pattern`** — the URI pattern this space handles (`mfs:#` matches `<mfs:file.txt>`, `<mfs:sub/dir/file.md>`,
-  etc.)
-- **`route`** — maps the pattern prefix (`mfs:`) to a filesystem path (`<~/software/metatron>`)
-- **`q`** — query processors: `mimeq` for MIME type tagging/conversion, `lineq` for line-level reads/writes
+The three keys: `pattern` is the uri space this instance owns (`mfs:#`, `#` the
+recursive wildcard); `route` maps the `mfs:` prefix onto the path the files live at;
+and `q` is the space's **query processors** — `mimeq` tags and structurally parses
+reads, `lineq` addresses lines.
 
-## mime type handling
-
-`fsspace::T` detects a file's MIME type from its extension (and optionally the OS content probe) and returns a **typed
-string** — a refined `str::T` such as `html::T`, `json::T`, `markdown::T`, etc.
-
-```
-file.html  →  html::"<html>...</html>"     (predicate-validated HTML string)
-file.json  →  json::"{\"key\":\"value\"}"  (predicate-validated JSON string)
-file.txt   →  str::"plain text"            (bare string, no special type)
-file.md    →  markdown::"# Title"          (predicate-validated markdown string)
-```
-
-The MIME type acts as a **predicate** on the string content. For example, `html::T`'s predicate validates that the
-string is valid HTML. The structural representation (`rec::T` DOM tree) is opt-in via `?mimeq=application/x-mtron` or
-`.as(rec::T)`.
-
-### mime-to-tid mapping
-
-| Extension       | MIME Type             | TID                    |
-|-----------------|-----------------------|------------------------|
-| `.html`, `.htm` | `text/html`           | `/m/web/mime/html`     |
-| `.json`         | `application/json`    | `/m/web/mime/json`     |
-| `.xml`          | `application/xml`     | `/m/web/mime/xml`      |
-| `.md`           | `text/markdown`       | `/m/web/mime/markdown` |
-| `.css`          | `text/css`            | `/m/web/mime/css`      |
-| `.java`         | `text/x-java`         | `/m/web/mime/java`     |
-| `.yaml`, `.yml` | `application/yaml`    | `/m/web/mime/yaml`     |
-| `.mtron`        | `application/x-mtron` | `/m/rec`               |
-| `.txt`          | `text/plain`          | `/m/str`               |
-| _other_         | `text/plain` / probe  | `/m/str`               |
-
-### the `mimeq` query processor
-
-The `?mimeq=` query parameter on a file URI controls what the space returns:
+Writes go to a second mount, a scratch directory the docs build owns — made by
+`bash`, which is exactly the point of keeping the two halves of this doc in one
+conversation:
 
 ```mtron_pre
-[-- default: typed string (predicate-validated) --]
-[MAXOUTPUT 20] *<mfs:docs/website/index.html>
-
-[-- explicit type tag (same as default for .html files) --]
-[MAXOUTPUT 20] *<mfs:docs/website/index.html?mimeq=text/html>
-
-[-- structural parse via application/x-mtron --]
-[MAXOUTPUT 20] *<mfs:docs/website/index.html?mimeq=application/x-mtron>
-```
-
-`mimeq` is implemented in `QCollection.mimeQ()` as a space-level `postRead` query processor. It:
-
-1. **Probes** the content type from the object's existing TID (or falls back to URI/file extension if the TID is bare
-   `STR_TID`)
-2. **Tags** the string with the correct MIME TID — this triggers predicate validation (e.g., `html::T` validates the
-   string is valid HTML)
-3. **Structural parse** — if `?mimeq=application/x-mtron`, runs the content-type-specific serializer
-   (`ObjHTMLSerializer` for HTML, `ObjJSONSerializer` for JSON, etc.) to produce the `rec::T` DOM tree
-
-## reading and writing files
-
-### basic read/write
-
-```mtron_pre
-[-- Read a file (returns typed string by default) --]
-*<mfs:README.md>
-```
-
-```mtron
-[-- Write a string to a file --]
-<mfs:README.md> -> "## new content"
-```
-
-### reading with structural parse
-
-```mtron_pre
-[-- Read markdown as a rec::T structure --]
-*<mfs:README.md?mimeq=application/x-mtron>
-
-[-- Read JSON, then walk into rec fields --]
-*<mfs:config.json?mimeq=application/x-mtron>/database/host
-```
-
-### binary files
-
-Files without a recognized text MIME type are read as `bytes::T`. Executable files (with shebangs)
-are treated as `inst::T` and can be invoked directly:
-
-```mtron_pre
-*<mfs:script.sh>        [-- bytes::T if binary, str::T if text                    --]
-<mfs:script.sh>()       [-- execute (shell scripts, via application/x-mtron exec) --]
-```
-
-## pattern-based access
-
-fsSpace supports wildcard patterns in reads:
-
-```mtron_pre
-[-- List all files in a directory --]
-*<mfs:+/>
-
-[-- Read all .txt files --]
-*<mfs:+/+>.where([name => -<'.'>>1.is('txt')])
-```
-
-## Line-Level Editing with `lineq`
-
-The `lineq` query processor enables reading and editing specific line ranges within text files, useful for targeted
-edits without loading the entire file:
-
-```mtron_pre
-[-- Read lines 10-20 of a file --]
-*<mfs:src/main.java?lineq=10..20>
-
-[-- Replace lines 5-10 with new content --]
-<mfs:src/main.java?lineq=5..10> -> """/
-  public void newMethod() {/
-    // new implementation/
-  }/
-"""
-```
-
-### boot configuration example
-
-```mtron_pre
+bash('mkdir -p /tmp/mtron-docs-scratch')
 fsspace::[/
-  pattern => <local:#>,/
-  q       => [mimeq::[=>], lineq::[=>]],/
-  route   => [local: => ~/src]]@/sys/space/fs/src
-
-[-- Then use in expressions: --]
-*<local:Main.java?lineq=1..50>
-<local:index.html?mimeq=application/x-mtron>/html/head/title
+  pattern => <scratch:#>, /
+  q       => [lineq::[=>]], /
+  route   => [scratch: => /tmp/mtron-docs-scratch]]@/sys/space/scratch
 ```
 
-## type round-trip
-
-The full read-modify-write cycle preserves types:
+## typed reads
 
 ```mtron_pre
-[-- Read HTML, cast to rec, modify, cast back to html string, write --]
-<local:page.html> -> *<local:page.html?mimeq=application/x-mtron>/
-  .at(html/head/title -> 'New Title')/
-  .as(html::T)
-
-[-- Read JSON config, modify a value, write back --]
-<local:config.json> -> *<local:config.json?mimeq=application/x-mtron>/
-  .at(database/host -> 'new-host')/
-  .as(json::T)
+*<mfs:README.md>.tid()          [-- markdown's mime --]
+*<mfs:pom.xml>.tid()            [-- xml's mime --]
+*<mfs:boot/docs.mtron>.tid()    [-- a .mtron file reads as the code it is --]
 ```
 
-The `.as(html::T)` / `.as(json::T)` serialization passes through `ObjHTMLSerializer.write()` /
-`ObjJSONSerializer.write()` which handle both `str::T` (pass-through) and `rec::T` (structural render).
+Three content types, one `*` — the tid is the referent's claim, and `.tid()` is how
+it is read out. A `.mtron` file is not lines: it parses into the objs it declares, so
+its referent is a `rec::T`, not a `str::T`. The probe defaults a file with no
+extension to the same `application/x-mtron` type — which is a file named `lines` an
+invitation to be parsed as code, and a `lines.txt` a note.
+
+## `?mimeq` — tagging, and the structural read
+
+`?mimeq` is a post-read query processor: it tags the string with the MIME's tid — the
+tag *is* the predicate validation — and, for `application/x-mtron`, parses the content
+into its structural form. Where in doubt, `?docq` and `.explain()` say what an inst
+is doing — the sugar is short precisely because it is legible once:
+
+```mtron_pre
+[NO_OUTPUT] *<mfs:README.md?mimeq=text/markdown>                    [-- explicit tag, same referent typed --]
+[NO_PROMPT] [MAXOUTPUT 10] *<mfs:boot/docs.mtron>                   [-- the doc boot, read as its code --]
+```
+
+## walking the tree
+
+Wildcards are space-side. `+` is one segment, `#` is the recursion:
+
+```mtron_pre
+*<mfs:src/main/java/+/>                  [-- the child of src/main/java --]
+[NO_OUTPUT] *<mfs:docs/skills/mtron/+/>  [-- this doc's siblings, with their content --]
+```
+
+## text work on the tree
+
+A file is a string and a string splits: `-<` divides on the separator, and the rec
+decides which pieces survive — here, everything before line 10:
+
+```mtron_pre
+*<mfs:AGENTS.md>.-<'\n'==[?>10 => none, _ => _]
+```
+
+## line addressing — on the scratch mount
+
+The scratch mount is where the doc writes. `bash` authors the file in the shell's own
+voice — and names it `lines.txt`, because the probe reads an extension-less file as
+`application/x-mtron` code, while a `.txt` name is what makes prose prose. The space
+half then addresses the same file by line: `N` or `A-B` for a slice, `N+` to insert
+before line N, `+` to append; a read takes the slice, a write replaces it:
+
+```mtron_pre
+bash('printf "the metatron docs pipeline\nevaluates this block\nand inlines the result" > /tmp/mtron-docs-scratch/lines.txt')
+*<scratch:lines.txt?lineq=1>                     [-- line two, zero-indexed --]
+<scratch:lines.txt?lineq=1> -> "rewrote line two"  [-- replace --]
+*<scratch:lines.txt>                                  [-- the file after the write --]
+```
+
+## the file family — `read_file`, `edit_file`
+
+The same lines, as instructions, when the shape of the answer matters. A uri with a
+dot in its name takes the angle brackets, even as an argument. `read_file` indexes its
+lines:
+
+```mtron_pre
+read_file(file=><scratch:lines.txt>, min=>0, max=>2)
+```
+
+`edit_file` states the write as arguments — insert at `min`, replace the `min..max`
+span when `max` is given — and answers with a status report:
+
+```mtron_pre
+edit_file(file=><scratch:lines.txt>, text=>'added by edit_file', min=>1, max=>1)
+```
+
+A rec written as data and read back — the round trip closes the scratch story:
+
+```mtron_pre
+scratch:meta -> [doc => 'sys-instset', revision=>2]
+*scratch:meta
+```
+
+## a file as an instruction
+
+A file that is executable is read back as an `inst::T` — the space exposes the call,
+and the type carries where the space stood when it served it. `bin/metatron` shows
+the shape; it is read here, never run:
+
+```mtron_pre
+[NO_OUTPUT] *<mfs:bin/metatron>
+*<mfs:bin/metatron>.tid()
+```
+
+## taking the mounts down
+
+The doc leaves the graph as it found it — the two mounts it added are removed, and
+the scratch directory goes with `bash`, the tool that made it:
+
+```mtron_pre
+/sys/space/scratch -> noobj
+/sys/space/mfs     -> noobj
+bash('rm -rf /tmp/mtron-docs-scratch')
+```
+
+## see also
+
+* [mtron type system](type-system-mtron.md) — vid/tid, coefficients, `.as(type::T)`.
+* [mtron language reference](language-reference-mtron.md) — `>>`, the `?`-family filters, select (`==`), split (`-<`), `->` write.
+* [web instruction set](web-instset-mtron.md) — the route tables an `fsspace` mount hangs behind.
+* [tble instruction set](tble-instset-mtron.md) — the same space protocol, on a database.

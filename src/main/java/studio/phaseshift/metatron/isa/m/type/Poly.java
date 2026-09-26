@@ -579,5 +579,29 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             });
             return result;
         }
+
+        /**
+         * The deep union of two colliding values: recs merge key-by-key (recursing), lsts
+         * concatenate, and anything else appends into an objs set. This is the flattening
+         * behind {@code rec + rec} — e.g. {@code [a=>[c=>e]] + [a=>[c=>d]]} yields
+         * {@code [a=>[c=>{e,d}]]} in one pass instead of {@code [a=>{[c=>e],[c=>d]}]}.
+         */
+        public static Obj mergeObjRecursion(final Obj lhs, final Obj rhs) {
+            if (lhs.isRec() && rhs.isRec())
+                return mergeRecRecursion(lhs.asRec(), rhs.asRec());
+            else if (lhs.isLst() && rhs.isLst())
+                return lhs.asLst().plus(rhs.asLst());
+            else
+                return lhs.append(rhs);
+        }
+
+        private static Rec mergeRecRecursion(final Rec lhs, final Rec rhs) {
+            final Map<Obj, Obj> newMap = new LinkedHashMap<>(lhs.recValue());
+            rhs.elements().forEach(o -> newMap.compute(o.jvm().get0(), (k, v) -> null == v
+                    ? o.jvm().get1()
+                    : mergeObjRecursion(v, o.jvm().get1())));
+            // build a fresh rec (not this.jvm()/clone(), which a Space no-ops) and re-tag it in place
+            return rec(newMap).self(newMap, lhs.tid(), lhs.vid());
+        }
     }
 }

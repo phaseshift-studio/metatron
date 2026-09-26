@@ -79,31 +79,48 @@ public class ExecutionStack {
         return stack;
     }
 
-    public static void push(final ExecutionState state) {
+    /**
+     * Push a frame unless the stack has already reached its cap, in which case
+     * the push is skipped (and reported to the caller, so it will not later
+     * pop a frame that never landed) — the cap bounds the rendered fail
+     * message against runaway depth, and the pop-for-push invariant holds
+     * either way.
+     */
+    public static boolean push(final ExecutionState state) {
         final Deque<ExecutionState> stack = stack();
-        if (stack.size() < MAX_FRAMES)
+        if (stack.size() < MAX_FRAMES) {
             stack.push(state);
+            return true;
+        }
+        return false;
     }
 
     public static void pop() {
         final Deque<ExecutionState> stack = stack();
         if (null == stack.peek())
-            throw MTronException.of("execution state stack corrupted");
+            // a pop with no landed push — only reachable if something popped
+            // outside {@link #frame}; the thread identity is the first clue
+            throw MTronException.of("execution state stack corrupted — pop on empty stack (thread: %s)", Thread.currentThread().getName());
         stack.pop();
     }
 
     public static <T> T frame(final ExecutionState state, final Supplier<T> supplier) {
-        ExecutionStack.push(state);
+        final boolean pushed = push(state);
         try {
             return supplier.get();
         } finally {
-            ExecutionStack.pop();
+            if (pushed)
+                pop();
         }
     }
 
     /**
      * Snapshot render of the stack — innermost step first, without mutating
      * it (safe to call from any thread and at fail-generation time).
+     * Consecutive identical frames (the signature of a self-referential read
+     * looping on itself) collapse to one line plus a counted marker, so a
+     * runaway renders as the loop it is instead of a staircase of it — and a
+     * collapsed run consumes a single indent level, not one per frame.
      */
     public static String generateStackTrace() {
         final Deque<ExecutionState> stack = STACK.get();
@@ -112,24 +129,50 @@ public class ExecutionStack {
         final List<ExecutionState> snapshot = List.copyOf(stack);
         final StringBuilder builder = new StringBuilder();
         int indent = 0;
-        for (final ExecutionState state : snapshot) {
-            if (!builder.isEmpty())
-                builder.append('\n');
-            for (int i = 0; i < indent; i++)
-                builder.append("    ");
-            indent++;
-            StringBuilder line = new StringBuilder(state.state().name() + (null == state.message() || state.message().isEmpty() ? "" : ": " + state.message()));
-            if (null != state.obj())
-                line.append(" lhs=").append(tidOf(state.obj()));
-            final Obj[] objs = state.objs();
-            if (null != objs)
-                for (final Obj obj : objs)
-                    line.append(", ").append(tidOf(obj));
-            if (line.length() > MAX_FRAME_LEN)
-                line = new StringBuilder(line.substring(0, MAX_FRAME_LEN) + "...");
-            builder.append("\\_").append(line);
+        int i = 0;
+        while (i < snapshot.size()) {
+            final ExecutionState state = snapshot.get(i);
+            int n = 1;
+            while (i + n < snapshot.size() && linesEqual(state, snapshot.get(i + n)))
+                n++;
+            appendFrame(builder, indent++, state);
+            if (n > 1)
+                // the marker is its own visual level — the next frame nests one
+                // level below it, keeping the staircase's one-level-per-line rule
+                appendLine(builder, indent++, "… (×" + (n - 1) + " more — same frame repeated: " + state.state().name()
+                        + (null == state.message() || state.message().isEmpty() ? "" : ": " + state.message()));
+            i += n;
         }
         return builder.toString();
+    }
+
+    private static void appendFrame(final StringBuilder builder, final int level, final ExecutionState state) {
+        appendLine(builder, level, renderLine(state));
+    }
+
+    private static void appendLine(final StringBuilder builder, final int level, final String text) {
+        if (!builder.isEmpty())
+            builder.append('\n');
+        for (int i = 0; i < level; i++)
+            builder.append("    ");
+        builder.append("\\_").append(text);
+    }
+
+    private static String renderLine(final ExecutionState state) {
+        StringBuilder line = new StringBuilder(state.state().name() + (null == state.message() || state.message().isEmpty() ? "" : ": " + state.message()));
+        if (null != state.obj())
+            line.append(" lhs=").append(tidOf(state.obj()));
+        final Obj[] objs = state.objs();
+        if (null != objs)
+            for (final Obj obj : objs)
+                line.append(", ").append(tidOf(obj));
+        if (line.length() > MAX_FRAME_LEN)
+            line = new StringBuilder(line.substring(0, MAX_FRAME_LEN) + "...");
+        return line.toString();
+    }
+
+    private static boolean linesEqual(final ExecutionState a, final ExecutionState b) {
+        return renderLine(a).equals(renderLine(b));
     }
 
     private static String tidOf(final Obj obj) {

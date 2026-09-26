@@ -388,422 +388,305 @@
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">sys instruction set</h1>
-        <small>file system, bash, sleep, process i/o</small><br/>
+        <small>The /m/sys instruction set and the fsspace::T half of the same doc: a guarded bash whose allow/reject/env/dir policy is baked into the inst's own tid, sleep/stdout/stdin, the sys_stat thread summary, and the file family read_file/edit_file. The second half is the fsspace::T tour, mounted on the metatron project root: typed reads by MIME, ?mimeq tagging and structural parse, line addressing, tree walking, and text work on a scratch mount. TRIGGER: when shelling out (bash guard, timeout), reading or editing file lines, mounting a directory as a space, or discovering what a file is before reading it.</small><br/>
         <a href="sys-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>sys-instset-mtron.md</a>
     </div>
     <div class="markdown-body">
-<h2>system instruction set (<code>/m/sys</code>)</h2>
-<p><code>/sys</code> is a required system space — created at boot, it holds the system objs (router, typer,
-rewriter, env, thread). The sys instset (<code>/m/sys</code>) is its instruction companion: a guarded <code>bash</code> shell and
-the <code>sleep</code>/<code>stdout</code>/<code>stdin</code> I/O primitives. Instructions live under <code>/m/sys/inst/...</code>; read any of them with
-<code>?docq</code> before use.</p>
+<h2>sys instruction set (<code>/m/sys</code>)</h2>
+<p><code>/sys</code> is the required system space — created at boot, it holds the system objs
+(router, typer, rewriter, environment, thread registry). The sys instset is its
+instruction companion: a guarded <code>bash</code>, the blocking I/O primitives <code>sleep</code>,
+<code>stdout</code>, and <code>stdin</code>, the <code>sys_stat</code> thread summary, and a file family —
+<code>read_file</code>, <code>edit_file</code> — that operates on files mounted by a <code>fsspace::T</code>.</p>
+<p>The <code>fsspace::T</code> half occupies the rest of the doc: a directory, mounted and given the
+mime and line query processors, becomes a <strong>typed</strong> file system.</p>
+<p>Nothing here presumes a boot-time space. Each space the examples need is loaded by the
+doc itself, in the block that introduces it — read those blocks the way the examples
+read them.</p>
 <h3>instructions</h3>
 <table>
 <thead>
-<tr><th>inst</th><th>dom → rng</th><th>arg</th><th>description</th></tr>
+<tr><th>inst</th><th>dom → rng</th><th>args</th><th>what it does</th></tr>
 </thead>
 <tbody>
-<tr><td><code>bash</code></td><td><code>#{?} → lst[str]</code></td><td><code>cmd</code>, <code>timeout?</code></td><td>guarded shell (<code>bash -c</code>), stdout split to lst</td></tr>
-<tr><td><code>sleep</code></td><td><code>A{?} → A{?}</code></td><td><code>time</code></td><td>pause the current thread, pass lhs through</td></tr>
-<tr><td><code>stdout</code></td><td><code>A{?} → A{?}</code></td><td><code>#{?}</code></td><td>print the arg's jvm obj, pass lhs through</td></tr>
-<tr><td><code>stdin</code></td><td><code>A{?} → str</code></td><td>—</td><td>read one line from the terminal</td></tr>
+<tr><td><code>bash</code></td><td><code>#{?} → lst[str]</code></td><td><code>cmd</code>, <code>timeout?</code></td><td>guarded shell (<code>bash -c</code>), stdout as lines</td></tr>
+<tr><td><code>sleep</code></td><td><code>A{?} → A{?}</code></td><td><code>time</code></td><td>pause the thread, pass lhs through</td></tr>
+<tr><td><code>stdout</code></td><td><code>#{?} → #{?}</code></td><td><code>obj</code></td><td>print the arg's jvm obj, pass lhs through</td></tr>
+<tr><td><code>stdin</code></td><td><code>#{?} → str</code></td><td>—</td><td>read one line from terminal input</td></tr>
+<tr><td><code>sys_stat</code></td><td><code>#{?} → rec</code></td><td>—</td><td>the thread executor's own summary</td></tr>
+<tr><td><code>read_file</code></td><td><code>#{?} → lst</code></td><td><code>file</code>, <code>min?</code>, <code>max?</code></td><td>a file's lines, indexed, or the <code>min..max</code> slice</td></tr>
+<tr><td><code>edit_file</code></td><td><code>#{?} → rec</code></td><td><code>file</code>, <code>text</code>, <code>min</code>, <code>max?</code></td><td>insert at <code>min</code> (or replace <code>min..max</code>), and report</td></tr>
 </tbody>
 </table>
 <h3>bash (<code>/m/sys/inst/bash</code>)</h3>
-<p>The shell instruction — the function-call primitive: reach into the shell with <code>bash</code>, shape the result with
-metatron's data structures. <code>cmd</code> is the terminal command, evaluated with <code>bash -c</code>. <code>timeout</code> is an optional
-<code>time::T</code> (<code>millis::1000.0</code>, <code>second::1.0</code>, ...) with a 30-second default. The result is a <code>lst[str::T]</code>, one
-entry per stdout line; a non-zero exit is a <code>fail::T</code>.</p>
+<p>The function-call primitive: reach into the shell with <code>bash</code>, shape the result with
+metatron's data structures. <code>cmd</code> runs under <code>bash -c</code>, in the VM's working directory —
+in the docs build that is the metatron project root — and returns a <code>lst[str]</code>, one
+entry per stdout line. A non-zero exit is a <code>fail::T</code> that carries the process's stderr
+in its message. <code>timeout</code> takes a time type — <code>second::5.0</code>, <code>millis::1000.0</code> — or a
+bare int, which is seconds; the default is <code>second::20.0</code>.</p>
+<p>The signature is not a memory exercise; the inst carries its own doc:</p>
+<pre><code class="language-mtron">mtron&gt; *bash?docq
+==&gt;docs::[obj=&gt;bash?rng=lst[str]&amp;dom=#{?}(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},dom=&gt;'maybe an obj',rng=&gt;'a lst[str] of results',args=&gt;[cmd=&gt;&quot;the terminal command to evaluate (uses bash('-c',${cmd}) behind the scenes)&quot;,{?}timeout=&gt;&quot;&quot;&quot;a real number denoting timeout of the process (default: /m/math/time/second::20.0).
+   &quot;&quot;&quot;],desc=&gt;&quot;&quot;&quot;evaluate bash command. *important* the timeout argument takes a real not an int -- e.g. millis::1000.0 or second::1.0.
+   note that this field is optional, so when in doubt, just don't fill it out
+   &quot;&quot;&quot;,example=&gt;[&quot;&quot;&quot;bash('ls')                                           [-- return lst containing each file/dir as str::T --]
+   {&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;}.-&lt;[_ =&gt; _]==[_ =&gt; bash(_)]   [-- batch bash results indexed by cmd             --]
+   [&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;].mapp(-&lt;[_ =&gt; bash(_)]).sum() [-- same as above but with lst of cmds            --]
+   &quot;&quot;&quot;]]
+</code></pre>
 <pre><code class="language-mtron">mtron&gt; bash('ls')
 ==&gt;['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE','metatron.ide.mtron','mvnw','mvnw.cmd','node_modules','pom.xml','README.md','RELEASE.md','REVIEW-FULL.md','REVIEW-FULL.md.bak','REVIEW-METATRON.md','src','target']
-mtron&gt; bash(cmd=&gt;'whoami', timeout=&gt;second::5.0)
-==&gt;['killswitch']
+mtron&gt; bash(cmd=&gt;'whoami')
+==&gt;['ubuntu']
+mtron&gt; bash('df -h')
+==&gt;['Filesystem      Size  Used Avail Use% Mounted on','overlay         916G  496G  374G  58% /','tmpfs            64M     0   64M   0% /dev','shm              64M     0   64M   0% /dev/shm','/dev/nvme1n1p2  916G  496G  374G  58% /work','tmpfs            31G     0   31G   0% /proc/acpi','tmpfs            31G     0   31G   0% /proc/asound','tmpfs            31G     0   31G   0% /proc/scsi','tmpfs            31G     0   31G   0% /sys/devices/virtual/powercap','tmpfs            31G     0   31G   0% /sys/firmware']
 </code></pre>
-<p>Batch over a rec (indexed) or a lst (flat):</p>
-<pre><code class="language-mtron">mtron&gt; {&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;}.-&lt;[_ =&gt; _]==[_ =&gt; bash(_)]   [-- rec of cmds =&gt; rec of result lsts --]
+<p>A timeout and a failed exit are both fails, and both are inspectable:</p>
+<pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
+==&gt;fail::[inst apply failure: org.buildobjects.process.TimeoutException: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/78
+mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
+==&gt;fail::[inst apply failure: org.buildobjects.process.ExternalProcessFailureException: External process `bash` terminated with unexpected exit status 2 after 3ms:
+     $ bash -c 'ls /no/such/directory'
+     STDERR: ls: cannot access '/no/such/directory': No such file or directory
+    (at /m/sys/inst/bash@0) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 3ms:
+     $ bash -c 'ls /no/such/directory'
+     STDERR: ls: cannot access '/no/such/directory': No such file or directory
+    [ProcBuilder&lt;228&gt;]]@/sys/fail/82
+</code></pre>
+<h4>batch</h4>
+<p>A rec of commands maps to a rec of results, indexed by command; a lst of commands takes
+the same <code>==</code> projection:</p>
+<pre><code class="language-mtron">mtron&gt; {&quot;ls&quot;, &quot;whoami&quot;}.-&lt;[_ =&gt; _]==[_ =&gt; bash(_)]   [-- rec of cmds =&gt; rec of result lsts --]
 ==&gt;['ls'=&gt;['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE','metatron.ide.mtron','mvnw','mvnw.cmd','node_modules','pom.xml','README.md','RELEASE.md','REVIEW-FULL.md','REVIEW-FULL.md.bak','REVIEW-METATRON.md','src','target']]
-==&gt;['whoami'=&gt;['killswitch']]
-==&gt;['df -h'=&gt;['Filesystem             Size  Used Avail Use% Mounted on','tmpfs                  6.1G  6.3M  6.1G   1% /run','efivarfs               128K   42K   82K  34% /sys/firmware/efi/efivars','/dev/nvme1n1p2         916G  501G  369G  58% /','tmpfs                   31G  222M   31G   1% /dev/shm','tmpfs                  5.0M   20K  5.0M   1% /run/lock','tmpfs                   31G     0   31G   0% /run/qemu','/dev/nvme1n1p1         511M  6.2M  505M   2% /boot/efi','tmpfs                  6.1G  252K  6.1G   1% /run/user/1000','/dev/nvme0n1p2         932G  240G  692G  26% /media/hdd0','//192.168.1.72/beast1  1.8T  1.7T  145G  93% /srv/beast/hdd1']]
-mtron&gt; [&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;].mapp(-&lt;[_ =&gt; bash(_)]).sum() [-- flatten to one lst --]
-==&gt;fail::[lhs range does not match inst domain: fail::T =&gt; lst{*}::T [sum?rng=lst&amp;dom=lst{*}(){&lt;j&gt;}@&lt;2&gt;]]@/sys/fail/1862
+==&gt;['whoami'=&gt;['ubuntu']]
+mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum()       [-- lst of cmds =&gt; one flat lst --]
+==&gt;['AGENTS.md','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE','metatron.ide.mtron','mvnw','mvnw.cmd','node_modules','pom.xml','README.md','RELEASE.md','REVIEW-FULL.md','REVIEW-FULL.md.bak','REVIEW-METATRON.md','src','target','ubuntu']
 </code></pre>
-<p>Pipe a follow-up command over each result — <code>&gt;&gt;</code> drains the list, <code>${_}</code> binds the current element; <code>.mapp</code>
-maps explicitly (and, with a lambda, indexes by the current element):</p>
-<pre><code class="language-mtron">mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat -c 'U' ${_}&quot;)            [-- drain: owners coalesce to a multiset --]
-==&gt;{22}['U']
-mtron&gt; bash('ls').mapp(bash(&quot;stat -c 'U' ${_}&quot;))         [-- map: one result lst per file --]
-==&gt;fail::[unable to locate inst-f of mapp(bash(&quot;stat -c 'U' ${_}&quot;))@&lt;1&gt;]@/sys/fail/1890
-mtron&gt; bash('ls').mapp(-&lt;[_=&gt;bash(&quot;stat -c 'U' ${_}&quot;)])  [-- indexed map: file =&gt; owner --]
-==&gt;fail::[unable to locate inst-f of mapp(split([id()=&gt;bash(&quot;stat -c 'U' ${_}&quot;)]))@&lt;1&gt;]@/sys/fail/1894
+<p><code>==</code> is a <strong>select</strong> — one branch per slot of the poly, the rec's value the projection
+applied to each. The glyphs are the actions, and the sugar says so in plain sight:</p>
+<pre><code class="language-mtron">mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum().explain()
+==&gt;&quot;&quot;&quot;
+    op      dom          rng      args                f    desc      c_dom  c_rng 
+    start   noobj{0}::T  lst::T   ['ls','whoami']     &lt;j&gt;  initial   {0}    {1}   
+    select  lst::T       lst::T   [id()=&gt;bash(id())]  &lt;j&gt;  mapper    {1}    {1}   
+    rshift  lst::T       #{*}::T  noobj               &lt;j&gt;  standard  {1}    {*}   
+    sum     #{*}::T      #::T                         &lt;?&gt;  reducer   {*}    {1}   
+   &quot;&quot;&quot;
+</code></pre>
+<h4>pipe over the results</h4>
+<p><code>&gt;&gt;</code> moves right along the data — one step per element; <code>${_}</code> binds the current one.
+The projection can do the work: first stat line of each entry, nothing else:</p>
+<pre><code class="language-mtron">mtron&gt; bash('ls')==[_ =&gt; bash(&quot;stat ${_}&quot;)&gt;&gt;0]          [-- each entry =&gt; its `File:` line --]
+==&gt;['  File: AGENTS.md','  File: bin','  File: boot','  File: conf','  File: CONTRIBUTING.md','  File: dist','  File: docs','  File: dsh-plugins','  File: language.properties','  File: LICENSE','  File: metatron.ide.mtron','  File: mvnw','  File: mvnw.cmd','  File: node_modules','  File: pom.xml','  File: README.md','  File: RELEASE.md','  File: REVIEW-FULL.md','  File: REVIEW-FULL.md.bak','  File: REVIEW-METATRON.md','  File: src','  File: target']
+mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full stat per entry --]
+==&gt;['  File: AGENTS.md','  Size: 34192     	Blocks: 72         IO Block: 4096   regular file','Device: 259,3	Inode: 26348579    Links: 1','Access: (0664/-rw-rw-r--)  Uid: ( 1000/  ubuntu)   Gid: ( 1000/  ubuntu)','Access: 2026-09-25 19:17:42.070049402 +0000','Modify: 2026-09-24 18:53:23.043502578 +0000','Change: 2026-09-24 18:53:23.044502554 +0000',' Birth: 2026-09-24 18:53:23.043502578 +0000']
+==&gt;['  File: bin','  Size: 4096      	Blocks: 8          IO Block: 4096   directory','Device: 259,3	Inode: 22826424    Links: 5','Access: (0775/drwxrwxr-x)  Uid: ( 1000/  ubuntu)   Gid: ( 1000/  ubuntu)','Access: 2026-09-25 00:07:43.360888917 +0000','Modify: 2026-09-20 22:31:57.121101695 +0000','Change: 2026-09-20 22:31:57.121101695 +0000',' Birth: 2025-11-08 21:38:11.425442859 +0000']
+==&gt;['  File: boot','  Size: 4096      	Blocks: 8          IO Block: 4096   directory','Device: 259,3	Inode: 28469828    Links: 4','Access: (0775/drwxrwxr-x)  Uid: ( 1000/  ubuntu)   Gid: ( 1000/  ubuntu)','Access: 2026-09-25 17:46:46.398082694 +0000','Modify: 2026-09-14 02:30:49.310909041 +0000','Change: 2026-09-14 02:30:49.310909041 +0000',' Birth: 2026-01-16 18:53:47.513549189 +0000']
+==&gt;['  File: conf','  Size: 4096      	Blocks: 8          IO Block: 4096   directory','Device: 259,3	Inode: 23107074    Links: 3','Access: (0775/drwxrwxr-x)  Uid: ( 1000/  ubuntu)   Gid: ( 1000/  ubuntu)','Access: 2026-09-25 17:46:46.399082679 +0000','Modify: 2026-09-14 05:55:17.159928081 +0000','Change: 2026-09-14 05:55:17.159928081 +0000',' Birth: 2026-05-04 22:27:26.799073113 +0000']
+==&gt;['  File: CONTRIBUTING.md','  Size: 6984      	Blocks: 16         IO Block: 4096   regular file','Device: 259,3	Inode: 22879108    Links: 1','Access: (0664/-rw-rw-r--)  Uid: ( 1000/  ubuntu)   Gid: ( 1000/  ubuntu)','Access: 2026-09-24 18:43:26.827307490 +0000','Modify: 2026-07-29 14:27:08.684000000 +0000','Change: 2026-08-19 19:14:16.914365198 +0000',' Birth: 2026-06-05 04:49:54.746480453 +0000']
+   ...
+</code></pre>
+<h4>a shape of its own</h4>
+<p><code>bash</code> supplies the functions; metatron supplies the shape. Each top-level entry's
+<code>Size</code>, extracted and typed <code>bB::T</code>, then converted to <code>kB::T</code> — the unit system
+converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du</code>:</p>
+<pre><code class="language-mtron">mtron&gt; bash('ls')==[_ =&gt; bash('stat ${_} | sed -n &quot;s/.*Size: \([0-9]*\).*/\1/p&quot;')&gt;&gt;0.as?int&lt;=str(int::T).as(bB::T)]
+==&gt;[bB::34192.0,bB::4096.0,bB::4096.0,bB::4096.0,bB::6984.0,bB::4096.0,bB::4096.0,bB::4096.0,bB::7304.0,bB::34523.0,bB::107.0,bB::11790.0,bB::8481.0,bB::4096.0,bB::50823.0,bB::150.0,bB::2624.0,bB::76171.0,bB::66247.0,bB::16576.0,bB::4096.0,bB::4096.0]
+</code></pre>
+<p>Unit values test against each other's units:</p>
+<pre><code class="language-mtron">mtron&gt; bB::34192.0.gt(kB::30.0)
+==&gt;true
+</code></pre>
+<p>And they filter a lst by the same predicate — the branches that fail are dropped:</p>
+<pre><code class="language-mtron">mtron&gt; [bB::34192.0, bB::100.0]==[_ =&gt; ?&gt;kB::30.0]==[_ =&gt; else(none)]
+==&gt;[bB::34192.0]
 </code></pre>
 <h4>security modulators (q-params)</h4>
-<p><code>bash</code> is hardened at the <em>instruction</em> level, not the call site. <code>allow</code>/<code>reject</code>/<code>env</code>/<code>dir</code> attach as query
-parameters on the tid, so a tool registration bakes the policy in once — <code>!*bash?reject=['\brm\b']</code> — rather
-than trusting the caller.</p>
+<p><code>bash</code> is hardened at the <strong>instruction</strong>, not the call site: <code>allow</code>, <code>reject</code>,
+<code>env</code>, and <code>dir</code> attach as query parameters on the inst's own tid — a policy baked in
+once rather than negotiated per call. Query parameters are metatron's way of
+annotating an inst at its tid; <code>?*</code> is the door, and these are the ones agents meet
+first.</p>
 <table>
 <thead>
 <tr><th>q-param</th><th>type</th><th>semantics</th></tr>
 </thead>
 <tbody>
-<tr><td><code>allow</code></td><td><code>lst[str::T]</code></td><td>whitelist regexes, matched whole-command (<code>matches()</code>)</td></tr>
-<tr><td><code>reject</code></td><td><code>lst[str::T]</code></td><td>blacklist regexes, matched anywhere (<code>find()</code>)</td></tr>
-<tr><td><code>env</code></td><td><code>rec[uri=&gt;str]</code></td><td>environment vars injected into the process</td></tr>
-<tr><td><code>dir</code></td><td><code>str</code></td><td>working directory of the process</td></tr>
+<tr><td><code>allow</code></td><td><code>lst[str]</code></td><td>whitelist regexes, matched whole-command (<code>matches()</code>)</td></tr>
+<tr><td><code>reject</code></td><td><code>lst[str]</code></td><td>blacklist regexes, matched anywhere (<code>find()</code>)</td></tr>
+<tr><td><code>env</code></td><td><code>rec[str=&gt;str]</code></td><td>environment variables injected into the process</td></tr>
+<tr><td><code>dir</code></td><td><code>str</code></td><td>the process's working directory</td></tr>
 </tbody>
 </table>
-<p><code>allow</code>, when non-empty, requires the command to match at least one pattern; <code>reject</code> fails when any pattern
-matches anywhere. Both apply before the process spawns.</p>
-<pre><code class="language-mtron">!*bash?reject=['\brm\b']      [-- a bash that refuses rm --]
-!*bash?env=[USER=&gt;'metatron'] [-- a bash with a fixed env --]
+<p>Each guard fails before the process spawns, and the failure names the pattern that
+fired:</p>
+<pre><code class="language-mtron">mtron&gt; bash?reject=['\brm\b'](&quot;rm -rf /tmp/never-created-here&quot;)  [-- the policy, not the file system, stops it --]
+==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/910
+mtron&gt; bash?allow=['ls'](&quot;whoami&quot;)                                [-- allow is whole-command: `whoami` is not `ls` --]
+==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/914
 </code></pre>
-<h4>worked example — bash + the graph</h4>
-<p>The split in one line: <code>bash</code> supplies the function (<code>ls</code>, <code>stat</code>), metatron the shape — find the <code>Size</code> line,
-regex out its byte count, type it <code>bB::T</code>, and keep the files over 30 kB. The unit types auto-convert, so <code>bB</code>
-compares against <code>kB</code> directly (no <code>awk</code>, no <code>grep</code>, no <code>du</code>).</p>
-<pre><code class="language-mtron">bash('ls').mapp(-&lt;[_=&gt;bash(&quot;stat ${_}&quot;)]).&gt;&gt;.==[_=&gt; &gt;&gt;.has(&quot;Size&quot;).regex('\s*(\d+)')&gt;&gt;&lt;0/0&gt;.as?int&lt;=str(int::T).as(bB::T)]==[_=&gt;?&gt;kB::30.0]
+<p>The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the process:</p>
+<pre><code class="language-mtron">mtron&gt; bash?allow=['ls .+']('ls AGENTS.md')
+==&gt;['AGENTS.md']
+mtron&gt; bash?env=[CI =&gt; 'docs']('echo CI=$CI')
+==&gt;['CI=docs']
 </code></pre>
 <h3>sleep / stdout / stdin</h3>
-<pre><code class="language-mtron">sleep(second::1.0)   [-- pause, pass lhs through --]
-stdout('hello')      [-- print to the terminal, pass lhs through --]
-stdin()              [-- block for one line, emit it as a str --]
+<pre><code class="language-mtron">mtron&gt; sleep(second::1.0)                       [-- one second, then lhs passes through --]
+mtron&gt; stdout(&quot;the sleep above took one second&quot;)
 </code></pre>
-<h3>mounted state</h3>
-<p>Two recs are mounted under <code>/sys</code> at boot — not instructions, but read like any other space:</p>
-<ul>
-<li><strong><code>/sys/env</code></strong> — the process environment, one <code>KEY =&gt; str</code> per variable.</li>
-<li><strong><code>/sys/thread</code></strong> — the thread registry, one <code>id =&gt; thread</code> per thread, each documented via <code>?docq</code>.</li>
-</ul>
-<pre><code class="language-mtron">*/sys/env              [-- the environment as a rec --]
-*/sys/env/HOME         [-- one variable --]
+<p><code>stdin()</code> blocks for one line of terminal input. In the headless docs build there is
+no input to take, so it is shown rather than run:</p>
+<pre><code class="language-mtron">stdin()    [-- block for one line, emit it as str::T --]
 </code></pre>
-<pre><code class="language-mtron">mtron&gt; */sys/thread/+.count()               [-- number of threads        --]
-==&gt;14
-mtron&gt; */sys/thread/+.=?=[state=&gt;run]       [-- number of active threads --]
-==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '=?=[state=&gt;run]'
-mtron&gt; */sys/thread/+?docq                  [-- thread documentation     --]
-==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},source=&gt;!*/sys/thread/main,state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/688?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/e6c46929,desc=&gt;'metatron-thread']
-==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},start=&gt;noobj,state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/47/48/261?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/main,desc=&gt;'this root thread waits till all child threads are complete and then releases a latch to initiate metatron shutdown procedure']
-==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/679?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/95f054eb,desc=&gt;'metatron-thread']
-==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/699?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/1f48b4e0,desc=&gt;'metatron-thread']
-==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/693?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/9d8e346b,desc=&gt;'metatron-thread']
-==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/668?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/62eeaa16,desc=&gt;'metatron-thread']
-==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/691?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/a61703a2,desc=&gt;'metatron-thread']
-==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},source=&gt;!*/sys/thread/main,state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/695?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/208f7b1c,desc=&gt;'metatron-thread']
-==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/697?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/1e6fa8e6,desc=&gt;'metatron-thread']
-==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},source=&gt;!*/sys/thread/main,state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/677?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/a8668665,desc=&gt;'metatron-thread']
-==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},source=&gt;!*/sys/thread/main,state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/650?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/d1b68533,desc=&gt;'metatron-thread']
-==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/681?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/f978cc81,desc=&gt;'metatron-thread']
-==&gt;docs::[obj=&gt;core::[code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},state=&gt;stop,time=&gt;datetime::&lt;//2026.09:25/06/48/15/670?tz=-0600&gt;,runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},result=&gt;noobj]@/sys/thread/a37def8e,desc=&gt;'metatron-thread']
+<h3>the registry under /sys</h3>
+<p>One read each: the environment, the thread count, and the executor's own summary —
+<code>sys_stat</code> answers with running vs stopped, no introspection ceremony:</p>
+<pre><code class="language-mtron">mtron&gt; */sys/env/HOME
+==&gt;'/work'
+mtron&gt; */sys/thread/+.count()
+==&gt;2
+mtron&gt; sys_stat()
+==&gt;[run=&gt;1,stop=&gt;0]
 </code></pre>
-<h2>file system space (fsspace::T)</h2>
-<p>An <code>fsspace::T</code> mounts a subset of a file system into the metatron graph. Files are addressed via the space's
-scheme and path prefix.</p>
-<p><strong>IMPORTANT</strong>: Every uri can be wrapped in angle brackets <code>&lt; &gt;</code>, but it is only required for those uris that have <code>.</code>
-(periods), <code></code> (spaces), and/or special characters such as <code>~</code> (tildes) in them. For instance, <code>/a/b/c</code> can be written
-as is, but <code>&lt;/a/b/c.txt&gt;</code> requires angle brackets.</p>
-<h3>Configuration</h3>
-<p>A typical <code>fsspace</code> definition:</p>
+<h2>file system space (<code>fsspace::T</code>)</h2>
+<p>An <code>fsspace::T</code> mounts a directory into the metatron graph. A file's uri is
+<code>&lt;scheme:path&gt;</code>; a read returns the file's content <strong>typed by its MIME</strong> — the type is
+a predicate on the content.</p>
+<p><strong>IMPORTANT</strong>: any uri may be wrapped in <code>&lt; &gt;</code>, but the brackets are <em>required</em> when
+the uri carries a <code>.</code>, a space, a <code>~</code>, or a <code>?</code>. <code>/a/b/c</code> writes bare;
+<code>&lt;mfs:pom.xml&gt;</code> and <code>&lt;mfs:AGENTS.md?lineq=1-3&gt;</code> must be bracketed.</p>
+<h3>the space these examples use</h3>
+<p>The examples read the live metatron project — this very tree — and never write to it.
+The route anchors on <code>&lt;.&gt;</code>, the cwd of the process, which in the docs build is the
+project root:</p>
 <pre><code class="language-mtron">mtron&gt; fsspace::[
          pattern =&gt; &lt;mfs:#&gt;,
          q       =&gt; [mimeq::[=&gt;], lineq::[=&gt;]],
-         route   =&gt; [mfs: =&gt; &lt;~/software/metatron&gt;]]@/sys/space/fs/mfs
-==&gt;fsspace::[pattern=&gt;mfs:#,q=&gt;[mimeq::[pattern=&gt;mimeq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}],lineq::[pattern=&gt;lineq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}]],route=&gt;[mfs:=&gt;/home/killswitch/software/metatron]]@/sys/space/fs/mfs
+         route   =&gt; [mfs: =&gt; &lt;.&gt;]]@/sys/space/mfs
+==&gt;fsspace::[pattern=&gt;mfs:#,q=&gt;[mimeq::[pattern=&gt;mimeq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}],lineq::[pattern=&gt;lineq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}]],route=&gt;[mfs:=&gt;&lt;&gt;]]@/sys/space/mfs
 </code></pre>
+<p>The three keys: <code>pattern</code> is the uri space this instance owns (<code>mfs:#</code>, <code>#</code> the
+recursive wildcard); <code>route</code> maps the <code>mfs:</code> prefix onto the path the files live at;
+and <code>q</code> is the space's <strong>query processors</strong> — <code>mimeq</code> tags and structurally parses
+reads, <code>lineq</code> addresses lines.</p>
+<p>Writes go to a second mount, a scratch directory the docs build owns — made by
+<code>bash</code>, which is exactly the point of keeping the two halves of this doc in one
+conversation:</p>
+<pre><code class="language-mtron">mtron&gt; bash('mkdir -p /tmp/mtron-docs-scratch')
+==&gt;['']
+mtron&gt; fsspace::[
+         pattern =&gt; &lt;scratch:#&gt;,
+         q       =&gt; [lineq::[=&gt;]],
+         route   =&gt; [scratch: =&gt; /tmp/mtron-docs-scratch]]@/sys/space/scratch
+==&gt;fsspace::[pattern=&gt;scratch:#,q=&gt;[lineq::[pattern=&gt;lineq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}]],route=&gt;[scratch:=&gt;/tmp/mtron-docs-scratch]]@/sys/space/scratch
+</code></pre>
+<h3>typed reads</h3>
+<pre><code class="language-mtron">mtron&gt; *&lt;mfs:README.md&gt;.tid()          [-- markdown's mime --]
+==&gt;/m/web/mime/markdown
+mtron&gt; *&lt;mfs:pom.xml&gt;.tid()            [-- xml's mime --]
+==&gt;/m/web/mime/xml
+mtron&gt; *&lt;mfs:boot/docs.mtron&gt;.tid()    [-- a .mtron file reads as the code it is --]
+==&gt;/m/rec
+</code></pre>
+<p>Three content types, one <code>*</code> — the tid is the referent's claim, and <code>.tid()</code> is how
+it is read out. A <code>.mtron</code> file is not lines: it parses into the objs it declares, so
+its referent is a <code>rec::T</code>, not a <code>str::T</code>. The probe defaults a file with no
+extension to the same <code>application/x-mtron</code> type — which is a file named <code>lines</code> an
+invitation to be parsed as code, and a <code>lines.txt</code> a note.</p>
+<h3><code>?mimeq</code> — tagging, and the structural read</h3>
+<p><code>?mimeq</code> is a post-read query processor: it tags the string with the MIME's tid — the
+tag <em>is</em> the predicate validation — and, for <code>application/x-mtron</code>, parses the content
+into its structural form. Where in doubt, <code>?docq</code> and <code>.explain()</code> say what an inst
+is doing — the sugar is short precisely because it is legible once:</p>
+<pre><code class="language-mtron">mtron&gt; *&lt;mfs:README.md?mimeq=text/markdown&gt;                    [-- explicit tag, same referent typed --]
+...
+*&lt;mfs:boot/docs.mtron&gt;                   [-- the doc boot, read as its code --]
+==&gt;[space=&gt;/sys/space,web=&gt;[http/host=&gt;http://localhost:8777,ws/host=&gt;ws://localhost:8555],typer/stage=&gt;[inst_dom=&gt;true,inst_rng=&gt;true,type_ctor=&gt;true,obj_write=&gt;true,code_resolve=&gt;false],header=&gt;&quot;&quot;&quot;
+   _,.---._      _,.----.    ,-,--.
+   _,..---._   ,-.' , -  `.  .' .' -   \ ,-.'-  _\
+   /==/,   -  \ /==/_,  ,  - \/==/  ,  ,-'/==/_ ,_.'
+   |==|   _   _\==|   .=.     |==|-   |  .\==\  \
+   |==|  .=.   |==|_ : ;=:  - |==|_   `-' \\==\ -\
+   |==|,|   | -|==| , '='     |==|   _  , |_\==\ ,\
+   |==|  '='   /\==\ -    ,_ /\==\.       /==/\/ _ | .=.
+   |==|-,   _`/  '.='. -   .'  `-.`.___.-'\==\ - , /:=; :
+   `-.`.____.'     `--`--''                `--`---'  `=`
+   ...
+</code></pre>
+<h3>walking the tree</h3>
+<p>Wildcards are space-side. <code>+</code> is one segment, <code>#</code> is the recursion:</p>
+<pre><code class="language-mtron">mtron&gt; *&lt;mfs:src/main/java/+/&gt;                  [-- the child of src/main/java --]
+==&gt;mfs:src/main/java/studio=&gt;mfs:src/main/java/studio
+mtron&gt; *&lt;mfs:docs/skills/mtron/+/&gt;  [-- this doc's siblings, with their content --]
+...
+</code></pre>
+<h3>text work on the tree</h3>
+<p>A file is a string and a string splits: <code>-&lt;</code> divides on the separator, and the rec
+decides which pieces survive — here, everything before line 10:</p>
+<pre><code class="language-mtron">mtron&gt; *&lt;mfs:AGENTS.md&gt;.-&lt;'\n'==[?&gt;10 =&gt; none, _ =&gt; _]
+==&gt;['# metatron — AGENTS.md','','A distributed data-oriented computing language and virtual machine built in Java. Two key terms:','','- **metatron** (lowercase): the runtime system / VM environment','- **mtron** (lowercase): the functional programming language (like Java to JVM)','','---','','## Strict Rules','']
+</code></pre>
+<h3>line addressing — on the scratch mount</h3>
+<p>The scratch mount is where the doc writes. <code>bash</code> authors the file in the shell's own
+voice — and names it <code>lines.txt</code>, because the probe reads an extension-less file as
+<code>application/x-mtron</code> code, while a <code>.txt</code> name is what makes prose prose. The space
+half then addresses the same file by line: <code>N</code> or <code>A-B</code> for a slice, <code>N+</code> to insert
+before line N, <code>+</code> to append; a read takes the slice, a write replaces it:</p>
+<pre><code class="language-mtron">mtron&gt; bash('printf &quot;the metatron docs pipeline\nevaluates this block\nand inlines the result&quot; &gt; /tmp/mtron-docs-scratch/lines.txt')
+==&gt;['']
+mtron&gt; *&lt;scratch:lines.txt?lineq=1&gt;                     [-- line two, zero-indexed --]
+==&gt;'evaluates this block'
+mtron&gt; &lt;scratch:lines.txt?lineq=1&gt; -&gt; &quot;rewrote line two&quot;  [-- replace --]
+==&gt;'rewrote line two'
+mtron&gt; *&lt;scratch:lines.txt&gt;                                  [-- the file after the write --]
+==&gt;&quot;&quot;&quot;the metatron docs pipeline
+   rewrote line two
+   and inlines the result&quot;&quot;&quot;
+</code></pre>
+<h3>the file family — <code>read_file</code>, <code>edit_file</code></h3>
+<p>The same lines, as instructions, when the shape of the answer matters. A uri with a
+dot in its name takes the angle brackets, even as an argument. <code>read_file</code> indexes its
+lines:</p>
+<pre><code class="language-mtron">mtron&gt; read_file(file=&gt;&lt;scratch:lines.txt&gt;, min=&gt;0, max=&gt;2)
+==&gt;[[0,'the metatron docs pipeline'],[1,'rewrote line two']]
+</code></pre>
+<p><code>edit_file</code> states the write as arguments — insert at <code>min</code>, replace the <code>min..max</code>
+span when <code>max</code> is given — and answers with a status report:</p>
+<pre><code class="language-mtron">mtron&gt; edit_file(file=&gt;&lt;scratch:lines.txt&gt;, text=&gt;'added by edit_file', min=&gt;1, max=&gt;1)
+==&gt;[status=&gt;success,obj=&gt;!*&lt;scratch:lines.txt&gt;,start_line_count=&gt;5,inserted_line_count=&gt;1,end_line_count=&gt;5]
+</code></pre>
+<p>A rec written as data and read back — the round trip closes the scratch story:</p>
+<pre><code class="language-mtron">mtron&gt; scratch:meta -&gt; [doc =&gt; 'sys-instset', revision=&gt;2]
+==&gt;[doc=&gt;'sys-instset',revision=&gt;2]
+mtron&gt; *scratch:meta
+==&gt;[doc=&gt;'sys-instset',revision=&gt;2]
+</code></pre>
+<h3>a file as an instruction</h3>
+<p>A file that is executable is read back as an <code>inst::T</code> — the space exposes the call,
+and the type carries where the space stood when it served it. <code>bin/metatron</code> shows
+the shape; it is read here, never run:</p>
+<pre><code class="language-mtron">mtron&gt; *&lt;mfs:bin/metatron&gt;
+...
+mtron&gt; *&lt;mfs:bin/metatron&gt;.tid()
+==&gt;/sys/space/mfs/exec/metatron?rng=#{*}&amp;dom=#{?}
+</code></pre>
+<h3>taking the mounts down</h3>
+<p>The doc leaves the graph as it found it — the two mounts it added are removed, and
+the scratch directory goes with <code>bash</code>, the tool that made it:</p>
+<pre><code class="language-mtron">mtron&gt; /sys/space/scratch -&gt; noobj
+mtron&gt; /sys/space/mfs     -&gt; noobj
+mtron&gt; bash('rm -rf /tmp/mtron-docs-scratch')
+==&gt;['']
+</code></pre>
+<h3>see also</h3>
 <ul>
-<li><strong><code>pattern</code></strong> — the URI pattern this space handles (<code>mfs:#</code> matches <code>&lt;mfs:file.txt&gt;</code>, <code>&lt;mfs:sub/dir/file.md&gt;</code>,
-etc.)</li>
-<li><strong><code>route</code></strong> — maps the pattern prefix (<code>mfs:</code>) to a filesystem path (<code>&lt;~/software/metatron&gt;</code>)</li>
-<li><strong><code>q</code></strong> — query processors: <code>mimeq</code> for MIME type tagging/conversion, <code>lineq</code> for line-level reads/writes</li>
+<li><a href="type-system-mtron.html">mtron type system</a> — vid/tid, coefficients, <code>.as(type::T)</code>.</li>
+<li><a href="language-reference-mtron.html">mtron language reference</a> — <code>&gt;&gt;</code>, the <code>?</code>-family filters, select (<code>==</code>), split (<code>-&lt;</code>), <code>-&gt;</code> write.</li>
+<li><a href="web-instset-mtron.html">web instruction set</a> — the route tables an <code>fsspace</code> mount hangs behind.</li>
+<li><a href="tble-instset-mtron.html">tble instruction set</a> — the same space protocol, on a database.</li>
 </ul>
-<h3>mime type handling</h3>
-<p><code>fsspace::T</code> detects a file's MIME type from its extension (and optionally the OS content probe) and returns a <strong>typed
-string</strong> — a refined <code>str::T</code> such as <code>html::T</code>, <code>json::T</code>, <code>markdown::T</code>, etc.</p>
-<pre><code>file.html  →  html::&quot;&lt;html&gt;...&lt;/html&gt;&quot;     (predicate-validated HTML string)
-file.json  →  json::&quot;{\&quot;key\&quot;:\&quot;value\&quot;}&quot;  (predicate-validated JSON string)
-file.txt   →  str::&quot;plain text&quot;            (bare string, no special type)
-file.md    →  markdown::&quot;# Title&quot;          (predicate-validated markdown string)
-</code></pre>
-<p>The MIME type acts as a <strong>predicate</strong> on the string content. For example, <code>html::T</code>'s predicate validates that the
-string is valid HTML. The structural representation (<code>rec::T</code> DOM tree) is opt-in via <code>?mimeq=application/x-mtron</code> or
-<code>.as(rec::T)</code>.</p>
-<h4>mime-to-tid mapping</h4>
-<table>
-<thead>
-<tr><th>Extension</th><th>MIME Type</th><th>TID</th></tr>
-</thead>
-<tbody>
-<tr><td><code>.html</code>, <code>.htm</code></td><td><code>text/html</code></td><td><code>/m/web/mime/html</code></td></tr>
-<tr><td><code>.json</code></td><td><code>application/json</code></td><td><code>/m/web/mime/json</code></td></tr>
-<tr><td><code>.xml</code></td><td><code>application/xml</code></td><td><code>/m/web/mime/xml</code></td></tr>
-<tr><td><code>.md</code></td><td><code>text/markdown</code></td><td><code>/m/web/mime/markdown</code></td></tr>
-<tr><td><code>.css</code></td><td><code>text/css</code></td><td><code>/m/web/mime/css</code></td></tr>
-<tr><td><code>.java</code></td><td><code>text/x-java</code></td><td><code>/m/web/mime/java</code></td></tr>
-<tr><td><code>.yaml</code>, <code>.yml</code></td><td><code>application/yaml</code></td><td><code>/m/web/mime/yaml</code></td></tr>
-<tr><td><code>.mtron</code></td><td><code>application/x-mtron</code></td><td><code>/m/rec</code></td></tr>
-<tr><td><code>.txt</code></td><td><code>text/plain</code></td><td><code>/m/str</code></td></tr>
-<tr><td><em>other</em></td><td><code>text/plain</code> / probe</td><td><code>/m/str</code></td></tr>
-</tbody>
-</table>
-<h4>the <code>mimeq</code> query processor</h4>
-<p>The <code>?mimeq=</code> query parameter on a file URI controls what the space returns:</p>
-<pre><code class="language-mtron">mtron&gt; [-- default: typed string (predicate-validated) --]
-mtron&gt; *&lt;mfs:docs/website/index.html&gt;
-==&gt;html::&quot;&quot;&quot;&lt;!--
-     ~ Metatron: A Distributed Computing Language and Virtual Machine
-     ~  Copyright (C) 2025- PhaseShift Studio, LLC
-     ~  
-     ~ This program is free software: you can redistribute it and/or modify
-     ~ it under the terms of the GNU Affero General Public License as published by
-     ~ the Free Software Foundation, either version 3 of the License, or
-     ~ (at your option) any later version.
-     ~  
-     ~ This program is distributed in the hope that it will be useful,
-     ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-     ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-     ~ GNU Affero General Public License for more details.
-     ~
-     ~ You should have received a copy of the GNU Affero General Public License
-     ~ along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
-     --&gt;
-   
-   &lt;!DOCTYPE html&gt;
-   &lt;html lang=&quot;en&quot;&gt;
-   ...
-mtron&gt; [-- explicit type tag (same as default for .html files) --]
-mtron&gt; *&lt;mfs:docs/website/index.html?mimeq=text/html&gt;
-==&gt;html::&quot;&quot;&quot;&lt;!--
-     ~ Metatron: A Distributed Computing Language and Virtual Machine
-     ~  Copyright (C) 2025- PhaseShift Studio, LLC
-     ~  
-     ~ This program is free software: you can redistribute it and/or modify
-     ~ it under the terms of the GNU Affero General Public License as published by
-     ~ the Free Software Foundation, either version 3 of the License, or
-     ~ (at your option) any later version.
-     ~  
-     ~ This program is distributed in the hope that it will be useful,
-     ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-     ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-     ~ GNU Affero General Public License for more details.
-     ~
-     ~ You should have received a copy of the GNU Affero General Public License
-     ~ along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
-     --&gt;
-   
-   &lt;!DOCTYPE html&gt;
-   &lt;html lang=&quot;en&quot;&gt;
-   ...
-mtron&gt; [-- structural parse via application/x-mtron --]
-mtron&gt; *&lt;mfs:docs/website/index.html?mimeq=application/x-mtron&gt;
-==&gt;[html=&gt;[head=&gt;[title=&gt;'metatron',out=&gt;[[tag=&gt;meta,charset=&gt;'utf-8'],[tag=&gt;meta,name=&gt;'viewport',content=&gt;'width=device-width, initial-scale=1.0'],[tag=&gt;meta,name=&gt;'keywords',content=&gt;'metatron programming data graph database llm'],[tag=&gt;meta,name=&gt;'description',content=&gt;'Next Generation Data Technologies'],[tag=&gt;meta,name=&gt;'theme-color',content=&gt;'#ffffff'],[tag=&gt;link,rel=&gt;'apple-touch-icon',sizes=&gt;'114x114',href=&gt;&lt;images/apple-touch-icon.png&gt;],[tag=&gt;link,rel=&gt;'icon',type=&gt;'image/png',sizes=&gt;'32x32',href=&gt;&lt;images/favicon-32x32.png&gt;],[tag=&gt;link,rel=&gt;'icon',type=&gt;'image/png',sizes=&gt;'16x16',href=&gt;&lt;images/favicon-16x16.png&gt;],[tag=&gt;link,rel=&gt;'mask-icon',href=&gt;&lt;images/safari-pinned-tab.svg&gt;,color=&gt;'#5bbad5'],[tag=&gt;link,rel=&gt;'preconnect',href=&gt;&lt;https://fonts.googleapis.com&gt;],[tag=&gt;link,rel=&gt;'preconnect',href=&gt;&lt;https://fonts.gstatic.com&gt;,crossorigin=&gt;''],[tag=&gt;link,href=&gt;&lt;https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400;JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400;Oswald:wght@400;500;600;700&amp;display=swap&gt;,rel=&gt;'stylesheet'],[tag=&gt;link,href=&gt;&lt;https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css&gt;,rel=&gt;'stylesheet'],[tag=&gt;link,href=&gt;&lt;https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css&gt;,rel=&gt;'stylesheet'],[tag=&gt;link,href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,rel=&gt;'stylesheet'],[tag=&gt;link,href=&gt;&lt;css/bootstrap.min.css&gt;,rel=&gt;'stylesheet'],[tag=&gt;link,href=&gt;&lt;https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css&gt;,rel=&gt;'stylesheet'],[tag=&gt;script,src=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,src=&gt;&lt;highlight/highlight.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,src=&gt;&lt;https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,src=&gt;&lt;highlight/languages/mtron.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,src=&gt;&lt;highlight/languages/java.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,src=&gt;&lt;highlight/languages/bash.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,src=&gt;&lt;highlight/languages/sql.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,src=&gt;&lt;highlight/languages/json.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,src=&gt;&lt;https://code.jquery.com/jquery-3.4.1.min.js&gt;,type=&gt;'text/javascript'],[tag=&gt;script,async=&gt;'',src=&gt;&lt;https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js&gt;,type=&gt;'text/javascript'],[tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet'],[tag=&gt;style,data=&gt;&quot;&quot;&quot;
-           .hidden {
-               display: none;
-           }
-   
-           .switch {
-               border-width: 1px 1px 0 1px;
-               border-style: solid;
-               border-color: #7a2518;
-               display: inline-block;
-               border-radius: 4px 4px 0 0;
-           }
-   
-           .switch--item {
-               padding: 4px 14px;
-               font-size: 0.85rem;
-               background-color: #ffffff;
-               color: #7a2518;
-               display: inline-block;
-               cursor: pointer;
-   ...
-</code></pre>
-<p><code>mimeq</code> is implemented in <code>QCollection.mimeQ()</code> as a space-level <code>postRead</code> query processor. It:</p>
-<ol>
-<li><strong>Probes</strong> the content type from the object's existing TID (or falls back to URI/file extension if the TID is bare
-<code>STR_TID</code>)</li>
-<li><strong>Tags</strong> the string with the correct MIME TID — this triggers predicate validation (e.g., <code>html::T</code> validates the
-string is valid HTML)</li>
-<li><strong>Structural parse</strong> — if <code>?mimeq=application/x-mtron</code>, runs the content-type-specific serializer
-(<code>ObjHTMLSerializer</code> for HTML, <code>ObjJSONSerializer</code> for JSON, etc.) to produce the <code>rec::T</code> DOM tree</li>
-</ol>
-<h3>reading and writing files</h3>
-<h4>basic read/write</h4>
-<pre><code class="language-mtron">mtron&gt; [-- Read a file (returns typed string by default) --]
-mtron&gt; *&lt;mfs:README.md&gt;
-==&gt;markdown::&quot;&quot;&quot;# metatron
-   
-   &lt;a href=&quot;http://metatron.phaseshift.studio&quot;&gt;&lt;img src=&quot;http://metatron.phaseshift.studio/images/metatron-character.png&quot; width=&quot;200px&quot;&gt;&lt;/a&gt;
-   &quot;&quot;&quot;
-</code></pre>
-<pre><code class="language-mtron">[-- Write a string to a file --]
-&lt;mfs:README.md&gt; -&gt; &quot;## new content&quot;
-</code></pre>
-<h4>reading with structural parse</h4>
-<pre><code class="language-mtron">mtron&gt; [-- Read markdown as a rec::T structure --]
-mtron&gt; *&lt;mfs:README.md?mimeq=application/x-mtron&gt;
-==&gt;[type=&gt;doc,out=&gt;[[type=&gt;head,level=&gt;1,text=&gt;'metatron',out=&gt;[[type=&gt;text,content=&gt;'metatron']]],[type=&gt;p,text=&gt;&quot;&quot;&quot;&lt;a href=&quot;http://metatron.phaseshift.studio&quot;&gt;&lt;img src=&quot;http://metatron.phaseshift.studio/images/metatron-character.png&quot; width=&quot;200px&quot;&gt;&lt;/a&gt;
-   &quot;&quot;&quot;,out=&gt;[[type=&gt;html_inline,html=&gt;'&lt;a href=&quot;http://metatron.phaseshift.studio&quot;&gt;'],[type=&gt;html_inline,html=&gt;'&lt;img src=&quot;http://metatron.phaseshift.studio/images/metatron-character.png&quot; width=&quot;200px&quot;&gt;'],[type=&gt;html_inline,html=&gt;'&lt;/a&gt;']]]]]
-mtron&gt; [-- Read JSON, then walk into rec fields --]
-mtron&gt; *&lt;mfs:config.json?mimeq=application/x-mtron&gt;/database/host
-==&gt;/database/host
-</code></pre>
-<h4>binary files</h4>
-<p>Files without a recognized text MIME type are read as <code>bytes::T</code>. Executable files (with shebangs)
-are treated as <code>inst::T</code> and can be invoked directly:</p>
-<pre><code class="language-mtron">mtron&gt; *&lt;mfs:script.sh&gt;        [-- bytes::T if binary, str::T if text                    --]
-mtron&gt; &lt;mfs:script.sh&gt;()       [-- execute (shell scripts, via application/x-mtron exec) --]
-==&gt;fail::[unable to locate inst-f of mfs:script.sh()@&lt;0&gt;]@/sys/fail/1902
-</code></pre>
-<h3>pattern-based access</h3>
-<p>fsSpace supports wildcard patterns in reads:</p>
-<pre><code class="language-mtron">mtron&gt; [-- List all files in a directory --]
-mtron&gt; *&lt;mfs:+/&gt;
-==&gt;mfs:/LICENSE=&gt;fail::[parse error at line 1, col 4:
-     GNU AFFERO GENERAL PUBLIC LICENSE
-            ...
-        ^
-     could not parse at ' ' — unclosed single-quote — missing closing '''?]
-==&gt;mfs:/docs=&gt;mfs:/docs
-==&gt;&lt;mfs:/.agentbridge&gt;=&gt;&lt;mfs:/.agentbridge&gt;
-==&gt;&lt;mfs:/.gitignore&gt;=&gt;&quot;&quot;&quot;.*
-   *.sqlite
-   opencode.json
-   !.metatron/
-   # mvnw reads .mvn/wrapper/maven-wrapper.properties at runtime — it must ship
-   # in clones, but `.*` above swallows the whole .mvn/ dir. Re-include it.
-   !.mvn/
-   !.mvn/wrapper/
-   !.mvn/wrapper/maven-wrapper.properties
-   # `.*` above also swallows the docker build context and new GitHub workflows.
-   !.dockerignore
-   !.github/
-   !.github/workflows/
-   !.github/workflows/docker.yml
-   target/
-   node_modules/
-   .metatron.history
-   *.iml
-   /.venv/
-   __pycache__/
-   *.pyc
-   *.pyo
-   # Compiled class file
-   *.class
-   
-   benchmark/*.json
-   .open*
-   .worktrees
-   
-   # Log file
-   *.log
-   
-   # BlueJ files
-   *.ctxt
-   
-   # Mobile Tools for Java (J2ME)
-   .mtj.tmp/
-   
-   # Package Files #
-   *.jar
-   *.war
-   *.nar
-   *.ear
-   *.zip
-   *.tar.gz
-   *.rar
-   
-   # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-   hs_err_pid*
-   replay_pid*
-   
-   .ai/
-   &quot;&quot;&quot;
-==&gt;&lt;mfs:/.github&gt;=&gt;&lt;mfs:/.github&gt;
-==&gt;&lt;mfs:/.classpath&gt;=&gt;&quot;&quot;&quot;&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-   &lt;classpath&gt;
-   	&lt;classpathentry kind=&quot;src&quot; output=&quot;target/classes&quot; path=&quot;src/main/java&quot;&gt;
-   		&lt;attributes&gt;
-   			&lt;attribute name=&quot;optional&quot; value=&quot;true&quot;/&gt;
-   			&lt;attribute name=&quot;maven.pomderived&quot; value=&quot;true&quot;/&gt;
-   		&lt;/attributes&gt;
-   	&lt;/classpathentry&gt;
-   	&lt;classpathentry excluding=&quot;**&quot; kind=&quot;src&quot; output=&quot;target/classes&quot; path=&quot;src/main/resources&quot;&gt;
-   		&lt;attributes&gt;
-   			&lt;attribute name=&quot;maven.pomderived&quot; value=&quot;true&quot;/&gt;
-   			&lt;attribute name=&quot;optional&quot; value=&quot;true&quot;/&gt;
-   		&lt;/attributes&gt;
-   	&lt;/classpathentry&gt;
-   	&lt;classpathentry kind=&quot;src&quot; output=&quot;target/test-classes&quot; path=&quot;src/test/java&quot;&gt;
-   		&lt;attributes&gt;
-   			&lt;attribute name=&quot;optional&quot; value=&quot;true&quot;/&gt;
-   			&lt;attribute name=&quot;maven.pomderived&quot; value=&quot;true&quot;/&gt;
-   			&lt;attribute name=&quot;test&quot; value=&quot;true&quot;/&gt;
-   		&lt;/attributes&gt;
-   	&lt;/classpathentry&gt;
-   	&lt;classpathentry excluding=&quot;**&quot; kind=&quot;src&quot; output=&quot;target/test-classes&quot; path=&quot;src/test/resources&quot;&gt;
-   		&lt;attributes&gt;
-   			&lt;attribute name=&quot;maven.pomderived&quot; value=&quot;true&quot;/&gt;
-   			&lt;attribute name=&quot;test&quot; value=&quot;true&quot;/&gt;
-   			&lt;attribute name=&quot;optional&quot; value=&quot;true&quot;/&gt;
-   		&lt;/attributes&gt;
-   	&lt;/classpathentry&gt;
-   	&lt;classpathentry kind=&quot;con&quot; path=&quot;org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-21&quot;&gt;
-   		&lt;attributes&gt;
-   			&lt;attribute name=&quot;maven.pomderived&quot; value=&quot;true&quot;/&gt;
-   		&lt;/attributes&gt;
-   	&lt;/classpathentry&gt;
-   	&lt;classpathentry kind=&quot;con&quot; path=&quot;org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER&quot;&gt;
-   		&lt;attributes&gt;
-   			&lt;attribute name=&quot;maven.pomderived&quot; value=&quot;true&quot;/&gt;
-   		&lt;/attributes&gt;
-   	&lt;/classpathentry&gt;
-   	&lt;classpathentry kind=&quot;src&quot; path=&quot;target/generated-sources/annotations&quot;&gt;
-   ...
-mtron&gt; [-- Read all .txt files --]
-mtron&gt; *&lt;mfs:+/+&gt;.where([name =&gt; -&lt;'.'&gt;&gt;1.is('txt')])
-==&gt;fail::[inst apply failure: java.io.UncheckedIOException: java.nio.file.AccessDeniedException: /backends (at /m/inst/from@0) [UnixException&lt;90&gt;]][java.nio.file.AccessDeniedException: /backends [UnixException&lt;90&gt;]]@/sys/fail/2378
-</code></pre>
-<h3>Line-Level Editing with <code>lineq</code></h3>
-<p>The <code>lineq</code> query processor enables reading and editing specific line ranges within text files, useful for targeted
-edits without loading the entire file:</p>
-<pre><code class="language-mtron">mtron&gt; [-- Read lines 10-20 of a file --]
-mtron&gt; *&lt;mfs:src/main.java?lineq=10..20&gt;
-==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;10..20&quot; (at /m/inst/from@0) [NumberFormatException&lt;67&gt;]][For input string: &quot;10..20&quot; [NumberFormatException&lt;67&gt;]]@/sys/fail/2382
-mtron&gt; [-- Replace lines 5-10 with new content --]
-mtron&gt; &lt;mfs:src/main.java?lineq=5..10&gt; -&gt; &quot;&quot;&quot;
-         public void newMethod() {
-           // new implementation
-         }
-       &quot;&quot;&quot;
-==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;5..10&quot; (at /m/inst/ref@1) [NumberFormatException&lt;67&gt;]][For input string: &quot;5..10&quot; [NumberFormatException&lt;67&gt;]]@/sys/fail/2386
-</code></pre>
-<h4>boot configuration example</h4>
-<pre><code class="language-mtron">mtron&gt; fsspace::[
-         pattern =&gt; &lt;local:#&gt;,
-         q       =&gt; [mimeq::[=&gt;], lineq::[=&gt;]],
-         route   =&gt; [local: =&gt; ~/src]]@/sys/space/fs/src
-==&gt;fsspace::[pattern=&gt;local:#,q=&gt;[mimeq::[pattern=&gt;mimeq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}],lineq::[pattern=&gt;lineq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}]],route=&gt;[local:=&gt;/m/inst/thread(/src)]]@/sys/space/fs/src
-mtron&gt; [-- Then use in expressions: --]
-mtron&gt; *&lt;local:Main.java?lineq=1..50&gt;
-==&gt;fail::[inst apply failure: java.lang.NumberFormatException: For input string: &quot;1..50&quot; (at /m/inst/from@0) [NumberFormatException&lt;67&gt;]][For input string: &quot;1..50&quot; [NumberFormatException&lt;67&gt;]]@/sys/fail/2390
-mtron&gt; &lt;local:index.html?mimeq=application/x-mtron&gt;/html/head/title
-==&gt;ERROR: monad obj coefficient is greater than inst dom coefficient:
-	&lt;local:index.html?mimeq=application/x-mtron&gt; [{1} X=&gt; {0}] start?rng=A{**}&amp;dom=noobj{0}(/html/head/title){&lt;j&gt;}@&lt;1&gt;
-</code></pre>
-<h3>type round-trip</h3>
-<p>The full read-modify-write cycle preserves types:</p>
-<pre><code class="language-mtron">mtron&gt; [-- Read HTML, cast to rec, modify, cast back to html string, write --]
-mtron&gt; &lt;local:page.html&gt; -&gt; *&lt;local:page.html?mimeq=application/x-mtron&gt;
-         .at(html/head/title -&gt; 'New Title')
-         .as(html::T)
-==&gt;fail::[inst apply failure: 'New Title' [str::T] unable to convert uri::T (at /m/inst/at@2)]@/sys/fail/2428
-mtron&gt; [-- Read JSON config, modify a value, write back --]
-mtron&gt; &lt;local:config.json&gt; -&gt; *&lt;local:config.json?mimeq=application/x-mtron&gt;
-         .at(database/host -&gt; 'new-host')
-         .as(json::T)
-==&gt;fail::[inst apply failure: 'new-host' [str::T] unable to convert uri::T (at /m/inst/at@2)]@/sys/fail/2464
-</code></pre>
-<p>The <code>.as(html::T)</code> / <code>.as(json::T)</code> serialization passes through <code>ObjHTMLSerializer.write()</code> /
-<code>ObjJSONSerializer.write()</code> which handle both <code>str::T</code> (pass-through) and <code>rec::T</code> (structural render).</p>
 
     </div>
 </main>

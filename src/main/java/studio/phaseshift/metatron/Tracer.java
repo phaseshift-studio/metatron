@@ -55,6 +55,15 @@ public enum Tracer {
         return tracer;
     }
 
+    public static boolean toggle(final Tracer tracer) {
+        if (ACTIVE_TRACERS.contains(tracer)) {
+            ACTIVE_TRACERS.remove(tracer);
+            return false;
+        }
+        ACTIVE_TRACERS.add(tracer);
+        return true;
+    }
+
     public boolean enabled() {
         return ACTIVE_TRACERS.contains(this);
     }

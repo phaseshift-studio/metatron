@@ -103,7 +103,7 @@ public interface Bytes extends Mono, PlusMonoid.O<Bytes> {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(Tokens.BYTES_TID).rng(Tokens.BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> bool(!Arrays.stream(lhs.bytesValue().asIntBuffer().array()).allMatch(b -> b == 0), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
-                    instC(AS_INST_TID.dom(Tokens.BYTES_TID).rng(Tokens.STR_TID), lst(T(Tokens.STR_TID)), (lhs, inst) -> str(new String(lhs.bytesValue().array(), StandardCharsets.UTF_8), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
+                    instC(AS_INST_TID.dom(Tokens.BYTES_TID).rng(Tokens.STR_TID), lst(STR_TYPE), (lhs, inst) -> str(new String(lhs.bytesValue().array(), StandardCharsets.UTF_8), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     //instC(LSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(jnt(1)).tryToInst()), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOfRange(lhs.bytesValue().array(), inst.arg(0).intValue().intValue(), lhs.bytesValue().array().length)))),
                     //instC(RSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(jnt(1)).tryToInst()), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOf(lhs.bytesValue().array(), lhs.bytesValue().array().length - inst.arg(0).intValue().intValue())))),
                     instC(ZERO_INST_TID.dom(Tokens.BYTES_TID).rng(Tokens.BYTES_TID), lst(), (lhs, inst) -> lhs.asBytes().zero()),

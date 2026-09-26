@@ -39,8 +39,10 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -156,7 +158,7 @@ public class catInstSet extends AbstractInstSet {
                                             block.put(uri(FORM), uri(Inst.Form.of(inst).name()));
                                             block.put(uri(SRC), instLambda(inst.tid(), ALL, o -> rec(mutableMap(uri(OBJ), inst.dom()), OBJECT_TID, null)).tryToInst());
                                             block.put(uri(TRGT), instLambda(inst.tid(), ALL, o -> rec(mutableMap(uri(OBJ), inst.rng()), OBJECT_TID, null)).tryToInst());
-                                            block.put(uri(ANALYSIS), auto_(instLambda(inst.tid(), ALL, o -> {
+                                            block.put(uri(ANALYSIS), auto_(instLambda(ALL, ALL, o -> {
                                                 final Map<Obj, Obj> analysis = new LinkedHashMap<>();
                                                 analysis.put(uri(FAMILY), instLambda(inst.tid(), ALL, o2 -> catInstSet.family(inst)).tryToInst());
                                                 analysis.put(uri(CONTESTED), instLambda(inst.tid(), ALL, o2 -> catInstSet.contested(inst)).tryToInst());
@@ -169,7 +171,7 @@ public class catInstSet extends AbstractInstSet {
                                             block.putAll(objInstRec.jvm());
                                             if (null != entry && !entry.laws().isEmpty())
                                                 block.put(uri(LAW), entry.laws());
-                                            return rec(block);
+                                            return rec(block).clone().selfTID(MORPHISM_TID);
                                         })
                                         .create(),
                                 Map.of(uri(FORM), "the n-tid coefficient shape \\((c_{\\mathrm{dom}}, c_{\\mathrm{rng}})\\) in regex notation: \\(\\mathrm{mapper} = (1,1),\\; \\mathrm{filter} = (1, ?),\\; \\mathrm{reducer} = (^{\\ast}, 1),\\; \\mathrm{flatmapper} = (1, ^{+}),\\; \\ldots\\)",
@@ -194,15 +196,15 @@ public class catInstSet extends AbstractInstSet {
                                             final Rec object = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
                                             final Obj obj = object.at(OBJ);
                                             object.at(LAW, CoreMaker.typeLaws(obj.asType()), MUTABLE);
-                                            object.at(MORPHED_TO, auto_(instLambda(obj.vid(), ALL, (ignore, i) -> {
+                                            object.at(MORPHED_TO, auto_(instLambda(ALL, ALL, (ignore, i) -> {
                                                 final Obj insts = Router.readFromSpace(f("/m/inst/+").dom(obj.vid()));//.rng(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())); // TODO: constrain to instset
                                                 return objs(insts.stream().map(Obj::asInst).filter(m -> !m.tid().dom().isGeneric() && !m.tid().rng().isGeneric()).map(m -> rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));
                                             })).tryToInst(), MUTABLE);
-                                            object.at(MORPHED_FROM, auto_(instLambda(obj.vid(), ALL, (o, i) -> {
+                                            object.at(MORPHED_FROM, auto_(instLambda(ALL, ALL, (o, i) -> {
                                                 final Obj insts = Router.readFromSpace(f("/m/inst/+")/*.dom(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())*/.rng(obj.vid())); // TODO: constrain to instset
                                                 return objs(insts.stream().map(Obj::asInst).filter(m -> !m.tid().dom().isGeneric() && !m.tid().rng().isGeneric()).map(m -> rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));
                                             })).tryToInst(), MUTABLE);
-                                            return object;
+                                            return object.selfTID(OBJECT_TID);
                                         })
                                         .create(), Map.of(
                                         uri(MORPHED_TO), "the morphisms sourced from this object (out-edges): \\(\\mathrm{morphed\\_to}(A) = \\{f : \\mathrm{src}(f) = A\\}\\)",
@@ -220,15 +222,15 @@ public class catInstSet extends AbstractInstSet {
                                 .isaPredicate(rec(
                                         uri(ADD), INST_TYPE,
                                         uri(MUL), INST_TYPE,
-                                        uri(ZERO), INST_TYPE,
-                                        uri(ONE), INST_TYPE))
+                                        uri(ZERO), ALL_TYPE,
+                                        uri(ONE), ALL_TYPE))
                                 .create(), "the theory of rings \\(\\langle R, +, \\cdot, 0, 1 \\rangle\\): \\(+\\) an abelian group, \\(\\cdot\\) a monoid, and \\(a \\cdot (b + c) = a \\cdot b + a \\cdot c\\)"),
                         docWrap(GROUP_THEORY_TYPE = Type.Builder.build()
                                 .tid(THEORY_TID)
                                 .vid(GROUP_THEORY_TID)
                                 .isaPredicate(rec(
                                         uri(OP), INST_TYPE,
-                                        uri(ID), INST_TYPE,
+                                        uri(ID), ALL_TYPE,
                                         uri(INV), INST_TYPE))
                                 .create(), "the theory of groups \\(\\langle G, \\cdot, 1, {}^{-1} \\rangle\\): \\(g \\cdot g^{-1} = g^{-1} \\cdot g = 1\\)"),
                         docWrap(MONOID_THEORY_TYPE = Type.Builder.build()
@@ -236,13 +238,46 @@ public class catInstSet extends AbstractInstSet {
                                 .vid(MONOID_THEORY_TID)
                                 .isaPredicate(rec(
                                         uri(OP), INST_TYPE,
-                                        uri(ID), INST_TYPE))
+                                        uri(ID), ALL_TYPE))
                                 .create(), "the theory of monoids \\(\\langle M, \\cdot, 1 \\rangle\\): \\(m \\cdot 1 = 1 \\cdot m = m\\) and \\((m \\cdot n) \\cdot p = m \\cdot (n \\cdot p)\\)")),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(ALL).rng(MORPHISM_TID), lst(MORPHISM_TYPE), (lhs, inst) -> MORPHISM_TYPE.constructor().apply(lhs)),
-                        instC(AS_INST_TID.dom(ALL).rng(OBJECT_TID), lst(OBJECT_TYPE), (lhs, inst) -> OBJECT_TYPE.constructor().apply(lhs))))));
+                        instC(AS_INST_TID.dom(ALL).rng(OBJECT_TID), lst(OBJECT_TYPE), (lhs, inst) -> OBJECT_TYPE.constructor().apply(lhs))),
+                uri(REWRITE), lst(
+                        instC(catInstSet.CAT_ISA_TID.extend(INST).extend(REWRITE).extend(RING_THEORY_TID.name() + "_unit_removal").dom(CODE_TID).rng(CODE_TID.maybe()), lst(), (lhs, inst) ->
+                                code(lhs.asCode().insts().stream().filter(i -> !TheoryHelper.plusZeroInst(RING_THEORY_TID, i.arg(0).type()).test(i) && !TheoryHelper.multOneInst(RING_THEORY_TID, i.arg(0).type()).test(i)).toList())),
+                        instC(catInstSet.CAT_ISA_TID.extend(INST).extend(REWRITE).extend(GROUP_THEORY_TID.name() + "_involution").dom(CODE_TID).rng(CODE_TID.maybe()), lst(), (lhs, inst) ->
+                                code(collapseInvolutions(lhs.asCode().insts(), TheoryHelper.invInst(carrier(lhs.asCode())))))
+                ))));
         docWrap(this, "categorical realization of types and insts as objects and morphisms");
         super.setup();
+    }
+
+
+    /**
+     * The carrier type of a code chain — the type of the seed (the {@code start(x)} wrapper's arg).
+     * Argless ops ({@code neg()}) have no arg to derive it from, so the rewrite reads it off the seed.
+     */
+    private static Type carrier(final Code code) {
+        final List<Inst> insts = code.insts();
+        if (!insts.isEmpty() && START_INST_TID.equals(insts.get(0).tid().basePath()))
+            return insts.get(0).arg(0).type();
+        return T(ALL);
+    }
+
+    /**
+     * Collapse adjacent {@code inv·inv} pairs to identity — the involution law {@code f(f(x)) = x}.
+     */
+    private static List<Inst> collapseInvolutions(final List<Inst> insts, final Inst inv) {
+        final List<Inst> result = new ArrayList<>();
+        int i = 0;
+        while (i < insts.size()) {
+            if (i + 1 < insts.size() && inv.test(insts.get(i)) && inv.test(insts.get(i + 1)))
+                i += 2; // f·f => id — drop the pair
+            else
+                result.add(insts.get(i++));
+        }
+        return result;
     }
 
 
@@ -254,21 +289,21 @@ public class catInstSet extends AbstractInstSet {
                         uri("ring"), rec(mutableMap(
                                         uri(ADD), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
                                         uri(MUL), auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                        uri(Tokens.ZERO), auto_from_(ZERO_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                        uri(Tokens.ONE), auto_from_(ONE_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
+                                        uri(Tokens.ZERO), jnt(0),
+                                        uri(Tokens.ONE), jnt(1)),
                                 RING_THEORY_TID, null),
                         uri("add_group"), rec(mutableMap(
                                         uri(OP), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                        uri(ID), auto_from_(ZERO_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                        uri(ID), jnt(0),
                                         uri(INV), auto_from_(NEG_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
                                 GROUP_THEORY_TID, null),
                         uri("add_monoid"), rec(mutableMap(
                                         uri(OP), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                        uri(ID), auto_from_(ZERO_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
+                                        uri(ID), jnt(0)),
                                 MONOID_THEORY_TID, null),
                         uri("mult_monoid"), rec(mutableMap(
                                         uri(OP), auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                        uri(ID), auto_from_(ONE_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
+                                        uri(ID), jnt(1)),
                                 MONOID_THEORY_TID, null)));
             }
             return rec0();

@@ -209,9 +209,17 @@ public interface Inst extends Call {
             return true;
         final fURI base = this.tid().basePath();
         return base.equals(BLOCK_INST_TID) ||
-                // base.equals(AUTO_TID) ||
-                // base.equals(MAPP_INST_TID) ||
-                //base.equals(MAP_INST_TID) ||
+                // these store thunks (callables) as args and apply them lazily in their
+                // function — they must be blocking so applyArgs does NOT eagerly apply them:
+                //   auto/auto_from/auto_at:  inst.arg(0).apply(lhs)  (lazy payload)
+                //   map:                     inst.arg(0).apply(lhs)  (x.map(f) = f(x))
+                //   select/where:            rec arg whose VALUES are per-element projections
+                base.equals(AUTO_INST_TID) ||
+                base.equals(AUTO_FROM_INST_TID) ||
+                base.equals(AUTO_AT_INST_TID) ||
+                base.equals(MAP_INST_TID) ||
+                base.equals(SELECT_INST_TID) ||
+                base.equals(WHERE_INST_TID) ||
                 base.equals(FILTER_INST_TID) ||
                 base.equals(FORK_INST_TID) ||
                 base.equals(THREAD_INST_TID) ||
@@ -219,9 +227,7 @@ public interface Inst extends Call {
                 base.equals(AS_INST_TID) ||
                 base.equals(WITHIN_INST_TID) ||
                 base.equals(ISA_INST_TID) ||
-                //base.equals(SELECT_INST_TID) ||
                 base.equals(UPDATE_INST_TID) ||
-                //base.equals(WHERE_INST_TID) ||
                 base.equals(GROUP_INST_TID) ||
                 base.equals(REPEAT_INST_TID) ||
                 base.equals(ELSE_INST_TID) ||
@@ -353,7 +359,7 @@ public interface Inst extends Call {
         //if (false && reself) // TODO: why do type predicates get rewritten?
         //    this.self(Triplet.with(cinst.args(), cinst.f(), cinst.seed()), cinst.tid(), cinst.vid());
         if (cinst.isNoObj())
-            return fail(MTronException.of("unable to locate inst-f of %s", this, clhs));
+            return fail(MTronException.of("unable to locate inst-f %s::T => %s", Obj.Helper.specificTypeId(lhs).name(), this, clhs));
         if (lhs.isNoObj() && !cinst.dom().c().isZeroable())
             return noobj();
         // return fail(MTronException.of("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
@@ -404,13 +410,16 @@ public interface Inst extends Call {
                         final String text = "args do not match inst args: " + Poly.Helper.mismatchText(cinst.args(), this.args());
                         throw null == child ? MTronException.of(text) : MTronException.of(child.jvm(), text);
                     } else
-                        // of(Throwable, format, args) both links e as the java
-                        // cause (so the tracer dedups the failure chain once
-                        // and the inner is machine-traversable) and keeps e's
-                        // raw text in the message — the origin is the failing
-                        // instruction's address (not a java factory line);
-                        // query stripped: it can carry secrets (?env=[...])
-                        throw MTronException.of(e, "inst apply failure: %s (at %s)", e, Helper.instContext(cinst));
+                        // funnel (MTronException.funnel): one frame at the failing
+                        // instruction's address (query stripped — it can carry
+                        // secrets, ?env=[...]), the raw-java text translated
+                        // through the exception family rather than embedded raw,
+                        // and an already-framed inner forwarded untouched — its
+                        // origin is its own, and a second frame would misname it.
+                        // e stays linked as the java cause: the tracer's
+                        // once-per-chain dedup and the fail's cause chain both
+                        // still see it.
+                        throw MTronException.funnel(e, Helper.instContext(cinst));
                 } finally {
                     Router.stack().pop();
                     //  Router.stack().pop();

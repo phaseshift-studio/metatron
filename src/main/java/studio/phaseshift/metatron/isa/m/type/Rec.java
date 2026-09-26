@@ -158,13 +158,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
 
     @Override
     default Rec plus(final Rec rhs) {
-        final Map<Obj, Obj> newMap = new LinkedHashMap<>(this.recValue());
-        // Overlapping keys always produce Objs via append (never eagerly compute).
-        // + is structural merge; use == or >>= for computation.
-        rhs.elements().forEach(o -> newMap.compute(o.jvm().get0(), (k, v) -> null == v
-                ? o.jvm().get1()
-                : v.append(o.jvm().get1())));
-        return this.jvm(newMap);
+        return Poly.Helper.mergeObjRecursion(this, rhs).asRec();
     }
 
     @Override
@@ -437,7 +431,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(RNG_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.asRec().elements().map(Rel::second))),
                     // instC(RSHIFT_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri("+")).stream().map(k -> lhs.asRec().at(k)))),
                     instC(LSHIFT_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs.parent()),
-                    instC(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID.maybeMaybe())), (lhs, inst) -> lhs.jvm(lhs.asRec().plus(inst.arg(0).asRec()).recValue())),
+                    instC(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID.maybeMaybe())), (lhs, inst) -> lhs.asRec().plus(inst.arg(0).asRec())),
                     //      Map.of(uri(LAW), laws(Category.Law.monoidic))),
                     instC(MINUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> {
                         final Map<Obj, Obj> values = lhs.recValue();
