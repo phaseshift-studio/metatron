@@ -75,7 +75,7 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
      * {@link #applyAsync(Obj)}.{@code get()} to block for the result.
      *
      * <p>Subclasses with truly synchronous execution (e.g.
-     * {@code SwarmMachine}) override this to run inline and return the
+     * {@code SwarmProcessor}) override this to run inline and return the
      * result directly.</p>
      */
     @Override
@@ -119,7 +119,7 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
 
     /**
      * Threads are not cloneable — the 3-arg clone returns {@code this}.
-     * Subclasses that need a real clone (e.g. {@code SwarmMachine})
+     * Subclasses that need a real clone (e.g. {@code SwarmProcessor})
      * override this.
      */
     @Override

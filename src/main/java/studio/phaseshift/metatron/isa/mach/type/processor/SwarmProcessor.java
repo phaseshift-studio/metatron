@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.machine;
+package studio.phaseshift.metatron.isa.mach.type.processor;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
@@ -24,9 +24,10 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.PCMonad;
+import studio.phaseshift.metatron.isa.mach.type.MonadProcessor;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
+import studio.phaseshift.metatron.isa.mach.type.machine.ListMonad;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -48,13 +49,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_SWARM_MACHINE_TID;
-import static studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad.pcmonad;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_SWARM_PROCESSOR_TID;
+import static studio.phaseshift.metatron.isa.mach.type.monad.BasicStatefulMonad.statefulMonad;
 
 /*
- * SwarmMachine — a monadic execution engine that IS a VirtualThread.
+ * SwarmProcessor — a monadic execution engine that IS a VirtualThread.
  *
- * A SwarmMachine processes code through a monadic step-loop with barrier
+ * A SwarmProcessor processes code through a monadic step-loop with barrier
  * synchronization and halted-object collection.  It extends {@code VirtualThread}
  * so execution runs on a cheap virtual thread; lifecycle control (stop, pause,
  * resume) is inherited from {@code AbstractThread}.
@@ -69,22 +70,22 @@ import static studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad.pcmona
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class SwarmMachine extends VirtualThread implements Machine {
+public class SwarmProcessor extends VirtualThread implements MonadProcessor {
 
     public static final int MAX_FAILS = 10;
 
 
     protected final GraphittyLogger LOG = Graphitty.log(this);
     private static final Supplier<Obj> RUNNING_SUPPLIER = ListMonad::of;
-    private static final AtomicLong MACHINE_COUNTER = new AtomicLong(0);
+    private static final AtomicLong PROCESSOR_COUNTER = new AtomicLong(0);
 
     private Consumer<Obj> onHalt;
     private final AtomicInteger infiniteFailCounter = new AtomicInteger(0);
 
     // ======================== Constructors & factories ========================
 
-    protected SwarmMachine(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, null == vid ? f("/sys/machine").extend(String.valueOf(MACHINE_COUNTER.incrementAndGet())) : vid);
+    protected SwarmProcessor(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, null == vid ? f("/sys/processor").extend(String.valueOf(PROCESSOR_COUNTER.incrementAndGet())) : vid);
         // Ensure machine state fields exist with defaults
         this.jvm().putIfAbsent(uri(RUN), RUNNING_SUPPLIER.get());
         this.jvm().putIfAbsent(uri(BARRIER), lst(new LinkedList<>()));
@@ -94,17 +95,17 @@ public class SwarmMachine extends VirtualThread implements Machine {
         this.onHalt = makeOnHalt();
     }
 
-    public static SwarmMachine of(final Call code) {
-        return new SwarmMachine(
+    public static SwarmProcessor of(final Call code) {
+        return new SwarmProcessor(
                 new LinkedHashMap<>(Map.of(uri(CODE), code.isCode() ? code.as() : new MCode(code.insts(), CODE_TID, null))),
-                MACH_SWARM_MACHINE_TID, null);
+                MACH_SWARM_PROCESSOR_TID, null);
     }
 
-    public static SwarmMachine machine(final Map<Obj, Obj> machineState, final fURI tid, final fURI vid) {
-        return new SwarmMachine(new LinkedHashMap<>(machineState), tid, vid);
+    public static SwarmProcessor processor(final Map<Obj, Obj> state, final fURI tid, final fURI vid) {
+        return new SwarmProcessor(new LinkedHashMap<>(state), tid, vid);
     }
 
-    public static Machine of(final Obj start, final Code code) {
+    public static SwarmProcessor of(final Obj start, final Code code) {
         if (!start.isNoObj()) {
             final List<Inst> prepended = new ArrayList<>();
             if (start.isMonad()) {
@@ -116,11 +117,11 @@ public class SwarmMachine extends VirtualThread implements Machine {
                 prepended.add(MInst.instB(mInstSet.START_INST_TID, lst(start)));
                 prepended.addAll(code.codeValue());
             }
-            return new SwarmMachine(
+            return new SwarmProcessor(
                     new LinkedHashMap<>(Map.of(uri(CODE), MCode.of(prepended))),
-                    MACH_SWARM_MACHINE_TID, null);
+                    MACH_SWARM_PROCESSOR_TID, null);
         } else {
-            return SwarmMachine.of(code);
+            return SwarmProcessor.of(code);
         }
     }
 
@@ -136,8 +137,7 @@ public class SwarmMachine extends VirtualThread implements Machine {
         return this.jvm().getOrDefault(uri(CODE), noobj()).as();
     }
 
-    @Override
-    public SwarmMachine code(final Code code) {
+    public SwarmProcessor code(final Code code) {
         final Map<Obj, Obj> map = new LinkedHashMap<>(this.jvm());
         map.put(uri(CODE), code);
         return this.clone(map, this.tid(), this.vid());
@@ -176,7 +176,7 @@ public class SwarmMachine extends VirtualThread implements Machine {
     }
 
     @Override
-    public Machine onHalt(final Consumer<Obj> onHalt) {
+    public MonadProcessor onHalt(final Consumer<Obj> onHalt) {
         this.onHalt = onHalt;
         return this;
     }
@@ -228,21 +228,21 @@ public class SwarmMachine extends VirtualThread implements Machine {
     // ======================== Resolution ========================
 
     @Override
-    public SwarmMachine resolve(final Obj lhs) {
+    public SwarmProcessor resolve(final Obj lhs) {
         final Obj resolveLhs = lhs.isMonad() ? lhs.asMonad().obj() : lhs;
         final Code resolvedCode = this.code().resolve(resolveLhs);
         // boolean-switch: if any inst reads the walked path (?monad_in=state/path), tag the code
         // with ?path so the monads it mints accrue the path (looked up via the shared code, not
         // copied into each monad's state).
         final Code code = this.computesPath(resolvedCode) ? resolvedCode.tid(resolvedCode.tid().addQ(PATH)) : resolvedCode;
-        final SwarmMachine mach = this.code(code);
+        final SwarmProcessor mach = this.code(code);
         for (final Inst inst : mach.code().jvm()) {
             if (inst.isInitial()) {
                 LOG.trace("  {{g}}==>{{/g}} creating {{y}}initial{{/y}} monad at %s", inst);
-                this.running().append(pcmonad(noobj(), inst, lhs.isMonad() ? lhs.asMonad().state() : rec0(), code));
+                this.running().append(statefulMonad(noobj(), inst, lhs.isMonad() ? lhs.asMonad().state() : rec0(), code));
             } else if (inst.isGather()) {
                 LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", inst);
-                final PCMonad m = pcmonad(objs0(), inst, lhs.isMonad() ? lhs.asMonad().state() : rec0(), code);
+                final StatefulMonad m = statefulMonad(objs0(), inst, lhs.isMonad() ? lhs.asMonad().state() : rec0(), code);
                 mach.barriers().<LinkedList<Obj>>jvmAs().add(m);
             }
         }
@@ -286,7 +286,7 @@ public class SwarmMachine extends VirtualThread implements Machine {
         final Code code = this.resolve(this.at(START)).code();
         if (this.running().c().isZero()) {
             final Obj start = this.at(START);
-            this.running().append(pcmonad(start.isMonad() ? start.asMonad().obj() : start, code.insts().getFirst(), start.isMonad() ? start.asMonad().state() : rec0(), code));
+            this.running().append(statefulMonad(start.isMonad() ? start.asMonad().obj() : start, code.insts().getFirst(), start.isMonad() ? start.asMonad().state() : rec0(), code));
         }
 
         // Monadic processing loop
@@ -308,18 +308,18 @@ public class SwarmMachine extends VirtualThread implements Machine {
                     break;
             }
 
-            final PCMonad m = (PCMonad) this.running().take();
+            final StatefulMonad m = (StatefulMonad) this.running().take();
             if (null != m) {
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
-                final PCMonad x = this.split(m);
+                final StatefulMonad x = this.split(m);
                 x.apply().stream().forEach(y -> {
-                    final PCMonad n = y.as();
+                    final StatefulMonad n = y.as();
                     LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
                     if (n.obj().isFail())
                         this.infiniteFailCounter.incrementAndGet();
                     if (n.inst().isBatching() && (!n.dead() || n.inst().dom().c().isZeroable())) {
                         if (n.inst().isGather()) {
-                            final PCMonad barrier = this.barriers().<LinkedList<PCMonad>>jvmAs().peek();
+                            final StatefulMonad barrier = this.barriers().<LinkedList<StatefulMonad>>jvmAs().peek();
                             LOG.trace("{{m}}====|{{/m}} appending living obj to barrier %s", n);
                             if (null == barrier)
                                 throw MTronException.of("barrier should exist: %s", n.inst());
@@ -351,25 +351,25 @@ public class SwarmMachine extends VirtualThread implements Machine {
                     }
                 });
             } else if (!this.barriers().isEmpty()) {
-                final PCMonad barrier = this.barriers().<LinkedList<PCMonad>>jvmAs().poll();
+                final StatefulMonad barrier = this.barriers().<LinkedList<StatefulMonad>>jvmAs().poll();
                 if (null != barrier) {
                     LOG.trace("   {{m}}=|{{/m}} processing barrier monad %s", barrier);
                     final Obj result = barrier.inst().apply(barrier.obj());
                     final Inst nextInst = code.nextInst(barrier.inst());
                     if (nextInst.isGather()) {
                         LOG.trace("  {{m}}==|{{/m}} passing barrier obj %s to %s", result, nextInst);
-                        final PCMonad nextBarrier = this.barriers().<LinkedList<PCMonad>>jvmAs().peek();
+                        final StatefulMonad nextBarrier = this.barriers().<LinkedList<StatefulMonad>>jvmAs().peek();
                         if (null == nextBarrier)
                             throw MTronException.of("barrier should exist: %s", nextInst);
                         nextBarrier.obj().append(result);
                     } else if (nextInst.isBatching()) {
                         Router.global().stats().monadicStats().incrBarrierMonads(-1L);
-                        this.running().append(pcmonad(result, nextInst, noobjRec(), code));
+                        this.running().append(statefulMonad(result, nextInst, noobjRec(), code));
                         Router.global().stats().monadicStats().incrRunningMonads(1L);
                     } else {
                         LOG.trace("  {{m}}==|{{/m}} scattering barrier obj %s to %s", result, nextInst);
                         result.forEach(o -> {
-                            final PCMonad n = pcmonad(o, nextInst, noobjRec(), code);
+                            final StatefulMonad n = statefulMonad(o, nextInst, noobjRec(), code);
                             Router.global().stats().monadicStats().incrBarrierMonads(-1L);
                             LOG.trace(" {{m}}===|{{/m}} scattering %s", n);
                             this.running().append(n);
@@ -423,7 +423,7 @@ public class SwarmMachine extends VirtualThread implements Machine {
 
     // ======================== Monad splitting ========================
 
-    protected PCMonad split(final PCMonad monad) {
+    protected StatefulMonad split(final StatefulMonad monad) {
         if (monad.obj().unique() && (monad.inst().dom().c().isOne() || monad.inst().dom().c().isAny()))
             return monad;
         if (monad.inst().dom().c().isZero() && !monad.obj().c().isZeroable())
@@ -442,11 +442,11 @@ public class SwarmMachine extends VirtualThread implements Machine {
     // ======================== Cloning ========================
 
     @Override
-    public SwarmMachine clone(final Object jvm, final fURI tid, final fURI vid) {
+    public SwarmProcessor clone(final Object jvm, final fURI tid, final fURI vid) {
         // Return a fresh instance via the no-arg constructor and self(),
         // bypassing the full MObj(obj,tid,vid) constructor to avoid
         // objCheckAndSave → type-resolution StackOverflow.
-        final SwarmMachine clone = new SwarmMachine();
+        final SwarmProcessor clone = new SwarmProcessor();
         final Map<Obj, Obj> map = new LinkedHashMap<>((Map<Obj, Obj>) jvm);
         map.putIfAbsent(uri(RUN), RUNNING_SUPPLIER.get());
         map.putIfAbsent(uri(BARRIER), lst(new LinkedList<>()));
@@ -462,22 +462,22 @@ public class SwarmMachine extends VirtualThread implements Machine {
     /**
      * No-arg constructor that skips objCheckAndSave (used by clone).
      */
-    protected SwarmMachine() {
+    protected SwarmProcessor() {
         // MObj no-arg constructor — sets parent=noobj, does NOT call objCheckAndSave
     }
 
     @Override
-    public SwarmMachine self(final Object jvm, final fURI tid, final fURI vid) {
+    public SwarmProcessor self(final Object jvm, final fURI tid, final fURI vid) {
         final Map<Obj, Obj> map = (Map<Obj, Obj>) jvm;
         // Ensure defaults for machine state fields
         map.putIfAbsent(uri(RUN), RUNNING_SUPPLIER.get());
         map.putIfAbsent(uri(BARRIER), lst(new LinkedList<>()));
         map.putIfAbsent(uri(HALTED), MObjs.objs0());
-        return (SwarmMachine) super.self(jvm, tid, null == this.vid() ? vid : this.vid());
+        return (SwarmProcessor) super.self(jvm, tid, null == this.vid() ? vid : this.vid());
     }
 
     @Override
-    public SwarmMachine clone() {
+    public SwarmProcessor clone() {
         return this;
     }
 

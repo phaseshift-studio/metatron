@@ -329,6 +329,8 @@ agent::[
                                                               anchor=>bottom_right,
                                                               left  =>-2,
                                                               top   =>5,
+                                                              width =>75,
+                                                              height => 25,
                                                               foreground =>"{{y}}"]]@<audit_widget> },
                       to            => inst(a=>str::T){ @<audit_widget>>>=[body=>+*a].display() }],
   summarize_feature::[              => ],
@@ -352,6 +354,7 @@ agent::[
                                           }
                                         }
                                         """@codegraph).as(mcp_client::T)),
+                                        mcp_client::[host=><http://127.0.0.1:64342/stream>],
                                         !*find_file,
                                         !*read_file,
                                         !*edit_file,
@@ -365,8 +368,8 @@ agent::[
                                                                    border=>continuous,
                                                                    height=>30,
                                                                    width=>100]].to(tool_widget)).
-                                           side(w -> -<accordion_widget::[title=>"""{{r}}>>{{g}}${*a>>name}{{m}}({{/m}}${*a>>arguments}{{m}})""",
-                                                                          body=>"""{{/m}}{{/g}}${*a>>result}"""]).
+                                           side(w -> -<accordion_widget::[title=>"""{{r}}>>{{/r}}{{m}}${*a>>name}{{g}}({{/g}}${*a>>arguments}{{g}}){{/g}}{{/m}}""",
+                                                                          body=>*a>>result.==['.\n' => '']==(".{0,150}")>>0]).
                                            @<tool_widget/grid> >>=(+(-<[-<[ !*w ]]))                          
                                            .side(@tool_widget.display()) }],
   cost_feature:::::::[rate          => [in  => usd_currency::0.435,

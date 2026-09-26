@@ -35,8 +35,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -83,9 +82,9 @@ public class mcp_wsHandler extends WebSocketRec {
             .vid(WS_MCP_HANDLER_TID)
             .isaPredicate(rec(
                     uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
-                    uri(RESOURCE).maybe().asUri(), T(ALL),
-                    uri(PROMPT).maybe().asUri(), T(ALL)))
-            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_MCP_HANDLER_TID), lst(T(REC_TID)), (lhs, inst) ->
+                    uri(RESOURCE).maybe().asUri(), ALL_TYPE,
+                    uri(PROMPT).maybe().asUri(), ALL_TYPE))
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_MCP_HANDLER_TID), lst(REC_TYPE), (lhs, inst) ->
                     new mcp_wsHandler(new LinkedHashMap<>(inst.arg(0).asRec()
                             .at(uri(IN), uri(MIME.MIMEType.APPLICATION_JSON.value))
                             .at(uri(OUT), uri(MIME.MIMEType.APPLICATION_JSON.value)).jvm()), WS_MCP_HANDLER_TID, inst.arg(0).vid()))).create();

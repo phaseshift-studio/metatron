@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
-import studio.phaseshift.metatron.isa.mach.type.PCMonad;
+import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -42,14 +42,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -457,7 +456,7 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
     }
 
     @Override
-    public BsonDocument writeMonad(final PCMonad monad) {
+    public BsonDocument writeMonad(final StatefulMonad monad) {
         return new BsonDocument(List.of(
                 new BsonElement("obj", this.write(monad.obj())),
                 new BsonElement("inst", this.write(monad.inst()))

@@ -20,9 +20,7 @@ package studio.phaseshift.metatron.isa.mach.type.monad;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.PCMonad;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -33,21 +31,20 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class BasicPCMonad extends AbstractPCMonad implements PCMonad {
+public class BasicStatefulMonad extends AbstractStatefulMonad {
 
-    private static final GraphittyLogger LOG = Graphitty.log(BasicPCMonad.class);
     public static final fURI MACH_BASIC_MONAD_TID = MACH_MONAD_TID; // .extend("basic");
 
     Lst jvm;
 
-    public BasicPCMonad(final Lst jvm, final fURI tid, final fURI vid) {
+    public BasicStatefulMonad(final Lst jvm, final fURI tid, final fURI vid) {
         super(tid, vid);
         this.jvm = jvm;
     }
 
     @Override
-    public PCMonad clone(final Object jvm, final fURI tid, final fURI vid) {
-        return new BasicPCMonad((Lst) jvm, tid, vid);
+    public StatefulMonad clone(final Object jvm, final fURI tid, final fURI vid) {
+        return new BasicStatefulMonad((Lst) jvm, tid, vid);
     }
 
     @Override
@@ -56,32 +53,27 @@ public class BasicPCMonad extends AbstractPCMonad implements PCMonad {
     }
 
     @Override
-    public PCMonad clone() {
-        final BasicPCMonad clone = (BasicPCMonad) super.clone();
+    public StatefulMonad clone() {
+        final BasicStatefulMonad clone = (BasicStatefulMonad) super.clone();
         clone.jvm = (Lst) this.jvm.clone();
         return clone;
     }
 
     @Override
-    public <OBJ extends Obj> OBJ self(final Object jvm, final fURI tid, final fURI vid) {
+    public StatefulMonad self(final Object jvm, final fURI tid, final fURI vid) {
         this.jvm = (Lst) jvm;
         this.tid = tid;
         this.vid = vid;
-        return (OBJ) this;
+        return this;
     }
-
-    /*@Override
-    public PCMonad plus(final PCMonad objs) {
-        return new BasicPCMonad(List.of(this, objs), this.tid().plus(objs.tid()), this.vid());
-    }*/
 
     /// //////////////////////////////////////////////////////////////////////////////////////
 
-    public static PCMonad pcmonad(final Obj obj, final Inst inst, final Rec state, final Call code) {
-        return new BasicPCMonad(lst(CommonUtil.arrayList(obj, inst, state, code)), MACH_BASIC_MONAD_TID, null);
+    public static StatefulMonad statefulMonad(final Obj obj, final Inst inst, final Rec state, final Call code) {
+        return new BasicStatefulMonad(lst(CommonUtil.arrayList(obj, inst, state, code)), MACH_BASIC_MONAD_TID, null);
     }
 
-    public static PCMonad pcmonad(final Obj obj) {
-        return pcmonad(obj, noobj(), rec0(), noobj());
+    public static StatefulMonad statefulMonad(final Obj obj) {
+        return statefulMonad(obj, noobj(), rec0(), noobj());
     }
 }

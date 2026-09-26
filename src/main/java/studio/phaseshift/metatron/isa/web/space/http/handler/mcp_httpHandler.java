@@ -28,12 +28,10 @@ import studio.phaseshift.metatron.isa.web.space.http.HttpRec;
 import studio.phaseshift.metatron.isa.web.space.http.SseStream;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
-import studio.phaseshift.metatron.isa.web.webInstSet;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -41,13 +39,15 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_SUB_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.type.MIME.MIMEType.APPLICATION_JSON;
+import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -66,17 +66,14 @@ public class mcp_httpHandler extends HttpRec {
     public static final fURI HTTP_MCP_HANDLER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_http");
 
     public static final Type HTTP_MCP_HANDLER_TYPE = Type.Builder.build()
-            .tid(webInstSet.MCP_TID)
+            .tid(MCP_TID)
             .vid(HTTP_MCP_HANDLER_TID)
             .isaPredicate(rec(
                     uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
                     uri(RESOURCE).maybe().asUri(), T(ALL),
                     uri(PROMPT).maybe().asUri(), T(ALL)))
-            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(HTTP_MCP_HANDLER_TID),
-                    lst(T(REC_TID)),
-                    (lhs, inst) -> new mcp_httpHandler(
-                            new LinkedHashMap<>(inst.arg(0).asRec().jvm()),
-                            HTTP_MCP_HANDLER_TID, inst.arg(0).vid())))
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(HTTP_MCP_HANDLER_TID), lst(T(REC_TID)),
+                    (lhs, inst) -> new mcp_httpHandler(mutableMap(inst.arg(0).asRec().jvm()), HTTP_MCP_HANDLER_TID, inst.arg(0).vid())))
             .create();
 
     // Transport-agnostic protocol handler (composition)

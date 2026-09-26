@@ -803,7 +803,7 @@ public final class CommonRewrites {
                                 this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
                                 lst(uri(expandedfURI), str(filterClause)),
                                 (lhs, inst) -> {
-                                    // Barrier re-application guard: if the SwarmMachine
+                                    // Barrier re-application guard: if the SwarmProcessor
                                     // already accumulated results via the gather barrier,
                                     // just return those results; re-querying g.V().has()
                                     // would double them.

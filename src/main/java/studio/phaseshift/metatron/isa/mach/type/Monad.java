@@ -20,11 +20,8 @@ package studio.phaseshift.metatron.isa.mach.type;
 
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 
 import java.util.Objects;
-
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -35,9 +32,6 @@ public interface Monad<OBJ extends Obj> extends Obj {
 
     Obj obj();
 
-    default Rec state() {
-        return rec0();
-    }
 
     /// //////////////////////////////////////////////
 
@@ -59,7 +53,7 @@ public interface Monad<OBJ extends Obj> extends Obj {
     OBJ jvm();
 
     class Helpers {
-        
+
         public static String monadToString(final Monad monad) {
             return "%s::[%s<=o==M==i=>%s]".formatted(monad.tid(), monad.obj(), monad.inst());
         }

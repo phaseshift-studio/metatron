@@ -22,8 +22,8 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Iterator;
@@ -39,9 +39,9 @@ import static studio.phaseshift.metatron.Tokens.OBJS_TID;
  */
 public class RunningMonads implements Obj {
 
-    protected Map<Inst, PCMonad> instIndex = new ConcurrentHashMap<>();
+    protected Map<Inst, StatefulMonad> instIndex = new ConcurrentHashMap<>();
 
-    public RunningMonads(final Iterable<PCMonad> monads) {
+    public RunningMonads(final Iterable<StatefulMonad> monads) {
         monads.forEach(this::append);
     }
 
@@ -49,14 +49,14 @@ public class RunningMonads implements Obj {
         return new RunningMonads(List.of());
     }
 
-    public static RunningMonads of(final Iterable<PCMonad> monads) {
+    public static RunningMonads of(final Iterable<StatefulMonad> monads) {
         return new RunningMonads(monads);
     }
 
     @Override
     public RunningMonads append(final Obj monad) {
-        assert monad instanceof PCMonad;
-        monad.forEach(o -> this.instIndex.compute(o.<PCMonad>as().inst(), (inst, value) -> null == value ? o.as() : value.obj(value.obj().append(o.<PCMonad>as().obj()))));
+        assert monad instanceof StatefulMonad;
+        monad.forEach(o -> this.instIndex.compute(o.<StatefulMonad>as().inst(), (inst, value) -> null == value ? o.as() : value.obj(value.obj().append(o.<StatefulMonad>as().obj()))));
         Router.global().stats().monadicStats().incrRunningMonads(1L);
         return this;
     }
@@ -64,7 +64,7 @@ public class RunningMonads implements Obj {
 
     @Override
     public cInt c() {
-        return this.instIndex.values().stream().map(PCMonad::obj).map(Obj::c).reduce(cInt.ZERO(), cInt::plus);
+        return this.instIndex.values().stream().map(StatefulMonad::obj).map(Obj::c).reduce(cInt.ZERO(), cInt::plus);
     }
 
    /* @Override
@@ -75,11 +75,11 @@ public class RunningMonads implements Obj {
     }*/
 
     @Override
-    public PCMonad take() {
+    public StatefulMonad take() {
         if (this.instIndex.isEmpty())
             return null;
         for (final Inst key : this.instIndex.keySet()) {
-            final PCMonad value = this.instIndex.remove(key);
+            final StatefulMonad value = this.instIndex.remove(key);
             Router.global().stats().monadicStats().incrRunningMonads(-1L);
             return value;
         }
@@ -93,7 +93,7 @@ public class RunningMonads implements Obj {
 
 
     @Override
-    public Iterable<PCMonad> jvm() {
+    public Iterable<StatefulMonad> jvm() {
         return this.instIndex.values();
     }
 
@@ -109,7 +109,7 @@ public class RunningMonads implements Obj {
 
     @Override
     public RunningMonads clone(final Object jvm, final fURI tid, final fURI vid) {
-        return new RunningMonads((Iterable<PCMonad>) jvm);
+        return new RunningMonads((Iterable<StatefulMonad>) jvm);
     }
 
     @Override

@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.PCMonad;
+import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -33,9 +33,9 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
-import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TYPE_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -116,7 +116,7 @@ public interface ObjFactory extends Rec {
             tid = Tokens.FAIL_TID;
         else if (NoObj.class.isAssignableFrom(objClass))
             tid = NOOBJ;
-        else if (PCMonad.class.isAssignableFrom(objClass))
+        else if (StatefulMonad.class.isAssignableFrom(objClass))
             tid = MACH_MONAD_TID;
         else
             throw MTronException.of("unable to convert to requested obj class: %s", objClass);

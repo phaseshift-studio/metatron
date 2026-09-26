@@ -150,7 +150,7 @@ public class SkillFeature extends AbstractFeature implements SkillService {
                 }
             }
         } catch (final Exception e) {
-            throw MTronException.of("unable to setup skills: %s", e);
+            throw MTronException.of("unable to setup skills: %s", MTronException.translateMessage(e));
         }
         return noobj();
     }

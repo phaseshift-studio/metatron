@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
+import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -150,7 +150,7 @@ public interface Code extends Call {
     default Obj apply(final Obj lhs) {
         final Call code = this.tryToInst();
         if (code.isCode())
-            return SwarmMachine.of(lhs, code.as()).apply(lhs.isMonad() ? lhs : noobj());
+            return SwarmProcessor.of(lhs, code.as()).apply(lhs.isMonad() ? lhs : noobj());
         // single inst: dispatch by the inst's own monad flag. A monadic inst (loop())
         // receives the monad; a value inst is resolved and applied against the monad's obj.
         final boolean monadic = code.isInst() && code.resolve(lhs).tid().hasQ(MONAD_IN);

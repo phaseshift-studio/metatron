@@ -1407,7 +1407,10 @@ public class mParser {
         try {
             return (O) ((List) list).get(index);
         } catch (final Exception e) {
-            throw MTronException.of(e, "%s - unexpected %s[%d]", e, list, index);
+            // designed text: the raw IndexOutOfBounds + a java List dump said
+            // nothing about what went wrong in the parse structure
+            throw MTronException.of(e, "token list end — asked for token %d of %d (a malformed parse structure)",
+                    index, ((List) list).size());
         }
     }
 

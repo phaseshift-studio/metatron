@@ -24,10 +24,10 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.PCMonad;
+import studio.phaseshift.metatron.isa.mach.type.MonadProcessor;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
+import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
+import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -133,7 +133,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         for (final Code segment : segments) {
             try {
                 final Obj resolvedResult = segment.resolve(running);
-                final Machine mach = SwarmMachine.of(resolvedResult.as());
+                final MonadProcessor mach = SwarmProcessor.of(resolvedResult.as());
                 running = mach.apply(noobj());
             } catch (final Exception e) {
                 throw MTronException.of(e);
@@ -364,7 +364,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     }
 
     @Override
-    public String writeMonad(final PCMonad monad) {
+    public String writeMonad(final StatefulMonad monad) {
         return handleIds(monad, "M[" + this.write(monad.obj()) + "<=M=>" + this.write(monad.inst()));
     }
 

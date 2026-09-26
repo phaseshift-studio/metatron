@@ -19,98 +19,108 @@
 package studio.phaseshift.metatron.isa.mach.type;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.thread.mThread;
-
-import java.util.Map;
-import java.util.function.Consumer;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.type.router.BasicRouter;
+import studio.phaseshift.metatron.util.CommonUtil;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.InstSet.instset0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
 
-/*
- * Machine — a thread of execution that processes code through a monadic
- * step-loop with barriers, halted collection, and lifecycle control.
- *
- * A Machine IS-A {@code mThread}: it can be started, paused, resumed, and
- * stopped.  The machine's state (code, running queue, barriers, halted
- * objects) lives in its jvm map, making it fully queryable through the
- * mtron URI graph.
+/**
+ * Machine — the container that binds an ISA to its lowering and execution axes. A Machine IS-A
+ * {@code Router}: it holds spaces, so a machine is a memory hierarchy — its own address space plus
+ * the nested spaces of its instset, compiler and processor. The three members are held as rec
+ * entries ({@code instset}, {@code compiler}, {@code processor}), which is exactly the shape of the
+ * {@code machine::T} structural type.
+ * <p>
+ * Execution is <em>not</em> on this axis: {@link Processor} (a thread) runs code and
+ * {@link Compiler} (a rec) lowers it — they are siblings of {@code Machine}, not refinements. A
+ * machine <em>contains</em> them.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Machine extends mThread {
+public interface Machine extends Router {
 
-    Type MACH_MACHINE_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(MACH_MACHINE_TID)
-            .isaPredicate(rec(
-                    uri(HALTED), T(ALL_STAR),
-                    uri(RUN), T(MACH_MONAD_TID.maybeSome()),
-                    uri(BARRIER), LST_TYPE))
-            .create();
+    static Machine mach0() {
+        return Helper.Machine0.single();
+    }
 
-    // ======================== Machine state ========================
-
-    /**
-     * @return the machine state as a jvm map (code, running, barriers, halted)
-     */
-    Map<Obj, Obj> jvm();
+    interface Component extends Rec {
+        default Machine machine() {
+            final Obj mach = this.at(MACHINE);
+            return mach instanceof Machine ? mach.as() : mach0();
+        }
+    }
 
     /**
-     * @return the code this machine is executing
+     * @return the machine's instruction set (ISA), or {@code null} when none is bound
      */
-    Code code();
+    default InstSet instset() {
+        return this.at(uri(INSTSET)).orElse(instset0());
+    }
 
     /**
-     * Return a copy of this machine with the given code substituted.
+     * @return this machine with the given instruction set bound
      */
-    Machine code(final Code code);
+    default Machine instset(final InstSet instset) {
+        CommonUtil.close(this.atDirect(uri(INSTSET)));
+        return this.at(uri(INSTSET), instset, MUTABLE).as();
+    }
 
     /**
-     * @return the running monad queue
+     * @return the machine's compiler, or {@code null} when none is bound
      */
-    Obj running();
+    default Compiler compiler() {
+        return this.at(COMPILER).orElse(null);
+    }
 
     /**
-     * @return the barrier monad queue
+     * @return this machine with the given compiler bound
      */
-    Lst barriers();
+    default Machine compiler(final Compiler compiler) {
+        return this.at(uri(COMPILER), compiler, MUTABLE).as();
+    }
 
     /**
-     * @return the collection of halted objects produced during execution
+     * @return the machine's processor, or {@code null} when none is bound
      */
-    Obj halted();
-
-    // ======================== Halt callback ========================
+    default Processor processor() {
+        return this.at(PROCESSOR).orElse(null);
+    }
 
     /**
-     * Register a callback invoked for each halted object.
+     * @return this machine with the given processor bound
      */
-    Machine onHalt(final Consumer<Obj> halted);
+    default Machine processor(final Processor processor) {
+        return this.at(uri(PROCESSOR), processor, MUTABLE).as();
+    }
 
-    /**
-     * @return the current onHalt callback
-     */
-    Consumer<Obj> onHalt();
+    class Helper {
 
-    // ======================== Resolution ========================
+        public static final class Machine0 extends BasicRouter implements Machine {
+            private static final Machine0 INSTANCE = new Machine0();
 
-    /**
-     * Resolve the machine's code against the given input, creating initial
-     * and barrier monads in the running/barriers queues.
-     */
-    Machine resolve(final Obj lhs);
+            public static Machine0 single() {
+                return INSTANCE;
+            }
 
-    // ======================== Cloning ========================
+            private Machine0() {
+                super(null);
+            }
 
-    Machine clone(final Object jvm, final fURI tid, final fURI vid);
+            public fURI tid() {
+                return MACH_MACHINE_TID.zero();
+            }
+
+            public fURI vid() {
+                return null;
+            }
+
+        }
+
+    }
 }

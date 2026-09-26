@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler;
+import studio.phaseshift.metatron.isa.web.webInstSet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +77,11 @@ public class mcpServer extends MRec {
     public static final String PROTOCOL_VERSION = "2025-03-26";
 
     public mcpServer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, vid);
+        // the constructor's job is to reshape what it is given into the form the ::T declares — and it must
+        // happen in the super() argument, because MObj's constructor type-checks the obj it is handed: a
+        // `tool => [!*eval, …]` list that reached the predicate unreshaped would throw before this constructor
+        // had a chance to key it.
+        super(Helper.reshape(jvm), tid, vid);
     }
 
     /**
@@ -219,7 +224,9 @@ public class mcpServer extends MRec {
                                         uri(DESCRIPTION), str(toolEntry.toShortString()),
                                         uri("inputSchema"), rec(uri(TYPE), str(OBJECT), uri("properties"), rec()));
                             final ToolSpecification spec = mTool.mtronInstToolSpecification(mTool.mtronInstToDocs(toolEntry.asInst())).get0();
-                            return (Obj) rec(uri(NAME), str(spec.name()),
+                            // advertised by KEY, not by spec.name(): the key is what tools/call resolves, and a
+                            // keyed entry's key is the name its author published
+                            return (Obj) rec(uri(NAME), str(kv.first().uriValue().toString()),
                                     uri(DESCRIPTION), str(null == spec.description() ? "<no description>" : spec.description()),
                                     uri("inputSchema"), jsonSchemaToRec(spec.parameters()));
                         })
@@ -582,6 +589,133 @@ public class mcpServer extends MRec {
         return new WebSocketRec.IO(
                 MIME.MIMEType.of(MIME.MIMEType.APPLICATION_JSON.value),
                 MIME.MIMEType.of(MIME.MIMEType.APPLICATION_JSON.value));
+    }
+
+// ========================================
+// Helper — the shared ladder every transport and every constructor uses
+// ========================================
+
+    /**
+     * The ladders that used to live, slightly differently, in each transport and each server type.
+     *
+     * @author Marko A. Rodriguez (http://markorodriguez.com)
+     */
+    public static final class Helper {
+
+        private static final GraphittyLogger LOG = Graphitty.log(Helper.class);
+
+        private Helper() {
+            // do nothing
+        }
+
+        /**
+         * Reshape a server config into the form {@code mcp_server::T} declares, so a constructor can hand the
+         * result to {@code super(...)} and pass the predicate check.
+         * <p>
+         * Only {@code tool} needs reshaping: a server's tools may be written as a <em>collection</em> —
+         * {@code tool => [!*eval, !*read_memory]} — because that is how a {@code tool_feature} names its tools,
+         * and an author should not have to type a tool's name twice. The key is always derived from the
+         * instruction ({@link mTool#toolName}) rather than taken from the author, because {@code tools/list}
+         * advertises the derived name and {@code tools/call} looks it up by rec key: a hand-written key that
+         * disagreed would list a tool that can never be called.
+         */
+        public static Map<Obj, Obj> reshape(final Map<Obj, Obj> jvm) {
+            final Obj tool = null == jvm ? null : jvm.get(uri(TOOL));
+            if (null == tool || tool.isNoObj())
+                return jvm;
+            final Map<Obj, Obj> reshaped = mutableMap();
+            reshaped.putAll(jvm);
+            reshaped.put(uri(TOOL), tools(tool));
+            return reshaped;
+        }
+
+        /**
+         * Normalize a {@code tool} field — a list of instruction references, a bare instruction, or an
+         * already-keyed rec — into the name-keyed rec {@link #handleToolsCall} reads.  Idempotent, and total:
+         * an entry it cannot name is left alone under whatever key it already had rather than failing the
+         * server, so no server that worked before stops working.
+         */
+        public static Rec tools(final Obj collection) {
+            final Rec tools = rec();
+            if (collection.isNoObj())
+                return tools;
+            if (collection.isLst())
+                collection.asLst().lstValue().forEach(entry -> keyed(tools, null, entry, true));
+            else if (collection.isRec() && !collection.asRec().has(uri(INST)))
+                collection.asRec().jvm().forEach((key, value) -> keyed(tools, key, value, false));
+            else
+                keyed(tools, null, collection, true);
+            return tools;
+        }
+
+        /**
+         * Put one entry under the name a client will see.
+         * <p>
+         * Two kinds of entry, two kinds of name, and the difference is deliberate:
+         * <ul>
+         *   <li><b>an authored key is the name.</b> A keyed collection is written by hand, and its keys are
+         *   what that server publishes — the emulator's {@code adduser} / {@code deluser} / {@code tools_call}
+         *   are the names its own {@code tools_call} resolves emulated tools by, and the name a client calls.
+         *   Re-deriving those would rename a live contract.</li>
+         *   <li><b>a collection entry is named by its instruction.</b> {@code tool => [!*eval]} says "this
+         *   instruction, as a tool", and the only stable name for that is the instruction's flattened tid
+         *   ({@code m_inst_eval}) — the same name it has on every other server it is mounted on.</li>
+         * </ul>
+         * Either way the name it lands under is the name {@code tools/list} advertises, so a client that
+         * follows the listing can always call what it saw.
+         */
+        private static void keyed(final Rec tools, final Obj key, final Obj value, final boolean derived) {
+            if (null == value || value.isNoObj())
+                return;
+            // `!*eval` is a deferred pointer (auto_from), and a boot file names its tools that way — it means
+            // "whatever `eval` resolves to right now". Dereferencing here is what turns the pointer into the
+            // instruction (and lets its tid name the tool); left unresolved it would key as `m_inst_auto_from`.
+            final Obj dereferenced = value.dereference();
+            final Obj named = null != dereferenced && !dereferenced.isNoObj() ? dereferenced : value;
+            if (!derived && null != key && !key.isNoObj()) {
+                tools.jvm().put(key, named);
+                return;
+            }
+            final Obj entry = named.isObjInst()
+                    ? named
+                    : named.isRec() && named.asRec().has(uri(OBJ)) ? named.asRec().atDirect(uri(OBJ)) : named;
+            if (entry.isObjInst())
+                tools.jvm().put(uri(mTool.toolName(entry.asInst().tid())), named);
+            else if (null != key && !key.isNoObj())
+                tools.jvm().put(key, named);
+            else
+                LOG.warn("mcp tool entry has no name and is not an instruction — ignoring: %s", value);
+        }
+
+        /**
+         * Resolve a route value to an mcp server: a uri that reads back to one, an {@code mcp_server} type
+         * materialized through its constructor, or a server already.  The ladder ws, http and stdio all
+         * resolve their {@code server}/route values with, so a "server" cannot mean three different things.
+         */
+        public static Obj resolve(final Obj target) {
+            // a boot file writes `server => !*</sys/space/mcp/basic_server>` — dereference the pointer before
+            // deciding which of the three shapes this is
+            final Obj dereferenced = null == target ? null : target.dereference();
+            final Obj pointer = null != dereferenced && !dereferenced.isNoObj() ? dereferenced : target;
+            final Obj read = null != pointer && pointer.isUri() ? Router.global().read(pointer.uriValue()) : pointer;
+            if (null == read || read.isNoObj())
+                return noobj();
+            if (read.isType() && read.asType().hasConstructor()
+                    && Obj.Helper.specificType(read).test(webInstSet.MCP_SERVER_TYPE)) {
+                final Obj server = read.asType().constructor().apply(rec()).as();
+                if (!server.isFail())
+                    return server;
+            }
+            return read;
+        }
+
+        /**
+         * A JSON-RPC error, for a carrier that must answer one outside the protocol handlers (a line that
+         * never parsed, say, where there is no id to echo).
+         */
+        public static Obj error(final Obj id, final int code, final String message) {
+            return mcpError(id, jnt(code), str(message));
+        }
     }
 
 }

@@ -671,6 +671,20 @@ public class mParserTest extends AbstractMetatronTest {
                 "the designed message should surface, got: " + ex.getMessage());
     }
 
+    @Test
+    public void testPickOutOfRangeUsesDesignedText() {
+        // pick() is the inst-chain token accessor — an out-of-range ask is a
+        // malformed parse structure, not an IndexOutOfBounds to be shown
+        final MTronException ex = assertThrows(MTronException.class, () -> mParser.pick(List.of(1, 2, 3), 5),
+                "an out-of-range pick must fail");
+        assertTrue(ex.getMessage().contains("token list end — asked for token 5 of 3"),
+                "the designed text should name the ask and the list, got: " + ex.getMessage());
+        assertFalse(ex.getMessage().contains("IndexOutOfBounds"),
+                "a raw java exception name must not leak, got: " + ex.getMessage());
+        assertTrue(java.util.Objects.equals(mParser.pick(List.of(1, 2, 3), 1), 2),
+                "an in-range pick must still return the token");
+    }
+
     // ========================================
     // ParseDiagnose — non-throwing parse
     // ========================================

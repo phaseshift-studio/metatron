@@ -29,8 +29,8 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
  * mThread — the unified thread lifecycle contract.
  *
  * Both {@code AbstractThread} (and its subclasses {@code VirtualThread},
- * {@code CoreThread}) and {@code Machine} (and its subclasses like
- * {@code SwarmMachine}) share this contract.  A thread is a callable
+ * {@code CoreThread}) and {@code Processor} (and its refinements like
+ * {@code MonadProcessor}, {@code SwarmProcessor}) share this contract.  A thread is a callable
  * object with a lifecycle: it can be started, paused, resumed, and
  * stopped, and it yields a result.
  *

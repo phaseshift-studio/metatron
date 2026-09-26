@@ -117,7 +117,7 @@ code, different answer, decided by one line of boot data.
 | 4 | `boot/mcp.boot.mtron` — portless profile | `boot/` | the `console.boot.mtron` sibling: capability as data |
 | 5 | `--mcp` flag | `BootLoader.main` | the API the user asked for; sugar over 4, guarantee over any profile |
 | 6 | launcher output discipline | `bin/metatron`, `bin/lib/utility.sh` | the shell must not write to fd 1 before the JVM owns it |
-| 7 | **tool pull-out** — the tool instructions get registered as instructions, and `mcp_server`'s `tool` field accepts a collection of references (§5.3) | `mcpMetatronBuilder`, `webInstSet`, `mTool` | turns a Java-hardcoded tool set into a boot-data selection; the reason `!*eval` works |
+| 7 | **tool pull-out** — the tool instructions get registered as instructions, and `mcp_server`'s `tool` field accepts a collection of references (§5.3) | `mcpMetatronBuilder`, `webInstSet`, `mTool` | turns a Java-hardcoded tool set into a boot-data selection — the *selection* half of which has landed (§9.1) |
 
 No `stdioSpace`. A space owns an addressable carrier and a route table; stdio's carrier *is* the process, and
 there is no path to route on (one connection, no `Mcp-Session-Id`). This is exactly the split that already
@@ -362,29 +362,33 @@ What this buys, beyond tidiness:
 - **The tools become usable from mtron**, not just over MCP: `eval(...)` in a REPL or a drstynx agent works the
   same as `eval` over the wire.
 
-### 5.3.1 The name is derived, not typed
+### 5.3.1 Two kinds of entry, two kinds of name
 
-You write the **collection**; the names come from the instructions:
+A tool can be written either way, and both are legal for a reason:
 
 ```mtron
-mcp_server::[tool => [!*eval, !*read_memory, !*write_memory]]@/sys/space/mcp/basic_server;   [-- write this --]
-mcp_server::[tool => [m_inst_eval => !*eval, ...]]@/sys/space/mcp/basic_server;             [-- do NOT write this --]
+mcp_server::[tool => [!*eval, !*read_memory, !*write_memory]]@/sys/space/mcp/basic_server;  [-- a selection --]
+mcp_server::[tool => [adduser => !*adduser, tools_call => !*tools_call]]@/mcp/emulator;    [-- a naming   --]
 ```
 
-The second form is not merely redundant, it is **broken**, and the code says exactly why:
+* **a collection entry is named by its instruction.** `!*eval` says "this instruction, as a tool", and the only
+  stable name for it is the instruction's flattened tid (`m_inst_eval`) — the same name it has on every server
+  it is mounted on. Writing `[eval => !*eval]` by hand is not *broken*, it is **redundant**, and the key is
+  ignored in favor of the derived one.
+* **an authored key is the name.** A keyed collection publishes *its* names: the emulator's `adduser` /
+  `deluser` / `tools_call` are what its own `tools_call` resolves emulated tools by and what clients call.
+  Re-deriving those from the tid would rename a live contract.
 
-- `handleToolsList` advertises an inst entry's name as `spec.name()`, which `mTool.mtronInstToolSpecification`
-  builds from `toolName(inst.tid())` (`mTool.java:198`) — the rec **key is ignored** for inst entries.
-- `handleToolsCall` looks the tool up **by that rec key**: `this.at(TOOL).orElse(rec0()).at(uri(toolName))`.
-- So a key that disagrees with the derived name yields a tool that is *listed* as `m_inst_eval` and is
-  *uncallable*: `tools/call` misses the key and answers `-32601 tool not found`.
+The gap this closes is real, and `mcpEmulatorTest` is where it showed: `handleToolsList` used to advertise an
+instruction entry's name as `spec.name()` (the flattened tid) while `handleToolsCall` resolved by **rec key** —
+so the emulator advertised `m_inst_adduser` and answered only to `adduser`. The fix is not to pick a winner but
+to make the key *be* the name: **the listing now advertises the key**, whatever the key is, so a client that
+follows the listing can always call what it saw. `mcp_mtron` and `mcp_message` are unaffected because their keys
+already equal the flattened tids (they key with `mTool.toolName`), and the derived-key path still applies to
+collection entries, so `tool => [!*eval]` advertises `m_inst_eval`.
 
-Every existing construction site already obeys the derived-name rule — `MCPServerUtil:65`,
-`mcpMessageServer:160-162`, `mcpMetatronBuilder:131+`, and `mcpServer.of(skill)` all key with
-`mTool.toolName(inst.tid())`. The invariant is real but currently held up by convention in four places; the
-normalization in §5.3 is what makes it structural. The name-keyed rec remains the internal representation
-`mcpServer` consumes, and it is still the right form for a **non-inst** entry (`handleToolsList`'s `else`
-branch names those by key, since there is no tid to flatten).
+The name-keyed rec remains the internal representation `mcpServer` consumes either way, and it is the only
+form for a **non-inst** entry (a `tool::T` rec, or an mcp client's remote tools) — those name themselves.
 
 ### 5.3.2 The constructor contract: reshape, or `fail::T`
 
@@ -552,7 +556,7 @@ every other request wait behind it, and the client's timeout becomes the failure
 
 ## 9. Files
 
-**New**
+**New** — *landed*
 
 | file | contents |
 |---|---|
@@ -560,7 +564,37 @@ every other request wait behind it, and the client's timeout becomes the failure
 | `src/main/java/.../isa/web/space/stdio/StdioProtocol.java` | fd-1 claim + logback re-point |
 | `boot/mcp.boot.mtron` | the portless profile |
 | `src/test/java/.../isa/web/space/mcp_stdioHandlerTest.java` | unit, extends `AbstractMcpHandlerTest`, in-memory streams |
-| `bin/test/mcp-stdio-smoke.py` | scripted session over a real pipe (run via `bin/metatron-docker build shell`) |
+| `bin/test/mcp-stdio-smoke.py` | scripted session over a real pipe (run via `bin/metatron-docker build shell`) — *not yet written; the shell one-liner covers it* |
+
+### 9.1 What landed, and what is still open
+
+Landed and verified end to end: the carrier, `StdioProtocol`, `mcp_server`'s constructor reshape
+(`mcpServer.Helper.reshape`/`tools`/`resolve`), `--mcp`, `boot/mcp.boot.mtron`, the launcher's stdio
+discipline, the `mcp_stdio` type registration, and the unit test. `mcp_stdioHandlerTest` 15/15, and the MCP
+regression suite (emulator, mtron, message, stdio) is 100 tests / 0 failures.
+
+A correction worth recording, because the first cut got it wrong: the reshape originally re-keyed *every*
+entry by `mTool.toolName(inst.tid())`, which closed the listing/calling gap but renamed `mcpEmulatorTest`'s
+published tools (`adduser` → `m_inst_adduser`) and broke three of its tests. The rule that holds is §5.3.1's
+two-kinds rule — an authored key is the name, a collection entry gets the derived one — plus advertising the
+key in `tools/list`. That keeps every existing server's names and still makes "everything listed is callable"
+true. A scripted session over a real pipe returns
+pure JSON-RPC on fd 1 — `initialize`, `tools/list` → one tool `m_inst_eval`, and
+`tools/call {"0":"1+2"}` → `3`, `{"0":"[1,2,3]>-.sum()"}` → `6` — with logs and banners on stderr.
+
+Two findings from building it that the design did not anticipate:
+
+- **`!*eval` is a deferred pointer (`auto_from`), not the instruction.** A boot file's `tool => [!*eval]` arrives
+  as `/m/inst/auto_from`, so the reshape must `dereference()` each entry before deriving the name — otherwise
+  the tool is listed as `m_inst_auto_from`. The same applies to `server => !*</sys/space/mcp/basic_server>`.
+- **`!*eval` works as an MCP tool as written** (positional `{"0": "…"}` argument, and the code is evaluated, not
+  passed through as a string). So the minimal server really is one line of boot data with no new Java — but it
+  advertises a positional argument and inherits `auto_from`'s noise in the schema, which is the argument for
+  the pulled-out `eval_mtron` (named `code::T` argument) once the rest of the tools move.
+
+Still open: the **full tool pull-out** (registering `read_memory`/`write_memory`/`list_space`/`router_info`/
+`find_inst`/`spawn_*` as instructions so a profile can name them, which renames them to
+`m_web_mcp_inst_*`), per-request dispatch, notification push, and the `as?mcp_stdio<=json` config row.
 
 **Changed**
 

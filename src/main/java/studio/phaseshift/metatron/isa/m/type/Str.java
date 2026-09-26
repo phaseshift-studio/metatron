@@ -411,7 +411,7 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                     docWrap(instC(MERGE_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.stream().map(Obj::<String>jvmAs).reduce((a, b) -> a + inst.arg(0).strValue() + b).orElse(""))),
                             "an str barrier", "the join of the str barrier", Map.of(jnt(0), "the join token"), "join the barrier given the str arg"),
                     //    Map.of(uri(LAW), laws(Category.Law.monoidic), uri(INVERSE), uri(SPLIT_INST_TID.dom(STR_TID).rng(Tokens.LST_TID)))),
-                    docWrap(instC(REGEX_INST_TID.dom(STR_TID).rng(Tokens.LST_TID), lst(T(STR_TID)), (lhs, inst) -> {
+                    docWrap(instC(SELECT_INST_TID.dom(STR_TID).rng(Tokens.LST_TID), lst(T(STR_TID)), (lhs, inst) -> {
                                 final Pattern pattern = REGEX_CACHE.compute(inst.arg(0).strValue(), (k, v) -> null == v ? Pattern.compile(k) : v);
                                 final Matcher matcher = pattern.matcher(lhs.strValue());
                                 if (matcher.groupCount() == 0) {
@@ -452,7 +452,7 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                     //     Map.of(uri(LAW), laws(Category.Law.idempotent))),
                     instC(LCASE_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.strValue().toLowerCase())),
                     //         Map.of(uri(LAW), laws(Category.Law.idempotent))),
-                    instC(SELECT_INST_TID.dom(STR_TID).rng(STR_TID), lst(REC_TYPE), (lhs, inst) -> str(Str.Helper.project(lhs.strValue(), inst.arg(0)), lhs.tid(), lhs.vid())),
+                    instC(UPDATE_INST_TID.dom(STR_TID).rng(STR_TID), lst(REC_TYPE), (lhs, inst) -> str(Str.Helper.project(lhs.strValue(), inst.arg(0)), lhs.tid(), lhs.vid())),
                     instC(HAS_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Str.Helper.project(lhs.strValue(), inst.arg(0).asRec()))),
                     //      Map.of(uri(LAW), laws(Category.Law.boolean_))),
 

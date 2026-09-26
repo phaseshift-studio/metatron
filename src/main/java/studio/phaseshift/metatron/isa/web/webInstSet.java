@@ -74,6 +74,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_emulator_httpHandler.HTTP_MCP_EMULTATOR_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler.HTTP_MCP_HANDLER_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.stdio.handler.mcp_stdioHandler.STDIO_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mtron_httpHandler.HTTP_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.web_httpHandler.WEB_HTTP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.*;
@@ -409,6 +410,12 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(HTTP_MCP_EMULTATOR_TYPE, "an http mcp emulator server that provides an agent a stateful environment of mcp server access"),
                         docWrap(HTTP_MTRON_HANDLER_TYPE, "a simple http handler accepting mtron expressions and return mtron results", "mtron_http::[=>]"),
                         docWrap(HTTP_MCP_HANDLER_TYPE, "an abstract mcp http handler providing necessary json-rpc infrastructure for mcp servers to leverage"),
+                        docWrap(STDIO_MCP_HANDLER_TYPE, """
+                                                                 an mcp stdio carrier — the transport-agnostic mcp server served over the process's own stdin/stdout.
+                                                                 fd 1 is the wire, so the VM's ordinary output (logs, banners, renders) is moved to stderr.
+                                                                 the session ends at EOF on stdin, which is how a client shuts the server down.
+                                                                 """,
+                                "mcp_stdio::[server => !*</sys/space/mcp/basic_server>]@/sys/io/mcp/stdio"),
                         docWrap(WEB_HTTP_HANDLER_TYPE, "a http handler serving web content from a router-backed space"),
                         /// //////////////////////////////
                         docWrap(MCP_MTRON_SERVER_TYPE, "a transport-agnostic mcp server exposing metatron-native tools (eval_mtron, list_space, router_info, find_inst)"),

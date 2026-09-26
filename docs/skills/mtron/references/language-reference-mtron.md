@@ -151,13 +151,13 @@ int{50}::10.mult(10)          [-- int{50}::100 (coefficient account for) --]
 ## 5. String Operations
 
 ```mtron_pre
-"goodbye".plus(" nowhere")    [-- "goodbye nowhere" --]
-"goodbye" + " nowhere"        [-- sugar sytnax for previous --]
-'a b c'.split(' ')            [-- ["a", "b", "c"] --]
-'a b c'-<' '                  [-- sugar syntax for previous --]
-{"a","b","c"}>-' '            [-- "a b c"  (merge with separator) --]
-'ab3cd'.regex('\d+')          [-- ['3'] --]
-'ab3cd'.regex('\d{2}')        [-- [,]  (no match — empty pair) --]
+"goodbye".plus(" nowhere")     [-- "goodbye nowhere" --]
+"goodbye" + " nowhere"         [-- sugar sytnax for previous --]
+'a b c'.split(' ')             [-- ["a", "b", "c"] --]
+'a b c'-<' '                   [-- sugar syntax for previous --]
+{"a","b","c"}>-' '             [-- "a b c"  (merge with separator) --]
+'ab3cd'.select('\d+')          [-- ['3'] --]
+'ab3cd'.select('\d{2}')        [-- [,]  (no match — empty pair) --]
 ```
 
 ---

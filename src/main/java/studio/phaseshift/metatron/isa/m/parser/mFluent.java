@@ -191,10 +191,6 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.GTE_INST_TID, lst(obj)));
     }
 
-    public F regex_(final Obj obj) {
-        return this.addInst(instB(mInstSet.REGEX_INST_TID, lst(obj)));
-    }
-
     // ========================================
     // Arithmetic Operators
     // ========================================
@@ -597,10 +593,6 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F gte_(final Obj obj) {
             return new mFluent<F>().gte_(obj);
-        }
-
-        public static <F extends mFluent<F>> F regex_(final Obj obj) {
-            return new mFluent<F>().regex_(obj);
         }
 
         // ========================================

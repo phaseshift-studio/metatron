@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.sys.type;
 
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.util.MTronException;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -79,5 +80,31 @@ public class ExecutionStackTest {
                 "the repeated frame must render once, plus the collapse marker naming it, not " + repeats + " times; got: " + rendered);
         assertTrue(rendered.contains("… (×49 more — same frame repeated:"),
                 "the collapse marker should name the count, got: " + rendered);
+    }
+
+    @Test
+    public void testFlatSpinTripsTheWorkBudgetWithANamedFailure() {
+        // the shape of the self-referential inst-space freeze: shallow
+        // nesting, repeated push/pop, never deeper — the depth cap never
+        // sees it, only the cumulative budget can
+        ExecutionStack.clear();
+        final long saved = ExecutionStack.workBudget;
+        ExecutionStack.workBudget = 1000;
+        try {
+            final MTronException ex = assertThrows(MTronException.class, () -> {
+                ExecutionStack.push(ExecutionStack.exec(ExecutionStack.ExState.resolve_inst, "read /m/inst/auto_from?rng=#{*}&dom=#{?}"));
+                for (int i = 0; i < 10_000; i++) {
+                    ExecutionStack.push(ExecutionStack.exec(ExecutionStack.ExState.apply_inst, "/m/inst/auto_from"));
+                    ExecutionStack.pop();
+                }
+            }, "a flat spin past the work budget must fail");
+            assertTrue(ex.getMessage().contains("computation budget exceeded"),
+                    "the budget failure must name itself, got: " + ex.getMessage());
+            assertTrue(ex.getMessage().contains("self-referential"),
+                    "the budget failure should name the suspected cause, got: " + ex.getMessage());
+        } finally {
+            ExecutionStack.workBudget = saved;
+            ExecutionStack.clear();
+        }
     }
 }

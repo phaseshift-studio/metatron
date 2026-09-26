@@ -46,7 +46,7 @@ public class NanorcUtil {
                     .map(f -> f.getFileName().toString().split("\\.")[0])) {
                 SUPPORTED_LANGUAGES = new HashSet<>(temp.toList());
             } catch (final Exception e) {
-                throw MTronException.of("unable to access conf/nanorc directory: %s", e);
+                throw MTronException.of("unable to access conf/nanorc directory: %s", MTronException.translateMessage(e));
             }
         }
         return Collections.unmodifiableSet(SUPPORTED_LANGUAGES);

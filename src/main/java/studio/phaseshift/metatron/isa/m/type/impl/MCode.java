@@ -37,6 +37,10 @@ public class MCode extends MObj implements Code {
         wireParents();
     }
 
+    public static Code code0() {
+        return new MCode(List.of(), CODE_TID.zero(), null);
+    }
+
     public static Code of(final List<Inst> insts) {
         return new MCode(insts, CODE_TID, null);
     }

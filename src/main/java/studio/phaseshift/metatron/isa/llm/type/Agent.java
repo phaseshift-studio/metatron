@@ -683,7 +683,10 @@ public class Agent extends MRec {
         final fURI currentFeature = this.currentHook.get().get0();
         final fURI currentStage = this.currentHook.get().get1();
         final String errorMessage = "[" + currentFeature + "][" + currentStage + "]";
-        isError.set(MTronException.of("%s: %s", errorMessage, e));
+        // the throwable's text goes through the failure translator: raw java
+        // (the toString of a provider exception) must not reach the fail text —
+        // the location prefix above is the position, the body is the detail
+        isError.set(MTronException.of("%s: %s", errorMessage, MTronException.translateMessage(e)));
         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_ERROR));
         // signal the waiting thread on every error: a failed turn has nothing left to await.
         // countDown() is idempotent, so this also covers the interrupt case.  Gating it on

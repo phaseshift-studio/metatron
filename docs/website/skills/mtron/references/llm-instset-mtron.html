@@ -1,0 +1,892 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>llm instruction set · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../../../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../../../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../../../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../../../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .terminal-box.click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .terminal-box.click-to-copy:active {
+            background-color: var(--mred);
+        }
+
+        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
+        .terminal-box.click-to-copy .hljs-copy-button {
+            display: none;
+        }
+    </style>
+    <script src="../../../js/metatron.js" type="text/javascript"></script>
+    
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../../../index.html" title="metatron"><img src="../../../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="../../../start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m.html"><img
+                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dckr.html"><img
+                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dcmnt.html"><img
+                            src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_grph.html"><img
+                            src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_ide.html"><img
+                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                            alt="ide"/>/m/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_iot.html"><img
+                            src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_llm.html"><img
+                            src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                            alt="llm"/>/m/llm</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach.html"><img
+                            src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                            alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach_ui.html"><img
+                            src="../../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                            alt="ui"/>/m/mach/ui</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math.html"><img
+                            src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math_cat.html"><img
+                            src="../../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_sys.html"><img
+                            src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_tble.html"><img
+                            src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                            alt="tble"/>/m/tble</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_vec.html"><img
+                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/vec</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_web.html"><img
+                            src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../../../tractatus.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/agent/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/robobot/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>robobot</a></li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/stream-ring-theory.pdf"><i
+                            class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/parametric-identities-in-ring-theory.html"><i
+                            class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/mm-adt.pdf"><i
+                            class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../../../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../../../index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../../../console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target (no rollover copy button). The :active CSS turns the block
+    // red while pressed; this copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
+        <h1 class="skill-title mb-1">llm instruction set</h1>
+        <small>The /m/llm instruction set — models, agents, features, skills and tools, and the Model Context Protocol on both sides of the wire: mcp_client::T over streamable-http, websockets or stdio, and mcp_server::T carried by http, ws or the process's own stdio. TRIGGER: When connecting an agent to an MCP server, exposing mtron instructions to an MCP client, choosing a transport (streamable-http + sse, ws, stdio), wiring tools into a tool_feature, or asking how a tool gets its name.</small><br/>
+        <a href="llm-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>llm-instset-mtron.md</a>
+    </div>
+    <div class="markdown-body">
+<h2>llm instruction set (<code>/m/llm</code>)</h2>
+<p>Three ideas carry the package.</p>
+<p><strong>An agent is a rec, not a class.</strong> <code>agent::T</code> holds a <code>model</code> and a bag of <code>feature</code>s; a model is a provider
+(ollama, openai, …) plus a model name; a feature is a stage spliced into the chat loop (<code>tool_feature</code>,
+<code>system_feature</code>, <code>cost_feature</code>, <code>compaction_feature</code>, …). <code>.chat()</code> runs the loop and <code>&gt;&gt;message</code> is the ledger
+it wrote.</p>
+<p><strong>A tool is an instruction.</strong> There is no tool registry to populate: anything callable <em>is</em> a tool, and <code>mTool</code>
+derives both the JSON schema and the name from the instruction's tid. That one rule is why a <code>tool_feature</code> can
+be handed an instruction (<code>!*bash</code>), a skill, an MCP client or an <code>mcp_server</code> — one vocabulary throughout — and
+why the same objs can be turned around and exposed outward as a server.</p>
+<p><strong>MCP is a projection, not a port.</strong> <code>mcp_server::T</code> is transport-agnostic: it speaks JSON-RPC 2.0 over its own
+<code>tool</code> / <code>resource</code> / <code>prompt</code> recs and knows nothing about sockets. A <em>carrier</em> wraps it — <code>mcp_http</code>, <code>mcp_ws</code>,
+<code>mcp_stdio</code> — and owns exactly the one thing the server does not: how bytes arrive. The other end is
+<code>mcp_client::T</code>, one connection to any server over any of those transports.</p>
+<h3>the space these examples use</h3>
+<p>The examples that <em>compile</em> (a <code>mtron_pre</code> block is executed by the docs pipeline and inlined with its results;
+a plain <code>mtron</code> block is only shown) need no server: they define a server, select its tools, and read what came
+out. The examples that <em>talk to a carrier</em> — a client reaching a mounted server — are shown, and they address the
+live carrier the way a boot file does, at <code>http://localhost:8777</code> and <code>ws://localhost:8555</code>.</p>
+<pre><code class="language-mtron">mtron&gt; import(/m/llm)
+==&gt;instset::[pattern=&gt;/m/llm/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],type=&gt;[rec::T[?[{?}provider=&gt;uri::T,host=&gt;uri::T,protocol=&gt;uri::T,llm=&gt;uri::T,{?}api_key=&gt;str::T,{?}timeout=&gt;!*/m/math/time,{?}size=&gt;!*/m/math/datasize,{?}quant=&gt;int::T,{?}context=&gt;int::T,{?}cost=&gt;{?}[in=&gt;!*/m/math/currency,out=&gt;!*/m/math/currency]]][ctor?rng=model&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@model,rec::T[?[inst=&gt;&lt;#&gt;::T,name=&gt;uri::T,desc=&gt;str::T,{?}arg=&gt;&lt;#&gt;::T]]@tool,rec::T[?[agent=&gt;uri{+}::T,user=&gt;uri{+}::T,algorithm=&gt;rec::T]]@session,rec::T[?[session=&gt;uri::T,index=&gt;int::T,{?}prev=&gt;uri::T,{?}next=&gt;uri::T,{?}message=&gt;lst::T,time=&gt;!*/m/math/time]]@iteration,rec{*}::T[?[name=&gt;str::T,{?}concept=&gt;{?}[concept{*}::T],{?}message=&gt;{?}[message{*}::T]]]@concept,rec::T[?[text=&gt;str::T,{?}status=&gt;isa(union(open,run,block,close)).else(open),{?}time=&gt;isa(uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime).else(datetime_now()),{?}concept=&gt;[rec{*}::T[?[name=&gt;str::T,{?}concept=&gt;{?}[concept{*}::T],{?}message=&gt;{?}[message{*}::T]]]@concept],{?}message=&gt;[message{*}::T],{?}reference=&gt;lst::T]]@todo,rec::T[?[{?}in=&gt;isa(int::T).else(0),{?}out=&gt;isa(int::T).else(0),{?}max=&gt;int::T,{?}est=&gt;{?}[{?}user=&gt;int::T,{?}ai=&gt;int::T,{?}tool=&gt;int::T,{?}system=&gt;int::T]]][ctor?rng=token_counter_tool&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@token_counter_tool,rec::T[?[text=&gt;str::T,kind=&gt;union(decision,problem,solution,observation),{?}source=&gt;[&lt;#{?}&gt;::T],{?}concept=&gt;[&lt;#{?}&gt;::T],{?}tier=&gt;isa(int::T[is(gt(0))]@nat).else(1)]]@claim,rec::T[?[title=&gt;str::T,desc=&gt;str::T,status=&gt;union(open,in_progress,resolved,abandoned),{?}source=&gt;[&lt;#{?}&gt;::T],{?}claim=&gt;[&lt;#{?}&gt;::T],{?}time=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime]]@loose_end,message::T[?[text=&gt;str::T]]@system,rec::T[?[tag=&gt;str::T,key=&gt;str::T,{?}body=&gt;str::T,{?}obj=&gt;&lt;#&gt;::T,{?}error=&gt;fail::T,{?}index=&gt;int::T,{?}stage=&gt;uri::T]]@watermark,rec::T[?[{?}chat=&gt;&lt;#&gt;::T,time=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime,runtime=&gt;!*/m/math/time,{?}watermark=&gt;[rec::T[?[tag=&gt;str::T,key=&gt;str::T,{?}body=&gt;str::T,{?}obj=&gt;&lt;#&gt;::T,{?}error=&gt;fail::T,{?}index=&gt;int::T,{?}stage=&gt;uri::T]]@watermark],{?}error=&gt;fail::T]]@chat_result,message::T[?[{?}name=&gt;str::T,{?}text=&gt;str::T,{?}contents=&gt;&lt;#{*}&gt;::T]]@user,message::T[?[name=&gt;uri::T,{?}args=&gt;str::T,text=&gt;str::T,{?}contents=&gt;str::T]]@tool_request,message::T[?[{?}text=&gt;str::T,{?}tool_requests=&gt;[message::T[?[name=&gt;uri::T,{?}args=&gt;str::T,text=&gt;str::T,{?}contents=&gt;str::T]]@tool_request]]]@ai,message::T[?[name=&gt;uri::T,text=&gt;str::T,{?}chat=&gt;&lt;#&gt;::T,{?}id=&gt;str::T]]@tool_result,message::T[?[text=&gt;str::T]]@thinking,message::T[?[text=&gt;str::T,{?}in=&gt;int::T,{?}out=&gt;int::T,{?}compression=&gt;real::T]]@compaction,rec::T[?[{?}session=&gt;uri::T]]@message,rec::T[?[name=&gt;uri::T,desc=&gt;str::T,{?}content=&gt;str::T,{?}resource=&gt;[[uri=&gt;uri::T,{?}name=&gt;str::T,{?}desc=&gt;str::T,text=&gt;str::T]],{?}tool=&gt;[&lt;#&gt;::T]]]@skill,rec::T[?[{?}root=&gt;uri::T,{?}to=&gt;&lt;#&gt;::T,{?}on_agent_ctor=&gt;&lt;#&gt;::T,{?}on_before_chat=&gt;&lt;#&gt;::T,{?}on_partial_response=&gt;&lt;#&gt;::T,{?}on_partial_thinking=&gt;&lt;#&gt;::T,{?}on_partial_tool_call=&gt;&lt;#&gt;::T,{?}before_tool_execution=&gt;&lt;#&gt;::T,{?}on_tool_executed=&gt;&lt;#&gt;::T,{?}on_tool_result=&gt;&lt;#&gt;::T,{?}on_complete_response=&gt;&lt;#&gt;::T,{?}on_error=&gt;&lt;#&gt;::T]]@feature,rec::T[?[name=&gt;str::T,{?}desc=&gt;str::T,{?}feature=&gt;lst::T]][ctor?rng=agent&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@agent,feature::T[?[model=&gt;rec::T[?[{?}provider=&gt;uri::T,host=&gt;uri::T,protocol=&gt;uri::T,llm=&gt;uri::T,{?}api_key=&gt;str::T,{?}timeout=&gt;!*/m/math/time,{?}size=&gt;!*/m/math/datasize,{?}quant=&gt;int::T,{?}context=&gt;int::T,{?}cost=&gt;{?}[in=&gt;!*/m/math/currency,out=&gt;!*/m/math/currency]]][ctor?rng=model&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@model,{?}response=&gt;{?}[{?}to=&gt;&lt;#&gt;::T,{?}complete=&gt;&lt;#&gt;::T],{?}format=&gt;&lt;#&gt;::T]][ctor?rng=chat_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@chat_feature,feature::T[][ctor?rng=summarize_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@summarize_feature,feature::T[?[session=&gt;uri::T]][ctor?rng=token_message_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@token_message_feature,feature::T[?[session=&gt;uri::T]][ctor?rng=window_message_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@window_message_feature,feature::T[][ctor?rng=persisted_frame_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@persisted_frame_feature,feature::T[][ctor?rng=transient_frame_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@transient_frame_feature,feature::T[?[{?}tool=&gt;lst{?}::T,{?}max=&gt;isa(int::T).else(-1)]][ctor?rng=tool_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@tool_feature,feature::T[?[{?}model=&gt;rec::T[?[{?}provider=&gt;uri::T,host=&gt;uri::T,protocol=&gt;uri::T,llm=&gt;uri::T,{?}api_key=&gt;str::T,{?}timeout=&gt;!*/m/math/time,{?}size=&gt;!*/m/math/datasize,{?}quant=&gt;int::T,{?}context=&gt;int::T,{?}cost=&gt;{?}[in=&gt;!*/m/math/currency,out=&gt;!*/m/math/currency]]][ctor?rng=model&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@model]][ctor?rng=embed_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@embed_feature,feature::T[][ctor?rng=skill_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@skill_feature,feature::T[][ctor?rng=system_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@system_feature,feature::T[][ctor?rng=think_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@think_feature,feature::T[][ctor?rng=midchat_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@midchat_feature,feature::T[][ctor?rng=tagging_concept_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@tagging_concept_feature,feature::T[][ctor?rng=agent_concept_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@agent_concept_feature,feature::T[][ctor?rng=lucene_concept_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@lucene_concept_feature,feature::T[?[rate=&gt;[in=&gt;!*/m/math/currency,out=&gt;!*/m/math/currency]]][ctor?rng=cost_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@cost_feature,feature::T[?[{?}stage=&gt;{?}[union(on_agent_ctor,on_before_chat,on_partial_response,on_partial_thinking,on_partial_tool_call,on_tool_executed,on_tool_result,on_complete_response,on_error)=&gt;lst::T]]][ctor?rng=lambda_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@lambda_feature,feature::T[][ctor?rng=todo_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@todo_feature,feature::T[?[{?}model=&gt;rec::T[?[{?}provider=&gt;uri::T,host=&gt;uri::T,protocol=&gt;uri::T,llm=&gt;uri::T,{?}api_key=&gt;str::T,{?}timeout=&gt;!*/m/math/time,{?}size=&gt;!*/m/math/datasize,{?}quant=&gt;int::T,{?}context=&gt;int::T,{?}cost=&gt;{?}[in=&gt;!*/m/math/currency,out=&gt;!*/m/math/currency]]][ctor?rng=model&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@model,{?}threshold=&gt;real::T,{?}context=&gt;int::T]][ctor?rng=compaction_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@compaction_feature,feature::T[][ctor?rng=audit_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@audit_feature,feature::T[?[{?}max_loop=&gt;int::T,{?}max_time=&gt;real::T@time,{?}delay=&gt;real::T@time,{?}preserve=&gt;lst::T]][ctor?rng=loop_feature&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@loop_feature,session_or_agent::T[?union(rec::T[?[name=&gt;str::T,{?}desc=&gt;str::T,{?}feature=&gt;lst::T]][ctor?rng=agent&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@agent,rec::T[?[agent=&gt;uri{+}::T,user=&gt;uri{+}::T,algorithm=&gt;rec::T]]@session)],mcp_server::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_message&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_message],inst=&gt;[as?rng=model&amp;dom=rec(rec::T[?[{?}provider=&gt;uri::T,host=&gt;uri::T,protocol=&gt;uri::T,llm=&gt;uri::T,{?}api_key=&gt;str::T,{?}timeout=&gt;!*/m/math/time,{?}size=&gt;!*/m/math/datasize,{?}quant=&gt;int::T,{?}context=&gt;int::T,{?}cost=&gt;{?}[in=&gt;!*/m/math/currency,out=&gt;!*/m/math/currency]]][ctor?rng=model&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@model){&lt;j&gt;},as?rng=tool&amp;dom=docs(rec::T[?[inst=&gt;&lt;#&gt;::T,name=&gt;uri::T,desc=&gt;str::T,{?}arg=&gt;&lt;#&gt;::T]]@tool){&lt;j&gt;},as?rng=tool&amp;dom=inst(rec::T[?[inst=&gt;&lt;#&gt;::T,name=&gt;uri::T,desc=&gt;str::T,{?}arg=&gt;&lt;#&gt;::T]]@tool){&lt;j&gt;},as?rng=skill&amp;dom=uri(rec::T[?[name=&gt;uri::T,desc=&gt;str::T,{?}content=&gt;str::T,{?}resource=&gt;[[uri=&gt;uri::T,{?}name=&gt;str::T,{?}desc=&gt;str::T,text=&gt;str::T]],{?}tool=&gt;[&lt;#&gt;::T]]]@skill){&lt;j&gt;},as?rng=skill&amp;dom=agent(rec::T[?[name=&gt;uri::T,desc=&gt;str::T,{?}content=&gt;str::T,{?}resource=&gt;[[uri=&gt;uri::T,{?}name=&gt;str::T,{?}desc=&gt;str::T,text=&gt;str::T]],{?}tool=&gt;[&lt;#&gt;::T]]]@skill){&lt;j&gt;},chat?rng=chat_result&amp;dom=agent(str::T){&lt;j&gt;},embed?rng=/m/vec/vec&amp;dom=model(&lt;#&gt;::T){&lt;j&gt;},interrupt?rng=noobj{0}&amp;dom=agent(){&lt;j&gt;},sweep?rng=rec&amp;dom=session_or_agent{?}({?}session_or_agent=&gt;session_or_agent{?}::T,{?}repair=&gt;bool::T,{?}prune=&gt;bool::T){&lt;j&gt;},chat?rng=chat_result&amp;dom=agent(str::T,rec::T){&lt;j&gt;},summary?rng=rec&amp;dom=session_or_agent{?}({?}session_or_agent=&gt;session_or_agent{?}::T,{?}model=&gt;choose([isa(rec::T[?[{?}provider=&gt;uri::T,host=&gt;uri::T,protocol=&gt;uri::T,llm=&gt;uri::T,{?}api_key=&gt;str::T,{?}timeout=&gt;!*/m/math/time,{?}size=&gt;!*/m/math/datasize,{?}quant=&gt;int::T,{?}context=&gt;int::T,{?}cost=&gt;{?}[in=&gt;!*/m/math/currency,out=&gt;!*/m/math/currency]]][ctor?rng=model&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@model)=&gt;id(),isa(rec::T[?[agent=&gt;uri{+}::T,user=&gt;uri{+}::T,algorithm=&gt;rec::T]]@session)=&gt;*rshift(agent).mult(model)]).rshift(),{?}scope=&gt;union(time::T,datetime::T),{?}kind=&gt;lst::T,{?}concept=&gt;lst::T){&lt;j&gt;},compact?rng=rec&amp;dom=session_or_agent{?}({?}session_or_agent=&gt;session_or_agent{?}::T,{?}model=&gt;model::T,{?}prompt=&gt;str::T){&lt;j&gt;}]]@/m/llm
+mtron&gt; import(/m/web,web)
+==&gt;instset::[pattern=&gt;/m/web/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],const=&gt;[[remote_console=&gt;inst(){&lt;j&gt;}]@helper,obj_xml::[=&gt;]@obj_xml,obj_html::[=&gt;]@obj_html,obj_json::[density=&gt;OPAQUE,wrap_uri=&gt;true,bias_towards_uri=&gt;true,bias_towards_objs=&gt;false]@obj_json,obj_markdown::[=&gt;]@obj_markdown,obj_text::[=&gt;]@obj_text,/m/mach/io/serializer/mtron::[clip=&gt;[str=&gt;35,rec=&gt;7,lst=&gt;7]]@clean,bytebuffer::[=&gt;]@bytebuffer,obj_json::[density=&gt;&lt;TRANSPARENT&gt;,wrap_uri=&gt;true,bias_towards_uri=&gt;true,bias_towards_objs=&gt;false]@obj_json,obj_bson::[=&gt;]@obj_bson,obj_xsv::[delimiter=&gt;',',header=&gt;false]@obj_xsv],type=&gt;[uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@xml,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@html,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@json,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@yaml,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@xsv,xsv::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@csv,str::T@css,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@markdown,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@java,serializer::T,serializer::T[?[clip=&gt;[{?}/m/rec=&gt;isa(int::T),{?}/m/lst=&gt;isa(int::T),{?}/m/str=&gt;isa(int::T),{?}/m/uri=&gt;isa(int::T),{?}/m/real=&gt;isa(int::T),{?}/m/bytes=&gt;isa(int::T),{?}/m/fail=&gt;isa(int::T)],{?}pointer=&gt;isa(str::T),{?}pager=&gt;isa(bool::T)]][ctor?rng=obj_mtron&amp;dom=#{?}(obj_mtron::T){&lt;j&gt;}]@obj_mtron,serializer::T[?[{?}wrap_uri=&gt;isa(bool::T),{?}bias_towards_uri=&gt;isa(bool::T),{?}bias_towards_objs=&gt;isa(bool::T)]][ctor?rng=obj_simple_json&amp;dom=#{?}(obj_simple_json::T){&lt;j&gt;}]@obj_simple_json,serializer::T@obj_bson,serializer::T[][ctor?rng=obj_yaml&amp;dom=#{?}(obj_yaml::T){&lt;j&gt;}]@obj_yaml,serializer::T[?[{?}pretty=&gt;bool::T,{?}indent=&gt;2]][ctor?rng=obj_bytebuffer&amp;dom=#{?}(obj_bytebuffer::T){&lt;j&gt;}]@obj_bytebuffer,serializer::T[?[{?}delimiter=&gt;isa(str::T),{?}header=&gt;isa(bool::T)]][ctor?rng=obj_xsv&amp;dom=#{?}(obj_xsv::T){&lt;j&gt;}]@obj_xsv,space::T[][ctor?rng=httpspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@httpspace,space::T[?[host=&gt;uri::T]][ctor?rng=wsspace&amp;dom=#{?}(wsspace::T){&lt;j&gt;}]@wsspace,rec::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}send=&gt;inst::T,{?}send_recv=&gt;inst::T,{?}on_open=&gt;&lt;#&gt;::T,{?}on_error=&gt;&lt;#&gt;::T,{?}on_message=&gt;&lt;#&gt;::T,{?}on_close=&gt;&lt;#&gt;::T]]@web_socket,web_socket::T[][ctor?rng=web_socket&amp;dom=#{?}(rec::T){&lt;j&gt;}]@ws_handler,web_socket::T[][ctor?rng=web_socket&amp;dom=#{?}(rec::T){&lt;j&gt;}]@ws_client,mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_ws&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_ws,mcp_ws::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_emulator_ws&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_emulator_ws,mtron::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron)]][ctor?rng=mtron_ws&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mtron_ws,rec::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}send=&gt;inst::T,{?}on_get=&gt;&lt;#&gt;::T,{?}on_post=&gt;&lt;#&gt;::T,{?}on_put=&gt;&lt;#&gt;::T,{?}on_delete=&gt;&lt;#&gt;::T,{?}on_patch=&gt;&lt;#&gt;::T,{?}on_head=&gt;&lt;#&gt;::T,{?}on_options=&gt;&lt;#&gt;::T,{?}on_error=&gt;&lt;#&gt;::T,{?}on_close=&gt;&lt;#&gt;::T]]@http_socket,http_socket::T[][ctor?rng=http_handler&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@http_handler,http_socket::T[][ctor?rng=http_client&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@http_client,mcp_http::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_emulator_http&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_emulator_http,mtron::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron)]][ctor?rng=mtron_http&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mtron_http,mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_http&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_http,mcp::T[?[server=&gt;mcp_server::T,{?}in=&gt;uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime,{?}out=&gt;uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime,{?}status=&gt;bool::T]][ctor?rng=mcp_stdio&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_stdio,rest::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron),{?}web_root=&gt;&lt;#&gt;::T,{?}default_page=&gt;&lt;#&gt;::T,{?}read_only=&gt;&lt;#&gt;::T]][ctor?rng=web_http&amp;dom=#{?}(rec::T){&lt;j&gt;}]@web_http,mcp_server::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_mtron&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_mtron,mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_server&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_server,rec::T@route,protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream,stream::T@sse,rec::T[?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)]@protocol,rec::T[?[{?}host=&gt;uri::T,{?}transport=&gt;uri::T,{?}command=&gt;lst::T,{?}env=&gt;[uri::T=&gt;&lt;#&gt;::T],{?}tool=&gt;[uri::T=&gt;rec::T[?[inst=&gt;&lt;#&gt;::T,name=&gt;uri::T,desc=&gt;str::T,{?}arg=&gt;&lt;#&gt;::T]]@tool],{?}status=&gt;bool::T]][ctor?rng=mcp_client&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_client],inst=&gt;[ping?rng=time&amp;dom=#{?}(uri::T){&lt;j&gt;},format?rng=str&amp;dom=markdown(){&lt;j&gt;},as?rng=skill&amp;dom=markdown(str::T){&lt;j&gt;},as?rng=rec&amp;dom=json(rec::T){&lt;j&gt;},as?rng=rec&amp;dom=yaml(rec::T){&lt;j&gt;},as?rng=json&amp;dom=rec(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@json){&lt;j&gt;},as?rng=rec&amp;dom=xml(rec::T){&lt;j&gt;},as?rng=xml&amp;dom=rec(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@xml){&lt;j&gt;},as?rng=rec&amp;dom=html(rec::T){&lt;j&gt;},as?rng=html&amp;dom=rec(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@html){&lt;j&gt;},as?rng=rec&amp;dom=markdown(rec::T){&lt;j&gt;},as?rng=html&amp;dom=markdown(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@html){&lt;j&gt;},as?rng=markdown&amp;dom=html(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@markdown){&lt;j&gt;},as?rng=markdown&amp;dom=rec(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@markdown){&lt;j&gt;},as?rng=rec&amp;dom=java(rec::T){&lt;j&gt;},as?rng=java&amp;dom=rec(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@java){&lt;j&gt;},as?rng=java&amp;dom=str(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@java){&lt;j&gt;},as?rng=xsv&amp;dom=str(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@xsv){&lt;j&gt;},as?rng=csv&amp;dom=str(xsv::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@csv){&lt;j&gt;},as?rng=json&amp;dom=mcp_client(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@json){&lt;j&gt;},as?rng=mcp_client{+}&amp;dom=json(rec::T[?[{?}host=&gt;uri::T,{?}transport=&gt;uri::T,{?}command=&gt;lst::T,{?}env=&gt;[uri::T=&gt;&lt;#&gt;::T],{?}tool=&gt;[uri::T=&gt;rec::T[?[inst=&gt;&lt;#&gt;::T,name=&gt;uri::T,desc=&gt;str::T,{?}arg=&gt;&lt;#&gt;::T]]@tool],{?}status=&gt;bool::T]][ctor?rng=mcp_client&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_client){&lt;j&gt;},as?rng=mcp_server&amp;dom=skill(mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_server&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_server){&lt;j&gt;}]]@/m/web
+mtron&gt; [-- a server is a selection over instructions; `!*eval` is dereferenced as this is constructed --]
+mtron&gt; mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/basic_server
+==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]]@/sys/space/mcp/basic_server
+</code></pre>
+<p>What the shown blocks assume is a route table like this one — the same mounts the live profile uses, one route
+per server, <code>mcp_mtron</code> for the metatron-native tools, <code>mcp_message</code> for the ledger, and <code>/basic</code> for the server
+just defined:</p>
+<pre><code class="language-mtron">[-- a carrier is a space; a route binds a server to it. `else` makes a mount idempotent --]
+*/sys/space/web/http.else(httpspace::[pattern=&gt; http://#, host =&gt; http://localhost:8777, route =&gt; [/mcp =&gt; mcp_mtron, /message =&gt; mcp_message, /basic =&gt; !*&lt;/sys/space/mcp/basic_server&gt;, / =&gt; /usr]]@/sys/space/web/http)
+*/sys/space/web/ws.else(wsspace::[pattern=&gt; ws:#, host =&gt; ws://localhost:8555, route =&gt; [/mcp =&gt; mcp_mtron, /message =&gt; mcp_message]]@/sys/space/web/ws)
+</code></pre>
+<h3>types</h3>
+<table>
+<thead>
+<tr><th>type</th><th>vid</th><th>meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>agent::T</code></td><td><code>/m/llm/agent</code></td><td>a model + features; <code>.chat()</code> runs the loop</td></tr>
+<tr><td><code>model::T</code></td><td><code>/m/llm/model</code></td><td>a provider, a protocol, a host, an llm name</td></tr>
+<tr><td><code>feature::T</code></td><td><code>/m/llm/feature</code></td><td>a stage in the chat loop (<code>tool_feature</code>, <code>chat_feature</code>, …)</td></tr>
+<tr><td><code>tool::T</code></td><td><code>/m/llm/tool</code></td><td>an instruction with a name, a description and an argument schema</td></tr>
+<tr><td><code>skill::T</code></td><td><code>/m/llm/skill</code></td><td>a directory of markdown: front matter, instructions, tools, resources</td></tr>
+<tr><td><code>message::T</code></td><td><code>/m/llm/message</code></td><td>one ledger record — <code>user</code>, <code>ai</code>, <code>system</code>, <code>thinking</code>, <code>tool_result</code></td></tr>
+<tr><td><code>mcp_client::T</code></td><td><code>/m/web/mcp/mcp_client</code></td><td>a connection to an MCP server</td></tr>
+<tr><td><code>mcp_message::T</code></td><td><code>/m/llm/mcp/mcp_message</code></td><td>the message-ledger server</td></tr>
+<tr><td><code>mcp_server::T</code></td><td><code>/m/web/mcp/mcp_server</code></td><td>a transport-agnostic MCP server</td></tr>
+</tbody>
+</table>
+<p><code>mcp_client::T</code> is <em>declared</em> by <code>/m/web</code> — transport surfaces are its business — and <em>implemented</em> by
+<code>studio.phaseshift.metatron.isa.llm.type.mcp.mcpClient</code>, which is why this document, the llm one, is where a
+client is documented.</p>
+<h3>Model Context Protocol</h3>
+<p>MCP is JSON-RPC 2.0 over <code>tool</code> / <code>resource</code> / <code>prompt</code>, plus a handshake. metatron splits it in three:
+<code>mcp_server::T</code> is the protocol, a carrier is the bytes, <code>mcp_client::T</code> is the other end. One server obj rides
+all three carriers unchanged — mount it on http and a browser-driven client reaches it, mount it on ws and a
+websocket client does, hand it to stdio and a client that spawns a process does.</p>
+<h4>mcp client</h4>
+<p>An <code>mcp_client::T</code> is one connection — and it connects <strong>eagerly</strong>: the constructor calls <code>listTools()</code>, so by
+the time you hold the obj, <code>tool</code> is populated and <code>status</code> can answer a health check.</p>
+<table>
+<thead>
+<tr><th>key</th><th>type</th><th>meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>host</code></td><td><code>uri</code></td><td>the endpoint; the <strong>scheme picks the transport</strong> (<code>http</code>/<code>https</code> → streamable-http, <code>ws</code>/<code>wss</code> → ws)</td></tr>
+<tr><td><code>transport</code></td><td><code>uri</code></td><td>force a transport when the scheme is ambiguous (<code>streamable-http</code>)</td></tr>
+<tr><td><code>command</code></td><td><code>lst</code></td><td><strong>stdio</strong>: the argv that spawns the server as a subprocess</td></tr>
+<tr><td><code>env</code></td><td><code>rec</code></td><td>environment for a spawned stdio server (it becomes headers on http/ws)</td></tr>
+<tr><td><code>headers</code></td><td><code>rec</code></td><td>http/ws request headers</td></tr>
+<tr><td><code>tool</code></td><td><code>rec</code></td><td><em>populated</em>: tool name → <code>tool::T</code>, each carrying the <code>inst</code> to call</td></tr>
+<tr><td><code>status</code></td><td><code>bool</code></td><td><em>populated</em>: applying it runs a health check and answers true/false</td></tr>
+</tbody>
+</table>
+<pre><code class="language-mtron">mcp_client::[host=&gt;http://localhost:8777/mcp]@/usr/ai/mcp/a
+*/usr/ai/mcp/a&gt;&gt;status                        [-- the endpoint answers --]
+*/usr/ai/mcp/a&gt;&gt;tool                          [-- one tool::T per tool --]
+</code></pre>
+<p>Invoking a tool is applying the <code>inst</code> it carries. The client is only a transport, so there is no call
+vocabulary to learn:</p>
+<pre><code class="language-mtron">[-- the tool is applied through the inst it carries; the client is only a transport --]
+/usr/ai/mcp/a/tool/m_web_mcp_mcp_mtron_eval_mtron/inst(&quot;1+2&quot;)     [-- =&gt; 3 --]
+/usr/ai/mcp/a/tool/m_web_mcp_mcp_mtron_find_inst/inst(&quot;plus&quot;)
+</code></pre>
+<p>And the custom server defined above — one instruction — is reachable the same way through its own mount:</p>
+<pre><code class="language-mtron">[-- the same for a server you defined: its vid is the route target, and a client reaches it like any other --]
+/basic =&gt; !*&lt;/sys/space/mcp/basic_server&gt;
+mcp_client::[host=&gt;http://localhost:8777/basic]@/usr/ai/mcp/b
+/usr/ai/mcp/b&gt;&gt;tool                                          [-- =&gt; [m_inst_eval =&gt; tool::[…]] --]
+/usr/ai/mcp/b/tool/m_inst_eval/inst(&quot;[1,2,3,4]&gt;-.sum()&quot;)     [-- =&gt; 10 --]
+</code></pre>
+<h5>transports, and where sse lives</h5>
+<p><code>createTransport</code> picks the carrier in this order: an explicit <code>transport =&gt; streamable-http</code>, else a non-empty
+<code>command</code> (stdio), else the <code>host</code> scheme.</p>
+<ul>
+<li><strong>streamable-http</strong> — <code>host =&gt; http://…</code>. The client POSTs a JSON-RPC request and reads the response; the
+server-to-client channel is the GET half of the same endpoint, an <strong>sse</strong> stream (<code>text/event-stream</code>) that the
+server holds open and pushes <code>event: message</code> frames down. A client never opens it explicitly — that is the
+streamable transport's business, and it is why one endpoint is enough.</li>
+<li><strong>websocket</strong> — <code>host =&gt; ws://…</code>. One frame is one message, and there is no second channel because the socket
+is already bidirectional. It is the simplest carrier to reason about:</li>
+</ul>
+<pre><code class="language-mtron">mcp_client::[host=&gt;ws://localhost:8555/mcp]@/usr/ai/mcp/c
+*/usr/ai/mcp/c&gt;&gt;tool
+</code></pre>
+<ul>
+<li><strong>stdio</strong> — <code>command =&gt; […]</code>. The client spawns the server process and speaks newline-delimited JSON on its
+pipes: no port, no listener, and the server <em>is</em> a subprocess.</li>
+</ul>
+<pre><code class="language-mtron">[-- a stdio server: argv only — the client owns the process --]
+mcp_client::[command=&gt;['bin/metatron','--mcp']]@/usr/ai/mcp/metatron
+mcp_client::[command=&gt;['codegraph','serve','--mcp']]@/usr/ai/mcp/codegraph
+</code></pre>
+<p>A stdio client's <code>env</code> rec goes to the child process; on http/ws the same rec is sent as headers, so a server
+configured by its environment and one configured by headers are configured in the same place.</p>
+<h5>the JSON snippet path</h5>
+<p>A published MCP server config is JSON, so it can be typecast instead of transcribed:</p>
+<pre><code class="language-mtron">mtron&gt; &quot;&quot;&quot;
+       {&quot;mcpServers&quot;: {
+         &quot;local&quot; : {
+           &quot;type&quot;: &quot;streamable-http&quot;,
+           &quot;url&quot;: &quot;http://localhost:8777/mcp&quot;,
+           &quot;headers&quot;: {
+            &quot;IJ_MCP_SERVER_PROJECT_PATH&quot;: &quot;.&quot;
+           }
+         }}}
+       &quot;&quot;&quot;.as(json::T).as(rec::T)&gt;&gt;mcpServers/local.as(json::T)@/usr/ai/mcp/local_cfg
+==&gt;json::'{&quot;type&quot;:&quot;streamable-http&quot;,&quot;url&quot;:&quot;http://localhost:8777/mcp&quot;,&quot;headers&quot;:{}}'
+</code></pre>
+<p>That value is a <code>json::T</code> str — exactly what the client cast takes — so a published snippet becomes a client in
+one line:</p>
+<pre><code class="language-mtron">[-- the same snippet, straight to a client: the cast reads the json::T str it produced --]
+&quot;&quot;&quot;.as(json::T).as(mcp_client::T)@/usr/ai/mcp/local
+</code></pre>
+<p><code>as?mcp_client&lt;=json</code> unwraps an <code>mcpServers</code> wrapper (every entry, as a lst), merges <code>args</code> into <code>command</code> and
+<code>env</code> into <code>headers</code> — so the snippet a harness reads is the snippet mtron reads.</p>
+<p>One wrinkle worth knowing before it bites: <code>simple()</code> hands every untyped JSON string to the <strong>mtron parser</strong>, so
+a bare <code>&quot;--mcp&quot;</code> in a snippet parses as <code>minus(minus(mcp))</code>. Published stdio snippets spell the argument as a uri
+(<code>&quot;&lt;--mcp&gt;&quot;</code>), which is what the drstynx boot does; <code>ObjJSONSerializer.literal()</code> keeps strings exactly as
+written and is the reader to use for a document whose fields are all strings.</p>
+<h5>tools from a client, for an agent</h5>
+<p>A client is a tool <em>source</em>, which is how an agent gets someone else's tools with no wrapper:</p>
+<pre><code class="language-mtron">[-- the drstynx tool bag: instructions, skills, and two mcp servers — one of them a spawned subprocess --]
+tool_feature::[tool =&gt; [!*gremlin,/
+                       !*sql,/
+                       !(map(json::&quot;&quot;&quot;{&quot;mcpServers&quot;:{&quot;codegraph&quot;:{&quot;command&quot;:&quot;codegraph&quot;,&quot;args&quot;:[&quot;&lt;--mcp&gt;&quot;]}}}&quot;&quot;&quot;).as(mcp_client::T)),/
+                       mcp_client::[host=&gt;&lt;http://localhost:8777/mcp&gt;]]]
+</code></pre>
+<p><code>tool_feature</code>'s intake ladder is <code>mTool | mcp_client | mTool.tool(t)</code>: an <code>mcp_client</code> in that list contributes
+<strong>all of its tools</strong>, each keyed by the name the server advertised.</p>
+<p>A client holds a live connection — and on http a server-side session — so a client that is never closed leaks
+one. <code>close()</code> releases it; <code>clone()</code> returns the same client rather than opening a second connection.</p>
+<h4>mcp server</h4>
+<p>An <code>mcp_server::T</code> is a rec with three optional collections — <code>tool</code>, <code>resource</code>, <code>prompt</code> — and it is
+transport-agnostic: mount it, and the carrier supplies the bytes.</p>
+<p>Because a tool is an instruction, a server is a <strong>selection over instructions</strong>, and that selection is boot data:</p>
+<pre><code class="language-mtron">mtron&gt; mcp_server::[tool =&gt; [!*eval, !*eval]]@/sys/space/mcp/two_say
+==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]]@/sys/space/mcp/two_say
+mtron&gt; */sys/space/mcp/two_say&gt;&gt;tool     [-- one entry: a collection is keyed by the instruction --]
+==&gt;[m_inst_eval=&gt;eval?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]
+</code></pre>
+<p>Three rules follow, and the third is the one that surprises people:</p>
+<ul>
+<li><strong>a tool's name is derived, never typed.</strong> <code>mTool.toolName</code> flattens the instruction's path, so <code>/m/inst/eval</code>
+is <code>m_inst_eval</code> and <code>/m/llm/mcp/mcp_message/add_message</code> is <code>m_llm_mcp_mcp_message_add_message</code>. The name is
+stable across carriers <em>and across servers</em> — the same instruction is the same tool wherever it is mounted.</li>
+<li><strong><code>tool</code> may be a list, a single instruction, or an already-keyed rec.</strong> The type's constructor reshapes it into
+the keyed rec its <code>::T</code> declares, and it does so before <code>super(...)</code> — a typed obj is checked against its
+predicate <em>at construction</em>, so an unreshaped list could not be constructed at all. Which name an entry lands
+under follows from how you wrote it: a <strong>collection</strong> entry is named by its instruction (<code>!*eval</code> →
+<code>m_inst_eval</code>), while an <strong>authored key is the name</strong> (<code>adduser =&gt; …</code> publishes <code>adduser</code>, which is what the
+emulator's own clients call). Either way the key is what <code>tools/list</code> advertises, so a client can always call
+what it was shown.</li>
+<li><strong><code>!*</code> is dereferenced when the server is built</strong> — <code>!*eval</code> means &quot;whatever <code>eval</code> resolves to right now&quot;,
+not a pointer the server carries.</li>
+</ul>
+<p>A server can be built from a skill instead: its instructions become tools and its documents become resources.</p>
+<pre><code class="language-mtron">[-- a skill as a server; `.as(mcp_server::T)` is the whole mapping --]
+*&lt;mtronfs:skills/mtron&gt;.as(skill::T).as(mcp_server::T)@/sys/space/mcp/mtron_skill
+</code></pre>
+<h5>resources and prompts</h5>
+<ul>
+<li><strong>resources</strong> are the server's documents. A skill's markdown becomes resources keyed by relative path, each
+with <code>uri</code> / <code>name</code> / <code>description</code> and its text inline — except a document over 256 KB, which is exposed as a
+<strong><code>reference</code></strong> (a path to read) rather than inlined, so a listing stays small.</li>
+<li><strong>prompts</strong> are templated messages: a prompt entry resolves against <code>noobj()</code> and returns one <code>user</code> message.</li>
+</ul>
+<h5>the ledger server (<code>mcp_message</code>)</h5>
+<p><code>/m/llm</code>'s own server is <code>mcp_message</code> — the chat ledger over MCP, mounted as <code>/message</code> above. Its tools are
+<code>add_message</code>, <code>get_messages</code> and <code>search_messages</code>, and it is the bus a harness lifecycle is mirrored onto (see
+the <code>dsh-mtron</code> reference). Mounting it is one route away:</p>
+<pre><code class="language-mtron">mcp_client::[host=&gt;http://localhost:8777/message]@/usr/ai/mcp/m
+/usr/ai/mcp/m&gt;&gt;tool                       [-- add_message, get_messages, search_messages --]
+</code></pre>
+<p><code>add_message</code> returns a <strong>receipt</strong>: the record, its <code>location</code>, and a <code>status</code> of <code>published</code>, <code>parked</code> (its tool
+group still owes results) or <code>unpaired</code> (refused). Reads are windowed, session-scoped and newest-first:</p>
+<pre><code class="language-mtron">[-- root is an absolute space that serves incrq; session is the envelope that scopes the ledger --]
+m_llm_mcp_mcp_message_add_message(root='/usr/doc/message', kind='user', text='first light', session='/usr/doc/session/a')
+m_llm_mcp_mcp_message_get_messages(root='/usr/doc/message', session='/usr/doc/session/a', max=10)
+m_llm_mcp_mcp_message_search_messages(root='/usr/doc/message', pattern='light', session='/usr/doc/session/a')
+</code></pre>
+<h5>the carriers</h5>
+<table>
+<thead>
+<tr><th>carrier</th><th>vid</th><th>what it owns</th></tr>
+</thead>
+<tbody>
+<tr><td><code>mcp_http</code></td><td><code>/m/web/mcp/mcp_http</code></td><td>POST answers a request; <strong>GET is the sse notification channel</strong>; HEAD probes; DELETE ends a session</td></tr>
+<tr><td><code>mcp_ws</code></td><td><code>/m/web/mcp/mcp_ws</code></td><td>one handler per connection; the socket is already bidirectional</td></tr>
+<tr><td><code>mcp_stdio</code></td><td><code>/m/web/mcp/mcp_stdio</code></td><td>the process's own stdin/stdout; <strong>fd 1 is the wire</strong></td></tr>
+</tbody>
+</table>
+<p><code>mcp_http</code> is Streamable HTTP: <code>initialize</code> opens a session (<code>Mcp-Session-Id</code>), a POST carries requests, and the
+GET half answers only when the client sends <code>Accept: text/event-stream</code> — anything else is a 405 rather than a
+socket held open forever. That GET drains the server's subscription outbox, then holds the stream open with
+heartbeats, so a <code>?subq</code>-driven <code>notifications/resources/updated</code> reaches the client without a second request.</p>
+<p>A route is what binds a server to a carrier, and a <strong>short name is a factory, not an instance</strong> — dereferencing
+it yields the type, and the carrier builds one:</p>
+<pre><code class="language-mtron">/mcp       =&gt; mcp_mtron                               [-- the router's redirect table: a type with a ctor --]
+/message   =&gt; mcp_message
+/basic     =&gt; !*&lt;/sys/space/mcp/basic_server&gt;         [-- an instance already built --]
+/drstynx   =&gt; *dr.as(skill::T).as(mcp_server::T)      [-- an evaluated expression: built at mount time --]
+</code></pre>
+<h5>stdio: the carrier with no carrier</h5>
+<p><code>mcp_stdio</code> serves a server on the process's own streams, which is what lets an agent attach to a VM by spawning
+one — no port, no listener, nothing left running:</p>
+<pre><code class="language-bash">bin/metatron --mcp                       # boot/mcp.boot.mtron, then serve on stdin/stdout
+bin/metatron --mcp -b some.boot.mtron    # another profile, the same stdio discipline
+</code></pre>
+<p>A profile mounts the carrier like any other, and the <code>mcp =&gt; stdio</code> boot arg is what tells the BootLoader to
+claim fd 1 <em>before</em> the boot file runs:</p>
+<pre><code class="language-mtron">[space       =&gt; /sys/space,
+ log         =&gt; warn,
+ mcp         =&gt; stdio,
+ typer/stage =&gt; [code_resolve =&gt; false]]
+[===============]
+import(/m/mach/io);
+import(/m/web,web);
+import(/m/llm);
+fsspace::[pattern =&gt; mfs:#, q =&gt; [mimeq::[=&gt;]], route =&gt; [mfs: =&gt; &lt;.&gt;]]@/sys/space/fs/metatron;
+memspace::[pattern =&gt; &lt;/usr/#&gt;, q =&gt; [docq::[=&gt;],subq::[=&gt;],incrq::[=&gt;]]]@/sys/space/usr;
+mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/basic_server;
+mcp_stdio::[server =&gt; !*&lt;/sys/space/mcp/basic_server&gt;]@/sys/io/mcp/stdio;
+</code></pre>
+<p>Three properties are worth stating because none of them is obvious:</p>
+<ul>
+<li><strong>stdout belongs to the protocol.</strong> fd 1 is claimed for the wire, and <code>System.out</code> — with every logback console
+appender, which capture their stream once at start — is re-pointed at stderr. A boot banner, a log line or a
+widget render on fd 1 is read by the client as a malformed frame.</li>
+<li><strong>the session is the process.</strong> One client, one VM, one session: <code>initialize</code> is answered inline, there is no
+session id, and the client closing stdin is the shutdown. There is no per-call mode — the JVM boots once and
+serves many calls.</li>
+<li><strong>what an agent can see is decided by the boot's spaces, not the transport.</strong> All-memspace state makes the
+session an ephemeral island; mounting the same sqlite or database the live server mounts makes it another door
+into the same world. The carrier takes no position — one line of boot data decides.</li>
+</ul>
+<p>A harness registers it like any other stdio server, which is the point:</p>
+<pre><code class="language-json">{&quot;mcpServers&quot;: {&quot;metatron&quot;: {&quot;command&quot;: &quot;bin/metatron&quot;, &quot;args&quot;: [&quot;--mcp&quot;]}}}
+</code></pre>
+<h3>see also</h3>
+<ul>
+<li><a href="web-instset-mtron.html">web instruction set</a> — the <code>protocol::T</code> lattice, route tables, <code>sse::T</code>, and the
+<code>mcp::T</code> surfaces a carrier realizes.</li>
+<li><a href="mcp-server-architecture.html">MCP server architecture</a> — <code>mcp_server</code>, tool registration, the carrier split.</li>
+<li><a href="mcp-server-notifications.html">MCP server notifications</a> — server→client push over a <code>?subq</code> subscription, and
+the <code>json::</code> / <code>.inst()</code> split-pattern those notifications ride on.</li>
+<li><code>docs/design/mcp-stdio.md</code> — the stdio carrier in full: stdout discipline, the constructor reshape, and why the
+tools are being pulled out into instructions.</li>
+<li><code>.metatron/skills/drstynx/assets/drstynx.boot.mtron</code> — a real boot file with two MCP clients (one http, one a
+spawned subprocess) inside a single <code>tool_feature</code>.</li>
+</ul>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

@@ -18,6 +18,17 @@ set -euo pipefail
 # ── resolve project root ───────────────────────────────────────────
 cd "$(dirname "$(readlink -f "$0")")/.."
 
+# ── stdio mcp mode: fd 1 is the protocol wire, so this script's own output
+#    (spinner, maven log, the restart banner) must go to stderr.  The JVM takes
+#    stdout for the protocol; anything the shell prints there first would be
+#    read by the client as a corrupt JSON-RPC frame.
+MCP_MODE=0
+for arg in "$@"; do
+    [ "$arg" = "--mcp" ] && MCP_MODE=1
+done
+# NB: in mcp mode this script's OWN output goes to stderr (below, per line) — never `exec 1>&2`,
+# which would hand the JVM stderr as its stdout and leave the protocol stream with nothing to claim
+
 # ── container toolchain: root FS is read-only, so use the in-repo JDK
 #    when present (Maven caches live under .build/) ──
 if [ -x "./.build/jdk/bin/java" ]; then JAVA_BIN="./.build/jdk/bin/java"; else JAVA_BIN="java"; fi
@@ -67,11 +78,11 @@ else
         MVN_LOG=$(mktemp)
         set +e
         "$MVNW" dependency:build-classpath -DincludeScope=runtime -Dmdep.outputFile="$CP_FILE" -q > "$MVN_LOG" 2>&1 &
-        spinner $! "resolving dependencies"
+        if [ "$MCP_MODE" -eq 1 ]; then spinner $! "resolving dependencies" >&2; else spinner $! "resolving dependencies"; fi
         wait $!
         MVN_EXIT=$?
         set -e
-        grep -v "^WARNING:" "$MVN_LOG" 2>/dev/null || true
+        grep -v "^WARNING:" "$MVN_LOG" 2>/dev/null >&2 || true
         rm -f "$MVN_LOG"
         if [ "$MVN_EXIT" -ne 0 ]; then exit "$MVN_EXIT"; fi
         STEP_RAN=1
@@ -88,13 +99,13 @@ else
         wait $!
         MVN_EXIT=$?
         set -e
-        grep -v "^WARNING:" "$MVN_LOG" 2>/dev/null || true
+        grep -v "^WARNING:" "$MVN_LOG" 2>/dev/null >&2 || true
         rm -f "$MVN_LOG"
         if [ "$MVN_EXIT" -ne 0 ]; then exit "$MVN_EXIT"; fi
         STEP_RAN=1
     fi
     # Spinner already emits \n when done.  Only need this when nothing ran.
-    if [ "$STEP_RAN" -eq 0 ]; then echo; fi
+    if [ "$STEP_RAN" -eq 0 ]; then if [ "$MCP_MODE" -eq 1 ]; then echo >&2; else echo; fi; fi
 
     JVM_FLAGS=( -Dlogback.configurationFile=conf/logback.xml
                 -Djava.util.logging.config.file=conf/logging.properties
@@ -124,5 +135,9 @@ while true; do
     if [ "$exit_code" -ne "$EXIT_RESET" ]; then
         exit "$exit_code"
     fi
-    printf '\n%b\n\n' "${RED}⟳ ${YELLOW}restarting ${BLUE}m${CYAN}E${RED}t${YELLOW}A${GREEN}T${MAGENTA}r${RED}o${GREEN}N${NC}...${NC}"
+    if [ "$MCP_MODE" -eq 1 ]; then
+        printf '\n%b\n\n' "${RED}⟳ ${YELLOW}restarting ${BLUE}m${CYAN}E${RED}t${YELLOW}A${GREEN}T${MAGENTA}r${RED}o${GREEN}N${NC}...${NC}" >&2
+    else
+        printf '\n%b\n\n' "${RED}⟳ ${YELLOW}restarting ${BLUE}m${CYAN}E${RED}t${YELLOW}A${GREEN}T${MAGENTA}r${RED}o${GREEN}N${NC}...${NC}"
+    fi
 done

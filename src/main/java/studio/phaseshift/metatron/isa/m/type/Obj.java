@@ -30,8 +30,8 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.*;
@@ -510,7 +510,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default boolean isMonad() {
-        return this instanceof PCMonad;
+        return this instanceof StatefulMonad;
     }
 
     default Obj autoResolve(final Obj obj) {
@@ -690,9 +690,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         }
     }
 
-    default PCMonad asMonad() {
+    default StatefulMonad asMonad() {
         try {
-            return (PCMonad) this;
+            return (StatefulMonad) this;
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -1319,14 +1319,14 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         final Obj untilPredicate = inst.arg(f(UNTIL), 1);
                         final Obj emitPredicate = inst.arg(f(EMIT), 2);
                         final List<Obj> toEmit = new ArrayList<>();
-                        final PCMonad monad = PCMonad.of(lhs);
+                        final StatefulMonad monad = StatefulMonad.of(lhs);
                         if (monad.isNoObj() || monad.obj().isNoObj()) {
                             toEmit.add(monad.loopback(false).nextInst());
                         } else {
                             // fresh entry pushes a loop frame; a loopback continuation does not
                             final boolean loopback = monad.isLoopback();
-                            final PCMonad m = monad.loopback(false);
-                            final PCMonad repeatMonad = loopback ? m : m.pushLoop();
+                            final StatefulMonad m = monad.loopback(false);
+                            final StatefulMonad repeatMonad = loopback ? m : m.pushLoop();
                             final Obj emitCode = emitPredicate.isCall() ? emitPredicate.<Call>as().toCode() : emitPredicate;
                             final boolean emit = emitCode.apply(repeatMonad).booleanCheck();
                             if (emit)
@@ -1337,7 +1337,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                     toEmit.add(repeatMonad.popLoop().nextInst());
                             } else {
                                 final Obj codeResult = repeatedApply.apply(repeatMonad.obj());
-                                final PCMonad monadX = repeatMonad.obj(codeResult).incrLoop(1).loopback(true);
+                                final StatefulMonad monadX = repeatMonad.obj(codeResult).incrLoop(1).loopback(true);
                                 toEmit.add(monadX);
                             }
                         }
@@ -1452,9 +1452,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     instC(PARENT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(), (lhs, inst) -> lhs.parent()),
                     docWrap(instC(COUNT_INST_TID.dom(A.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/), jnt(0)),
                             "any objs", "the count of objs", Map.of(), "counts the number of objs"),
-                    docWrap(instC(SKIP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1()), // retrieve
+                    docWrap(instC(SKIP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(INT_TYPE), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1()), // tail
                             "any objs", "the objs after skipping", Map.of(jnt(0), "the number of objs to skip"), "skips the first n objs"),
-                    docWrap(instC(TAKE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get0()), // remaining
+                    docWrap(instC(TAKE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(INT_TYPE), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get0()), // head
                             "any objs", "the objs before skipping", Map.of(jnt(0), "the number of objs to take"), "takes the first n objs"),
                     // Mutation box: detach the anchor (no auto-write during compute),
                     // compute in-memory (IMMUTABLE), then atomically write the result.
