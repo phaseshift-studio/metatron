@@ -284,20 +284,67 @@ public class MTronException extends RuntimeException {
             return null;
         if (throwable instanceof MTronException)
             return (MTronException) throwable;
-        else if (throwable.toString().contains("cannot be cast to class")) {
+        // Preserve the original throwable as the Java cause — do NOT
+        // embed the full stack trace in the message string.  The cause
+        // chain is available through getCause() and the stack trace
+        // through getStackTrace().  Embedding them in the message
+        // buries the signal and discards structured cause data.
+        return tracerThrow(new MTronException(translateMessage(throwable), throwable));
+    }
+
+    /**
+     * The mtron text of any throwable, for embedding in a message: its own
+     * message when already a MTronException, the conversion for a raw cast
+     * failure, and the plain message otherwise. Never the raw toString of a
+     * java throwable — and never with a trailing origin suffix, which is the
+     * outermost frame's to append, not the embedded text's.
+     */
+    public static String translateMessage(final Throwable throwable) {
+        if (null == throwable)
+            return "fail";
+        if (throwable instanceof MTronException m)
+            return null == m.getMessage() ? "fail" : m.getMessage();
+        if (throwable.toString().contains("cannot be cast to class")) {
             final String[] message = throwable.getMessage().split(" cannot be cast to class ");
             final String leftClass = message[0].trim();
             final String rightClass = message[1].trim().split("\\(")[0].trim();
-            return tracerThrow(new MTronException("unable to convert " + convertName(leftClass.substring(leftClass.lastIndexOf('.') + 1)) + " to " + convertName(rightClass.substring(rightClass.lastIndexOf('.') + 1)), throwable));
-        } else {
-            // Preserve the original throwable as the Java cause — do NOT
-            // embed the full stack trace in the message string.  The cause
-            // chain is available through getCause() and the stack trace
-            // through getStackTrace().  Embedding them in the message
-            // buries the signal and discards structured cause data.
-            // throwable.printStackTrace();
-            return tracerThrow(new MTronException(null == throwable.getMessage() ? "fail" : throwable.getMessage(), throwable));
+            return "unable to convert " + convertName(leftClass.substring(leftClass.lastIndexOf('.') + 1)) + " to " + convertName(rightClass.substring(rightClass.lastIndexOf('.') + 1));
         }
+        return null == throwable.getMessage() ? "fail" : throwable.getMessage();
+    }
+
+    /**
+     * The inst-frame mark: a message carrying this was framed at its own failing
+     * instruction — it already names its origin, and a second frame would name the
+     * wrong one.
+     */
+    public static final String FRAME_MARK = " (at ";
+
+    /**
+     * Whether this failure's message already carries an inst frame — the mark of a
+     * failure framed at the instruction that produced it.
+     */
+    public boolean isFramed() {
+        return null != this.getMessage() && this.getMessage().contains(FRAME_MARK);
+    }
+
+    /**
+     * The inst-apply funnel: compose the failure message for a throwable raised
+     * while applying {@code instContext}.
+     * <ul>
+     *   <li>an unframed inner failure gets exactly one frame, at the failing
+     *       instruction;</li>
+     *   <li>an already-framed inner failure is forwarded untouched — reframing it
+     *       would append a second origin that is not its own;</li>
+     *   <li>raw-java text is composed through {@link #translateMessage(Throwable)},
+     *       never through the exception's raw text, and the origin suffix is the
+     *       outermost frame's to append exactly once — not the embedded text's.</li>
+     * </ul>
+     */
+    public static MTronException funnel(final Throwable inner, final String instContext) {
+        if (inner instanceof MTronException m && m.isFramed())
+            return m;
+        return of(inner, "inst apply failure: %s (at %s)", translateMessage(inner), instContext);
     }
 
     private static String convertName(final String name) {

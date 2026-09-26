@@ -566,7 +566,7 @@ public class mParserTest extends AbstractMetatronTest {
     @ParameterizedTest(name = "[{index}] {1}")
     @CsvSource(value = {
             // ── End-of-input: incomplete expressions ─────────────────
-            "1+                                                   % could not parse",
+            "1+                                                   % incomplete — binary operator",
             "rec[name=>bob                                          % unclosed '['",
             "lst[1,2,                                              % unclosed '['",
             "str(                                                   % unclosed '('",
@@ -632,6 +632,46 @@ public class mParserTest extends AbstractMetatronTest {
     }
 
     // ========================================
+    // Designed failure messages — labeled at the expectation point
+    // ========================================
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "'abc                % unclosed single-quote — missing closing '''",
+            "\"abc               % unclosed double-quote — missing closing '\"'",
+            "\"\"\"abc           % unclosed triple-quote — missing closing '\"\"\"'",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testUnclosedQuoteFailuresCarryDesignedMessage(final String code, final String expected) {
+        final MTronException ex = assertThrows(MTronException.class, () -> mParser.parse(code));
+        assertTrue(ex.getMessage().contains("parse error at"),
+                "should keep the line:col format, got: " + ex.getMessage());
+        assertTrue(ex.getMessage().contains(expected),
+                "the designed message should surface, got: " + ex.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "12ab            % two adjacent terms need an operator or sugar between them",
+            "1e              % two adjacent terms need an operator or sugar between them",
+            "1 2             % two adjacent terms need an operator or sugar between them",
+            "1+              % incomplete — binary operator",
+            "1=              % incomplete — binary operator",
+            "1/              % incomplete — binary operator",
+            "?               % the coefficient slot needs a target to qualify",
+            "[1 2]          % invalid list/record entry",
+            "[a b]          % invalid list/record entry",
+            "a.b             % mtron uses '/' for space paths",
+            ".5              % mtron has no leading-dot reals",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testContentLevelFailuresCarryDesignedMessage(final String code, final String expected) {
+        final MTronException ex = assertThrows(MTronException.class, () -> mParser.parse(code));
+        assertTrue(ex.getMessage().contains("parse error at"),
+                "should keep the line:col format, got: " + ex.getMessage());
+        assertTrue(ex.getMessage().contains(expected),
+                "the designed message should surface, got: " + ex.getMessage());
+    }
+
+    // ========================================
     // ParseDiagnose — non-throwing parse
     // ========================================
 
@@ -669,7 +709,7 @@ public class mParserTest extends AbstractMetatronTest {
             "1]                                                          % unexpected ']'    % stray list closer",
             "1)                                                          % unexpected ')'    % stray paren closer",
             // ── Incomplete / generic ──────────────────────────────
-            "1+                                                          % could not parse   % incomplete binary op",
+            "1+                                                          % incomplete — binary operator   % trailing binary operator",
             "str(                                                        % unclosed '('      % incomplete inst call",
             // ── Operator chars confuse bracket detection ───────────
             "1.-<[-<[?>0=>5,_=>_]>                                       % unclosed '['      % operator chars mask real unclosed bracket",

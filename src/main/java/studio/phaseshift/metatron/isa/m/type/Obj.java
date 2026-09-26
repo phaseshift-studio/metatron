@@ -1207,26 +1207,43 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return MObjFactory.of().toObj(jvm, tid, vid, clazz);
         }
 
+        /**
+         * Clone recursion depth — a self-referential obj (an inst whose tid is
+         * {@code #{*}} references the inst itself) re-enters objClone without
+         * end; the gauge turns that runaway into a named failure instead of a
+         * StackOverflowError.
+         */
+        private static final int MAX_CLONE_DEPTH = 128;
+        private static final ThreadLocal<Integer> CLONE_DEPTH = ThreadLocal.withInitial(() -> 0);
+
         public static <O extends Obj> O objClone(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {
-            if (!Objects.equals(tid, obj.tid())) {
-                final Obj type = Router.readFromSpace(tid);
-                if (!type.isNoObj() && type.isType() && type.<Type>as().hasConstructor()) {
-                    final Obj clone = type.<Type>as().constructor().apply(obj);
-                    if (clone.isFail())
-                        throw MTronException.of(clone.<Fail>as().jvm());
-                    return (O) clone.selfTID(tid);
+            final int depth = CLONE_DEPTH.get() + 1;
+            if (depth > MAX_CLONE_DEPTH)
+                throw MTronException.of("clone depth limit exceeded (%d) — self-referential obj at %s", MAX_CLONE_DEPTH, obj);
+            CLONE_DEPTH.set(depth);
+            try {
+                if (!Objects.equals(tid, obj.tid())) {
+                    final Obj type = Router.readFromSpace(tid);
+                    if (!type.isNoObj() && type.isType() && type.<Type>as().hasConstructor()) {
+                        final Obj clone = type.<Type>as().constructor().apply(obj);
+                        if (clone.isFail())
+                            throw MTronException.of(clone.<Fail>as().jvm());
+                        return (O) clone.selfTID(tid);
+                    }
                 }
-            }
-            if (null != jvm && !Objects.equals(jvm, obj.jvm()) || !Objects.equals(tid, obj.tid()) || !Objects.equals(vid, obj.vid())) {
-                try {
-                    final O clone = (O) obj.clone();
-                    Obj.Helper.objCheckAndSave(clone, jvm, tid, null == vid || vid.isEmpty() ? null : vid);
-                    return (O) clone.selfTID(tid);
-                } catch (final Exception e) {
-                    throw MTronException.of(e);
+                if (null != jvm && !Objects.equals(jvm, obj.jvm()) || !Objects.equals(tid, obj.tid()) || !Objects.equals(vid, obj.vid())) {
+                    try {
+                        final O clone = (O) obj.clone();
+                        Obj.Helper.objCheckAndSave(clone, jvm, tid, null == vid || vid.isEmpty() ? null : vid);
+                        return (O) clone.selfTID(tid);
+                    } catch (final Exception e) {
+                        throw MTronException.of(e);
+                    }
                 }
+                return (O) obj;
+            } finally {
+                CLONE_DEPTH.set(depth - 1);
             }
-            return (O) obj;
         }
     }
 

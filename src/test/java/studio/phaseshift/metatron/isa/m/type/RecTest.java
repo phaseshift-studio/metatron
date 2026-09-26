@@ -710,19 +710,19 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[=>] + [a=>1]                                     % [a=>1]",
             "[a=>1] + [=>]                                     % [a=>1]",
             "[=>] + [=>]                                       % [=>]",
-            // nested recs — structural merge, no deep recursion
-            "[a=>[b=>1]] + [a=>[c=>2]]                         % [a=>{[b=>1],[c=>2]}]",
-            "[a=>[b=>1,c=>2]] + [a=>[b=>3]]                    % [a=>{[b=>1,c=>2],[b=>3]}]",
+            // nested recs — deep structural merge (recursion into sub-recs)
+            "[a=>[b=>1]] + [a=>[c=>2]]                         % [a=>[b=>1,c=>2]]",
+            "[a=>[b=>1,c=>2]] + [a=>[b=>3]]                    % [a=>[b=>{1,3},c=>2]]",
             // multi-key
             "[a=>1] + [b=>2] + [c=>3]                          % [a=>1,b=>2,c=>3]",
             // wildcard key _ (doesn't match any literal key → added as new field)
             "[a=>1,b=>2,c=>3] + [_=>+2]                        % [a=>1,b=>2,c=>3,id()=>plus(2)]",
             // ── deep nesting ──
-            "[a=>[b=>1]] + [a=>[b=>2]]                         % [a=>{[b=>1],[b=>2]}]",
-            "[a=>[b=>[c=>1,d=>2]]] + [a=>[b=>[e=>3]]]           % [a=>{[b=>[c=>1,d=>2]],[b=>[e=>3]]}]",
-            "[a=>[b=>[c=>1]]] + [a=>[b=>[c=>2]]]                % [a=>{[b=>[c=>1]],[b=>[c=>2]]}]",
-            "[a=>[b=>1,c=>2]] + [a=>[b=>3,d=>4]]               % [a=>{[b=>1,c=>2],[b=>3,d=>4]}]",
-            "[a=>[b=>1]] + [a=>[b=>+2]]                         % [a=>{[b=>1],[b=>plus(2)]}]",
+            "[a=>[b=>1]] + [a=>[b=>2]]                         % [a=>[b=>{1,2}]]",
+            "[a=>[b=>[c=>1,d=>2]]] + [a=>[b=>[e=>3]]]           % [a=>[b=>[c=>1,d=>2,e=>3]]]",
+            "[a=>[b=>[c=>1]]] + [a=>[b=>[c=>2]]]                % [a=>[b=>[c=>{1,2}]]]",
+            "[a=>[b=>1,c=>2]] + [a=>[b=>3,d=>4]]               % [a=>[b=>{1,3},c=>2,d=>4]]",
+            "[a=>[b=>1]] + [a=>[b=>+2]]                         % [a=>[b=>{1,plus(2)}]]",
     }, delimiter = '%')
     public void testRecPlus(final String expression, final String expected) {
         final Obj result = ObjmtronSerializer.parse(expression).apply();
@@ -809,7 +809,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[a=>[b=>[c=>1,d=>2]]] >>= [a=>[b=>[c=>+1]]]         % [a=>[b=>[c=>2,d=>2]]]",
             "[a=>[b=>[c=>1,d=>2]]] >>= [a=>[b=>[c=>+1,d=>+10]]]  % [a=>[b=>[c=>2,d=>12]]]",
             "[a=>[b=>[c=>1,d=>2]]] >>= [a=>[b=>[e=>3]]]          % [a=>[b=>[c=>1,d=>2]]]",
-            "[a=>[b=>[c=>1]]] >>= [a=>+[b=>[e=>3]]]              % [a=>[b=>{[c=>1],[e=>3]}]]",
+            "[a=>[b=>[c=>1]]] >>= [a=>+[b=>[e=>3]]]              % [a=>[b=>[c=>1,e=>3]]]",
             "[a=>[b=>[c=>1]]] >>= [a=>[b=>+[e=>3]]]              % [a=>[b=>[c=>1,e=>3]]]",
     }, delimiter = '%')
     public void testUpdateOperator(final String expression, final String expected) {

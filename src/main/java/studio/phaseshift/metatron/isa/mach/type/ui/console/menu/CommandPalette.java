@@ -106,7 +106,7 @@ public final class CommandPalette extends MRec {
                     .addRow(List.of(kc("<tab>"), "tabular view of the current code"))
                     .addRow(List.of(cc(":typer [stages]"), "show or enable/disable type checking stages (+stage/-stage)"))
                     .addRow(List.of(kc("<alt>+t") + "  " + cc(":typer-cycle"), "cycle type check activations"))
-                    .addRow(List.of(cc(":tracer [on|off]"), "toggle Java stack trace dump on fail"))
+                    .addRow(List.of(cc(":tracer [mtron|java]"), "toggle mtron/java stack trace dump on fail"))
                     /// ///////////////////////////////////////////////////////////////////////////////////////
                     .addRow(List.of("{{[g]&w}}console", "{{[g]&w}}"))
                     .addRow(List.of(kc("<ctrl>+q") + "  " + cc(":quit"), "exit the console"))
@@ -299,12 +299,12 @@ public final class CommandPalette extends MRec {
 
         // ===== tracer =====
         this.at("tracer", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-            final boolean newState = lhs.isStr() && !lhs.strValue().isBlank()
-                    ? lhs.strValue().trim().equalsIgnoreCase("on")
-                    : !Tracer.java_stack.enabled();
-            if (newState) Tracer.enable(Tracer.java_stack);
-            else Tracer.disable(Tracer.java_stack);
-            this.console.logger().info("tracer {{%s}}%s{{X}}", newState ? "g" : "r", newState ? "ON" : "OFF");
+            final String newState = lhs.isStr() && !lhs.strValue().isBlank() ? lhs.strValue().trim() : null;
+            if (null == newState || newState.equals("mtron"))
+                Tracer.toggle(Tracer.mtron_stack);
+            if (null == newState || newState.equals("java"))
+                Tracer.toggle(Tracer.java_stack);
+            this.console.logger().info("tracer {{b}}mtron:{{g}}%s{{/g}} java:{{g}}%s{{X}}", Tracer.getEnabled().contains(Tracer.mtron_stack), Tracer.getEnabled().contains(Tracer.java_stack));
             return noobj();
         }), MUTABLE);
 

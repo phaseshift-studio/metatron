@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -218,6 +219,33 @@ public class MTronExceptionTest extends AbstractMetatronTest {
             throw new AssertionError("fail lost its message: " + rendered);
         assertEquals(before + 1, MTronException.mtronTracesEmitted(), "one logical failure → one mtron stack trace");
         assertEquals("\\_apply_inst: /m/inst/as?rng=/m/lst&dom=/m/int", MTronException.lastMtronTrace());
+    }
+
+    // ==================================================================
+    // the inst funnel — one frame, translated raw-java, no double framing
+    // ==================================================================
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "plain unframed message                      | inst apply failure: plain unframed message (at /m/inst/x@1) | an unframed inner gets exactly one frame at the inst",
+            "rejected by the policy (at /m/sys/inst/bash@0) | rejected by the policy (at /m/sys/inst/bash@0)            | an already-framed inner is forwarded, not re-framed",
+    }, delimiter = '|')
+    public void testFunnelFramesOnce(final String inner, final String expected, final String desc) {
+        final MTronException funneled = MTronException.funnel(MTronException.of(inner), "/m/inst/x@1");
+        assertEquals(expected, funneled.getMessage(), desc);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "class a.b.MFail cannot be cast to class a.b.Bool | unable to convert mfail to bool | a raw cast failure surfaces as the conversion, never as java text",
+    }, delimiter = '|')
+    public void testFunnelTranslatesRawJava(final String rawMessage, final String expected, final String desc) {
+        final MTronException funneled = MTronException.funnel(new ClassCastException(rawMessage), "/m/inst/is@1");
+        final String message = funneled.getMessage();
+        assertTrue(message.startsWith("inst apply failure: " + expected + " (at /m/inst/is@1)"),
+                "raw java must pass through the translator; got: " + message);
+        assertFalse(message.contains("java.lang"), "no raw class names in the message: " + message);
+        assertFalse(message.contains("cannot be cast"), "no raw cast text in the message: " + message);
     }
 
     @Test

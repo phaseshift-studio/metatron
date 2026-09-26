@@ -25,20 +25,22 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -251,5 +253,75 @@ public class catInstSetTest extends AbstractInstSetTest {
     }, delimiter = '%')
     void testMorphismLaws(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);
+    }
+
+    /**
+     * the {@code code.rewrite()} loop, but scoped to {@link catInstSet} only — proves the logical
+     * rewrites fire without {@code /m}'s heuristic rewrites doing the work.
+     */
+    private static Code catRewrite(final Code code) {
+        final AtomicReference<Code> rewrittenCode = new AtomicReference<>(code);
+        int hash = code.hashCode();
+        int done = 2;
+        while (done != 0) {
+            Router.global().spaces()
+                    .elements()
+                    .filter(r -> r.second() instanceof catInstSet)
+                    .flatMap(r -> r.second().<InstSet>as().rewrites().stream())
+                    .forEach(r -> {
+                        final Obj rewritten = r.apply(rewrittenCode.get());
+                        STATIC_LOG.warn(Graphitty.strip("%s: %s => %s".formatted(r, rewrittenCode.get(), rewritten)));
+                        if (rewritten.isCode())
+                            rewrittenCode.set(rewritten.asCode());
+                    });
+            if (hash == (hash = rewrittenCode.get().hashCode()))
+                done--;
+        }
+        return rewrittenCode.get();
+    }
+
+    /**
+     * The logical rewrites — derived from the operand's declared theory (not hand-matched).
+     * {@code ring_theory_unit_removal} strips {@code op(id)} (the ring's zero/one) from code.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // ring_theory_unit_removal — op(id) removed, where id comes from the operand's ring (zero=0, one=1)
+            "5.plus(0)          % start(5)          % 5",
+            "5.mult(1)          % start(5)          % 5",
+            "5.plus(0).mult(1)  % start(5)          % 5",
+            "5.plus(0).mult(3)  % start(5).mult(3)  % 15",
+            "5.plus(2).plus(0)  % start(5).plus(2)  % 7",
+            "-5.mult(1)         % start(-5)         % -5",
+    }, delimiter = '%')
+    public void testRewrites(final String code, final String expected, final String expectedResult) throws Exception {
+        final Code firstStage = ObjmtronSerializer.parse(code);
+        final Call secondStage = ObjmtronSerializer.parse(expected);
+        final Call compilation = catRewrite(firstStage).tryToInst();
+        final Obj result = ObjmtronSerializer.parse(expectedResult);
+        assertEquals(secondStage, compilation);
+        assertEquals(result, firstStage.apply(noobj()));
+    }
+
+    /**
+     * {@code group_theory_involution} — {@code neg().neg()} collapses to identity (the additive
+     * group's inverse is period-two), derived from {@code add_group.inv}. The carrier comes from the
+     * seed (the argless {@code neg()} has no arg to derive it from).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.neg().neg()          % start(5)          % 5",
+            "5.neg().neg().plus(2)  % start(5).plus(2)  % 7",
+            "5.plus(2).neg().neg()  % start(5).plus(2)  % 7",
+            "5.neg()                % start(5).neg()    % -5",
+            "-5.neg().neg()         % start(-5)         % -5",
+    }, delimiter = '%')
+    public void testInvolutions(final String code, final String expected, final String expectedResult) throws Exception {
+        final Code firstStage = ObjmtronSerializer.parse(code);
+        final Call secondStage = ObjmtronSerializer.parse(expected);
+        final Call compilation = catRewrite(firstStage).tryToInst();
+        final Obj result = ObjmtronSerializer.parse(expectedResult);
+        assertEquals(secondStage, compilation);
+        assertEquals(result, firstStage.apply(noobj()));
     }
 }

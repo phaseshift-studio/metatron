@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.isa.m.parser;
 
+import org.petitparser.context.Context;
+import org.petitparser.context.Failure;
 import org.petitparser.context.Result;
 import org.petitparser.context.Token;
 import org.petitparser.parser.Parser;
@@ -26,6 +28,7 @@ import org.petitparser.parser.combinators.OptionalParser;
 import org.petitparser.parser.combinators.SequenceParser;
 import org.petitparser.parser.combinators.SettableParser;
 import org.petitparser.parser.primitive.CharacterParser;
+import org.petitparser.utils.FailureJoiner;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -83,6 +86,17 @@ public class mParser {
 
     private static final SettableParser furi_parser = SettableParser.undefined();
     private static final GraphittyLogger LOG = Graphitty.log(mParser.class);
+
+    /**
+     * The choice failure that got the farthest.  The child that came closest
+     * to succeeding is where the attempt died, so its failure — position
+     * and message (labeled or not) — is what survives to the reporter,
+     * instead of the arbitrary last branch's.
+     * Declared before the static parser build so the initializers see a
+     * live joiner.
+     */
+    private static final FailureJoiner FURTHEST =
+            (final Failure a, final Failure b) -> a.getPosition() >= b.getPosition() ? a : b;
     private static final SettableParser obj_parser = new MemoizedSettableParser();
     private static final SettableParser obj_no_code_parser = new MemoizedSettableParser();
     private static final SettableParser obj_no_call_parser = new MemoizedSettableParser();
@@ -562,11 +576,24 @@ public class mParser {
     }
 
     /**
+     * Failure labels written at expectation points ({@link #labeled}).
+     * These are already the designed text — simplifyParseMessage passes them
+     * through verbatim; the position heuristics that follow would otherwise
+     * rewrite them into generic bracket talk.
+     */
+    private static final Set<String> DESIGNED = Set.of(
+            "unclosed single-quote — missing closing '''",
+            "unclosed double-quote — missing closing '\"'",
+            "unclosed triple-quote — missing closing '\"\"\"'");
+
+    /**
      * Cleans up PetitParser's verbose ChoiceParser failure message into a
      * single actionable explanation.
      */
     private static String simplifyParseMessage(final String rawMsg, final String buffer,
                                                final int pos, final String snippet) {
+        if (null != rawMsg && DESIGNED.contains(rawMsg))
+            return rawMsg;
         final boolean atEnd = pos >= buffer.length();
         final char atChar = atEnd ? '\0' : buffer.charAt(pos);
         final char prevChar = pos > 0 ? buffer.charAt(pos - 1) : '\0';
@@ -605,6 +632,31 @@ public class mParser {
         if (atChar == '}')
             return "unexpected '}' — missing opening '{' or extra '}'?";
 
+        // ── Content-level designed failures ─────────────────────────────
+        // These fire where the bracket heuristics don't: two terms with no
+        // operator between them (12ab, 1e — mtron has no scientific
+        // notation, 1 2), a binary operator hanging at the end (1+, 1=, 1/),
+        // a dangling coefficient slot (?), a dot used as a name separator
+        // (a.b), and a leading-dot real (.5).
+        final char prevSignificant = lastNonSpace(buffer, pos);
+        final boolean prevClosesTerm = prevSignificant != '\0' && (Character.isLetterOrDigit(prevSignificant)
+                || prevSignificant == ']' || prevSignificant == ')' || prevSignificant == '}'
+                || prevSignificant == '>' || prevSignificant == '"' || prevSignificant == '\'');
+        if (Character.isLetterOrDigit(atChar) && prevClosesTerm)
+            return "unexpected '" + atChar + "' — two adjacent terms need an operator or sugar between them (e.g. 1 + 2)";
+        if ((atChar == '+' || atChar == '-' || atChar == '/' || atChar == '=') && prevClosesTerm)
+            return "incomplete — binary operator '" + atChar + "' needs a right operand (e.g. 1 + 2)";
+        if (atChar == '?' && (prevSignificant == '\0' || prevClosesTerm))
+            return "unexpected '?' — the coefficient slot needs a target to qualify (e.g. is?int(x), int::T[?>0])";
+        if (atChar == '[' && pos + 2 <= buffer.length() && Character.isLetterOrDigit(buffer.charAt(pos + 1))
+                && Character.isWhitespace(buffer.charAt(pos + 2)))
+            return "invalid list/record entry — entries separate with ',' or '=>' (e.g. [1,2,3], [a=>1,b=>2])";
+        if (pos >= 2 && buffer.charAt(pos - 1) == '.' && Character.isLetter(buffer.charAt(pos - 2)))
+            return "invalid name — mtron uses '/' for space paths, not '.' (e.g. */usr/share)";
+        if (Character.isDigit(atChar) && pos >= 1 && buffer.charAt(pos - 1) == '.'
+                && (pos == 1 || !Character.isDigit(buffer.charAt(pos - 2))))
+            return "invalid real — mtron has no leading-dot reals (write 0.5)";
+
         // Generic: show what character couldn't be parsed, but also check from
         // the end of the full expression for unclosed delimiters — the real
         // problem is often an unclosed bracket earlier, not this character.
@@ -621,6 +673,17 @@ public class mParser {
      */
     private static boolean isOperatorChar(final char c) {
         return c == '=' || c == '-' || c == '?' || c == '<' || c == '>';
+    }
+
+    /**
+     * The last non-whitespace character strictly before {@code pos}, or
+     * {@code '\0'} if there is none.
+     */
+    private static char lastNonSpace(final String buffer, final int pos) {
+        for (int i = pos - 1; i >= 0; i--)
+            if (!Character.isWhitespace(buffer.charAt(i)))
+                return buffer.charAt(i);
+        return '\0';
     }
 
     /**
@@ -1110,12 +1173,20 @@ public class mParser {
     public static Parser m_str() {
         final Parser sqInner = noneOf("'\\").or(of("\\").seq(any()));
         final Parser dqInner = noneOf("\"\\").or(of("\\").seq(any()));
-        final Parser singleQuote = seq(of('\''), sqInner.starLazy(of('\'')), of('\'')).flatten().map(t -> t.toString().substring(1, t.toString().length() - 1));
-        final Parser doubleQuote = seq(of('"'), dqInner.starLazy(of('"')), of('"')).flatten().map(t -> t.toString().substring(1, t.toString().length() - 1));
-        final Parser tripleQuote = seq(
+        final Parser singleQuote = labeled(
+                seq(of('\''), sqInner.starLazy(of('\'')), of('\'')).flatten(),
+                "unclosed single-quote — missing closing '''")
+                .map(t -> t.toString().substring(1, t.toString().length() - 1));
+        final Parser doubleQuote = labeled(
+                seq(of('"'), dqInner.starLazy(of('"')), of('"')).flatten(),
+                "unclosed double-quote — missing closing '\"'")
+                .map(t -> t.toString().substring(1, t.toString().length() - 1));
+        final Parser tripleQuote = labeled(seq(
                 of('"').repeat(3, 3),
                 any().starLazy(of('"').repeat(3, 3)),
-                of('"').repeat(3, 3)).flatten().map(t -> t.toString().substring(3, t.toString().length() - 3));
+                of('"').repeat(3, 3)).flatten(),
+                "unclosed triple-quote — missing closing '\"\"\"'")
+                .map(t -> t.toString().substring(3, t.toString().length() - 3));
         return seq(m_type_prefix(Tokens.STR_TID), choice(tripleQuote, singleQuote, doubleQuote), m_vid_postfix())
                 .map(t -> new MStr(mParser.pick(t, 1), pick(t, 0), pick(t, 2)));
     }
@@ -1288,11 +1359,44 @@ public class mParser {
     }
 
     public static ChoiceParser choice(final Parser... parsers) {
-        return new ChoiceParser(parsers);
+        return new ChoiceParser(FURTHEST, parsers);
     }
 
     public static ChoiceParser choice(final List<Parser> parsers) {
-        return new ChoiceParser(parsers.toArray(new Parser[parsers.size()]));
+        return new ChoiceParser(FURTHEST, parsers.toArray(new Parser[parsers.size()]));
+    }
+
+    /**
+     * A parser that reports its own failure: the message written at the
+     * expectation point — not the combinators' — is what survives to the
+     * reporter, while the inner failure's position is preserved, so line:col
+     * still points at where the attempt actually stopped.
+     */
+    public static Parser labeled(final Parser inner, final String message) {
+        return new LabeledParser(inner, message);
+    }
+
+    private static final class LabeledParser extends Parser {
+        private final Parser inner;
+        private final String message;
+
+        private LabeledParser(final Parser inner, final String message) {
+            this.inner = inner;
+            this.message = message;
+        }
+
+        @Override
+        public Result parseOn(final Context ctx) {
+            final Result r = this.inner.parseOn(ctx);
+            if (r.isFailure())
+                return ctx.failure(this.message, r.getPosition());
+            return r;
+        }
+
+        @Override
+        public Parser copy() {
+            return new LabeledParser(this.inner.copy(), this.message);
+        }
     }
 
     public static CharacterParser none() {

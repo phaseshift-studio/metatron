@@ -364,6 +364,8 @@ public final class Tokens {
     public static final String HOSTNAME = "HOSTNAME";
     public static final String SCHEMA = "schema";
     public static final String INSTSET = "instset";
+    public static final String COMPILER = "compiler";
+    public static final String PROCESSOR = "processor";
     public static final String ALT = "alt";
     public static final String REFERENCES = "references";
     public static final String URI = "uri";
