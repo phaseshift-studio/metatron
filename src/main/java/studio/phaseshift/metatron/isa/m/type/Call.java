@@ -29,7 +29,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_FROM_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.split_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -72,7 +73,8 @@ public interface Call extends Obj, Ring<Call> {
         return this;
     }
 
-    default Code toCode() {
+    @Override
+    default Code asCode() {
         if (this.isCode())
             return (Code) this;
         else

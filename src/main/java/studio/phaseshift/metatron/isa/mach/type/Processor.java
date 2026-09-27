@@ -22,6 +22,8 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.thread.mThread;
 
+import java.util.function.Consumer;
+
 import static studio.phaseshift.metatron.Tokens.CODE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code0;
 
@@ -50,4 +52,14 @@ public interface Processor extends mThread, Machine.Component {
     default Code code() {
         return this.at(CODE).orElse(code0());
     }
+
+    /**
+     * @return a copy of this processor with the given onHalt callback registered
+     */
+    Processor onHalt(final Consumer<Obj> halted);
+
+    /**
+     * @return the current onHalt callback
+     */
+    Consumer<Obj> onHalt();
 }

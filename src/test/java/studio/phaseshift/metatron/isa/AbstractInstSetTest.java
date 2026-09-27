@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -30,9 +30,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 
 /*
@@ -44,9 +42,11 @@ public abstract class AbstractInstSetTest extends AbstractMetatronTest {
     protected final Supplier<InstSet> spaceSupplier;
 
     public AbstractInstSetTest(final Supplier<InstSet> instSetSupplier) {
+        super();
         this.spaceSupplier = instSetSupplier;
+
     }
-    
+
     @BeforeEach
     protected void setup() {
         this.space = this.spaceSupplier.get();

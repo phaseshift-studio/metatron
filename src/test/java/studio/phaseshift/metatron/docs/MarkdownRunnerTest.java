@@ -231,6 +231,84 @@ public class MarkdownRunnerTest {
         assertEquals(current, MarkdownRunner.isCurrent(target, processed.replace("+NL", "\n")), desc);
     }
 
+    @Test
+    public void testArticlesContainerClimbsToWebsiteArticlesDir(@TempDir final Path tmp) throws IOException {
+        // ws/articles — the canonical article container is the ancestor named "articles"
+        final Path container = tmp.resolve("ws").resolve("articles");
+        Files.createDirectories(container.resolve("sub"));
+
+        assertEquals(container, MarkdownRunner.articlesContainer(container));
+        assertEquals(container, MarkdownRunner.articlesContainer(container.resolve("sub")));
+        // a tree with no "articles" ancestor is not a website articles container
+        final Path plain = tmp.resolve("probe-output");
+        Files.createDirectories(plain);
+        assertNull(MarkdownRunner.articlesContainer(plain));
+    }
+
+    @Test
+    public void testRenderedArticleCarriesTheoryChrome(@TempDir final Path tmp) throws IOException {
+        // A minimal website articles container: <tmp>/articles/geometry.md
+        final Path articles = tmp.resolve("articles");
+        Files.createDirectories(articles);
+        Files.writeString(articles.resolve("geometry.md"), """
+                ---
+                name: The Geometry of Data Is the Program
+                description: why a function's signature is the shape of the data it walks
+                ---
+
+                **Theorem.** A coefficient is arithmetic: `{1,2,{10}3}.count()`.
+
+                ## Live proof
+
+                ```mtron
+                mtron> {1,2,{10}3}.count()
+                ==>12
+                ```
+                """);
+
+        assertTrue(MarkdownRunner.renderArticleHtml(articles) >= 1, "a new article page must be written");
+        assertEquals(0, MarkdownRunner.renderArticleHtml(articles), "a second pass must write nothing (idempotent)");
+
+        final String html = Files.readString(articles.resolve("geometry.html"));
+        // frontmatter owns the single h1 title, the description the subtitle beneath it
+        assertTrue(html.contains("class=\"article-title"), "article must carry the frontmatter h1 chrome: " + html);
+        assertTrue(html.contains("<h1 class=\"article-title mb-1\">The Geometry of Data Is the Program</h1>"),
+                "the h1 must carry the frontmatter name: " + html);
+        // KaTeX + the article stylesheet ride the {{EXTRA_HEAD}} token; the stylesheet
+        // href is depth-rewritten (articles is one level under the website root)
+        assertTrue(html.contains("katex"), "the article must inject KaTeX for $...$ math: " + html);
+        assertTrue(html.contains("../css/theory-article.css"),
+                "the article stylesheet href must be depth-rewritten: " + html);
+        assertFalse(containsAny(html, LOOKALIKES),
+                "rendered article must not contain a compressed single-character look-alike");
+    }
+
+    @Test
+    public void testArticleHtmlPassSkipsMarkdownWithoutFrontmatter(@TempDir final Path tmp) throws IOException {
+        // A .md without YAML frontmatter (a raw paper like stream-ring-theory.md)
+        // is not a "theory article" — it must be skipped, not rendered with an
+        // empty title.
+        final Path articles = tmp.resolve("articles");
+        Files.createDirectories(articles);
+        Files.writeString(articles.resolve("paper.md"), """
+                # A raw paper (no frontmatter)
+
+                body here
+                """);
+        Files.writeString(articles.resolve("theory.md"), """
+                ---
+                name: A Theory Article
+                description: has frontmatter
+                ---
+
+                body
+                """);
+
+        assertTrue(MarkdownRunner.renderArticleHtml(articles) >= 1, "the frontmatter article must render");
+        assertTrue(Files.exists(articles.resolve("theory.html")), "the frontmatter article gets an html");
+        assertFalse(Files.exists(articles.resolve("paper.html")), "a .md without frontmatter is not a theory article");
+    }
+
     private static boolean containsAny(final String s, final String chars) {
         for (int i = 0; i < chars.length(); i++) {
             if (s.indexOf(chars.charAt(i)) >= 0) return true;

@@ -31,8 +31,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
-import studio.phaseshift.metatron.isa.mach.type.MonadProcessor;
-import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
+import studio.phaseshift.metatron.isa.mach.type.Processor;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
@@ -118,7 +117,7 @@ public class Console extends MRec implements Closeable, Runnable {
      * evaluation.  Set when the console binds its repl thread.
      */
     public static volatile fURI CONSOLE_THREAD_VID = null;
-    public MonadProcessor machine = null;
+    public Processor machine = null;
     public static AtomicBoolean userMode = new AtomicBoolean(false);
 
     /**
@@ -522,7 +521,7 @@ public class Console extends MRec implements Closeable, Runnable {
      * as {@code virtual::[code=>...]} forks, so background chats don't
      * animate console spinners.
      */
-    public static boolean isConsoleOwned() {
+    /*public static boolean isConsoleOwned() {
         final AbstractThread current = BootLoader.CURRENT_THREAD.get();
         if (null == current)
             return true;
@@ -532,8 +531,7 @@ public class Console extends MRec implements Closeable, Runnable {
         if (consoleVid.equals(current.vid()))
             return true;
         return current.sourceVid().map(consoleVid::equals).orElse(true);
-    }
-
+    }*/
     public LineReader getReader() {
         return this.reader;
     }
@@ -1516,12 +1514,12 @@ public class Console extends MRec implements Closeable, Runnable {
      * while we wait — {@code <alt>+b} detaches, ctrl-c stops, {@code [q]}
      * cancels once the offer has been printed, other keystrokes are kept for
      * the next prompt.  The protocol itself lives on
-     * {@link ForegroundJobs#awaitForeground(MonadProcessor, FutureObj, String)}.
+     * {@link ForegroundJobs#awaitForeground(Processor, FutureObj, String)}.
      *
      * @return true when the job was detached with {@code <alt>+b} (it is still
      * running — the console returns to the prompt)
      */
-    boolean awaitForeground(final MonadProcessor mach, final FutureObj<Obj> future, final String line) {
+    boolean awaitForeground(final Processor mach, final FutureObj<Obj> future, final String line) {
         return this.jobs.awaitForeground(mach, future, line);
     }
 
@@ -1608,7 +1606,7 @@ public class Console extends MRec implements Closeable, Runnable {
      * @return the jobs detached with {@code <alt>+b} that have not yet halted,
      * in detach order
      */
-    public List<MonadProcessor> backgroundJobs() {
+    public List<Processor> backgroundJobs() {
         return this.jobs.backgroundJobs();
     }
 

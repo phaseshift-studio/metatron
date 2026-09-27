@@ -19,11 +19,13 @@
 package studio.phaseshift.metatron.isa.mach.type;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.router.BasicRouter;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.instset0;
@@ -51,9 +53,16 @@ public interface Machine extends Router {
 
     interface Component extends Rec {
         default Machine machine() {
-            final Obj mach = this.at(MACHINE);
+            Obj mach = this.parent();
+            while (!mach.isNoObj() && !(mach instanceof Machine))
+                mach = mach.parent();
             return mach instanceof Machine ? mach.as() : mach0();
         }
+    }
+
+    @Override
+    default Obj apply(final Obj call) {
+        return this.processor().apply(this.compiler().apply(call));
     }
 
     /**
@@ -71,11 +80,19 @@ public interface Machine extends Router {
         return this.at(uri(INSTSET), instset, MUTABLE).as();
     }
 
+    default Machine instset(final Call instsetReference) {
+        CommonUtil.close(this.atDirect(uri(INSTSET)));
+        return this.at(uri(INSTSET), instsetReference, MUTABLE).as();
+    }
+
     /**
      * @return the machine's compiler, or {@code null} when none is bound
      */
     default Compiler compiler() {
-        return this.at(COMPILER).orElse(null);
+        final Obj protoCompiler = this.atDirect(COMPILER).orThrow(MTronException.of("machine has no compiler: %s", this.type().vid()));
+        if (protoCompiler.isCode())
+            return protoCompiler.apply().as();
+        return protoCompiler.as();
     }
 
     /**
@@ -85,11 +102,20 @@ public interface Machine extends Router {
         return this.at(uri(COMPILER), compiler, MUTABLE).as();
     }
 
+    default Machine compiler(final Call templateCompiler) {
+        return this.at(uri(COMPILER), templateCompiler, MUTABLE).as();
+
+    }
+
+
     /**
      * @return the machine's processor, or {@code null} when none is bound
      */
     default Processor processor() {
-        return this.at(PROCESSOR).orElse(null);
+        final Obj protoProcessor = this.atDirect(PROCESSOR).orThrow(MTronException.of("machine has no processor: %s", this.type().vid()));
+        if (protoProcessor.isCode())
+            return protoProcessor.apply().as();
+        return protoProcessor.clone().as();
     }
 
     /**
@@ -97,6 +123,10 @@ public interface Machine extends Router {
      */
     default Machine processor(final Processor processor) {
         return this.at(uri(PROCESSOR), processor, MUTABLE).as();
+    }
+
+    default Machine processor(final Call templateProcessor) {
+        return this.at(uri(PROCESSOR), templateProcessor, MUTABLE).as();
     }
 
     class Helper {

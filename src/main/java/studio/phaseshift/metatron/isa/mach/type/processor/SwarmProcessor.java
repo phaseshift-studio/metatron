@@ -134,7 +134,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
 
     @Override
     public Code code() {
-        return this.jvm().getOrDefault(uri(CODE), noobj()).as();
+        return this.jvm().getOrDefault(uri(CODE), noobj()).asCode();
     }
 
     public SwarmProcessor code(final Code code) {

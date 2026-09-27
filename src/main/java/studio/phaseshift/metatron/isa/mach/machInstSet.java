@@ -25,6 +25,8 @@ import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.space.clstrSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.compiler.FixPointCompiler;
+import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
@@ -51,6 +53,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjFactory.M_FACTORY_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -126,12 +129,17 @@ public class machInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(MACH_ISA_TID.extend(ALL)),
-                // uri(CONST), lst(new BasicMachine(SYS.extend(MACH)).compiler(new FixPointCompiler()).processor(new SwarmProcessor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null))),
                 uri(TYPE), lst(
                         SPACE_TYPE,
                         FACTORY_TYPE,
                         M_FACTORY_TYPE,
                         /////////////////////////
+                        MACH_MACHINE_COMPONENT_TYPE = Type.Builder.build()
+                                .tid(REC_TID)
+                                .vid(MACH_MACHINE_COMPONENT_TID)
+                                .isaPredicate(rec(uri(MACHINE).maybe().asUri(), T(MACH_MACHINE_TID)))
+                                .create(),
+                        // machine::T — the container: an ISA + a compiler + a processor
                         // the processor family — structural apply(code)->obj contract, nominal monad marker, concrete swarm strategy
                         MACH_PROCESSOR_TYPE = Type.Builder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
@@ -151,11 +159,6 @@ public class machInstSet extends AbstractInstSet {
                                         .create(), null, null, Map.of(uri(CODE), "the code the processor will evaluate"),
                                 "a swarm processor schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result"),
                         // the compiler family — structural apply(code)->code contract, concrete fixpoint strategy
-                        MACH_MACHINE_COMPONENT_TYPE = Type.Builder.build()
-                                .tid(REC_TID)
-                                .vid(MACH_MACHINE_COMPONENT_TID)
-                                .isaPredicate(rec(uri(MACHINE), MACH_MACHINE_TYPE))
-                                .create(),
                         MACH_COMPILER_TYPE = Type.Builder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
                                 .vid(MACH_COMPILER_TID)
@@ -165,15 +168,7 @@ public class machInstSet extends AbstractInstSet {
                                 .tid(MACH_COMPILER_TID)
                                 .vid(MACH_FIXPOINT_COMPILER_TID)
                                 .isaPredicate(rec(uri(LOOP).maybe().asUri(), isa_(INT_TYPE).else_(jnt(2))))
-                                .create(),
-                        // machine::T — the container: an ISA + a compiler + a processor
-                        MACH_MACHINE_TYPE = Type.Builder.build()
-                                .tid(REC_TID)
-                                .vid(MACH_MACHINE_TID)
-                                .isaPredicate(rec(
-                                        uri(INSTSET).maybe().asUri(), T(INSTSET_TID),
-                                        uri(COMPILER).maybe().asUri(), T(MACH_COMPILER_TID),
-                                        uri(PROCESSOR).maybe().asUri(), T(MACH_PROCESSOR_TID)))
+                                .constructor(arg -> new FixPointCompiler(arg.asRec().jvm(), MACH_FIXPOINT_COMPILER_TID, arg.vid()))
                                 .create(),
                         // the old swarm_machine::T — transition alias, re-parented under monad_processor
                         MACH_SWARM_MACHINE_TYPE = docWrap(Type.Builder.build()
@@ -182,6 +177,14 @@ public class machInstSet extends AbstractInstSet {
                                         .constructor(machine -> SwarmProcessor.processor(machine.jvm(), machine.tid(), machine.vid()))
                                         .create(), null, null, Map.of(uri(CODE), "the code the machine will evaluate"),
                                 "a swarm machine makes use of a set of independently executing monads that move across the code inst chain. barriers serve as synchronization points where all running monads must aggregate before being released on the post-barrier segment of code. the objs referenced by the monads that halt are the result of the machine execution."),
+                        MACH_MACHINE_TYPE = Type.Builder.build()
+                                .tid(REC_TID)
+                                .vid(MACH_MACHINE_TID)
+                                .isaPredicate(rec(
+                                        uri(INSTSET).maybe().asUri(), INSTSET_TYPE,
+                                        uri(COMPILER).maybe().asUri(), MACH_COMPILER_TYPE,
+                                        uri(PROCESSOR).maybe().asUri(), MACH_PROCESSOR_TYPE))
+                                .create(),
                         /// /////////////////////
                         THREAD_EXECUTOR_TYPE = docWrap(Type.Builder.build()
                                         .tid(REC_TID)
@@ -247,7 +250,8 @@ public class machInstSet extends AbstractInstSet {
                             ((AbstractThread) lhs).resume();
                             return lhs;
                         })
-                )))));
+                ))),
+                uri(CONST), lst(BasicMachine.of(MACH_MACHINE_TID, SYS.extend(MACH)))));
         docWrap(this, "the reflective instruction set of metatron featuring process, monad, and code introspection");
         super.setup();
 

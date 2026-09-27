@@ -19,8 +19,11 @@
 package studio.phaseshift.metatron.isa.mach.type.machine;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.router.BasicRouter;
+
+import java.util.Map;
 
 /**
  * AbstractMachine — the thin wrapper around a {@code machine::T} router. It holds no fields of its
@@ -31,8 +34,8 @@ import studio.phaseshift.metatron.isa.mach.type.router.BasicRouter;
  */
 public abstract class AbstractMachine extends BasicRouter implements Machine {
 
-    public AbstractMachine(final fURI vid) {
-        super(vid);
+    public AbstractMachine(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
     }
-    
+
 }

@@ -18,15 +18,16 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui.console;
 
+import org.slf4j.event.Level;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.MonadProcessor;
+import studio.phaseshift.metatron.isa.mach.type.Processor;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
-import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
@@ -39,8 +40,6 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-
-import org.slf4j.event.Level;
 
 /**
  * The console's execution engine: takes one prompt line, parses its
@@ -108,7 +107,7 @@ public final class Executor {
                 });
                 final AtomicReference<Obj> computeResult = new AtomicReference<>(noobj());
                 if (this.console.input.isNoObj()) {
-                    final MonadProcessor mach = SwarmProcessor.of(resolvedResult.as());
+                    final Processor mach = SwarmProcessor.of(resolvedResult.as());
                     final Consumer<Obj> defaultOnHalt = mach.onHalt(); // accumulate into HALTED
                     mach.onHalt(o -> {
                         defaultOnHalt.accept(o);  // persist in HALTED collection

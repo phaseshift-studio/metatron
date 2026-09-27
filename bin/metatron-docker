@@ -237,6 +237,9 @@ cmd_build() {
                             esac
                             out_dir=".metatron/skills${sub:+/$sub}"
                             ;;
+                        docs/articles/*.md)
+                            out_dir="docs/website/articles"
+                            ;;
                         *)
                             out_dir="_probe"
                             ;;
