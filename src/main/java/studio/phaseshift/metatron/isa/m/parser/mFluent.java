@@ -47,6 +47,16 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return obj;
     }
 
+   /* @Override
+    public Obj apply(final Obj obj) {
+        return MCode.code(this.insts()).apply(obj);
+    }
+
+    @Override
+    public Code resolve(final Obj obj) {
+        return MCode.code(this.insts()).resolve(obj);
+    }*/
+
     // ========================================
     // Constructors and Core Methods
     // ========================================

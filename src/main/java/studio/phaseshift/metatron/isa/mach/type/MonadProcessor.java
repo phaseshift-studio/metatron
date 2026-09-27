@@ -21,8 +21,6 @@ package studio.phaseshift.metatron.isa.mach.type;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
-import java.util.function.Consumer;
-
 /**
  * MonadProcessor — a {@code Processor} that schedules monads. This is the nominal marker for the
  * monadic strategy, and the home of the three monad queues: {@code running} (the active mailbox),
@@ -48,14 +46,4 @@ public interface MonadProcessor extends Processor {
      * @return the collection of halted objects produced during execution
      */
     Obj halted();
-
-    /**
-     * @return a copy of this processor with the given onHalt callback registered
-     */
-    MonadProcessor onHalt(final Consumer<Obj> halted);
-
-    /**
-     * @return the current onHalt callback
-     */
-    Consumer<Obj> onHalt();
 }

@@ -47,7 +47,6 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
@@ -69,20 +68,22 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
     private fURI primary = M_ISA_TID;
 
     public BasicRouter(final fURI vid) {
-        super(new ConcurrentHashMap<>(), new ConcurrentHashMap<>(Map.of(
-                        uri(PATTERN), uri(ALL),
-                        PRIMARY, uri(M_ISA_TID),
-                        uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))),
-                ROUTER_TID,
-                vid);
+        this(ALL, vid);
+    }
+
+    public BasicRouter(final fURI pattern, final fURI vid) {
+        this(new ConcurrentHashMap<>(Map.of(
+                uri(PATTERN), uri(pattern),
+                PRIMARY, uri(M_ISA_TID),
+                uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))), ROUTER_TID, vid);
+    }
+
+    public BasicRouter(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(new ConcurrentHashMap<>(), jvm, tid, vid);
         this.at(uri(ROUTE), this.smallToBigRoutes.toRec(), MUTABLE);
         //LOG.info("local router at %s", this.vid.toUri());
     }
 
-
-    private static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
-        return addition.isNoObj() ? base : (send ? base.append(rel(addition.vid().toUri(), addition)) : base.append(addition));
-    }
 
     public Rec at(final Obj key, final Obj value) {
         if (key.equals(PRIMARY))

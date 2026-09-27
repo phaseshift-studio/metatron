@@ -102,7 +102,7 @@ Coefficients propagate through arithmetic and affect count, sum, repeat:
 
 ```mtron_pre
 {1,2,3}.count()               [-- 3  (sum of coefficients) --]
-{1,2,{10}3}.count()           [-- 13  (sum of coefficients) --]
+{1,2,{10}3}.count()           [-- 12  (sum of coefficients) --]
 int{50}::10.mult(10)          [-- int{50}::100 (coefficient account for) --]
 {int{2}::1,int{3}::2}.sum()   [-- int::8 (coefficients account for) --]
 ```

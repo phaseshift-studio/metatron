@@ -16,26 +16,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.machine;
+package studio.phaseshift.metatron.isa.mach;
 
-import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.router.BasicRouter;
+import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
 
 /**
- * AbstractMachine — the thin wrapper around a {@code machine::T} router. It holds no fields of its
- * own; the machine's members (instset, compiler, processor) and its nested spaces live in the
- * router's jvm map, and space addressing is {@code Router}'s read/write/addSpace/removeSpace.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
+ * Inherits the machine-universal contract from {@link AbstractMachineTest}; this class only supplies
+ * the concrete machine. Future machine implementations add one class and inherit the same tests.
  */
-public abstract class AbstractMachine extends BasicRouter implements Machine {
+public class BasicMachineTest extends AbstractMachineTest {
 
-    public AbstractMachine(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, vid);
+    private static final AtomicLong COUNTER = new AtomicLong(0);
+
+    public BasicMachineTest() {
+        super(mInstSet::new);
     }
 
+    @Override
+    protected Machine newMachine() {
+        return BasicMachine.of(MACH_MACHINE_TID, null);
+    }
 }

@@ -22,10 +22,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -37,8 +35,6 @@ import java.util.Random;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.LOGG;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -59,14 +55,19 @@ public abstract class AbstractMetatronTest {
         return RANDOM.nextInt(10000, 65000);
     }
 
+    public AbstractMetatronTest() {
+        begin();
+
+    }
+
     @BeforeAll
     public static void begin() {
-        memSpace.of(f("/sys/#"), null);
+        //memSpace.of(f("/sys/#"), null);
         TypeCheck.enable(TypeCheck.values());
         TypeCheck.disable(TypeCheck.values());
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
-        BootLoader.load(rec(uri(LOGG), uri(LogObj.getSLF4J().toString().toLowerCase())));
+        BootLoader.load(rec());
         InstSet.importInstSet(IO_ISA_TID);
     }
 

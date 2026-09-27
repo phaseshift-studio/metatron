@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.MonadProcessor;
+import studio.phaseshift.metatron.isa.mach.type.Processor;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
@@ -42,13 +42,11 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_SUB_TID;
-import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_CONSOLE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
@@ -76,7 +74,7 @@ public class Pane implements PaneNode, Stylable<Pane> {
     private static final Logger log = LoggerFactory.getLogger(Pane.class);
 
     private final int id;
-    private MonadProcessor machine;
+    private Processor processor;
     private final List<String> outputBuffer;
     private final int maxOutputLines;
     private volatile boolean needsRedraw = false;
@@ -112,7 +110,7 @@ public class Pane implements PaneNode, Stylable<Pane> {
         this.id = ID_COUNTER.get() - 1;
         this.maxOutputLines = maxOutputLines;
         this.outputBuffer = Collections.synchronizedList(new ArrayList<>());
-        this.machine = null;
+        this.processor = null;
         // Default to simple border style (ASCII: +, |, -) for visibility
         this.style = this.style().border(Border.continuous);
         //  this.subscribe();
@@ -181,17 +179,17 @@ public class Pane implements PaneNode, Stylable<Pane> {
         return this.id;
     }
 
-    public MonadProcessor machine() {
-        return this.machine;
+    public Processor machine() {
+        return this.processor;
     }
 
-    public Pane machine(final MonadProcessor machine) {
-        this.machine = machine;
+    public Pane machine(final Processor machine) {
+        this.processor = machine;
         return this;
     }
 
     public void clearMachine() {
-        this.machine = null;
+        this.processor = null;
     }
 
     /**

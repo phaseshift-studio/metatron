@@ -37,8 +37,12 @@ import static studio.phaseshift.metatron.Tokens.REC_TID;
 public class MType extends MObj implements Type {
 
     protected MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
+        this(jvm, tid, vid, true);
+    }
+
+    private MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid, final boolean register) {
         super(jvm, tid.big(), null == vid ? null : vid.big());
-        if (Router.loaded() && null != this.vid() && !this.vid().equals(this.tid()) /*(this.hasPredicate() || this.hasConstructor())*/ && !this.isBaseType() && !this.isGeneric() && !this.isPattern()) {
+        if (register && Router.loaded() && null != this.vid() && !this.vid().equals(this.tid()) /*(this.hasPredicate() || this.hasConstructor())*/ && !this.isBaseType() && !this.isGeneric() && !this.isPattern()) {
             Router.global().write(this.vid(), this);
         }
     }
@@ -99,7 +103,7 @@ public class MType extends MObj implements Type {
 
     @Override
     public Type clone(final Object jvm, final fURI tid, final fURI vid) {
-        return T((Tuple.Pair<Call, Call>) jvm, tid, vid);
+        return new MType((Tuple.Pair<Call, Call>) jvm, tid, vid, false);
     }
 
     @Override

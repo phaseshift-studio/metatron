@@ -127,10 +127,10 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
         return this;
     }
 
-    @Override
+    /*@Override
     public AbstractThread clone() {
-        return this;
-    }
+        return super.clone();
+    }*/
 
     /**
      * Set by {@code ThreadExecutor} before the task begins executing.

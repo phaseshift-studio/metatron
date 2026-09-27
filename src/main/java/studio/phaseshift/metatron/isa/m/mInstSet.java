@@ -100,6 +100,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI ID_INST_TID = M_ISA_INST_TID.extend("id");
     public static final fURI DEDUP_INST_TID = M_ISA_INST_TID.extend("dedup");
     public static final fURI EXPLAIN_INST_TID = M_ISA_INST_TID.extend("explain");
+    public static final fURI PROFILE_INST_TID = M_ISA_INST_TID.extend("profile");
     public static final fURI HAS_INST_TID = M_ISA_INST_TID.extend("has");
     public static final fURI EVAL_INST_TID = M_ISA_INST_TID.extend("eval");
     public static final fURI PARSE_INST_TID = M_ISA_INST_TID.extend("parse");
@@ -822,7 +823,22 @@ public class mInstSet extends AbstractInstSet {
                                             instC(M_ISA_INST_TID.extend("explain_compute").dom(NOOBJ_TID.zero()).rng(STR_TID),
                                                     lst(block_(precedingCode).tryToInst()),
                                                     (lhs, inst) -> str(explainTable(inst.arg(0).asCode()))))).asCode();
-                                }), "rewrites a().b().c().explain() to explain_rewrite(a().b().c())"))
+                                }), "rewrites a().b().c().explain() to explain_rewrite(a().b().c())"),
+
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("profile_timing"),
+                                code -> {
+                                    final List<Inst> insts = code.insts();
+                                    if (insts.isEmpty() || insts.size() < 2) return code;
+                                    final Inst last = insts.getLast();
+                                    if (!last.tid().basePath().equals(PROFILE_INST_TID)) return code;
+                                    final List<Inst> preceding = new ArrayList<>(insts.subList(0, insts.size() - 1));
+                                    final Code precedingCode = MCode.of(preceding);
+                                    return code.selfJVM(List.of(
+                                            instC(M_ISA_INST_TID.extend("profile_compute").dom(NOOBJ_TID.zero()).rng(STR_TID),
+                                                    lst(block_(precedingCode).tryToInst()),
+                                                    (lhs, inst) -> str(profileTable(inst.arg(0).asCode()))))).asCode();
+                                }), "rewrites a().b().c().profile() to profile_compute(a().b().c())"))
+
                 /*uri(SUGAR), lst(sugars().stream()
                         .map(s -> rec(
                                 START, null == s.getStartToken() ? noobj() : str(s.getStartToken()),
@@ -874,6 +890,41 @@ public class mInstSet extends AbstractInstSet {
             }
             sb.append('\n');
         }
+        return sb.toString();
+    }
+
+    /**
+     * Time the resolve (compile) and apply (evaluate) stages of {@code code} after a single
+     * warm-up run, and return a small text table of min/max stage times. Terminal-free —
+     * suitable for use in rewrites and non-interactive contexts.
+     */
+    private static String profileTable(final Code code) {
+        // warm the resolver + type graph so the timed runs are steady-state
+        try {
+            code.resolve(noobj()).apply(noobj());
+        } catch (final Throwable ignored) {
+            // cold-start semi-resolution may throw; the timed loop below will surface a real failure
+        }
+        final int iters = 5;
+        long resolveMin = Long.MAX_VALUE, resolveMax = 0L;
+        long applyMin = Long.MAX_VALUE, applyMax = 0L;
+        for (int i = 0; i < iters; i++) {
+            final long r0 = System.nanoTime();
+            final Code resolved = code.resolve(noobj());
+            final long r1 = System.nanoTime();
+            final long a0 = System.nanoTime();
+            resolved.apply(noobj());
+            final long a1 = System.nanoTime();
+            resolveMin = Math.min(resolveMin, r1 - r0);
+            resolveMax = Math.max(resolveMax, r1 - r0);
+            applyMin = Math.min(applyMin, a1 - a0);
+            applyMax = Math.max(applyMax, a1 - a0);
+        }
+        final StringBuilder sb = new StringBuilder("\n");
+        sb.append("  stage     min (ms)   max (ms)\n");
+        sb.append(String.format("  resolve   %8.3f   %8.3f%n", resolveMin / 1_000_000.0, resolveMax / 1_000_000.0));
+        sb.append(String.format("  apply     %8.3f   %8.3f%n", applyMin / 1_000_000.0, applyMax / 1_000_000.0));
+        sb.append(String.format("  insts     %d%n", code.insts().size()));
         return sb.toString();
     }
 

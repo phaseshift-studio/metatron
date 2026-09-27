@@ -32,13 +32,11 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.MONAD_IN;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public interface Code extends Call {
 
@@ -134,12 +132,13 @@ public interface Code extends Call {
 
     @Override
     default Type dom() {
-        return this.jvm().isEmpty() ? T(NOOBJ) : T(this.jvm().get(0).dom().tid()); // TODO: if unresolved, it's maybe.. is that good?
+        return this.jvm().isEmpty() ? NOOBJ_TYPE : this.jvm().getFirst().dom(); // TODO: if unresolved, it's maybe.. is that good?
     }
 
     default Type rng() {
-        return this.jvm().isEmpty() ? T(NOOBJ) : T(this.jvm().getLast().rng().tid());
+        return this.jvm().isEmpty() ? NOOBJ_TYPE : this.jvm().getLast().rng();
     }
+
 
     @Override
     default Obj apply() {

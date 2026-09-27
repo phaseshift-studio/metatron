@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_FIXPOINT_COMPILER_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_COMPILER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -38,7 +38,7 @@ public class LambdaCompiler extends AbstractCompiler {
 
 
     public LambdaCompiler() {
-        this(mutableMap(), MACH_FIXPOINT_COMPILER_TID, null);
+        this(mutableMap(), MACH_COMPILER_TID, null);
     }
 
     public LambdaCompiler(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {

@@ -203,11 +203,15 @@ public class MarkdownRunner {
         if (html) {
             final long t1 = System.nanoTime();
             final Path skillsDir = skillsContainer(out);
-            if (skillsDir == null) {
-                LOG.info("--html skipped: output " + out + " is not under a website skills tree");
-            } else {
+            final Path articlesDir = articlesContainer(out);
+            if (skillsDir != null) {
                 renderSiteHtml(skillsDir);
                 LOG.info("html rendered into " + skillsDir + " (" + elapsedMs(t1) + "ms)");
+            } else if (articlesDir != null) {
+                renderArticleHtml(articlesDir);
+                LOG.info("html rendered into " + articlesDir + " (" + elapsedMs(t1) + "ms)");
+            } else {
+                LOG.info("--html skipped: output " + out + " is not under a website skills or articles tree");
             }
         }
 
@@ -231,6 +235,22 @@ public class MarkdownRunner {
         while (p != null) {
             final Path name = p.getFileName();
             if (name != null && "skills".equals(name.toString())) return p;
+            p = p.getParent();
+        }
+        return null;
+    }
+
+    /**
+     * The canonical website articles container that the markdown output directory
+     * {@code out} lives under: the nearest ancestor (or {@code out} itself) whose
+     * directory name is {@code articles}, symlinks resolved. Returns null when
+     * {@code out} is not under an {@code articles} directory (probe outputs).
+     */
+    static Path articlesContainer(final Path out) throws IOException {
+        Path p = out.toRealPath();
+        while (p != null) {
+            final Path name = p.getFileName();
+            if (name != null && "articles".equals(name.toString())) return p;
             p = p.getParent();
         }
         return null;
@@ -319,6 +339,104 @@ public class MarkdownRunner {
         }
         Files.writeString(htmlFile, html, StandardCharsets.UTF_8);
         LOG.info("[site-html] wrote %s", htmlFile);
+        return true;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  Article-html pass (the "theory article" species)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * KaTeX plus the theory-article stylesheet, injected through the shared
+     * header's {@code {{EXTRA_HEAD}}} token. KaTeX auto-render is scoped to
+     * {@code $…$} (inline only) so it never fights the site's global MathJax,
+     * which owns {@code \(…\)} and {@code $$…$$}. The article stylesheet href is
+     * depth-rewritten by hand because {@code {{EXTRA_HEAD}}} is substituted after
+     * {@link SiteChrome} has already depth-rewritten the header template.
+     */
+    private static String articleExtraHead(final String depth) {
+        final String pre = depth == null || depth.isEmpty() ? "" : depth + "/";
+        return "    <link href=\"" + pre + "css/theory-article.css\" rel=\"stylesheet\">\n"
+                + "    <link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css\">\n"
+                + "    <script defer src=\"https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js\"></script>\n"
+                + "    <script defer src=\"https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js\"></script>\n"
+                + "    <script>\n"
+                + "        document.addEventListener(\"DOMContentLoaded\", function () {\n"
+                + "            renderMathInElement(document.body, { delimiters: [{ left: \"$\", right: \"$\", display: false }] });\n"
+                + "        });\n"
+                + "    </script>";
+    }
+
+    /**
+     * Render every {@code .md} file under {@code articlesDir} to a sibling
+     * {@code .html} with the theory-article chrome (frontmatter title + subtitle,
+     * KaTeX, the article stylesheet), rewriting nothing that is already current.
+     *
+     * @return the number of html files actually written (changed)
+     */
+    static boolean isArticleDoc(final Path file) {
+        try (final var r = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+            final String first = r.readLine();
+            return first != null && "---".equals(first.strip());
+        } catch (final IOException e) {
+            return false;
+        }
+    }
+
+    public static int renderArticleHtml(final Path articlesDir) throws IOException {
+        final Path websiteRoot = articlesDir.getParent();
+        final List<Path> files = new ArrayList<>();
+        try (final var stream = Files.walk(articlesDir)) {
+            stream.filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().endsWith(".md"))
+                    .filter(MarkdownRunner::isArticleDoc)
+                    .sorted()
+                    .forEach(files::add);
+        }
+        int written = 0;
+        for (final Path file : files) {
+            if (renderArticleFile(file, websiteRoot)) written++;
+        }
+        LOG.info("[article-html] rendered %d of %d markdown files into %s", written, files.size(), articlesDir);
+        return written;
+    }
+
+    /**
+     * Render a single article markdown file to a sibling {@code .html}. Returns
+     * true only when the output changed (idempotent, like the skills pass).
+     */
+    private static boolean renderArticleFile(final Path mdFile, final Path websiteRoot) throws IOException {
+        final FrontMatter fm = split(Files.readString(mdFile, StandardCharsets.UTF_8));
+
+        final String mdName = mdFile.getFileName().toString();
+        final Path htmlFile = mdFile.resolveSibling(mdName.substring(0, mdName.length() - ".md".length()) + ".html");
+
+        final String depth = depth(websiteRoot, htmlFile);
+        final String header = SiteChrome.header(depth, fm.name() + " · PhaseShift Studio", articleExtraHead(depth));
+        final String footer = SiteChrome.footer(depth);
+
+        final String body = HTMLMarkdownSerializer.toHTML(fm.body());
+        final String bodyLinks = MD_HREF.matcher(body).replaceAll(mr ->
+                "href=\"" + mr.group(1) + ".html" + (mr.group(2) == null ? "" : mr.group(2)) + "\"");
+        final String bodyShifted = shiftHeadingsDown(bodyLinks);
+
+        final StringBuilder page = new StringBuilder();
+        page.append(header);
+        page.append("    <div class=\"article-doc\">\n");
+        page.append("        <h1 class=\"article-title mb-1\">").append(fm.name()).append("</h1>\n");
+        page.append("        <small class=\"article-subtitle\">").append(fm.description().replace("`", "").replaceAll("\\s+", " ").strip()).append("</small>\n");
+        page.append("    </div>\n");
+        page.append("    <div class=\"article-body\">\n");
+        page.append(bodyShifted);
+        page.append("\n    </div>\n");
+        page.append(footer);
+
+        final String html = page.toString();
+        if (Files.exists(htmlFile) && html.equals(Files.readString(htmlFile, StandardCharsets.UTF_8))) {
+            return false;
+        }
+        Files.writeString(htmlFile, html, StandardCharsets.UTF_8);
+        LOG.info("[article-html] wrote %s", htmlFile);
         return true;
     }
 

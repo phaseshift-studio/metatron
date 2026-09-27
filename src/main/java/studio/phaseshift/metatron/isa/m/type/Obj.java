@@ -726,7 +726,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Throwable failValue() {
         if (this.isFail() || this.isCaughtFail())
-            return (Throwable) this.jvm();
+            return this.jvm();
         throw MTronException.of(xxxValue, this, T(tid()), FAIL_TYPE);
     }
 
@@ -1327,11 +1327,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             final boolean loopback = monad.isLoopback();
                             final StatefulMonad m = monad.loopback(false);
                             final StatefulMonad repeatMonad = loopback ? m : m.pushLoop();
-                            final Obj emitCode = emitPredicate.isCall() ? emitPredicate.<Call>as().toCode() : emitPredicate;
+                            final Obj emitCode = emitPredicate.isCall() ? emitPredicate.<Call>as().asCode() : emitPredicate;
                             final boolean emit = emitCode.apply(repeatMonad).booleanCheck();
                             if (emit)
                                 toEmit.add(repeatMonad.popLoop().nextInst());
-                            final Obj untilCode = untilPredicate.isCall() ? untilPredicate.<Call>as().toCode() : untilPredicate;
+                            final Obj untilCode = untilPredicate;//.<Call>as().asCode() : untilPredicate;
                             if (untilCode.apply(repeatMonad).booleanCheck()) {
                                 if (!emit)
                                     toEmit.add(repeatMonad.popLoop().nextInst());
@@ -1473,6 +1473,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "@a >>= [b=>[c=>sum()]]  [-- [b=>[c=>9]]@a     --]"),
                     instC(EXPLAIN_INST_TID.dom(A.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> {
                         // explain_rewrite handles normal case; bare explain() is a no-op
+                        return lhs;
+                    }),
+                    instC(PROFILE_INST_TID.dom(A.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> {
+                        // profile_timing rewrite handles normal case; bare profile() is a no-op
                         return lhs;
                     }),
                     instC(REIFY_INST_TID.dom(A).rng(REC_TID), lst(), (lhs, inst) -> rec(
