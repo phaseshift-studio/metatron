@@ -441,7 +441,7 @@ public final class QCollection {
         @Override
         public Obj write(final fURI vid, final Obj obj) {
             //if (vid.hasRng()) {
-            final Inst inst = obj.asRec().at(OBJ).as();
+            final Inst inst = obj.asRec().atDirect(OBJ).as();
             if (inst.dom().isCode()) {
                 REWRITE_TABLE.put(inst.tid(), obj.asRec());
             } else {
@@ -467,9 +467,9 @@ public final class QCollection {
                             return new ArrayList<>(set).stream();
                         }
                     })
-                    .filter(i -> !pattern.hasDom() || i.asRec().at(OBJ).dom().test(T(pattern.dom().big())))
-                    .filter(i -> !pattern.hasRng() || i.asRec().at(OBJ).rng().test(T(pattern.rng().big())))
-                    .map(i -> pattern.isNode() ? i : rel(i.asRec().at(OBJ).tid().toUri(), i)))
+                    .filter(i -> !pattern.hasDom() || i.asRec().atDirect(OBJ).dom().test(T(pattern.dom().big())))
+                    .filter(i -> !pattern.hasRng() || i.asRec().atDirect(OBJ).rng().test(T(pattern.rng().big())))
+                    .map(i -> pattern.isNode() ? i : rel(i.asRec().atDirect(OBJ).tid().toUri(), i)))
                     .append(objs(TYPE_TABLE.entrySet()
                             .stream()
                             .filter(kv -> kv.getKey().test(pattern.asNode()))

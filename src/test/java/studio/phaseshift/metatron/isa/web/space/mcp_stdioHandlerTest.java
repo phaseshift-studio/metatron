@@ -89,7 +89,7 @@ public class mcp_stdioHandlerTest extends AbstractMcpHandlerTest {
 
     private mcp_stdioHandler carrier(final ByteArrayOutputStream sink) {
         return (mcp_stdioHandler) mcp_stdioHandler.of(
-                rec(mutableMap(uri(SERVER), this.mcp)),
+                rec(mutableMap(uri(HOST), this.mcp)),
                 new ByteArrayInputStream(new byte[0]),
                 new PrintStream(sink, true, StandardCharsets.UTF_8), false);
     }
@@ -149,7 +149,7 @@ public class mcp_stdioHandlerTest extends AbstractMcpHandlerTest {
     void testCarrierStateIsData() {
         final mcp_stdioHandler carrier = carrier(new ByteArrayOutputStream());
         assertFalse(carrier.at(uri(STATUS)).isNoObj(), "a serving carrier reports status as data: " + carrier);
-        assertFalse(carrier.at(uri(SERVER)).isNoObj(), "the server it carries is visible as data: " + carrier);
+        assertFalse(carrier.at(uri(HOST)).isNoObj(), "the server it carries is visible as data: " + carrier);
         carrier.close();
         assertFalse(carrier.at(uri(STATUS)).boolValue(), "a closed carrier reports not-serving");
     }

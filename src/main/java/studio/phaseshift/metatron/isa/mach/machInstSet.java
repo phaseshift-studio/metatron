@@ -45,8 +45,8 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjFactory.M_FACTORY_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -58,7 +58,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 @JREService(vid = "/m/mach")
 public class machInstSet extends AbstractInstSet {
-    public static final fURI MACH_ISA_TID = M_ISA_TID.extend("mach");
+    public static final fURI MACH = f("mach");
+    public static final fURI MACH_ISA_TID = M_ISA_TID.extend(MACH);
     public static final fURI MACH_MACHINE_TID = MACH_ISA_TID.extend("machine");
     public static final fURI MACH_MONAD_TID = MACH_ISA_TID.extend("monad");
     public static final fURI MACH_INST_TID = MACH_ISA_TID.extend("inst");
@@ -125,6 +126,7 @@ public class machInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(MACH_ISA_TID.extend(ALL)),
+                // uri(CONST), lst(new BasicMachine(SYS.extend(MACH)).compiler(new FixPointCompiler()).processor(new SwarmProcessor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null))),
                 uri(TYPE), lst(
                         SPACE_TYPE,
                         FACTORY_TYPE,
@@ -143,10 +145,10 @@ public class machInstSet extends AbstractInstSet {
                                 .vid(MACH_MONAD_PROCESSOR_TID)
                                 .create(),
                         MACH_SWARM_PROCESSOR_TYPE = docWrap(Type.Builder.build()
-                                .tid(MACH_PROCESSOR_TID)
-                                .vid(MACH_SWARM_PROCESSOR_TID)
-                                .constructor(machine -> SwarmProcessor.processor(machine.jvm(), machine.tid(), machine.vid()))
-                                .create(), null, null, Map.of(uri(CODE), "the code the processor will evaluate"),
+                                        .tid(MACH_PROCESSOR_TID)
+                                        .vid(MACH_SWARM_PROCESSOR_TID)
+                                        .constructor(machine -> SwarmProcessor.processor(machine.jvm(), machine.tid(), machine.vid()))
+                                        .create(), null, null, Map.of(uri(CODE), "the code the processor will evaluate"),
                                 "a swarm processor schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result"),
                         // the compiler family — structural apply(code)->code contract, concrete fixpoint strategy
                         MACH_MACHINE_COMPONENT_TYPE = Type.Builder.build()

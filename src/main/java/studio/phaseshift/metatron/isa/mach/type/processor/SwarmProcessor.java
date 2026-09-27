@@ -205,7 +205,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
                     throw MTronException.of("interrupted while waiting for machine result");
                 }
             }
-            return this.at(RESULT); // auto-resolves !*<self>/halted
+            return this.atDirect(RESULT); // auto-resolves !*<self>/halted
         }
     }
 

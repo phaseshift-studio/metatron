@@ -183,14 +183,14 @@ public class mcpClient extends MRec implements AutoCloseable {
                 .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue)));
 
         if (null != transport && !transport.isNoObj() && f(STREAMABLE_HTTP).equals(transport.uriValue())) {
-            return StreamableHttpMcpTransport.builder()
+            final StreamableHttpMcpTransport.Builder builder = StreamableHttpMcpTransport.builder()
                     .logRequests(true)
                     .logResponses(true)
                     .logger(LOG.logger(WARN))
                     .customHeaders(stringHeaders)
                     .url(host.uriValue().toString())
-                    .executor(ThreadExecutor.instance())
-                    .build();
+                    .executor(ThreadExecutor.instance());
+            return headers.getOrDefault(str("Via"), str("2")).equals(str("1.1")) ? builder.setHttpVersion1_1().build() : builder.build();
         } else if (!command.isEmpty()) {  // STDIO
             return new StdioMcpTransport.Builder()
                     .command(command.stream().map(Str.Helper::cleanString).toList())
@@ -209,14 +209,14 @@ public class mcpClient extends MRec implements AutoCloseable {
                         .executor(ThreadExecutor.instance())
                         .build();
             } else if (host.uriValue().scheme().equals(HTTP) || host.uriValue().scheme().equals(HTTPS)) {
-                return StreamableHttpMcpTransport.builder() // HTTP
+                final StreamableHttpMcpTransport.Builder builder = StreamableHttpMcpTransport.builder()
                         .logRequests(true)
                         .logResponses(true)
                         .logger(LOG.logger(WARN))
                         .customHeaders(stringHeaders)
                         .url(host.uriValue().toString())
-                        .executor(ThreadExecutor.instance())
-                        .build();
+                        .executor(ThreadExecutor.instance());
+                return headers.getOrDefault(str("Via"), str("2")).equals(str("1.1")) ? builder.setHttpVersion1_1().build() : builder.build();
             }
         }
         throw MTronException.of("unsupported transport for host:%s transport:%s headers:%s command:%s", host, transport, headers, command);
