@@ -23,43 +23,40 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
-import static studio.phaseshift.metatron.Tokens.LOOP;
-import static studio.phaseshift.metatron.Tokens.REWRITE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_FIXPOINT_COMPILER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
- * FixPointCompiler — the concrete {@code fixpoint_compiler::T}: the default schedule
- * ({@code rewrite → resolve → bind → type}) over the machine's rewrite rules. It carries no logic
- * of its own — the stages and the schedule live on {@code Compiler}; the {@code loop} convergence
- * window is its {@code fixpoint_compiler::T} refinement.
- *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class FixPointCompiler extends AbstractCompiler {
+public class LambdaCompiler extends AbstractCompiler {
 
-    public FixPointCompiler() {
+    public static final String REWRITE = "rewrite";
+    public static final String RESOLVE = "resolve";
+
+
+    public LambdaCompiler() {
         this(mutableMap(), MACH_FIXPOINT_COMPILER_TID, null);
     }
 
-    public FixPointCompiler(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+    public LambdaCompiler(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
 
     @Override
     public Code rewrite(final Code code) {
-        final AtomicReference<Code> rewritten = new AtomicReference<>(code);
-        int hash = code.hashCode();
-        int done = this.at(LOOP).orElse(jnt(2)).intValue().intValue();
-        while (done != 0) {
-            this.machine().instset().at(REWRITE).elements()
-                    .forEach(r -> rewritten.set(this.applyRewrite(r, rewritten.get())));
-            if (hash == (hash = rewritten.get().hashCode()))
-                done--;
-        }
-        return rewritten.get();
+        return this.at(REWRITE).orElse(id_()).apply(code).as();
+    }
+
+    @Override
+    public Code resolve(final Code code) {
+        return this.at(RESOLVE).orElse(id_()).apply(code).as();
+    }
+
+    @Override
+    public Code apply(final Obj code) {
+        return this.at("apply").orElse(id_()).as();
     }
 }

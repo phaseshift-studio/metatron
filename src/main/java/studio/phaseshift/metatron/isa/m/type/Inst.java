@@ -38,6 +38,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
@@ -755,7 +756,7 @@ public interface Inst extends Call {
                 apiInstTemp = apiInstTemp.rng(T(generics.getOrDefault(apiInstTemp.rng().tid().one(), userInst.rng().tid()).c(apiInstTemp.rng().c())));
             }
             ///  hail mary
-            if (apiInstTemp.dom().tid().one().isGeneric()) {
+            if (apiInstTemp.dom().tid().one().isGeneric() || apiInstTemp.dom().tid().one().equals(ALL)) {
                 apiInstTemp = apiInstTemp.dom(lhs.type().c(apiInstTemp.dom().c()).as());
                 apiInstTemp = apiInstTemp.tid(Helper.apiOrUser(apiInstTemp.tid(), userInst.tid(), generics));
             }

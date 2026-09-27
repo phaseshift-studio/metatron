@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.io.type;
 
 
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -331,6 +332,23 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             this.renderInstArg(sb, depth + 1, inst.arg(0));
         } else if (inst.tid().basePath().equals(FROM_INST_TID)) {
             sb.append("*");
+            // this was a bug in the serializer where coeffiicents for these sugar instructions were being dropped
+            // that is not valid as a coefficient within the bounds of the defined coefficient is a legal instruction
+            // whose refined coefficients effect the computation from compilation through to evaluation.
+            boolean nonStandard = false;
+            if (!inst.tid().rng().c().equals(cInt.ONE())) { // TODO: remove when compiler is strict about # rng
+                if (!inst.tid().rng().c().equals(cInt.MAYBESOME())) {
+                    sb.append("?{").append(inst.tid().rng().c()).append("}").append("<=");
+                    nonStandard = true;
+                }
+            }
+            if (!inst.tid().dom().c().equals(cInt.ONE())) { // TODO: remove when compiler is strict about # dom
+                if (!inst.tid().dom().c().equals(cInt.MAYBE())) {
+                    if (!nonStandard)
+                        sb.append("?").append("<=");
+                    sb.append("{").append(inst.tid().dom().c()).append("}");
+                }
+            }
             this.renderInstArg(sb, depth + 1, inst.arg(0));
         } else {
             final String internal = inst.args().elements()

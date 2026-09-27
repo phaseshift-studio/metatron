@@ -23,13 +23,8 @@ import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.resolver.ScoringInstResolver;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.concurrent.atomic.AtomicReference;
-
-import static studio.phaseshift.metatron.Tokens.LOOP;
-import static studio.phaseshift.metatron.Tokens.REWRITE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 /**
  * Compiler — lowers {@code code::T} to {@code code::T} by composing a schedule of named, overridable
@@ -89,18 +84,11 @@ public interface Compiler extends Machine.Component, Rec {
      * Apply the machine's rewrite rules until the code stabilizes (fixpoint). The convergence
      * window is the {@code loop} rec entry (default one stable pass); each pass applies every rule
      * via {@link #applyRewrite}.
+     * <p>
+     * default is identity (no rewrite).
      */
     default Code rewrite(final Code code) {
-        final AtomicReference<Code> rewritten = new AtomicReference<>(code);
-        int hash = code.hashCode();
-        int done = this.at(LOOP).orElse(jnt(2)).intValue().intValue();
-        while (done != 0) {
-            this.machine().instset().at(REWRITE).elements()
-                    .forEach(r -> rewritten.set(this.applyRewrite(r, rewritten.get())));
-            if (hash == (hash = rewritten.get().hashCode()))
-                done--;
-        }
-        return rewritten.get();
+        return code;
     }
 
     /**
