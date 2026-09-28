@@ -1331,7 +1331,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             final boolean emit = emitCode.apply(repeatMonad).booleanCheck();
                             if (emit)
                                 toEmit.add(repeatMonad.popLoop().nextInst());
-                            final Obj untilCode = untilPredicate;//.<Call>as().asCode() : untilPredicate;
+                            // wrap the predicate in a code so a single-inst until (is(gt(10))) goes
+                            // through the monad lens like the multi-inst form (loop().is(gt(3))) —
+                            // applied bare, is(gt(10)) receives the whole monad and never terminates.
+                            final Obj untilCode = untilPredicate.isCall() ? untilPredicate.<Call>as().asCode() : untilPredicate;
                             if (untilCode.apply(repeatMonad).booleanCheck()) {
                                 if (!emit)
                                     toEmit.add(repeatMonad.popLoop().nextInst());

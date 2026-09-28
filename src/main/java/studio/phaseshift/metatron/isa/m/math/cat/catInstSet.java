@@ -244,10 +244,20 @@ public class catInstSet extends AbstractInstSet {
                         instC(AS_INST_TID.dom(ALL).rng(MORPHISM_TID), lst(MORPHISM_TYPE), (lhs, inst) -> MORPHISM_TYPE.constructor().apply(lhs)),
                         instC(AS_INST_TID.dom(ALL).rng(OBJECT_TID), lst(OBJECT_TYPE), (lhs, inst) -> OBJECT_TYPE.constructor().apply(lhs))),
                 uri(REWRITE), lst(
-                        instC(catInstSet.CAT_ISA_TID.extend(INST).extend(REWRITE).extend(RING_THEORY_TID.name() + "_unit_removal").dom(CODE_TID).rng(CODE_TID.maybe()), lst(), (lhs, inst) ->
-                                code(lhs.asCode().insts().stream().filter(i -> !TheoryHelper.plusZeroInst(RING_THEORY_TID, i.arg(0).type()).test(i) && !TheoryHelper.multOneInst(RING_THEORY_TID, i.arg(0).type()).test(i)).toList())),
-                        instC(catInstSet.CAT_ISA_TID.extend(INST).extend(REWRITE).extend(GROUP_THEORY_TID.name() + "_involution").dom(CODE_TID).rng(CODE_TID.maybe()), lst(), (lhs, inst) ->
-                                code(collapseInvolutions(lhs.asCode().insts(), TheoryHelper.invInst(carrier(lhs.asCode())))))
+                        instC(catInstSet.CAT_ISA_TID.extend(INST).extend(REWRITE).extend(RING_THEORY_TID.name() + "_unit_removal").dom(CODE_TID).rng(CODE_TID.maybe()), lst(), (lhs, inst) -> {
+                            final Code c = lhs.asCode();
+                            // early bail: no plus/mult inst → no unit to remove
+                            if (c.insts().stream().noneMatch(i -> i.tid().basePath().equals(PLUS_INST_TID) || i.tid().basePath().equals(MULT_INST_TID)))
+                                return c;
+                            return code(c.insts().stream().filter(i -> !TheoryHelper.plusZeroInst(RING_THEORY_TID, i.arg(0).type()).test(i) && !TheoryHelper.multOneInst(RING_THEORY_TID, i.arg(0).type()).test(i)).toList());
+                        }),
+                        instC(catInstSet.CAT_ISA_TID.extend(INST).extend(REWRITE).extend(GROUP_THEORY_TID.name() + "_involution").dom(CODE_TID).rng(CODE_TID.maybe()), lst(), (lhs, inst) -> {
+                            final Code c = lhs.asCode();
+                            // early bail: no neg/inv inst → nothing to collapse
+                            if (c.insts().stream().noneMatch(i -> i.tid().basePath().equals(NEG_INST_TID) || i.tid().basePath().equals(INV_INST_TID)))
+                                return c;
+                            return code(collapseInvolutions(c.insts(), TheoryHelper.invInst(carrier(c))));
+                        })
                 ))));
         docWrap(this, "categorical realization of types and insts as objects and morphisms");
         super.setup();
@@ -283,7 +293,13 @@ public class catInstSet extends AbstractInstSet {
 
     private static class CoreMaker {
 
+        private static final Map<fURI, Rec> TYPE_LAWS_CACHE = new ConcurrentHashMap<>();
+
         public static Rec typeLaws(final Type type) {
+            return TYPE_LAWS_CACHE.computeIfAbsent(type.tid().basePath(), k -> typeLawsUncached(type));
+        }
+
+        private static Rec typeLawsUncached(final Type type) {
             if (type.tid().basePath().equals(INT_TID)) {
                 return rec(mutableMap(
                         uri("ring"), rec(mutableMap(

@@ -76,7 +76,7 @@ public class mcpClient extends MRec implements AutoCloseable {
         this.client = DefaultMcpClient.builder()
                 .clientName(METATRON)
                 .clientVersion(METATRON_VERSION)
-                .protocolVersion(mcpServer.PROTOCOL_VERSION)
+                .protocolVersion(jvm.getOrDefault(uri("version"), (Obj) str(mcpServer.PROTOCOL_VERSION)).toCleanString())
                 //.roots(List.of(new McpRoot("metatron", "http://localhost:8999")))
                 .logHandler(message -> as().logger().log(message.level().name(), "mcp log: %s", message))
                 .transport(createTransport(

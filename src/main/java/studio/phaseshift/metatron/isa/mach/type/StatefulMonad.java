@@ -27,6 +27,8 @@ import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -44,6 +46,54 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
 
 public interface StatefulMonad extends Monad<Lst> {
 
+    // processor-stage timing (read by the profile() instruction): split = coefficient splitting,
+    // apply = the instruction's f, next = the successor-inst lookup. MONADS/COEFF_SUM measure the
+    // bulk-compression: monads propagated vs the total coefficient magnitude they carried.
+    AtomicLong T_SPLIT = new AtomicLong(0);
+    AtomicLong T_APPLY = new AtomicLong(0);
+    AtomicLong T_NEXT = new AtomicLong(0);
+    AtomicLong MONADS = new AtomicLong(0);
+    AtomicLong COEFF_SUM = new AtomicLong(0);
+
+    // per-instruction stats, keyed by the resolved inst's vid (its index in the code sequence)
+    ConcurrentHashMap<fURI, AtomicLong> INST_MONAD_IN = new ConcurrentHashMap<>();
+    ConcurrentHashMap<fURI, AtomicLong> INST_MONAD_OUT = new ConcurrentHashMap<>();
+    ConcurrentHashMap<fURI, AtomicLong> INST_TIME = new ConcurrentHashMap<>();
+    ConcurrentHashMap<fURI, AtomicLong> INST_COEFF_IN = new ConcurrentHashMap<>();
+    ConcurrentHashMap<fURI, AtomicLong> INST_COEFF_OUT = new ConcurrentHashMap<>();
+
+    static void resetTimings() {
+        T_SPLIT.set(0);
+        T_APPLY.set(0);
+        T_NEXT.set(0);
+        MONADS.set(0);
+        COEFF_SUM.set(0);
+        INST_MONAD_IN.clear();
+        INST_MONAD_OUT.clear();
+        INST_TIME.clear();
+        INST_COEFF_IN.clear();
+        INST_COEFF_OUT.clear();
+    }
+
+    /**
+     * the coefficient magnitude of an obj — its exact multiplicity when it has one, else 1
+     * (the bulk it carries as a single monad).
+     */
+    static long coeffMagnitude(final Obj obj) {
+        final cInt c = obj.c();
+        return null != c.min() && c.min().equals(c.max()) ? c.min() : 1L;
+    }
+
+    /**
+     * diagnostic: record this monad's propagation — its coefficient magnitude (the number of
+     * elements it carries when bulked) is added to the running sum, for the bulk-compression ratio.
+     */
+    default void countPropagation() {
+        MONADS.incrementAndGet();
+        final cInt c = this.obj().c();
+        COEFF_SUM.addAndGet(null != c.min() && c.min().equals(c.max()) ? c.min() : 1L);
+    }
+
     @Override
     StatefulMonad clone(final Object jvm, final fURI tid, final fURI vid);
 
@@ -57,7 +107,21 @@ public interface StatefulMonad extends Monad<Lst> {
     default StatefulMonad next(final Obj obj) {
         final Code code = this.code();
         final Rec state = code.tid().hasQ(PATH) ? this.accruePath(obj) : this.state();
-        return this.jvm(lst(CommonUtil.arrayList(obj, code.nextInst(this.inst()), state, code)));
+        final long t0 = System.nanoTime();
+        final Inst nxt = code.nextInst(this.inst());
+        final long t1 = System.nanoTime();
+        T_NEXT.addAndGet(t1 - t0);
+        final fURI curVid = this.inst().vid();
+        if (null != curVid) {
+            INST_MONAD_OUT.computeIfAbsent(curVid, k -> new AtomicLong()).incrementAndGet();
+            INST_COEFF_OUT.computeIfAbsent(curVid, k -> new AtomicLong()).addAndGet(coeffMagnitude(obj));
+        }
+        final fURI nxtVid = nxt.vid();
+        if (null != nxtVid) {
+            INST_MONAD_IN.computeIfAbsent(nxtVid, k -> new AtomicLong()).incrementAndGet();
+            INST_COEFF_IN.computeIfAbsent(nxtVid, k -> new AtomicLong()).addAndGet(coeffMagnitude(obj));
+        }
+        return this.jvm(lst(CommonUtil.arrayList(obj, nxt, state, code)));
     }
 
     /**
@@ -231,11 +295,26 @@ public interface StatefulMonad extends Monad<Lst> {
         // read lens: which component to feed the instruction (default obj)
         final fURI in = tid.hasQ(MONAD_IN) ? f(tid.q(MONAD_IN)) : null;
         final Obj input = null == in ? this.obj() : this.component(in);
+        final long t0 = System.nanoTime();
         final Obj result = this.inst().apply(input);
+        final long t1 = System.nanoTime();
+        T_APPLY.addAndGet(t1 - t0);
+        final fURI vid = this.inst().vid();
+        if (null != vid) {
+            INST_TIME.computeIfAbsent(vid, k -> new AtomicLong()).addAndGet(t1 - t0);
+        }
         // write lens: where the result lands (default obj). '+' = the monad's new contents,
         // returned raw for the machine to re-queue; other write-targets are future work.
-        if (tid.hasQ(MONAD_OUT) && "+".equals(f(tid.q(MONAD_OUT)).name()))
+        if (tid.hasQ(MONAD_OUT) && "+".equals(f(tid.q(MONAD_OUT)).name())) {
+            // terminal output: next() is never called for this inst (no successor), so record its
+            // out-flow here — a gather (sum?int<=int{*}) emits one monad carrying its coefficient.
+            final fURI outVid = this.inst().vid();
+            if (null != outVid && !result.isNoObj()) {
+                INST_MONAD_OUT.computeIfAbsent(outVid, k -> new AtomicLong()).incrementAndGet();
+                INST_COEFF_OUT.computeIfAbsent(outVid, k -> new AtomicLong()).addAndGet(coeffMagnitude(result));
+            }
             return result;
+        }
         return this.next(result);
     }
 

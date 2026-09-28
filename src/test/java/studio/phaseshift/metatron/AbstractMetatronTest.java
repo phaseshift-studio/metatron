@@ -55,6 +55,11 @@ public abstract class AbstractMetatronTest {
         return RANDOM.nextInt(10000, 65000);
     }
 
+    // the VM is booted once per test class, not once per test-case instance. the
+    // constructor calls begin() so a subclass that bypasses @BeforeAll still boots,
+    // but re-booting per @ParameterizedTest row is the dominant test-harness cost.
+    private static volatile boolean BOOTED = false;
+
     public AbstractMetatronTest() {
         begin();
 
@@ -62,6 +67,9 @@ public abstract class AbstractMetatronTest {
 
     @BeforeAll
     public static void begin() {
+        if (BOOTED)
+            return;
+        BOOTED = true;
         //memSpace.of(f("/sys/#"), null);
         TypeCheck.enable(TypeCheck.values());
         TypeCheck.disable(TypeCheck.values());
@@ -74,6 +82,7 @@ public abstract class AbstractMetatronTest {
     @AfterAll
     public static void end() {
         BootLoader.close();
+        BOOTED = false;
     }
 
 

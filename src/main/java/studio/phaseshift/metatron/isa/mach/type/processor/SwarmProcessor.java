@@ -78,6 +78,12 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
     protected final GraphittyLogger LOG = Graphitty.log(this);
     private static final Supplier<Obj> RUNNING_SUPPLIER = ListMonad::of;
     private static final AtomicLong PROCESSOR_COUNTER = new AtomicLong(0);
+    // number of processor instances spawned during evaluation (read by the profile() instruction)
+    public static final AtomicLong PROCESSORS = new AtomicLong(0);
+
+    public static void resetTimings() {
+        PROCESSORS.set(0);
+    }
 
     private Consumer<Obj> onHalt;
     private final AtomicInteger infiniteFailCounter = new AtomicInteger(0);
@@ -86,6 +92,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
 
     protected SwarmProcessor(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, null == vid ? f("/sys/processor").extend(String.valueOf(PROCESSOR_COUNTER.incrementAndGet())) : vid);
+        PROCESSORS.incrementAndGet();
         // Ensure machine state fields exist with defaults
         this.jvm().putIfAbsent(uri(RUN), RUNNING_SUPPLIER.get());
         this.jvm().putIfAbsent(uri(BARRIER), lst(new LinkedList<>()));
@@ -282,6 +289,16 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
      * {@link #createTask()} (async via {@link #applyAsync(Obj)}).
      */
     private Obj runMonadicLoop() {
+        final Code submitted = this.code();
+        final List<Inst> submittedInsts = submitted.insts();
+        if (submittedInsts.size() < 2) {
+            // profile()/explain() collapse to a single *_compute inst by design — a 1-inst
+            // sequence here is the point, not a smell. suppress the warning for those.
+            final String name = submittedInsts.isEmpty() ? "" : submittedInsts.getFirst().tid().name();
+            if (!"profile".equals(name) && !"explain".equals(name)
+                    && !"profile_compute".equals(name) && !"explain_compute".equals(name))
+                LOG.warn("processor %s evaluating a %d-instruction code sequence: %s", this.vid(), submittedInsts.size(), submitted);
+        }
         Router.global().stats().monadicStats().resetMonads();
         final Code code = this.resolve(this.at(START)).code();
         if (this.running().c().isZero()) {
@@ -310,6 +327,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
 
             final StatefulMonad m = (StatefulMonad) this.running().take();
             if (null != m) {
+                m.countPropagation();
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
                 final StatefulMonad x = this.split(m);
                 x.apply().stream().forEach(y -> {
@@ -353,8 +371,16 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
             } else if (!this.barriers().isEmpty()) {
                 final StatefulMonad barrier = this.barriers().<LinkedList<StatefulMonad>>jvmAs().poll();
                 if (null != barrier) {
+                    barrier.countPropagation();
                     LOG.trace("   {{m}}=|{{/m}} processing barrier monad %s", barrier);
                     final Obj result = barrier.inst().apply(barrier.obj());
+                    // a gather emits one result monad carrying its coefficient — record its
+                    // out-flow here (the barrier path bypasses StatefulMonad.next()).
+                    final fURI barVid = barrier.inst().vid();
+                    if (null != barVid && !result.isNoObj()) {
+                        StatefulMonad.INST_MONAD_OUT.computeIfAbsent(barVid, k -> new AtomicLong()).incrementAndGet();
+                        StatefulMonad.INST_COEFF_OUT.computeIfAbsent(barVid, k -> new AtomicLong()).addAndGet(StatefulMonad.coeffMagnitude(result));
+                    }
                     final Inst nextInst = code.nextInst(barrier.inst());
                     if (nextInst.isGather()) {
                         LOG.trace("  {{m}}==|{{/m}} passing barrier obj %s to %s", result, nextInst);
@@ -429,6 +455,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
         if (monad.inst().dom().c().isZero() && !monad.obj().c().isZeroable())
             throw MTronException.of("monad obj coefficient is greater than inst dom coefficient:" +
                     "\n\t%s [{%s} X=> {%s}] %s", monad.obj(), monad.obj().c(), monad.inst().dom().c(), monad.inst());
+        final long t0 = System.nanoTime();
         final Tuple.Pair<Obj, Obj> pair =
                 monad.obj().c().gte(monad.inst().dom().c()) ?
                         monad.obj().take(monad.inst().dom().c().most()) :
@@ -436,6 +463,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
         if (!pair.get1().isNoObj())
             this.running().append(monad.obj(pair.get1()));
         LOG.trace("{{g}}=>{{/g}} splitting monad %s / %s (inst: %s)", pair.get0(), pair.get1(), monad.inst());
+        StatefulMonad.T_SPLIT.addAndGet(System.nanoTime() - t0);
         return monad.obj(pair.get0());
     }
 
@@ -464,6 +492,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
      */
     protected SwarmProcessor() {
         // MObj no-arg constructor — sets parent=noobj, does NOT call objCheckAndSave
+        PROCESSORS.incrementAndGet();
     }
 
     @Override

@@ -24,8 +24,6 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
-import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
@@ -41,7 +39,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Rewriter extends JRec<Rewriter> {
+public class Rewriter extends MRec {
 
     protected final List<Inst> sourceInsts;
     protected List<Inst> matchInsts;
@@ -49,13 +47,15 @@ public class Rewriter extends JRec<Rewriter> {
     protected Predicate<List<Inst>> matchPredicate = null;
     protected boolean repeat = false;
     protected boolean matchC = true;
-    @JRecElement(key = "allow", rng = "/m/lst", rngPoly = "/m/uri")
     public List<fURI> allow = new ArrayList<>();
-    @JRecElement(key = "disallow", rng = "/m/lst", rngPoly = "/m/uri")
     public List<fURI> disallow = new ArrayList<>();
 
     private Rewriter(final List<Inst> sourceInsts) {
-        super(mutableMap(), REWRITER_TYPE_TID, null);
+        // no-arg super() + self() skips MObj's objCheckAndSave (a full type test) — a Rewriter
+        // is a throwaway matcher created once per rule application, never serialized or read back,
+        // so re-validating its REWRITER_TYPE rec on the hot path is pure waste.
+        super();
+        this.self(mutableMap(), REWRITER_TYPE_TID, null);
         this.sourceInsts = sourceInsts;
     }
 

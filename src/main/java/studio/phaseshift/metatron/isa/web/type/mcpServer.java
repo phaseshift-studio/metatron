@@ -38,6 +38,7 @@ import studio.phaseshift.metatron.isa.web.webInstSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -218,19 +219,23 @@ public class mcpServer extends MRec {
         return mcpResponse(id, rec(
                 uri("tools"), lst(this.at(TOOL).orElse(rec0()).elements()
                         .map(kv -> {
-                            final Obj toolEntry = kv.second();
-                            if (!toolEntry.isObjInst())
-                                return rec(uri(NAME), str(kv.first().uriValue().toString()),
-                                        uri(DESCRIPTION), str(toolEntry.toShortString()),
-                                        uri("inputSchema"), rec(uri(TYPE), str(OBJECT), uri("properties"), rec()));
-                            final ToolSpecification spec = mTool.mtronInstToolSpecification(mTool.mtronInstToDocs(toolEntry.asInst())).get0();
-                            // advertised by KEY, not by spec.name(): the key is what tools/call resolves, and a
-                            // keyed entry's key is the name its author published
-                            return (Obj) rec(uri(NAME), str(kv.first().uriValue().toString()),
-                                    uri(DESCRIPTION), str(null == spec.description() ? "<no description>" : spec.description()),
-                                    uri("inputSchema"), jsonSchemaToRec(spec.parameters()));
+                            try {
+                                final Obj toolEntry = kv.second();
+                                if (!toolEntry.isObjInst())
+                                    return rec(uri(NAME), str(kv.first().uriValue().toString()),
+                                            uri(DESCRIPTION), str(toolEntry.toShortString()),
+                                            uri("inputSchema"), rec(uri(TYPE), str(OBJECT), uri("properties"), rec()));
+                                final ToolSpecification spec = mTool.mtronInstToolSpecification(mTool.mtronInstToDocs(toolEntry.asInst())).get0();
+                                // advertised by KEY, not by spec.name(): the key is what tools/call resolves, and a
+                                // keyed entry's key is the name its author published
+                                return (Obj) rec(uri(NAME), str(kv.first().uriValue().toString()),
+                                        uri(DESCRIPTION), str(null == spec.description() ? "<no description>" : spec.description()),
+                                        uri("inputSchema"), jsonSchemaToRec(spec.parameters()));
+                            } catch (final Exception e) {
+                                return null;
+                            }
                         })
-                        .filter(r -> null != r)
+                        .filter(Objects::nonNull)
                         .toList())));
     }
 

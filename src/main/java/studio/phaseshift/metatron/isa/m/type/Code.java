@@ -29,6 +29,8 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.MONAD_IN;
@@ -39,6 +41,17 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
 public interface Code extends Call {
+
+    // rewrite-rule timing + inst reduction, keyed by rule leaf name (read by the profile() instruction)
+    ConcurrentHashMap<String, AtomicLong> REWRITE_TIMINGS = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, AtomicLong> REWRITE_INS = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, AtomicLong> REWRITE_OUTS = new ConcurrentHashMap<>();
+
+    static void resetRewriteTimings() {
+        REWRITE_TIMINGS.clear();
+        REWRITE_INS.clear();
+        REWRITE_OUTS.clear();
+    }
 
     @Override
     Code clone(final Object jvm, final fURI tid, final fURI vid);
@@ -71,8 +84,18 @@ public interface Code extends Call {
                     .flatMap(r -> r.second().<InstSet>as().rewrites().stream())
                     //.peek(r -> this.logger().warn("REWRITE RULE: %s => %s [hash:%d][stage:%d]", rewrittenCode.get(), r, rewrittenCode.get().hashCode(), stage))
                     .forEach(r -> {
-                        // rewrittenCode.get().insts().forEach(i -> i.args(Code.Helper.tryRewrite(i.args()).as()));
-                        final Obj rewritten = r.apply(rewrittenCode.get());
+                        final long t0 = System.nanoTime();
+                        final Code before = rewrittenCode.get();
+                        // capture the inst count BEFORE apply: rewriters mutate the code in place
+                        // (selfJVM), so reading before.size() after the fact reports the post size.
+                        final int in = before.codeValue().size();
+                        final Obj rewritten = r.apply(before);
+                        final long t1 = System.nanoTime();
+                        final String name = r.tid().name();
+                        REWRITE_TIMINGS.computeIfAbsent(name, k -> new AtomicLong()).addAndGet(t1 - t0);
+                        final int out = rewritten.isCode() ? rewritten.asCode().codeValue().size() : in;
+                        REWRITE_INS.computeIfAbsent(name, k -> new AtomicLong()).addAndGet(in);
+                        REWRITE_OUTS.computeIfAbsent(name, k -> new AtomicLong()).addAndGet(out);
                         if (rewritten.isCode()) {
                             rewrittenCode.set(rewritten.asCode());
                         } else {

@@ -1822,6 +1822,7 @@ public class Console extends MRec implements Closeable, Runnable {
                 // eof ends the console the way quit does: the close drains the last
                 // writes and hands the terminal back before the process goes
                 this.close();
+                System.out.print("\r");
                 System.exit(0);
             } catch (final Exception e) {
                 Throwable x = e;
@@ -1870,6 +1871,7 @@ public class Console extends MRec implements Closeable, Runnable {
             }
         }
         this.close();
+        System.out.print("\r");
         System.exit(0);
     }
 

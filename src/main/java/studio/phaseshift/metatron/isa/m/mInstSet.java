@@ -20,8 +20,6 @@ package studio.phaseshift.metatron.isa.m;
 
 import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.TypeCheck;
-import studio.phaseshift.metatron.algebra.MultMonoid;
-import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -31,8 +29,14 @@ import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
+import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
+import studio.phaseshift.metatron.isa.m.type.resolver.ScoringInstResolver;
+import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
+import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -290,6 +294,20 @@ public class mInstSet extends AbstractInstSet {
         super(new LinkedHashMap<>(Map.<Obj, Obj>of(uri(PATTERN), uri(M_ISA_TID.extend(ALL)), uri(QPROC), lst())), INSTSET_TID, M_ISA_TID);
     }
 
+    // resolved rewrite match patterns, memoized on first use so the per-application
+    // is_(eq_(zero_())) / is_(eq_(one_())) construction (each inst build runs
+    // objCheckAndSave → objTypeCheck → a full type test) happens once, not on every rewrite pass.
+    private static final AtomicReference<List<Inst>> PLUS_ZERO_MATCH = new AtomicReference<>();
+    private static final AtomicReference<List<Inst>> MULT_ONE_MATCH = new AtomicReference<>();
+
+    private static List<Inst> cachedMatch(final AtomicReference<List<Inst>> ref, final java.util.function.Supplier<List<Inst>> build) {
+        final List<Inst> existing = ref.get();
+        if (null != existing)
+            return existing;
+        ref.compareAndSet(null, build.get());
+        return ref.get();
+    }
+
     public void setup() {
         this.selfTID(INSTSET_TID);
         this.jvm().putAll(new LinkedHashMap<>(Map.of(
@@ -521,6 +539,25 @@ public class mInstSet extends AbstractInstSet {
                         Stream.of(instA(INST_CTOR_TID))
                 ).flatMap(i -> i)),
                 uri(REWRITE), lst(
+                        // capture the original (pre-collapse) code for profile(): runs FIRST so the
+                        // id/plus/mult collapses below don't strip the code before it is timed.
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("profile_timing"),
+                                code -> {
+                                    final List<Inst> insts = code.insts();
+                                    if (insts.isEmpty() || insts.size() < 2) return code;
+                                    final Inst last = insts.getLast();
+                                    if (!last.tid().basePath().equals(PROFILE_INST_TID)) return code;
+                                    final List<Inst> preceding = new ArrayList<>(insts.subList(0, insts.size() - 1));
+                                    // capture the pre-collapse code by CLOSURE, not as an inst arg — an arg
+                                    // (even block-wrapped) is resolved/collapsed by the outer resolve, which
+                                    // would strip id()/plus(0)/mult(1) before the rewrite can be timed.
+                                    final Code precedingCode = MCode.of(preceding);
+                                    return code.selfJVM(List.of(
+                                            instC(M_ISA_INST_TID.extend("profile_compute").dom(NOOBJ_TID.zero()).rng(STR_TID),
+                                                    lst(),
+                                                    (lhs, inst) -> str(profileTable(precedingCode))))).asCode();
+                                }), "rewrites a().b().c().profile() to profile_compute(a().b().c())"),
+
                         // Remove identity instructions (no-op)
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("id_removal"),
                                 code -> code.selfJVM(
@@ -576,14 +613,12 @@ public class mInstSet extends AbstractInstSet {
                         InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("plus_zero"),
                                 code -> code.selfJVM(
                                         Rewriter.search(code.insts())
-                                                .match(List.of(instB(PLUS_INST_TID, lst(is_(eq_(zero_())).tryToInst()))))
+                                                .match(cachedMatch(PLUS_ZERO_MATCH, () -> List.of(instB(PLUS_INST_TID, lst()))))
                                                 .rewrite(map -> {
                                                     final Inst plusInst = map.values().iterator().next();
-                                                    if (plusInst.args().count() > 0) {
-                                                        if (plusInst.arg(0) instanceof PlusMonoid<?> && ((PlusMonoid<?>) plusInst.arg(0)).isZero()) {
-                                                            // plus(0) is identity, remove it
-                                                            return List.of();
-                                                        }
+                                                    if (plusInst.args().count() > 0 && plusInst.arg(0).isInt() && plusInst.arg(0).asInt().intValue() == 0) {
+                                                        // plus(0) is identity, remove it
+                                                        return List.of();
                                                     }
                                                     return List.of(plusInst);
                                                 })).asCode()),
@@ -596,14 +631,12 @@ public class mInstSet extends AbstractInstSet {
                         InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("mult_one"),
                                 code -> code.selfJVM(
                                         Rewriter.search(code.insts())
-                                                .match(List.of(mult_(is_(eq_(one_()))).tryToInst().as()))
+                                                .match(cachedMatch(MULT_ONE_MATCH, () -> List.of(instB(MULT_INST_TID, lst()))))
                                                 .rewrite(map -> {
                                                     final Inst multInst = map.values().iterator().next();
-                                                    if (multInst.args().count() > 0) {
-                                                        if (multInst.arg(0) instanceof MultMonoid<?> && ((MultMonoid<?>) multInst.arg(0)).isOne()) {
-                                                            // mult(1) is identity, remove it
-                                                            return List.of();
-                                                        }
+                                                    if (multInst.args().count() > 0 && multInst.arg(0).isInt() && multInst.arg(0).asInt().intValue() == 1) {
+                                                        // mult(1) is identity, remove it
+                                                        return List.of();
                                                     }
                                                     return List.of(multInst);
                                                 })).asCode()),
@@ -823,21 +856,7 @@ public class mInstSet extends AbstractInstSet {
                                             instC(M_ISA_INST_TID.extend("explain_compute").dom(NOOBJ_TID.zero()).rng(STR_TID),
                                                     lst(block_(precedingCode).tryToInst()),
                                                     (lhs, inst) -> str(explainTable(inst.arg(0).asCode()))))).asCode();
-                                }), "rewrites a().b().c().explain() to explain_rewrite(a().b().c())"),
-
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("profile_timing"),
-                                code -> {
-                                    final List<Inst> insts = code.insts();
-                                    if (insts.isEmpty() || insts.size() < 2) return code;
-                                    final Inst last = insts.getLast();
-                                    if (!last.tid().basePath().equals(PROFILE_INST_TID)) return code;
-                                    final List<Inst> preceding = new ArrayList<>(insts.subList(0, insts.size() - 1));
-                                    final Code precedingCode = MCode.of(preceding);
-                                    return code.selfJVM(List.of(
-                                            instC(M_ISA_INST_TID.extend("profile_compute").dom(NOOBJ_TID.zero()).rng(STR_TID),
-                                                    lst(block_(precedingCode).tryToInst()),
-                                                    (lhs, inst) -> str(profileTable(inst.arg(0).asCode()))))).asCode();
-                                }), "rewrites a().b().c().profile() to profile_compute(a().b().c())"))
+                                }), "rewrites a().b().c().explain() to explain_rewrite(a().b().c())"))
 
                 /*uri(SUGAR), lst(sugars().stream()
                         .map(s -> rec(
@@ -899,32 +918,135 @@ public class mInstSet extends AbstractInstSet {
      * suitable for use in rewrites and non-interactive contexts.
      */
     private static String profileTable(final Code code) {
+        // snapshot the pre-collapse insts: Code.rewrite() mutates its input in place (via
+        // selfJVM), so the timed loop must rewrite a fresh copy each iteration — the snapshot
+        // is what makes the original 7 → 3 reduction measurable.
+        final List<Inst> originalInsts = code.insts();
         // warm the resolver + type graph so the timed runs are steady-state
         try {
-            code.resolve(noobj()).apply(noobj());
+            MCode.of(new ArrayList<>(originalInsts)).resolve(noobj()).apply(noobj());
         } catch (final Throwable ignored) {
             // cold-start semi-resolution may throw; the timed loop below will surface a real failure
         }
+        final TypeGraph graph = TypeGraph.global();
+        graph.resetStats();
+        ScoringInstResolver.resetTimings();
+        Code.resetRewriteTimings();
+        StatefulMonad.resetTimings();
+        SwarmProcessor.resetTimings();
         final int iters = 5;
         long resolveMin = Long.MAX_VALUE, resolveMax = 0L;
+        long rewriteMin = Long.MAX_VALUE, rewriteMax = 0L;
         long applyMin = Long.MAX_VALUE, applyMax = 0L;
+        final AtomicReference<Code> lastRewritten = new AtomicReference<>();
+        final AtomicReference<Code> lastResolved = new AtomicReference<>();
         for (int i = 0; i < iters; i++) {
-            final long r0 = System.nanoTime();
-            final Code resolved = code.resolve(noobj());
+            final long rw0 = System.nanoTime();
+            final Code rewritten = MCode.of(new ArrayList<>(originalInsts)).rewrite();
+            final long rw1 = System.nanoTime();
+            final Code resolved = InstResolver.get().resolveCode(noobj(), rewritten);
             final long r1 = System.nanoTime();
             final long a0 = System.nanoTime();
             resolved.apply(noobj());
             final long a1 = System.nanoTime();
-            resolveMin = Math.min(resolveMin, r1 - r0);
-            resolveMax = Math.max(resolveMax, r1 - r0);
+            rewriteMin = Math.min(rewriteMin, rw1 - rw0);
+            rewriteMax = Math.max(rewriteMax, rw1 - rw0);
+            resolveMin = Math.min(resolveMin, r1 - rw0);
+            resolveMax = Math.max(resolveMax, r1 - rw0);
             applyMin = Math.min(applyMin, a1 - a0);
             applyMax = Math.max(applyMax, a1 - a0);
+            lastRewritten.set(rewritten);
+            lastResolved.set(resolved);
         }
+        final Code rewritten = lastRewritten.get();
+        final Code resolved = lastResolved.get();
+        final long resSum = ScoringInstResolver.T_RESOLVE.get() + ScoringInstResolver.T_BIND.get() + ScoringInstResolver.T_COMPOSE.get();
+        final long appSum = StatefulMonad.T_SPLIT.get() + StatefulMonad.T_APPLY.get() + StatefulMonad.T_NEXT.get();
         final StringBuilder sb = new StringBuilder("\n");
         sb.append("  stage     min (ms)   max (ms)\n");
+        sb.append(String.format("  rewrite   %8.3f   %8.3f%n", rewriteMin / 1_000_000.0, rewriteMax / 1_000_000.0));
         sb.append(String.format("  resolve   %8.3f   %8.3f%n", resolveMin / 1_000_000.0, resolveMax / 1_000_000.0));
         sb.append(String.format("  apply     %8.3f   %8.3f%n", applyMin / 1_000_000.0, applyMax / 1_000_000.0));
-        sb.append(String.format("  insts     %d%n", code.insts().size()));
+        sb.append(String.format("  insts     %d%n", resolved.insts().size()));
+        sb.append("  resolve sub-stages (avg ms):\n");
+        sb.append(String.format("    inst-resolve      %8.3f  %5.1f%%%n", ScoringInstResolver.T_RESOLVE.get() / 1_000_000.0 / iters, 0L == resSum ? 0.0 : ScoringInstResolver.T_RESOLVE.get() * 100.0 / resSum));
+        sb.append(String.format("    generic-binding   %8.3f  %5.1f%%%n", ScoringInstResolver.T_BIND.get() / 1_000_000.0 / iters, 0L == resSum ? 0.0 : ScoringInstResolver.T_BIND.get() * 100.0 / resSum));
+        sb.append(String.format("    inst-composition  %8.3f  %5.1f%%%n", ScoringInstResolver.T_COMPOSE.get() / 1_000_000.0 / iters, 0L == resSum ? 0.0 : ScoringInstResolver.T_COMPOSE.get() * 100.0 / resSum));
+        sb.append("  rewrite rules:\n");
+        final List<Map.Entry<String, AtomicLong>> rules = new ArrayList<>(Code.REWRITE_TIMINGS.entrySet());
+        rules.sort((a, b) -> Long.compare(b.getValue().get(), a.getValue().get()));
+        final int nRules = Math.min(6, rules.size());
+        sb.append("                ");
+        for (int i = 0; i < nRules; i++)
+            sb.append(String.format("%-20s", rules.get(i).getKey()));
+        sb.append('\n');
+        sb.append("      insts.in  ");
+        for (int i = 0; i < nRules; i++) {
+            final AtomicLong v = Code.REWRITE_INS.get(rules.get(i).getKey());
+            sb.append(String.format("%-20d", null == v ? 0L : v.get()));
+        }
+        sb.append('\n');
+        sb.append("      insts.out ");
+        for (int i = 0; i < nRules; i++) {
+            final AtomicLong v = Code.REWRITE_OUTS.get(rules.get(i).getKey());
+            sb.append(String.format("%-20d", null == v ? 0L : v.get()));
+        }
+        sb.append('\n');
+        sb.append("      time(ms)  ");
+        for (int i = 0; i < nRules; i++)
+            sb.append(String.format("%-20.3f", rules.get(i).getValue().get() / 1_000_000.0));
+        sb.append('\n');
+        // summary: the net reduction (original → rewritten inst count) and the total rule time.
+        long totalRuleTime = 0L;
+        for (final AtomicLong v : Code.REWRITE_TIMINGS.values())
+            totalRuleTime += v.get();
+        sb.append(String.format("      TOTAL     inst.in %d   inst.out %d   time(ms) %.3f%n",
+                originalInsts.size(), rewritten.insts().size(), totalRuleTime / 1_000_000.0));
+        sb.append("  apply sub-stages (avg ms):\n");
+        sb.append(String.format("    split     %8.3f  %5.1f%%%n", StatefulMonad.T_SPLIT.get() / 1_000_000.0 / iters, 0L == appSum ? 0.0 : StatefulMonad.T_SPLIT.get() * 100.0 / appSum));
+        sb.append(String.format("    apply     %8.3f  %5.1f%%%n", StatefulMonad.T_APPLY.get() / 1_000_000.0 / iters, 0L == appSum ? 0.0 : StatefulMonad.T_APPLY.get() * 100.0 / appSum));
+        sb.append(String.format("    next      %8.3f  %5.1f%%%n", StatefulMonad.T_NEXT.get() / 1_000_000.0 / iters, 0L == appSum ? 0.0 : StatefulMonad.T_NEXT.get() * 100.0 / appSum));
+        sb.append("  per-instruction (per iteration):\n");
+        final List<Inst> insts = resolved.insts();
+        sb.append("                ");
+        for (final Inst inst : insts)
+            sb.append(String.format("%-10s", inst.tid().name()));
+        sb.append('\n');
+        sb.append("      in.monad  ");
+        for (int i = 0; i < insts.size(); i++) {
+            final AtomicLong v = StatefulMonad.INST_MONAD_IN.get(f(String.valueOf(i)));
+            sb.append(String.format("%-10d", null == v ? 0L : v.get() / iters));
+        }
+        sb.append('\n');
+        sb.append("      in.coeff  ");
+        for (int i = 0; i < insts.size(); i++) {
+            final AtomicLong v = StatefulMonad.INST_COEFF_IN.get(f(String.valueOf(i)));
+            sb.append(String.format("%-10d", null == v ? 0L : v.get() / iters));
+        }
+        sb.append('\n');
+        sb.append("      out.monad ");
+        for (int i = 0; i < insts.size(); i++) {
+            final AtomicLong v = StatefulMonad.INST_MONAD_OUT.get(f(String.valueOf(i)));
+            sb.append(String.format("%-10d", null == v ? 0L : v.get() / iters));
+        }
+        sb.append('\n');
+        sb.append("      out.coeff ");
+        for (int i = 0; i < insts.size(); i++) {
+            final AtomicLong v = StatefulMonad.INST_COEFF_OUT.get(f(String.valueOf(i)));
+            sb.append(String.format("%-10d", null == v ? 0L : v.get() / iters));
+        }
+        sb.append('\n');
+        sb.append("      time(ms)  ");
+        for (int i = 0; i < insts.size(); i++) {
+            final AtomicLong v = StatefulMonad.INST_TIME.get(f(String.valueOf(i)));
+            sb.append(String.format("%-10.3f", null == v ? 0.0 : v.get() / 1_000_000.0 / iters));
+        }
+        sb.append('\n');
+        final long monads = StatefulMonad.MONADS.get();
+        final long coeffSum = StatefulMonad.COEFF_SUM.get();
+        sb.append(String.format("  flow       monads=%d coeff-sum=%d compression=%.2f processors=%d%n",
+                monads, coeffSum, 0L == monads ? 0.0 : (double) coeffSum / (double) monads, SwarmProcessor.PROCESSORS.get()));
+        sb.append(String.format("  cache     hits=%d misses=%d hit=%.1f%%%n", graph.hits(), graph.misses(), graph.hitRate() * 100.0));
         return sb.toString();
     }
 
