@@ -367,6 +367,25 @@ public final class Tokens {
     public static final String INSTSET = "instset";
     public static final String COMPILER = "compiler";
     public static final String PROCESSOR = "processor";
+    // profiling::T rec keys — the structured profile() report
+    public static final String RESOLVE = "resolve";
+    public static final String APPLY = "apply";
+    public static final String SPLIT = "split";
+    public static final String FLOW = "flow";
+    public static final String RULES = "rules";
+    public static final String INSTS = "insts";
+    public static final String INST_RESOLVE = "inst_resolve";
+    public static final String GENERIC_BINDING = "generic_binding";
+    public static final String INST_COMPOSITION = "inst_composition";
+    public static final String PER_INST = "per_inst";
+    public static final String COEFF_IN = "coeff_in";
+    public static final String COEFF_OUT = "coeff_out";
+    public static final String MONADS = "monads";
+    public static final String COEFF_SUM = "coeff_sum";
+    public static final String PROCESSORS = "processors";
+    public static final String HITS = "hits";
+    public static final String MISSES = "misses";
+    public static final String HIT_RATE = "hit_rate";
     public static final String ALT = "alt";
     public static final String REFERENCES = "references";
     public static final String URI = "uri";

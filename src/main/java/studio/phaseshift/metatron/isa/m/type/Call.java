@@ -99,11 +99,11 @@ public interface Call extends Obj, Ring<Call> {
     Call resolve(final Obj start);
 
     default <C extends Call> C dom(final Type domain) {
-        return (C) this.tid(this.tid().dom(domain.tid()));
+        return (C) this.tid(this.tid().dom(domain.vid().c(domain.tid().c()))); // TODO: we need to make the distrinction between vid coeffs and tid coeffs for type (remove c(domain...) when refactor complete)
     }
 
     default <C extends Call> C rng(final Type range) {
-        return (C) this.tid(this.tid().rng(range.vidOrTid()));
+        return (C) this.tid(this.tid().rng(range.vid().c(range.tid().c())));  // TODO: we need to make the distrinction between vid coeffs and tid coeffs for type (remove c(range...) when refactor complete)
     }
 
     @Override

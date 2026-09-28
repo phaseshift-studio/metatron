@@ -118,6 +118,8 @@ public interface Inst extends Call {
 
     @Override
     default Type dom() {
+        //if(!this.tid().hasDom())
+        //    return T(ALL.maybe());
         final fURI domain = this.tid().dom();
         // return MType.of(domain);
         return T(domain);
