@@ -22,10 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjYAMLSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.*;
 import studio.phaseshift.metatron.isa.web.parser.*;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -55,6 +52,7 @@ public class MIME {
         APPLICATION_ATOM_XML("application/atom+xml"),
         APPLICATION_XML("application/xml"),
         APPLICATION_MTRON("application/x-mtron"),
+        APPLICATION_MTRON_UI("application/x-mtron-ui"),
         APPLICATION_YAML("application/yaml"),
         APPLICATION_JAVASCRIPT("application/javascript"),
         TEXT_HTML("text/html"),
@@ -171,6 +169,10 @@ public class MIME {
             return this.equals(APPLICATION_MTRON);
         }
 
+        public boolean isMtronUI() {
+            return this.equals(APPLICATION_MTRON_UI);
+        }
+
         /**
          * Returns the type TID for this MIME type (e.g. TEXT_HTML → HTML_TID).
          * Returns null for MIME types that don't have a corresponding metatron type.
@@ -227,6 +229,7 @@ public class MIME {
 
         public ObjSerializer<?> serializer() {
             if (this.isMtron()) return ObjmtronSerializer.single();
+            if (this.isMtronUI()) return ObjmtronUISerializer.blackWhite();
             if (this.isJson()) return ObjJSONSerializer.web();
             if (this.isYaml()) return ObjYAMLSerializer.single();
             if (this.isHtml()) return ObjHTMLSerializer.single();

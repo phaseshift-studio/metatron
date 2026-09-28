@@ -83,6 +83,19 @@ public final class TypeGraph {
     private final AtomicLong generation = new AtomicLong(1);
     private volatile Object builtFor;
 
+    /**
+     * diagnostics: when false, {@link #memo} bypasses the cache and re-resolves every
+     * call. off by default while the cache is suspected of serving a stale (ephemeral)
+     * type — flip to true to restore the memoized path.
+     */
+    public static volatile boolean CACHE_ENABLED = true;
+
+    // cache statistics: hits/misses measure the memo hit-rate, skips are the lookups
+    // that bypass the cache entirely (boot window or a degenerate tid==vid==null key)
+    private final AtomicLong hits = new AtomicLong(0);
+    private final AtomicLong misses = new AtomicLong(0);
+    private final AtomicLong skips = new AtomicLong(0);
+
     private TypeGraph() {
     }
 
@@ -114,11 +127,20 @@ public final class TypeGraph {
      */
     public Type memo(final Key key, final Supplier<Type> resolve) {
         this.rebind();
-        if (BootLoader.BOOTING || (null == key.tid() && null == key.vid()))
+        if (BootLoader.BOOTING || (null == key.tid() && null == key.vid())) {
+            this.skips.incrementAndGet();
             return resolve.get();
+        }
+        if (!CACHE_ENABLED) {
+            this.skips.incrementAndGet();
+            return resolve.get();
+        }
         final Entry hit = this.resolved.get(key);
-        if (null != hit && hit.gen == this.generation.get())
+        if (null != hit && hit.gen == this.generation.get()) {
+            this.hits.incrementAndGet();
             return hit.type;
+        }
+        this.misses.incrementAndGet();
         final long gen = this.generation.get();
         final Type type = resolve.get();
         if (null != type && gen == this.generation.get()) {
@@ -202,6 +224,43 @@ public final class TypeGraph {
         return this.generation.get();
     }
 
+    /**
+     * number of {@link #memo} lookups that hit the cache.
+     */
+    public long hits() {
+        return this.hits.get();
+    }
+
+    /**
+     * number of {@link #memo} lookups that missed and re-resolved.
+     */
+    public long misses() {
+        return this.misses.get();
+    }
+
+    /**
+     * number of {@link #memo} lookups that bypassed the cache (boot window or degenerate key).
+     */
+    public long skips() {
+        return this.skips.get();
+    }
+
+    /**
+     * fraction of cache lookups that hit, in {@code [0.0, 1.0]}; {@code 1.0} when nothing has been looked up yet.
+     */
+    public double hitRate() {
+        final long h = this.hits.get();
+        final long m = this.misses.get();
+        final long total = h + m;
+        return 0L == total ? 1.0 : (double) h / (double) total;
+    }
+
+    public void resetStats() {
+        this.hits.set(0);
+        this.misses.set(0);
+        this.skips.set(0);
+    }
+
     public void clear() {
         this.generation.incrementAndGet();
         this.resolved.clear();
@@ -228,16 +287,22 @@ public final class TypeGraph {
     }
 
     /**
-     * a new router instance is a new type registry: drop and rebind
+     * a new router instance is a new type registry: drop and rebind. double-checked so the
+     * steady-state (router unchanged) hot path never takes the monitor — {@link #memo} calls
+     * this on every lookup, so the lock would otherwise be acquired millions of times.
      */
-    private synchronized void rebind() {
+    private void rebind() {
         final Object router = BootLoader.ROUTER;
         if (router != this.builtFor) {
-            this.builtFor = router;
-            this.generation.incrementAndGet();
-            this.resolved.clear();
-            this.watched.clear();
-            this.watchedBase.clear();
+            synchronized (this) {
+                if (router != this.builtFor) {
+                    this.builtFor = router;
+                    this.generation.incrementAndGet();
+                    this.resolved.clear();
+                    this.watched.clear();
+                    this.watchedBase.clear();
+                }
+            }
         }
     }
 }

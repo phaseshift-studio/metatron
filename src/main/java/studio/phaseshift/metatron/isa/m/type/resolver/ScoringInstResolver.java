@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.MONAD_IN;
@@ -65,6 +66,18 @@ public class ScoringInstResolver implements InstResolver {
      * for scoring purposes.
      */
     private record ScoredCandidate(Inst original, Inst transformed, int score) {
+    }
+
+    // fine-grained resolve-stage timing (read by the profile() instruction). times accumulate
+    // across all resolveInst calls; resetTimings() zeroes them before a profiling window.
+    public static final AtomicLong T_RESOLVE = new AtomicLong(0);
+    public static final AtomicLong T_BIND = new AtomicLong(0);
+    public static final AtomicLong T_COMPOSE = new AtomicLong(0);
+
+    public static void resetTimings() {
+        T_RESOLVE.set(0);
+        T_BIND.set(0);
+        T_COMPOSE.set(0);
     }
 
     @Override
@@ -111,8 +124,11 @@ public class ScoringInstResolver implements InstResolver {
             if (null != fetched && fetched.isObjInst())
                 return fetched.asInst();
         }
-        if (null == fetched || fetched.isNoObj()) // TODO: can't figure out why grphspace is yielding a null
+        if (null == fetched || fetched.isNoObj()) { // TODO: can't figure out why grphspace is yielding a null
+            final long t0 = System.nanoTime();
             fetched = Router.readFromSpace(basePath);
+            T_RESOLVE.addAndGet(System.nanoTime() - t0);
+        }
 
         return Inst.Helper.bindQ(lhs, userInst, resolve(lhs, userInst, fetched.stream()));
     }
@@ -191,26 +207,38 @@ public class ScoringInstResolver implements InstResolver {
                 //.peek(apiInst -> LOG.error("\nlhs: %s\napi: %s\nusr: %s", lhs, apiInst, userInst))
                 // .filter(apiInst -> Obj.Helper.specificType(lhs).isRefinementOf(apiInst.dom()))
                 .map(apiInst -> {
+                    final long t0 = System.nanoTime();
                     final int score = scoreSpecificity(lhs, userInst, apiInst);
                     // Inst transformed = userInst.hasDom() ? apiInst.dom(userInst.dom()) : apiInst;
                     Inst transformed = userInst.hasDom() ? apiInst.dom(apiInst.dom().c(userInst.dom().c()).as()) : apiInst;
                     transformed = userInst.hasRng() ? transformed.rng(userInst.rng()) : transformed;
                     transformed = userInst.tid().basePath().equals(AS_INST_TID) ? transformed.rng(userInst.arg(0).isNoObj() ? NOOBJ_TYPE : Obj.Helper.specificType(userInst.arg(0))) : transformed;
+                    final long t1 = System.nanoTime();
                     transformed = lhs.isInst() ? transformed : Inst.Helper.bindGenerics(lhs, transformed, userInst);
+                    final long t2 = System.nanoTime();
+                    T_RESOLVE.addAndGet(t1 - t0);
+                    T_BIND.addAndGet(t2 - t1);
                     return new ScoredCandidate(apiInst, transformed, score);
                 })
                 .filter(sc -> sc.transformed != null)
                 .filter(sc -> lhs.isInst() || Inst.Helper.filterOnDomainAllowUnique(lhs, sc.transformed))
                 .map(sc -> {
+                    final long t0 = System.nanoTime();
                     final Poly<?, ?> resolvedArgs = Inst.Helper.resolveArgs(userInst, sc.transformed, lhs);
                     if (null == resolvedArgs)
                         return null;
-                    return new ScoredCandidate(sc.original, sc.transformed.args(resolvedArgs), sc.score);
+                    final ScoredCandidate r = new ScoredCandidate(sc.original, sc.transformed.args(resolvedArgs), sc.score);
+                    final long t1 = System.nanoTime();
+                    T_COMPOSE.addAndGet(t1 - t0);
+                    return r;
                 })
                 .filter(Objects::nonNull)
                 .map(sc -> {
+                    final long t0 = System.nanoTime();
                     Inst result = sc.transformed.isInitial() ? sc.transformed.rng(sc.transformed.arg(0).type()) : sc.transformed;
                     result = result.c(userInst.c());
+                    final long t1 = System.nanoTime();
+                    T_COMPOSE.addAndGet(t1 - t0);
                     return new ScoredCandidate(sc.original, result, sc.score);
                 })
                 //.peek(sc -> LOG.warn("\nlhs: %s\nusr: %s\napi: %s\nfinal: %s", lhs, userInst, sc.original, sc.transformed))
@@ -224,20 +252,28 @@ public class ScoringInstResolver implements InstResolver {
      * Used when there is only one viable candidate — no need to wrap/unwrap in ScoredCandidate.
      */
     private Inst transformCandidate(final Obj lhs, final Inst userInst, final Inst apiInst) {
+        final long t0 = System.nanoTime();
         Inst transformed = userInst.hasDom() ? apiInst.dom(userInst.dom()) : apiInst;
         transformed = userInst.hasRng() ? transformed.rng(userInst.rng()) : transformed;
         transformed = userInst.tid().basePath().equals(AS_INST_TID) ? transformed.rng(userInst.arg(0).isNoObj() ? NOOBJ_TYPE : userInst.arg(0).asType()) : transformed;
+        final long t1 = System.nanoTime();
         transformed = lhs.isInst() ? transformed : Inst.Helper.bindGenerics(lhs, transformed, userInst);
         if (transformed == null)
             return null;
         if (!lhs.isInst() && !Inst.Helper.filterOnDomainAllowUnique(lhs, transformed))
             return null;
+        final long t2 = System.nanoTime();
         final Poly<?, ?> resolvedArgs = Inst.Helper.resolveArgs(userInst, transformed, lhs);
         if (resolvedArgs == null)
             return null;
         transformed = transformed.args(resolvedArgs);
         transformed = transformed.isInitial() ? transformed.rng(transformed.arg(0).type()) : transformed;
-        return transformed.c(userInst.c());
+        transformed = transformed.c(userInst.c());
+        final long t3 = System.nanoTime();
+        T_RESOLVE.addAndGet(t1 - t0);
+        T_BIND.addAndGet(t2 - t1);
+        T_COMPOSE.addAndGet(t3 - t2);
+        return transformed;
     }
 
     /**

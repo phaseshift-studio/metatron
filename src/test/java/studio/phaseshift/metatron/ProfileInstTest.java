@@ -42,9 +42,19 @@ public class ProfileInstTest extends AbstractMetatronTest {
         final Obj r = ObjmtronSerializer.eval(code + ".profile()");
         assertFalse(r.isFail(), "profile() should not fail: " + r);
         final String s = r.toString();
+        assertTrue(s.contains("rewrite"), "profile() output should include rewrite timing: " + s);
         assertTrue(s.contains("resolve"), "profile() output should include resolve timing: " + s);
         assertTrue(s.contains("apply"), "profile() output should include apply timing: " + s);
         assertTrue(s.contains("insts"), "profile() output should include the inst count: " + s);
+        assertTrue(s.contains("inst-resolve"), "profile() output should include the inst-resolve sub-stage: " + s);
+        assertTrue(s.contains("generic-binding"), "profile() output should include the generic-binding sub-stage: " + s);
+        assertTrue(s.contains("inst-composition"), "profile() output should include the inst-composition sub-stage: " + s);
+        assertTrue(s.contains("split"), "profile() output should include the processor split sub-stage: " + s);
+        assertTrue(s.contains("flow"), "profile() output should include the flow metric: " + s);
+        assertTrue(s.contains("compression"), "profile() output should include the compression ratio: " + s);
+        assertTrue(s.contains("processors"), "profile() output should include the processor spawn count: " + s);
+        assertTrue(s.contains("cache"), "profile() output should include the type-graph cache stats: " + s);
+        assertTrue(s.contains("hit="), "profile() output should include the cache hit rate: " + s);
     }
 
     @Test

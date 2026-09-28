@@ -95,6 +95,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     private static final fURI KEY_CLIP = f("clip");
     private static final fURI KEY_POINTER = f("pointer");
     private static final fURI KEY_PAGER = f("pager");
+    private static final fURI KEY_COLOR = f("color");
 
     // ── Identity ──────────────────────────────────────────────────
     private static final fURI VID = OBJ_MTRON_STRING_SERIALIZER_VID.extend("ui");
@@ -104,8 +105,9 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     // inherited hands out the wrong type: a factory on the base answers with a plain
     // serializer whose writeUri emits the uri as text, so a subclass that only overrides
     // writeUri is never the one asked to write it.
-    private static final ObjmtronUISerializer CONSOLE_INSTANCE = new ObjmtronUISerializer(str("address"), true);
-    private static final ObjmtronUISerializer BODIES_INSTANCE = new ObjmtronUISerializer(str(Tokens.BODY), false);
+    private static final ObjmtronUISerializer CONSOLE_INSTANCE = new ObjmtronUISerializer(str("address"), true, false);
+    private static final ObjmtronUISerializer BODIES_INSTANCE = new ObjmtronUISerializer(str(Tokens.BODY), false, false);
+    private static final ObjmtronUISerializer BW_INSTANCE = ObjmtronUISerializer.of(rec(), null);
 
     /**
      * The console instance: clipped, indented, linked, paged where a terminal is present,
@@ -123,6 +125,13 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     }
 
     /**
+     * The black and white instance: graphitty less, but pretty-printed.
+     */
+    public static ObjmtronUISerializer blackWhite() {
+        return BW_INSTANCE;
+    }
+
+    /**
      * A serializer configured by the rec it is given — the mtron constructor's
      * ({@code obj_mtron::[...])} job.  Its own keys — clip, pointer, pager — are read
      * straight out of it, with the defaults above filling in whatever it leaves out.
@@ -134,14 +143,15 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     // ── Constructors ──────────────────────────────────────────────
 
     public ObjmtronUISerializer() {
-        this(str("address"), true);
+        this(str("address"), true, true);
     }
 
-    private ObjmtronUISerializer(final Obj pointer, final boolean pager) {
+    private ObjmtronUISerializer(final Obj pointer, final boolean pager, final boolean color) {
         super(VID);
         this.at(KEY_CLIP, defaultClip(), MUTABLE);
         this.at(KEY_POINTER, pointer, MUTABLE);
         this.at(KEY_PAGER, bool(pager), MUTABLE);
+        this.at(KEY_COLOR, bool(color), MUTABLE);
     }
 
     protected ObjmtronUISerializer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -237,12 +247,20 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         return this.at(KEY_PAGER).orElse(bool(false)).boolValue();
     }
 
+    /**
+     * Whether a render longer than the terminal opens the pager (console default).
+     */
+    private boolean bwOn() {
+        return this.at(KEY_COLOR).orElse(bool(true)).boolValue();
+    }
+
     // ── Top-level write: the pager is this class's, and only when a terminal is here ──
 
     @Override
     public String write(final Obj obj) {
         final String written = super.write(obj);
-        return this.pagerOn() ? this.page(written) : written;
+        final String output = this.pagerOn() ? this.page(written) : written;
+        return bwOn() ? Graphitty.strip(output) : output;
     }
 
     /**

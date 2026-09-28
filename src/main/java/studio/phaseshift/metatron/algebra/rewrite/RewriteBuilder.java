@@ -81,6 +81,7 @@ public class RewriteBuilder<S extends Space> {
     protected final Class<S> spaceType;
     protected final List<fURI> matchPattern = new ArrayList<>();
     protected Predicate<List<Inst>> matchPredicate = null;
+    protected boolean requiresFromOrAt = false;
     protected BiPredicate<S, List<Inst>> matchSpacePredicate = null;
     protected String rewriteName;
     protected fURI rewriteTid;
@@ -162,6 +163,7 @@ public class RewriteBuilder<S extends Space> {
         if (!this.matchPattern.isEmpty()) {
             this.matchPattern.set(0, ALL);
         }
+        this.requiresFromOrAt = true;
         // Merge FROM/AT guard with any existing matchPredicate.
         final Predicate<List<Inst>> existing = this.matchPredicate;
         this.matchPredicate = matches -> {
@@ -250,13 +252,28 @@ public class RewriteBuilder<S extends Space> {
             this.resultTid = ALL;
         }
 
-        return InstSet.Helper.rewriter(this.rewriteTid, code ->
-                code.selfJVM(Rewriter.search(code.codeValue())
-                        .match(this.matchPattern.stream()
-                                .map(tid -> instB(tid, lst()))
-                                .toList())
-                        .rewrite(this.createRewriteFunction())
-                ).asCode());
+        return InstSet.Helper.rewriter(this.rewriteTid, code -> {
+            // early bail: skip the pattern search unless the code contains every non-wildcard
+            // match tid. a cheap pre-check that avoids the search + space resolution for codes
+            // that can never match (e.g. a projection rule on a code with no rshift/from).
+            final List<fURI> required = this.matchPattern.stream().filter(tid -> !ALL.equals(tid)).toList();
+            if (!required.isEmpty() && !required.stream().allMatch(r ->
+                    code.codeValue().stream().anyMatch(i -> i.tid().basePath().equals(r.basePath())))) {
+                return code;
+            }
+            // from/at rewrites also need a source instruction (* or @) in the code; the match
+            // pattern replaced it with ALL, so the tid pre-check above cannot see it.
+            if (this.requiresFromOrAt && code.codeValue().stream().noneMatch(i ->
+                    i.tid().basePath().equals(FROM_INST_TID.basePath()) || i.tid().basePath().equals(AT_INST_TID.basePath()))) {
+                return code;
+            }
+            return code.selfJVM(Rewriter.search(code.codeValue())
+                    .match(this.matchPattern.stream()
+                            .map(tid -> instB(tid, lst()))
+                            .toList())
+                    .rewrite(this.createRewriteFunction())
+            ).asCode();
+        });
     }
 
     /**

@@ -102,7 +102,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static final int EXIT_RESET = 100;
     public static java.util.function.IntConsumer EXIT_HANDLER = System::exit;
     private static final GraphittyLogger LOG;
-    public static Router ROUTER;
+    public static volatile Router ROUTER;
     public static Rec ARGS;
     /**
      * Tracks the currently executing metatron thread on this Java thread.
