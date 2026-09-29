@@ -45,7 +45,7 @@ mtron> rec::T[done=>bool::T,desc=>str::T,start{?}::T,end{?}::T]@/usr/agent/task
 mtron> [,]@/usr/agent/todo
 ==>[,]@/usr/agent/todo
 mtron> datetime_now()-<task::[done=>false,desc=>"review metatron docs",start=>_]>-@/usr/agent/todo
-==>[task::[done=>false,desc=>'review metatron docs',start=>datetime::<//2026.09:25/06/47/51/571?tz=-0600>],task::[done=>false,desc=>'review metatron docs',start=>datetime::<//2026.09:25/06/47/51/540?tz=-0600>]]@/usr/agent/todo
+==>[task::[done=>false,desc=>'review metatron docs',start=>datetime::<//2026.09:29/02/08/29/509?tz=-0600>],task::[done=>false,desc=>'review metatron docs',start=>datetime::<//2026.09:29/02/08/29/480?tz=-0600>]]@/usr/agent/todo
 ```
 The current time is split across the defined task. Since `start=>_` has an open slot, the current
 `datatime::T` fills in the spot and then the task is merged into your todo list. To get a structured understanding of
@@ -58,7 +58,7 @@ Have you completed a task? If so, mark it done.
 
 ```mtron
 mtron> @/usr/agent/todo/0 >>= [done=>true]
-==>fail::[inst apply failure: java.lang.ClassCastException: class studio.phaseshift.metatron.isa.m.type.impl.MRec cannot be cast to class studio.phaseshift.metatron.isa.m.type.Objs (studio.phaseshift.metatron.isa.m.type.impl.MRec and studio.phaseshift.metatron.isa.m.type.Objs are in unnamed module of loader 'app') (at /m/inst/update@1) [MObjs<332>]][unable to convert rec::T to objs [MObjs<332>]][class studio.phaseshift.metatron.isa.m.type.impl.MRec cannot be cast to class studio.phaseshift.metatron.isa.m.type.Objs (studio.phaseshift.metatron.isa.m.type.impl.MRec and studio.phaseshift.metatron.isa.m.type.Objs are in unnamed module of loader 'app')]@/sys/fail/80
+==>task::[done=>true,desc=>'review metatron docs',start=>datetime::<//2026.09:29/02/08/29/509?tz=-0600>]
 ```
 As you learn about metatron and the mtron language, you'll come up with clever ways to manipulate your `/usr/agent`
 space.
@@ -76,7 +76,7 @@ mtron> @/usr/agent.chat("what is 1+(2+3)?")      [-- human asks you --]
 ==>fail::[unable to determine inst function:
    	chat('what is 1+(2+3)?')@/usr/agent  => chat?dom=chat('what is 1+(2+3)?')@<1>   | [inst]
    	chat::T     => chat::T   |  \_dom
-   	chat::T    ==> ['what is 1+(2+3)?']   |  \_args]@/sys/fail/84
+   	chat::T    ==> ['what is 1+(2+3)?']   |  \_args]@/sys/fail/82
 ```
 The sub-agent (depth 2) solves "what is 2+3?" in a clean context window. You receive only its answer (`5`). Its internal
 tool calls, thinking traces, and intermediate steps are *invisible to you*. Your context window stays focused on the

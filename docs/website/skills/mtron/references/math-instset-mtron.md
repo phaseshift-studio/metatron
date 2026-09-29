@@ -74,7 +74,7 @@ under `/m/math/+` and available via the standard type resolution system.
 ```mtron
 mtron> [-- current system time --]
 mtron> datetime_now()
-==>datetime::<//2026.09:25/06/48/42/235?tz=-0600>
+==>datetime::<//2026.09:29/02/09/14/301?tz=-0600>
 mtron> [-- from record (goes through .as(uri::T) first) --]
 mtron> [host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],
         c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T)
@@ -215,11 +215,11 @@ Time units require a real-backed value — an int-backed time is a type violatio
 mtron> day::2.as(millis::T)         [-- int-backed time (bad) --]
 ==>fail::[2 is not a time::T[][ctor?rng=day&dom=#{?}(<#{*}>::T){<j>}]@day
    	while parsing: day::2.as(millis::T)
-   	at offset 9]@/sys/fail/1812
+   	at offset 9]@/sys/fail/604
 mtron> hour::2.as(minute::T)        [-- int-backed time (bad) --]
 ==>fail::[2 is not a time::T[][ctor?rng=hour&dom=#{?}(<#{*}>::T){<j>}]@hour
    	while parsing: hour::2.as(minute::T)
-   	at offset 8]@/sys/fail/1816
+   	at offset 8]@/sys/fail/608
 ```
 #### relational operators
 

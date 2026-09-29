@@ -278,6 +278,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
@@ -298,7 +299,6 @@
                             </div>
                         </div>
                     </li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/robobot/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>robobot</a></li>
                 </ul>
             </li>
             <!-- SKILLS-MENU:END -->
@@ -421,7 +421,7 @@ anywhere            ┌───────────────────
                -&lt;json::[jsonrpc =&gt; '2.0',
                   method  =&gt; &gt;&gt;0 - &lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}${/}&gt;,
                   params  =&gt; *message&gt;&gt;1].inst(payload=&gt;_){
-                    *&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}&gt;&gt;&gt;send.apply(*payload)}}]]@/sys/fail/1820
+                    *&lt;ws://localhost:8555/mcp/${*message&gt;&gt;0&gt;&gt;1}&gt;&gt;&gt;send.apply(*payload)}}]]@/sys/fail/612
 </code></pre>
 <p>This lives in <code>boot/boot.mtron</code> lines 82-88 and is injected at boot time.</p>
 <h3>Key Mechanics</h3>
@@ -451,7 +451,7 @@ Ensures JSON serialization (`{&quot;jsonrpc&quot;:&quot;2.0&quot;,...}`) rather 
 mtron&gt; [-- WRONG — sends literal source code, not evaluated JSON --]
 mtron&gt; json::[jsonrpc =&gt; '2.0', params =&gt; *message&gt;&gt;1]
 ==&gt;fail::[[jsonrpc=&gt;'2.0',params=&gt;*message.rshift(1)] is not a str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@json
-   	while parsing: json::[jsonrpc =&gt; '2.0', params =&gt; *message&gt;&gt;1]]@/sys/fail/1824
+   	while parsing: json::[jsonrpc =&gt; '2.0', params =&gt; *message&gt;&gt;1]]@/sys/fail/616
 ```**Symptom**: Client receives raw expression text instead of evaluated values.
 **Fix**: Use `-&lt;json::[...]` to force evaluation.
 

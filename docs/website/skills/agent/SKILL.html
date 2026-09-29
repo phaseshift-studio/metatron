@@ -278,6 +278,7 @@
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
@@ -298,7 +299,6 @@
                             </div>
                         </div>
                     </li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../skills/robobot/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>robobot</a></li>
                 </ul>
             </li>
             <!-- SKILLS-MENU:END -->
@@ -422,7 +422,7 @@ mtron&gt; @/usr/agent/todo &gt;&gt;= [0=&gt;none]
 mtron&gt; [,]@/usr/agent/todo
 ==&gt;[,]@/usr/agent/todo
 mtron&gt; datetime_now()-&lt;task::[done=&gt;false,desc=&gt;&quot;review metatron docs&quot;,start=&gt;_]&gt;-@/usr/agent/todo
-==&gt;[task::[done=&gt;false,desc=&gt;'review metatron docs',start=&gt;datetime::&lt;//2026.09:25/06/47/51/571?tz=-0600&gt;],task::[done=&gt;false,desc=&gt;'review metatron docs',start=&gt;datetime::&lt;//2026.09:25/06/47/51/540?tz=-0600&gt;]]@/usr/agent/todo
+==&gt;[task::[done=&gt;false,desc=&gt;'review metatron docs',start=&gt;datetime::&lt;//2026.09:29/02/08/29/509?tz=-0600&gt;],task::[done=&gt;false,desc=&gt;'review metatron docs',start=&gt;datetime::&lt;//2026.09:29/02/08/29/480?tz=-0600&gt;]]@/usr/agent/todo
 </code></pre>
 <p>The current time is split across the defined task. Since <code>start=&gt;_</code> has an open slot, the current
 <code>datatime::T</code> fills in the spot and then the task is merged into your todo list. To get a structured understanding of
@@ -431,7 +431,7 @@ the expression, do:
 <p>The task type was saved to your space. It's your type. The todo list was also saved to your space. It's your todo list.</p>
 <p>Have you completed a task? If so, mark it done.</p>
 <pre><code class="language-mtron">mtron&gt; @/usr/agent/todo/0 &gt;&gt;= [done=&gt;true]
-==&gt;fail::[inst apply failure: java.lang.ClassCastException: class studio.phaseshift.metatron.isa.m.type.impl.MRec cannot be cast to class studio.phaseshift.metatron.isa.m.type.Objs (studio.phaseshift.metatron.isa.m.type.impl.MRec and studio.phaseshift.metatron.isa.m.type.Objs are in unnamed module of loader 'app') (at /m/inst/update@1) [MObjs&lt;332&gt;]][unable to convert rec::T to objs [MObjs&lt;332&gt;]][class studio.phaseshift.metatron.isa.m.type.impl.MRec cannot be cast to class studio.phaseshift.metatron.isa.m.type.Objs (studio.phaseshift.metatron.isa.m.type.impl.MRec and studio.phaseshift.metatron.isa.m.type.Objs are in unnamed module of loader 'app')]@/sys/fail/80
+==&gt;task::[done=&gt;true,desc=&gt;'review metatron docs',start=&gt;datetime::&lt;//2026.09:29/02/08/29/509?tz=-0600&gt;]
 </code></pre>
 <p>As you learn about metatron and the mtron language, you'll come up with clever ways to manipulate your <code>/usr/agent</code>
 space.</p>
@@ -444,7 +444,7 @@ recursive chat:</p>
 ==&gt;fail::[unable to determine inst function:
    	chat('what is 1+(2+3)?')@/usr/agent  =&gt; chat?dom=chat('what is 1+(2+3)?')@&lt;1&gt;   | [inst]
    	chat::T     =&gt; chat::T   |  \_dom
-   	chat::T    ==&gt; ['what is 1+(2+3)?']   |  \_args]@/sys/fail/84
+   	chat::T    ==&gt; ['what is 1+(2+3)?']   |  \_args]@/sys/fail/82
 </code></pre>
 <p>The sub-agent (depth 2) solves &quot;what is 2+3?&quot; in a clean context window. You receive only its answer (<code>5</code>). Its internal
 tool calls, thinking traces, and intermediate steps are <em>invisible to you</em>. Your context window stays focused on the

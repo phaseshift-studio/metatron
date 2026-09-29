@@ -278,6 +278,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
@@ -298,7 +299,6 @@
                             </div>
                         </div>
                     </li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/robobot/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>robobot</a></li>
                 </ul>
             </li>
             <!-- SKILLS-MENU:END -->
@@ -955,6 +955,18 @@ widget's rec — the space, for a store-backed widget — so it survives the age
 <code>&gt;&gt;=[body=&gt;...].display()</code> updates: folded once, it stays folded while text piles up inside it
 (verified in <code>bin/test/console-widget-mouse.steps</code>, which folds, writes more body, and checks the
 fold held).</p>
+<p><strong>A title never widens its box</strong> — <code>Utilities.titleClip(title, width, chrome)</code> is the one rule the
+titled boxes clip through: an explicit <code>style=&gt;[width=&gt;x]</code> is the box's width, the box spends its
+own chrome first (border sides, margins, and any glyph drawn beside the title), and the title — the
+one thing in a header that can be arbitrarily long — is what gives way, clipped with <code>…</code>.  The call
+sites differ only in their numbers: <code>AccordionWidget</code> (the declared width is the whole box; chrome
+is the two border sides plus <code>&quot; [-] &quot;</code>, and the clip feeds <code>onClick</code> too, so the toggle glyph's
+target moves with it), <code>PanelWidget</code> (the declared width IS the content width, so chrome is 0 —
+this is what <code>ModalTool</code>, the <code>CardUtil</code> popups and <code>TreeSelectTool</code> render through, all of which
+constrain the panel to the terminal), and <code>CardWidget</code> (a declared width is a cap, not a fill: a
+small card keeps its natural size, and its body wraps when the cap bites).  A title is one line by
+definition, so newlines are flattened to spaces on the way through — a title carrying one cannot
+break the box it sits in.</p>
 <p>A click costs <strong>one render pass</strong>: <code>Console.clickAt</code> renders the focus change and, when the
 widget also acted, the affordance (the surface coalesces the two), and it never blocks the
 console thread — <code>focusWidget</code> renders fire-and-forget.  (It used to <code>renderNow()</code>, which

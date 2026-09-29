@@ -89,14 +89,9 @@ keeps what SQL cannot say:
 ```mtron
 mtron> */sys/space/tbledoc.sql('SELECT table_name, column_name, base_vid, obj_tid, ref_table FROM _mtron_meta')
 ==>[table_name=>'person',column_name=>'$table',base_vid=>'/m/rec',obj_tid=>'/m/rec']
-==>[table_name=>'person',column_name=>'skill',base_vid=>'/m/str',obj_tid=>'/m/str']
-==>[table_name=>'award',column_name=>'$table',base_vid=>'/m/rec',obj_tid=>'/m/rec']
-==>[table_name=>'award',column_name=>'trophy',base_vid=>'/m/str',obj_tid=>'/m/str']
-==>[table_name=>'award',column_name=>'recipient',base_vid=>'/m/inst',obj_tid=>'/m/inst/auto_from',ref_table=>'person']
-==>[table_name=>'note',column_name=>'$table',base_vid=>'/m/rec',obj_tid=>'/m/rec']
+==>[table_name=>'person',column_name=>'name',base_vid=>'/m/str',obj_tid=>'/m/str']
 ==>[table_name=>'person',column_name=>'age',base_vid=>'/m/int',obj_tid=>'/m/int']
-==>[table_name=>'person',column_name=>'name',base_vid=>'/m/str',obj_tid=>'/m/str{2}']
-==>[table_name=>'note',column_name=>'body',base_vid=>'/m/str',obj_tid=>'/m/str']
+==>[table_name=>'person',column_name=>'skill',base_vid=>'/m/str',obj_tid=>'/m/str']
 ```
 A structural obj (`tags=>['a','b']`) rides in a `TEXT` column with its type preserved in `obj_tid`, so a read
 reconstructs the lst rather than a string that looks like one.
@@ -109,7 +104,6 @@ mtron> *tbledoc:person/+              [-- every row as a rec --]
 ==>[name=>'marko',age=>29]
 ==>[name=>'metis',age=>41]
 ==>[name=>'grant',age=>25]
-==>[name=>'vela',age=>53]
 mtron> *tbledoc:person/1              [-- one row --]
 ==>[name=>'marko',age=>29]
 mtron> *tbledoc:person/+/             [-- vid => row --]
@@ -117,18 +111,15 @@ mtron> *tbledoc:person/+/             [-- vid => row --]
 ==>tbledoc:person/1=>[name=>'marko',age=>29]
 ==>tbledoc:person/3=>[name=>'metis',age=>41]
 ==>tbledoc:person/2=>[name=>'grant',age=>25]
-==>tbledoc:person/5=>[name=>'vela',age=>53]
 mtron> *tbledoc:person/+/name         [-- one column, across rows --]
 ==>'metis'
 ==>'grant'
-==>'vela'
 ==>'marko'
 ==>'xilo'
 mtron> *tbledoc:person/1/name         [-- one field: the row is unrolled --]
 ==>'marko'
 mtron> *tbledoc:person/+/id           [-- the keys: they live in the vid, not in the body --]
 ==>1
-==>5
 ==>2
 ==>4
 ==>3
@@ -147,8 +138,6 @@ mtron> *tbledoc:person/+/+      [-- clone: fields detached from their rows --]
 ==>41
 ==>'grant'
 ==>25
-==>53
-==>'vela'
 ==>33
 ==>29
 ==>'graph'
@@ -159,8 +148,6 @@ mtron> @tbledoc:person/+/+      [-- anchor: the same fields, each still addresse
 ==>41@tbledoc:person/3/age
 ==>'grant'@tbledoc:person/2/name
 ==>25@tbledoc:person/2/age
-==>53@tbledoc:person/5/age
-==>'vela'@tbledoc:person/5/name
 ==>33@tbledoc:person/4/age
 ==>29@tbledoc:person/1/age
 ==>'graph'@tbledoc:person/4/skill
@@ -189,29 +176,26 @@ mtron> *tbledoc:person/+.?[age=>?<30]        [-- SELECT * FROM person WHERE age 
 ==>[name=>'marko',age=>29]@tbledoc:person/noobj
 ==>[name=>'grant',age=>25]@tbledoc:person/noobj
 mtron> *tbledoc:person/+.count()               [-- SELECT COUNT(*) FROM person --]
-==>5
+==>4
 mtron> *tbledoc:person/+/age.sum()             [-- SELECT SUM(age) FROM person --]
-==>181.0
+==>128.0
 mtron> *tbledoc:person/+/age.mean()            [-- SELECT AVG(age) FROM person --]
-==>36.2
+==>32.0
 mtron> *tbledoc:person/+.==[name=>_]           [-- SELECT name FROM person --]
 ==>[name=>'xilo']
 ==>[name=>'marko']
 ==>[name=>'metis']
 ==>[name=>'grant']
-==>[name=>'vela']
 mtron> *tbledoc:person/+.order(select(age))    [-- ... ORDER BY age --]
 ==>{2}[name=>'grant',age=>25]@tbledoc:person/noobj
 ==>{2}[name=>'marko',age=>29]@tbledoc:person/noobj
 ==>{2}[name=>'xilo',age=>33,skill=>'graph']@tbledoc:person/noobj
 ==>{2}[name=>'metis',age=>41]@tbledoc:person/noobj
-==>{2}[name=>'vela',age=>53]@tbledoc:person/noobj
 mtron> *tbledoc:person/+.dedup(select(name))   [-- SELECT DISTINCT name FROM person --]
 ==>{2}'marko'
 ==>{2}'grant'
 ==>{2}'metis'
 ==>{2}'xilo'
-==>{2}'vela'
 mtron> *tbledoc:person/+.take(2)               [-- ... LIMIT 2 --]
 ==>{2}[name=>'marko',age=>29]@tbledoc:person/noobj
 ==>{2}[name=>'grant',age=>25]@tbledoc:person/noobj
@@ -219,7 +203,6 @@ mtron> *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
 ==>{2}[name=>'grant',age=>25]@tbledoc:person/noobj
 ==>{2}[name=>'metis',age=>41]@tbledoc:person/noobj
 ==>{2}[name=>'xilo',age=>33,skill=>'graph']@tbledoc:person/noobj
-==>{2}[name=>'vela',age=>53]@tbledoc:person/noobj
 ```
 | rewrite                  | mtron                                   | sql                                                 |
 |--------------------------|-----------------------------------------|-----------------------------------------------------|
@@ -293,9 +276,8 @@ kinds may sit in one row.
 mtron> */sys/space/tbledoc/schema/pattern      [-- where the discovered types are published --]
 ==>/sys/space/tbledoc/instset/#
 mtron> */sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
-==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,recipient=>isa(person/+/id).!*id(),uri{?}::T=><#>::T]]@award
-==>/sys/space/tbledoc/instset/note=>rec::T[?[{?}body=>str::T,uri{?}::T=><#>::T]]@note
-==>/sys/space/tbledoc/instset/person=>rec::T[?[{?}name=>str::T,{?}age=>int::T,{?}skill=>str::T,uri{?}::T=><#>::T]]@person
+==>/sys/space/tbledoc/instset/person=>rec::T[?[{?}name=>str::T,{?}age=>int::T,{?}skill=>str::T,uri{?}::T=><#>::T]]@/sys/space/tbledoc/instset/person
+==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,recipient=>isa(person/+/id).!*id(),uri{?}::T=><#>::T]]@/sys/space/tbledoc/instset/award
 ```
 Reading the schema is how you meet a table you have never seen: each entry is an `isa([{?}name=>str::T,…])` refinement
 of `rec::T`, and a foreign-key column appears as `recipient=>isa(person/+/id).!*id()` — the column *is* the pointer.
@@ -352,50 +334,14 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/38
+==>[body=>'a note with a database-assigned key']@tbledoc:note/2
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/40
+==>[body=>'another one']@tbledoc:note/4
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
-==>12
-==>17
-==>21
-==>26
-==>11
-==>27
-==>4
-==>6
-==>35
-==>31
-==>16
-==>3
-==>24
-==>28
-==>20
-==>40
-==>7
-==>36
-==>32
-==>29
-==>15
-==>19
-==>23
-==>2
-==>8
-==>33
-==>37
-==>39
 ==>1
-==>13
-==>22
-==>25
-==>10
-==>14
-==>18
-==>5
-==>9
-==>34
-==>38
-==>30
+==>3
+==>2
+==>4
 ```
 ## taking the space down
 
