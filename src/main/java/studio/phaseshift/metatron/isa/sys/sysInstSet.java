@@ -191,7 +191,7 @@ public class sysInstSet extends AbstractInstSet {
                                 uri(SHORT), uri(Router.global().redirect(inst.arg(0).uriValue(), false)),
                                 uri(LONG), uri(Router.global().redirect(inst.arg(0).uriValue(), true)))),
                         docWrap(instC(SYS_INST_TID.extend("sys_stat").dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) -> ThreadExecutor.instance().summary()), "a summary of thread counts"),
-                        docWrap(instC(SYS_INST_TID.extend("find_file").dom(A.maybe()).rng(LST_TID), rec(
+                        docWrap(instC(SYS_INST_TID.extend("find_file").dom(ALL.maybe()).rng(LST_TID), rec(
                                         uri(NAME), STR_TYPE,
                                         uri(ROOT).maybe(), URI_TYPE,
                                         uri(PATTERN), BOOL_TYPE,
@@ -214,7 +214,7 @@ public class sysInstSet extends AbstractInstSet {
                                         uri(MAX).maybe(), "the max number of results to return (default: 50)",
                                         uri(DEPTH).maybe(), "the max depth to search directories (default: 50)"),
                                 "recursively search directory for named file by regex or partial string match"),
-                        docWrap(instC(SYS_INST_TID.extend("read_file").dom(A.maybe()).rng(LST_TID), rec(
+                        docWrap(instC(SYS_INST_TID.extend("read_file").dom(ALL.maybe()).rng(LST_TID), rec(
                                         uri(FILE), URI_TYPE,
                                         uri(MIN).maybe(), INT_TYPE,
                                         uri(MAX).maybe(), INT_TYPE), (lhs, inst) -> {
@@ -245,7 +245,7 @@ public class sysInstSet extends AbstractInstSet {
                                 if no min, nor max is provided, then the entire file is read.
                                 if only a min is provided, then the file is read from that line till the end.
                                 """),
-                        docWrap(instC(SYS_INST_TID.extend("edit_file").dom(A.maybe()).rng(REC_TID), rec(FILE, URI_TYPE, TEXT, STR_TYPE, MIN, INT_TYPE, uri(MAX).maybe(), INT_TYPE), (lhs, inst) -> {
+                        docWrap(instC(SYS_INST_TID.extend("edit_file").dom(ALL.maybe()).rng(REC_TID), rec(FILE, URI_TYPE, TEXT, STR_TYPE, MIN, INT_TYPE, uri(MAX).maybe(), INT_TYPE), (lhs, inst) -> {
                                     final fURI file = inst.arg(FILE, 0).uriValue();
                                     final String text = inst.arg(TEXT, 1).strValue();
                                     final int min = inst.arg(MIN, 2).intValue().intValue();
