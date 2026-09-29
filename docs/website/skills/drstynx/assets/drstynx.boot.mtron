@@ -361,16 +361,16 @@ agent::[
                                         /m/inst/web?str<=#{?}(url=>union(uri::T,str::T),native=>bool{?}::T){ *<url>.as(uri::T).*_.-<|[*native.else(false) => as(rec::T).as(str::T), _ => _]>> },
                                         !*bash?reject=['\brm\b','\bgit\b'],
                                         mcp_client::[host=><http://localhost:8777/mcp>]],
-                   to =>  inst?<=#{?}(a=>rec::T){ @<tool_widget>.else(
+                   to =>  inst(a=>rec::T){ @<tool_widget>.else(
                                              grid_widget::[grid=>[,],
                                                            style=>[anchor=>bottom_middle,
                                                                    border=>continuous,
                                                                    height=>30,
                                                                    width=>100]].to(tool_widget)).
                                            side(w -> -<accordion_widget::[title=>"""{{r}}>>{{/r}}{{m}}${*a>>name}{{g}}({{/g}}${*a>>arguments}{{g}}){{/g}}{{/m}}""",
-                                                                          body=>*a>>result.==['.\n' => '']==(".{0,150}")>>0]).
+                                                                          body=>"""{{y}}${*a>>result}{{/y}}"""]).
                                            @<tool_widget/grid> >>=(+(-<[-<[ !*w ]]))                          
-                                           .side(@tool_widget.display()) }],
+                                           .side(@tool_widget.display()).end() }],
   cost_feature:::::::[rate          => [in  => usd_currency::0.435,
                                         out => usd_currency::0.870]],
   system_feature:::::[              => ]]]@<dr>; 
