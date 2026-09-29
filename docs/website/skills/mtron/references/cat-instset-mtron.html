@@ -278,6 +278,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
@@ -298,7 +299,6 @@
                             </div>
                         </div>
                     </li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/robobot/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>robobot</a></li>
                 </ul>
             </li>
             <!-- SKILLS-MENU:END -->
@@ -401,7 +401,7 @@ processor — cast a type to a vertex, cast an inst to an edge:</p>
 <pre><code class="language-mtron">mtron&gt; int::T.as(object::T)&gt;&gt;obj
 </code></pre>
 <pre><code class="language-mtron">mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)&gt;&gt;form
-==&gt;fail::[inst apply failure: plus?rng=int&amp;dom=int(int::T) is not a morphism::T [nominal] (at /m/inst/as@1)]@/sys/fail/622
+==&gt;fail::[inst apply failure: plus?rng=int&amp;dom=int(int::T) is not a morphism::T [nominal] (at /m/inst/as@1)]@/sys/fail/294
 </code></pre>
 <p>Every registered inst is a morphism and every type an object — the graph is emergent, not declared edge-by-edge.</p>
 <h3>the two blocks</h3>
@@ -493,7 +493,7 @@ instance. <code>algebraic_theory::T</code> is the nominal super-type grouping th
 <p>The morphism's <code>law</code> field is a set of <strong>process</strong> law labels served from <code>CatLawTable</code> (the <code>declared ∩ process</code>
 cell):</p>
 <pre><code class="language-mtron">mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)&gt;&gt;law
-==&gt;fail::[inst apply failure: plus?rng=int&amp;dom=int(int::T) is not a morphism::T [nominal] (at /m/inst/as@1)]@/sys/fail/650
+==&gt;fail::[inst apply failure: plus?rng=int&amp;dom=int(int::T) is not a morphism::T [nominal] (at /m/inst/as@1)]@/sys/fail/298
 </code></pre>
 <p>Examples: <code>commutative</code> (<code>f(x,y) = f(y,x)</code>), <code>right_distributive</code>, <code>action</code>, <code>monoidic</code>, <code>involution</code>, <code>absorbing</code>,
 <code>idempotent</code>. A law has a <em>provenance</em> tier (<code>syntactic</code> — derived from the n-tid, <code>declared</code> — proved once per

@@ -278,6 +278,7 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
@@ -298,7 +299,6 @@
                             </div>
                         </div>
                     </li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/robobot/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>robobot</a></li>
                 </ul>
             </li>
             <!-- SKILLS-MENU:END -->
@@ -309,6 +309,8 @@
                 <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
                    data-bs-toggle="dropdown" aria-expanded="false">articles</a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../articles/geometry-is-the-program.html"><i
+                            class="bi bi-diagram-3 icon-color me-2 isa-row"></i>geometry is the program</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../articles/stream-ring-theory.pdf"><i
                             class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../articles/parametric-identities-in-ring-theory.html"><i
@@ -407,7 +409,7 @@
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[pattern=&gt;/m/sys/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],inst=&gt;[as?rng=bytes&amp;dom=uri(bytes::T){&lt;j&gt;},as?rng=image&amp;dom=bytes(image::T,else(1.0)){&lt;j&gt;},close?rng=noobj&amp;dom=#{?}(){&lt;j&gt;},redirect?rng=rec[short=&gt;uri,long=&gt;uri]&amp;dom=#{?}(uri::T){&lt;j&gt;},sys_stat?rng=rec&amp;dom=#{?}(){&lt;j&gt;},find_file?rng=lst&amp;dom=A{?}(name=&gt;str::T,{?}root=&gt;uri::T,regex{?}=&gt;bool::T,{?}max=&gt;int::T,{?}depth=&gt;int::T){&lt;j&gt;},read_file?rng=lst&amp;dom=A{?}(file=&gt;uri::T,{?}min=&gt;int::T,{?}max=&gt;int::T){&lt;j&gt;},edit_file?rng=rec&amp;dom=A{?}(file=&gt;uri::T,text=&gt;str::T,min=&gt;int::T,{?}max=&gt;int::T){&lt;j&gt;},bash?rng=lst[str]&amp;dom=#{?}(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},sleep?rng=A{?}&amp;dom=A{?}(real::T@time){&lt;j&gt;},stdout?rng=#{?}&amp;dom=#{?}(&lt;#{?}&gt;::T){&lt;j&gt;},stdin?rng=str&amp;dom=#{?}(){&lt;j&gt;}],type=&gt;[space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?rng=fsspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@fsspace,space::T[][ctor?rng=serialspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@serialspace,uri::T[][ctor?rng=dir&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@dir,uri::T[][ctor?rng=file&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@file,file::T@image],const=&gt;[thread_executor::[stop=&gt;[,],run=&gt;[!*/sys/thread/main]]@/sys/thread/executor]]@/m/sys</code></pre>
+                        <pre><code>instset::[pattern=&gt;/m/sys/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],type=&gt;[space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?rng=fsspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@fsspace,space::T[][ctor?rng=serialspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@serialspace,uri::T[][ctor?rng=dir&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@dir,uri::T[][ctor?rng=file&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@file,file::T@image],inst=&gt;[as?rng=bytes&amp;dom=uri(bytes::T){&lt;j&gt;},as?rng=image&amp;dom=bytes(image::T,else(1.0)){&lt;j&gt;},close?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},redirect?rng=rec[short=&gt;uri,long=&gt;uri]&amp;dom=#{?}(uri::T){&lt;j&gt;},sys_stat?rng=rec&amp;dom=#{?}(){&lt;j&gt;},find_file?rng=lst&amp;dom=#{?}(name=&gt;str::T,{?}root=&gt;uri::T,pattern=&gt;bool::T,{?}max=&gt;int::T,{?}depth=&gt;int::T){&lt;j&gt;},read_file?rng=lst&amp;dom=#{?}(file=&gt;uri::T,{?}min=&gt;int::T,{?}max=&gt;int::T){&lt;j&gt;},edit_file?rng=rec&amp;dom=#{?}(file=&gt;uri::T,text=&gt;str::T,min=&gt;int::T,{?}max=&gt;int::T){&lt;j&gt;},bash?rng=lst[str]&amp;dom=#{?}(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},sleep?rng=A{?}&amp;dom=A{?}(real::T@time){&lt;j&gt;},stdout?rng=#{?}&amp;dom=#{?}(&lt;#{?}&gt;::T){&lt;j&gt;},stdin?rng=str&amp;dom=#{?}(){&lt;j&gt;}],const=&gt;[thread_executor::[stop=&gt;[,],run=&gt;[!*/sys/thread/main]]@/sys/thread/executor]]@/m/sys</code></pre>
                     </div>
                 </div>
             </div>
@@ -446,16 +448,16 @@
     <div class="d-flex flex-wrap"><a href="#__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">bash</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__sys__inst__close?rng=noobj&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__sys__inst__close?rng=noobj{0}&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">close</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__sys__inst__edit_file?rng=__m__rec&dom=A{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__sys__inst__edit_file?rng=__m__rec&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">edit_file</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__sys__inst__find_file?rng=__m__lst&dom=A{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__sys__inst__find_file?rng=__m__lst&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">find_file</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__sys__inst__read_file?rng=__m__lst&dom=A{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__sys__inst__read_file?rng=__m__lst&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">read_file</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__sys__inst__redirect?rng=__m__rec[short=>uri,long=>uri]&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -562,26 +564,26 @@ note that this field is optional, so when in doubt, just don&#39;t fill it out
 [&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;].mapp(-&lt;[_ =&gt; bash(_)]).sum() [-- same as above but with lst of cmds            --]
 </code></pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__close?rng=noobj&dom=#{?}">
+</div><div class="card mb-3" id="__m__sys__inst__close?rng=noobj{0}&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">close</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">noobj</span></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">noobj{0}</span></span></span>
         </span>
-        <small class="text-muted code">/m/sys/inst/close?rng=noobj&amp;dom=#{?}</small>
+        <small class="text-muted code">/m/sys/inst/close?rng=noobj{0}&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__close?rng=noobj&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__close?rng=noobj&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">close?rng=<span class="code text-success">noobj</span>&dom=<span class="code text-info">#{?}</span>(){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__close?rng=noobj{0}&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__close?rng=noobj{0}&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">close?rng=<span class="code text-success">noobj{0}</span>&dom=<span class="code text-info">#{?}</span>(){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="__m__sys__inst__edit_file?rng=__m__rec&dom=A{?}">
+</div><div class="card mb-3" id="__m__sys__inst__edit_file?rng=__m__rec&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">edit_file</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
         </span>
-        <small class="text-muted code">/m/sys/inst/edit_file?rng=/m/rec&amp;dom=A{?}</small>
+        <small class="text-muted code">/m/sys/inst/edit_file?rng=/m/rec&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__edit_file?rng=__m__rec&dom=A{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__edit_file?rng=__m__rec&dom=A{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">edit_file?rng=rec&dom=<span class="code text-info">A{?}</span>(file=>uri::T,text=>str::T,min=>int::T,{?}max=>int::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__edit_file?rng=__m__rec&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__edit_file?rng=__m__rec&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">edit_file?rng=rec&dom=<span class="code text-info">#{?}</span>(file=>uri::T,text=>str::T,min=>int::T,{?}max=>int::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">write text to a file in fsspace::T. the min and max values represent the range to write.
@@ -590,44 +592,44 @@ if both min and max are provided, then those lines are removed and the text is i
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] maybe an obj (optional)" class="text-info">[generic] maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a status report on the write" class="text-success">a status report on the write</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a status report on the write" class="text-success">a status report on the write</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
   <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the text to add to the file'" class="text-info">&#39;the text to add to the file&#39;</a>
-  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
+  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
   <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__find_file?rng=__m__lst&dom=A{?}">
+</div><div class="card mb-3" id="__m__sys__inst__find_file?rng=__m__lst&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">find_file</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__lst" data-bs-toggle="tooltip" title="range" class="code text-success">lst</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__lst" data-bs-toggle="tooltip" title="range" class="code text-success">lst</a></span></span>
         </span>
-        <small class="text-muted code">/m/sys/inst/find_file?rng=/m/lst&amp;dom=A{?}</small>
+        <small class="text-muted code">/m/sys/inst/find_file?rng=/m/lst&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__find_file?rng=__m__lst&dom=A{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__find_file?rng=__m__lst&dom=A{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">find_file?rng=lst&dom=<span class="code text-info">A{?}</span>(name=>str::T,{?}root=>uri::T,regex{?}=>bool::T,{?}max=>int::T,{?}depth=>int::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__find_file?rng=__m__lst&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__find_file?rng=__m__lst&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">find_file?rng=lst&dom=<span class="code text-info">#{?}</span>(name=>str::T,{?}root=>uri::T,pattern=>bool::T,{?}max=>int::T,{?}depth=>int::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">recursively search directory for named file by regex or partial string match</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] maybe an obj (optional)" class="text-info">[generic] maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a lst of all files whose path matches str regex" class="text-success">a lst of all files whose path matches str regex</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a regex or plain string to match file paths against'" class="text-info">&#39;a regex or plain string to match file paths against&#39;</a>
-  <a href="#{?}depth" class="text-light">{?}depth</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to search directories (default: 50)'" class="text-info">&#39;the max depth to search directories (default: 50)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a lst of all files whose path matches str regex" class="text-success">a lst of all files whose path matches str regex</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root directory for searching (default: current working directory -- <mfs:.>)'" class="text-info">&#39;the root directory for searching (default: current working directory -- &lt;mfs:.&gt;)&#39;</a>
   <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the max number of results to return (default: 50)'" class="text-info">&#39;the max number of results to return (default: 50)&#39;</a>
-  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root directory for searching (default: current working directory -- <mfs:.>)'" class="text-info">&#39;the root directory for searching (default: current working directory -- &lt;mfs:.&gt;)&#39;</a>
-  <a href="#{?}regex" class="text-light">{?}regex</a> <span class="text-light">=&gt;</span> <a href="#'if the search string should be treated as a regex pattern (default: false)'" class="text-info">&#39;if the search string should be treated as a regex pattern (default: false)&#39;</a>
+  <a href="#{?}depth" class="text-light">{?}depth</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to search directories (default: 50)'" class="text-info">&#39;the max depth to search directories (default: 50)&#39;</a>
+  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a regex or plain string to match file paths against'" class="text-info">&#39;a regex or plain string to match file paths against&#39;</a>
+  <a href="#{?}pattern" class="text-light">{?}pattern</a> <span class="text-light">=&gt;</span> <a href="#'if the search string should be treated as a regex pattern (default: false)'" class="text-info">&#39;if the search string should be treated as a regex pattern (default: false)&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__read_file?rng=__m__lst&dom=A{?}">
+</div><div class="card mb-3" id="__m__sys__inst__read_file?rng=__m__lst&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">read_file</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__lst" data-bs-toggle="tooltip" title="range" class="code text-success">lst</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__lst" data-bs-toggle="tooltip" title="range" class="code text-success">lst</a></span></span>
         </span>
-        <small class="text-muted code">/m/sys/inst/read_file?rng=/m/lst&amp;dom=A{?}</small>
+        <small class="text-muted code">/m/sys/inst/read_file?rng=/m/lst&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__read_file?rng=__m__lst&dom=A{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__read_file?rng=__m__lst&dom=A{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">read_file?rng=lst&dom=<span class="code text-info">A{?}</span>(file=>uri::T,{?}min=>int::T,{?}max=>int::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__read_file?rng=__m__lst&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__read_file?rng=__m__lst&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">read_file?rng=lst&dom=<span class="code text-info">#{?}</span>(file=>uri::T,{?}min=>int::T,{?}max=>int::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">read a file from an fsspace::T. the min and max values represent the range to read.
@@ -636,9 +638,9 @@ if only a min is provided, then the file is read from that line till the end.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#[generic] maybe an obj (optional)" class="text-info">[generic] maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#read file indexed lines" class="text-success">read file indexed lines</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
-  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#read file indexed lines" class="text-success">read file indexed lines</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
+  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
   <a href="#{?}min" class="text-light">{?}min</a> <span class="text-light">=&gt;</span> <a href="#'the start line to read'" class="text-info">&#39;the start line to read&#39;</a>
 </pre>
 </div>

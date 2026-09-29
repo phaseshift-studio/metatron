@@ -42,7 +42,7 @@ mtron> <ws://localhost:8555/mcp/+/notifications/#?subq> -> sub::[
                -<json::[jsonrpc => '2.0',
                   method  => >>0 - <ws://localhost:8555/mcp/${*message>>0>>1}${/}>,
                   params  => *message>>1].inst(payload=>_){
-                    *<ws://localhost:8555/mcp/${*message>>0>>1}>>>send.apply(*payload)}}]]@/sys/fail/1820
+                    *<ws://localhost:8555/mcp/${*message>>0>>1}>>>send.apply(*payload)}}]]@/sys/fail/612
 ```
 This lives in `boot/boot.mtron` lines 82-88 and is injected at boot time.
 
@@ -75,7 +75,7 @@ Ensures JSON serialization (`{"jsonrpc":"2.0",...}`) rather than mtron record sy
 mtron> [-- WRONG — sends literal source code, not evaluated JSON --]
 mtron> json::[jsonrpc => '2.0', params => *message>>1]
 ==>fail::[[jsonrpc=>'2.0',params=>*message.rshift(1)] is not a str::T[/m/inst/pred?rng=#{?}&dom=#{?}(<#{*}>::T){<j>}]@json
-   	while parsing: json::[jsonrpc => '2.0', params => *message>>1]]@/sys/fail/1824
+   	while parsing: json::[jsonrpc => '2.0', params => *message>>1]]@/sys/fail/616
 ```**Symptom**: Client receives raw expression text instead of evaluated values.
 **Fix**: Use `-<json::[...]` to force evaluation.
 

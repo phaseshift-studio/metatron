@@ -278,6 +278,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
@@ -298,7 +299,6 @@
                             </div>
                         </div>
                     </li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/robobot/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>robobot</a></li>
                 </ul>
             </li>
             <!-- SKILLS-MENU:END -->
@@ -499,7 +499,7 @@ mtron&gt; {1,2,3}.sum{2}().sum() [-- {2}6 merged by sum is 12 --]
 <p>Coefficients propagate through arithmetic and affect count, sum, repeat:</p>
 <pre><code class="language-mtron">mtron&gt; {1,2,3}.count()               [-- 3  (sum of coefficients) --]
 ==&gt;3
-mtron&gt; {1,2,{10}3}.count()           [-- 13  (sum of coefficients) --]
+mtron&gt; {1,2,{10}3}.count()           [-- 12  (sum of coefficients) --]
 ==&gt;12
 mtron&gt; int{50}::10.mult(10)          [-- int{50}::100 (coefficient account for) --]
 ==&gt;{50}100
@@ -562,19 +562,19 @@ mtron&gt; 1.and(gt(2),lt(5))          [-- false --]
 </code></pre>
 <hr />
 <h3>5. String Operations</h3>
-<pre><code class="language-mtron">mtron&gt; &quot;goodbye&quot;.plus(&quot; nowhere&quot;)    [-- &quot;goodbye nowhere&quot; --]
+<pre><code class="language-mtron">mtron&gt; &quot;goodbye&quot;.plus(&quot; nowhere&quot;)     [-- &quot;goodbye nowhere&quot; --]
 ==&gt;'goodbye nowhere'
-mtron&gt; &quot;goodbye&quot; + &quot; nowhere&quot;        [-- sugar sytnax for previous --]
+mtron&gt; &quot;goodbye&quot; + &quot; nowhere&quot;         [-- sugar sytnax for previous --]
 ==&gt;'goodbye nowhere'
-mtron&gt; 'a b c'.split(' ')            [-- [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;] --]
+mtron&gt; 'a b c'.split(' ')             [-- [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;] --]
 ==&gt;['a','b','c']
-mtron&gt; 'a b c'-&lt;' '                  [-- sugar syntax for previous --]
+mtron&gt; 'a b c'-&lt;' '                   [-- sugar syntax for previous --]
 ==&gt;['a','b','c']
-mtron&gt; {&quot;a&quot;,&quot;b&quot;,&quot;c&quot;}&gt;-' '            [-- &quot;a b c&quot;  (merge with separator) --]
+mtron&gt; {&quot;a&quot;,&quot;b&quot;,&quot;c&quot;}&gt;-' '             [-- &quot;a b c&quot;  (merge with separator) --]
 ==&gt;'a b c'
-mtron&gt; 'ab3cd'.regex('\d+')          [-- ['3'] --]
+mtron&gt; 'ab3cd'.select('\d+')          [-- ['3'] --]
 ==&gt;['3']
-mtron&gt; 'ab3cd'.regex('\d{2}')        [-- [,]  (no match — empty pair) --]
+mtron&gt; 'ab3cd'.select('\d{2}')        [-- [,]  (no match — empty pair) --]
 ==&gt;[,]
 </code></pre>
 <hr />
@@ -630,7 +630,7 @@ mtron&gt; nat::2                    [-- ok --]
 mtron&gt; nat::-1                   [-- &lt;ERROR&gt; --]
 ==&gt;fail::[-1 is not a int::T[is(gt(0))]@nat
    	while parsing: nat::-1
-   	at offset 19]@/sys/fail/1086
+   	at offset 19]@/sys/fail/394
 </code></pre>
 <hr />
 <h3>8. Mapping &amp; Filtering</h3>
@@ -650,7 +650,7 @@ mtron&gt; {1,2,3,4}.map(map(+2))           [-- nested --]
 ==&gt;5
 ==&gt;6
 mtron&gt; {1,2,3}.where(gt(1))             [-- {2,3}  (filter: keep if predicate matches) --]
-==&gt;fail{3}::[lhs range does not match inst domain: int::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri(gt(1)){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/1094
+==&gt;fail{3}::[lhs range does not match inst domain: int::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri(gt(1)){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/402
 mtron&gt; {1,2,3}.is(gt(1))                [-- {2,3}  (same, filter via is()) --]
 ==&gt;2
 ==&gt;3
@@ -672,7 +672,7 @@ mtron&gt; [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3]
 </code></pre>
 <h4>Where (filter)</h4>
 <pre><code class="language-mtron">mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}.where([a=&gt;is(gt(1))])               [-- {[a=&gt;2],[a=&gt;3]} --]
-==&gt;fail{3}::[lhs range does not match inst domain: rec::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri([a=&gt;is(gt(1))]){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/1106
+==&gt;fail{3}::[lhs range does not match inst domain: rec::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri([a=&gt;is(gt(1))]){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/414
 mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}=?=[a=&gt;is(gt(1))]                    [-- syntax sugar for above --]
 ==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '=?=[a=&gt;is(gt(1))]'
 mtron&gt; [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   [-- [1,7,3] --]

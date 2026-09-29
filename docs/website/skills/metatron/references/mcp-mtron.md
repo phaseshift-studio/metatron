@@ -58,21 +58,21 @@ do
 
 ```mtron
 mtron> *mcp_server
-==>mcp::T[?[{?}tool=>{?}[uri::T=>inst::T],{?}resource=><#>::T,{?}prompt=><#>::T]][ctor?rng=mcp_server&dom=#{?}(rec::T){<j>}]@mcp_server
+==>mcp{*}::T[?[{?}tool=>{?}[uri::T=>inst::T],{?}resource=><#>::T,{?}prompt=><#>::T]][ctor?rng=mcp_server&dom=#{?}(rec::T){<j>}]@mcp_server
 ```### Using tools from the client
 
 After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entries keyed by `mTool.toolName(tid)` — the flattened instruction tid (e.g. `m_inst_eval_mtron`). Each entry carries `inst`, `name`, `desc`, and `arg`:
 
 ```mtron
 mtron> mcp_client::[host=>http://localhost:8777/mcp]@a
-==>fail::[unable to construct mcp_client::T: fail::[inst apply failure: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]][java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]][][]@/sys/fail/400
-   	while parsing: mcp_client::[host=>http://localhost:8777/mcp]@a]@/sys/fail/402
+==>fail::[unable to construct mcp_client::T: fail::[inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]][java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]][][]@/sys/fail/280
+   	while parsing: mcp_client::[host=>http://localhost:8777/mcp]@a]@/sys/fail/282
 mtron> *a>>tool
-==>fail::[inst apply failure: java.lang.NullPointerException: Cannot invoke "dev.langchain4j.mcp.client.McpClient.listTools()" because "this.client" is null (at /m/inst/from@0) [mcpClient<163>]][Cannot invoke "dev.langchain4j.mcp.client.McpClient.listTools()" because "this.client" is null [mcpClient<163>]]@/sys/fail/406
+==>fail::[inst apply failure: Cannot invoke "dev.langchain4j.mcp.client.McpClient.listTools()" because "this.client" is null (at /m/inst/from@0) [mcpClient<163>]][Cannot invoke "dev.langchain4j.mcp.client.McpClient.listTools()" because "this.client" is null [mcpClient<163>]]@/sys/fail/286
 mtron> [-- => [m_inst_eval_mtron=>tool::[inst=>..., name=>m_inst_eval_mtron, desc=>..., arg=>...], ...] --]
 mtron> [-- invoke a tool by applying its inst field --]
 mtron> a/tool/m_inst_eval_mtron/inst("1+2")
-==>fail::[unable to locate inst-f of a/tool/m_inst_eval_mtron/inst('1+2')@<0>]@/sys/fail/410
+==>fail::[unable to locate inst-f noobj::T => a/tool/m_inst_eval_mtron/inst('1+2')@<0>]@/sys/fail/290
 mtron> [-- => 3 --]
 ```
 ### WebSocket

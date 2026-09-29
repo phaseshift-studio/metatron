@@ -278,6 +278,7 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
@@ -298,7 +299,6 @@
                             </div>
                         </div>
                     </li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/robobot/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>robobot</a></li>
                 </ul>
             </li>
             <!-- SKILLS-MENU:END -->
@@ -309,6 +309,8 @@
                 <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
                    data-bs-toggle="dropdown" aria-expanded="false">articles</a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../articles/geometry-is-the-program.html"><i
+                            class="bi bi-diagram-3 icon-color me-2 isa-row"></i>geometry is the program</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../articles/stream-ring-theory.pdf"><i
                             class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="../articles/parametric-identities-in-ring-theory.html"><i
@@ -407,7 +409,7 @@
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[pattern=&gt;/m/mach/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],type=&gt;[rec::T[?[pattern=&gt;uri::T,{?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,{?}pre_write=&gt;inst::T,{?}post_write=&gt;inst::T,{?}qless_write=&gt;inst::T,{?}pre_read=&gt;inst::T,{?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@qproc],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]]@space,rec::T@factory,factory::T[][ctor?rng=mfactory&amp;dom=#{?}(){&lt;j&gt;}]@mfactory,virtual::T@machine,machine::T[][ctor?rng=swarm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@swarm,rec::T[?[run=&gt;[,],stop=&gt;[,]]]@thread_executor,rec::T[?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),{?}result=&gt;&lt;#{*}&gt;::T]]@thread,thread::T[][ctor?rng=core&amp;dom=#{?}(rec::T){&lt;j&gt;}]@core,thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual,space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@authority=&gt;&lt;#&gt;::T]]][ctor?rng=clstrspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@clstrspace],inst=&gt;[lift?monad_out=+&amp;rng=/m/mach/monad&amp;dom=#&amp;monad_in=+(&lt;#{?}&gt;::T){&lt;j&gt;},zero?rng=A&amp;dom=A(){&lt;j&gt;},one?rng=A&amp;dom=A(){&lt;j&gt;},which?rng=A&amp;dom=#(uri::T){&lt;j&gt;},inject?rng=#&amp;dom=#(int::T,&lt;#&gt;::T){&lt;j&gt;},/m/inst/thread?rng=thread&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},stop?rng=thread&amp;dom=thread(){&lt;j&gt;},pause?rng=thread&amp;dom=thread(){&lt;j&gt;},resume?rng=thread&amp;dom=thread(){&lt;j&gt;}]]@/m/mach</code></pre>
+                        <pre><code>instset::[pattern=&gt;/m/mach/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],type=&gt;[rec::T[?[pattern=&gt;uri::T,{?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,{?}pre_write=&gt;inst::T,{?}post_write=&gt;inst::T,{?}qless_write=&gt;inst::T,{?}pre_read=&gt;inst::T,{?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@qproc],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]]@space,rec::T@factory,factory::T[][ctor?rng=mfactory&amp;dom=#{?}(){&lt;j&gt;}]@mfactory,rec::T[?[{?}machine=&gt;machine::T]]@component,component::T[?[{?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),{?}result=&gt;&lt;#{*}&gt;::T]]@processor,processor::T@monad,processor::T[][ctor?rng=swarm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@swarm,component::T[?[{?}instset=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset]]@compiler,compiler::T[?[{?}loop=&gt;isa(int::T).else(2)]][ctor?rng=fixpoint&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@fixpoint,monad::T[][ctor?rng=swarm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@swarm,rec::T[?[{?}instset=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset,{?}compiler=&gt;component::T[?[{?}instset=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset]]@compiler,{?}processor=&gt;component::T[?[{?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),{?}result=&gt;&lt;#{*}&gt;::T]]@processor]]@machine,rec::T[?[run=&gt;[,],stop=&gt;[,]]]@thread_executor,rec::T[?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),{?}result=&gt;&lt;#{*}&gt;::T]]@thread,thread::T[][ctor?rng=core&amp;dom=#{?}(rec::T){&lt;j&gt;}]@core,thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual,space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@authority=&gt;&lt;#&gt;::T]]][ctor?rng=clstrspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@clstrspace],inst=&gt;[/m/inst/thread?rng=thread&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},stop?rng=thread&amp;dom=thread(){&lt;j&gt;},pause?rng=thread&amp;dom=thread(){&lt;j&gt;},resume?rng=thread&amp;dom=thread(){&lt;j&gt;}],const=&gt;[machine::[instset=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},compiler=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},processor=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},route=&gt;[=&gt;]]@/sys/mach]]@/m/mach</code></pre>
                     </div>
                 </div>
             </div>
@@ -415,7 +417,7 @@
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">9</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">8</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">15</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -424,6 +426,9 @@
     <h6 class="text-primary mb-2">types</h6>
     <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">mach</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__clstrspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">clstrspace</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">component</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__mach__factory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">factory</span>
@@ -440,6 +445,12 @@
 </a><a href="#__m__mach__thread_executor" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">thread_executor</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">component</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__component__compiler" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">compiler</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component__processor" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">processor</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">machine</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__machine__swarm" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">swarm</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -449,19 +460,19 @@
 </a><a href="#__m__mach__thread__virtual" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">virtual</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">component&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">compiler</small></div></div><div class="d-flex flex-wrap"><a href="#__m__mach__component__compiler__fixpoint" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">fixpoint</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">component&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">processor</small></div></div><div class="d-flex flex-wrap"><a href="#__m__mach__component__processor__monad" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">monad</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">component/processor&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">monad</small></div></div><div class="d-flex flex-wrap"><a href="#__m__mach__component__processor__monad__swarm" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">swarm</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">insts</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__mach__inst__inject?rng=#&dom=#" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">inject</span>
-    <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__mach__inst__lift?monad_out=+&rng=__m__mach__monad&dom=#&monad_in=+" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">lift</span>
-    <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__mach__inst__ring__const__one?rng=A&dom=A" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">one</span>
-    <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__mach__inst__pause?rng=__m__mach__thread&dom=__m__mach__thread" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__mach__inst__pause?rng=__m__mach__thread&dom=__m__mach__thread" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">pause</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__mach__inst__resume?rng=__m__mach__thread&dom=__m__mach__thread" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -470,17 +481,11 @@
 </a><a href="#__m__mach__inst__stop?rng=__m__mach__thread&dom=__m__mach__thread" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">stop</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__mach__inst__which?rng=A&dom=#" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">which</span>
-    <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__mach__inst__ring__const__zero?rng=A&dom=A" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">zero</span>
-    <span class="pill-label badge bg-success ms-2">I</span>
 </a></div>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">9</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">15</span></h3>
     <div class="card mb-3" id="__m__mach__clstrspace">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -500,6 +505,28 @@
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#peer" class="text-light">peer</a> <span class="text-light">=&gt;</span> <a href="#'known metatron instance elsewhere in ws or http space'" class="text-info">&#39;known metatron instance elsewhere in ws or http space&#39;</a>
 </pre>
 </div>
+</div><div class="card mb-3" id="__m__mach__component__compiler">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">compiler::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__component" class="instset-doc-small-code text-info code">/m/mach/component::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/compiler</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[{?}instset=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset]]@compiler</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    
+</div><div class="card mb-3" id="__m__mach__component">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">component::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}machine=&gt;machine::T]]@component</code></pre></div>
+    
+    
 </div><div class="card mb-3" id="__m__mach__thread__core">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -527,16 +554,27 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@factory</code></pre></div>
     
     
+</div><div class="card mb-3" id="__m__mach__component__compiler__fixpoint">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">fixpoint::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__component__compiler" class="instset-doc-small-code text-info code">/m/mach/component/compiler::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/compiler/fixpoint</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">compiler::T[?[{?}loop=&gt;isa(int::T).else(2)]][ctor?rng=fixpoint&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@fixpoint</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__compiler" class="code inherited-link">compiler::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}instset=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    
 </div><div class="card mb-3" id="__m__mach__machine">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">machine::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__thread__virtual" class="instset-doc-small-code text-info code">/m/mach/thread/virtual::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
         <small class="text-muted code">/m/mach/machine</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">virtual::T@machine</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),{?}result=&gt;&lt;#{*}&gt;::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}instset=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset,{?}compiler=&gt;component::T[?[{?}instset=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset]]@compiler,{?}processor=&gt;component::T[?[{?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),{?}result=&gt;&lt;#{*}&gt;::T]]@processor]]@machine</code></pre></div>
+    
     
 </div><div class="card mb-3" id="__m__mach__mfactory">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -549,24 +587,60 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">factory::T[][ctor?rng=mfactory&amp;dom=#{?}(){&lt;j&gt;}]@mfactory</code></pre></div>
     
     
+</div><div class="card mb-3" id="__m__mach__component__processor__monad">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">monad::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__component__processor" class="instset-doc-small-code text-info code">/m/mach/component/processor::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/processor/monad</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">processor::T@monad</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__processor" class="code inherited-link">processor::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),{?}result=&gt;&lt;#{*}&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    
+</div><div class="card mb-3" id="__m__mach__component__processor">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">processor::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__component" class="instset-doc-small-code text-info code">/m/mach/component::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/processor</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[{?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),{?}result=&gt;&lt;#{*}&gt;::T]]@processor</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    
 </div><div class="card mb-3" id="__m__mach__machine__swarm">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">swarm::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__machine" class="instset-doc-small-code text-info code">/m/mach/machine::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__component__processor__monad" class="instset-doc-small-code text-info code">/m/mach/component/processor/monad::T</a></span>
         </span>
         <small class="text-muted code">/m/mach/machine/swarm</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">machine::T[][ctor?rng=swarm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@swarm</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),{?}result=&gt;&lt;#{*}&gt;::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">monad::T[][ctor?rng=swarm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@swarm</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__processor" class="code inherited-link">processor::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),{?}result=&gt;&lt;#{*}&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a swarm machine makes use of a set of independently executing monads that move across the code inst chain.
-barriers serve as synchronization points where all running monads must aggregate before being released on the post-barrier segment of code.
-the objs referenced by the monads that halt are the result of the machine execution.
-</p>
+    <p class="mb-0 text-light">[structural] a swarm machine makes use of a set of independently executing monads that move across the code inst chain. barriers serve as synchronization points where all running monads must aggregate before being released on the post-barrier segment of code. the objs referenced by the monads that halt are the result of the machine execution.</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code the machine will evaluate'" class="text-info">&#39;the code the machine will evaluate&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__processor__monad__swarm">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">swarm::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__component__processor" class="instset-doc-small-code text-info code">/m/mach/component/processor::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/processor/monad/swarm</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">processor::T[][ctor?rng=swarm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@swarm</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__processor" class="code inherited-link">processor::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}state=&gt;is(or(eq(stop),eq(run),eq(pause))),{?}result=&gt;&lt;#{*}&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] a swarm processor schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code the processor will evaluate'" class="text-info">&#39;the code the processor will evaluate&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__thread">
@@ -583,11 +657,11 @@ the objs referenced by the monads that halt are the result of the machine execut
     <p class="mb-0 text-light">[structural] the thread base type</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
-  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
-  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
   <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
-  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
+  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
+  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
+  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
   <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
 </pre>
 </div>
@@ -622,41 +696,8 @@ the objs referenced by the monads that halt are the result of the machine execut
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">8</span></h3>
-    <div class="card mb-3" id="__m__mach__inst__inject?rng=#&dom=#">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">inject</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">#</span></span></span>
-        </span>
-        <small class="text-muted code">/m/mach/inst/inject?rng=#&amp;dom=#</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__inject?rng=#&dom=#-doc-0-tab').click();document.getElementById('__m__mach__inst__inject?rng=#&dom=#-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inject?rng=<span class="code text-info"><span class="code text-success">#</span></span>&dom=<span class="code text-info"><span class="code text-success">#</span></span>(int::T,<<span class="code text-info"><span class="code text-success">#</span></span>>::T){<j>}</code></pre>
-</div>
-    
-</div><div class="card mb-3" id="__m__mach__inst__lift?monad_out=+&rng=__m__mach__monad&dom=#&monad_in=+">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">lift</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__mach__monad" data-bs-toggle="tooltip" title="range" class="code text-success">monad</a></span></span>
-        </span>
-        <small class="text-muted code">/m/mach/inst/lift?monad_out=+&amp;rng=/m/mach/monad&amp;dom=#&amp;monad_in=+</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__lift?monad_out=+&rng=__m__mach__monad&dom=#&monad_in=+-doc-0-tab').click();document.getElementById('__m__mach__inst__lift?monad_out=+&rng=__m__mach__monad&dom=#&monad_in=+-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">lift?monad_out=+&rng=<a href="#__m__mach__monad" data-bs-toggle="tooltip" title="range" class="code text-success">monad</a>&dom=<span class="code text-info">#</span>&monad_in=+(<<span class="code text-info">#</span>{?}>::T){<j>}</code></pre>
-</div>
-    
-</div><div class="card mb-3" id="__m__mach__inst__ring__const__one?rng=A&dom=A">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">one</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">A</span></span></span>
-        </span>
-        <small class="text-muted code">/m/mach/inst/ring/const/one?rng=A&amp;dom=A</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__ring__const__one?rng=A&dom=A-doc-0-tab').click();document.getElementById('__m__mach__inst__ring__const__one?rng=A&dom=A-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">one?rng=<span class="code text-info"><span class="code text-success">A</span></span>&dom=<span class="code text-info"><span class="code text-success">A</span></span>(){<j>}</code></pre>
-</div>
-    
-</div><div class="card mb-3" id="__m__mach__inst__pause?rng=__m__mach__thread&dom=__m__mach__thread">
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">3</span></h3>
+    <div class="card mb-3" id="__m__mach__inst__pause?rng=__m__mach__thread&dom=__m__mach__thread">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">pause</span>
@@ -687,28 +728,6 @@ the objs referenced by the monads that halt are the result of the machine execut
         <small class="text-muted code">/m/mach/inst/stop?rng=/m/mach/thread&amp;dom=/m/mach/thread</small>
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__stop?rng=__m__mach__thread&dom=__m__mach__thread-doc-0-tab').click();document.getElementById('__m__mach__inst__stop?rng=__m__mach__thread&dom=__m__mach__thread-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">stop?rng=thread&dom=thread(){<j>}</code></pre>
-</div>
-    
-</div><div class="card mb-3" id="__m__mach__inst__which?rng=A&dom=#">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">which</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">A</span></span></span>
-        </span>
-        <small class="text-muted code">/m/mach/inst/which?rng=A&amp;dom=#</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__which?rng=A&dom=#-doc-0-tab').click();document.getElementById('__m__mach__inst__which?rng=A&dom=#-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">which?rng=<span class="code text-success">A</span>&dom=<span class="code text-info">#</span>(uri::T){<j>}</code></pre>
-</div>
-    
-</div><div class="card mb-3" id="__m__mach__inst__ring__const__zero?rng=A&dom=A">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">zero</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">A</span></span></span>
-        </span>
-        <small class="text-muted code">/m/mach/inst/ring/const/zero?rng=A&amp;dom=A</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__ring__const__zero?rng=A&dom=A-doc-0-tab').click();document.getElementById('__m__mach__inst__ring__const__zero?rng=A&dom=A-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">zero?rng=<span class="code text-info"><span class="code text-success">A</span></span>&dom=<span class="code text-info"><span class="code text-success">A</span></span>(){<j>}</code></pre>
 </div>
     
 </div>

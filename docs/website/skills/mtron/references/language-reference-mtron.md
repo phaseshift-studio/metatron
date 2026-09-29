@@ -133,7 +133,7 @@ Coefficients propagate through arithmetic and affect count, sum, repeat:
 ```mtron
 mtron> {1,2,3}.count()               [-- 3  (sum of coefficients) --]
 ==>3
-mtron> {1,2,{10}3}.count()           [-- 13  (sum of coefficients) --]
+mtron> {1,2,{10}3}.count()           [-- 12  (sum of coefficients) --]
 ==>12
 mtron> int{50}::10.mult(10)          [-- int{50}::100 (coefficient account for) --]
 ==>{50}100
@@ -208,19 +208,19 @@ mtron> 1.and(gt(2),lt(5))          [-- false --]
 ## 5. String Operations
 
 ```mtron
-mtron> "goodbye".plus(" nowhere")    [-- "goodbye nowhere" --]
+mtron> "goodbye".plus(" nowhere")     [-- "goodbye nowhere" --]
 ==>'goodbye nowhere'
-mtron> "goodbye" + " nowhere"        [-- sugar sytnax for previous --]
+mtron> "goodbye" + " nowhere"         [-- sugar sytnax for previous --]
 ==>'goodbye nowhere'
-mtron> 'a b c'.split(' ')            [-- ["a", "b", "c"] --]
+mtron> 'a b c'.split(' ')             [-- ["a", "b", "c"] --]
 ==>['a','b','c']
-mtron> 'a b c'-<' '                  [-- sugar syntax for previous --]
+mtron> 'a b c'-<' '                   [-- sugar syntax for previous --]
 ==>['a','b','c']
-mtron> {"a","b","c"}>-' '            [-- "a b c"  (merge with separator) --]
+mtron> {"a","b","c"}>-' '             [-- "a b c"  (merge with separator) --]
 ==>'a b c'
-mtron> 'ab3cd'.regex('\d+')          [-- ['3'] --]
+mtron> 'ab3cd'.select('\d+')          [-- ['3'] --]
 ==>['3']
-mtron> 'ab3cd'.regex('\d{2}')        [-- [,]  (no match — empty pair) --]
+mtron> 'ab3cd'.select('\d{2}')        [-- [,]  (no match — empty pair) --]
 ==>[,]
 ```
 ---
@@ -291,7 +291,7 @@ mtron> nat::2                    [-- ok --]
 mtron> nat::-1                   [-- <ERROR> --]
 ==>fail::[-1 is not a int::T[is(gt(0))]@nat
    	while parsing: nat::-1
-   	at offset 19]@/sys/fail/1086
+   	at offset 19]@/sys/fail/394
 ```
 ---
 
@@ -314,7 +314,7 @@ mtron> {1,2,3,4}.map(map(+2))           [-- nested --]
 ==>5
 ==>6
 mtron> {1,2,3}.where(gt(1))             [-- {2,3}  (filter: keep if predicate matches) --]
-==>fail{3}::[lhs range does not match inst domain: int::T => uri::T [where?rng=uri{?}&dom=uri(gt(1)){<j>}@<1>]]@/sys/fail/1094
+==>fail{3}::[lhs range does not match inst domain: int::T => uri::T [where?rng=uri{?}&dom=uri(gt(1)){<j>}@<1>]]@/sys/fail/402
 mtron> {1,2,3}.is(gt(1))                [-- {2,3}  (same, filter via is()) --]
 ==>2
 ==>3
@@ -340,7 +340,7 @@ mtron> [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3] --
 
 ```mtron
 mtron> {[a=>1],[a=>2],[a=>3]}.where([a=>is(gt(1))])               [-- {[a=>2],[a=>3]} --]
-==>fail{3}::[lhs range does not match inst domain: rec::T => uri::T [where?rng=uri{?}&dom=uri([a=>is(gt(1))]){<j>}@<1>]]@/sys/fail/1106
+==>fail{3}::[lhs range does not match inst domain: rec::T => uri::T [where?rng=uri{?}&dom=uri([a=>is(gt(1))]){<j>}@<1>]]@/sys/fail/414
 mtron> {[a=>1],[a=>2],[a=>3]}=?=[a=>is(gt(1))]                    [-- syntax sugar for above --]
 ==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at '=?=[a=>is(gt(1))]'
 mtron> [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   [-- [1,7,3] --]
