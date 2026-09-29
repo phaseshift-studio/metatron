@@ -684,12 +684,12 @@ public interface Type extends Obj {
                 // and skips levels that carry no predicate of their own.
                 // NOTE: selfTID() prevents infinite recursion on type checking.
                 final fURI lhsTID = lhs.tid();
-                final Obj predLhs = lhs.clone().selfTID(lhs.baseTypeID());
+                //final Obj predLhs = lhs.clone().selfTID(lhs.baseTypeID());
                 boolean accepted = true;
                 for (final Call pred : rhs.asType().predicateStack()) {
                     if (pred.isNoObj())
                         continue;
-                    if (pred.apply(predLhs).isNothing()) {
+                    if (pred.dom(ALL_TYPE).apply(lhs).isNothing()) {
                         accepted = false;
                         break;
                     }
@@ -698,7 +698,7 @@ public interface Type extends Obj {
                 // lhs.clone() can BE lhs. The base-type re-tag above would then mutate the caller's object --
                 // a test that strips a handler or a typed value of its type as a side effect. Undo exactly
                 // that case; a genuine clone is left alone.
-                if (predLhs == lhs && !Objects.equals(lhs.tid(), lhsTID))
+                if (!Objects.equals(lhs.tid(), lhsTID))
                     lhs.selfTID(lhsTID);
                 return accepted;
             } else {

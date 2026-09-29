@@ -150,11 +150,13 @@ A `space::T` refines `rec::T`. Common spaces include:
 
 mtron is built on **chained/nested function composition** with attention to each function's domain, range, and argument
 types. Any expression, desugar'd, is a fluent chain of nested instruction calls. Append `.explain()` to any expression
-to see its unsugar'd form:
+to get its structured explanation — the expression-level head (dom/rng/inst count) is `>>desc`, the per-instruction stages
+(the ops, their dom/rng, args, and form) are `>>per_inst`, and the unsugar'd text table is the lazy `>>format` inst
+(materialized in the interactive console):
 
 ```mtron_pre
-start(/a).rshift().rshift().rshift().explain()
-/a.>>.>>.>>.explain()
+start(/a).rshift().rshift().rshift().explain()>>desc
+/a.>>.>>.>>.explain()>>desc>>insts
 ```
 
 Traversing the graph non-sugar'd vs sugar'd (`>>` = `rshift`):

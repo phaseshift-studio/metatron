@@ -107,7 +107,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     // writeUri is never the one asked to write it.
     private static final ObjmtronUISerializer CONSOLE_INSTANCE = new ObjmtronUISerializer(str("address"), true, false);
     private static final ObjmtronUISerializer BODIES_INSTANCE = new ObjmtronUISerializer(str(Tokens.BODY), false, false);
-    private static final ObjmtronUISerializer BW_INSTANCE = ObjmtronUISerializer.of(rec(), null);
+    private static final ObjmtronUISerializer BW_INSTANCE = new ObjmtronUISerializer(str("address"), false, true);
 
     /**
      * The console instance: clipped, indented, linked, paged where a terminal is present,
@@ -248,7 +248,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     }
 
     /**
-     * Whether a render longer than the terminal opens the pager (console default).
+     * Whether a render is stripped of color or not (default black and white).
      */
     private boolean bwOn() {
         return this.at(KEY_COLOR).orElse(bool(true)).boolValue();

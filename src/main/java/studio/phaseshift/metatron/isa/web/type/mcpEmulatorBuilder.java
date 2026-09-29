@@ -37,13 +37,10 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.rec0;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -69,7 +66,7 @@ public class mcpEmulatorBuilder {
         if (!jvm.containsKey(uri(TOOL))) {
             final Rec tools = rec(mutableMap());
             tools.at(uri("adduser"), docWrap(
-                    instC(M_ISA_INST_TID.extend("adduser").dom(NOOBJ_TID.zero()).rng(URI_TID), rec(uri(USER), URI_TYPE),
+                    instC(M_ISA_INST_TID.extend("adduser").dom(ALL.maybe()).rng(URI_TID), rec(uri(USER), URI_TYPE),
                             (lhs, inst) -> {
                                 final fURI userDirectory = getUserDirectory(inst.arg(f(USER), 0).uriValue());
                                 if (!Router.readFromSpace(userDirectory).isNoObj())
@@ -80,7 +77,7 @@ public class mcpEmulatorBuilder {
                     Map.of(uri(USER), "the name of the user to create a home directory for"),
                     "constructs a home directory in space and returns the root of that directory"), MUTABLE);
             tools.at(uri("deluser"), docWrap(
-                    instC(M_ISA_INST_TID.extend("deluser").dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()), rec(uri(USER), URI_TYPE),
+                    instC(M_ISA_INST_TID.extend("deluser").dom(ALL.maybe()).rng(ALL.maybeSome()), rec(uri(USER), URI_TYPE),
                             (lhs, inst) -> {
                                 final fURI userDirectory = getUserDirectory(inst.arg(f(USER), 0).uriValue());
                                 if (Router.readFromSpace(userDirectory).isNoObj())
@@ -92,7 +89,7 @@ public class mcpEmulatorBuilder {
                     "constructs a home directory in space and returns the root of that directory"), MUTABLE);
             // install
             tools.at(uri("install"), docWrap(
-                            instC(M_ISA_INST_TID.extend("install").dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
+                            instC(M_ISA_INST_TID.extend("install").dom(ALL.maybe()).rng(ALL.maybeSome()),
                                     rec(uri(USER), URI_TYPE, uri("mcpServers"), STR_TYPE),
                                     (lhs, inst) -> {
                                         final fURI userDirectory = getUserDirectory(inst.arg(f(USER), 0).uriValue());
@@ -116,14 +113,14 @@ public class mcpEmulatorBuilder {
                     MUTABLE);
             // tools_list
             tools.at(uri("tools_list"),
-                    docWrap(instC(M_ISA_INST_TID.extend("tools_list").dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
+                    docWrap(instC(M_ISA_INST_TID.extend("tools_list").dom(ALL.maybe()).rng(ALL.maybeSome()),
                                     rec(uri(USER), URI_TYPE),
                                     (lhs, inst) -> from_(getUserDirectory(inst.arg(f(USER), 0).uriValue()).extend(TOOL).extend("+/").toUri()).apply()),
                             "noobj lhs", "emulated mcp tools currently available to user",
                             Map.of(uri(USER), "the user of the mcp emulator"),
                             "returns the emulated tools currently available to the user"), MUTABLE);
             // tools_call
-            tools.at(uri("tools_call"), docWrap(instC(M_ISA_INST_TID.extend("tools_call").dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
+            tools.at(uri("tools_call"), docWrap(instC(M_ISA_INST_TID.extend("tools_call").dom(ALL.maybe()).rng(ALL.maybeSome()),
                             rec(uri(USER), URI_TYPE, uri(NAME), URI_TYPE, uri(ARGS), REC_TYPE),
                             (lhs, inst) -> {
                                 final fURI userDir = getUserDirectory(inst.arg(f(USER), 0).uriValue());

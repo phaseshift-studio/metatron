@@ -354,7 +354,7 @@ public class uiInstSet extends AbstractInstSet {
                             final String widgetString = ((Widget<?>) lhs).format();
                             return str("\n" + widgetString + "\n");
                         }), "map a widget to a str::T representation not anchored to a canvas. useful for embedding widget text into other objs."),
-                        docWrap(instC(UI_INST_TID.extend("display").dom(UI_WIDGET_TID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {
+                        docWrap(instC(UI_INST_TID.extend("display").dom(UI_WIDGET_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
                             final Widget<?> widget = (Widget<?>) lhs;
                             widget.run();
                             widget.close();
@@ -369,7 +369,7 @@ public class uiInstSet extends AbstractInstSet {
                                 throw MTronException.of(e);
                             }
                         }), "open a nano-like editor for the obj"),
-                        docWrap(instC(UI_INST_TID.extend("less").dom(STR_TID).rng(NOOBJ_TID.zero()), lst(isa_(T(INT_TID)).else_(jnt(10))), (lhs, inst) -> {
+                        docWrap(instC(UI_INST_TID.extend("less").dom(STR_TID).rng(NOOBJ_TID), lst(isa_(T(INT_TID)).else_(jnt(10))), (lhs, inst) -> {
                             Scanner scanner = new Scanner(System.in);
                             final int pageSize = inst.arg(0).orElse(jnt(100)).intValue().intValue();
                             final AtomicInteger page = new AtomicInteger(0);

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
@@ -48,14 +49,13 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MILLIS_TYPE;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.block_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -79,6 +79,8 @@ public class mInstSet extends AbstractInstSet {
     public static final Type STR_TYPE = Type.Builder.build().tid(STR_TID).vid(STR_TID).create();
 
     public static final Type URI_TYPE = Type.Builder.build().tid(URI_TID).vid(URI_TID).create();
+
+    public static final Type REL_TYPE = Type.Builder.build().tid(REL_TID).vid(REL_TID).create();
 
     public static final Type LST_TYPE = Type.Builder.build()
             .tid(LST_TID)
@@ -234,6 +236,7 @@ public class mInstSet extends AbstractInstSet {
 
     public static Type AUTHORITY_TYPE;
     public static final Type ALL_TYPE = Type.Builder.build().tid(ALL).vid(ALL).create();
+    public static final Type ALL_MAYBE_TYPE = Type.Builder.build().tid(ALL.maybe()).vid(ALL.maybe()).create();
     public static final Type SPACE_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(SPACE_TID)
@@ -275,51 +278,60 @@ public class mInstSet extends AbstractInstSet {
                     uri(Tracer.java_stack.name()), stacks.asRec().at(uri(Tracer.java_stack.name())).orElse(BOOL_FALSE))))
             .create();
 
-    public static final Type PROFILING_TYPE = docWrap(Type.Builder.build()
-                    .tid(REC_TID)
-                    .vid(PROFILE_INST_TID.extend("profiling"))
-                    .isaPredicate(rec(
-                            uri(FORMAT), STR_TYPE,
-                            uri(STAGE), rec(
-                                    uri(REWRITE), rec(uri(MIN), MILLIS_TYPE, uri(MAX), MILLIS_TYPE),
-                                    uri(RESOLVE), rec(uri(MIN), MILLIS_TYPE, uri(MAX), MILLIS_TYPE),
-                                    uri(APPLY), rec(uri(MIN), MILLIS_TYPE, uri(MAX), MILLIS_TYPE)),
+    public static final fURI EXPLANATION_TID = EXPLAIN_INST_TID.extend("explanation");
+    public static final Type EXPLANATION_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(EXPLANATION_TID)
+            .isaPredicate(rec(
+                    uri(FORMAT), STR_TYPE,
+                    uri(DESC), rec(
+                            uri(DOM), URI_TYPE,
+                            uri(RNG), URI_TYPE,
                             uri(INSTS), INT_TYPE,
-                            uri(RESOLVE), rec(
-                                    uri(INST_RESOLVE), MILLIS_TYPE,
-                                    uri(GENERIC_BINDING), MILLIS_TYPE,
-                                    uri(INST_COMPOSITION), MILLIS_TYPE),
-                            uri(REWRITE), rec(
-                                    uri(RULES), lst(rec(uri(NAME), URI_TYPE, uri(IN), INT_TYPE, uri(OUT), INT_TYPE, uri(TIME), MILLIS_TYPE)),
-                                    uri(TOTAL), rec(uri(IN), INT_TYPE, uri(OUT), INT_TYPE, uri(TIME), MILLIS_TYPE)),
-                            uri(APPLY), rec(
-                                    uri(SPLIT), MILLIS_TYPE,
-                                    uri(APPLY), MILLIS_TYPE,
-                                    uri(NEXT), MILLIS_TYPE),
-                            uri(PER_INST), lst(rec(
-                                    uri(NAME), URI_TYPE,
-                                    uri(MONAD_IN), INT_TYPE, uri(COEFF_IN), INT_TYPE,
-                                    uri(MONAD_OUT), INT_TYPE, uri(COEFF_OUT), INT_TYPE,
-                                    uri(TIME), MILLIS_TYPE)),
-                            uri(FLOW), rec(
-                                    uri(MONADS), INT_TYPE, uri(COEFF_SUM), INT_TYPE,
-                                    uri(COMPRESSION), REAL_TYPE, uri(PROCESSORS), INT_TYPE),
-                            uri(CACHE), rec(
-                                    uri(HITS), INT_TYPE, uri(MISSES), INT_TYPE, uri(HIT_RATE), REAL_TYPE)))
-                    .create(),
-            Map.of(
-                    uri(FORMAT), "lazily constructed pretty print format",
-                    uri(STAGE), "per-pipeline-stage min/max wall-clock timings (rewrite/resolve/apply)",
-                    uri(INSTS), "the resolved instruction count",
-                    uri(RESOLVE), "resolve sub-stages (inst-resolve/generic-binding/inst-composition)",
-                    uri(REWRITE), "per-rewrite-rule instruction reduction (rules + net total)",
-                    uri(APPLY), "processor sub-stages (split/apply/next)",
-                    uri(PER_INST), "per-instruction monad/coefficient flow + time",
-                    uri(FLOW), "bulk-compression flow (monads propagated vs coefficient sum)",
-                    uri(CACHE), "type-graph cache hit/miss/hit-rate"),
-            "a structured profile report produced by profile()",
-            "{1,2,3}.sum().profile()>>format    [-- the str::T text table --]",
-            "{1,2,3}.sum().profile()>>flow      [-- [monads=>…,coeff_sum=>…,compression=>…,processors=>…] --]");
+                            uri(REWRITE), T(EXPLANATION_TID.maybe())),
+                    uri(PER_INST), lst(rec(
+                            uri(OP), URI_TYPE,
+                            uri(DOM), URI_TYPE,
+                            uri(RNG), URI_TYPE,
+                            uri(ARGS), union_(LST_TYPE, REC_TYPE).tryToInst(),
+                            uri(Tokens.F), ALL_TYPE,
+                            uri(FORM), URI_TYPE,
+                            uri(C_DOM), INT_TYPE,
+                            uri(C_RNG), INT_TYPE))))
+            .create();
+    public static final fURI PROFILING_TID = PROFILE_INST_TID.extend("profiling");
+    public static final Type PROFILING_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(PROFILING_TID)
+            .isaPredicate(rec(
+                    uri(FORMAT), STR_TYPE,
+                    uri(STAGE), rec(
+                            uri(REWRITE), rec(uri(MIN), MILLIS_TYPE, uri(MAX), MILLIS_TYPE),
+                            uri(RESOLVE), rec(uri(MIN), MILLIS_TYPE, uri(MAX), MILLIS_TYPE),
+                            uri(APPLY), rec(uri(MIN), MILLIS_TYPE, uri(MAX), MILLIS_TYPE)),
+                    uri(INSTS), INT_TYPE,
+                    uri(RESOLVE), rec(
+                            uri(INST_RESOLVE), MILLIS_TYPE,
+                            uri(GENERIC_BINDING), MILLIS_TYPE,
+                            uri(INST_COMPOSITION), MILLIS_TYPE),
+                    uri(REWRITE), rec(
+                            uri(RULES), lst(rec(uri(NAME), URI_TYPE, uri(IN), INT_TYPE, uri(OUT), INT_TYPE, uri(TIME), MILLIS_TYPE)),
+                            uri(TOTAL), rec(uri(IN), INT_TYPE, uri(OUT), INT_TYPE, uri(TIME), MILLIS_TYPE)),
+                    uri(APPLY), rec(
+                            uri(SPLIT), MILLIS_TYPE,
+                            uri(APPLY), MILLIS_TYPE,
+                            uri(NEXT), MILLIS_TYPE),
+                    uri(PER_INST), lst(rec(
+                            uri(NAME), URI_TYPE,
+                            uri(MONAD_IN), INT_TYPE, uri(C_IN), INT_TYPE,
+                            uri(MONAD_OUT), INT_TYPE, uri(C_OUT), INT_TYPE,
+                            uri(TIME), MILLIS_TYPE)),
+                    uri(FLOW), rec(
+                            uri(MONADS), INT_TYPE, uri(C_SUM), INT_TYPE,
+                            uri(COMPRESSION), REAL_TYPE, uri(PROCESSORS), INT_TYPE),
+                    uri(CACHE), rec(
+                            uri(HITS), INT_TYPE, uri(MISSES), INT_TYPE, uri(HIT_RATE), REAL_TYPE)))
+            .create();
     
    /* public static final Type MONO_TYPE = Type.Builder.build()
             .tid(MONO_TID)
@@ -469,7 +481,29 @@ public class mInstSet extends AbstractInstSet {
                                 useful for debugging native java issues that mtron instructions
                                 trigger but cannot introspect.
                                 """),
-                        PROFILING_TYPE,
+                        docWrap(PROFILING_TYPE,
+                                Map.of(
+                                        uri(FORMAT), "lazily constructed pretty print format",
+                                        uri(STAGE), "per-pipeline-stage min/max wall-clock timings (rewrite/resolve/apply)",
+                                        uri(INSTS), "the resolved instruction count",
+                                        uri(RESOLVE), "resolve sub-stages (inst-resolve/generic-binding/inst-composition)",
+                                        uri(REWRITE), "per-rewrite-rule instruction reduction (rules + net total)",
+                                        uri(APPLY), "processor sub-stages (split/apply/next)",
+                                        uri(PER_INST), "per-instruction monad/coefficient flow + time",
+                                        uri(FLOW), "bulk-compression flow (monads propagated vs coefficient sum)",
+                                        uri(CACHE), "type-graph cache hit/miss/hit-rate"),
+                                "a structured profile report produced by profile()",
+                                "{1,2,3}.sum().profile()>>format    [-- the str::T text table --]",
+                                "{1,2,3}.sum().profile()>>flow      [-- [monads=>…,coeff_sum=>…,compression=>…,processors=>…] --]"),
+                        docWrap(EXPLANATION_TYPE,
+                                Map.of(
+                                        uri(FORMAT), "lazily constructed pretty-print format (the current text table)",
+                                        uri(DESC), "expression-level metadata: whole-expression dom/rng, inst count, and the rewrite-stage chain (rewrite)",
+                                        uri(PER_INST), "per-instruction compilation stage (op/dom/rng/args/f/form/coefs)"),
+                                "a structured explanation of a resolved expression produced by explain()",
+                                "1.plus(2).explain()>>desc>>rng     [-- int — the type flowing out of the expression --]",
+                                "1.plus(2).explain()>>per_inst       [-- per-inst recs: [[op=>start,…,form=>initial],[op=>plus,…,form=>mapper]] --]",
+                                "1.plus(2).explain()>>format         [-- the str::T text table --]"),
                         docWrap(SPACE_TYPE, null, null, Map.of(
                                         uri(PATTERN), "the uri address region the space will manage",
                                         uri(QPROC).maybe(), "query processors (qproc) that augment space capabilities",
@@ -605,7 +639,7 @@ public class mInstSet extends AbstractInstSet {
                                     // would strip id()/plus(0)/mult(1) before the rewrite can be timed.
                                     final Code precedingCode = MCode.of(preceding);
                                     final List<Inst> bundledCode = new ArrayList<>();
-                                    bundledCode.add(instC(M_ISA_INST_TID.extend("profile_compute").dom(NOOBJ_TID.zero()).rng(PROFILING_TYPE.vid()),
+                                    bundledCode.add(instC(M_ISA_INST_TID.extend("profile_compute").dom(NOOBJ_TID).rng(PROFILING_TYPE.vid()),
                                             lst(),
                                             (lhs, inst) -> profileTable(precedingCode)));
                                     if (profileInst.get0() + 1 < insts.size()) {
@@ -908,15 +942,26 @@ public class mInstSet extends AbstractInstSet {
                                 code -> {
                                     final List<Inst> insts = code.insts();
                                     if (insts.isEmpty() || insts.size() < 2) return code;
-                                    final Inst last = insts.getLast();
-                                    if (!last.tid().basePath().equals(EXPLAIN_INST_TID)) return code;
-                                    final List<Inst> preceding = new ArrayList<>(insts.subList(0, insts.size() - 1));
+                                    final Tuple.Pair<Integer, Inst> explainInst = IteratorUtil.indexedStream(insts.iterator()).filter(i -> i.get1().tid().basePath().equals(EXPLAIN_INST_TID)).findAny().orElse(null);
+                                    if (null == explainInst || explainInst.get0() <= 0) return code;
+                                    final List<Inst> preceding = new ArrayList<>(insts.subList(0, explainInst.get0()));
+                                    // capture the pre-collapse code by CLOSURE, not as an inst arg — an arg
+                                    // (even block-wrapped) is resolved/collapsed by the outer resolve, which
+                                    // would strip id()/plus(0)/mult(1) before explain can be computed.
                                     final Code precedingCode = MCode.of(preceding).resolve(noobj());
-                                    return code.selfJVM(List.of(
-                                            instC(M_ISA_INST_TID.extend("explain_compute").dom(NOOBJ_TID.zero()).rng(STR_TID),
-                                                    lst(block_(precedingCode).tryToInst()),
-                                                    (lhs, inst) -> str(explainTable(inst.arg(0).asCode()))))).asCode();
-                                }), "rewrites a().b().c().explain() to explain_rewrite(a().b().c())"))
+                                    final List<Inst> bundledCode = new ArrayList<>();
+                                    bundledCode.add(instC(M_ISA_INST_TID.extend("explain_compute").dom(NOOBJ_TID).rng(EXPLANATION_TYPE.vid()),
+                                            lst(),
+                                            (lhs, inst) -> explainRec(precedingCode)));
+                                    if (explainInst.get0() + 1 < insts.size()) {
+                                        final Inst capInst = insts.get(explainInst.get0() + 1);
+                                        bundledCode.add(capInst.dom(EXPLANATION_TYPE));
+                                        if (explainInst.get0() + 2 < insts.size()) {
+                                            bundledCode.addAll(insts.subList(explainInst.get0() + 2, insts.size()));
+                                        }
+                                    }
+                                    return code.selfJVM(bundledCode).asCode();
+                                }), "rewrites a().b().c().explain() to explain_compute(a().b().c()), carrying trailing insts (e.g. >>format) — mirror of profile_timing"))
 
                 /*uri(SUGAR), lst(sugars().stream()
                         .map(s -> rec(
@@ -970,6 +1015,51 @@ public class mInstSet extends AbstractInstSet {
             sb.append('\n');
         }
         return sb.toString();
+    }
+
+    /**
+     * The dom/rng value of a stage rec: a zero-coefficient (noobj) type yields noobj itself,
+     * otherwise the type's vid as a uri. (a noobj{c} uri and a noobj literal parse to different
+     * classes — noobj-vs-noobj is the one equivalence test literals can express)
+     */
+    private static Obj domRngValue(final Type t) {
+        if (0L == t.c().min()) return noobj();
+        return uri(f(t.vid().small().pathString()));
+    }
+
+    /**
+     * Build the explanation::T rec of the instructions in {@code code}: expression-level
+     * metadata (desc), per-instruction stages (per_inst), and a lazily constructed format
+     * (today's text table). Terminal-free — suitable for use in rewrites and
+     * non-interactive contexts.
+     */
+    private static Rec explainRec(final Code code) {
+        final List<Inst> insts = code.insts();
+        // per-instruction stage records
+        final List<Obj> perInstRecs = new ArrayList<>();
+        for (final Inst i : insts) {
+            perInstRecs.add(rec(
+                    uri(OP), uri(f(i.tid().name())),
+                    uri(DOM), domRngValue(i.dom()),
+                    uri(RNG), domRngValue(i.rng()),
+                    // the args as their own objs (ints, calls, ...), not their string renderings
+                    uri(ARGS), lst(i.args().elements().toList()),
+                    uri(Tokens.F), i.hasf() ? (i.f().isLambda() ? (Obj) str("<j>") : i.getMtronFunctionObj()) : noobj(),
+                    uri(FORM), uri(f(Inst.Form.of(i).toString())),
+                    uri(C_DOM), jnt(i.dom().c().min()),
+                    uri(C_RNG), jnt(i.rng().c().min())));
+        }
+        return rec(
+                uri(FORMAT), instLambda(ALL.zero(), STR_TID, (lhs, inst) -> str(explainTable(code))),
+                uri(DESC), rec(
+                        uri(DOM), domRngValue(insts.getFirst().dom()),
+                        uri(RNG), domRngValue(insts.getLast().rng()),
+                        uri(INSTS), jnt(insts.size()),
+                        // rewrite-stage chain: a later stage's explanation will point at this rec (the
+                        // original submitted expression's); the original terminates the chain (noobj)
+                        uri(REWRITE), noobj()),
+                uri(PER_INST), lst(perInstRecs))
+                .vid(EXPLANATION_TYPE.vid());
     }
 
     /**
@@ -1132,9 +1222,9 @@ public class mInstSet extends AbstractInstSet {
             perInstRecs.add(rec(
                     uri(NAME), uri(f(insts.get(i).tid().name())),
                     uri(MONAD_IN), jnt((null == mi ? 0L : mi.get()) / iters),
-                    uri(COEFF_IN), jnt((null == ci ? 0L : ci.get()) / iters),
+                    uri(C_IN), jnt((null == ci ? 0L : ci.get()) / iters),
                     uri(MONAD_OUT), jnt((null == mo ? 0L : mo.get()) / iters),
-                    uri(COEFF_OUT), jnt((null == co ? 0L : co.get()) / iters),
+                    uri(C_OUT), jnt((null == co ? 0L : co.get()) / iters),
                     uri(TIME), real((null == ti ? 0L : ti.get()) / ms / iters, MILLIS_TYPE.vid(), null)));
         }
         return rec(
@@ -1157,7 +1247,7 @@ public class mInstSet extends AbstractInstSet {
                         uri(NEXT), real(StatefulMonad.T_NEXT.get() / ms / iters, MILLIS_TYPE.vid(), null)),
                 uri(PER_INST), lst(perInstRecs),
                 uri(FLOW), rec(
-                        uri(MONADS), jnt(monads), uri(COEFF_SUM), jnt(coeffSum),
+                        uri(MONADS), jnt(monads), uri(C_SUM), jnt(coeffSum),
                         uri(COMPRESSION), real(0L == monads ? 0.0 : (double) coeffSum / (double) monads),
                         uri(PROCESSORS), jnt(SwarmProcessor.PROCESSORS.get())),
                 uri(CACHE), rec(

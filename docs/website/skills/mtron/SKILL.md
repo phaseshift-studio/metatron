@@ -165,25 +165,15 @@ A `space::T` refines `rec::T`. Common spaces include:
 
 mtron is built on **chained/nested function composition** with attention to each function's domain, range, and argument
 types. Any expression, desugar'd, is a fluent chain of nested instruction calls. Append `.explain()` to any expression
-to see its unsugar'd form:
+to get its structured explanation — the expression-level head (dom/rng/inst count) is `>>desc`, the per-instruction stages
+(the ops, their dom/rng, args, and form) are `>>per_inst`, and the unsugar'd text table is the lazy `>>format` inst
+(materialized in the interactive console):
 
 ```mtron
-mtron> start(/a).rshift().rshift().rshift().explain()
-==>"""
-    op      dom          rng      args   f    desc      c_dom  c_rng 
-    start   noobj{0}::T  uri::T   /a     <j>  initial   {0}    {1}   
-    rshift  uri::T       #{*}::T  noobj  <j>  standard  {1}    {*}   
-    rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
-    rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
-   """
-mtron> /a.>>.>>.>>.explain()
-==>"""
-    op      dom          rng      args   f    desc      c_dom  c_rng 
-    start   noobj{0}::T  uri::T   /a     <j>  initial   {0}    {1}   
-    rshift  uri::T       #{*}::T  noobj  <j>  standard  {1}    {*}   
-    rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
-    rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
-   """
+mtron> start(/a).rshift().rshift().rshift().explain()>>desc
+==>[insts=>4]
+mtron> /a.>>.>>.>>.explain()>>desc>>insts
+==>4
 ```
 Traversing the graph non-sugar'd vs sugar'd (`>>` = `rshift`):
 
@@ -302,7 +292,8 @@ mtron> *plus?docq
 ==>docs::[obj=>plus?rng=int&dom=int(int::T){<j>},dom=>'the lhs int',rng=>'the result of the addition',args=>[int::T=>'the int to add to the lhs'],desc=>"""[mapper] add the argument int to the lhs int
    one-to-one obj transformation (dom_c = rng_c = 1)""",example=>['1.plus(2)          [-- 3                    --]',"1+2                [-- 3 sugar'd form       --]",'1.plus(plus(1))    [-- 3 nested application --]','1+(+1)             [-- 3 sugar nested form  --]']]
 mtron> *select?docq
-==>docs::[desc=>'no documentation available',obj=>{select?rng=str&dom=str(rec::T){<j>},select?rng=uri&dom=uri(rec::T){<j>},select?rng=rel{?}&dom=rel(rel::T){<j>},select?rng=B{*}&dom=lst(A{+}::T){<j>},select?rng=lst{?}&dom=lst(lst::T){<j>},select?rng=lst&dom=lst(rec::T){<j>},select?rng=B{*}&dom=rec(A{+}::T){<j>},select?rng=rec{?}&dom=rec(rec::T){<j>}}]
+==>docs::[obj=>select?rng=lst&dom=str(str::T){<j>},dom=>'a str to split by regex',rng=>'the regex capture groups (or full matches) of the lhs str',args=>[0=>'regex'],desc=>"""[mapper] split the lhs str by regex matches; if the regex has capture groups, each match is a lst of [fullMatch, group1, group2, ...], otherwise a flat lst of full matches
+   one-to-one obj transformation (dom_c = rng_c = 1)""",example=>["'abc.cde'.regex('[^.]+') [-- ['abc','cde'] --]","'abc.cde'.regex('.\..') [-- ['c.c'] --]","'241G'.regex('(\d+)([KMGT])') [-- [['241G','241','G']] --]"]]
 mtron> */a/b?docq
 ==>[q=>r,c=>plus(2),d=>[e=>[1.0,0xa5,true]]]
 ```
@@ -351,6 +342,9 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 
 **Protocol & services**
 
+* [llm instruction set](references/llm-instset-mtron.md) -- `/m/llm`: agents, models, features, skills and tools, and
+  the Model Context Protocol on both sides -- `mcp_client::T` over streamable-http + sse, websockets or stdio, and
+  `mcp_server::T` carried by http, ws or the process's own stdio (`bin/metatron --mcp`).
 * [MCP Server Architecture](references/mcp-server-architecture.md) -- building MCP servers in mtron: `mcp_wsHandler` /
   `mcp_mtron_wsHandler`, websocket routing, tool registration, `SpaceChatMemoryStore`, and the agent memory flow.
 * [MCP Server Notifications](references/mcp-server-notifications.md) -- server-to-client push via a `?subq` subscription

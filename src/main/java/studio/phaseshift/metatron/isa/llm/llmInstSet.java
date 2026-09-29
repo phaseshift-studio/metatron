@@ -842,7 +842,7 @@ public class llmInstSet extends AbstractInstSet {
                                 mutableMap(jnt(0), "the object to embed"), // args
                                 "embed an object with an llm", // desc
                                 "*<ollama:qwen3:latest>.embed('what is a database?')"),
-                        docWrap(instC(LLM_INST_TID.extend("interrupt").dom(LLM_AGENT_TID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {
+                        docWrap(instC(LLM_INST_TID.extend("interrupt").dom(LLM_AGENT_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
                             lhs.<Agent>as().interrupt();
                             return noobj();
                         }), "interrupt the agent mid-process"),
@@ -1009,7 +1009,7 @@ public class llmInstSet extends AbstractInstSet {
             new StageDef(ON_BEFORE_CHAT, "onBeforeChat", new Class<?>[]{Agent.class},
                     f -> instLambda(ALL.maybe(), ALL.maybeSome(), (agent, ignored) -> f.onBeforeChat((Agent) agent))),
             new StageDef(ON_PARTIAL_RESPONSE, "onPartialResponse", new Class<?>[]{Agent.class, Str.class},
-                    f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, i) -> {
+                    f -> instLambda(ALL.maybe(), NOOBJ_TID, (agent, i) -> {
                         f.onPartialResponse((Agent) agent, i.arg(0).asStr());
                         return noobj();
                     })),
@@ -1019,17 +1019,17 @@ public class llmInstSet extends AbstractInstSet {
                     f -> instLambda(ALL.maybe(), ALL.maybe(), (agent, i) ->
                             f.onPartialThinking((Agent) agent, i.arg(0)))),
             new StageDef(ON_PARTIAL_TOOL_CALL, "onPartialToolCall", new Class<?>[]{Agent.class, Inst.class},
-                    f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, i) -> {
+                    f -> instLambda(ALL.maybe(), NOOBJ_TID, (agent, i) -> {
                         f.onPartialToolCall((Agent) agent, (Inst) i.arg(0));
                         return noobj();
                     })),
             new StageDef(BEFORE_TOOL_EXECUTION, "beforeToolExecution", new Class<?>[]{Agent.class, Inst.class},
-                    f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, i) -> {
+                    f -> instLambda(ALL.maybe(), NOOBJ_TID, (agent, i) -> {
                         f.beforeToolExecution((Agent) agent, (Inst) i.arg(0));
                         return noobj();
                     })),
             new StageDef(ON_TOOL_EXECUTED, "onToolExecuted", new Class<?>[]{Agent.class, Obj.class},
-                    f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, i) -> {
+                    f -> instLambda(ALL.maybe(), NOOBJ_TID, (agent, i) -> {
                         f.onToolExecuted((Agent) agent, i.arg(0));
                         return noobj();
                     })),
@@ -1039,12 +1039,12 @@ public class llmInstSet extends AbstractInstSet {
                     f -> instLambda(ALL.maybe(), ALL.maybe(), (agent, i) ->
                             f.onToolResult((Agent) agent, i.arg(0), Str.Helper.cleanString(i.arg(1))))),
             new StageDef(ON_COMPLETE_RESPONSE, "onCompleteResponse", new Class<?>[]{Agent.class, ChatFrame.class},
-                    f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, i) -> {
+                    f -> instLambda(ALL.maybe(), NOOBJ_TID, (agent, i) -> {
                         f.onCompleteResponse((Agent) agent, (ChatFrame) i.arg(0));
                         return noobj();
                     })),
             new StageDef(ON_ERROR, "onError", new Class<?>[]{Agent.class, Fail.class},
-                    f -> instLambda(ALL.maybe(), NOOBJ_TID.zero(), (agent, ignored) -> {
+                    f -> instLambda(ALL.maybe(), NOOBJ_TID, (agent, ignored) -> {
                         f.onError((Agent) agent, null);
                         return noobj();
                     }))

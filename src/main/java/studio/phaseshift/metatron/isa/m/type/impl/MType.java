@@ -74,9 +74,11 @@ public class MType extends MObj implements Type {
         final fURI bigVID = null == vid ? null : vid.big();
         final fURI checkID = null == bigVID ? bigTID : bigVID;
         assert checkID != null;
+        if (checkID.isGeneric())
+            return new MType(Tuple.Pair.with(null, null), checkID, checkID);
         if (!checkID.basePath().equals(Tokens.REL_TID) && !checkID.basePath().equals(Tokens.LST_TID) && !checkID.basePath().equals(REC_TID) && !checkID.poly().isEmpty())
             throw MTronException.of("only poly types can have polynomials: %s {{r}}X=>{{X}} %s", checkID.basePath(), checkID.poly());
-        if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && !checkID.isGeneric() && Router.loaded()) { // TODO: remove the pattern constraint - why not a type be the set of other types?
+        if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && Router.loaded()) { // TODO: remove the pattern constraint - why not a type be the set of other types?
             Obj obj = Router.readFromSpace(checkID);
             obj = obj.selfTID(obj.tid().c(checkID.c()));
             if (obj.isType()) {
@@ -95,7 +97,7 @@ public class MType extends MObj implements Type {
             return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigTID);
         if (Objects.equals(bigVID, bigTID))
             return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
-        if ((null != vid && null != tid) || checkID.hasPattern() || checkID.isGeneric())
+        if ((null != vid && null != tid) || checkID.hasPattern())
             return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
         //throw MTronException.of("type not found: %s@%s", tid, vid); // TODO: a few cases fail --namely around equality checks. fix and then replace the bottom with this/
         return new MType(Tuple.Pair.with(predicate, constructor), null == bigTID ? checkID : bigTID, null == bigVID ? checkID : bigVID).c(checkID.c()).as();
@@ -123,7 +125,8 @@ public class MType extends MObj implements Type {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.tid(), this.jvm());
+        return Objects.hash(this.vid(), this.jvm());
+        //  return Objects.hash(this.vid(), this.tid());
     }
 
 }

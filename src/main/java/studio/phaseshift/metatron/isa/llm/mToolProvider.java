@@ -26,6 +26,9 @@ import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -40,6 +43,7 @@ public class mToolProvider implements ToolProvider {
     private final Set<mTool> toolSet = new LinkedHashSet<>();
     private final Set<ToolProvider> providers = new LinkedHashSet<>();
     private Agent agent = null;
+    private static final GraphittyLogger LOG = Graphitty.log(mToolProvider.class);
 
     public void addToolProvider(final ToolProvider provider) {
         this.providers.add(provider);
@@ -64,7 +68,11 @@ public class mToolProvider implements ToolProvider {
         final Map<ToolSpecification, ToolExecutor> map = new LinkedHashMap<>();
         this.providers.forEach(p -> map.putAll(p.provideTools(request).tools()));
         this.toolSet.forEach(t -> {
-            map.put(t.toolSpecification().get0(), ((mToolExecutor) t.toolSpecification().get1()).agent(this.agent));
+            final Tuple.Pair<ToolSpecification, ToolExecutor> spec = t.toolSpecification();
+            if (null == spec)
+                LOG.error("unable to load %s tool [ignoring]", t.name());
+            else
+                map.put(t.toolSpecification().get0(), ((mToolExecutor) t.toolSpecification().get1()).agent(this.agent));
         });
         return new ToolProviderResult(map);
     }

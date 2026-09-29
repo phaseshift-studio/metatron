@@ -128,7 +128,7 @@ public final class mcpMetatronBuilder {
         // ── tools ────────────────────────────────────────────────────────────
         if (!jvm.containsKey(uri(TOOL))) {
             final Rec tools = rec(mutableMap());
-            tools.at(uri(mTool.toolName(toolTid("write_memory"))), docWrap(instC(toolTid("write_memory").dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
+            tools.at(uri(mTool.toolName(toolTid("write_memory"))), docWrap(instC(toolTid("write_memory").dom(ALL.maybe()).rng(ALL.maybeSome()),
                             rec(uri("current_memory"), ALL_TYPE,
                                     uri("previous_memory").maybe().asUri(), URI_TYPE), (lhs, inst) -> {
                                 final Obj previousMemory = Router.readFromSpace(inst.arg(f("previous_memory"), 1).uriValue());
@@ -139,7 +139,7 @@ public final class mcpMetatronBuilder {
                     Map.of(uri("current_memory"), "the memory to remember -- e.g. a str::T, a markdown::T, etc.",
                             uri("previous_memory"), "a previous memory vid to chain current memory to"),
                     "(experimental) returns a memory relation of the form (current@<vid> => previous@<vid>)@<vid>"), MUTABLE);
-            tools.at(uri(mTool.toolName(toolTid("read_memory"))), docWrap(instC(toolTid("read_memory").dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
+            tools.at(uri(mTool.toolName(toolTid("read_memory"))), docWrap(instC(toolTid("read_memory").dom(ALL.maybe()).rng(ALL.maybeSome()),
                             rec(uri("memory_vid").maybe().asUri(), URI_TYPE), (lhs, inst) -> {
                                 final Obj memId = inst.arg(f("memory_vid"), 0);
                                 if (!memId.isNoObj())
@@ -151,7 +151,7 @@ public final class mcpMetatronBuilder {
                     "(experimental) returns the result of reading the provided memory"), MUTABLE);
             // eval_mtron — the foundational tool: evaluate metatron expressions
             tools.at(uri(mTool.toolName(toolTid("eval_mtron"))), docWrap(instC(
-                            f(mTool.toolName(toolTid("eval_mtron"))).dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
+                            f(mTool.toolName(toolTid("eval_mtron"))).dom(ALL.maybe()).rng(ALL.maybeSome()),
                             rec(uri(CODE), CODE_TYPE, uri(NATIVE).maybeSome(), BOOL_TYPE), (lhs, inst) -> {
                                 // code arrives already parsed to code::T by the schema-aware JSON
                                 // layer — no JSON-massaging here; just evaluate it.
@@ -172,7 +172,7 @@ public final class mcpMetatronBuilder {
                     "returns the result of evaluating the provided mtron expression"), MUTABLE);
             // list_space — return an index of currently accessible spaces
             tools.at(uri(mTool.toolName(toolTid("list_space"))), docWrap(instC(
-                            toolTid("list_space").dom(NOOBJ_TID.zero()).rng(ALL.maybe()),
+                            toolTid("list_space").dom(ALL.maybe()).rng(ALL.maybe()),
                             lst(), (lhs, inst) -> {
                                 final Map<Obj, Obj> spaces = new LinkedHashMap<>();
                                 Router.global().spaces().jvm().entrySet().forEach(kv -> {
@@ -184,7 +184,7 @@ public final class mcpMetatronBuilder {
 
             // router_info — router vid, tid, and space count
             tools.at(uri(mTool.toolName(toolTid("router_info"))), docWrap(instC(
-                    toolTid("router_info").dom(NOOBJ_TID.zero()).rng(ALL.maybe()),
+                    toolTid("router_info").dom(ALL.maybe()).rng(ALL.maybe()),
                     lst(), (lhs, inst) -> {
                         if (!Router.loaded()) return str("router not loaded");
                         final Router router = Router.global();
@@ -197,7 +197,7 @@ public final class mcpMetatronBuilder {
 
             // find_inst — gets lst of loaded /m instructions and documentation
             tools.at(uri(mTool.toolName(toolTid("find_inst"))), docWrap(instC(
-                            toolTid("find_inst").dom(NOOBJ_TID.zero()).rng(ALL.maybe()),
+                            toolTid("find_inst").dom(ALL.maybe()).rng(ALL.maybe()),
                             rec(uri(PATTERN), URI_TYPE,
                                     uri(DOM).maybe(), URI_TYPE,
                                     uri(RNG).maybe(), URI_TYPE), (lhs, inst) -> {
@@ -220,7 +220,7 @@ public final class mcpMetatronBuilder {
                     "find_inst(plus?int<=int)"), MUTABLE);
             // spawn_wsclient — create a websocket client
             tools.at(uri(mTool.toolName(toolTid("spawn_wsclient"))), docWrap(instC(
-                            toolTid("spawn_wsclient").dom(NOOBJ_TID.zero()).rng(WS_CLIENT_TID),
+                            toolTid("spawn_wsclient").dom(ALL.maybe()).rng(WS_CLIENT_TID),
                             rec(uri(HOST), URI_TYPE, uri(ON_MESSAGE), INST_TYPE), (lhs, inst) -> new WebSocketRecClient(
                                     new WebSocketRec(
                                             new LinkedHashMap<>(inst.args().jvm()),
@@ -233,7 +233,7 @@ public final class mcpMetatronBuilder {
 
             // spawn_wshandler — create a websocket handler
             tools.at(uri(mTool.toolName(toolTid("spawn_wshandler"))), docWrap(instC(
-                            toolTid("spawn_wshandler").dom(NOOBJ_TID.zero()).rng(WS_HANDLER_TID),
+                            toolTid("spawn_wshandler").dom(ALL.maybe()).rng(WS_HANDLER_TID),
                             rec(uri(HOST), URI_TYPE, uri(ON_MESSAGE), INST_TYPE), (lhs, inst) -> {
                                 final WebSocketRec server = new WebSocketRec(
                                         new LinkedHashMap<>(inst.args().jvm()),

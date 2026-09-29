@@ -45,7 +45,7 @@ public final class Tokens {
     public static final fURI OBJS_TID = M_ISA_TID.extend("objs");
     public static final fURI TYPE_TID = M_ISA_TID.extend("type");
     public static final fURI CODE_TID = M_ISA_TID.extend("code");
-    public static final fURI NOOBJ_TID = f("noobj");
+    public static final fURI NOOBJ_TID = f("noobj").zero();
     public static final fURI BOOL_TID = M_ISA_TID.extend("bool");
     public static final fURI REL_TID = M_ISA_TID.extend("rel");
     public static final fURI LST_TID = M_ISA_TID.extend("lst");
@@ -378,10 +378,13 @@ public final class Tokens {
     public static final String GENERIC_BINDING = "generic_binding";
     public static final String INST_COMPOSITION = "inst_composition";
     public static final String PER_INST = "per_inst";
-    public static final String COEFF_IN = "coeff_in";
-    public static final String COEFF_OUT = "coeff_out";
+    public static final String C_IN = "c_in";
+    public static final String C_OUT = "c_out";
+    public static final String C_DOM = "c_dom";
+    public static final String C_RNG = "c_rng";
+    public static final String F = "f"; // function the instruction wraps ("<j>" = opaque java body, or the mtron body itself)
     public static final String MONADS = "monads";
-    public static final String COEFF_SUM = "coeff_sum";
+    public static final String C_SUM = "c_sum";
     public static final String PROCESSORS = "processors";
     public static final String HITS = "hits";
     public static final String MISSES = "misses";

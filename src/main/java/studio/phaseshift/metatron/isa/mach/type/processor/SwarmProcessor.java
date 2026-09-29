@@ -297,7 +297,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
             final String name = submittedInsts.isEmpty() ? "" : submittedInsts.getFirst().tid().name();
             if (!"profile".equals(name) && !"explain".equals(name)
                     && !"profile_compute".equals(name) && !"explain_compute".equals(name))
-                LOG.warn("processor %s evaluating a %d-instruction code sequence: %s", this.vid(), submittedInsts.size(), submitted);
+                LOG.warn("processor %s evaluating a %d-instruction code sequence: %s [parent:%s]", this.vid(), submittedInsts.size(), submitted, this.parent());
         }
         Router.global().stats().monadicStats().resetMonads();
         final Code code = this.resolve(this.at(START)).code();

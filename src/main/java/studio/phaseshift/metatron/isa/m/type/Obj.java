@@ -56,7 +56,6 @@ import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -1356,7 +1355,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any obj", "the uri (if possible) that refers to the obj arg", Map.of(jnt(0), "the obj to reference"), "like !*(vid), except that the obj arg is converted to an !* reference (an inverse dereference) immediately upon inst access (no inst apply required)."),
                     docWrap(instC(CATCH_INST_TID.dom(A).rng(C.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> lhs.isFail() && !lhs.isCaughtFail() ? inst.arg(0).apply(lhs.asFail().caught()).c(c -> c.mult(lhs.c())) : lhs),
                             "any obj", "uncaught fails go to arg, others mapped by identity", Map.of(jnt(0), "the obj triggered on an uncaught fail"), "a catch function f(x)->x"),
-                    docWrap(instC(END_INST_TID.dom(ALL_STAR).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
+                    docWrap(instC(END_INST_TID.dom(ALL_STAR).rng(NOOBJ_TID), lst(), (lhs, inst) -> noobj()),
                             "terminal objs", "noobj", Map.of(), "the terminal function \\(f(x)\\to \\emptyset\\)"),
                     docWrap(instC(PRINTLN_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none("%s", o.isStr() ? o.strValue() : o.toString())).filter(x -> false).findAny().orElse(lhs).stream().peek(x -> inst.logger().none(lineSeparator())))),
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
@@ -1474,14 +1473,16 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "@a >>= [b=>[c=>+3]]     [-- [b=>[c=>5]]@a     --]",
                             "@a >>= [b=>+[c=>4]]     [-- [b=>[c=>{5,4}]]@a --]",
                             "@a >>= [b=>[c=>sum()]]  [-- [b=>[c=>9]]@a     --]"),
-                    instC(EXPLAIN_INST_TID.dom(A.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> {
+                    instC(EXPLAIN_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> {
                         // explain_rewrite handles normal case; bare explain() is a no-op
                         return lhs;
                     }),
-                    instC(PROFILE_INST_TID.dom(A.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> {
-                        // profile_timing rewrite handles normal case; bare profile() is a no-op
-                        return lhs;
-                    }),
+                    docWrap(instC(PROFILE_INST_TID.dom(ALL.maybe()).rng(PROFILING_TID), lst(), (lhs, inst) -> {
+                                // profile_timing rewrite handles normal case; bare profile() is a no-op
+                                return lhs;
+                            }), "generates a profiling::T analysis of the current expression",
+                            "*<http://markorodriguez.com>.as(rec::T)>>html/head/title.profile()",
+                            "*<http://markorodriguez.com>.as(rec::T)>>html/head/title.profile()>>format"),
                     instC(REIFY_INST_TID.dom(A).rng(REC_TID), lst(), (lhs, inst) -> rec(
                             "type", rec(
                                     "tid", rec(

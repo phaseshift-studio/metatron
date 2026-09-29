@@ -20,7 +20,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrapDocs;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
@@ -100,7 +100,7 @@ public class SkillFeature extends AbstractFeature implements SkillService {
 
     @Override
     public Obj onBeforeChat(final Agent agent) {
-        agent.requireService(ToolService.class).addTool(mTool.tool(docWrapDocs(instC(f("list_skills").dom(NOOBJ.zero()).rng(LST_TID), lst(),
+        agent.requireService(ToolService.class).addTool(mTool.tool(docWrapDocs(instC(f("list_skills").dom(ALL.maybe()).rng(LST_TID), lst(),
                         (lhs, inst) -> lst(this.skillRegistry.values().stream().map(mSkill::toSkill).toList().stream().map(s -> (Obj) lst(str(s.name()), str(s.description()))).toList())),
                 "no domain",
                 "a lst[lst[str,str]] of skills",

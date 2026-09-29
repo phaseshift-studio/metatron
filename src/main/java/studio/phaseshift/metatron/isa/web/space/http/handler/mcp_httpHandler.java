@@ -178,7 +178,7 @@ public class mcp_httpHandler extends HttpRec {
             Router.global().write(outbox.extend("#").addQ(SUBQ),
                     rec(mutableMap(
                                     uri(TARGET), uri(outbox.extend("#")),
-                                    uri(CODE), instC(f("mcp_sse_push").dom(LST_TID).rng(NOOBJ_TID.zero()), lst(),
+                                    uri(CODE), instC(f("mcp_sse_push").dom(LST_TID).rng(NOOBJ_TID), lst(),
                                             (lhs, inst) -> {
                                                 try {
                                                     sse.send("message", this.JSON.write(lhs.asLst().at(1)).toString());

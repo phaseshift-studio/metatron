@@ -259,6 +259,7 @@ public class TypeTest extends AbstractMetatronTest {
             "noobj               | A{?}::T                                    | true",
             "{0}noobj            | abc{+}::T                                  | false",
             "1                   | noobj::T                                   | false",
+            "1                   | noobj{0}::T                                | false",
             "1                   | str::T                                     | false",
             "1                   | lst::T                                     | false",
             "1                   | int::T                                     | true",
@@ -303,7 +304,6 @@ public class TypeTest extends AbstractMetatronTest {
             "{0,1}               | int{2}::T[is(gt(0))]                         | false",
             "{0,0}               | int{2}::T[is(gt(1))]                       | false",
             "{0,-1}               | int{2}::T[is(gt(1))]                        | false",
-            //  "1               | int^:is(gt(0))                               | false"},
     },
             delimiter = '|')
     public void testTypeObj(final String obj, final String type, final boolean matches) {
@@ -362,7 +362,7 @@ public class TypeTest extends AbstractMetatronTest {
             "int::T              | 0                                          | false",
             "0                   | int::T                                     | true",
             "0                   | nat::T                                     | false",
-            // "int::T              | nat::T + int::T                            | true",
+            "int::T              | nat::T + int::T                            | true",
             //"0                   | nat::T[mult(int::T)]                                        | false",
             "0                   | int::T[is(or(matches(int::T),matches(real::T)))]            | true",
             "0                   | int::T[is(or(matches(str::T),matches(real::T)))]            | false",
@@ -778,7 +778,7 @@ public class TypeTest extends AbstractMetatronTest {
             "[age=>2]                                                            % lst::T                % false",
             "[age=>2]                                                            % being::T              % true",
             "[age=>'2']                                                          % being::T              % false",
-            "{mortal::[age=>2],mortal::[age=>3]}                                 % rec{2}::T             % true",
+            "{mortal::[age=>2],mortal::[age=>3]}                                 % {rec::T,rec::T}       % true",
             "{mortal::[age=>2],mortal::[age=>3]}                                 % being{2}::T           % true",
             "mortal::[age=>2]                                                    % being::T              % true",
             "being::[age=>2]                                                     % being::T              % true",
