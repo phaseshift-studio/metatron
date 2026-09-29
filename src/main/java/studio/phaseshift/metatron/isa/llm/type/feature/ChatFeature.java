@@ -178,7 +178,7 @@ public class ChatFeature extends AbstractFeature implements ChatService {
                                   
                                   "The magic number ${ 1 + ${ 2 + ${ 3 } + 4 } + 5 } wasn't so magical once I knew what it was."
                                   """.formatted(agent.vidOrTid())),
-                uri(TOOL), lst(docWrap(instC(CHAT_INST_TID.dom(NOOBJ_TID.zero()).rng(LLM_CHAT_RESULT_TID),
+                uri(TOOL), lst(docWrap(instC(CHAT_INST_TID.dom(NOOBJ_TID).rng(LLM_CHAT_RESULT_TID),
                                 lst(STR_TYPE),
                                 (lhs, inst) -> agent.chat(inst.arg(0).strValue())),
                         "noobj lhs",

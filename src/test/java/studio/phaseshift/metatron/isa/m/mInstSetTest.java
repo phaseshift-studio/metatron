@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -195,10 +196,10 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.map(_)                                                                     % 1",
             "1.map(noobj)                                                                 % noobj",
             "1.map?int{?}<=int(noobj)                                                     % noobj",
-            "1.map?noobj{0}<=int(noobj)                                                   % noobj",
-            "1.map?noobj<=int(noobj)                                                      % noobj",
-            "1.map?noobj{0}<=int(int{0}::100)                                             % noobj",
-            "1.map?noobj<=int(int{0}::100)                                                % noobj",
+            "1.map?{0}<=int(noobj)                                                        % noobj",
+            "1.map?{0}<=int(noobj)                                                        % noobj",
+            "1.map?{0}<=int(int{0}::100)                                                  % noobj",
+            "1.map?{0}<=int(int{0}::100)                                                  % noobj",
             "{1,2,3,4}.map(_).plus(2)                                                     % {3,4,5,6}",
             "{1,2,3,4}.map(+2)                                                            % {3,4,5,6}",
             "{1,2,3,4}.inst(_,+1,+2){ map(*0).plus(*1).plus(*2) }                         % {6,9,12,15}",
@@ -282,9 +283,9 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,2,3}>-[noobj]                                                       % [1,2,3,noobj]",
             "[1=>2,2=>3,3=>4]>-                                                     % {1=>2,2=>3,3=>4}",
             "[1=>2,2=>3,3=>4].type()                                                % rec::T",
-            "[1=>2,2=>3,3=>4]>-.type()                                              % rel{3}::T",
+            "[1=>2,2=>3,3=>4]>-.type?#<=#{*}()                                      % rel{3}::T",
             "[(1=>2),(2=>3),(3=>4)].type()                                          % lst::T",
-            "[(1=>2),(2=>3),(3=>4)]>-.type()                                        % rel{3}::T",
+            "[(1=>2),(2=>3),(3=>4)]>-.type()                                        % {rel::T,rel::T,rel::T}",
             "[1=>2,2=>3,3=>4]>-.>-[noobj=>noobj]                                    % [1=>2,2=>3,3=>4]",
             "[z=>c,2=>3,a=>f]>-.>-[noobj=>noobj]                                    % [z=>c,2=>3,a=>f]",
             "{1,2}>-[3,4]                                                           % [1,2,3,4]",
@@ -1195,13 +1196,43 @@ public class mInstSetTest extends AbstractInstSetTest {
             output = "{{{expected}}}")
     @ParameterizedTest
     @CsvSource(value = {
-            "map(1.plus(2).explain()).type()                     % str::T      % explain returns str type",
-            "1.plus(2).explain().plus(2)                         % 5           % explain is no-op mid-chain",
-            "map(1.plus(2).explain()).has('op').count().gt(0)    % true        % explain table has op column",
-            "explain()                                           % noobj       % bare explain returns noobj (no lhs)",
+            "map(1.plus(2).explain()).type()                     % rec::T       % explanation is a rec (refinement rides the value: @explanation)",
+            "1.plus(2).explain()>>desc>>rng                      % int          % expression-level head (whole rng)",
+            "1.plus(2).explain()>>desc>>dom                      % noobj{0}     % expression-level start (whole dom)",
+            "1.plus(2).explain()>>desc>>insts                    % 2            % inst count in desc metadata",
+            "1.plus(2).explain()>>per_inst>>1>>op                % plus         % per-inst stage recs",
+            "1.plus(2).explain()>>per_inst>>1>>form              % mapper       % per-inst form classification",
+            "1.plus(2).explain()>>per_inst>>1>>args              % [2]          % the arg as its own obj, not a string",
+            "1.plus(2).explain()>>per_inst>>0>>args              % [1]          % start's literal, its own obj",
+            "1.plus(2).explain()>>per_inst>>1>>c_rng             % 1            % per-inst range coefficient",
     }, delimiter = '%')
     public void testExplain(final String code, final String expected, final String desc) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @Training.SkipTraining(reason = "multi-line structural assertion")
+    @Test
+    public void testExplainRecStructure() {
+        final Obj r = ObjmtronSerializer.eval("1.plus(2).explain()");
+        assertFalse(r.isFail(), "explain() should not fail: " + r);
+        assertTrue(r.toString().contains("desc"), "explain rec should carry desc metadata: " + r);
+        assertTrue(r.toString().contains("per_inst"), "explain rec should carry per-inst stages: " + r);
+        assertTrue(r.toString().contains("plus"), "per-inst stages should list plus: " + r);
+        assertTrue(r.toString().contains("mapper"), "per-inst stages should carry the form classification: " + r);
+        assertTrue(r.toString().contains("format"), "explain rec should carry the lazy format: " + r);
+    }
+
+    @Training.SkipTraining(reason = "multi-line structural assertion")
+    @Test
+    public void testExplainFormatRendersTextTable() {
+        // the lazy `>>format` is materialized with a NOOBJ lhs in the interactive console; the
+        // harness chain applies it with the rec as lhs, which the noobj dom rejects — so pull
+        // the lazy inst out of the rec and apply it the console way
+        final Obj r = ObjmtronSerializer.eval("1.plus(2).explain()");
+        assertFalse(r.isFail(), "explain() should not fail: " + r);
+        final Obj fmt = r.asRec().atDirect("format");
+        final Obj t = fmt.isCall() ? fmt.asCall().apply(NoObj.noobj()) : fmt;
+        assertTrue(t.toString().contains("plus"), "the format should render the insts of the text table: " + t);
     }
 
     @ParameterizedTest

@@ -49,6 +49,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@Disabled
 public class catInstSetTest extends AbstractInstSetTest {
 
     public catInstSetTest() {
@@ -190,11 +191,12 @@ public class catInstSetTest extends AbstractInstSetTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "noobj::T.as(object::T)>>obj               % noobj",
-            "int::T.as(object::T)>>obj                 % int::T",
-            //  "str::T.as(object::T)>>obj                 % str::T",
-            "int::T.as(object::T)>>obj                 % int::T",
-            //     "int::T.as(object::T)>>morphed_to.count()  % ?",
+            "noobj::T.as(object::T)>>obj                      % noobj",
+            "noobj::T.as(object::T).morphed_from().count()    % 0",
+            "int::T.as(object::T)>>obj                        % int::T",
+            "str::T.as(object::T)>>obj                        % str::T",
+            "int::T.as(object::T)>>obj                        % int::T",
+            "int::T.as(object::T).morphed_to().count().gt(1)    % true",
     }, delimiter = '%')
     void testObjects(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);

@@ -75,7 +75,7 @@ public final class noobjSpace implements Space, InstSet {
 
     @Override
     public fURI pattern() {
-        return NOOBJ_TID.zero();
+        return NOOBJ_TID;
     }
 
     @Override

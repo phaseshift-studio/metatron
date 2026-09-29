@@ -103,12 +103,19 @@ async def repl(url):
             except (EOFError, KeyboardInterrupt):
                 print()
                 return
-            if not line.strip():
+            try:
+                if not line.strip():
+                    continue
+                if line.strip() in (":help"):
+                    print(rf"""connection: {url}""")
+                    continue
+                if line.strip() in (":quit", ":exit"):
+                    print()
+                    return
+                await ws.send(line)
+            except:
+                print(RED + "==>ERROR")
                 continue
-            if line.strip() in (":quit", ":exit"):
-                print()
-                return
-            await ws.send(line)
             try:
                 result = await asyncio.wait_for(ws.recv(), 30)
                 text = result.decode() if isinstance(result, bytes) else str(result)
@@ -117,6 +124,7 @@ async def repl(url):
                 print(GREEN + "==>" + NC + text.replace("\n", "\n   "))
             except asyncio.TimeoutError:
                 print(RED + "==>ERROR: " + NC + "timed out")
+                continue
 
 
 def main():

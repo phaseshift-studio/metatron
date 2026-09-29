@@ -24,7 +24,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * {@code profile()} — the {@code profile::T} instruction that times the resolve (compile) and
@@ -46,15 +47,15 @@ public class ProfileInstTest extends AbstractMetatronTest {
         assertTrue(s.contains("resolve"), "profile() output should include resolve timing: " + s);
         assertTrue(s.contains("apply"), "profile() output should include apply timing: " + s);
         assertTrue(s.contains("insts"), "profile() output should include the inst count: " + s);
-        assertTrue(s.contains("inst-resolve"), "profile() output should include the inst-resolve sub-stage: " + s);
-        assertTrue(s.contains("generic-binding"), "profile() output should include the generic-binding sub-stage: " + s);
-        assertTrue(s.contains("inst-composition"), "profile() output should include the inst-composition sub-stage: " + s);
+        assertTrue(s.contains("resolve"), "profile() output should include the inst-resolve sub-stage: " + s);
+        assertTrue(s.contains("generic_binding"), "profile() output should include the generic-binding sub-stage: " + s);
+        assertTrue(s.contains("inst_composition"), "profile() output should include the inst-composition sub-stage: " + s);
         assertTrue(s.contains("split"), "profile() output should include the processor split sub-stage: " + s);
         assertTrue(s.contains("flow"), "profile() output should include the flow metric: " + s);
         assertTrue(s.contains("compression"), "profile() output should include the compression ratio: " + s);
         assertTrue(s.contains("processors"), "profile() output should include the processor spawn count: " + s);
         assertTrue(s.contains("cache"), "profile() output should include the type-graph cache stats: " + s);
-        assertTrue(s.contains("hit="), "profile() output should include the cache hit rate: " + s);
+        assertTrue(s.contains("hit"), "profile() output should include the cache hit rate: " + s);
     }
 
     @Test

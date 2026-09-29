@@ -108,7 +108,7 @@ public class InstTest extends AbstractObjTest {
             LOG.warn("resolution algorithm generates matching, but not equal final resolution -- skipping equality checks\n\t%s ~ %s", resultA, resolutionA);
         else
             assertEquals(resolutionA, resultA);
-        assertTrue(resolutionA.test(resultA));
+        assertTrue(resolutionA.test(resultA), resolutionA + "---" + resultA);
         assertTrue(resultA.tid().test(resolutionA.tid()));
         //    assertTrue(resultA.test(specA));
         assertTrue(resultA.tid().test(specA.tid()));

@@ -463,7 +463,7 @@ public class mcpServer extends MRec {
         final fURI outbox = this.subscriptionOutbox(id);
         Router.global().write(target.addQ(SUBQ), rec(mutableMap(
                 uri(TARGET), uri(target),
-                uri(CODE), instC(f("mcp_resource_updated").dom(LST_TID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {
+                uri(CODE), instC(f("mcp_resource_updated").dom(LST_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
                     final Obj changed = lhs.asLst().at(0);
                     final Obj value = lhs.asLst().at(1);
                     Router.global().write(outbox, rec(mutableMap(

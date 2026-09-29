@@ -18,11 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -203,8 +199,7 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
         this.responseLatch = new CountDownLatch(1);
         this.lastResponse.set(null);
         this.webSocket.sendText(message, true);
-        final boolean received = responseLatch.await(getWsTimeoutSeconds(), TimeUnit.SECONDS);
-        if (!received) return null;
+        this.responseLatch.await(getWsTimeoutSeconds(), TimeUnit.SECONDS);
         return this.lastResponse.get();
     }
 

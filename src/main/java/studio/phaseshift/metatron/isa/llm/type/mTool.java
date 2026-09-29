@@ -162,14 +162,18 @@ public class mTool extends MRec {
     }
 
     public Tuple.Pair<ToolSpecification, ToolExecutor> toolSpecification() {
-        return mtronInstToolSpecification(doc(this.at(INST).asInst()));
+        try {
+            return mtronInstToolSpecification(doc(this.at(INST).asInst()));
+        } catch (final Exception e) {
+            return null;
+        }
     }
 
     public static Tuple.Pair<ToolSpecification, ToolExecutor> mtronInstToolSpecification(final QCollection.Docs doc) {
         final Inst inst = doc.atDirect(uri(OBJ));
         JsonObjectSchema.Builder parameters = new JsonObjectSchema.Builder();
         List<String> required = new ArrayList<>();
-        if (!inst.tid().dom().isZero()) {
+        if (!inst.tid().dom().isZero() && !inst.tid().dom().equals(ALL.maybe())) { // TODO: this is a hack to not confuse agents (if the dom is #{?} just don't show them the possibility of a lhs)
             parameters.addProperty(LHS, objToSchema(inst.dom(), Type.Helper.polyTypePredicateObj(inst.dom()), doc.at(DOM).orElse(str("<no description>")).strValue()));
             if (!inst.tid().dom().c().isZeroable())
                 required.add(LHS);

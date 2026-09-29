@@ -42,6 +42,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
@@ -167,18 +168,18 @@ public abstract class AbstractConceptFeature extends AbstractFeature implements 
                 uri(DESC), str("in situ concept graph construction w/ spreading activation recommendation"),
                 uri(CONTENT), str(content + "\nconcept::T is defined as\n%s\n".formatted(CommonUtil.indent(LLM_CONCEPT_TYPE.toString(), 2))),
                 uri(TOOL), lst(
-                        docWrap(instC(MESSAGES_INST_TID.dom(NOOBJ_TID.zero()).rng(STR_TID.maybeSome()),
+                        docWrap(instC(MESSAGES_INST_TID.dom(ALL.maybe()).rng(STR_TID.maybeSome()),
                                         lst(URI_TYPE),
                                         start_(jnt(0)).from_(uri("0")).dedup_().swap_(block_(mult_(uri(this.getRoot(agent))))).from_(id_()).select_(uri(f("message").extend("+").extend("text"))).tryToInst()),
-                                "noobj",
+                                null,
                                 "a stream of message texts",
                                 Map.of(jnt(0), "a concept uri"),
                                 "fetches past messages associated with the concept",
                                 MESSAGES_INST_TID + "(metatron) [-- returns messages discussing metatron --]"),
-                        docWrap(instC(CONCEPTS_INST_TID.dom(NOOBJ_TID.zero()).rng(LST_TID.maybeSome()),
+                        docWrap(instC(CONCEPTS_INST_TID.dom(ALL.maybe()).rng(LST_TID.maybeSome()),
                                         lst(URI_TYPE),
                                         start_(jnt(0)).from_(uri("0")).dedup_().swap_(block_(mult_(uri(this.getRoot(agent))))).from_(id_()).select_(uri("concept")).tryToInst()),
-                                "noobj",
+                                null,
                                 "a lst of related concepts as auto_ats",
                                 Map.of(jnt(0), "a concept uri"),
                                 "fetches concepts associated with the provided concept"))))));

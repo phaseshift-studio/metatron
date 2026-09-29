@@ -29,7 +29,6 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
-import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;

@@ -63,6 +63,7 @@ import static org.petitparser.parser.primitive.CharacterParser.noneOf;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
+import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.and_;
@@ -1182,9 +1183,9 @@ public class mParser {
                 "unclosed double-quote — missing closing '\"'")
                 .map(t -> t.toString().substring(1, t.toString().length() - 1));
         final Parser tripleQuote = labeled(seq(
-                of('"').repeat(3, 3),
-                any().starLazy(of('"').repeat(3, 3)),
-                of('"').repeat(3, 3)).flatten(),
+                        of('"').repeat(3, 3),
+                        any().starLazy(of('"').repeat(3, 3)),
+                        of('"').repeat(3, 3)).flatten(),
                 "unclosed triple-quote — missing closing '\"\"\"'")
                 .map(t -> t.toString().substring(3, t.toString().length() - 3));
         return seq(m_type_prefix(Tokens.STR_TID), choice(tripleQuote, singleQuote, doubleQuote), m_vid_postfix())
@@ -1212,7 +1213,7 @@ public class mParser {
                 opt(seq(of('['), opt(m_obj(), null), of(']')).map(t -> pick(t, 1)), null),
                 opt(seq(of('['), opt(m_obj(), null), of(']')).map(t -> pick(t, 1)), null),
                 choice(m_furi_coefficient().map(t -> Tokens.TYPE_TID.c(cInt.of(t.toString()))), m_vid_postfix()))
-                .map(t -> T(Tuple.Pair.with(pick(t, 2), pick(t, 3)), pick(t, 0), pick(t, 4)));
+                .map(t -> T(Tuple.Pair.with(pick(t, 2), pick(t, 3)), pick(t, 0).toString().equals("noobj") ? NOOBJ_TID : pick(t, 0), pick(t, 4)));
     }
 
     public static Parser m_code() {

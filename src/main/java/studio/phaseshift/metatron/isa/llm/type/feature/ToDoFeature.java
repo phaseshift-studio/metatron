@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
@@ -81,12 +82,12 @@ public class ToDoFeature extends AbstractFeature {
                         CommonUtil.indent(null == conceptFeature ? "<no concepts>" : "*<" + conceptFeature.root(agent).extend("concept_name") + ">", 2),
                         CommonUtil.indent(null == messageFeature ? "<no messages>" : "*<" + messageFeature.root(agent).extend("message_id").toString() + ">", 2))),
                 uri(TOOL), lst(
-                        docWrap(instC(f("get_todo").dom(NOOBJ_TID.zero()).rng(LST_TID.poly(LLM_TODO_TID.maybeSome())), lst(), (lhs, inst) -> Router.readFromSpace(this.getRoot(agent)).orElse(lst())),
+                        docWrap(instC(f("get_todo").dom(ALL.maybe()).rng(LST_TID.poly(LLM_TODO_TID.maybeSome())), lst(), (lhs, inst) -> Router.readFromSpace(this.getRoot(agent)).orElse(lst())),
                                 "noobj",
                                 "a todo lst",
                                 Map.of(),
                                 "retrieve an ordered lst of todos"),
-                        docWrap(instC(f("add_todo").dom(NOOBJ_TID.zero()).rng(LST_TID.poly(LLM_TODO_TID.maybeSome())), rec(uri(TODO), LLM_TODO_TYPE, uri(INDEX).maybe(), INT_TYPE), (lhs, inst) -> {
+                        docWrap(instC(f("add_todo").dom(ALL.maybe()).rng(LST_TID.poly(LLM_TODO_TID.maybeSome())), rec(uri(TODO), LLM_TODO_TYPE, uri(INDEX).maybe(), INT_TYPE), (lhs, inst) -> {
                                     Lst todoLst = Router.readFromSpace(this.getRoot(agent)).orElse(lst());
                                     final Rec todo = inst.arg(TODO, 0).asRec().tid(LLM_TODO_TID);
                                     if (todo.at(STATUS).isNoObj())
@@ -113,7 +114,7 @@ public class ToDoFeature extends AbstractFeature {
                                 }), "noobj", "an updated todo lst",
                                 Map.of(uri(TODO), "the todo item to add to the todo lst",
                                         uri(INDEX).maybe(), "the index in the lst to add the todo (default: end of lst)"), "add a new item to the todo lst"),
-                        docWrap(instC(f("remove_todo").dom(NOOBJ_TID.zero()).rng(LST_TID.poly(LLM_TODO_TID.maybeSome())), rec(uri(INDEX), INT_TYPE), (lhs, inst) -> {
+                        docWrap(instC(f("remove_todo").dom(ALL.maybe()).rng(LST_TID.poly(LLM_TODO_TID.maybeSome())), rec(uri(INDEX), INT_TYPE), (lhs, inst) -> {
                                     Lst todoLst = Router.readFromSpace(this.getRoot(agent)).orElse(lst());
                                     final int index = inst.arg(INDEX, 0).intValue().intValue();
                                     final String text = todoLst.lstValue().remove(index).strValue();

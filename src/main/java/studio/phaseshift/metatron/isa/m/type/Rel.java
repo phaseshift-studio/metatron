@@ -49,9 +49,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>, PlusMonoid.O<Rel> {
-
-    Type REL_TYPE = Type.Builder.build().tid(Tokens.REL_TID).vid(Tokens.REL_TID).create();
-
+    
     @Override
     Rel clone(final Object jvm, final fURI tid, final fURI vid);
 

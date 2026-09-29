@@ -26,6 +26,7 @@ import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -65,7 +66,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public Poly args() {
-        return lst();
+        return lst().zero();
         //throw MTronException.of("%s has no accessible arguments", this);
     }
 
@@ -76,7 +77,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public fURI tid() {
-        return NOOBJ_TID.zero();
+        return NOOBJ_TID;
     }
 
     @Override
@@ -86,7 +87,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public fURI vid() {
-        return NOOBJ_TID.zero();
+        return NOOBJ_TID;
     }
 
     @Override
@@ -106,7 +107,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public boolean test(final Obj rhs) {
-        return rhs.isNoObj() || rhs.c().isZeroable() || rhs.tid().equals(NOOBJ_TID);
+        return rhs.isNoObj() || rhs.c().isZeroable() || (rhs.hasVID() && rhs.vid().equals(NOOBJ_TID)) || rhs.tid().equals(NOOBJ_TID);
     }
 
     @Override
@@ -166,7 +167,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public f f() {
-        return f.of(o -> NoObj.noobj());
+        return f.of(o -> this);
     }
 
     @Override
@@ -181,12 +182,12 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public Type rng() {
-        return NoObj.noobj().type();
+        return NOOBJ_TYPE;
     }
 
     @Override
     public fURI uriValue() {
-        return fURI.Singleton.NOOBJ;
+        return NOOBJ_TID;
     }
 
     @Override
@@ -203,6 +204,16 @@ public final class NoObj implements Obj, Inst {
     public List<Obj> lstValue() {
         return List.of();
     }
+
+    @Override
+    public Map<Obj, Obj> recValue() {
+        return Map.of();
+    }
+
+   /* @Override
+    public List<Inst> codeValue() {
+        return List.of(this);
+    }*/
 
     @Override
     public Double realValue() {

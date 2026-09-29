@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrapDocs;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_SERVICE_TID;
@@ -110,7 +110,7 @@ public class ToolFeature extends AbstractFeature implements ToolService {
     @Override
     public Obj onBeforeChat(final Agent agent) {
         this.toolProvider.agent(agent);
-        this.addTool(mTool.tool(docWrapDocs(instC(f("list_tools").dom(NOOBJ.zero()).rng(LST_TID), lst(),
+        this.addTool(mTool.tool(docWrapDocs(instC(f("list_tools").dom(ALL.maybe()).rng(LST_TID), lst(),
                         (lhs, inst) -> lst(agent.requireService(ToolService.class).tools())),
                 "no domain",
                 "a lst of tools",

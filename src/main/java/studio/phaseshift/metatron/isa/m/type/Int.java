@@ -43,8 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  */
 public interface Int extends Mono, Ring.O<Int> {
-
-
+    
     Int ZERO = jnt(0L);
     Int ONE = jnt(1L);
 

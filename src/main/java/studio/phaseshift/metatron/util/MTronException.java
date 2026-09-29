@@ -23,12 +23,15 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static studio.phaseshift.metatron.Tokens.DEBUG;
 
 public class MTronException extends RuntimeException {
 
@@ -59,7 +62,7 @@ public class MTronException extends RuntimeException {
 
     /**
      * @return the execution stack snapshot captured on this exception, or
-     *         {@code null} when no frame was in flight at creation
+     * {@code null} when no frame was in flight at creation
      */
     public String mtronTrace() {
         return this.mtronTrace;
@@ -151,8 +154,8 @@ public class MTronException extends RuntimeException {
         // invocation are the JEP 513 flexible bodies — preview only here),
         // so the suffix is composed inline
         super(null == cause ? Graphitty.string(message) :
-                    Graphitty.string((message != null ? message : "(null)").replace("%", "%%") + originSuffix(cause)),
-               null == cause ? null : cause);
+                        Graphitty.string((message != null ? message : "(null)").replace("%", "%%") + originSuffix(cause)),
+                null == cause ? null : cause);
     }
 
     private MTronException(final String message) {
@@ -376,6 +379,14 @@ public class MTronException extends RuntimeException {
             return function.get();
         } catch (final Exception e) {
             throw MTronException.of(convert(e));
+        }
+    }
+
+    public static void wrap(final Runnable function, final GraphittyLogger LOG, final String statusMessage) {
+        try {
+            function.run();
+        } catch (final Exception e) {
+            LOG.status(DEBUG, statusMessage + ": e");
         }
     }
 
