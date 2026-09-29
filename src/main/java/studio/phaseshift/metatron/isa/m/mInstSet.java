@@ -497,12 +497,12 @@ public class mInstSet extends AbstractInstSet {
                                 "{1,2,3}.sum().profile()>>flow      [-- [monads=>…,coeff_sum=>…,compression=>…,processors=>…] --]"),
                         docWrap(EXPLANATION_TYPE,
                                 Map.of(
-                                        uri(FORMAT), "lazily constructed pretty-print format (the current text table)",
-                                        uri(DESC), "expression-level metadata: whole-expression dom/rng, inst count, and the rewrite-stage chain (rewrite)",
-                                        uri(PER_INST), "per-instruction compilation stage (op/dom/rng/args/f/form/coefs)"),
+                                        uri(FORMAT), "lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively",
+                                        uri(DESC), "expression-level metadata: whole-expression dom/rng, inst count, and the rewrite chain — the next stage's explanation ({?}), none when the original submission is last",
+                                        uri(PER_INST), "lst of per-instruction stage recs (op/dom/rng/args/f/form/c_dom/c_rng) — args are the real objs, not their string renderings; f is the wrapped function ('<j>' = java/opaque)"),
                                 "a structured explanation of a resolved expression produced by explain()",
                                 "1.plus(2).explain()>>desc>>rng     [-- int — the type flowing out of the expression --]",
-                                "1.plus(2).explain()>>per_inst       [-- per-inst recs: [[op=>start,…,form=>initial],[op=>plus,…,form=>mapper]] --]",
+                                "1.plus(2).explain()>>per_inst      [-- per-inst recs: [op=>start,args=>[1],form=>initial,c_dom=>0,c_rng=>1], [op=>plus,dom=>int,rng=>int,args=>[2],f=>'<j>',form=>mapper,c_dom=>1,c_rng=>1] --]",
                                 "1.plus(2).explain()>>format         [-- the str::T text table --]"),
                         docWrap(SPACE_TYPE, null, null, Map.of(
                                         uri(PATTERN), "the uri address region the space will manage",

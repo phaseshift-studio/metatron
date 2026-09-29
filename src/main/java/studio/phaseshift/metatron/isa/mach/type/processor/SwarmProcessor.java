@@ -295,7 +295,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
             // profile()/explain() collapse to a single *_compute inst by design — a 1-inst
             // sequence here is the point, not a smell. suppress the warning for those.
             final String name = submittedInsts.isEmpty() ? "" : submittedInsts.getFirst().tid().name();
-            if (!this.parent.isNoObj() && !"profile".equals(name) && !"explain".equals(name)
+            if (null != this.parent && !this.parent.isNoObj() && !"profile".equals(name) && !"explain".equals(name)
                     && !"profile_compute".equals(name) && !"explain_compute".equals(name))
                 LOG.warn("processor %s evaluating a %d-instruction code sequence: %s [parent:%s]", this.vid(), submittedInsts.size(), submitted, this.parent());
         }
