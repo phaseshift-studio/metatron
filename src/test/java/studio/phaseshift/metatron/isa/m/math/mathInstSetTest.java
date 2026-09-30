@@ -125,6 +125,10 @@ public class mathInstSetTest extends AbstractInstSetTest {
 
     @Test
     public void testNominalTyping() {
+        assertTrue(real(43.0, MATH_NANOS_TID, null).testNominally(NANOS_TYPE));
+        assertTrue(real(43.0, MATH_NANOS_TID, null).testNominally(TIME_TYPE));
+        assertTrue(real(43.0, MATH_MICROS_TID, null).testNominally(MICROS_TYPE));
+        assertTrue(real(43.0, MATH_MICROS_TID, null).testNominally(TIME_TYPE));
         assertTrue(real(43.0, MATH_MILLIS_TID, null).testNominally(MILLIS_TYPE));
         assertTrue(real(43.0, MATH_MILLIS_TID, null).testNominally(TIME_TYPE));
     }
@@ -205,7 +209,23 @@ public class mathInstSetTest extends AbstractInstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             // raw real to time unit (no conversion — re-tagging only)
-            "30000.0.as(minute::T)                                                               % minute::30000.0",
+            "30000.0.as(minute::T)                                                              % minute::30000.0",
+            "7.0.as(nanos::T)                                                                   % nanos::7.0",
+
+            // nanos conversions (identity and upward)
+            "nanos::500.0.as(nanos::T)                                                          % nanos::500.0",
+            "nanos::1000.0.as(micros::T)                                                        % micros::1.0",
+            "nanos::1000000.0.as(millis::T)                                                     % millis::1.0",
+            "nanos::1000000000.0.as(second::T)                                                  % second::1.0",
+            "nanos::60000000000.0.as(minute::T)                                                 % minute::1.0",
+            "nanos::3600000000000.0.as(hour::T)                                                 % hour::1.0",
+
+            // micros conversions (identity and upward)
+            "micros::500.0.as(micros::T)                                                        % micros::500.0",
+            "micros::1000.0.as(millis::T)                                                       % millis::1.0",
+            "micros::1000000.0.as(second::T)                                                    % second::1.0",
+            "micros::60000000.0.as(minute::T)                                                   % minute::1.0",
+            "micros::3600000000.0.as(hour::T)                                                   % hour::1.0",
 
             // millis conversions (identity and upward)
             "millis::1000.0.as(millis::T)                                                        % millis::1000.0",
@@ -214,24 +234,32 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "millis::3600000.0.as(hour::T)                                                       % hour::1.0",
 
             // second conversions (downward, identity, and upward)
+            "second::1.0.as(nanos::T)                                                            % nanos::1000000000.0",
+            "second::1.0.as(micros::T)                                                           % micros::1000000.0",
             "second::1.0.as(millis::T)                                                           % millis::1000.0",
             "second::60.0.as(second::T)                                                          % second::60.0",
             "second::60.0.as(minute::T)                                                          % minute::1.0",
             "second::3600.0.as(hour::T)                                                          % hour::1.0",
 
             // minute conversions (downward, identity, and upward)
+            "minute::1.0.as(nanos::T)                                                            % nanos::60000000000.0",
+            "minute::1.0.as(micros::T)                                                           % micros::60000000.0",
             "minute::1.0.as(millis::T)                                                           % millis::1000.0.mult(60.0)",
             "minute::1.0.as(second::T)                                                           % second::60.0",
             "minute::1.0.as(minute::T)                                                           % minute::1.0",
             "minute::60.0.as(hour::T)                                                            % hour::1.0",
 
             // hour conversions (downward and identity)
+            "hour::1.0.as(nanos::T)                                                              % nanos::3600000000000.0",
+            "hour::1.0.as(micros::T)                                                             % micros::3600000000.0",
             "hour::1.0.as(millis::T)                                                             % millis::1000.0.mult(60.0).mult(60.0)",
             "hour::1.0.as(second::T)                                                             % second::60.0.mult(60.0)",
             "hour::1.0.as(minute::T)                                                             % minute::60.0",
             "hour::1.0.as(hour::T)                                                               % hour::1.0",
 
             // day conversions (downward, identity, and upward)
+            "day::1.0.as(nanos::T)                                                               % nanos::86400000000000.0",
+            "day::1.0.as(micros::T)                                                              % micros::86400000000.0",
             "day::1.0.as(millis::T)                                                             % millis::1000.0.mult(60.0).mult(60.0).mult(24.0)",
             "day::1.0.as(second::T)                                                             % second::60.0.mult(60.0).mult(24.0)",
             "day::1.0.as(minute::T)                                                             % minute::60.0.mult(24.0)",
@@ -239,6 +267,8 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "day::1.0.as(day::T)                                                                % day::1.0",
 
             // smaller units → day
+            "nanos::86400000000000.0.as(day::T)                                                 % day::1.0",
+            "micros::86400000000.0.as(day::T)                                                   % day::1.0",
             "millis::86400000.0.as(day::T)                                                      % day::1.0",
             "second::86400.0.as(day::T)                                                         % day::1.0",
             "minute::1440.0.as(day::T)                                                          % day::1.0",
@@ -254,12 +284,21 @@ public class mathInstSetTest extends AbstractInstSetTest {
             // time units require real values — int-backed time is a type violation
             "day::2.as(millis::T)                                                              % <ERROR>",
             "hour::2.as(minute::T)                                                             % <ERROR>",
+            "nanos::2.as(millis::T)                                                            % <ERROR>",
+            "micros::2.as(millis::T)                                                           % <ERROR>",
 
             // Multi-step conversions (skip levels)
+            "nanos::3600000000000.0.as(hour::T)                                                  % hour::1.0",
+            "micros::3600000000.0.as(hour::T)                                                    % hour::1.0",
             "millis::3600000.0.as(hour::T)                                                       % hour::1.0",
             "second::3600.0.as(hour::T)                                                          % hour::1.0",
 
             // Larger / fractional values
+            "nanos::5400000000000.0.as(hour::T)                                                  % hour::1.5",
+            "micros::5400000000.0.as(hour::T)                                                    % hour::1.5",
+            "micros::1500000.0.as(second::T)                                                      % second::1.5",
+            "second::1.5.as(micros::T)                                                            % micros::1500000.0",
+            "hour::0.5.as(nanos::T)                                                              % nanos::1800000000000.0",
             "millis::1800000.0.as(minute::T)                                                     % minute::30.0",
             "millis::7200000.0.as(hour::T)                                                       % hour::2.0",
             "second::90.0.as(minute::T)                                                          % minute::1.5",
@@ -275,6 +314,15 @@ public class mathInstSetTest extends AbstractInstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             // eq() - Equality tests with exact conversions
+            "nanos::1000.0.eq(micros::1.0)                                                       % true",
+            "nanos::1000000.0.eq(millis::1.0)                                                    % true",
+            "nanos::1000000000.0.eq(second::1.0)                                                 % true",
+            "nanos::60000000000.0.eq(minute::1.0)                                                % true",
+            "nanos::86400000000000.0.eq(day::1.0)                                                % true",
+            "micros::1000.0.eq(millis::1.0)                                                      % true",
+            "micros::1000000.0.eq(second::1.0)                                                   % true",
+            "micros::60000000.0.eq(minute::1.0)                                                  % true",
+            "micros::86400000000.0.eq(day::1.0)                                                  % true",
             "millis::1000.0.eq(second::1.0)                                                       % true",
             "second::60.0.eq(minute::1.0)                                                         % true",
             "minute::60.0.eq(hour::1.0)                                                           % true",
@@ -283,16 +331,26 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "second::3600.0.eq(hour::1.0)                                                         % true",
 
             // neq() - Not equal tests
+            "nanos::1000000.0.neq(millis::1.0)                                                    % false",
+            "micros::1000.0.neq(millis::1.0)                                                      % false",
             "millis::1000.0.neq(second::1.0)                                                      % false",
             "second::60.0.neq(minute::1.0)                                                        % false",
 
             // lt() and gt() - Basic comparison tests
+            "micros::500.0.lt(millis::1.0)                                                        % true",
+            "millis::1.0.gt(micros::500.0)                                                        % true",
+            "nanos::500000.0.lt(millis::1.0)                                                      % true",
+            "millis::1.0.gt(nanos::500000.0)                                                      % true",
             "millis::500.0.lt(second::1.0)                                                        % true",
             "second::1.0.gt(millis::500.0)                                                        % true",
             "millis::1000.0.lt(second::1.0)                                                       % false",
             "millis::1000.0.gt(second::1.0)                                                       % false",
 
             // lte() and gte() - Less/greater than or equal tests
+            "micros::1000.0.lte(millis::1.0)                                                      % true",
+            "micros::1000.0.gte(millis::1.0)                                                      % true",
+            "nanos::1000000.0.lte(millis::1.0)                                                    % true",
+            "nanos::1000000.0.gte(millis::1.0)                                                    % true",
             "millis::1000.0.lte(second::1.0)                                                      % true",
             "millis::1000.0.gte(second::1.0)                                                      % true",
             "minute::60.0.lte(hour::1.0)                                                          % true",
@@ -317,14 +375,28 @@ public class mathInstSetTest extends AbstractInstSetTest {
     @Training.SkipTraining(reason = "too complicated -- requires reasoning on the compiler's behavior")
     @CsvSource(value = {
             // Time unit as() conversions - verifies resolver picks correct as?X<=Y instruction
+            "nanos::1000.0.as(micros::T)    | *micros   | true",
+            "nanos::1000000.0.as(millis::T)  | *millis   | true",
+            "nanos::1000000000.0.as(second::T) | *second | true",
+            "nanos::86400000000000.0.as(day::T) | *day   | true",
+            "micros::1000.0.as(millis::T)   | *millis   | true",
+            "micros::1000000.0.as(second::T) | *second  | true",
+            "micros::86400000000.0.as(day::T) | *day    | true",
             "millis::1000.0.as(second::T)   | *second   | true",
             "second::60.0.as(minute::T)     | *minute   | true",
             "minute::60.0.as(hour::T)       | *hour     | true",
             // Downward conversions
+            "micros::1.0.as(nanos::T)        | *nanos    | true",
+            "millis::1.0.as(nanos::T)        | *nanos    | true",
+            "millis::1.0.as(micros::T)       | *micros   | true",
+            "second::1.0.as(nanos::T)        | *nanos    | true",
+            "second::1.0.as(micros::T)       | *micros   | true",
             "second::1.0.as(millis::T)       | *millis   | true",
             "minute::1.0.as(second::T)       | *second   | true",
             "hour::1.0.as(minute::T)         | *minute   | true",
             // day conversions
+            "day::1.0.as(nanos::T)           | *nanos    | true",
+            "day::1.0.as(micros::T)          | *micros   | true",
             "day::1.0.as(hour::T)            | *hour     | true",
             "day::1.0.as(minute::T)          | *minute   | true",
             "day::1.0.as(day::T)             | *day      | true",
@@ -369,12 +441,19 @@ public class mathInstSetTest extends AbstractInstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             // below threshold — stays put
-            "millis::1500.0.normalize() % millis::1500.0",
+            "nanos::1999.0.normalize()   % nanos::1999.0",
+            "micros::1999.0.normalize()  % micros::1999.0",
+            "millis::1500.0.normalize()  % millis::1500.0",
 
             // cascade upward until stable
+            "nanos::2000.0.normalize()   % micros::2.0",
+            "micros::2000.0.normalize()  % millis::2.0",
             "millis::9000.0.normalize()  % second::9.0",
             "minute::150.0.normalize()   % hour::2.5",
             "hour::72.0.normalize()      % day::3.0",
+
+            // cascade through more than one unit
+            "nanos::9000000000.0.normalize()  % second::9.0",
     }, delimiter = '%', quoteCharacter = '~')
     public void testTimeNormalize(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

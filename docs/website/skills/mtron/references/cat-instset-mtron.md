@@ -21,7 +21,7 @@ mtron> int::T.as(object::T)>>obj
 ```
 ```mtron
 mtron> |plus?int<=int(int::T).as(morphism::T)>>form
-==>fail::[inst apply failure: plus?rng=int&dom=int(int::T) is not a morphism::T [nominal] (at /m/inst/as@1)]@/sys/fail/294
+==>fail::[inst apply failure: plus?rng=int&dom=int(int::T) is not a morphism::T [nominal] (at /m/inst/as@1)]@/sys/fail/380
 ```
 Every registered inst is a morphism and every type an object — the graph is emergent, not declared edge-by-edge.
 
@@ -106,7 +106,7 @@ cell):
 
 ```mtron
 mtron> |plus?int<=int(int::T).as(morphism::T)>>law
-==>fail::[inst apply failure: plus?rng=int&dom=int(int::T) is not a morphism::T [nominal] (at /m/inst/as@1)]@/sys/fail/298
+==>fail::[inst apply failure: plus?rng=int&dom=int(int::T) is not a morphism::T [nominal] (at /m/inst/as@1)]@/sys/fail/382
 ```
 Examples: `commutative` (`f(x,y) = f(y,x)`), `right_distributive`, `action`, `monoidic`, `involution`, `absorbing`,
 `idempotent`. A law has a *provenance* tier (`syntactic` — derived from the n-tid, `declared` — proved once per

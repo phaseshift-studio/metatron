@@ -568,7 +568,7 @@ instruction calls. Append <code>.explain()</code> to any expression to get its s
 (dom/rng/inst count) is <code>&gt;&gt;desc</code>, the per-instruction stages (the ops, their dom/rng, args, and form) are <code>&gt;&gt;per_inst</code>,
 and the unsugar'd text table is the lazy <code>&gt;&gt;format</code> inst (materialized in the interactive console):</p>
 <pre><code class="language-mtron">mtron&gt; start(/a).rshift().rshift().rshift().explain()&gt;&gt;format
-==&gt;{2}&quot;&quot;&quot;
+==&gt;&quot;&quot;&quot;
     op      dom          rng      args   f    desc      c_dom  c_rng 
     start   noobj{0}::T  uri::T   /a     &lt;j&gt;  initial   {0}    {1}   
     rshift  uri::T       #{*}::T  noobj  &lt;j&gt;  standard  {1}    {*}   
@@ -576,7 +576,7 @@ and the unsugar'd text table is the lazy <code>&gt;&gt;format</code> inst (mater
     rshift  A::T         B{*}::T         &lt;j&gt;  standard  {1}    {*}   
    &quot;&quot;&quot;
 mtron&gt; /a.&gt;&gt;.&gt;&gt;.&gt;&gt;.explain()&gt;&gt;format
-==&gt;{2}&quot;&quot;&quot;
+==&gt;&quot;&quot;&quot;
     op      dom          rng      args   f    desc      c_dom  c_rng 
     start   noobj{0}::T  uri::T   /a     &lt;j&gt;  initial   {0}    {1}   
     rshift  uri::T       #{*}::T  noobj  &lt;j&gt;  standard  {1}    {*}   
@@ -679,6 +679,8 @@ mtron&gt; person::[name=&gt;'marko', age=&gt;29]
 <h3>docq: read the code you are about to run</h3>
 <p>Do not guess at instruction signatures. Every instruction ships with documentation attached via the <code>?docq</code> query
 processor. <strong>Read the documentation of the code you are about to execute.</strong></p>
+<p>IMPORTANT: An <code>inst::T</code> is identified by its operation, its domain and its range. If <code>dom</code> or <code>rng</code> are not provided,
+the default values are <code>#{?}</code> and <code>#{*}</code>, respectively.</p>
 <pre><code class="language-mtron">mtron&gt; *plus?docq
 ==&gt;docs::[
     obj=&gt;plus?rng=int&amp;dom=int(int::T){&lt;j&gt;},

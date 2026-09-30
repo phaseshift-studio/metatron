@@ -429,58 +429,136 @@ in its message. <code>timeout</code> takes a time type — <code>second::5.0</co
 bare int, which is seconds; the default is <code>second::20.0</code>.</p>
 <p>The signature is not a memory exercise; the inst carries its own doc:</p>
 <pre><code class="language-mtron">mtron&gt; *bash?docq
-==&gt;docs::[obj=&gt;bash?rng=lst[str]&amp;dom=#{?}(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},dom=&gt;'maybe an obj',rng=&gt;'a lst[str] of results',args=&gt;[{?}timeout=&gt;&quot;&quot;&quot;a real number denoting timeout of the process (default: /m/math/time/second::20.0).
-   &quot;&quot;&quot;,cmd=&gt;&quot;the terminal command to evaluate (uses bash('-c',${cmd}) behind the scenes)&quot;],desc=&gt;&quot;&quot;&quot;evaluate bash command. *important* the timeout argument takes a real not an int -- e.g. millis::1000.0 or second::1.0.
-   note that this field is optional, so when in doubt, just don't fill it out
-   &quot;&quot;&quot;,example=&gt;[&quot;&quot;&quot;bash('ls')                                           [-- return lst containing each file/dir as str::T --]
-   {&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;}.-&lt;[_ =&gt; _]==[_ =&gt; bash(_)]   [-- batch bash results indexed by cmd             --]
-   [&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;].mapp(-&lt;[_ =&gt; bash(_)]).sum() [-- same as above but with lst of cmds            --]
-   &quot;&quot;&quot;]]
+==&gt;docs::[
+    obj=&gt;bash?rng=lst[str]&amp;dom=#{?}(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},
+    dom=&gt;'maybe an obj',
+    rng=&gt;'a lst[str] of results',
+    args=&gt;[
+     cmd=&gt;'the terminal command to evaluate (...',
+     {?}timeout=&gt;'a real number denoting timeout of ...'],
+    desc=&gt;'evaluate bash command. *important*...',
+    example=&gt;[&quot;bash('ls')                        ...&quot;]]
 </code></pre>
 <pre><code class="language-mtron">mtron&gt; bash('ls')
-==&gt;['AGENTS.md','articles','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE','metatron.ide.mtron','mvnw','mvnw.cmd','node_modules','pom.xml','_probe','README.md','RELEASE.md','src','target']
+==&gt;[
+    'AGENTS.md',
+    'articles',
+    'bin',
+    'boot',
+    'conf',
+    'CONTRIBUTING.md',
+    'dist',
+   ...(14 more)]
 mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
-==&gt;['Filesystem             Size  Used Avail Use% Mounted on','tmpfs                  6.1G  6.0M  6.1G   1% /run','efivarfs               128K   42K   82K  34% /sys/firmware/efi/efivars','/dev/nvme0n1p2         916G  513G  357G  59% /','tmpfs                   31G  260M   31G   1% /dev/shm','tmpfs                  5.0M   20K  5.0M   1% /run/lock','tmpfs                   31G     0   31G   0% /run/qemu','/dev/nvme0n1p1         511M  6.2M  505M   2% /boot/efi','tmpfs                  6.1G  260K  6.1G   1% /run/user/1000','/dev/nvme1n1p2         932G  240G  692G  26% /media/hdd0','//192.168.1.72/beast1  1.8T  1.2T  630G  66% /srv/beast/hdd1']
+==&gt;[
+    'Filesystem             Size  Used ...',
+    'tmpfs                  6.1G  6.4M ...',
+    'efivarfs               128K   42K ...',
+    '/dev/nvme0n1p2         916G  511G ...',
+    'tmpfs                   31G  277M ...',
+    'tmpfs                  5.0M   20K ...',
+    'tmpfs                   31G     0 ...',
+   ...(4 more)]
 </code></pre>
 <p>A timeout and a failed exit are both fails, and both are inspectable:</p>
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
-==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/626
+==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/560
 mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
 ==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 4ms:
+    (at /m/sys/inst/bash) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder&lt;228&gt;]]@/sys/fail/630
+    [ProcBuilder&lt;228&gt;]]@/sys/fail/562
 </code></pre>
 <h4>batch</h4>
 <p>A rec of commands maps to a rec of results, indexed by command; a lst of commands takes
 the same <code>==</code> projection:</p>
 <pre><code class="language-mtron">mtron&gt; {&quot;ls&quot;, &quot;whoami&quot;}.-&lt;[_ =&gt; _]==[_ =&gt; bash(_)]   [-- rec of cmds =&gt; rec of result lsts --]
-==&gt;['ls'=&gt;['AGENTS.md','articles','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE','metatron.ide.mtron','mvnw','mvnw.cmd','node_modules','pom.xml','_probe','README.md','RELEASE.md','src','target']]
+==&gt;['ls'=&gt;[
+    'AGENTS.md',
+    'articles',
+    'bin',
+    'boot',
+    'conf',
+    'CONTRIBUTING.md',
+    'dist',
+   ...(14 more)]]
 ==&gt;['whoami'=&gt;['killswitch']]
 mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum()       [-- lst of cmds =&gt; one flat lst --]
-==&gt;['AGENTS.md','articles','bin','boot','conf','CONTRIBUTING.md','dist','docs','dsh-plugins','language.properties','LICENSE','metatron.ide.mtron','mvnw','mvnw.cmd','node_modules','pom.xml','_probe','README.md','RELEASE.md','src','target','killswitch']
+==&gt;[
+    'AGENTS.md',
+    'articles',
+    'bin',
+    'boot',
+    'conf',
+    'CONTRIBUTING.md',
+    'dist',
+   ...(15 more)]
 </code></pre>
 <p><code>==</code> is a <strong>select</strong> — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:</p>
 <pre><code class="language-mtron">mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum().explain()
-==&gt;[format=&gt;inst?rng=str&amp;dom=#{0}(){&lt;j&gt;},desc=&gt;[rng=&gt;&lt;#&gt;,insts=&gt;4],per_inst=&gt;[[op=&gt;start,rng=&gt;lst,args=&gt;[['ls','whoami']],f=&gt;'&lt;j&gt;',form=&gt;initial,c_dom=&gt;0,c_rng=&gt;1],[op=&gt;select,dom=&gt;lst,rng=&gt;lst,args=&gt;[[id()=&gt;bash(id())]],f=&gt;'&lt;j&gt;',form=&gt;mapper,c_dom=&gt;1,c_rng=&gt;1],[op=&gt;rshift,dom=&gt;lst,args=&gt;[noobj],f=&gt;'&lt;j&gt;',form=&gt;standard,c_dom=&gt;1,c_rng=&gt;0],[op=&gt;sum,rng=&gt;&lt;#&gt;,args=&gt;[,],form=&gt;reducer,c_dom=&gt;0,c_rng=&gt;1]]]@explanation
+==&gt;explanation::[
+    format=&gt;!inst?rng=str&amp;dom=#{?}(){&lt;j&gt;},
+    desc=&gt;[
+     rng=&gt;&lt;#&gt;,
+     insts=&gt;4],
+    per_inst=&gt;[
+     [
+      op=&gt;start,
+      rng=&gt;lst,
+      args=&gt;[['ls','whoami']],
+      f=&gt;'&lt;j&gt;',
+      form=&gt;initial,
+      c_dom=&gt;0,
+      c_rng=&gt;1],
+     [   op=&gt;select,
+      dom=&gt;lst,
+      rng=&gt;lst,
+      args=&gt;[[id()=&gt;bash(id())]],
+      f=&gt;'&lt;j&gt;',
+      form=&gt;mapper,
+      c_dom=&gt;1,
+      ...(1 more)],
+     [
+      op=&gt;rshift,
+      dom=&gt;lst,
+      args=&gt;[noobj],
+      f=&gt;'&lt;j&gt;',
+      form=&gt;standard,
+      c_dom=&gt;1,
+      c_rng=&gt;0],
+     [
+      op=&gt;sum,
+      rng=&gt;&lt;#&gt;,
+      args=&gt;[,],
+      form=&gt;reducer,
+      c_dom=&gt;0,
+      c_rng=&gt;1]]]
 </code></pre>
 <h4>pipe over the results</h4>
 <p><code>&gt;&gt;</code> moves right along the data — one step per element; <code>${_}</code> binds the current one.
 The projection can do the work: first stat line of each entry, nothing else:</p>
 <pre><code class="language-mtron">mtron&gt; bash('ls')==[_ =&gt; bash(&quot;stat ${_}&quot;)&gt;&gt;0]          [-- each entry =&gt; its `File:` line --]
-==&gt;['  File: AGENTS.md','  File: articles','  File: bin','  File: boot','  File: conf','  File: CONTRIBUTING.md','  File: dist','  File: docs','  File: dsh-plugins','  File: language.properties','  File: LICENSE','  File: metatron.ide.mtron','  File: mvnw','  File: mvnw.cmd','  File: node_modules','  File: pom.xml','  File: _probe','  File: README.md','  File: RELEASE.md','  File: src','  File: target']
+==&gt;[
+    '  File: AGENTS.md',
+    '  File: articles',
+    '  File: bin',
+    '  File: boot',
+    '  File: conf',
+    '  File: CONTRIBUTING.md',
+    '  File: dist',
+   ...(14 more)]
 mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full stat per entry --]
-==&gt;['  File: AGENTS.md','  Size: 34192     	Blocks: 72         IO Block: 4096   regular file','Device: 259,5	Inode: 26348579    Links: 1','Access: (0664/-rw-rw-r--)  Uid: ( 1000/killswitch)   Gid: ( 1000/killswitch)','Access: 2026-09-28 17:56:42.028908982 -0600','Modify: 2026-09-24 12:53:23.043502578 -0600','Change: 2026-09-24 12:53:23.044502554 -0600',' Birth: 2026-09-24 12:53:23.043502578 -0600']
-==&gt;['  File: articles','  Size: 4096      	Blocks: 8          IO Block: 4096   directory','Device: 259,5	Inode: 22841148    Links: 2','Access: (0775/drwxrwxr-x)  Uid: ( 1000/killswitch)   Gid: ( 1000/killswitch)','Access: 2026-09-28 02:55:22.135510689 -0600','Modify: 2026-09-27 02:55:21.536000472 -0600','Change: 2026-09-27 02:55:21.536000472 -0600',' Birth: 2026-09-27 02:55:21.534000486 -0600']
-==&gt;['  File: bin','  Size: 4096      	Blocks: 8          IO Block: 4096   directory','Device: 259,5	Inode: 22826424    Links: 5','Access: (0775/drwxrwxr-x)  Uid: ( 1000/killswitch)   Gid: ( 1000/killswitch)','Access: 2026-09-29 01:56:45.116666893 -0600','Modify: 2026-09-29 01:56:45.084667013 -0600','Change: 2026-09-29 01:56:45.084667013 -0600',' Birth: 2025-11-08 14:38:11.425442859 -0700']
-==&gt;['  File: boot','  Size: 4096      	Blocks: 8          IO Block: 4096   directory','Device: 259,5	Inode: 28469828    Links: 4','Access: (0775/drwxrwxr-x)  Uid: ( 1000/killswitch)   Gid: ( 1000/killswitch)','Access: 2026-09-28 15:23:51.247833243 -0600','Modify: 2026-09-27 15:23:47.530060487 -0600','Change: 2026-09-27 15:23:47.530060487 -0600',' Birth: 2026-01-16 11:53:47.513549189 -0700']
-==&gt;['  File: conf','  Size: 4096      	Blocks: 8          IO Block: 4096   directory','Device: 259,5	Inode: 23107074    Links: 3','Access: (0775/drwxrwxr-x)  Uid: ( 1000/killswitch)   Gid: ( 1000/killswitch)','Access: 2026-09-28 15:06:36.371343374 -0600','Modify: 2026-09-13 23:55:17.159928081 -0600','Change: 2026-09-13 23:55:17.159928081 -0600',' Birth: 2026-05-04 16:27:26.799073113 -0600']
+==&gt;[
+    '  File: AGENTS.md',
+    '  Size: 34192     	Blocks: 72     ...',
+    'Device: 259,5	Inode: 26348579    L...',
+    'Access: (0664/-rw-rw-r--)  Uid: ( ...',
    ...
 </code></pre>
 <h4>a shape of its own</h4>
@@ -488,7 +566,15 @@ mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full
 <code>Size</code>, extracted and typed <code>bB::T</code>, then converted to <code>kB::T</code> — the unit system
 converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du</code>:</p>
 <pre><code class="language-mtron">mtron&gt; bash('ls')==[_ =&gt; bash('stat ${_} | sed -n &quot;s/.*Size: \([0-9]*\).*/\1/p&quot;')&gt;&gt;0.as?int&lt;=str(int::T).as(bB::T)]
-==&gt;[bB::34192.0,bB::4096.0,bB::4096.0,bB::4096.0,bB::4096.0,bB::6984.0,bB::4096.0,bB::4096.0,bB::4096.0,bB::7304.0,bB::34523.0,bB::414.0,bB::11790.0,bB::8481.0,bB::4096.0,bB::51040.0,bB::4096.0,bB::150.0,bB::2624.0,bB::4096.0,bB::4096.0]
+==&gt;[
+    bB::34192.0000,
+    bB::4096.0000,
+    bB::4096.0000,
+    bB::4096.0000,
+    bB::4096.0000,
+    bB::6984.0000,
+    bB::4096.0000,
+   ...(14 more)]
 </code></pre>
 <p>Unit values test against each other's units:</p>
 <pre><code class="language-mtron">mtron&gt; bB::34192.0.gt(kB::30.0)
@@ -496,7 +582,7 @@ converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du<
 </code></pre>
 <p>And they filter a lst by the same predicate — the branches that fail are dropped:</p>
 <pre><code class="language-mtron">mtron&gt; [bB::34192.0, bB::100.0]==[_ =&gt; ?&gt;kB::30.0]==[_ =&gt; else(none)]
-==&gt;[bB::34192.0]
+==&gt;[bB::34192.0000]
 </code></pre>
 <h4>security modulators (q-params)</h4>
 <p><code>bash</code> is hardened at the <strong>instruction</strong>, not the call site: <code>allow</code>, <code>reject</code>,
@@ -518,9 +604,9 @@ first.</p>
 <p>Each guard fails before the process spawns, and the failure names the pattern that
 fired:</p>
 <pre><code class="language-mtron">mtron&gt; bash?reject=['\brm\b'](&quot;rm -rf /tmp/never-created-here&quot;)  [-- the policy, not the file system, stops it --]
-==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/634
+==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash)]@/sys/fail/564
 mtron&gt; bash?allow=['ls'](&quot;whoami&quot;)                                [-- allow is whole-command: `whoami` is not `ls` --]
-==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/638
+==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash)]@/sys/fail/566
 </code></pre>
 <p>The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the process:</p>
 <pre><code class="language-mtron">mtron&gt; bash?allow=['ls .+']('ls AGENTS.md')
@@ -542,9 +628,11 @@ no input to take, so it is shown rather than run:</p>
 <pre><code class="language-mtron">mtron&gt; */sys/env/HOME
 ==&gt;'/home/killswitch'
 mtron&gt; */sys/thread/+.count()
-==&gt;14
+==&gt;8
 mtron&gt; sys_stat()
-==&gt;[run=&gt;0,stop=&gt;0]
+==&gt;[
+    run=&gt;0,
+    stop=&gt;0]
 </code></pre>
 <h2>file system space (<code>fsspace::T</code>)</h2>
 <p>An <code>fsspace::T</code> mounts a directory into the metatron graph. A file's uri is
@@ -561,7 +649,6 @@ project root:</p>
          pattern =&gt; &lt;mfs:#&gt;,
          q       =&gt; [mimeq::[=&gt;], lineq::[=&gt;]],
          route   =&gt; [mfs: =&gt; &lt;.&gt;]]@/sys/space/mfs
-==&gt;fsspace::[pattern=&gt;mfs:#,q=&gt;[mimeq::[pattern=&gt;mimeq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}],lineq::[pattern=&gt;lineq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}]],route=&gt;[mfs:=&gt;&lt;&gt;]]@/sys/space/mfs
 </code></pre>
 <p>The three keys: <code>pattern</code> is the uri space this instance owns (<code>mfs:#</code>, <code>#</code> the
 recursive wildcard); <code>route</code> maps the <code>mfs:</code> prefix onto the path the files live at;
@@ -576,7 +663,6 @@ mtron&gt; fsspace::[
          pattern =&gt; &lt;scratch:#&gt;,
          q       =&gt; [lineq::[=&gt;]],
          route   =&gt; [scratch: =&gt; /tmp/mtron-docs-scratch]]@/sys/space/scratch
-==&gt;fsspace::[pattern=&gt;scratch:#,q=&gt;[lineq::[pattern=&gt;lineq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}]],route=&gt;[scratch:=&gt;/tmp/mtron-docs-scratch]]@/sys/space/scratch
 </code></pre>
 <h3>typed reads</h3>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:README.md&gt;.tid()          [-- markdown's mime --]
@@ -599,16 +685,16 @@ is doing — the sugar is short precisely because it is legible once:</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:README.md?mimeq=text/markdown&gt;                    [-- explicit tag, same referent typed --]
 ...
 *&lt;mfs:boot/docs.mtron&gt;                   [-- the doc boot, read as its code --]
-==&gt;[space=&gt;/sys/space,web=&gt;[http/host=&gt;http://localhost:8777,ws/host=&gt;ws://localhost:8555],typer/stage=&gt;[inst_dom=&gt;true,inst_rng=&gt;true,type_ctor=&gt;true,obj_write=&gt;true,code_resolve=&gt;false],header=&gt;&quot;&quot;&quot;
-   _,.---._      _,.----.    ,-,--.
-   _,..---._   ,-.' , -  `.  .' .' -   \ ,-.'-  _\
-   /==/,   -  \ /==/_,  ,  - \/==/  ,  ,-'/==/_ ,_.'
-   |==|   _   _\==|   .=.     |==|-   |  .\==\  \
-   |==|  .=.   |==|_ : ;=:  - |==|_   `-' \\==\ -\
-   |==|,|   | -|==| , '='     |==|   _  , |_\==\ ,\
-   |==|  '='   /\==\ -    ,_ /\==\.       /==/\/ _ | .=.
-   |==|-,   _`/  '.='. -   .'  `-.`.___.-'\==\ - , /:=; :
-   `-.`.____.'     `--`--''                `--`---'  `=`
+==&gt;[
+    space=&gt;/sys/space,
+    web=&gt;[
+     http/host=&gt;http://localhost:8777,
+     ws/host=&gt;ws://localhost:8555],
+    typer/stage=&gt;[
+     inst_dom=&gt;true,
+     inst_rng=&gt;true,
+     type_ctor=&gt;true,
+     obj_write=&gt;true,
    ...
 </code></pre>
 <h3>walking the tree</h3>
@@ -622,7 +708,15 @@ mtron&gt; *&lt;mfs:docs/skills/mtron/+/&gt;  [-- this doc's siblings, with their
 <p>A file is a string and a string splits: <code>-&lt;</code> divides on the separator, and the rec
 decides which pieces survive — here, everything before line 10:</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:AGENTS.md&gt;.-&lt;'\n'==[?&gt;10 =&gt; none, _ =&gt; _]
-==&gt;['# metatron — AGENTS.md','','A distributed data-oriented computing language and virtual machine built in Java. Two key terms:','','- **metatron** (lowercase): the runtime system / VM environment','- **mtron** (lowercase): the functional programming language (like Java to JVM)','','---','','## Strict Rules','']
+==&gt;[
+    '# metatron — AGENTS.md',
+    '',
+    'A distributed data-oriented comput...',
+    '',
+    '- **metatron** (lowercase): the ru...',
+    '- **mtron** (lowercase): the funct...',
+    '',
+   ...(4 more)]
 </code></pre>
 <h3>line addressing — on the scratch mount</h3>
 <p>The scratch mount is where the doc writes. <code>bash</code> authors the file in the shell's own
@@ -646,18 +740,29 @@ mtron&gt; *&lt;scratch:lines.txt&gt;                                  [-- the fi
 dot in its name takes the angle brackets, even as an argument. <code>read_file</code> indexes its
 lines:</p>
 <pre><code class="language-mtron">mtron&gt; read_file(file=&gt;&lt;scratch:lines.txt&gt;, min=&gt;0, max=&gt;2)
-==&gt;[[0,'the metatron docs pipeline'],[1,'rewrote line two']]
+==&gt;[
+    [0,'the metatron docs pipeline'],
+    [1,'rewrote line two']]
 </code></pre>
 <p><code>edit_file</code> states the write as arguments — insert at <code>min</code>, replace the <code>min..max</code>
 span when <code>max</code> is given — and answers with a status report:</p>
 <pre><code class="language-mtron">mtron&gt; edit_file(file=&gt;&lt;scratch:lines.txt&gt;, text=&gt;'added by edit_file', min=&gt;1, max=&gt;1)
-==&gt;[status=&gt;success,obj=&gt;!*&lt;scratch:lines.txt&gt;,start_line_count=&gt;5,inserted_line_count=&gt;1,end_line_count=&gt;5]
+==&gt;[
+    status=&gt;success,
+    obj=&gt;!*&lt;scratch:lines.txt&gt;,
+    start_line_count=&gt;4,
+    inserted_line_count=&gt;1,
+    end_line_count=&gt;4]
 </code></pre>
 <p>A rec written as data and read back — the round trip closes the scratch story:</p>
 <pre><code class="language-mtron">mtron&gt; scratch:meta -&gt; [doc =&gt; 'sys-instset', revision=&gt;2]
-==&gt;[doc=&gt;'sys-instset',revision=&gt;2]
+==&gt;[
+    doc=&gt;'sys-instset',
+    revision=&gt;2]
 mtron&gt; *scratch:meta
-==&gt;[doc=&gt;'sys-instset',revision=&gt;2]
+==&gt;[
+    doc=&gt;'sys-instset',
+    revision=&gt;2]
 </code></pre>
 <h3>a file as an instruction</h3>
 <p>A file that is executable is read back as an <code>inst::T</code> — the space exposes the call,

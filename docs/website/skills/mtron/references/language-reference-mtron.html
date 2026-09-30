@@ -402,7 +402,7 @@ inst, code, bytes, etc. Expressions chain left-to-right: <code>lhs.inst(rhs)</co
 <pre><code class="language-mtron">mtron&gt; 1           [-- int (64-bit signed) --]
 ==&gt;1
 mtron&gt; 1.0         [-- real (double) --]
-==&gt;1.0
+==&gt;1.0000
 mtron&gt; true        [-- bool --]
 ==&gt;true
 mtron&gt; false       [-- bool --]
@@ -429,17 +429,26 @@ mtron&gt; noobj       [-- &quot;no obj&quot; (empty, none) --]
 <pre><code class="language-mtron">mtron&gt; [1, 2, 3]         [-- List of 3 ints --]
 ==&gt;[1,2,3]
 mtron&gt; [1, [2, 3]]       [-- Nested list --]
-==&gt;[1,[2,3]]
+==&gt;[
+    1,
+    [2,3]]
 mtron&gt; [a=&gt;1, b=&gt;2]      [-- Record (key-value pairs) --]
-==&gt;[a=&gt;1,b=&gt;2]
+==&gt;[
+    a=&gt;1,
+    b=&gt;2]
 mtron&gt; [,]               [-- Empty list --]
 ==&gt;[,]
 </code></pre>
 <h4>rec (<code>[key=&gt;val, ...]</code> — unordered, keyed)</h4>
 <pre><code class="language-mtron">mtron&gt; [name=&gt;'marko', age=&gt;29]
-==&gt;[name=&gt;'marko',age=&gt;29]
+==&gt;[
+    name=&gt;'marko',
+    age=&gt;29]
 mtron&gt; [1=&gt;2, 2=&gt;3, 3=&gt;4]
-==&gt;[1=&gt;2,2=&gt;3,3=&gt;4]
+==&gt;[
+    1=&gt;2,
+    2=&gt;3,
+    3=&gt;4]
 </code></pre>
 <h4>objs (<code>{ , }</code> — unordered, streamed and bulked)</h4>
 <pre><code class="language-mtron">mtron&gt; {1,2,3} [-- equivalent to {2,1,3} (unordered) --]
@@ -473,13 +482,15 @@ mtron&gt; name=&gt;'marko'=&gt;age=&gt;29.&gt;&gt;.&gt;&gt;.&gt;&gt;
 mtron&gt; [1,2,3,4]@b              [-- lst anchored at *a --]
 ==&gt;[1,2,3,4]@b
 mtron&gt; *a + [b=&gt;2]
-==&gt;[a=&gt;1,b=&gt;2]
+==&gt;[
+    a=&gt;1,
+    b=&gt;2]
 mtron&gt; *a
 ==&gt;[a=&gt;1]
 mtron&gt; @b + [5,6]
-==&gt;[1,2,3,4,5,6,5,6]@b
+==&gt;[1,2,3,4,5,6]@b
 mtron&gt; *b
-==&gt;[1,2,3,4,5,6,5,6]
+==&gt;[1,2,3,4,5,6]
 </code></pre>
 <hr />
 <h3>3. Coefficients (count / multiplicity)</h3>
@@ -616,21 +627,22 @@ mtron&gt; &quot;/a/b/c&quot;.as(uri::T)       [-- /a/b/c --]
 mtron&gt; true.as(int::T)           [-- 1 --]
 ==&gt;1
 mtron&gt; [a=&gt;1,b=&gt;2].as(lst::T)    [-- [(0=&gt;(a=&gt;1)),(1=&gt;(b=&gt;2))] --]
-==&gt;[0=&gt;a=&gt;1,1=&gt;b=&gt;2]
+==&gt;[
+    0=&gt;a=&gt;1,
+    1=&gt;b=&gt;2]
 mtron&gt; [a,b].as(rec::T)          [-- [0=&gt;a,1=&gt;b] --]
-==&gt;[0=&gt;a,1=&gt;b]
+==&gt;[
+    0=&gt;a,
+    1=&gt;b]
 </code></pre>
 <p>Custom types via <code>tid::T[predicate][constructor]@vid</code>:</p>
 <pre><code class="language-mtron">mtron&gt; int::T[is(gt(0))]@nat     [-- type nat, only positive ints --]
-==&gt;int::T[is(gt(0))]@nat
 mtron&gt; int::T[?&gt;0]@nat           [-- syntax sugar on is(gt(0)) --]
-==&gt;int::T[is(gt(0))]@nat
 mtron&gt; nat::2                    [-- ok --]
 ==&gt;nat::2
 mtron&gt; nat::-1                   [-- &lt;ERROR&gt; --]
 ==&gt;fail::[-1 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-1
-   	at offset 19]@/sys/fail/394
+   	while parsing: nat::-1]@/sys/fail/428
 </code></pre>
 <hr />
 <h3>8. Mapping &amp; Filtering</h3>
@@ -650,16 +662,22 @@ mtron&gt; {1,2,3,4}.map(map(+2))           [-- nested --]
 ==&gt;5
 ==&gt;6
 mtron&gt; {1,2,3}.where(gt(1))             [-- {2,3}  (filter: keep if predicate matches) --]
-==&gt;fail{3}::[lhs range does not match inst domain: int::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri(gt(1)){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/402
+==&gt;fail{3}::[lhs range does not match inst domain: int::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri(gt(1)){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/430
 mtron&gt; {1,2,3}.is(gt(1))                [-- {2,3}  (same, filter via is()) --]
 ==&gt;2
 ==&gt;3
 </code></pre>
 <h4>Select (structural projection)</h4>
 <pre><code class="language-mtron">mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3].select([_=&gt;_])                            [-- [a=&gt;1,b=&gt;2,c=&gt;3] --]
-==&gt;[a=&gt;1,b=&gt;2,c=&gt;3]
+==&gt;[
+    a=&gt;1,
+    b=&gt;2,
+    c=&gt;3]
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[_=&gt;_]                                   [-- syntax sugar for above --]
-==&gt;[a=&gt;1,b=&gt;2,c=&gt;3]
+==&gt;[
+    a=&gt;1,
+    b=&gt;2,
+    c=&gt;3]
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[a=&gt;_]                                   [-- [a=&gt;1] --]
 ==&gt;[a=&gt;1]
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[a=&gt;+10]                                 [-- [a=&gt;11] --]
@@ -672,18 +690,33 @@ mtron&gt; [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3]
 </code></pre>
 <h4>Where (filter)</h4>
 <pre><code class="language-mtron">mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}.where([a=&gt;is(gt(1))])               [-- {[a=&gt;2],[a=&gt;3]} --]
-==&gt;fail{3}::[lhs range does not match inst domain: rec::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri([a=&gt;is(gt(1))]){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/414
+==&gt;fail{3}::[lhs range does not match inst domain: rec::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri([a=&gt;is(gt(1))]){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/436
 mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}=?=[a=&gt;is(gt(1))]                    [-- syntax sugar for above --]
-==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '=?=[a=&gt;is(gt(1))]'
+==&gt;fail::[parse error at line 1, col 23:
+     {[a=&gt;1],[a=&gt;2],[a=&gt;3]}=?=[a=&gt;is(gt(1))]                    
+                           ^
+     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/442
 mtron&gt; [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   [-- [1,7,3] --]
-==&gt;ERROR: infinite recursion detected in parser: parser consumed 0 characters at '=?=[_,is(gt(5)),_]'
+==&gt;fail::[parse error at line 1, col 23:
+     [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   
+                           ^
+     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/444
 </code></pre>
 <hr />
 <h3>9. Grouping</h3>
 <pre><code class="language-mtron">mtron&gt; {1,2,3}.group([_=&gt;+10])                [-- [1=&gt;11, 2=&gt;12, 3=&gt;13] --]
-==&gt;[1=&gt;11,2=&gt;12,3=&gt;13]
+==&gt;[
+    1=&gt;11,
+    2=&gt;12,
+    3=&gt;13]
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3].group([_=&gt;_])          [-- [[a=&gt;1,b=&gt;2,c=&gt;3]=&gt;[a=&gt;1,b=&gt;2,c=&gt;3]] --]
-==&gt;[[a=&gt;1,b=&gt;2,c=&gt;3]=&gt;[a=&gt;1,b=&gt;2,c=&gt;3]]
+==&gt;[[
+    a=&gt;1,
+    b=&gt;2,
+    c=&gt;3]=&gt;[
+    a=&gt;1,
+    b=&gt;2,
+    c=&gt;3]]
 </code></pre>
 <hr />
 <h3>10. Merging &amp; Splitting</h3>
@@ -704,7 +737,9 @@ mtron&gt; {1,2,3}&gt;-1                           [-- {1,1,2,3} --]
 ==&gt;2
 ==&gt;3
 mtron&gt; [a=&gt;1,b=&gt;2]&gt;-.&gt;-[b=&gt;2]              [-- [a=&gt;1,b=&gt;2]  (merge into existing rec) --]
-==&gt;[a=&gt;1,b=&gt;{2}2]
+==&gt;[
+    a=&gt;1,
+    b=&gt;{2}2]
 </code></pre>
 <h4>Split (<code>-&lt;</code>)</h4>
 <p>Distributes elements:</p>
@@ -791,9 +826,15 @@ mtron&gt; [1,2]@a &gt;&gt;= [_,+4]                      [-- [1,6]@a  (second ele
 mtron&gt; [a=&gt;1,b=&gt;2] &gt;&gt;= [b=&gt;none]               [-- [a=&gt;1]  (remove field b) --]
 ==&gt;[a=&gt;1]
 mtron&gt; @&lt;people/+&gt;.&gt;&gt;= [name=&gt;&quot;Micky Mouse&quot;]   [-- wildcard update --]
-==&gt;[name=&gt;'Micky Mouse',role=&gt;architect]
-==&gt;[name=&gt;'Micky Mouse',role=&gt;developer]
-==&gt;[name=&gt;'Micky Mouse',role=&gt;oracle]
+==&gt;[
+    name=&gt;'Micky Mouse',
+    role=&gt;developer]
+==&gt;[
+    name=&gt;'Micky Mouse',
+    role=&gt;oracle]
+==&gt;[
+    name=&gt;'Micky Mouse',
+    role=&gt;architect]
 </code></pre>
 <p><code>@</code> means &quot;anchor the write-back to the VID&quot; (persist).  <code>*</code> means &quot;anonymous copy&quot; (no write-back):</p>
 <pre><code class="language-mtron">mtron&gt; @a/b/c&gt;&gt;= +10      [-- modifies *a/b/c and writes back --]
@@ -817,11 +858,11 @@ mtron&gt; *a&gt;&gt;x/x            [-- reads a field after resolving the auto-re
 <h3>16. Math Instruction</h3>
 <p>Embedded mathematical expressions:</p>
 <pre><code class="language-mtron">mtron&gt; math('1+2')                           [-- 3.0 --]
-==&gt;3.0
+==&gt;3.0000
 mtron&gt; 10.to(a).math('a^2')                  [-- 100.0 --]
-==&gt;100.0
+==&gt;100.0000
 mtron&gt; 10.to(a).plus(10).to(b).math('a+b')   [-- 30.0 --]
-==&gt;30.0
+==&gt;30.0000
 </code></pre>
 <hr />
 <h3>17. URI Path Operations</h3>
@@ -922,8 +963,10 @@ mtron&gt; ?int::T    [-- check if type is int --]
 </ol>
 <pre><code class="language-mtron">mtron&gt; [-- Chaining example (read test data from test file): --]
 mtron&gt; {1,2,3,4}.sum{2}().sum?int&lt;=int{1,7}().sum()-&lt;[_,_]&gt;-.sum?int&lt;=int{2}()  #
-==&gt;ERROR: monad obj coefficient is greater than inst dom coefficient:
-	40 [{1} X=&gt; {0}] start?rng=A{**}&amp;dom=noobj{0}(&lt;#&gt;){&lt;j&gt;}@&lt;6&gt;
+==&gt;fail::[parse error at line 1, col 74:
+     ...,7}().sum()-&lt;[_,_]&gt;-.sum?int&lt;=int{2}()  #
+                                                ^
+     could not parse at '#' — unclosed '&lt;' — missing '&gt;'?]@/sys/fail/472
 </code></pre>
 
     </div>

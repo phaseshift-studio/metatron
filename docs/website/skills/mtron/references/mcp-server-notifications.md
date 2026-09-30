@@ -38,11 +38,11 @@ mtron> <ws://localhost:8555/mcp/+/notifications/#?subq> -> sub::[
                  *<ws://localhost:8555/mcp/${*message>>0>>1}>>>send.apply(*payload)}}]
 ==>fail::[[jsonrpc=>'2.0',method=>rshift(0).minus(<ws://localhost:8555/mcp/${*message>>0>>1}${/}>),params=>*message.rshift(1)] is not a str::T[/m/inst/pred?rng=#{?}&dom=#{?}(<#{*}>::T){<j>}]@json
    	while parsing: <ws://localhost:8555/mcp/+/notifications/#?subq> -> sub::[
-             on_recv => inst?#<=lst(message=>?lst::T){
-               -<json::[jsonrpc => '2.0',
-                  method  => >>0 - <ws://localhost:8555/mcp/${*message>>0>>1}${/}>,
-                  params  => *message>>1].inst(payload=>_){
-                    *<ws://localhost:8555/mcp/${*message>>0>>1}>>>send.apply(*payload)}}]]@/sys/fail/612
+   on_recv => inst?#<=lst(message=>?lst::T){
+   -<json::[jsonrpc => '2.0',
+   method  => >>0 - <ws://localhost:8555/mcp/${*message>>0>>1}${/}>,
+   params  => *message>>1].inst(payload=>_){
+   *<ws://localhost:8555/mcp/${*message>>0>>1}>>>send.apply(*payload)}}]]@/sys/fail/550
 ```
 This lives in `boot/boot.mtron` lines 82-88 and is injected at boot time.
 
@@ -75,7 +75,7 @@ Ensures JSON serialization (`{"jsonrpc":"2.0",...}`) rather than mtron record sy
 mtron> [-- WRONG — sends literal source code, not evaluated JSON --]
 mtron> json::[jsonrpc => '2.0', params => *message>>1]
 ==>fail::[[jsonrpc=>'2.0',params=>*message.rshift(1)] is not a str::T[/m/inst/pred?rng=#{?}&dom=#{?}(<#{*}>::T){<j>}]@json
-   	while parsing: json::[jsonrpc => '2.0', params => *message>>1]]@/sys/fail/616
+   	while parsing: json::[jsonrpc => '2.0', params => *message>>1]]@/sys/fail/552
 ```**Symptom**: Client receives raw expression text instead of evaluated values.
 **Fix**: Use `-<json::[...]` to force evaluation.
 
@@ -83,7 +83,10 @@ mtron> json::[jsonrpc => '2.0', params => *message>>1]
 ```mtron
 mtron> [-- WRONG — parser can't resolve nested call structure --]
 mtron> *srv>>>send.apply(-<json::[...])
-==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at '>send.apply(-<json::[...])'
+==>fail::[parse error at line 1, col 7:
+     *srv>>>send.apply(-<json::[...])
+           ^
+     unexpected '>' — URI brackets don't match, or extra '>'?]@/sys/fail/554
 ```**Symptom**: `fail::[unable to determine inst function:]`
 **Fix**: Separate JSON builder from send call using `.inst()` split-pattern.
 
@@ -93,14 +96,20 @@ mtron> *srv>>>send.apply(-<json::[...])
 mtron> [-- Recover without full restart: --]
 mtron> */sys/space/web/ws>>=[q=>[subq::[=>]]]              [-- re-enable subq processor --]
 mtron> <ws://.../?subq> -> sub::[...]                       [-- re-register subscription --]
-==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at '-> sub::[...]'
+==>fail::[parse error at line 1, col 17:
+     <ws://.../?subq> -> sub::[...]                       
+                     ^
+     could not parse at ' ']@/sys/fail/556
 ```
 ## Boot Integration
 
 The `subq` framework must be enabled on the WebSocket space before subscriptions can be registered:
 ```mtron
 mtron> wsspace::[q => [subq::[=>]], ...]@/sys/space/web/ws
-==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at 'wsspace::[q => [subq::[=>]], ...]@/sys/space/web/ws'
+==>fail::[parse error at line 1, col 1:
+     wsspace::[q => [subq::[=>]], ...]@/sys/s...
+     ^
+     could not parse at 'w']@/sys/fail/558
 ```
 The `q => [subq::[=>]]` adds declarative pub/sub semantics to the space.
 

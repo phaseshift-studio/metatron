@@ -284,17 +284,21 @@ public class mInstSet extends AbstractInstSet {
             .vid(EXPLANATION_TID)
             .isaPredicate(rec(
                     uri(FORMAT), STR_TYPE,
+                    // dom/rng/rewrite/f are optional keys: the rec builder drops a noobj field (and cleanMap
+                    // drops the whole key with it), and every one of these is legitimately noobj — `dom` for any
+                    // expression starting at a literal, `rewrite` when the submitted code is the last stage, `f`
+                    // for an inst with no function. a mandatory key made explain() fail its own type_pred check.
                     uri(DESC), rec(
-                            uri(DOM), URI_TYPE,
-                            uri(RNG), URI_TYPE,
+                            uri(DOM).maybe().asUri(), URI_TYPE,
+                            uri(RNG).maybe().asUri(), URI_TYPE,
                             uri(INSTS), INT_TYPE,
-                            uri(REWRITE), T(EXPLANATION_TID.maybe())),
+                            uri(REWRITE).maybe().asUri(), T(EXPLANATION_TID.maybe())),
                     uri(PER_INST), lst(rec(
                             uri(OP), URI_TYPE,
-                            uri(DOM), URI_TYPE,
-                            uri(RNG), URI_TYPE,
+                            uri(DOM).maybe().asUri(), URI_TYPE,
+                            uri(RNG).maybe().asUri(), URI_TYPE,
                             uri(ARGS), union_(LST_TYPE, REC_TYPE).tryToInst(),
-                            uri(Tokens.F), ALL_TYPE,
+                            uri(Tokens.F).maybe().asUri(), ALL_TYPE,
                             uri(FORM), URI_TYPE,
                             uri(C_DOM), INT_TYPE,
                             uri(C_RNG), INT_TYPE))))
@@ -639,7 +643,10 @@ public class mInstSet extends AbstractInstSet {
                                     // would strip id()/plus(0)/mult(1) before the rewrite can be timed.
                                     final Code precedingCode = MCode.of(preceding);
                                     final List<Inst> bundledCode = new ArrayList<>();
-                                    bundledCode.add(instC(M_ISA_INST_TID.extend("profile_analysis").dom(ALL.maybeSome()).rng(PROFILING_TYPE.vid()),
+                                    // dom is maybe (not maybeSome): one lhs in, exactly one report out. a bulk (gather)
+                                    // dom made the monad loop apply this inst *and* flush it through the barrier, so
+                                    // profile() returned two reports — a {2} objs, printed as two tables end to end.
+                                    bundledCode.add(instC(M_ISA_INST_TID.extend("profile_analysis").dom(ALL.maybe()).rng(PROFILING_TID),
                                             lst(),
                                             (lhs, inst) -> profileTable(precedingCode)));
                                     if (profileInst.get0() + 1 < insts.size()) {
@@ -649,7 +656,7 @@ public class mInstSet extends AbstractInstSet {
                                             bundledCode.addAll(insts.subList(profileInst.get0() + 2, profileInst.get0() + 3));
                                         }
                                     }
-                                    return code.selfJVM(bundledCode).asCode();
+                                    return code.jvm(bundledCode);
                                 }), "rewrites a().b().c().profile() to profile_analysis(a().b().c())"),
 
                         // Remove identity instructions (no-op)
@@ -950,7 +957,10 @@ public class mInstSet extends AbstractInstSet {
                                     // would strip id()/plus(0)/mult(1) before explain can be computed.
                                     final Code precedingCode = MCode.of(preceding).resolve(noobj());
                                     final List<Inst> bundledCode = new ArrayList<>();
-                                    bundledCode.add(instC(M_ISA_INST_TID.extend("explain_analysis").dom(ALL.maybeSome()).rng(EXPLANATION_TYPE.vid()),
+                                    // dom is maybe (not maybeSome), mirroring profile_analysis: one lhs in, exactly
+                                    // one report out. see profile_analysis — a gather dom double-applied the report,
+                                    // which here merged into a single explanation{2} and a double-width >>format.
+                                    bundledCode.add(instC(M_ISA_INST_TID.extend("explain_analysis").dom(ALL.maybe()).rng(EXPLANATION_TID),
                                             lst(),
                                             (lhs, inst) -> explainRec(precedingCode)));
                                     if (explainInst.get0() + 1 < insts.size()) {
@@ -960,7 +970,7 @@ public class mInstSet extends AbstractInstSet {
                                             bundledCode.addAll(insts.subList(explainInst.get0() + 2, insts.size()));
                                         }
                                     }
-                                    return code.selfJVM(bundledCode).asCode();
+                                    return code.jvm(bundledCode);
                                 }), "rewrites a().b().c().explain() to explain_analysis(a().b().c()), carrying trailing insts (e.g. >>format) — mirror of profile_analysis"))
 
                 /*uri(SUGAR), lst(sugars().stream()
@@ -1044,22 +1054,21 @@ public class mInstSet extends AbstractInstSet {
                     uri(RNG), domRngValue(i.rng()),
                     // the args as their own objs (ints, calls, ...), not their string renderings
                     uri(ARGS), lst(i.args().elements().toList()),
-                    uri(Tokens.F), i.hasf() ? (i.f().isLambda() ? (Obj) str("<j>") : i.getMtronFunctionObj()) : noobj(),
+                    uri(Tokens.F), i.hasf() ? (i.f().isLambda() ? str("<j>") : i.getMtronFunctionObj()) : noobj(),
                     uri(FORM), uri(f(Inst.Form.of(i).toString())),
                     uri(C_DOM), jnt(i.dom().c().min()),
                     uri(C_RNG), jnt(i.rng().c().min())));
         }
         return rec(
-                uri(FORMAT), auto_(instLambda(ALL.maybe(), STR_TID, (lhs, inst) -> str(explainTable(code)))),
-                uri(DESC), rec(
-                        uri(DOM), domRngValue(insts.getFirst().dom()),
-                        uri(RNG), domRngValue(insts.getLast().rng()),
-                        uri(INSTS), jnt(insts.size()),
-                        // rewrite-stage chain: a later stage's explanation will point at this rec (the
-                        // original submitted expression's); the original terminates the chain (noobj)
-                        uri(REWRITE), noobj()),
-                uri(PER_INST), lst(perInstRecs))
-                .vid(EXPLANATION_TYPE.vid());
+                mutableMap(uri(FORMAT), auto_(instLambda(ALL.maybe(), STR_TID, (lhs, inst) -> str(explainTable(code)))),
+                        uri(DESC), rec(
+                                uri(DOM), domRngValue(insts.getFirst().dom()),
+                                uri(RNG), domRngValue(insts.getLast().rng()),
+                                uri(INSTS), jnt(insts.size()),
+                                // rewrite-stage chain: a later stage's explanation will point at this rec (the
+                                // original submitted expression's); the original terminates the chain (noobj)
+                                uri(REWRITE), noobj()),
+                        uri(PER_INST), lst(perInstRecs)), EXPLANATION_TID, null);
     }
 
     /**
@@ -1227,7 +1236,7 @@ public class mInstSet extends AbstractInstSet {
                     uri(C_OUT), jnt((null == co ? 0L : co.get()) / iters),
                     uri(TIME), real((null == ti ? 0L : ti.get()) / ms / iters, MILLIS_TYPE.vid(), null)));
         }
-        return rec(
+        return rec(mutableMap(
                 uri(FORMAT), auto_(instLambda(ALL.maybe(), STR_TID, (lhs, inst) -> str(text))),
                 uri(STAGE), rec(
                         uri(REWRITE), rec(uri(MIN), real(rewriteMin / ms, MILLIS_TYPE.vid(), null), uri(MAX), real(rewriteMax / ms, MILLIS_TYPE.vid(), null)),
@@ -1252,8 +1261,7 @@ public class mInstSet extends AbstractInstSet {
                         uri(PROCESSORS), jnt(SwarmProcessor.PROCESSORS.get())),
                 uri(CACHE), rec(
                         uri(HITS), jnt(graph.hits()), uri(MISSES), jnt(graph.misses()),
-                        uri(HIT_RATE), real(graph.hitRate())))
-                .vid(PROFILING_TYPE.vid());
+                        uri(HIT_RATE), real(graph.hitRate()))), PROFILING_TID, null);
     }
 
     @Override

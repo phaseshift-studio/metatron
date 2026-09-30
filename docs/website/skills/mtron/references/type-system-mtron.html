@@ -476,19 +476,17 @@ everything.</p>
 <h4>defining a named type</h4>
 <p>The full type syntax is <code>tid::T[predicate][constructor]@vid</code>:</p>
 <pre><code class="language-mtron">mtron&gt; person -&gt; rec::T[?[age=&gt;int::T,name=&gt;str::T]]@person
-==&gt;rec::T[?[age=&gt;int::T,name=&gt;str::T]]@person
 mtron&gt; nat -&gt; int::T[is(gt(0))]@nat
-==&gt;int::T[is(gt(0))]@nat
 mtron&gt; nat -&gt; int::T[?&gt;0][-&lt;|[is(lt(0)) =&gt; * -1, _ =&gt; _]&gt;&gt;]@nat
-==&gt;int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@nat
 mtron&gt; bignat -&gt; nat::T[is(gt(100))]@bignat
-==&gt;nat::T[is(gt(100))]@bignat
 </code></pre>
 <p>The <code>-&gt;</code> syntax defines a type in the current space. The right side is the full type definition; the left side is the
 name under which it is stored.</p>
 <h4>instantiation</h4>
 <pre><code class="language-mtron">mtron&gt; person::[name=&gt;'enoch',age=&gt;365]@enoch
-==&gt;person::[name=&gt;'enoch',age=&gt;365]@enoch
+==&gt;person::[
+    name=&gt;'enoch',
+    age=&gt;365]@enoch
 mtron&gt; 23.as(nat::T)
 ==&gt;nat::23
 mtron&gt; int::42@the_answer
@@ -499,46 +497,34 @@ mtron&gt; int::42@the_answer
 <h4>isa-predicates (structural)</h4>
 <p>Created with <code>?[...]</code> — defines a required <strong>record structure</strong>:</p>
 <pre><code class="language-mtron">mtron&gt; being -&gt; rec::T[?[age=&gt;int::T]]
-==&gt;rec::T[?[age=&gt;int::T]]
 mtron&gt; person -&gt; being::T[?[name=&gt;str::T]]
-==&gt;rec::T[?[name=&gt;str::T]]
 mtron&gt; team -&gt; rec::T[?[flag=&gt;str{2}::T, member=&gt;being{+}::T]]
-==&gt;rec::T[?[flag=&gt;str{2}::T,member=&gt;rec{+}::T[?[age=&gt;int::T]]]]
 </code></pre>
 <p>Field types can be optional with <code>?</code>:</p>
 <pre><code class="language-mtron">mtron&gt; rec::T[?[name=&gt;str::T, address=&gt;str{?}::T]]
-==&gt;rec::T[?[name=&gt;str::T,address=&gt;str{?}::T]]
 </code></pre>
 <p><strong>Multi-level stacking</strong>: a type inherits all isa constraints from its ancestors:</p>
 <pre><code class="language-mtron">mtron&gt; mortal -&gt; person::T[?&lt;120]  [-- adds a non-isa constraint on top --]
-==&gt;rec::T[is(lt(120))]
 </code></pre>
 <p>The full predicate stack for <code>mortal</code> is: <code>[?&lt;120, isa([age=&gt;int::T,name=&gt;str::T])]</code>.</p>
 <h4>non-isa predicates (nominal)</h4>
 <p>Freeform functional constraints using instructions:</p>
 <pre><code class="language-mtron">mtron&gt; int::T[is(gt(0))]
-==&gt;int::T[is(gt(0))]
 mtron&gt; int::T[?&gt;0]
-==&gt;int::T[is(gt(0))]
 mtron&gt; int::T[?=42]
-==&gt;int::T[is(eq(42))]
 mtron&gt; int::T[?&gt;0.?&lt;120]
-==&gt;int::T[is(gt(0)).is(lt(120))]
 </code></pre>
 <p>The <code>.</code> operator chains predicates: <code>p1.p2</code> means &quot;apply p1, then apply p2 to the result.&quot; Both must succeed (AND
 semantics).</p>
 <p><strong>OR semantics</strong> use split/merge:</p>
 <pre><code class="language-mtron">mtron&gt; [-- value must be &gt; 0 OR &lt; 120 --]
 mtron&gt; int::T[-&lt;[?&gt;0,?&lt;120]&gt;-]
-==&gt;int::T[split([is(gt(0)),is(lt(120))]).merge()]
 </code></pre>
 <h4>predicate vs no predicate</h4>
 <p>A type <strong>without</strong> a predicate is the most general type at its level — it accepts any value with the correct base type
 and coefficient:</p>
 <pre><code class="language-mtron">mtron&gt; int::T        [-- accepts any integer --]
-==&gt;int::T
 mtron&gt; int::T[?&gt;0]   [-- only accepts positive integers --]
-==&gt;int::T[is(gt(0))]
 </code></pre>
 <h4>type constructors</h4>
 <p>A type can also define a <strong>constructor</strong> — an instruction that transforms any value of the base type into a valid value
@@ -551,7 +537,6 @@ of the defined type. The constructor sits alongside the predicate in the type de
 </code></pre>
 <p>The predicate <strong>tests</strong> membership; the constructor <strong>produces</strong> membership:</p>
 <pre><code class="language-mtron">mtron&gt; nat -&gt; int::T[?&gt;0][-&lt;|[is(lt(0)) =&gt; * -1, _ =&gt; _]&gt;&gt;]
-==&gt;int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]
 mtron&gt; [-- Predicate test: is it &gt; 0? --]
 mtron&gt; 2.isa(nat::T)           [-- true --]
 ==&gt;2
@@ -560,7 +545,7 @@ mtron&gt; [-- Constructor application: coerce to fit --]
 mtron&gt; 2.as(nat::T)          [-- nat::2 --]
 ==&gt;nat::2
 mtron&gt; -2.as(nat::T)         [-- nat::2  (constructor applied: abs) --]
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@nat [structural] (at /m/inst/as@1)]@/sys/fail/674
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@nat [structural] (at /m/inst/as@1)]@/sys/fail/588
 </code></pre>
 <p>The <code>as()</code> instruction applies the constructor. If the predicate passes, the value is returned as-is. If not, the
 constructor runs. If the constructor's result passes the predicate, the transformed value is returned. Otherwise, it
@@ -594,14 +579,11 @@ from other structurally-identical types.</p>
 <p>Structural types alone can over-match. A <code>rec::T</code> with name and age could represent both a human and a chicken. Nominal
 types prevent this:</p>
 <pre><code class="language-mtron">mtron&gt; being -&gt; rec::T[?[name=&gt;str::T,age=&gt;int::T]]@being
-==&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T]]
 mtron&gt; human -&gt; being::T@human
-==&gt;being::T@human
 mtron&gt; chicken -&gt; being::T@chicken
-==&gt;being::T@chicken
 mtron&gt; [-- A human is NOT a chicken, despite identical structure --]
 mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T)
-==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal] (at /m/inst/as@1)]@/sys/fail/678
+==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal] (at /m/inst/as@1)]@/sys/fail/590
 </code></pre>
 <p>This is the difference between <strong>experiential knowledge</strong> (structural — what can be observed) and <strong>authoritative
 knowledge</strong> (nominal — what has been declared).</p>
@@ -633,9 +615,9 @@ knowledge</strong> (nominal — what has been declared).</p>
 <pre><code class="language-mtron">mtron&gt; [-- a function from any type to maybe some of any type --]
 mtron&gt; /m/inst?#{*}&lt;=#{?}(#::T)
 ==&gt;fail::[unable to determine inst function:
-   	noobj       =&gt; inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T)@&lt;0&gt;   | [inst]
+   	noobj       =&gt; inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T)   | [inst]
    	noobj       =&gt; &lt;#{?}&gt;::T   |  \_dom
-   	noobj      X=&gt; [&lt;#&gt;::T]   |  \_args]@/sys/fail/682
+   	noobj      X=&gt; [&lt;#&gt;::T]   |  \_args]@/sys/fail/592
 </code></pre>
 <h3>type checking and casting</h3>
 <h4><code>.test()</code> — predicate membership</h4>
@@ -649,7 +631,6 @@ mtron&gt; 2.isa(nat::T)           [-- true (2 &gt; 0) --]
 mtron&gt; -1.isa(nat::T)          [-- false (-1 is not &gt; 0) --]
 mtron&gt; [-- type vs type (refinement check) --]
 mtron&gt; nat::T.isa(int::T)      [-- true (nat is-a int) --]
-==&gt;int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@nat
 mtron&gt; int::T.isa(nat::T)      [-- false (int is not-a nat) --]
 </code></pre>
 <h4><code>.as()</code> — constructor application</h4>
@@ -659,28 +640,30 @@ returned as-is. Otherwise, the constructor transforms it:</p>
 mtron&gt; 2.as(nat::T)             [-- nat::2  (already fits) --]
 ==&gt;nat::2
 mtron&gt; -2.as(nat::T)            [-- nat::2  (constructor applied) --]
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@nat [structural] (at /m/inst/as@1)]@/sys/fail/686
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@nat [structural] (at /m/inst/as@1)]@/sys/fail/594
 mtron&gt; [-- Without a constructor, .as() is a pure test --]
 mtron&gt; -2.as(int::T[?&gt;0])  [-- fails: no constructor to rescue --]
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural] (at /m/inst/as@1)]@/sys/fail/690
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural] (at /m/inst/as@1)]@/sys/fail/596
 </code></pre>
 <p><code>.as()</code> is also used for nominal type casting:</p>
 <pre><code class="language-mtron">mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)    [-- ok: structurally a chicken --]
-==&gt;chicken::[name=&gt;'fuzzy feet',age=&gt;2]
+==&gt;chicken::[
+    name=&gt;'fuzzy feet',
+    age=&gt;2]
 mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T) [-- ERROR: nominally not a chicken --]
-==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal] (at /m/inst/as@1)]@/sys/fail/694
+==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal] (at /m/inst/as@1)]@/sys/fail/598
 </code></pre>
 <h3>lowest common denominator</h3>
 <p>The most specific type that subsumes a set of types. Two types always have an LCD:</p>
 <pre><code class="language-mtron">mtron&gt; [-- mono with non-isa predicates: OR the constraints --]
 mtron&gt; int::T[?&gt;0] + int::T[?&lt;120]
-==&gt;fail::[inst apply failure: int::T[is(gt(0))] [type] unable to convert int::T (at /m/inst/plus@1)]@/sys/fail/698
+==&gt;fail::[inst apply failure: int::T[is(gt(0))] [type] unable to convert int::T (at /m/inst/plus@1)]@/sys/fail/600
 mtron&gt; [-- rec with isa predicates: merge fields structurally --]
 mtron&gt; rec::T[?[age=&gt;int::T,name=&gt;str::T]]@person + rec::T[?[age=&gt;int::T]]@artifact
-==&gt;fail::[inst apply failure: unable to convert type to rec::T [Obj&lt;632&gt;] (at /m/inst/plus@1) [Obj&lt;632&gt;]][class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/702
+==&gt;fail::[inst apply failure: unable to convert type to rec::T [Obj&lt;632&gt;] (at /m/inst/plus@1) [Obj&lt;632&gt;]][class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/602
 mtron&gt; [-- Disjoint hierarchies: fall back to universal type --]
 mtron&gt; int::T + str::T
-==&gt;fail::[inst apply failure: int::T [int::T] unable to convert str::T (at /m/inst/plus@1)]@/sys/fail/706
+==&gt;fail::[inst apply failure: int::T [int::T] unable to convert str::T (at /m/inst/plus@1)]@/sys/fail/604
 </code></pre>
 
     </div>

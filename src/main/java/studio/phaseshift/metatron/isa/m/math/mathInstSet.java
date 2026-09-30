@@ -88,11 +88,15 @@ public class mathInstSet extends AbstractInstSet {
     public static final String MATH_PBYTE_STRING = "/m/math/datasize/pB";
     /// ///////////////////////
     public static final fURI MATH_TIME_TID = MATH_ISA_TID.extend("time");
+    public static final fURI MATH_NANOS_TID = MATH_TIME_TID.extend("nanos");
+    public static final fURI MATH_MICROS_TID = MATH_TIME_TID.extend("micros");
     public static final fURI MATH_MILLIS_TID = MATH_TIME_TID.extend("millis");
     public static final fURI MATH_SECOND_TID = MATH_TIME_TID.extend("second");
     public static final fURI MATH_MINUTE_TID = MATH_TIME_TID.extend("minute");
     public static final fURI MATH_HOUR_TID = MATH_TIME_TID.extend("hour");
     public static final fURI MATH_DAY_TID = MATH_TIME_TID.extend("day");
+    public static final String MATH_NANOS_STRING = "/m/math/time/nanos";
+    public static final String MATH_MICROS_STRING = "/m/math/time/micros";
     public static final String MATH_MILLIS_STRING = "/m/math/time/millis";
     public static final String MATH_SECOND_STRING = "/m/math/time/second";
     public static final String MATH_MINUTE_STRING = "/m/math/time/minute";
@@ -138,6 +142,8 @@ public class mathInstSet extends AbstractInstSet {
         assert MATH_GBYTE_STRING.equals(MATH_GBYTE_TID.toString());
         assert MATH_TBYTE_STRING.equals(MATH_TBYTE_TID.toString());
         assert MATH_PBYTE_STRING.equals(MATH_PBYTE_TID.toString());
+        assert MATH_NANOS_STRING.equals(MATH_NANOS_TID.toString());
+        assert MATH_MICROS_STRING.equals(MATH_MICROS_TID.toString());
         assert MATH_MILLIS_STRING.equals(MATH_MILLIS_TID.toString());
         assert MATH_SECOND_STRING.equals(MATH_SECOND_TID.toString());
         assert MATH_MINUTE_STRING.equals(MATH_MINUTE_TID.toString());
@@ -164,12 +170,46 @@ public class mathInstSet extends AbstractInstSet {
             .vid(MATH_TIME_TID)
             .create();
 
+    public static final Type NANOS_TYPE = Type.Builder.build()
+            .tid(MATH_TIME_TID)
+            .vid(MATH_NANOS_TID)
+            .constructor(arg -> {
+                final String tid = arg.tid().toString();
+                return switch (tid) {
+                    case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
+                    case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() * 1_000_000.0d);
+                    case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() * 1_000_000_000.0d);
+                    case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() * 1_000_000_000.0d * 60.0d);
+                    case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() * 1_000_000_000.0d * 60.0d * 60.0d);
+                    case MATH_DAY_STRING -> arg.jvm(arg.asReal().jvm() * 1_000_000_000.0d * 60.0d * 60.0d * 24.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static final Type MICROS_TYPE = Type.Builder.build()
+            .tid(MATH_TIME_TID)
+            .vid(MATH_MICROS_TID)
+            .constructor(arg -> {
+                final String tid = arg.tid().toString();
+                return switch (tid) {
+                    case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
+                    case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
+                    case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d);
+                    case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d * 60.0d);
+                    case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d * 60.0d * 60.0d);
+                    case MATH_DAY_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d * 60.0d * 60.0d * 24.0d);
+                    default -> arg;
+                };
+            }).create();
+
     public static final Type MILLIS_TYPE = Type.Builder.build()
             .tid(MATH_TIME_TID)
             .vid(MATH_MILLIS_TID)
             .constructor(arg -> {
                 final String tid = arg.tid().toString();
                 return switch (tid) {
+                    case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 1_000_000.0d);
+                    case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
                     case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
                     case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 60.0d);
                     case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 60.0d * 60.0d);
@@ -184,6 +224,8 @@ public class mathInstSet extends AbstractInstSet {
             .constructor(arg -> {
                 final String tid = arg.tid().toString();
                 return switch (tid) {
+                    case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 1_000_000_000.0d);
+                    case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d / 1000.0d);
                     case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
                     case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() * 60.0d);
                     case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() * 60.0d * 60.0d);
@@ -198,6 +240,8 @@ public class mathInstSet extends AbstractInstSet {
             .constructor(arg -> {
                 final String tid = arg.tid().toString();
                 return switch (tid) {
+                    case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 1_000_000_000.0d);
+                    case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 1000.0d / 1000.0d);
                     case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 1000.0d);
                     case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d);
                     case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() * 60.0d);
@@ -212,6 +256,8 @@ public class mathInstSet extends AbstractInstSet {
             .constructor(arg -> {
                 final String tid = arg.tid().toString();
                 return switch (tid) {
+                    case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 1_000_000_000.0d);
+                    case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 1000.0d / 1000.0d);
                     case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 1000.0d);
                     case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d);
                     case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d);
@@ -226,6 +272,8 @@ public class mathInstSet extends AbstractInstSet {
             .constructor(arg -> {
                 final String tid = arg.tid().toString();
                 return switch (tid) {
+                    case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 24.0d / 1_000_000_000.0d);
+                    case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 24.0d / 1000.0d / 1000.0d);
                     case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 24.0d / 1000.0d);
                     case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 24.0d);
                     case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 24.0d);
@@ -394,12 +442,14 @@ public class mathInstSet extends AbstractInstSet {
     }
 
     /**
-     * Convert a {@code time::T} (millis/second/minute/hour/day) to milliseconds.
+     * Convert a {@code time::T} (nanos/micros/millis/second/minute/hour/day) to milliseconds.
      * Time units require real-backed values — an int-backed time is a type
      * violation and {@code asReal()} rejects it.
      */
     public static double timeToMillis(final Obj time) {
         return switch (time.tid().basePath().toString()) {
+            case MATH_NANOS_STRING -> time.asReal().jvm() / 1_000_000.0d;
+            case MATH_MICROS_STRING -> time.asReal().jvm() / 1000.0d;
             case MATH_MILLIS_STRING -> time.asReal().jvm();
             case MATH_SECOND_STRING -> time.asReal().jvm() * 1000.0d;
             case MATH_MINUTE_STRING -> time.asReal().jvm() * 1000.0d * 60.0d;
@@ -414,7 +464,9 @@ public class mathInstSet extends AbstractInstSet {
      * Cascades upward through the time hierarchy when the value crosses
      * a ~2× threshold of the next larger unit:
      * <pre>
-     *   millis ≥ 2000  → seconds
+     *   nanos   ≥ 2000 → micros
+     *   micros  ≥ 2000 → millis
+     *   millis  ≥ 2000 → seconds
      *   seconds ≥ 120  → minutes
      *   minutes ≥ 120  → hours
      *   hours   ≥ 48   → days
@@ -423,6 +475,10 @@ public class mathInstSet extends AbstractInstSet {
      */
     public static Real normalizeTime(final Real time) {
         final double value = time.realValue();
+        if (time.tid().test(MATH_NANOS_TID) && value >= 2000.0d)
+            return normalizeTime(time.as(MICROS_TYPE).asReal());
+        if (time.tid().test(MATH_MICROS_TID) && value >= 2000.0d)
+            return normalizeTime(time.as(MILLIS_TYPE).asReal());
         if (time.tid().test(MATH_MILLIS_TID) && value >= 2000.0d)
             return normalizeTime(time.as(SECOND_TYPE).asReal());
         if (time.tid().test(MATH_SECOND_TID) && value >= 120.0d)
@@ -751,6 +807,8 @@ public class mathInstSet extends AbstractInstSet {
                         docWrap(Type.Builder.build().tid(MATH_CURRENCY_TID).vid(MATH_USD_TID).create(), "united states currency"),
                         docWrap(Type.Builder.build().tid(MATH_CURRENCY_TID).vid(MATH_EURO_TID).create(), "european union currency"),
                         docWrap(TIME_TYPE, "the nominal base type of time"),
+                        docWrap(NANOS_TYPE, "a nanosecond of time"),
+                        docWrap(MICROS_TYPE, "a microsecond of time"),
                         docWrap(MILLIS_TYPE, "a millisecond of time"),
                         docWrap(SECOND_TYPE, "a second of time (1000 millis)"),
                         docWrap(MINUTE_TYPE, "a minute of time (60 seconds)"),

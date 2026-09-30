@@ -1196,7 +1196,8 @@ public class mInstSetTest extends AbstractInstSetTest {
             output = "{{{expected}}}")
     @ParameterizedTest
     @CsvSource(value = {
-            "map(1.plus(2).explain()).type()                     % rec::T       % explanation is a rec (refinement rides the value: @explanation)",
+            "map(1.plus(2).explain()).type().tid()               % /m/rec       % explanation is a rec (refinement rides the value: @explanation)",
+            "map(1.plus(2).explain()).type().vid()               % /m/inst/explain/explanation % the refinement is the explanation vid",
             "1.plus(2).explain()>>desc>>rng                      % int          % expression-level head (whole rng)",
             "1.plus(2).explain()>>desc>>dom                      % noobj{0}     % expression-level start (whole dom)",
             "1.plus(2).explain()>>desc>>insts                    % 2            % inst count in desc metadata",
@@ -1205,6 +1206,8 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.plus(2).explain()>>per_inst>>1>>args              % [2]          % the arg as its own obj, not a string",
             "1.plus(2).explain()>>per_inst>>0>>args              % [1]          % start's literal, its own obj",
             "1.plus(2).explain()>>per_inst>>1>>c_rng             % 1            % per-inst range coefficient",
+            "1.plus(2).explain()>>format.count()                 % 1            % one report table (a bulk analysis dom applied it twice)",
+            "1.plus(2).explain()>>format.type()                  % str::T       % the table is a plain str, not a str{2} multiplicity",
     }, delimiter = '%')
     public void testExplain(final String code, final String expected, final String desc) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -1220,6 +1223,19 @@ public class mInstSetTest extends AbstractInstSetTest {
         assertTrue(r.toString().contains("plus"), "per-inst stages should list plus: " + r);
         assertTrue(r.toString().contains("mapper"), "per-inst stages should carry the form classification: " + r);
         assertTrue(r.toString().contains("format"), "explain rec should carry the lazy format: " + r);
+    }
+
+    @Training.SkipTraining(reason = "multi-line structural assertion")
+    @Test
+    public void testExplainIsOneReport() {
+        // explain_analysis' dom is maybe (not maybeSome): a bulk/gather dom made the monad loop
+        // apply the report closure a second time on the barrier flush, so explain() came back as
+        // two identical recs and >>format as a {2} str (the table rendered twice)
+        final Obj r = ObjmtronSerializer.eval("1.plus(2).explain()");
+        assertFalse(r.isFail(), "explain() should not fail: " + r);
+        assertTrue(r.tid().c().isOne(), "explain() should be one report rec, not a multiplicity: " + r.tid());
+        final Obj fmt = ObjmtronSerializer.eval("1.plus(2).explain()>>format");
+        assertTrue(fmt.tid().c().isOne(), ">>format should be one text table, not a multiplicity: " + fmt.tid());
     }
 
     @Training.SkipTraining(reason = "multi-line structural assertion")
