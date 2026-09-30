@@ -1138,9 +1138,7 @@ public class InstSetDocGenerator {
                         "text-success", instsetVid);
                 final String sigLabel = hasArgs ? "<small class=\"text-muted fw-bold\">sig:</small>\n    " : "";
                 inner.append(sigLabel)
-                        .append("<pre class=\"mb-0 text-bright\" style=\"font-family:monospace;font-size:0.8em;\">")
-                        .append(domHtml).append(" <span class=\"text-light\">=&gt;</span> ")
-                        .append(rngHtml).append("</pre>");
+                        .append(mathPre(domHtml + " <span class=\"text-light\">=&gt;</span> " + rngHtml));
             }
             if (hasArgs) {
                 final StringBuilder rows = new StringBuilder();
@@ -1155,8 +1153,7 @@ public class InstSetDocGenerator {
                 }
                 final String mtClass = hasSig ? " mt-2 d-block" : "";
                 inner.append("<small class=\"text-muted fw-bold").append(mtClass).append("\">args:</small>\n")
-                        .append("    <pre class=\"mb-0 text-bright\" style=\"font-family:monospace;font-size:0.8em;\">")
-                        .append(rows.toString()).append("</pre>");
+                        .append("    ").append(mathPre(rows.toString()));
             }
             parts.append("<div class=\"card-body py-2\">\n    ").append(inner.toString()).append("\n</div>");
         }
@@ -1520,6 +1517,21 @@ public class InstSetDocGenerator {
             target = "#" + anchor;
         }
         return "<a href=\"" + target + "\" class=\"" + cssClass + "\">" + esc(shortName) + "</a>";
+    }
+
+    /**
+     * The aligned prose {@code <pre>} block the sig/args display uses. Its
+     * contents are prose — type descriptions often carry LaTeX as
+     * {@code \(…\)} — but MathJax skips {@code <pre>} by default
+     * ({@code options.skipHtmlTags}) and only descends into it where the
+     * {@code mathjax_process} class ({@code options.processHtmlClass}) is
+     * present. So the block is marked <em>only</em> when it actually carries math:
+     * a plain block is left exactly as it was.
+     */
+    private static String mathPre(final String html) {
+        final String math = html.contains("\\(") || html.contains("\\[") ? " mathjax_process" : "";
+        return "<pre class=\"mb-0 text-bright" + math
+                + "\" style=\"font-family:monospace;font-size:0.8em;\">" + html + "</pre>";
     }
 
     private static String esc(final String s) {

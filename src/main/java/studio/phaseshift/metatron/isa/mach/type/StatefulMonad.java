@@ -296,7 +296,7 @@ public interface StatefulMonad extends Monad<Lst> {
         final fURI in = tid.hasQ(MONAD_IN) ? f(tid.q(MONAD_IN)) : null;
         final Obj input = null == in ? this.obj() : this.component(in);
         final long t0 = System.nanoTime();
-        final Obj result = this.inst().apply(input);
+        final Obj result = Processor.Helper.apply(input, this.inst());
         final long t1 = System.nanoTime();
         T_APPLY.addAndGet(t1 - t0);
         final fURI vid = this.inst().vid();

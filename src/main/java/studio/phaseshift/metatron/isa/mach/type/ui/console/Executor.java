@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Processor;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.util.MTronException;
@@ -107,7 +108,10 @@ public final class Executor {
                 });
                 final AtomicReference<Obj> computeResult = new AtomicReference<>(noobj());
                 if (this.console.input.isNoObj()) {
-                    final Processor mach = SwarmProcessor.of(resolvedResult.as());
+                    // funnel compilation through the machine's compiler (compile-once); the already-
+                    // resolved segment short-circuits, and the processor runs it without re-resolving.
+                    final Code compiled = Machine.defaultMachine().compiler().apply(resolvedResult).asCode();
+                    final Processor mach = SwarmProcessor.of(compiled);
                     final Consumer<Obj> defaultOnHalt = mach.onHalt(); // accumulate into HALTED
                     mach.onHalt(o -> {
                         defaultOnHalt.accept(o);  // persist in HALTED collection

@@ -20,10 +20,15 @@ package studio.phaseshift.metatron.isa.web.parser;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 /*
  * Fidelity + coverage for the generalized markdown ⇄ html serializer that
@@ -179,6 +184,87 @@ public class HTMLMarkdownSerializerTest {
         assertTrue(back.contains("- one"), "bullet must survive: " + back);
         assertTrue(back.contains("`a=>b`"), "inline code with operator must survive: " + back);
         assertTrue(back.contains("**bold**"), "strong must survive: " + back);
+    }
+
+    // ===================================================================
+    //  LaTeX math — the one place typography IS the point. Authored $…$ /
+    //  $$…$$ (and MathJax's own \(…\) / \[…\]) is lifted out of the markdown
+    //  before the parse and restored as \(…\) / \[…\], so the engine the site
+    //  already loads sees delimiters it owns AND markdown's backslash escapes
+    //  cannot eat the LaTeX (\{ → {, \, → ,, \\ → \ — the array row separator).
+    // ===================================================================
+
+    @ParameterizedTest
+    @MethodSource("mathSpans")
+    public void testAuthoredMathReachesThePageAsMathJaxDelimiters(final String markdown, final String expected) {
+        final String html = HTMLMarkdownSerializer.toHTML(markdown);
+        assertTrue(html.contains(expected), "html must carry " + expected + ": " + html);
+        assertFalse(html.contains(String.valueOf('\uE000')), "no math placeholder may leak: " + html);
+    }
+
+    static Stream<Arguments> mathSpans() {
+        return Stream.of(
+                // the skill-doc intro paragraph that motivated the pass
+                arguments("two vertex sets: $V = U \\cup O$. The set $O$ holds objs.", "\\(V = U \\cup O\\)"),
+                arguments("two vertex sets: $V = U \\cup O$. The set $O$ holds objs.", "\\(O\\)"),
+                // markdown backslash escapes would otherwise eat the LaTeX
+                arguments("$\\{0\\} \\to \\{1\\}$", "\\(\\{0\\} \\to \\{1\\}\\)"),
+                arguments("$a\\_1 + b_1$", "\\(a\\_1 + b_1\\)"),
+                arguments("$\\int_0^1 x\\,dx$", "\\(\\int_0^1 x\\,dx\\)"),
+                arguments("$\\begin{array}{c} 1 \\\\ 2 \\end{array}$", "1 \\\\ 2"),
+                // display math
+                arguments("$$\\int_0^1 x\\,dx$$", "\\[\\int_0^1 x\\,dx\\]"),
+                arguments("\\[E = mc^2\\]", "\\[E = mc^2\\]"),
+                // MathJax's own inline spelling is protected as well
+                arguments("\\(\\mathrm{obj} = X\\)", "\\(\\mathrm{obj} = X\\)"),
+                // the TeX is html-escaped, so it cannot break the page
+                arguments("$a < b > c$", "\\(a &lt; b &gt; c\\)"),
+                // every inline context flexmark offers
+                arguments("## the set $\\mathbb{N}$", "<h2>the set \\(\\mathbb{N}\\)</h2>"),
+                arguments("**bold $\\alpha$**", "<strong>bold \\(\\alpha\\)</strong>"),
+                arguments("| $a_1$ | b |\n|---|---|\n| c | $d$ |", "<th>\\(a_1\\)</th>"),
+                arguments("| $a_1$ | b |\n|---|---|\n| c | $d$ |", "<td>\\(d\\)</td>"),
+                arguments("[link $\\beta$](https://x.dev)", ">link \\(\\beta\\)</a>")
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("proseDollars")
+    public void testProseDollarSignsAreNotMath(final String markdown, final String expected) {
+        final String html = HTMLMarkdownSerializer.toHTML(markdown);
+        assertTrue(html.contains(expected), "html must carry " + expected + " verbatim: " + html);
+        assertFalse(html.contains("\\(") || html.contains("\\["),
+                "metatron's dollar vocabulary must not become math: " + html);
+        assertFalse(html.contains(String.valueOf('\uE000')), "no math placeholder may leak: " + html);
+    }
+
+    static Stream<Arguments> proseDollars() {
+        return Stream.of(
+                // a currency pair: pandoc's rules ($ need a non-space neighbour, no digit after)
+                arguments("price is $5 and $6 a piece", "$5 and $6"),
+                // metatron's ${…} interpolation splice, never math
+                arguments("the pull (`src/.../${class}()`) returns", "<code>src/.../${class}()</code>"),
+                arguments("prose ${_} binds the current one", "${_}"),
+                // shell substitution inside a code span
+                arguments("`--user $(id -u):$(id -g)`", "<code>--user $(id -u):$(id -g)</code>"),
+                // sentinels and java class names
+                arguments("`$DBRef` nested edges", "<code>$DBRef</code>"),
+                arguments("a `Tuple$Pair` cast", "<code>Tuple$Pair</code>"),
+                // an escaped dollar is a literal dollar
+                arguments("cost \\$5 or \\$6 here", "$5 or $6"),
+                // a fence is copied verbatim: were it scanned, this would become \(…\)
+                arguments("```mtron_pre\necho \"$V = U \\cup O$\"\n```", "$V = U \\cup O$")
+        );
+    }
+
+    @Test
+    public void testFencedCodeKeepsBackslashParensVerbatim() {
+        // the real doc line (sys-instset-mtron.md): a sed regexp in a mtron fence
+        final String html = HTMLMarkdownSerializer.toHTML(
+                "```mtron_pre\nbash('ls')==[_ => bash('stat ${_} | sed -n \"s/\\([0-9]*\\)/\\1/p\"')>>0]\n```");
+        assertTrue(html.contains("\\([0-9]*\\)"),
+                "a fenced regexp must survive the math pass untouched: " + html);
+        assertFalse(html.contains(String.valueOf('\uE000')), "no math placeholder may leak: " + html);
     }
 
     /// Flexmark-escape reversal (the html may legitimately carry the operators as &gt; / &lt;).

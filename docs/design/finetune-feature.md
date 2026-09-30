@@ -21,13 +21,13 @@ string. This is the one shape that matters — everything else is plumbing we al
 
 ### 1.1 Two capture paths (the key divergence from its siblings)
 
-Compaction and Summarize are **always-lossy** — they distill every time, via a mini-chat. FineTune needs a
-**lossless** primary path plus an optional lossy curation:
+Compaction and Summarize are **always-lossy** — they distill every time, via a mini-chat. FineTune needs a **lossless**
+primary path plus an optional lossy curation:
 
-| path | trigger | cost | product |
-|---|---|---|---|
-| **raw capture** | every `onCompleteResponse` | ~0 (a space write) | verbatim `(instruction, input, output)` |
-| **curated distill + augment** | `<<mtron:fine_tune>>` watermark, or `fine_tune()` inst, or a pool-cap auto-trigger | one mini-chat | vetted/merged rows **+ synthetic in-distribution pairs** |
+| path                          | trigger                                                                            | cost               | product                                                  |
+|-------------------------------|------------------------------------------------------------------------------------|--------------------|----------------------------------------------------------|
+| **raw capture**               | every `onCompleteResponse`                                                         | ~0 (a space write) | verbatim `(instruction, input, output)`                  |
+| **curated distill + augment** | `<<mtron:fine_tune>>` watermark, or `fine_tune()` inst, or a pool-cap auto-trigger | one mini-chat      | vetted/merged rows **+ synthetic in-distribution pairs** |
 
 Raw capture is what makes it "silent, behind the scenes". The curated pass is two jobs at once: it *cleans*
 (dedup/vet/annotate the raw rows — the acceptance gate, §1.4) and it **augments** — the mini-chat synthesizes
@@ -44,8 +44,8 @@ teacher buys higher-quality synthesis. The mini-chat uses the **same** skeleton 
   cleared in `onBeforeChat`), plus `source => [!*msg vids]` and `session`/`time`.
 - `onToolExecuted(agent, Obj toolRec)` — append `[name, arguments, result]` to the per-turn transcript.
   This is what turns a chat row into an *agentic* trajectory row.
-- `onError(agent, Fail)` / the interrupted-turn close — route the turn to a **rejected** subspace
-  (`train/rejected/`), not the accepted pool.
+- `onError(agent, Fail)` / the interrupted-turn close — route the turn to a **rejected** subspace (`train/rejected/`),
+  not the accepted pool.
 - `onCompleteResponse` watermark `<<mtron:fine_tune>>` — the model nominates a turn as exemplary (self-approval).
 - `fine_tune()` inst (operator) — the human-side approve/reject/curate/export entry point.
 
@@ -88,11 +88,11 @@ round** — which also respects the earlier finding that mixing diluted the mtro
 Industry calls this "user-based human-generated" data (e.g. InstructWild's ~110K instructions scraped from
 shared prompts). The four standard methods are already in our design, under better names:
 
-| industry method | FineTuneFeature mechanism |
-|---|---|
-| **public platform aggregation** | the agent's ledger *is* the platform — every turn is a shared prompt+response |
-| **synthetic augmentation** | the curated mini-chat (§1.1) generates additional in-pattern pairs |
-| **local LLM generation** (privacy/cost) | default `model::T` = the inspected session's model; data never leaves the VM |
+| industry method                                          | FineTuneFeature mechanism                                                         |
+|----------------------------------------------------------|-----------------------------------------------------------------------------------|
+| **public platform aggregation**                          | the agent's ledger *is* the platform — every turn is a shared prompt+response     |
+| **synthetic augmentation**                               | the curated mini-chat (§1.1) generates additional in-pattern pairs                |
+| **local LLM generation** (privacy/cost)                  | default `model::T` = the inspected session's model; data never leaves the VM      |
 | **tool-assisted curation** (topic-trees, human guidance) | acceptance/rejection (§1.4), concept features as topic-trees, `export_training()` |
 
 The one nuance worth carrying forward: synthetic augmentation is a *generation* step, not a cleaning step, so
@@ -111,10 +111,10 @@ rec to a URI, and subscribe to writes on that URI with `?subq` (`QCollection.sub
 The skill's instruction — "whenever you learn something new about mtron, post an alpaca `train::T` rec to
 `/sys/tmp/finetune_feature/train`" — makes the **model the author**: it posts when it has learned (the model's
 write goes through a tool/watermark, then a space write). The `?subq` subscription (registered by
-`FineTuneFeature` in Java) is the reactive processor: every write to the train URI — whether from the
-**retrospective mini-chat** (the distiller surveys the whole ledger and emits rows) or the **online proactive
-post** (the model submits as it learns) — fans through the one `sub::[code=>…]`. The two capture paths are
-**two writers to one bus**, and dedup/cap/append live in exactly one place.
+`FineTuneFeature` in Java) is the reactive processor: every write to the train URI — whether from the **retrospective
+mini-chat** (the distiller surveys the whole ledger and emits rows) or the **online proactive
+post** (the model submits as it learns) — fans through the one `sub::[code=>…]`. The two capture paths are **two writers
+to one bus**, and dedup/cap/append live in exactly one place.
 
 The §5.2 boundary still holds: `?subq` is a Java q-proc, so using it is core-in-Java; only the `code=>`
 reaction is mtron, and even that can be a Java-backed `instLambda` calling back into the feature. The pub/sub
@@ -127,8 +127,8 @@ surface is mtron; the processing stays Java.
 The same "read a session's messages" operation exists three ways:
 
 1. **`SpaceChatSessionStore.Query`** — the fluent builder
-   (`query(vid).maxFromCurrent(n).stopAt(tid).include(…).exclude(…).apply() → List<Rec>`). Store-bound
-   (a `Query` is built off a per-turn `SpaceChatSessionStore` instance), materializes to `List<Rec>`.
+   (`query(vid).maxFromCurrent(n).stopAt(tid).include(…).exclude(…).apply() → List<Rec>`). Store-bound (a `Query` is
+   built off a per-turn `SpaceChatSessionStore` instance), materializes to `List<Rec>`.
 2. **`SpaceChatSessionStore.sessionRels(vid)`** — the private read core: `List<Rel>` (vid ⇒ rec), scoped by
    session/depth/chatId, sorted by ledger id. `Query.apply()` is built on top of it.
 3. **Inline reads in `compactSession`/`summarizeSession`** — `Router.readFromSpace(agentHome/message/+/`
@@ -144,15 +144,15 @@ drops vids and joins with `-----`).
 The background distillation thread has an `agentHome` + `sessionVID` (from `SessionAddress`), **not** the
 turn's `SpaceChatSessionStore` instance (which is created per-turn in `AbstractMessageFeature.onBeforeChat`
 and lives on the agent). `Query` is an inner class of the store, so it is structurally unavailable to that
-thread. That is the real reason the features read raw rels. Fixing this means moving the *query* from the
-**store** to the **ledger address** — a read you can open from `(agentHome, sessionVID)` alone.
+thread. That is the real reason the features read raw rels. Fixing this means moving the *query* from the **store** to
+the **ledger address** — a read you can open from `(agentHome, sessionVID)` alone.
 
 ---
 
 ## 3. The stream is mtron
 
-We don't need a new Java `LedgerStream` — the lazy ledger stream **is mtron**. The three divergent readers
-(`Query`, `sessionRels`, the inline reads in the two distill features) are three *Java re-implementations of
+We don't need a new Java `LedgerStream` — the lazy ledger stream **is mtron**. The three divergent readers (`Query`,
+`sessionRels`, the inline reads in the two distill features) are three *Java re-implementations of
 a subset of mtron* — the exact anti-pattern the codebase already warns against ("every mtron expression is a
 fluent chain of instructions"; "don't shape-inspect a read — `stream()` it"). A read of a space region is
 already lazy, filterable, projectable, and windowable in the language itself:
@@ -173,14 +173,14 @@ resurrecting `where`.
 
 ### 3.1 The stage vocabulary, already in the language
 
-| stream stage | mtron |
-|---|---|
-| scope (session / depth / chatId) | fields in the filter rec: `.?[session=>…, depth=>…, chat_id=>…]` |
+| stream stage                      | mtron                                                                                                  |
+|-----------------------------------|--------------------------------------------------------------------------------------------------------|
+| scope (session / depth / chatId)  | fields in the filter rec: `.?[session=>…, depth=>…, chat_id=>…]`                                       |
 | kind projection (include/exclude) | filter on `tid`: `.?[tid=>…]` (the `isa` filter); a sentinel bound is `.?[tid=>compaction_message::T]` |
-| time scope (`withinScope`) | predicate field: `time => ?<now .?> now-1day` |
-| window cap / tail | `.take(n)` / `.skip(n)` (ledger is append-ordered) |
-| digest | `.map(…)` / `==[vid=>…]` — a projection, not a hand-rolled `String.join` |
-| pair-safety | **the exception — §3.2** |
+| time scope (`withinScope`)        | predicate field: `time => ?<now .?> now-1day`                                                          |
+| window cap / tail                 | `.take(n)` / `.skip(n)` (ledger is append-ordered)                                                     |
+| digest                            | `.map(…)` / `==[vid=>…]` — a projection, not a hand-rolled `String.join`                               |
+| pair-safety                       | **the exception — §3.2**                                                                               |
 
 ### 3.2 The one thing that is not a clean mtron operator: pair-safety
 
@@ -194,15 +194,15 @@ stays a **post-step** applied to the query result — either plain Java, or a re
 ### 3.3 Reconcile with `Query`
 
 `Query`/`sessionRels`/`getMessages`/`busWindow` don't go away; they become **one canonical mtron query**
-(parameterized with the session/depth/chatId holes) that the LC4j store and the distill features both
-*evaluate*. `Query` is then a thin typed wrapper that *emits* that query, not a parallel implementation.
+(parameterized with the session/depth/chatId holes) that the LC4j store and the distill features both *evaluate*.
+`Query` is then a thin typed wrapper that *emits* that query, not a parallel implementation.
 The three readers collapse to one query string plus the pair-safe post-step — and, because the query is
 data, it becomes **overridable from a boot file**, which no Java class was.
 
 ### 3.4 Fold-left: the query compiles to the backend
 
 "Lazy" undersells it. The `isa`/`select`/`take` chain is *rewritten* — a left-fold of the instruction chain
-into one native query — by the `algebra/rewrite` system (`Rewriter`, `RewriteBuilder`, `CommonRewrites`,
+into one native query — by the `algebra/rewrite` system (`RewriterBuilder`, `RewriteBuilder`, `CommonRewrites`,
 wired into `tbleInstSet` SQL and `dcmntInstSet` Mongo; see `docs/design/rewrite-planner.md`). So
 `*<ledger> .?[pattern] ==[projection] .take(n)` becomes `SELECT <projection> … WHERE <pattern> … LIMIT n`
 (or the Mongo/TinkerPop equivalent): the backend filters, projects, and windows, and the JVM never
@@ -303,14 +303,14 @@ implementation.
 The sharpest framing: the three features are **one machine pointed at three memories**, all distilled from
 the same ledger:
 
-| feature | memory kind | artifact | what it buys |
-|---|---|---|---|
-| `CompactionFeature` | **context** | resume summary | continuity *within* a window |
-| `SummarizeFeature` | **episodic** | claims / loose ends | salience *across* sessions |
-| `FineTuneFeature` | **parametric** | train rows | competence *in the weights* |
+| feature             | memory kind    | artifact            | what it buys                 |
+|---------------------|----------------|---------------------|------------------------------|
+| `CompactionFeature` | **context**    | resume summary      | continuity *within* a window |
+| `SummarizeFeature`  | **episodic**   | claims / loose ends | salience *across* sessions   |
+| `FineTuneFeature`   | **parametric** | train rows          | competence *in the weights*  |
 
-Context and episodic memory are monotonic — they can't poison their own input. Parametric memory is a
-**closed loop** (capture → fine-tune → redeploy → capture), which is both its power and its one unique
+Context and episodic memory are monotonic — they can't poison their own input. Parametric memory is a **closed loop**
+(capture → fine-tune → redeploy → capture), which is both its power and its one unique
 risk (model collapse). The design should therefore lean on the same two levers the siblings never needed:
 acceptance-gated capture, and a hard cap on self-generated data re-anchored to the reflective set.
 

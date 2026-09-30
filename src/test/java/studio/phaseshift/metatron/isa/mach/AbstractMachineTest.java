@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Processor;
-import studio.phaseshift.metatron.isa.mach.type.compiler.FixPointCompiler;
+import studio.phaseshift.metatron.isa.mach.type.compiler.DefaultCompiler;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -70,7 +70,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
     @Test
     public void testAddEagerCompilerThenFetch() {
         final Machine machine = this.newMachine();
-        final Compiler compiler = new FixPointCompiler();
+        final Compiler compiler = new DefaultCompiler();
         machine.compiler(compiler);
         assertEquals(compiler, machine.compiler(), "fetch returns the bound compiler instance");    }
 
@@ -87,11 +87,11 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
     @Test
     public void testTemplateCompilerMintsOnFetch() {
         final Machine machine = this.newMachine();
-        machine.compiler(start_(rec()).as_(MACH_FIXPOINT_COMPILER_TYPE).tryToInst());
+        machine.compiler(start_(rec()).as_(MACH_DEFAULT_COMPILER_TYPE).tryToInst());
         final Obj compiler = machine.compiler();
         LOG.warn("compiler: %s", compiler);
-        assertEquals(MACH_FIXPOINT_COMPILER_TID, compiler.tid());
-        assertInstanceOf(FixPointCompiler.class, compiler, "a compiler template mints a fixpoint compiler on fetch");
+        assertEquals(MACH_DEFAULT_COMPILER_TID, compiler.tid());
+        assertInstanceOf(DefaultCompiler.class, compiler, "a compiler template mints a default compiler on fetch");
     }
 
     // ======================== absence ========================
@@ -121,7 +121,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
     @Test
     public void testCompilerMachineBackRef() {
         final Machine machine = this.newMachine();
-        final Compiler compiler = new FixPointCompiler();
+        final Compiler compiler = new DefaultCompiler();
         machine.compiler(compiler);
         assertSame(machine, compiler.machine(), "a bound compiler resolves its machine through the parent nest");
     }

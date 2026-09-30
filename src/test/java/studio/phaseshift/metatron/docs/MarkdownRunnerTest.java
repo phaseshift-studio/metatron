@@ -66,6 +66,39 @@ public class MarkdownRunnerTest {
     }
 
     @Test
+    public void testRenderedSiteFileTypesetsMath(@TempDir final Path tmp) throws IOException {
+        // A skill doc whose prose carries authored LaTeX (the mtron SKILL.md intro):
+        // the page must carry the delimiters the site's MathJax renders, with the
+        // LaTeX intact — while metatron's own ${…} splice stays verbatim.
+        final Path references = tmp.resolve("skills").resolve("mtron").resolve("references");
+        Files.createDirectories(references);
+        final Path md = references.resolve("structure.md");
+        Files.writeString(md, """
+                ---
+                name: structure
+                description: split-graph fidelity probe
+                ---
+
+                The structure is a split graph whose vertex sets are $V = U \\cup O$.
+                Prose splices such as ${_} are metatron, not math, and the set $O$ holds objs.
+                """);
+        final Path skillsDir = tmp.resolve("skills");
+
+        assertTrue(MarkdownRunner.renderSiteHtml(skillsDir) >= 1, "a new page must be written");
+        assertFalse(MarkdownRunner.renderSiteHtml(skillsDir) >= 1, "a second pass must write nothing (idempotent)");
+        final String html = Files.readString(references.resolve("structure.html"));
+
+        assertTrue(html.contains("\\(V = U \\cup O\\)"),
+                "authored $…$ must reach the page as \\(…\\) with its LaTeX intact: " + html);
+        assertTrue(html.contains("\\(O\\)"), "every authored span must convert: " + html);
+        assertFalse(html.contains("$V = U"),
+                "the authored dollar spelling must not survive into the page: " + html);
+        assertTrue(html.contains("${_}"), "the metatron ${…} splice must stay verbatim: " + html);
+        assertTrue(html.contains("mathjax"),
+                "the page must load the engine that renders \\(…\\): " + html);
+    }
+
+    @Test
     public void testRenderedSiteFileKeepsOperators(@TempDir final Path tmp) throws IOException {
         // A minimal website skills container: <tmp>/skills/mtron/references/ops.md
         final Path references = tmp.resolve("skills").resolve("mtron").resolve("references");
@@ -258,6 +291,8 @@ public class MarkdownRunnerTest {
 
                 **Theorem.** A coefficient is arithmetic: `{1,2,{10}3}.count()`.
 
+                Multiplicity is a $(min, max)$ pair, so $\\{1\\} \\to \\{1\\}$ is a map.
+
                 ## Live proof
 
                 ```mtron
@@ -274,11 +309,17 @@ public class MarkdownRunnerTest {
         assertTrue(html.contains("class=\"article-title"), "article must carry the frontmatter h1 chrome: " + html);
         assertTrue(html.contains("<h1 class=\"article-title mb-1\">The Geometry of Data Is the Program</h1>"),
                 "the h1 must carry the frontmatter name: " + html);
-        // KaTeX + the article stylesheet ride the {{EXTRA_HEAD}} token; the stylesheet
-        // href is depth-rewritten (articles is one level under the website root)
-        assertTrue(html.contains("katex"), "the article must inject KaTeX for $...$ math: " + html);
+        // the article stylesheet rides the {{EXTRA_HEAD}} token and its href is
+        // depth-rewritten (articles is one level under the website root)
         assertTrue(html.contains("../css/theory-article.css"),
                 "the article stylesheet href must be depth-rewritten: " + html);
+        // authored $…$ becomes the delimiter the site's global MathJax owns, with
+        // its LaTeX intact (markdown's escapes would otherwise eat \{ and \\)
+        assertTrue(html.contains("\\(\\{1\\} \\to \\{1\\}\\)"),
+                "article math must reach the page as \\(…\\) with its LaTeX intact: " + html);
+        assertTrue(html.contains("\\((min, max)\\)"), "inline math must convert: " + html);
+        assertFalse(html.contains("katex"),
+                "the article pass must not inject a second math engine: " + html);
         assertFalse(containsAny(html, LOOKALIKES),
                 "rendered article must not contain a compressed single-character look-alike");
     }

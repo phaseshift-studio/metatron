@@ -18,16 +18,14 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
+import studio.phaseshift.metatron.isa.m.type.resolver.InstSelector;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Processor;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -284,7 +282,7 @@ public interface Inst extends Call {
         */
 
         try {
-            final Inst resolved = InstResolver.get().resolveInst(lhs, this);
+            final Inst resolved = InstSelector.get().resolveInst(lhs, this);
             if (null != resolved) {
                 LOG.trace("%s => %s is %s resolved", lhs, resolved, CommonUtil.lambda(() -> resolved.isResolved(false) ? "" : "not"));
                 // Cache disabled - see comment above
@@ -354,110 +352,9 @@ public interface Inst extends Call {
 
     @Override
     default Obj apply(final Obj lhs) {
-        final boolean isMonadicInst = this.tid().hasQ(MONAD_IN) || this.tid().hasQ(MONAD_OUT);
-        //final String monadUpDown = this.tid().queryValue(fURI.of(MONAD), String.class);
-        Obj clhs = lhs;
-        //boolean reself = !this.args().isEmpty() && this.args().argElements().noneMatch(e -> e.vid() != null || e.isObjCall());
-        Inst cinst = this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
-        //if (false && reself) // TODO: why do type predicates get rewritten?
-        //    this.self(Triplet.with(cinst.args(), cinst.f(), cinst.seed()), cinst.tid(), cinst.vid());
-        if (cinst.isNoObj())
-            return fail(MTronException.of("unable to locate inst-f %s::T => %s", Obj.Helper.specificTypeId(lhs).name(), this, clhs));
-        if (lhs.isNoObj() && !cinst.dom().c().isZeroable())
-            return noobj();
-        // return fail(MTronException.of("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
-
-        Obj rhs;
-        boolean modulateC = false;
-        if (TypeCheck.inst_dom.enabled() && !isMonadicInst && !lhs.isFail() && !lhs.isCaughtFail()
-                && !instDomRngMatch(clhs, cinst.dom()) && clhs.unique()) {
-            // if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
-            clhs = clhs.c(cInt::one);
-            cinst = Inst.Helper.bindQ(lhs, this, this.resolve(clhs));
-            modulateC = true;
-            //  }
-            if (!instDomRngMatch(clhs, cinst.dom()))
-                return fail("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst);
-        }
-        if (!clhs.isFail() || cinst.isCatch()) {
-            try {
-                if (null == cinst.f()) {
-                    if (cinst.tid().basePath().equals(AS_INST_TID)) {
-                        cinst = cinst.f(Inst.f.of((x, y) -> x.tid(y.arg(0).vid())));
-                    } else
-                        throw MTronException.of("unable to determine inst function:" +
-                                "\n\t%-10s  => %s   | [inst]" +
-                                "\n\t%-10s  => %s   |  \\_dom" +
-                                "\n\t%-10s %s=> %s   |  \\_args", clhs, cinst, clhs.type(), cinst.dom(), clhs.type(), cinst.args().elements().allMatch(clhs::test) ? "=" : "X", cinst.args());
-                }
-                final Inst cin1 = cinst;
-                final Obj clhs1 = clhs;
-                cinst = ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.resolve_inst_args, cin1.tid() + ""), () -> Helper.applyArgs(clhs1, cin1));
-                Router.stack().push(cinst.args());
-                //Router.stack().push(rec("lhs",clhs));
-                try {
-                    final Inst cin2 = cinst;
-                    final Obj clhs2 = clhs;
-                    rhs = ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.apply_inst, cin2.tid() + ""),
-                            () -> Objs.trySingleton(FutureObj.resolveFuture(cin2.f().apply(clhs2, cin2))));
-                    rhs = null == rhs ? noobj() : rhs;
-                    if (rhs.isUncaughtFail())
-                        return rhs;
-                    Graphitty.log(cinst).trace("%s (lhs) => %s (inst) => %s (rhs) evaluated successfully", clhs, cinst, rhs);
-                } catch (final Exception e) {
-                    if (!cinst.args().test(this.args())) {
-                        // the message is this mismatch only — the failed child
-                        // expression (a fail value among the args) is threaded
-                        // as the cause, never stringified into the message
-                        final Fail child = Poly.Helper.failChild(this.args());
-                        final String text = "args do not match inst args: " + Poly.Helper.mismatchText(cinst.args(), this.args());
-                        throw null == child ? MTronException.of(text) : MTronException.of(child.jvm(), text);
-                    } else
-                        // funnel (MTronException.funnel): one frame at the failing
-                        // instruction's address (query stripped — it can carry
-                        // secrets, ?env=[...]), the raw-java text translated
-                        // through the exception family rather than embedded raw,
-                        // and an already-framed inner forwarded untouched — its
-                        // origin is its own, and a second frame would misname it.
-                        // e stays linked as the java cause: the tracer's
-                        // once-per-chain dedup and the fail's cause chain both
-                        // still see it.
-                        throw MTronException.funnel(e, Helper.instContext(cinst));
-                } finally {
-                    Router.stack().pop();
-                    //  Router.stack().pop();
-                }
-            } catch (final Exception e) {
-                rhs = fail(e);
-            }
-            if (TypeCheck.inst_rng.enabled() && !isMonadicInst && !rhs.isType() && !rhs.isFail() && !clhs.isCaughtFail()
-                    && !instDomRngMatch(rhs, cinst.rng())) {
-                // same contract as args mismatch: own message + the failed
-                // value as cause, never a dump of it
-                final Fail child = Poly.Helper.failChild(rhs);
-                final String text = "rhs does not match inst range: " + Poly.Helper.mismatchText(cinst.rng(), rhs);
-                rhs = null == child ? fail(MTronException.of(text)) : fail(MTronException.of(child.jvm(), text));
-            }
-        } else {
-            rhs = clhs; // propagate fail through inst unless it's a catch inst
-        }
-        final cInt cc = cinst.c();
-        return modulateC ? rhs.c(c -> c.mult(lhs.c()).mult(cc)) : rhs.c(c -> c.mult(cc));
-    }
-
-    /**
-     * inst_dom/inst_rng dispatch check. Fast-out when the lhs's tid/vid label
-     * matches the target type (specificTypeId resolves the coefficient via
-     * fURI.test) and the coefficient/poly are consistent — trust construction-time
-     * validation. Otherwise fall back to the full structural test. Construction
-     * validation is unaffected (it routes through testObjs directly).
-     */
-    private static boolean instDomRngMatch(final Obj lhs, final Type type) {
-        if (type.tid().poly().isEmpty()
-                && Obj.Helper.specificTypeId(lhs).test(Obj.Helper.specificTypeId(type))
-                && lhs.c().within(type.c()))
-            return true;
-        return lhs.test(type);
+        // [Compiler] resolution + [Processor] computeArgs + f().apply + runtime check/coefficient
+        // all live on the machine now (Processor.Helper); the type layer's apply is a handoff.
+        return Processor.Helper.apply(lhs, this);
     }
 
     default boolean isCatch() {
@@ -645,49 +542,6 @@ public interface Inst extends Call {
             final Obj aNorm = a.c(cInt.ONE());
             final Obj bNorm = b.isType() ? b.asType().c(cInt.ONE()) : b.c(cInt.ONE());
             return aNorm.test(bNorm);
-        }
-
-        public static Inst applyArgs(final Obj lhs, final Inst inst) {
-          /*  if (inst.args().isRec() && inst.args().<Rec>as().elements().noneMatch(r -> r.second() instanceof FutureObj || r.first() instanceof FutureObj || r.first().isObjCall() || r.second().isObjCall() || r.first().isType() || r.second().isType()))
-                return inst;
-            else if (inst.args().isLst() && inst.args().<Lst>as().elements().noneMatch(e -> e instanceof FutureObj || e.isObjCall() || e.isType()))
-                return inst;*/
-            final boolean blocking = inst.isBlocking();
-            /*if (BootLoader.TYPE_CHECK) {
-                if (!blocking && (!lhs.matches(inst.dom()) || !(lhs.take(inst.dom().c()).get0()).matches(inst.dom())))
-                    throw MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (resolve): %s {{r}}=/>{{/r}} %s", lhs, inst);
-            }*/
-            final Poly cargs = inst.args().isLst() ?
-                    lst(inst.args().lstValue()
-                            .stream()
-                            .map(FutureObj::<Obj>resolveFuture)
-                            .map(arg -> {
-                                if (blocking)
-                                    return arg;
-                                else {
-                                    final Obj r = Objs.trySingleton(arg.apply(lhs));
-                                    if (null == r)
-                                        return null;
-                                    // Allow template expansion: if arg is Uri or Str with templates, always return expanded result
-                                    final boolean isTemplateExpansion = (arg.isUri() && arg.asUri().hasTemplates()) ||
-                                            (arg.isStr() && (arg.strValue().contains("${") || arg.strValue().contains("{{{")));
-                                    if (!arg.isObjCall() && !isTemplateExpansion && !r.test(arg)) {
-                                        // LOG.error("unmatched inst arg in %s: %s ({{y}}lhs{{/y}}) {{g}}=>{{/g}} %s ({{y}}arg{{/y}}) {{r}}~!>{{/r}} %s ", this, lhs, arg, r);
-                                        return arg;
-                                    }
-                                    //throw MTronException.of("arg obj does not match inst arg: %s: %s {{r}}-/>{{/r}} %s", this, arg, r);
-                                    return r;
-                                }
-                            }).toList()) :
-                    rec(inst.args().recValue().entrySet()
-                            .stream()
-                            .map(kv -> rel(kv.getKey().apply(lhs), blocking ?
-                                    kv.getValue() :
-                                    kv.getValue().apply(lhs))))
-                            .plus(rec(LHS, lhs));
-            final Inst resolved = inst.args(cargs);
-            //  LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
-            return resolved;
         }
 
         public static Inst bindQ(final Obj lhs, final Inst userInst, final Inst apiInst) {

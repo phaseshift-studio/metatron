@@ -21,37 +21,20 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.jspecify.annotations.NonNull;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
-import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
+import studio.phaseshift.metatron.isa.mach.type.Compiler;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.compiler.FixPointRewriter;
 
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.MONAD_IN;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
 public interface Code extends Call {
-
-    // rewrite-rule timing + inst reduction, keyed by rule leaf name (read by the profile() instruction)
-    ConcurrentHashMap<String, AtomicLong> REWRITE_TIMINGS = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, AtomicLong> REWRITE_INS = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, AtomicLong> REWRITE_OUTS = new ConcurrentHashMap<>();
-
-    static void resetRewriteTimings() {
-        REWRITE_TIMINGS.clear();
-        REWRITE_INS.clear();
-        REWRITE_OUTS.clear();
-    }
 
     @Override
     Code clone(final Object jvm, final fURI tid, final fURI vid);
@@ -74,44 +57,12 @@ public interface Code extends Call {
     }
 
     default Code rewrite() {
-        final AtomicReference<Code> rewrittenCode = new AtomicReference<>(this);
-        int hash = this.hashCode();
-        int done = 2;
-        while (done != 0) {
-            Router.global().spaces()
-                    .elements()
-                    .filter(r -> r.second() instanceof InstSet)
-                    .flatMap(r -> r.second().<InstSet>as().rewrites().stream())
-                    //.peek(r -> this.logger().warn("REWRITE RULE: %s => %s [hash:%d][stage:%d]", rewrittenCode.get(), r, rewrittenCode.get().hashCode(), stage))
-                    .forEach(r -> {
-                        final long t0 = System.nanoTime();
-                        final Code before = rewrittenCode.get();
-                        // capture the inst count BEFORE apply: rewriters mutate the code in place
-                        // (selfJVM), so reading before.size() after the fact reports the post size.
-                        final int in = before.codeValue().size();
-                        final Obj rewritten = r.apply(before);
-                        final long t1 = System.nanoTime();
-                        final String name = r.tid().name();
-                        REWRITE_TIMINGS.computeIfAbsent(name, k -> new AtomicLong()).addAndGet(t1 - t0);
-                        final int out = rewritten.isCode() ? rewritten.asCode().codeValue().size() : in;
-                        REWRITE_INS.computeIfAbsent(name, k -> new AtomicLong()).addAndGet(in);
-                        REWRITE_OUTS.computeIfAbsent(name, k -> new AtomicLong()).addAndGet(out);
-                        if (rewritten.isCode()) {
-                            rewrittenCode.set(rewritten.asCode());
-                        } else {
-                            // throw MTronException.of("rewrite %s rewrote to non-code %s", r, rewritten);
-                        }
-                    });
-            if (hash == (hash = rewrittenCode.get().hashCode()))
-                done--;
-        }
-        return rewrittenCode.get();
+        return FixPointRewriter.single().apply(this);
     }
 
     @Override
     default Code resolve(final Obj lhs) {
-        final Code rewrittenCode = this.rewrite();
-        return InstResolver.get().resolveCode(lhs, rewrittenCode);
+        return Compiler.Helper.resolve(lhs, this);
     }
 
     default Inst nextInst(final Inst inst) {
@@ -172,12 +123,29 @@ public interface Code extends Call {
     default Obj apply(final Obj lhs) {
         final Call code = this.tryToInst();
         if (code.isCode())
-            return SwarmProcessor.of(lhs, code.as()).apply(lhs.isMonad() ? lhs : noobj());
+            // wrapStart prepends start(value) for a value lhs; a monadic lhs passes through unchanged and
+            // rides START so the monad's loop/state context survives into the processor.
+            return Machine.defaultMachine().apply(wrapStart(lhs, code.as()), lhs.isMonad() ? lhs : noobj());
         // single inst: dispatch by the inst's own monad flag. A monadic inst (loop())
         // receives the monad; a value inst is resolved and applied against the monad's obj.
         final boolean monadic = code.isInst() && code.resolve(lhs).tid().hasQ(MONAD_IN);
         final Obj arg = lhs.isMonad() && !monadic ? lhs.asMonad().obj() : lhs;
         return code.resolve(arg).apply(arg);
+    }
+
+    /**
+     * Inject a runtime value into code by prepending {@code start(lhs)} — the same shape the
+     * processor used to mint. This threads the element type through the whole chain (so e.g.
+     * {@code as(str::T).count()} resolves against {@code int} from {@code start(1)}, not against
+     * {@code noobj}). Monadic and empty starts pass the code through unchanged.
+     */
+    static Code wrapStart(final Obj lhs, final Code code) {
+        if (lhs.isNoObj() || lhs.isMonad())
+            return code;
+        final List<Inst> insts = new ArrayList<>();
+        insts.add(instB(START_INST_TID, lst(lhs)));
+        insts.addAll(code.codeValue());
+        return MCode.of(insts);
     }
 
     public static class CodeType {

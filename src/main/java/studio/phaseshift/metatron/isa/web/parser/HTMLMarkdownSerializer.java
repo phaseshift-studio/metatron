@@ -55,6 +55,19 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_SERIALIZER_TID;
  * typographically "compresses" them into single Unicode look-alikes
  * ({@code ≥}, {@code ≤}, {@code ⇒}, …). A regression test pins this down.
  *
+ * <p><strong>Math.</strong> The one place where typography <em>is</em> the point
+ * is authored LaTeX: {@code $…$} / {@code $$…$$} (and the {@code \(…\)} /
+ * {@code \[…\]} spelling) is lifted out of the markdown by {@link MarkdownMath}
+ * <em>before</em> the parse and restored afterwards as {@code \(…\)} /
+ * {@code \[…\]} — the delimiters the site's global MathJax renders. Two reasons
+ * the lift exists rather than a server-side render: markdown has no math, so
+ * {@code $…$} would otherwise reach the page as source, and CommonMark's
+ * backslash-escape rule would otherwise corrupt the LaTeX inside it
+ * ({@code \{ } → {@code {}, {@code \, } → {@code ,}, {@code \\} → {@code \}).
+ * Code spans and fenced blocks are copied through untouched, so mtron's own
+ * {@code $} vocabulary ({@code ${…}} splices, {@code Tuple$Pair}) is never
+ * mistaken for math.
+ *
  * <p><strong>read(html) → markdown.</strong> Flexmark's official html→md
  * converter ({@link FlexmarkHtmlConverter}) runs on the same flexmark markdown
  * model as the write side, so both directions agree on what markdown is. Note
@@ -108,12 +121,17 @@ public class HTMLMarkdownSerializer extends AbstractSerializer<String, String> {
     }
 
     /**
-     * Render a markdown document (A) into an html fragment (B).
+     * Render a markdown document (A) into an html fragment (B). Authored math is
+     * protected across the parse — see {@link MarkdownMath}: {@code $…$} and
+     * {@code \(…\)} come out as inline {@code \(…\)}, {@code $$…$$} and
+     * {@code \[…\]} as display {@code \[…\]}, with the LaTeX intact.
      */
     @Override
     public String write(final String markdown) throws MTronException {
         if (null == markdown || markdown.isEmpty()) return "";
-        return RENDERER.render(PARSER.parse(markdown));
+        final MarkdownMath.Protected protectedMath = MarkdownMath.protect(markdown);
+        return MarkdownMath.restore(
+                RENDERER.render(PARSER.parse(protectedMath.markdown())), protectedMath.spans());
     }
 
     /**

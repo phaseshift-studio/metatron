@@ -22,7 +22,6 @@ import com.google.common.base.Objects;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -39,7 +38,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Rewriter extends MRec {
+public class RewriterBuilder extends MRec {
 
     protected final List<Inst> sourceInsts;
     protected List<Inst> matchInsts;
@@ -50,7 +49,7 @@ public class Rewriter extends MRec {
     public List<fURI> allow = new ArrayList<>();
     public List<fURI> disallow = new ArrayList<>();
 
-    private Rewriter(final List<Inst> sourceInsts) {
+    private RewriterBuilder(final List<Inst> sourceInsts) {
         // no-arg super() + self() skips MObj's objCheckAndSave (a full type test) — a Rewriter
         // is a throwaway matcher created once per rule application, never serialized or read back,
         // so re-validating its REWRITER_TYPE rec on the hot path is pure waste.
@@ -59,17 +58,17 @@ public class Rewriter extends MRec {
         this.sourceInsts = sourceInsts;
     }
 
-    public static Rewriter search(final List<Inst> sourceInsts) {
-        return new Rewriter(sourceInsts);
+    public static RewriterBuilder search(final List<Inst> sourceInsts) {
+        return new RewriterBuilder(sourceInsts);
     }
 
-    public Rewriter match(final List<Inst> matchInsts, final Predicate<List<Inst>> predicate) {
+    public RewriterBuilder match(final List<Inst> matchInsts, final Predicate<List<Inst>> predicate) {
         this.matchInsts = matchInsts;
         this.matchPredicate = predicate;
         return this;
     }
 
-    public Rewriter match(final List<Inst> matchInsts) {
+    public RewriterBuilder match(final List<Inst> matchInsts) {
         this.matchInsts = matchInsts;
         return this;
     }
@@ -81,18 +80,18 @@ public class Rewriter extends MRec {
      * matches two or more consecutive rshift instructions.  Consume with {@link #rewriteChain}.
      * (Varargs so it doesn't erase-clash with {@link #match(List)}.)
      */
-    public Rewriter match(final Tuple.Pair<Inst, Integer>... matchPairs) {
+    public RewriterBuilder match(final Tuple.Pair<Inst, Integer>... matchPairs) {
         this.matchChainPairs = List.of(matchPairs);
         return this;
     }
 
-    public Rewriter repeat() {
+    public RewriterBuilder repeat() {
         this.repeat = true;
         return this;
     }
 
 
-    public Rewriter matchCC() {
+    public RewriterBuilder matchCC() {
         this.matchC = true;
         return this;
     }

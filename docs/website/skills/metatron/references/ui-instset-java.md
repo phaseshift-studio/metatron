@@ -87,8 +87,8 @@ default W unfloat(FloatingSurface surface)
 **Consolidation note:** `display()` was removed — `run()` is the single presentation method.
 
 **Who draws:** `run()`'s default renders, but `AbstractWidget` overrides it with raw mode + attachment
-only. So a widget under `AbstractWidget` appears on screen only if it overrides `run()` itself
-(`MenuBarWidget`, `Selector`, `SelectorWidget`, `GridWidget`, and every tool do) or is drawn by a parent
+only. So a widget under `AbstractWidget` appears on screen only if it overrides `run()` itself (`MenuBarWidget`,
+`Selector`, `SelectorWidget`, `GridWidget`, and every tool do) or is drawn by a parent
 that holds it (a line widget is drawn by its `MenuBarWidget`). Displaying a lone line widget prints
 nothing — by design, not a bug.
 
@@ -173,14 +173,14 @@ write rec keys.
 
 ### What the migration removed, widget by widget
 
-| widget | state fields before | now |
-|---|---|---|
-| `AccordionWidget` | `cursor`, `style`, `lastRenderHeight` + rehydration helper | none; body/toggle latch in the rec |
-| `PanelWidget` | `cursor`, `maxWidth`, `style` | none; wrap width is the style's `width` |
-| `TreeWidget` | `rows` (a render cache), `style`, `forceExpand` (Java-only, lost on re-hydration) | none; `expand` is a rec key (`uri{*}` of branch uris) |
-| `TableWidget` | `headers`, `table`, `metadata` (`@JRecElement`), `style`, `javaPopulated` | none; `header`/`row`/`metadata` are rec keys |
-| `AbstractWidget` (and every widget/tool under it) | six `jvmWrite()` call sites, two style reads through `at()` | `put()`/`read()`; `size` and `eraseWidget()` were dead and are gone |
-| `Console`, `Pane`, `Rewriter` | many `@JRecElement` fields | unchanged — `JRec` is frozen; these are its only remaining clients |
+| widget                                            | state fields before                                                               | now                                                                 |
+|---------------------------------------------------|-----------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| `AccordionWidget`                                 | `cursor`, `style`, `lastRenderHeight` + rehydration helper                        | none; body/toggle latch in the rec                                  |
+| `PanelWidget`                                     | `cursor`, `maxWidth`, `style`                                                     | none; wrap width is the style's `width`                             |
+| `TreeWidget`                                      | `rows` (a render cache), `style`, `forceExpand` (Java-only, lost on re-hydration) | none; `expand` is a rec key (`uri{*}` of branch uris)               |
+| `TableWidget`                                     | `headers`, `table`, `metadata` (`@JRecElement`), `style`, `javaPopulated`         | none; `header`/`row`/`metadata` are rec keys                        |
+| `AbstractWidget` (and every widget/tool under it) | six `jvmWrite()` call sites, two style reads through `at()`                       | `put()`/`read()`; `size` and `eraseWidget()` were dead and are gone |
+| `Console`, `Pane`, `RewriterBuilder`              | many `@JRecElement` fields                                                        | unchanged — `JRec` is frozen; these are its only remaining clients  |
 
 Two traps that came out of that pass, both worth knowing before you touch a widget:
 
@@ -189,36 +189,36 @@ Two traps that came out of that pass, both worth knowing before you touch a widg
   how `SwipePanelWidgetTool(Lst)` came to build a swipe panel with no `obj` for months.
 - **`JRec.jvm()` returns a copy** (it folds annotated fields and methods into a temp map), so
   `jvm().put(...)` on a JRec subclass is a silent no-op. On a `SpaceRec` the map is the rec's own. If
-  you are on a JRec-backed class (Console, Pane, Rewriter), write through `put`/`jvmWrite`. 
+  you are on a JRec-backed class (Console, Pane, Rewriter), write through `put`/`jvmWrite`.
 
 ## 3. Style system (`Stylable.Style`)
 
 Style is a JVM-backed rec. Fields:
 
-| Field           | Type            | Description                                                                                                                                      |
-|-----------------|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| `border`        | uri             | simple, continuous, rounded, none, thick, hash, asterisk, period                                                                                 |
-| `background`    | str             | Graphitty color macro e.g. `{{[R]}}`                                                                                                             |
-| `foreground`    | str             | Graphitty color macro e.g. `{{g}}`                                                                                                               |
+| Field           | Type            | Description                                                                                                                                                                                   |
+|-----------------|-----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `border`        | uri             | simple, continuous, rounded, none, thick, hash, asterisk, period                                                                                                                              |
+| `background`    | str             | Graphitty color macro e.g. `{{[R]}}`                                                                                                                                                          |
+| `foreground`    | str             | Graphitty color macro e.g. `{{g}}`                                                                                                                                                            |
 | `highlight`     | str             | Syntax a widget colorizes its own body lines with — a `conf/nanorc` token (`mtron`, `java`, `python`, `txt`).  A line carrying a `{{syntax:…}}` tag is left to the whole-body pass (§ 4, § 9) |
-| `divider`       | str             | Column/row divider char                                                                                                                          |
-| `headerDivider` | str             | Header divider char                                                                                                                              |
-| `pointer`       | str             | Selection pointer e.g. `{{r}}>`                                                                                                                  |
-| `anchor`        | uri (coproduct) | top_left, top_middle, top_right, middle, bottom_left, bottom_middle, bottom_right                                                                |
-| `width`         | int             | Display width in columns; 0 = natural                                                                                                            |
-| `top`           | int             | Row offset from anchor edge (CSS top)                                                                                                            |
-| `left`          | int             | Column offset from anchor edge (CSS left)                                                                                                        |
-| `leftMargin`    | int             | Left margin                                                                                                                                      |
-| `rightMargin`   | int             | Right margin                                                                                                                                     |
-| `topMargin`     | int             | Top margin                                                                                                                                       |
-| `bottomMargin`  | int             | Bottom margin                                                                                                                                    |
-| `height`        | int             | **Viewport** height in rows; 0 = natural. Content taller than this is windowed (header/chrome pinned, newest lines at the bottom) and scrolls — nothing is discarded |
-| `scroll`        | union/uri/bool  | Which axes may scroll: `scroll=>union(x,y)` (both, the default), `union(y)` (vertical only), `none`/`false` (off) |
-| `scrollX`       | int             | Initial horizontal scroll offset (column at the left edge) |
-| `scrollY`       | int             | Initial vertical scroll offset (body row at the top); 0 = follow the newest content |
-| `zIndex`        | int             | Render order among floating widgets: higher = drawn later (on top). Default 0. Menu bars use `Integer.MAX_VALUE`. |
-| `focus`         | str             | Focus highlight color (Graphitty code, e.g. `{{r}}`) applied to the focus marker of the active widget |
-| `focus_token`   | str             | Marker char drawn at the focused widget's top-left corner (default `▶`) |
+| `divider`       | str             | Column/row divider char                                                                                                                                                                       |
+| `headerDivider` | str             | Header divider char                                                                                                                                                                           |
+| `pointer`       | str             | Selection pointer e.g. `{{r}}>`                                                                                                                                                               |
+| `anchor`        | uri (coproduct) | top_left, top_middle, top_right, middle, bottom_left, bottom_middle, bottom_right                                                                                                             |
+| `width`         | int             | Display width in columns; 0 = natural                                                                                                                                                         |
+| `top`           | int             | Row offset from anchor edge (CSS top)                                                                                                                                                         |
+| `left`          | int             | Column offset from anchor edge (CSS left)                                                                                                                                                     |
+| `leftMargin`    | int             | Left margin                                                                                                                                                                                   |
+| `rightMargin`   | int             | Right margin                                                                                                                                                                                  |
+| `topMargin`     | int             | Top margin                                                                                                                                                                                    |
+| `bottomMargin`  | int             | Bottom margin                                                                                                                                                                                 |
+| `height`        | int             | **Viewport** height in rows; 0 = natural. Content taller than this is windowed (header/chrome pinned, newest lines at the bottom) and scrolls — nothing is discarded                          |
+| `scroll`        | union/uri/bool  | Which axes may scroll: `scroll=>union(x,y)` (both, the default), `union(y)` (vertical only), `none`/`false` (off)                                                                             |
+| `scrollX`       | int             | Initial horizontal scroll offset (column at the left edge)                                                                                                                                    |
+| `scrollY`       | int             | Initial vertical scroll offset (body row at the top); 0 = follow the newest content                                                                                                           |
+| `zIndex`        | int             | Render order among floating widgets: higher = drawn later (on top). Default 0. Menu bars use `Integer.MAX_VALUE`.                                                                             |
+| `focus`         | str             | Focus highlight color (Graphitty code, e.g. `{{r}}`) applied to the focus marker of the active widget                                                                                         |
+| `focus_token`   | str             | Marker char drawn at the focused widget's top-left corner (default `▶`)                                                                                                                       |
 
 Float-related:
 
@@ -336,12 +336,12 @@ parks the repl — the keyboard looks dead even though the machine is already on
 `FOREGROUND_POLL_MS` (120 ms) while a **watcher thread** (`Console.watchTerminal`, a platform
 `CoreThread`) reads the terminal and classifies each keystroke through `Hotkeys`:
 
-| Key       | Effect |
-|-----------|--------|
-| `alt+b`   | **detach** — hand the running job to the background and return to the prompt |
-| `ctrl+c`  | stop the job (raw mode can disable sigint on some terminals — this is the fallback) |
-| `[q]`     | cancel the stream — only honored once the cancel offer has been printed |
-| any text  | kept as the next prompt's seed buffer, so typing ahead of a long job is never lost |
+| Key      | Effect                                                                              |
+|----------|-------------------------------------------------------------------------------------|
+| `alt+b`  | **detach** — hand the running job to the background and return to the prompt        |
+| `ctrl+c` | stop the job (raw mode can disable sigint on some terminals — this is the fallback) |
+| `[q]`    | cancel the stream — only honored once the cancel offer has been printed             |
+| any text | kept as the next prompt's seed buffer, so typing ahead of a long job is never lost  |
 
 **Why a watcher thread and not a poll loop.** Two terminal facts force the shape:
 
@@ -361,13 +361,13 @@ in the line as literal text (the classic `OA` in the prompt). So the watcher is 
 prompt waits (bounded by `WATCH_HANDOFF_MS`) for it to leave its read, and only then are the cooked
 attributes restored.
 
-**Escape sequences are swallowed whole.** `Hotkeys` is a pure, terminal-free state machine
-(`NORMAL → ESC → CSI`): the detach combo is `\e b`, arrows/function keys/unknown alt-combos are
+**Escape sequences are swallowed whole.** `Hotkeys` is a pure, terminal-free state machine (`NORMAL → ESC → CSI`): the
+detach combo is `\e b`, arrows/function keys/unknown alt-combos are
 consumed and dropped, `DEL`/backspace edit the kept text, and a keystroke is only ever *taken* when
 the watcher owns the terminal. A read that expires (`READ_EXPIRED`) drops a half-seen sequence, and
 a sequence already in flight is finished even after the job ended (`Hotkeys.inSequence()` keeps
-`beginWatch` true) — either way no fragment can reach the next line as text. `alt+b` is deliberately
-**not a keymap binding**: jline's emacs map owns `\eb` (backward-word) while the prompt is live.
+`beginWatch` true) — either way no fragment can reach the next line as text. `alt+b` is deliberately **not a keymap
+binding**: jline's emacs map owns `\eb` (backward-word) while the prompt is live.
 
 Detaching does not touch the job — it keeps its thread, keeps updating widgets, and stays
 addressable at its own vid (machines live under `/sys/machine/<n>`, spawned threads under
@@ -387,7 +387,7 @@ console.stopBackgroundJobs()   // stop them all — returns the count
 it (`bin/metatron-docker build console --steps bin/test/console-smoke.steps`), which is the only way to
 exercise the raw-mode path — see AGENTS.md → "Driving the console in a pty".
 
-`:bg` lists them, `:bg stop` stops them.  The decision table lives in the terminal-free
+`:bg` lists them, `:bg stop` stops them. The decision table lives in the terminal-free
 `Console.foregroundStep(detach, interrupt, cancel, userMode, nowMs, offerAtMs)` → `{WAIT, DETACH,
 INTERRUPT, CANCEL, OFFER_CANCEL}`: detach beats everything, ctrl+c beats cancel, and a widget on
 screen (`userMode`) suppresses the cancel offer, as before.
@@ -399,11 +399,11 @@ system (`activePane` ↔ `activeWidget`).
 
 **Keys** (bound in `CommandPalette.bindKeys()`):
 
-| Keys                          | Action |
-|-------------------------------|--------|
-| `alt+w`                       | cycle focus to the next floating widget (wraps) |
-| `alt+^` / `alt+v`             | grow / shrink focused widget height (±1 row) |
-| `alt+>` / `alt+<`             | grow / shrink focused widget width (±4 cols); falls back to pane resize when no widget is focused |
+| Keys              | Action                                                                                            |
+|-------------------|---------------------------------------------------------------------------------------------------|
+| `alt+w`           | cycle focus to the next floating widget (wraps)                                                   |
+| `alt+^` / `alt+v` | grow / shrink focused widget height (±1 row)                                                      |
+| `alt+>` / `alt+<` | grow / shrink focused widget width (±4 cols); falls back to pane resize when no widget is focused |
 
 Colon commands: `:next-widget`, `:prev-widget`, `:focus-widget [name\|off]`, `:widgets`
 (lists floating widgets, active one marked — same pattern as `:panes`), and `:keymap`
@@ -412,11 +412,11 @@ Colon commands: `:next-widget`, `:prev-widget`, `:focus-widget [name\|off]`, `:w
 **Key durability (reassertion)** — the five shortcut sequences above are *reasserted
 builtins*: `CommandPalette.bindBuiltin` registers handler identity with the console
 (`console.registerBuiltinKey(seq, handler)`), and `Console.prepareForInput` calls
-`reassertBuiltinKeys()` **before every prompt** — restoring any sequence a later binder
-(a menu line key, a tool) shadowed, by identity comparison on the shared `"main"` keymap
-(`Console.reassertBuiltin(keyMap, registered)`).  A shadow can therefore only last until
-the next read — never across turns.  This matters because the jline fork
-**pre-binds `\e<` = beginning-of-history and `\e>` = end-of-history on its emacs map —
+`reassertBuiltinKeys()` **before every prompt** — restoring any sequence a later binder (a menu line key, a tool)
+shadowed, by identity comparison on the shared `"main"` keymap (`Console.reassertBuiltin(keyMap, registered)`). A shadow
+can therefore only last until
+the next read — never across turns. This matters because the jline fork **pre-binds `\e<` = beginning-of-history and
+`\e>` = end-of-history on its emacs map —
 both silent**: an unowned `alt+<` / `alt+>` does nothing visible (it quietly jumps the
 prompt history), which is exactly what "the key is dead" looks like.  `:keymap` shows the
 current owner of each builtin sequence and the total escape-sequence binding count.
@@ -424,8 +424,8 @@ current owner of each builtin sequence and the total escape-sequence binding cou
 **Which edge moves is decided by the slot's anchor** — the anchor pins one edge, the free
 edge does the moving: a bottom-anchored widget's **top** edge lifts on `alt+^` (grow height);
 a left-anchored widget's **right** edge extends on `alt+>` (grow width), while a
-right-anchored one pulls in its **left** edge; top-anchored widgets are the mirror image
-(their bottom/right edges are the free ones).
+right-anchored one pulls in its **left** edge; top-anchored widgets are the mirror image (their bottom/right edges are
+the free ones).
 
 **Focus registry** lives on the `Console` (analogous to `activePane`):
 
@@ -452,17 +452,17 @@ update, and the key is what keeps focus and resize durable across re-floats.
   refreshes the live `style.width()` for content-shaping widgets (e.g. `AccordionWidget`
   body wrap), and re-renders.
 - On re-float, `add(widget, anchor, width, top, left)` carries the replaced slot's
-  `targetWidth` and `heightCap` into the new slot — the rehydrated instance's
-  (un-resized) `style.width()`/`style.height()` must not reset user geometry — and
+  `targetWidth` and `heightCap` into the new slot — the rehydrated instance's (un-resized) `style.width()`/
+  `style.height()` must not reset user geometry — and
   back-fills the resized width into the fresh instance's style when its own was unset.
 - Rendering resolves the height cap as `slot.heightCap > 0 ? slot.heightCap : style.height()`.
 
-**Focus marker** — `FloatingSurface.renderWidget` draws `▶` in the focused widget's own
-**top-left corner cell — inside the box**.  Placing the marker inside the widget's erase
+**Focus marker** — `FloatingSurface.renderWidget` draws `▶` in the focused widget's own **top-left corner cell — inside
+the box**. Placing the marker inside the widget's erase
 region makes ghost markers impossible: whatever owns that cell on the next pass paints over
-it, so a marker can never outlive its widget's next draw (a left-of-box marker used to sit
-*outside* every erase region and survived re-floats as a ghost).  The top-of-pass blank
-(`markerRow`/`markerCol`) remains as a belt-and-braces sweep.  Related scroll hygiene: the
+it, so a marker can never outlive its widget's next draw (a left-of-box marker used to sit *outside* every erase region
+and survived re-floats as a ghost). The top-of-pass blank (`markerRow`/`markerCol`) remains as a belt-and-braces sweep.
+Related scroll hygiene: the
 scroll-compensation erase blanks a **wrap-tolerant band** (4 rows above + 1 below the
 computed stale position, scoped to the widget's own columns) — wrapped console lines add
 visual rows without newlines, so the true scroll can exceed `scrollAccum` and leave a stale
@@ -471,9 +471,9 @@ box copy otherwise.
 ### Widget scrolling
 
 Every pinned widget is drawn through a **viewport**: the rows it may occupy (its `style.height`
-when set, otherwise its natural height capped by the terminal).  Content that does not fit is
-**off the viewport, never discarded** — the widget's body still holds every line — so the
-reader can scroll back to it.  That is the whole point: a live `thoughts`/`audit` widget used
+when set, otherwise its natural height capped by the terminal). Content that does not fit is **off the viewport, never
+discarded** — the widget's body still holds every line — so the
+reader can scroll back to it. That is the whole point: a live `thoughts`/`audit` widget used
 to lose the top of its text to the height cap.
 
 The mechanics are deliberately general:
@@ -487,7 +487,7 @@ The mechanics are deliberately general:
 - **Chrome is pinned.** `Stylable.chromeLines()` (1 when a border is configured, widgets with
   headers/status rows override) rows never scroll; only the body under them does.
 - **Tail by default.** A viewport that is not scrolled shows the *newest* content — the legacy
-  cap behavior, byte-identical: `offset = maxY` (follow).  Scrolling up (or seeding
+  cap behavior, byte-identical: `offset = maxY` (follow). Scrolling up (or seeding
   `style.scrollY`) drops the follow and holds the reader's **absolute** row, so text appended
   by an ongoing job does not yank the view out from under someone reading earlier lines.
   Scrolling back down to the end restores the follow.
@@ -496,7 +496,7 @@ The mechanics are deliberately general:
   same treatment the width clip always applied.
 - **Tall without a cap** — a widget with no `height` whose content is taller than the terminal
   is windowed to the terminal (`termHeight - 2`) instead of drawing rows off the bottom edge,
-  and becomes scrollable.  A terminal that reports no usable height (`0`) is not clamped at all.
+  and becomes scrollable. A terminal that reports no usable height (`0`) is not clamped at all.
 
 **The slot owns the scroll place** — exactly like `targetWidth`/`heightCap`:
 
@@ -518,19 +518,19 @@ re-hydrates a fresh instance), and a first float seeds them from `style.scrollX/
 > **The slot registry is identity-keyed** (`IdentityHashMap` behind synchronized accessors).
 > `Obj.hashCode` is derived from `jvm()` contents (`Obj.Helper.objHashCode`), and a widget
 > writes to its own jvm as it renders (an accordion latches its toggle instruction, an append
-> lands) — so a content-keyed map silently loses the widget the moment it draws.  Iteration
+> lands) — so a content-keyed map silently loses the widget the moment it draws. Iteration
 > always goes through `slotSnapshot()` so the lock is never held while calling into a widget.
 
 **Keys** (`CommandPalette.bindKeys()`, all registered as reasserted builtins):
 
-| Keys                          | Action |
-|-------------------------------|--------|
-| `alt+u` / `alt+d`             | scroll the focused widget's viewport up / down one line |
-| `pageup` / `pagedown`         | scroll it one page (viewport body rows − 1) |
-| `alt+,` / `alt+.`             | scroll it one column left / right |
-| `alt+0`                       | put the viewport back on the newest line (follow again) |
-| click                         | focus the widget under the pointer; click its header to fold it; click empty terminal to clear the focus and give the mouse back |
-| mouse wheel                   | scroll the widget under the pointer (or the focused one); a left click on a widget focuses it |
+| Keys                  | Action                                                                                                                           |
+|-----------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| `alt+u` / `alt+d`     | scroll the focused widget's viewport up / down one line                                                                          |
+| `pageup` / `pagedown` | scroll it one page (viewport body rows − 1)                                                                                      |
+| `alt+,` / `alt+.`     | scroll it one column left / right                                                                                                |
+| `alt+0`               | put the viewport back on the newest line (follow again)                                                                          |
+| click                 | focus the widget under the pointer; click its header to fold it; click empty terminal to clear the focus and give the mouse back |
+| mouse wheel           | scroll the widget under the pointer (or the focused one); a left click on a widget focuses it                                    |
 
 The scroll keys are **chained builtins** (`CommandPalette.chained`): when nothing scrollable is
 focused they fall through to whatever previously owned the key (jline's own page/history
@@ -543,16 +543,16 @@ reports the focused widget's viewport), and `:widgets` now appends each widget's
 
 Any pinned widget can be worked with the mouse (see `Console.clickAt`):
 
-| Gesture | Effect |
-|---------|--------|
-| click a widget | focus it (`Console.focusWidget`), and the pointer is armed for the widgets |
-| click a widget's own affordance | the widget acts — an accordion's header (its `[-]` / `[+]` included) folds it (see `Widget.onClick`) |
-| click terminal with no widget under it | clear the focus **and hand the mouse back to the terminal** |
-| wheel | scroll the widget under the pointer (or the focused one) |
-| **press the focused widget's chevron** | take hold of the widget — the chevron is its top-left cell, so the drag is a translation |
-| **press the focused widget's corner marker** (`◢`, its bottom-right cell) | take hold of its size — the mouse counterpart of `nudge()` |
-| **drag with the button held** | the corner follows the pointer (`FloatingSurface.placeAt`) or the box follows the pointer's delta (`FloatingSurface.resizeTo`), both clamped |
-| **release** | park it: a move writes `style => [top=>, left=>]`, a resize writes `width`/`height` — the rec, which is what survives the next `.display()` |
+| Gesture                                                                   | Effect                                                                                                                                       |
+|---------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| click a widget                                                            | focus it (`Console.focusWidget`), and the pointer is armed for the widgets                                                                   |
+| click a widget's own affordance                                           | the widget acts — an accordion's header (its `[-]` / `[+]` included) folds it (see `Widget.onClick`)                                         |
+| click terminal with no widget under it                                    | clear the focus **and hand the mouse back to the terminal**                                                                                  |
+| wheel                                                                     | scroll the widget under the pointer (or the focused one)                                                                                     |
+| **press the focused widget's chevron**                                    | take hold of the widget — the chevron is its top-left cell, so the drag is a translation                                                     |
+| **press the focused widget's corner marker** (`◢`, its bottom-right cell) | take hold of its size — the mouse counterpart of `nudge()`                                                                                   |
+| **drag with the button held**                                             | the corner follows the pointer (`FloatingSurface.placeAt`) or the box follows the pointer's delta (`FloatingSurface.resizeTo`), both clamped |
+| **release**                                                               | park it: a move writes `style => [top=>, left=>]`, a resize writes `width`/`height` — the rec, which is what survives the next `.display()`  |
 
 ### Moving and reshaping a widget by mouse
 
@@ -560,7 +560,7 @@ Any pinned widget can be worked with the mouse (see `Console.clickAt`):
 `FloatingSurface` draws `▶` in the *top-left* rendered cell and `◢` in the *bottom-right* one, so the
 cell a user grabs is the geometry the gesture changes — the origin for a move (which makes the drag a
 translation, the corner landing where the pointer is) and the far corner for a resize (which makes it a
-width/height delta).  Neither needs an offset calculation, and targets that small stay safe to hit:
+width/height delta). Neither needs an offset calculation, and targets that small stay safe to hit:
 nobody clicks a corner by accident, and the body stays free for selection, scrolling and affordances.
 Only the focused widget has handles, and a box drawn one cell wide and tall gets no corner marker
 rather than two glyphs on one cell.
@@ -573,18 +573,18 @@ Where the widget sits *while moving* is view state and lives on its slot; where 
 rec state and is written once, on release:
 
 - `Console.mousePressed/Dragged/Released` (dispatched from the mouse handler in `CommandPalette`)
-  run the gesture.  A press and release with no motion stays a click — the press already focused it.
-- `FloatingSurface.placeAt(widget, row, col)` writes the slot's anchor offsets via the anchor
-  **inverse** (`Slot.offsetRowFor/offsetColFor`, the mirror of `rowFor/colFor`) and queue-renders —
+  run the gesture. A press and release with no motion stays a click — the press already focused it.
+- `FloatingSurface.placeAt(widget, row, col)` writes the slot's anchor offsets via the anchor **inverse**
+  (`Slot.offsetRowFor/offsetColFor`, the mirror of `rowFor/colFor`) and queue-renders —
   never a synchronous pass per motion event.
 - `FloatingSurface.resizeTo(widget, width, height)` writes the slot's `targetWidth`/`heightCap` — the
   same two fields `nudge()` steps by key — clamped to `MIN_WIDTH`/`MIN_HEIGHT` (a resize can never
-  demolish a widget) and to the terminal.  A **cap only ever limits**: the drawn box is
+  demolish a widget) and to the terminal. A **cap only ever limits**: the drawn box is
   `min(cap, content)`, so raising a cap past the content's length changes nothing, and a right- or
   bottom-anchored box grows leftward/upward because the anchor pins one edge and the free edge moves.
 - the release calls the widget's style write path (`style().top(..).left(..).applyStyle()`, plus
   `width`/`height` after a resize), so the geometry lands in the rec and survives the re-hydration
-  every update performs.  A move deliberately writes *no* height: a cap nobody asked for would clip
+  every update performs. A move deliberately writes *no* height: a cap nobody asked for would clip
   content that arrives later.
 - **Clamping** keeps the chevron on screen: a handle dragged off the terminal would be
   unreachable, and the widget would be stuck where only its body showed.
@@ -593,12 +593,12 @@ rec state and is written once, on release:
 
 A drag holds the pointer for its whole duration (`syncWidgetMouseTracking` treats `dragging()` as
 "wanted"), because a mid-gesture hand-back to the terminal would drop the release event and leave the
-widget in flight.  End-to-end coverage: `bin/test/console-drag.steps` sends press/motion/release bytes
+widget in flight. End-to-end coverage: `bin/test/console-drag.steps` sends press/motion/release bytes
 and reads the widgets back out of the store — rendered text cannot say where a box sits, but the store
 can (a move parks `top=>3, left=>8`; a resize parks `width=>33, height=>6`).
 
-Affordances go through `Widget.onClick(int row, int col)` — **local** coordinates
-(`0,0` = the widget's top-left rendered cell), so a widget tests a click against its own
+Affordances go through `Widget.onClick(int row, int col)` — **local** coordinates (`0,0` = the widget's top-left
+rendered cell), so a widget tests a click against its own
 layout without knowing where it was pinned; the default returns false, which leaves the click
 to the console (focus).  `FloatingSurface.click(widget, row, col)` does the translation and
 re-renders when the widget consumed the click.
@@ -609,28 +609,28 @@ me read this" into "where did the text go" — a folded accordion draws nothing 
 that regression is exactly what a whole-header target caused once.
 
 A **folded header reports what it is holding** (`[+] 3` = three body lines), so a folded widget and
-a widget whose body never arrived can never be mistaken for each other.  The fold lives in the
+a widget whose body never arrived can never be mistaken for each other. The fold lives in the
 widget's rec — the space, for a store-backed widget — so it survives the agent's
-`>>=[body=>...].display()` updates: folded once, it stays folded while text piles up inside it
-(verified in `bin/test/console-widget-mouse.steps`, which folds, writes more body, and checks the
+`>>=[body=>...].display()` updates: folded once, it stays folded while text piles up inside it (verified in
+`bin/test/console-widget-mouse.steps`, which folds, writes more body, and checks the
 fold held).
 
 **A title never widens its box** — `Utilities.titleClip(title, width, chrome)` is the one rule the
 titled boxes clip through: an explicit `style=>[width=>x]` is the box's width, the box spends its
 own chrome first (border sides, margins, and any glyph drawn beside the title), and the title — the
-one thing in a header that can be arbitrarily long — is what gives way, clipped with `…`.  The call
+one thing in a header that can be arbitrarily long — is what gives way, clipped with `…`. The call
 sites differ only in their numbers: `AccordionWidget` (the declared width is the whole box; chrome
 is the two border sides plus `" [-] "`, and the clip feeds `onClick` too, so the toggle glyph's
 target moves with it), `PanelWidget` (the declared width IS the content width, so chrome is 0 —
 this is what `ModalTool`, the `CardUtil` popups and `TreeSelectTool` render through, all of which
 constrain the panel to the terminal), and `CardWidget` (a declared width is a cap, not a fill: a
-small card keeps its natural size, and its body wraps when the cap bites).  A title is one line by
+small card keeps its natural size, and its body wraps when the cap bites). A title is one line by
 definition, so newlines are flattened to spaces on the way through — a title carrying one cannot
 break the box it sits in.
 
 A click costs **one render pass**: `Console.clickAt` renders the focus change and, when the
 widget also acted, the affordance (the surface coalesces the two), and it never blocks the
-console thread — `focusWidget` renders fire-and-forget.  (It used to `renderNow()`, which
+console thread — `focusWidget` renders fire-and-forget. (It used to `renderNow()`, which
 stalled the reader thread on a full pass for every focus and every click; that stall is what
 made the pointer feel heavy.)
 
@@ -646,8 +646,8 @@ made the pointer feel heavy.)
 
 The enable/disable sequences are the console's own, not jline's:
 `MOUSE_ON = ?1000h ?1002h ?1006h` (button events, button-event tracking — motion while a button is
-held, which is what a drag is — and the SGR encoding) and a full `MOUSE_OFF` sweep.
-**Deliberately not `MouseSupport.trackMouse(Normal)`, which also enables `?1005h`** — the legacy
+held, which is what a drag is — and the SGR encoding) and a full `MOUSE_OFF` sweep. **Deliberately not
+`MouseSupport.trackMouse(Normal)`, which also enables `?1005h`** — the legacy
 UTF-8 coordinate encoding, whose mix with 1006 makes a terminal report the pointer in either
 encoding and mis-decode columns; that is exactly the failure mode where a widget's *body* still
 focuses on a click while its three-cell `[-]` target cannot be hit.
@@ -656,22 +656,22 @@ Two callers keep the mode honest:
 
 - `Console.prepareForInput()` re-asserts it **once per prompt** (forced) — jline releases
   tracking at the end of every `readLine`, so the flag alone would leave the pointer dead from
-  the second prompt on.  It also clears the release, so a new prompt re-arms the pointer after a
+  the second prompt on. It also clears the release, so a new prompt re-arms the pointer after a
   wheel handed it back to the terminal.
 - the hotkey watcher's idle tick reconciles **only on a change**, so a widget floated while the
   user sat at the prompt becomes clickable within a tick — and only while the prompt owns the
-  terminal.  While a job holds the console the mouse stays off, so its bytes can never be
+  terminal. While a job holds the console the mouse stays off, so its bytes can never be
   mistaken for typed input by the watcher.
 
 The handler is bound to `MouseSupport.keys()` (the `\033[<` / `\033[M` prefixes) and reads the
 event the way jline does — `reader.readMouseEvent()`, whose payload the keymap already pushed
-back as a macro.  Two jline details are load-bearing:
+back as a macro. Two jline details are load-bearing:
 
 - **`MouseEvent` coordinates are 0-BASED** (a click at terminal column 5 arrives as `x=4`),
   while widget geometry and the console's gestures are 1-based: `CommandPalette` converts once,
   at the handler.
-- **a click is a press *and* a release** — jline keeps the button down until the release
-  (`\033[<0;Cx;CyM` then `...m`) arrives, and reads any later press as a `dragged` event.  This
+- **a click is a press *and* a release** — jline keeps the button down until the release (`\033[<0;Cx;CyM` then `...m`)
+  arrives, and reads any later press as a `dragged` event. This
   only bites hand-written mouse bytes (a real terminal always sends both).
 
 Console-side API:
@@ -692,32 +692,32 @@ reader.getLastBinding())` is the read-back idiom, since the keymap consumed the 
 ### Rendering a pinned widget has to stay cheap
 
 A pinned widget is re-rendered **in full, on every pass** — a wheel notch, a page key, a resize, a
-click.  Three things make that affordable (measured on a 300-line accordion: a pass went from
+click. Three things make that affordable (measured on a 300-line accordion: a pass went from
 ~500 ms to ~8 ms):
 
-- **Highlighting is memoized, not repeated.** A widget that colorizes its own body lines
-  (`style.highlight(language)`) asks for `Highlighter.highlightLine(language, line)`, never
-  `new Highlighter(lang).highlight(line)` per line: highlighting is a full syntax pass per line
-  (~600 µs), and a 60 row body re-highlighted on every pass cost **38 ms per pass** before the
+- **Highlighting is memoized, not repeated.** A widget that colorizes its own body lines (`style.highlight(language)`)
+  asks for `Highlighter.highlightLine(language, line)`, never
+  `new Highlighter(lang).highlight(line)` per line: highlighting is a full syntax pass per line (~600 µs), and a 60 row
+  body re-highlighted on every pass cost **38 ms per pass** before the
   memo (`LINE_CACHE`, bounded, shared across widget instances on purpose — a widget is
   re-hydrated into a fresh instance by every update, so a per-widget memo would be cold exactly
   when a live widget needs it).
 
   A `{{syntax:java}} … {{/syntax:java}}` block is highlighted the same way, and the seam is where the
-  widget draws.  A block that nothing draws inside is ONE memoized `Highlighter.highlightBlock` pass;
+  widget draws. A block that nothing draws inside is ONE memoized `Highlighter.highlightBlock` pass;
   a block whose lines carry the widget's own border and colour is colorized piece by piece through
   `Highlighter.block(language)`, which carries jline's multi-line state across the seams (a comment
-  opened on one line of the block is still a comment on the next).  A line carrying a block tag is
+  opened on one line of the block is still a comment on the next). A line carrying a block tag is
   handed back untouched either way: a block spans several lines, so only the pass that sees the whole
   body can colorize it — that pass is `FloatingSurface`'s `Graphitty.string(sb)`.
-- **Measuring text is O(1) for plain text.** `Graphitty.strip`/`viewLength` return the input
+- **Measuring text is O (1) for plain text.** `Graphitty.strip`/`viewLength` return the input
   unchanged when it has no `{{…}}` code, no ANSI escape and nothing outside ASCII — 2.4 µs → 34 ns
-  per call, and every widget measures every one of its lines.  That same all-ASCII case is why a
+  per call, and every widget measures every one of its lines. That same all-ASCII case is why a
   plain line still measures exactly as it always did: there a column IS a char, so `viewLength`
   answers with the char count without walking code points.
 - **Widget passes outrank console output.** The render thread drains `urgentQueue` (widget
   passes: `render()`, `renderNow()`) ahead of `renderQueue` (console output, slot erases), so an
-  agent streaming a widget body cannot make a scroll wait behind thousands of output writes.  The
+  agent streaming a widget body cannot make a scroll wait behind thousands of output writes. The
   queues cannot interleave badly: a widget pass positions the cursor absolutely and restores it.
 
 `-Dmetatron.render.trace=true` logs one line per pass (and the widget's `format()` time inside
@@ -727,7 +727,7 @@ it); `bin/metatron-console` passes extra switches via
 ### Reads must go through the store, not `at()`
 
 `JRec.at()` reads the **construction-time snapshot**; `jvmWrite()` on a *store-backed* widget
-(`accordion_widget::[…]@<think_widget>`) writes the space.  So a widget that reads its own fields
+(`accordion_widget::[…]@<think_widget>`) writes the space. So a widget that reads its own fields
 with `at()` keeps serving the pre-mutation value: a click folded the accordion *in the space*
 while it went on drawing itself unfolded — invisible for every ephemeral (vid-less) widget, which
 is why it survived the unit tests and showed up only on a live `think_widget`.
@@ -752,8 +752,8 @@ again — and `--raw` shows the hand-back in bytes: `?1006l` right after the cli
 empty terminal, `?1006h` again once a widget is focused.
 
 **Deterministic focus order** — `surface.widgets()` sorts slots by z-index (lowest first) →
-anchor reading order (top row→bottom row, left→right) → top/left offsets → target width
-(widest first). Only slot geometry — stable across re-floats — feeds the order, so cycling
+anchor reading order (top row→bottom row, left→right) → top/left offsets → target width (widest first). Only slot
+geometry — stable across re-floats — feeds the order, so cycling
 never jumps around.
 
 ## 5. Instruction registration (`uiInstSet.java`)
@@ -962,7 +962,7 @@ create();
 6. **Choose the right state model**:
 
    | If your widget… | Use |
-                        |---|---|
+                           |---|---|
    | Has simple key/value fields, built from mtron or Java | **Model A** (JVM-as-source-of-truth).  Mutators call `jvmWrite()`, `format()` calls `jvmRead()`.  See AccordionWidget. |
    | Has list/table data populated via Java builders (`addRow()`, etc.) | **Model B** (Java-fields-as-storage) with the `javaPopulated` tracking flag.  See TableWidget. |
    | Is a pure display widget with no mutable state | Either — Model A is simpler. |
@@ -1068,20 +1068,20 @@ private void redrawStack() {
 
 With the console drawing its own screen (the default; `-Dmetatron.console.screen=false` opts out), every
 terminal-bound write funnels through the screen: the console records it as transcript rows and paints the
-region above the prompt with absolute positioning.  An in-place tool (the `redrawStack` pattern above)
+region above the prompt with absolute positioning. An in-place tool (the `redrawStack` pattern above)
 emits its own cursor math, so its frames must neither be recorded as content nor have the region repainted
 under them — do either one and the table doubles itself on every key (or the session dumps every frame the
-moment the tool closes).  The contract:
+moment the tool closes). The contract:
 
 - `beginToolRun()` / `endToolRun(finalFrame)` (`AbstractWidget`) bracket the tool's ownership of the terminal.
   While active, the tool's frames reach the terminal raw (their cursor math IS the in-place redraw), nothing
   is recorded, and the screen never repaints the region (a paint hands the cursor somewhere the tool did not
-  expect).  Wrap the input loop — `endToolRun` in a `finally`, so every exit, including an error, hands the
+  expect). Wrap the input loop — `endToolRun` in a `finally`, so every exit, including an error, hands the
   terminal back.
 - `endToolRun` settles the tool's last frame into the transcript — what the tool leaves on screen is what a
   reader scrolls back to (the screen keeps text and styling and strips terminal commands,
   `ScreenPainter.noCommands`) — then clears the screen and repaints fully from its own content, because the
-  tool's raw frames scrolled the terminal somewhere the painter cannot have followed.  Net effect: the tool
+  tool's raw frames scrolled the terminal somewhere the painter cannot have followed. Net effect: the tool
   leaves exactly one copy of its final state, at the tail of the transcript.
 - Content-less tools (transient selections, swipes) pass `null`.
 
@@ -1095,7 +1095,7 @@ moment the tool closes).  The contract:
 | `fURISelectorTool`     | `SelectorWidget` → `TableWidget` (URI pairs)                     |
 | `TreeSelectTool`       | `TreeWidget` (navigable tree) + `PanelWidget` (detail panel)     |
 | `SwipePanelWidgetTool` | `PanelWidget` (obj display panel, docq + Highlighter formatting) |
-| `ModalTool`            | `PanelWidget` (title + body popup panel)                          |
+| `ModalTool`            | `PanelWidget` (title + body popup panel)                         |
 
 **Important:** These tools populate their `TableWidget`s via Java API (`addRow()`,
 `addMetadata()`). They rely on the `sync()` guard pattern (section 2) to prevent data corruption — without it,
@@ -1140,7 +1140,8 @@ silently no-ops. The compiler can't catch this because `Style extends MRec exten
 ## 9. Graphitty — terminal markup DSL (`Graphitty.java`)
 
 Graphitty is a lightweight macro-to-ANSI preprocessor used throughout the UI layer. Tags are written `{{...}}` and are
-stripped by `Graphitty.strip()` for visual-length calculations. The DSL supports four families of tags: colour and effect,
+stripped by `Graphitty.strip()` for visual-length calculations. The DSL supports four families of tags: colour and
+effect,
 cursor and screen, chaining with `&`, and `{{syntax:lang}}` blocks of foreign source.
 
 ### Colour / effect tags
@@ -1184,49 +1185,52 @@ cursor and screen, chaining with `&`, and `{{syntax:lang}}` blocks of foreign so
 ### Syntax blocks (`{{syntax:lang}}` … `{{/syntax:lang}}`)
 
 Everything between the tags is **foreign source code**: its literal text is captured and colorized from a `conf/nanorc`
-syntax file, and the tags themselves never reach the terminal.  The end tag must name the same language as the open tag.
+syntax file, and the tags themselves never reach the terminal. The end tag must name the same language as the open tag.
 
 ```java
 // colorize a block of source anywhere a string is drawn:
 "{{syntax:java}}" + source + "{{/syntax:java}}"
 ```
 
-| Language token                                                                             | Resolves to                                     |
-|--------------------------------------------------------------------------------------------|-------------------------------------------------|
-| `java`, `python`, `yaml`, `sql`, `json`, `javascript`, `html`, `xml`, `markdown`, `mtron`   | `conf/nanorc/<token>.nanorc`                    |
-| `js` / `ts` → javascript, `py` → python, `yml` → yaml, `md` → markdown, `htm` → html        | the same files, short forms                     |
-| `txt`, `text`, `plain`, `none`, anything else                                               | no highlighting — the text is emitted as it is |
+| Language token                                                                            | Resolves to                                    |
+|-------------------------------------------------------------------------------------------|------------------------------------------------|
+| `java`, `python`, `yaml`, `sql`, `json`, `javascript`, `html`, `xml`, `markdown`, `mtron` | `conf/nanorc/<token>.nanorc`                   |
+| `js` / `ts` → javascript, `py` → python, `yml` → yaml, `md` → markdown, `htm` → html      | the same files, short forms                    |
+| `txt`, `text`, `plain`, `none`, anything else                                             | no highlighting — the text is emitted as it is |
 
-A token names the **file**; jline is then asked for the syntax name that file *declares* (`syntax "Java"`), because jline
+A token names the **file**; jline is then asked for the syntax name that file *declares* (`syntax "Java"`), because
+jline
 matches a syntax name by exact equality — passing `java` straight through landed on a same-named system nanorc, or, on a
-host without one, on nothing at all.  A user file in `~/.metatron/<token>.nanorc` wins over the shipped one.  A new
+host without one, on nothing at all. A user file in `~/.metatron/<token>.nanorc` wins over the shipped one. A new
 language needs both halves: `conf/nanorc/<language>.nanorc` **and** an `include <language>.nanorc` line in
 `conf/nanorc/jnanorc` — resolution reads the file, but jline only looks at the files `jnanorc` includes, so one that is
 missing from that list resolves to a syntax with no rules and the text is drawn plain.
 
-| Call                                         | Use                                                                              |
-|----------------------------------------------|----------------------------------------------------------------------------------|
-| `Highlighter.syntaxName(language)`           | the syntax a token resolves to; `null` means plain text                          |
-| `Highlighter.highlightBlock(language, code)` | a whole block in one pass, memoized                                              |
-| `Highlighter.block(language)`                | a stateful colorizer for a block that arrives in pieces                          |
+| Call                                         | Use                                                                                 |
+|----------------------------------------------|-------------------------------------------------------------------------------------|
+| `Highlighter.syntaxName(language)`           | the syntax a token resolves to; `null` means plain text                             |
+| `Highlighter.highlightBlock(language, code)` | a whole block in one pass, memoized                                                 |
+| `Highlighter.block(language)`                | a stateful colorizer for a block that arrives in pieces                             |
 | `Highlighter.highlightLine(language, line)`  | one line of a body — a line with no syntax, or carrying a block tag, is handed back |
 
 Rules of the road:
 
 - **Markup still applies inside a block.**  A block is not a verbatim region: the markup of the document around it keeps
   working through it, which is what lets a widget draw its border and its colours *through* the lines of a block it
-  renders.  Only literal text is code.  Code that has to *show* a tag escapes it — `\{\{b\}\}` renders as `{{b}}`.
+  renders. Only literal text is code. Code that has to *show* a tag escapes it — `\{\{b\}\}` renders as `{{b}}`.
 - **Measuring captures the block too**, with escapes off: the tags are dropped and the code is kept, so
   `Graphitty.strip()`, `viewLength()` and `Highlighter.visualLength()` measure exactly what is drawn on the line.
-- **A block that is never closed** renders what it captured; the flush belongs to the outermost parse.  A tag alone on a
+- **A block that is never closed** renders what it captured; the flush belongs to the outermost parse. A tag alone on a
   line is simply dropped — a widget measures its body line by line, so an end tag can arrive without its opener.
 - **A mismatched end tag reports** `unmatched syntax wrap: /syntax:sql != /syntax:java`, the same shape as any other
   unmatched rule wrap.
 - **No nesting**: inside a block another `{{syntax:…}}` is markup like any other and does not open a second block.
-- **A rule that merely contains the prefix** — `{{/syntax:java}}`, `{{not_syntax:java}}` — names no language: a block opens
+- **A rule that merely contains the prefix** — `{{/syntax:java}}`, `{{not_syntax:java}}` — names no language: a block
+  opens
   only on a rule that STARTS with `syntax:`.
 
-Trailing whitespace at a markup boundary is emitted outside the colouring: in a bordered body it is the widget's padding,
+Trailing whitespace at a markup boundary is emitted outside the colouring: in a bordered body it is the widget's
+padding,
 and a syntax file that colours trailing whitespace would otherwise paint it.
 
 ```java
@@ -1250,7 +1254,7 @@ a
 Tags separated by `&` are **chained** — `{{r&_}}` emits red-foreground (`\033[31m`)
 followed by underline (`\033[4m`), pushing both rules in left-to-right order.
 
-A `{{syntax:lang}}` block is the exception: it is matched **by name**, not by position, and never joins that stack.  So
+A `{{syntax:lang}}` block is the exception: it is matched **by name**, not by position, and never joins that stack. So
 markup inside the block pushes and pops above whatever encloses it, the rule the stack leads with is what resumes after
 the block, and only the exactly-spelled `{{/syntax:lang}}` closes it.
 
@@ -1267,15 +1271,15 @@ the block, and only the exactly-spelled `{{/syntax:lang}}` closes it.
 
 ### Static helpers
 
-| Method                                  | Purpose                                                                                                                                                 |
-|-----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `Graphitty.string(f, args...)`          | Convert a Graphitty format string to ANSI.  Used everywhere in widget `format()` methods.                                                               |
-| `Graphitty.strip(str)`                  | Remove all ANSI escapes (and Graphitty tags) to measure **visual length**.  Used by `Highlighter.visualLength()` and `WidgetCanvas` for width clipping. |
-| `Graphitty.out(stream, f, args...)`     | Write a Graphitty string directly to an output stream.  Used by `WidgetCanvas.finish()` for the final flush.                                            |
-| `Graphitty.writeToTerminal(f, args...)` | Write through the serialized terminal-writer bridge (FloatingSurface-safe).                                                                             |
+| Method                                  | Purpose                                                                                                                                                                                                                                                                                                                                                                      |
+|-----------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Graphitty.string(f, args...)`          | Convert a Graphitty format string to ANSI.  Used everywhere in widget `format()` methods.                                                                                                                                                                                                                                                                                    |
+| `Graphitty.strip(str)`                  | Remove all ANSI escapes (and Graphitty tags) to measure **visual length**.  Used by `Highlighter.visualLength()` and `WidgetCanvas` for width clipping.                                                                                                                                                                                                                      |
+| `Graphitty.out(stream, f, args...)`     | Write a Graphitty string directly to an output stream.  Used by `WidgetCanvas.finish()` for the final flush.                                                                                                                                                                                                                                                                 |
+| `Graphitty.writeToTerminal(f, args...)` | Write through the serialized terminal-writer bridge (FloatingSurface-safe).                                                                                                                                                                                                                                                                                                  |
 | `Graphitty.viewLength(str)`             | The **display columns** `str` occupies: stripped, then summed a code point at a time through jline's `WCWidth` — a CJK glyph is 2, a variation selector or combining mark 0, an emoji 1 glyph across 2 chars, a line break 0.  All-printable-ASCII lines short-circuit to the char count.  This is the measure `Highlighter.visualLength()` and every widget width rides on. |
-| `Graphitty.viewIndex(str, columns)`     | The char index at which `str` has spent `columns` of its `viewLength` — for slicing a line at a column boundary (`substring` counts chars).  Never lands inside a surrogate pair; a zero-width mark stays with its base. |
-| `Graphitty.viewPrefix(str, columns)`    | `viewIndex` as a slice, never shorter than the first code point — a clip makes progress even when one glyph is wider than the budget. |
+| `Graphitty.viewIndex(str, columns)`     | The char index at which `str` has spent `columns` of its `viewLength` — for slicing a line at a column boundary (`substring` counts chars).  Never lands inside a surrogate pair; a zero-width mark stays with its base.                                                                                                                                                     |
+| `Graphitty.viewPrefix(str, columns)`    | `viewIndex` as a slice, never shorter than the first code point — a clip makes progress even when one glyph is wider than the budget.                                                                                                                                                                                                                                        |
 
 `Graphitty` owns the tags; what a `{{syntax:lang}}` block is colored *with* is `Highlighter`'s — see **Syntax blocks**
 above for `syntaxName`, `highlightBlock`, `block` and the line-oriented `highlightLine`.

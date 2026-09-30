@@ -49,7 +49,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
  */
 @Disabled("Run manually: mvn test -Dtest=InstResolverBenchmarkTest")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class InstResolverBenchmarkTest extends AbstractMetatronTest {
+public class ResolverBenchmarkTest extends AbstractMetatronTest {
 
     private static final int WARMUP_ITERATIONS = 100;
     private static final int BENCHMARK_ITERATIONS = 1000;

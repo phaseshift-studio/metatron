@@ -365,7 +365,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
     }
 
     @Override
-    public BasicRouter apply(final Obj other) {
+    public Obj apply(final Obj other) {
         return null;
     }
 

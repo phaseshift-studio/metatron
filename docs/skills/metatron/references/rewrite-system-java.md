@@ -76,11 +76,24 @@ mapping pattern instructions to matched source instructions.
 ```java
 // Remove identity instructions
 InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("id_removal"),
-    code -> code.selfJVM(
+
+code ->code.
+
+selfJVM(
         Rewriter.search(code.insts())
-            .match(instA(ID_INST_TID).insts())   // match [_]
-            .rewrite(x -> List.of())              // replace with nothing
-    ).asCode())
+        .
+
+match(instA(ID_INST_TID).
+
+insts())   // match [_]
+        .
+
+rewrite(x ->List.
+
+of())              // replace with nothing
+        ).
+
+asCode())
 ```
 
 **`match(List<Inst>)`** — pattern instructions. `instA(tid)` creates a bare match instruction (no args, no f). Matching
@@ -146,7 +159,8 @@ RewriteBuilder.forDatabase(tbleSpace.class)
 
 ### 3. Custom `Function<Code, Code>` — full AST inspection
 
-When the `Rewriter` API's fixed-window matching doesn't fit (variable-length prefix capture, conditional restructuring),
+When the `RewriterBuilder` API's fixed-window matching doesn't fit (variable-length prefix capture, conditional
+restructuring),
 use `InstSet.Helper.rewriter()` directly with a custom function:
 
 ```java
@@ -235,13 +249,21 @@ The common `docWrap(InstSet.Helper.rewriter(...), ...)` pattern:
 
 ```java
 docWrap(
-    InstSet.Helper.rewriter(tid, code -> code.selfJVM(
+        InstSet.Helper.rewriter(tid, code ->code.
+
+selfJVM(
         Rewriter.search(code.insts())
-            .match(pattern)
-            .rewrite(replaceFunc)
-    ).asCode()),
-    "description"
-)
+        .
+
+match(pattern)
+            .
+
+rewrite(replaceFunc)
+    ).
+
+asCode()),
+        "description"
+        )
 ```
 
 `docWrap` registers the rewrite under `uri(REWRITE)` and attaches the description string as the `?docq` query parameter

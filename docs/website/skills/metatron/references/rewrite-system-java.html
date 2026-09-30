@@ -450,11 +450,24 @@ instruction list. The rewrite function receives a <code>Map&lt;Inst, Inst&gt;</c
 mapping pattern instructions to matched source instructions.</p>
 <pre><code class="language-java">// Remove identity instructions
 InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend(&quot;id_removal&quot;),
-    code -&gt; code.selfJVM(
+
+code -&gt;code.
+
+selfJVM(
         Rewriter.search(code.insts())
-            .match(instA(ID_INST_TID).insts())   // match [_]
-            .rewrite(x -&gt; List.of())              // replace with nothing
-    ).asCode())
+        .
+
+match(instA(ID_INST_TID).
+
+insts())   // match [_]
+        .
+
+rewrite(x -&gt;List.
+
+of())              // replace with nothing
+        ).
+
+asCode())
 </code></pre>
 <p><strong><code>match(List&lt;Inst&gt;)</code></strong> — pattern instructions. <code>instA(tid)</code> creates a bare match instruction (no args, no f). Matching
 uses <code>instsMatch()</code>: TIDs must be compatible via <code>tid.test()</code>, args are compared by position, and <code>?.test(source)</code> tests
@@ -510,7 +523,8 @@ difference: the rewrite checks <strong>which space</strong> the data lives in, a
 <li>The matched sequence is replaced with a single native instruction</li>
 </ol>
 <h4>3. Custom <code>Function&lt;Code, Code&gt;</code> — full AST inspection</h4>
-<p>When the <code>Rewriter</code> API's fixed-window matching doesn't fit (variable-length prefix capture, conditional restructuring),
+<p>When the <code>RewriterBuilder</code> API's fixed-window matching doesn't fit (variable-length prefix capture, conditional
+restructuring),
 use <code>InstSet.Helper.rewriter()</code> directly with a custom function:</p>
 <pre><code class="language-java">InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend(&quot;explain_profile&quot;),
     code -&gt; {
@@ -572,13 +586,21 @@ stream — it either runs natively (one-shot) or not at all:</p>
 <h3>Convenience: <code>InstSet.Helper.rewriter()</code> with Rewriter</h3>
 <p>The common <code>docWrap(InstSet.Helper.rewriter(...), ...)</code> pattern:</p>
 <pre><code class="language-java">docWrap(
-    InstSet.Helper.rewriter(tid, code -&gt; code.selfJVM(
+        InstSet.Helper.rewriter(tid, code -&gt;code.
+
+selfJVM(
         Rewriter.search(code.insts())
-            .match(pattern)
-            .rewrite(replaceFunc)
-    ).asCode()),
-    &quot;description&quot;
-)
+        .
+
+match(pattern)
+            .
+
+rewrite(replaceFunc)
+    ).
+
+asCode()),
+        &quot;description&quot;
+        )
 </code></pre>
 <p><code>docWrap</code> registers the rewrite under <code>uri(REWRITE)</code> and attaches the description string as the <code>?docq</code> query parameter
 on the rewrite TID.</p>

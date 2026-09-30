@@ -59,7 +59,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * This follows the same pattern used by {@code BasicRouter.getSpace()} which uses
  * {@code min(Comparator.comparing(Space::pattern))} to select the most specific space.
  */
-public class ScoringInstResolver implements InstResolver {
+public class ScoringInstResolver implements InstSelector {
 
     /**
      * A candidate instruction paired with its original (pre-transformation) form
@@ -94,10 +94,10 @@ public class ScoringInstResolver implements InstResolver {
                     final Obj fromOrAtObj = Router.readFromSpace(fromOrAt.get());
                     if (!fromOrAtObj.isNothing() && !fromOrAtObj.isCall()) {
                         userInst.logger().debug("fast from/at() resolution: %s", fromOrAt.get());
-                        return Router.readFromSpace(userInst.tid()).asInst().args(lst(fromOrAt.get().toUri())).rng(T(fromOrAtObj.typeId().maybeSome()));
+                        return Inst.Helper.bindQ(lhs, userInst, Router.readFromSpace(userInst.tid()).asInst().args(lst(fromOrAt.get().toUri())).rng(T(fromOrAtObj.typeId().maybeSome())));
                     }
                 }
-                return Router.readFromSpace(userInst.tid()).asInst().args(lst(uri(fromOrAt.get()))).rng(T(ALL.maybeSome()));
+                return Inst.Helper.bindQ(lhs, userInst, Router.readFromSpace(userInst.tid()).asInst().args(lst(uri(fromOrAt.get()))).rng(T(ALL.maybeSome())));
             }
         }
         // a cast names its target type in its own argument, and the general path rebinds the resolved contract's
@@ -111,7 +111,7 @@ public class ScoringInstResolver implements InstResolver {
                     .rng(Obj.Helper.specificTypeId(userInst.arg(0)))).stream().toList();
             if (!result.isEmpty()) {
                 userInst.logger().debug("fast as() resolution: %s", result);
-                return result.getFirst().as();
+                return Inst.Helper.bindQ(lhs, userInst, result.getFirst().asInst());
             }
         }
         /////////////////////////////////////////////////////////////////////
@@ -122,7 +122,7 @@ public class ScoringInstResolver implements InstResolver {
             fetched = lhs.asRec().atDirect(basePath);
             fetched = Obj.Helper.getAuto(fetched).orElse(Obj.Helper.isAutoPointer(fetched) ? fetched : null);
             if (null != fetched && fetched.isObjInst())
-                return fetched.asInst();
+                return Inst.Helper.bindQ(lhs, userInst, fetched.asInst());
         }
         if (null == fetched || fetched.isNoObj()) { // TODO: can't figure out why grphspace is yielding a null
             final long t0 = System.nanoTime();
@@ -175,7 +175,6 @@ public class ScoringInstResolver implements InstResolver {
         return true;
     }
 
-    @Override
     public Inst resolve(final Obj lhs, final Inst userInst, final Stream<Obj> candidates) {
         //final GraphittyLogger LOG = Graphitty.log(lhs);
         if (userInst.isNoObj())

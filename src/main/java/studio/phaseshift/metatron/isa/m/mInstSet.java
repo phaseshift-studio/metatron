@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.m;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.TypeCheck;
-import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
+import studio.phaseshift.metatron.algebra.rewrite.RewriterBuilder;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -30,9 +30,10 @@ import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
 import studio.phaseshift.metatron.isa.m.type.resolver.ScoringInstResolver;
 import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
+import studio.phaseshift.metatron.isa.mach.type.compiler.FixPointRewriter;
+import studio.phaseshift.metatron.isa.mach.type.compiler.ScoringResolver;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.Tuple;
@@ -49,8 +50,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MILLIS_TYPE;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
@@ -627,7 +627,7 @@ public class mInstSet extends AbstractInstSet {
                 uri(REWRITE), lst(
                         // capture the original (pre-collapse) code for profile(): runs FIRST so the
                         // id/plus/mult collapses below don't strip the code before it is timed.
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("profile_timing"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("profile_analysis"),
                                 code -> {
                                     final List<Inst> insts = code.insts();
                                     if (insts.isEmpty() || insts.size() < 2) return code;
@@ -639,7 +639,7 @@ public class mInstSet extends AbstractInstSet {
                                     // would strip id()/plus(0)/mult(1) before the rewrite can be timed.
                                     final Code precedingCode = MCode.of(preceding);
                                     final List<Inst> bundledCode = new ArrayList<>();
-                                    bundledCode.add(instC(M_ISA_INST_TID.extend("profile_compute").dom(NOOBJ_TID).rng(PROFILING_TYPE.vid()),
+                                    bundledCode.add(instC(M_ISA_INST_TID.extend("profile_analysis").dom(ALL.maybeSome()).rng(PROFILING_TYPE.vid()),
                                             lst(),
                                             (lhs, inst) -> profileTable(precedingCode)));
                                     if (profileInst.get0() + 1 < insts.size()) {
@@ -650,25 +650,25 @@ public class mInstSet extends AbstractInstSet {
                                         }
                                     }
                                     return code.selfJVM(bundledCode).asCode();
-                                }), "rewrites a().b().c().profile() to profile_compute(a().b().c())"),
+                                }), "rewrites a().b().c().profile() to profile_analysis(a().b().c())"),
 
                         // Remove identity instructions (no-op)
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("id_removal"),
                                 code -> code.selfJVM(
-                                        Rewriter.search(code.insts())
+                                        RewriterBuilder.search(code.insts())
                                                 .match(instA(ID_INST_TID).insts())
                                                 .rewrite(x -> List.of())).asCode()), "removes identity instructions"),
 
                         // Flatten nested map instructions
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_nest"),
                                 code -> code.selfJVM(
-                                        Rewriter.search(code.insts())
+                                        RewriterBuilder.search(code.insts())
                                                 .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(ALL_TYPE)))).insts())
                                                 .repeat()
                                                 .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens nested map instructions"),
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_inst"),
                                 code -> code.selfJVM(
-                                        Rewriter.search(code.insts())
+                                        RewriterBuilder.search(code.insts())
                                                 .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(M_ISA_INST_TID.extend("#"), lst(T(ALL.maybeSome()))))).insts())
                                                 .repeat()
                                                 .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens a mapping of an inst to the inst"),
@@ -676,7 +676,7 @@ public class mInstSet extends AbstractInstSet {
                         // Pattern: .count().else(x) → .count() (count always returns a value)
                         InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("else_after_count"),
                                 code -> code.selfJVM(
-                                        Rewriter.search(code.insts())
+                                        RewriterBuilder.search(code.insts())
                                                 .match(List.of(instA(COUNT_INST_TID), instA(ELSE_INST_TID)))
                                                 .rewrite(map -> {
                                                     final List<Inst> matched = map.values().stream().toList();
@@ -706,7 +706,7 @@ public class mInstSet extends AbstractInstSet {
 
                         InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("plus_zero"),
                                 code -> code.selfJVM(
-                                        Rewriter.search(code.insts())
+                                        RewriterBuilder.search(code.insts())
                                                 .match(cachedMatch(PLUS_ZERO_MATCH, () -> List.of(instB(PLUS_INST_TID, lst()))))
                                                 .rewrite(map -> {
                                                     final Inst plusInst = map.values().iterator().next();
@@ -724,7 +724,7 @@ public class mInstSet extends AbstractInstSet {
 
                         InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("mult_one"),
                                 code -> code.selfJVM(
-                                        Rewriter.search(code.insts())
+                                        RewriterBuilder.search(code.insts())
                                                 .match(cachedMatch(MULT_ONE_MATCH, () -> List.of(instB(MULT_INST_TID, lst()))))
                                                 .rewrite(map -> {
                                                     final Inst multInst = map.values().iterator().next();
@@ -742,7 +742,7 @@ public class mInstSet extends AbstractInstSet {
                         // Note: Only applies to split-merge pairs, as split alone creates superposition
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("split_merge_collapse"),
                                 code -> code.selfJVM(
-                                        Rewriter.search(code.insts())
+                                        RewriterBuilder.search(code.insts())
                                                 .match(List.of(instA(SPLIT_INST_TID), instA(MERGE_INST_TID)))
                                                 .rewrite(map -> {
                                                     final List<Inst> matched = map.values().stream().toList();
@@ -789,7 +789,7 @@ public class mInstSet extends AbstractInstSet {
                         // This reduces clock cycles by executing common prefix once
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("split_merge_left_factor"),
                                 code -> code.selfJVM(
-                                        Rewriter.search(code.asCode().insts())
+                                        RewriterBuilder.search(code.asCode().insts())
                                                 .match(List.of(instA(SPLIT_INST_TID), instA(MERGE_INST_TID)))
                                                 .repeat()
                                                 .rewrite(map -> {
@@ -857,7 +857,7 @@ public class mInstSet extends AbstractInstSet {
                         // This reduces clock cycles by executing common suffix once
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("split_merge_right_factor"),
                                 code -> code.selfJVM(
-                                        Rewriter.search(code.asCode().insts())
+                                        RewriterBuilder.search(code.asCode().insts())
                                                 .match(List.of(instA(SPLIT_INST_TID), instA(MERGE_INST_TID)))
                                                 .repeat()
                                                 .rewrite(map -> {
@@ -927,7 +927,7 @@ public class mInstSet extends AbstractInstSet {
                                                 })).asCode()), "leverages distributive ring law to pull common monoidally bound components to the left"),
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("range_skip_take"),
                                 code -> code.selfJVM(
-                                        Rewriter.search(code.asCode().insts())
+                                        RewriterBuilder.search(code.asCode().insts())
                                                 .match(List.of(instA(RANGE_INST_TID)))
                                                 .repeat()
                                                 .rewrite(map -> {
@@ -938,7 +938,7 @@ public class mInstSet extends AbstractInstSet {
                                                             instB(TAKE_INST_TID, lst(jnt(rangeInst.arg(1).intValue() - rangeInst.arg(0).intValue())))).toList();
                                                 })).asCode()), "rewrites virtual range inst rewritten to skip/take"),
 
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("explain_profile"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("explain_analysis"),
                                 code -> {
                                     final List<Inst> insts = code.insts();
                                     if (insts.isEmpty() || insts.size() < 2) return code;
@@ -950,7 +950,7 @@ public class mInstSet extends AbstractInstSet {
                                     // would strip id()/plus(0)/mult(1) before explain can be computed.
                                     final Code precedingCode = MCode.of(preceding).resolve(noobj());
                                     final List<Inst> bundledCode = new ArrayList<>();
-                                    bundledCode.add(instC(M_ISA_INST_TID.extend("explain_compute").dom(NOOBJ_TID).rng(EXPLANATION_TYPE.vid()),
+                                    bundledCode.add(instC(M_ISA_INST_TID.extend("explain_analysis").dom(ALL.maybeSome()).rng(EXPLANATION_TYPE.vid()),
                                             lst(),
                                             (lhs, inst) -> explainRec(precedingCode)));
                                     if (explainInst.get0() + 1 < insts.size()) {
@@ -961,7 +961,7 @@ public class mInstSet extends AbstractInstSet {
                                         }
                                     }
                                     return code.selfJVM(bundledCode).asCode();
-                                }), "rewrites a().b().c().explain() to explain_compute(a().b().c()), carrying trailing insts (e.g. >>format) — mirror of profile_timing"))
+                                }), "rewrites a().b().c().explain() to explain_analysis(a().b().c()), carrying trailing insts (e.g. >>format) — mirror of profile_analysis"))
 
                 /*uri(SUGAR), lst(sugars().stream()
                         .map(s -> rec(
@@ -1050,7 +1050,7 @@ public class mInstSet extends AbstractInstSet {
                     uri(C_RNG), jnt(i.rng().c().min())));
         }
         return rec(
-                uri(FORMAT), instLambda(ALL.zero(), STR_TID, (lhs, inst) -> str(explainTable(code))),
+                uri(FORMAT), auto_(instLambda(ALL.maybe(), STR_TID, (lhs, inst) -> str(explainTable(code)))),
                 uri(DESC), rec(
                         uri(DOM), domRngValue(insts.getFirst().dom()),
                         uri(RNG), domRngValue(insts.getLast().rng()),
@@ -1081,7 +1081,7 @@ public class mInstSet extends AbstractInstSet {
         final TypeGraph graph = TypeGraph.global();
         graph.resetStats();
         ScoringInstResolver.resetTimings();
-        Code.resetRewriteTimings();
+        FixPointRewriter.resetRewriteTimings();
         StatefulMonad.resetTimings();
         SwarmProcessor.resetTimings();
         final int iters = 5;
@@ -1094,7 +1094,7 @@ public class mInstSet extends AbstractInstSet {
             final long rw0 = System.nanoTime();
             final Code rewritten = MCode.of(new ArrayList<>(originalInsts)).rewrite();
             final long rw1 = System.nanoTime();
-            final Code resolved = InstResolver.get().resolveCode(noobj(), rewritten);
+            final Code resolved = ScoringResolver.resolveCode(noobj(), rewritten);
             final long r1 = System.nanoTime();
             final long a0 = System.nanoTime();
             resolved.apply(noobj());
@@ -1123,7 +1123,7 @@ public class mInstSet extends AbstractInstSet {
         sb.append(String.format("    generic-binding   %8.3f  %5.1f%%%n", ScoringInstResolver.T_BIND.get() / 1_000_000.0 / iters, 0L == resSum ? 0.0 : ScoringInstResolver.T_BIND.get() * 100.0 / resSum));
         sb.append(String.format("    inst-composition  %8.3f  %5.1f%%%n", ScoringInstResolver.T_COMPOSE.get() / 1_000_000.0 / iters, 0L == resSum ? 0.0 : ScoringInstResolver.T_COMPOSE.get() * 100.0 / resSum));
         sb.append("  rewrite rules:\n");
-        final List<Map.Entry<String, AtomicLong>> rules = new ArrayList<>(Code.REWRITE_TIMINGS.entrySet());
+        final List<Map.Entry<String, AtomicLong>> rules = new ArrayList<>(FixPointRewriter.REWRITE_TIMINGS.entrySet());
         rules.sort((a, b) -> Long.compare(b.getValue().get(), a.getValue().get()));
         final int nRules = Math.min(6, rules.size());
         sb.append("                ");
@@ -1132,13 +1132,13 @@ public class mInstSet extends AbstractInstSet {
         sb.append('\n');
         sb.append("      insts.in  ");
         for (int i = 0; i < nRules; i++) {
-            final AtomicLong v = Code.REWRITE_INS.get(rules.get(i).getKey());
+            final AtomicLong v = FixPointRewriter.REWRITE_INS.get(rules.get(i).getKey());
             sb.append(String.format("%-20d", null == v ? 0L : v.get()));
         }
         sb.append('\n');
         sb.append("      insts.out ");
         for (int i = 0; i < nRules; i++) {
-            final AtomicLong v = Code.REWRITE_OUTS.get(rules.get(i).getKey());
+            final AtomicLong v = FixPointRewriter.REWRITE_OUTS.get(rules.get(i).getKey());
             sb.append(String.format("%-20d", null == v ? 0L : v.get()));
         }
         sb.append('\n');
@@ -1148,7 +1148,7 @@ public class mInstSet extends AbstractInstSet {
         sb.append('\n');
         // summary: the net reduction (original → rewritten inst count) and the total rule time.
         long totalRuleTime = 0L;
-        for (final AtomicLong v : Code.REWRITE_TIMINGS.values())
+        for (final AtomicLong v : FixPointRewriter.REWRITE_TIMINGS.values())
             totalRuleTime += v.get();
         sb.append(String.format("      TOTAL     inst.in %d   inst.out %d   time(ms) %.3f%n",
                 originalInsts.size(), rewritten.insts().size(), totalRuleTime / 1_000_000.0));
@@ -1200,11 +1200,11 @@ public class mInstSet extends AbstractInstSet {
         final String text = sb.toString();
         final double ms = 1_000_000.0; // nanos -> millis
         // per-rewrite-rule reduction records, sorted by time (same order as the text table)
-        final List<Obj> ruleRecs = Code.REWRITE_TIMINGS.entrySet().stream()
+        final List<Obj> ruleRecs = FixPointRewriter.REWRITE_TIMINGS.entrySet().stream()
                 .sorted((a, b) -> Long.compare(b.getValue().get(), a.getValue().get()))
                 .map(e -> {
-                    final AtomicLong in = Code.REWRITE_INS.get(e.getKey());
-                    final AtomicLong out = Code.REWRITE_OUTS.get(e.getKey());
+                    final AtomicLong in = FixPointRewriter.REWRITE_INS.get(e.getKey());
+                    final AtomicLong out = FixPointRewriter.REWRITE_OUTS.get(e.getKey());
                     return (Obj) rec(
                             uri(NAME), uri(f(e.getKey())),
                             uri(IN), jnt(null == in ? 0L : in.get()),
@@ -1228,7 +1228,7 @@ public class mInstSet extends AbstractInstSet {
                     uri(TIME), real((null == ti ? 0L : ti.get()) / ms / iters, MILLIS_TYPE.vid(), null)));
         }
         return rec(
-                uri(FORMAT), instLambda(ALL.zero(), STR_TID, (lhs, inst) -> str(text)),
+                uri(FORMAT), auto_(instLambda(ALL.maybe(), STR_TID, (lhs, inst) -> str(text))),
                 uri(STAGE), rec(
                         uri(REWRITE), rec(uri(MIN), real(rewriteMin / ms, MILLIS_TYPE.vid(), null), uri(MAX), real(rewriteMax / ms, MILLIS_TYPE.vid(), null)),
                         uri(RESOLVE), rec(uri(MIN), real(resolveMin / ms, MILLIS_TYPE.vid(), null), uri(MAX), real(resolveMax / ms, MILLIS_TYPE.vid(), null)),

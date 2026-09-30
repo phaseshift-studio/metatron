@@ -38,4 +38,14 @@ public abstract class AbstractMachine extends BasicRouter implements Machine {
         super(jvm, tid, vid);
     }
 
+    /**
+     * A machine is a callable obj — {@code machine.apply(code)} is the single source of truth for
+     * code execution (compile then run). {@link BasicRouter} stubs {@code apply(Obj)} to {@code null};
+     * this re-pins it to the {@link Machine} contract.
+     */
+    @Override
+    public Obj apply(final Obj call) {
+        return Machine.super.apply(call);
+    }
+
 }

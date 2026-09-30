@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.isa.mach.type.MonadProcessor;
+import studio.phaseshift.metatron.isa.mach.type.Processor;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
 import studio.phaseshift.metatron.isa.mach.type.machine.ListMonad;
@@ -147,7 +148,13 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
     public SwarmProcessor code(final Code code) {
         final Map<Obj, Obj> map = new LinkedHashMap<>(this.jvm());
         map.put(uri(CODE), code);
-        return this.clone(map, this.tid(), this.vid());
+        // constructor (not clone/self) and fresh queues: MRec.self → cleanMap strips the noobj-valued
+        // halt queue, and a shallow copy would share the running/barrier/halted state with the cached
+        // template across runs — drop the queues so the constructor re-seeds fresh ones.
+        map.remove(uri(RUN));
+        map.remove(uri(BARRIER));
+        map.remove(uri(HALTED));
+        return new SwarmProcessor(map, this.tid(), this.vid());
     }
 
     @Override
@@ -250,7 +257,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
             } else if (inst.isGather()) {
                 LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", inst);
                 final StatefulMonad m = statefulMonad(objs0(), inst, lhs.isMonad() ? lhs.asMonad().state() : rec0(), code);
-                mach.barriers().<LinkedList<Obj>>jvmAs().add(m);
+                this.barriers().<LinkedList<Obj>>jvmAs().add(m);
             }
         }
         return mach;
@@ -373,7 +380,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
                 if (null != barrier) {
                     barrier.countPropagation();
                     LOG.trace("   {{m}}=|{{/m}} processing barrier monad %s", barrier);
-                    final Obj result = barrier.inst().apply(barrier.obj());
+                    final Obj result = Processor.Helper.apply(barrier.obj(), barrier.inst());
                     // a gather emits one result monad carrying its coefficient — record its
                     // out-flow here (the barrier path bypasses StatefulMonad.next()).
                     final fURI barVid = barrier.inst().vid();

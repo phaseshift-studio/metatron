@@ -1595,9 +1595,10 @@ public class TypeTest extends AbstractMetatronTest {
      * coefficient sits decides what it multiplies:
      *
      * <pre>
-     *   lst[int,int,int,int]   four slots, each an int
-     *   lst[int{4}]            ONE slot, whose value is itself an int{4}   (slot 0 holds four ints)
-     *   lst[{4}int]            the list is COMPOSED OF four ints           (four int slots)
+     *   lst[int,int,int,int]::T   four slots, each an int
+     *   lst[int{4}]::T            ONE slot, whose value is itself an int{4}   (slot 0 holds four ints)
+     *   lst[{4}int]::T            the list is COMPOSED OF four ints           (four int slots)
+     *   lst[{4}int{4}]::T         FOUR slot, whose values are int{4}          (slots 0-3 hold four ints)
      * </pre>
      * <p>
      * The distinction is what lets one construct serve both as a generic (List&lt;Integer&gt;) and as a

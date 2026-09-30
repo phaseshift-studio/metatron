@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -40,7 +40,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
@@ -71,8 +70,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *     .build();
  * }</pre>
  *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  * @param <S> The specific Space type this rewrite applies to
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class RewriteBuilder<S extends Space> {
 
@@ -97,7 +96,7 @@ public class RewriteBuilder<S extends Space> {
      * Create a new rewrite builder for a specific database space type.
      *
      * @param spaceType The class of the space to optimize for
-     * @param <S> The space type
+     * @param <S>       The space type
      * @return A new builder instance
      */
     public static <S extends Space> RewriteBuilder<S> forDatabase(final Class<S> spaceType) {
@@ -122,7 +121,7 @@ public class RewriteBuilder<S extends Space> {
      * @return This builder for chaining
      */
     public RewriteBuilder<S> rng(final fURI rngTID) {
-        this.rewriteTid=this.rewriteTid.rng(rngTID);
+        this.rewriteTid = this.rewriteTid.rng(rngTID);
         this.resultTid = rngTID;
         return this;
     }
@@ -140,7 +139,7 @@ public class RewriteBuilder<S extends Space> {
         this.matchPattern.addAll(Arrays.asList(instTIDs));
         return this;
     }
-    
+
     public RewriteBuilder<S> matchPredicate(final Predicate<List<Inst>> matchPredicate) {
         this.matchPredicate = matchPredicate;
         return this;
@@ -205,7 +204,7 @@ public class RewriteBuilder<S extends Space> {
      * and the coefficient from the instruction chain, and should return the
      * optimized result.
      *
-     * @param name The name of the native operation (for logging/debugging)
+     * @param name         The name of the native operation (for logging/debugging)
      * @param optimization The optimization function
      * @return This builder for chaining
      */
@@ -267,7 +266,7 @@ public class RewriteBuilder<S extends Space> {
                     i.tid().basePath().equals(FROM_INST_TID.basePath()) || i.tid().basePath().equals(AT_INST_TID.basePath()))) {
                 return code;
             }
-            return code.selfJVM(Rewriter.search(code.codeValue())
+            return code.selfJVM(RewriterBuilder.search(code.codeValue())
                     .match(this.matchPattern.stream()
                             .map(tid -> instB(tid, lst()))
                             .toList())
@@ -298,7 +297,7 @@ public class RewriteBuilder<S extends Space> {
                 final fURI expandedfURI = space.redirect(oldfURI, true);
 
                 // Extract coefficient from the last instruction in the chain
-                final C<?,?> coeff = map.values().stream()
+                final C<?, ?> coeff = map.values().stream()
                         .reduce((first, second) -> second)
                         .map(Inst::c)
                         .orElse(cInt.C_ONE);
@@ -310,7 +309,7 @@ public class RewriteBuilder<S extends Space> {
             }
 
             // not the right space type or the final match predicate failed - return original instructions
-            
+
             return map.values().stream().map(Obj::asInst).toList();
         };
     }
@@ -318,7 +317,7 @@ public class RewriteBuilder<S extends Space> {
     /**
      * Create the optimized instruction that executes the native database operation.
      */
-    protected Inst createOptimizedInst(final S typedSpace, final fURI expandedfURI, final C<?,?> coeff) {
+    protected Inst createOptimizedInst(final S typedSpace, final fURI expandedfURI, final C<?, ?> coeff) {
         final DataPath dp = DataPath.withoutDB(expandedfURI);
         return instC(
                 this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
@@ -345,13 +344,13 @@ public class RewriteBuilder<S extends Space> {
         /**
          * Execute the native database operation.
          *
-         * @param space  The database space
-         * @param dp     The decomposed DataPath for the operation target
+         * @param space       The database space
+         * @param dp          The decomposed DataPath for the operation target
          * @param coefficient The coefficient from the instruction chain
          * @return The result object
          * @throws Exception if the operation fails
          */
-        Obj execute(final S space, final DataPath dp, final C<?,?> coefficient) throws Exception;
+        Obj execute(final S space, final DataPath dp, final C<?, ?> coefficient) throws Exception;
     }
 
     /**
@@ -376,6 +375,6 @@ public class RewriteBuilder<S extends Space> {
          * @return The result object
          * @throws Exception if the operation fails
          */
-        Obj execute(final S space, final DataPath dp, final fURI expandedURI, final C<?,?> coefficient) throws Exception;
+        Obj execute(final S space, final DataPath dp, final fURI expandedURI, final C<?, ?> coefficient) throws Exception;
     }
 }
