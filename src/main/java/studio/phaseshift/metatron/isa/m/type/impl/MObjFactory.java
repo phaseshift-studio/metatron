@@ -30,8 +30,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.Tokens.ALL_STAR;
-import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.ObjFactory.Helper.containsObjs;
 import static studio.phaseshift.metatron.isa.m.type.ObjFactory.Helper.reflectionBasedCreate;
@@ -45,7 +44,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.FACTORY_TID;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 import static studio.phaseshift.metatron.isa.mach.type.monad.BasicStatefulMonad.MACH_BASIC_MONAD_TID;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;

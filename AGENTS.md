@@ -43,15 +43,23 @@ A distributed data-oriented computing language and virtual machine built in Java
 
 ### Build Environment (this container)
 
-The root filesystem is read-only (`HOME=/root`, `/usr` not writable), so the toolchain lives inside the repo under
-`.build/` (git-ignored):
+Builds normally run in docker (see **Docker Build Loop** below), where the toolchain lives inside the repo under
+`.build/` (git-ignored). On a full host — a writable `$HOME` with its own JDK and Maven — the host toolchain
+is used instead, and that is the case to check first when a build behaves oddly:
 
-- **`./mvnw` is patched to self-configure — just run it.** When `JAVA_HOME` is unset it falls back to `.build/jdk`
-  (Temurin 24, matching CI), keeps Maven caches under `.build/m2/`, and passes `.build/m2/settings.xml` which redirects
-  the local repository into the workspace. No env setup needed.
-- **`bin/metatron` is patched the same way** (uses `./mvnw` and
-  `.build/jdk/bin/java`).
-- `.build/jdk21` exists for reference, but **tests must run on the default JDK 24**: the pom's surefire `argLine`
+- **`./mvnw` (and a plain `mvn install`) is the stock Maven wrapper — do not assume it self-configures.** It does
+  *not* read `.build/m2/settings.xml`, so with no `~/.m2/settings.xml` the local repository is the default
+  `~/.m2/repository`. That is independent of the docker loop, which resolves into `.build/m2/repository` (see below);
+  the two caches do not overlap. It also uses the JDK from `JAVA_HOME` (else the `java` on `PATH`), which on a host is
+  usually *not* the `.build/jdk` the launcher runs on — the compiled classes are that other JDK's output.
+- **`bin/metatron`** prefers an explicit `JAVA_HOME`, else `.build/jdk/bin/java` when present (Temurin 24, matching
+  CI), else the `java` on `PATH`. It runs the dev loop from `target/classes` + the cached dependency classpath
+  (`.mtron-classpath`), which holds **absolute** jar paths and is validated before use: a sidecar
+  (`.mtron-classpath.sha256`) records the `pom.xml` the cache was resolved from, and the first cache entry must
+  still exist. A cache from another `$HOME`, or one whose pom has changed, is re-resolved automatically — so a
+  bare `NoClassDefFoundError` on some dependency class is a stale-cache symptom to check *here* first, not a
+  missing dependency.
+- `.build/jdk21` exists for reference, but **tests must run on a JDK 24 build**: the pom's surefire `argLine`
   includes `--sun-misc-unsafe-memory-access=allow`, a JDK 23+ flag that JDK 21 rejects (this is why CI uses JDK 24).
 - **`bin/` layout** — commands you *type* stay flat in `bin/` (`bin/metatron` is the launcher — the old
   `bin/metatron-dev` is retired — plus `bin/metatron-docker` for every docker job and `bin/metatron-console` for the
@@ -101,8 +109,13 @@ bin/metatron-docker dev [--no-build]                # dev loop: package in docke
   on the `/sys/thread/main` latch instead of exiting — a hung, non-terminating java process is the symptom).
 - The repo mounts at `/work`; the container runs as the host user; **no ports are published** — the VM's 8555/8777 exist
   only in the container's netns, never on the host.
-- Maven cache is shared with `.build/m2/repository`; every run gets a unique container name — never hardcode a docker
-  `--name` around these (a stale container from a killed run collides).
+- The build loop keeps its Maven cache **separate from the host's**: `Dockerfile.build` sets a local repository and
+  `bin/metatron-docker` overrides it with `-Dmaven.repo.local=/work/$MAVEN_REPO`, where `MAVEN_REPO` defaults to
+  `.build/m2/repository` (override it to share one cache, e.g. `MAVEN_REPO=~/.m2/repository`). So `.build/m2/repository`
+  serves the container only and `~/.m2/repository` serves `./mvnw` on the host; **neither is an orphan, and deleting
+  `.build/m2` just makes the next `build …` re-resolve** its dependencies. `.build/m2/settings.xml` is unreferenced —
+  the redirect is done with the flag above, not through a settings file. Every run gets a unique container name — never
+  hardcode a docker `--name` around these (a stale container from a killed run collides).
 - Docker builds **never touch the repo's `target/`**: the container's `/work/target` is bound to `.docker-target/` at
   the repo root (auto-ignored by .gitignore's `.*`; override with `METATRON_BUILD_TARGET`). Fs (host) builds and
   docker builds can therefore run without clobbering each other's artifacts. Jobs that hand an artifact off (`build`'s

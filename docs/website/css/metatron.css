@@ -1015,6 +1015,31 @@ footer {
     margin-right: 6px;
 }
 
+/* ── Word-wrap source/literal blocks ─────────────────────────────────
+   Bootstrap sets `pre { overflow: auto }` but never touches white-space,
+   so `pre` keeps the UA default `white-space: pre` and any line wider than
+   the column becomes a horizontal scrollbar instead of wrapping. Wrap
+   instead — the same policy @media print and .pdf-export-mode already
+   apply. `overflow-wrap: break-word` keeps an unbroken token (a long uri
+   or quoted string) from re-introducing the scrollbar. */
+pre,
+pre > code {
+    white-space: pre-wrap !important;
+    overflow-wrap: break-word;
+    word-wrap: break-word; /* legacy alias */
+}
+
+/* Opt-out for ASCII diagrams (arrow/box art relies on column alignment):
+   mark the block `role=nowrap` in the .adoc to restore scrolling. */
+.nowrap pre,
+.nowrap pre > code,
+pre.nowrap,
+pre.nowrap > code {
+    white-space: pre !important;
+    overflow-wrap: normal;
+    word-wrap: normal;
+}
+
 pre.highlight {
     position: relative !important;
 }
@@ -1796,7 +1821,7 @@ h6:hover .heading-anchor {
 .markdown-body h4,
 .markdown-body h5,
 .markdown-body h6 {
-    color: var(--mheading);
+    color: var(--mred);
     margin-top: 2rem;
     margin-bottom: 1rem;
 }

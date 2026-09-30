@@ -508,6 +508,11 @@ keeps what SQL cannot say:</p>
     obj_tid=&gt;'/m/inst/auto_from',
     ref_table=&gt;'person']
 ==&gt;[
+    table_name=&gt;'note',
+    column_name=&gt;'$table',
+    base_vid=&gt;'/m/rec',
+    obj_tid=&gt;'/m/rec']
+==&gt;[
     table_name=&gt;'person',
     column_name=&gt;'age',
     base_vid=&gt;'/m/int',
@@ -516,12 +521,7 @@ keeps what SQL cannot say:</p>
     table_name=&gt;'person',
     column_name=&gt;'name',
     base_vid=&gt;'/m/str',
-    obj_tid=&gt;'/m/str{2}']
-==&gt;[
-    table_name=&gt;'note',
-    column_name=&gt;'$table',
-    base_vid=&gt;'/m/rec',
-    obj_tid=&gt;'/m/rec']
+    obj_tid=&gt;'/m/str']
 ==&gt;[
     table_name=&gt;'note',
     column_name=&gt;'body',
@@ -865,9 +865,9 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/5
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/7
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/6
+==&gt;[body=&gt;'another one']@tbledoc:note/8
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;1
 ==&gt;3
@@ -875,6 +875,8 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;4
 ==&gt;5
 ==&gt;6
+==&gt;7
+==&gt;8
 </code></pre>
 <h3>taking the space down</h3>
 <p>A space is a <strong>mount</strong>, not a copy. Writing <code>noobj</code> to its vid takes it down: the pattern stops routing, the JDBC

@@ -548,12 +548,12 @@ public class Agent extends MRec {
 
                 // ── the stream — each callback is a lifecycle stage ──
                 agent.chat(Str.Helper.stripString(str(this.userMessage())))
-                        .onToolExecuted(tool -> MTronException.wrap((() -> this.onToolExecuted(tool, features, orphanToolRequests, latch)), LOG, "on_tool_executed"))
-                        .onPartialToolCall(p -> MTronException.wrap((() -> this.onPartialToolCall(p, features, orphanToolRequests, latch)), LOG, "on_partial_tool"))
-                        .onPartialResponse(s -> MTronException.wrap((() -> this.onPartialResponse(s, features, latch)), LOG, "on_partial_response"))
-                        .onPartialThinking(t -> MTronException.wrap((() -> this.onPartialThinking(t, latch)), LOG, "on_partial_thinking"))
-                        .onError(e -> MTronException.wrap((() -> this.onError(e, features, isError, latch)), LOG, "on_error"))
-                        .onCompleteResponse(c -> MTronException.wrap((() -> this.onCompleteResponse(c, responseFormat, features, startNanos, latch)), LOG, "on_complete_response"))
+                        .onToolExecuted(tool -> this.onToolExecuted(tool, features, orphanToolRequests, latch))
+                        .onPartialToolCall(p -> this.onPartialToolCall(p, features, orphanToolRequests, latch))
+                        .onPartialResponse(s -> this.onPartialResponse(s, features, latch))
+                        .onPartialThinking(t -> this.onPartialThinking(t, latch))
+                        .onError(e -> this.onError(e, features, isError, latch))
+                        .onCompleteResponse(c -> this.onCompleteResponse(c, responseFormat, features, startNanos, latch))
                         .start();
                 latch.await();
                 if (this.isInterrupted()) {

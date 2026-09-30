@@ -139,13 +139,13 @@ IMPORTANT: An `int` is an `int` because it is named `int`.
 [mtron]
 ----
 str::T@re                    [-- <1> --]
-*regex                       [-- <2> --]
-'marko'.regex('m.{3}o')      [-- <3> --]
-'marko'.regex(re::'m.{3}o')  [-- <4> --]
+*select?<=str&docq           [-- <2> --]
+'marko'=='m.{3}o'            [-- <3> --]
+'marko'==re:'m.{3}o'         [-- <4> --]
 ----
 
 <1> `re::T` is a regular expression string.
-<2> `regex` is an instruction that takes a `re::T` as an argument.
+<2> `select?<=str` performs a projection from a `str::T`.
 <3> a `str::T` is not an `re::T` nominally.
 <4> `regex` with with a particular type of nominally defined string.
 
@@ -179,12 +179,12 @@ being::T@chicken                                        [-- <3> --]
 Structurally speaking, there is nothing that prevents the person named marko from also being a chicken.
 However, nominally, that is not the case.
 The person named marko has been nominally relegated to the taxonomical classification of a person.
-In this way, nominal and structural types co-exist in mtron in order to satisfy two different understandings of type (type by name and type by strufcture).
+In this way, nominal and structural types co-exist in mtron in order to satisfy two different understandings of type (type by name and type by structure).
 
 IMPORTANT: Realize the distinction between structural and nominal types is one of convenience.
 It is true that there exists structural features of marko that make this person not a chicken (e.g. DNA, weight and size, etc.).
 However, if the system operating with such types can not make that distinction (perhaps no sensors to do so), then an explicit statement of the fact that marko is not a chicken allows such unrefined systems (literally) to operate effectively using said classification.
-This is the difference between **experiential knowledge** (structural) and **authoratative knowledge** (nominal).
+This is the difference between **experiential knowledge** (structural) and **authoritative knowledge** (nominal).
 
 NOTE: Type definitions in space are **monotonic**: once a type is defined with a predicate or constructor, subsequent redefinitions can only *add* structural constraints, never remove them.
 If `person::T` is written as a structural type and later referenced as `being::T\@person` (a nominal definition with no predicate), the existing predicate is inherited — the type remains structural.
@@ -248,7 +248,7 @@ a🧱
 
 [cols="1,2,6",options=header]
 !===
-! type    ! jvm object   ! description
+! type     ! jvm object   ! description
 !`bytes`   ! `ByteBuffer` ! ...
 !`bool`    ! `Boolean`    ! ...
 !`int`     ! `Long`       ! ...

@@ -434,8 +434,8 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
     dom=&gt;'maybe an obj',
     rng=&gt;'a lst[str] of results',
     args=&gt;[
-     cmd=&gt;'the terminal command to evaluate (...',
-     {?}timeout=&gt;'a real number denoting timeout of ...'],
+     {?}timeout=&gt;'a real number denoting timeout of ...',
+     cmd=&gt;'the terminal command to evaluate (...'],
     desc=&gt;'evaluate bash command. *important*...',
     example=&gt;[&quot;bash('ls')                        ...&quot;]]
 </code></pre>
@@ -454,10 +454,10 @@ mtron&gt; bash(cmd=&gt;'whoami')
 mtron&gt; bash('df -h')
 ==&gt;[
     'Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.4M ...',
+    'tmpfs                  6.1G  6.2M ...',
     'efivarfs               128K   42K ...',
     '/dev/nvme0n1p2         916G  511G ...',
-    'tmpfs                   31G  277M ...',
+    'tmpfs                   31G  199M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
    ...(4 more)]
@@ -466,10 +466,10 @@ mtron&gt; bash('df -h')
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
 ==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/560
 mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
+==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 4ms:
+    (at /m/sys/inst/bash) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder&lt;228&gt;]]@/sys/fail/562
@@ -556,8 +556,8 @@ The projection can do the work: first stat line of each entry, nothing else:</p>
 mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full stat per entry --]
 ==&gt;[
     '  File: AGENTS.md',
-    '  Size: 34192     	Blocks: 72     ...',
-    'Device: 259,5	Inode: 26348579    L...',
+    '  Size: 35822     	Blocks: 72     ...',
+    'Device: 259,5	Inode: 25690647    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
    ...
 </code></pre>
@@ -567,7 +567,7 @@ mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full
 converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du</code>:</p>
 <pre><code class="language-mtron">mtron&gt; bash('ls')==[_ =&gt; bash('stat ${_} | sed -n &quot;s/.*Size: \([0-9]*\).*/\1/p&quot;')&gt;&gt;0.as?int&lt;=str(int::T).as(bB::T)]
 ==&gt;[
-    bB::34192.0000,
+    bB::35822.0000,
     bB::4096.0000,
     bB::4096.0000,
     bB::4096.0000,

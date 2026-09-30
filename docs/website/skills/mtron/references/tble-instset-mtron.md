@@ -127,6 +127,11 @@ mtron> */sys/space/tbledoc.sql('SELECT table_name, column_name, base_vid, obj_ti
     obj_tid=>'/m/inst/auto_from',
     ref_table=>'person']
 ==>[
+    table_name=>'note',
+    column_name=>'$table',
+    base_vid=>'/m/rec',
+    obj_tid=>'/m/rec']
+==>[
     table_name=>'person',
     column_name=>'age',
     base_vid=>'/m/int',
@@ -135,12 +140,7 @@ mtron> */sys/space/tbledoc.sql('SELECT table_name, column_name, base_vid, obj_ti
     table_name=>'person',
     column_name=>'name',
     base_vid=>'/m/str',
-    obj_tid=>'/m/str{2}']
-==>[
-    table_name=>'note',
-    column_name=>'$table',
-    base_vid=>'/m/rec',
-    obj_tid=>'/m/rec']
+    obj_tid=>'/m/str']
 ==>[
     table_name=>'note',
     column_name=>'body',
@@ -517,9 +517,9 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/5
+==>[body=>'a note with a database-assigned key']@tbledoc:note/7
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/6
+==>[body=>'another one']@tbledoc:note/8
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==>1
 ==>3
@@ -527,6 +527,8 @@ mtron> *tbledoc:note/+/id                                    [-- the keys the ba
 ==>4
 ==>5
 ==>6
+==>7
+==>8
 ```
 ## taking the space down
 

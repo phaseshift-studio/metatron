@@ -31,7 +31,17 @@ done
 
 # ── container toolchain: root FS is read-only, so use the in-repo JDK
 #    when present (Maven caches live under .build/) ──
-if [ -x "./.build/jdk/bin/java" ]; then JAVA_BIN="./.build/jdk/bin/java"; else JAVA_BIN="java"; fi
+# An explicit JAVA_HOME wins: someone who set it meant it.  Otherwise prefer
+# the in-repo JDK, then whatever java is on PATH.
+JDK_SOURCE="PATH"
+if [ -n "${JAVA_HOME:-}" ] && [ -x "$JAVA_HOME/bin/java" ]; then
+    JAVA_BIN="$JAVA_HOME/bin/java"; JDK_SOURCE="JAVA_HOME"
+elif [ -x "./.build/jdk/bin/java" ]; then
+    JAVA_BIN="./.build/jdk/bin/java"; JDK_SOURCE=".build/jdk"
+else
+    JAVA_BIN="java"
+fi
+JAVA_MAJOR=$("$JAVA_BIN" -version 2>&1 | sed -nE 's/.*version "([0-9]+).*/\1/p')
 
 # Source utility functions (spinner, etc.)
 . "$(dirname "$(readlink -f "$0")")/lib/utility.sh"
@@ -70,11 +80,45 @@ else
     fi
 
     # ── dependency classpath cache ──────────────────────────────────────
-    # Only rebuild when pom.xml changes.  After that, mvn compile is all
-    # we need for source changes — the uber-jar is for distribution, not dev.
+    # Rebuild when the pom's content changes, when the cache is absent, or
+    # when the cache no longer describes this machine.
+    #
+    # Content, not mtime: the cache routinely ends up NEWER than pom.xml
+    # (mtime comparison made a genuine dependency change look valid), and a
+    # timestamp can be reverted out from under us by a copy, a checkout, or
+    # a clock difference.  A sidecar records the honored pom hash instead.
+    #
+    # The path check covers a separate failure: the cache holds ABSOLUTE jar
+    # paths, so a cache generated under another $HOME — or in the read-only
+    # container this repo is also built in — survives the hash check while
+    # pointing at trees that are gone.  The classpath then resolves to
+    # nothing and the VM dies with a bare NoClassDefFoundError on the first
+    # dependency class it touches, which reads as a missing dependency
+    # rather than a stale cache.  Every entry shares one local repository
+    # root, so probing the first one proves the tree is present; accept a
+    # directory too, since a dev checkout's first entry is target/classes.
+    #
+    # After that, mvn compile is all we need for source changes — the
+    # uber-jar is for distribution, not dev.
     CP_FILE=".mtron-classpath"
+    CP_HASH_FILE=".mtron-classpath.sha256"
     STEP_RAN=0
-    if [ ! -f "$CP_FILE" ] || [ pom.xml -nt "$CP_FILE" ]; then
+    CP_STALE=0
+    if command -v sha256sum > /dev/null 2>&1; then
+        POM_HASH=$(sha256sum pom.xml | awk '{ print $1 }')
+    else
+        POM_HASH=""
+    fi
+    if [ -z "$POM_HASH" ] || [ ! -f "$CP_FILE" ] || [ "$POM_HASH" != "$(cat "$CP_HASH_FILE" 2>/dev/null || true)" ]; then
+        CP_STALE=1
+    else
+        # awk exits at the first non-empty line, so a large cache is not walked
+        CP_FIRST=$(tr ':' '\n' < "$CP_FILE" | awk 'NF { print; exit }')
+        if [ -z "$CP_FIRST" ] || ! { [ -e "$CP_FIRST" ] && { [ -d "$CP_FIRST" ] || [ -f "$CP_FIRST" ]; }; }; then
+            CP_STALE=1
+        fi
+    fi
+    if [ "$CP_STALE" -eq 1 ]; then
         MVN_LOG=$(mktemp)
         set +e
         "$MVNW" dependency:build-classpath -DincludeScope=runtime -Dmdep.outputFile="$CP_FILE" -q > "$MVN_LOG" 2>&1 &
@@ -85,6 +129,10 @@ else
         grep -v "^WARNING:" "$MVN_LOG" 2>/dev/null >&2 || true
         rm -f "$MVN_LOG"
         if [ "$MVN_EXIT" -ne 0 ]; then exit "$MVN_EXIT"; fi
+        # Record the pom this cache was resolved from.  Best effort: an
+        # unwritable checkout must not fail the boot — it only costs a
+        # re-resolve next time.
+        if [ -n "$POM_HASH" ]; then printf '%s' "$POM_HASH" > "$CP_HASH_FILE" 2>/dev/null || true; fi
         STEP_RAN=1
     fi
     CLASSPATH="target/classes:src/main/resources:$(tr -d '\n' < "$CP_FILE")"
@@ -110,8 +158,12 @@ else
     JVM_FLAGS=( -Dlogback.configurationFile=conf/logback.xml
                 -Djava.util.logging.config.file=conf/logging.properties
                 --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
-                --enable-native-access=ALL-UNNAMED
-                --sun-misc-unsafe-memory-access=allow )
+                --enable-native-access=ALL-UNNAMED )
+    # As in the installed branch above: this flag exists only on JDK 23+.  Gate
+    # it rather than hardcoding it, since JAVA_HOME may now select a JDK 21.
+    if [ "${JAVA_MAJOR:-0}" -ge 23 ]; then
+        JVM_FLAGS+=( --sun-misc-unsafe-memory-access=allow )
+    fi
     LAUNCH=( -cp "$CLASSPATH" studio.phaseshift.metatron.BootLoader )
 fi
 

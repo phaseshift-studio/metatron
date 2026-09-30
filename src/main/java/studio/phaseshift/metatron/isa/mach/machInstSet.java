@@ -64,8 +64,6 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 @JREService(vid = "/m/mach")
 public class machInstSet extends AbstractInstSet {
-    public static final fURI MACH = f("mach");
-    public static final fURI MACH_ISA_TID = M_ISA_TID.extend(MACH);
     public static final fURI MACH_MACHINE_TID = MACH_ISA_TID.extend("machine");
     public static final fURI MACH_MONAD_TID = MACH_ISA_TID.extend("monad");
     public static final fURI MACH_INST_TID = MACH_ISA_TID.extend("inst");

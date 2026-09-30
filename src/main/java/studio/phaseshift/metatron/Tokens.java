@@ -29,12 +29,15 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public final class Tokens {
+    public static final fURI MACH = f("mach");
+
     private Tokens() {
         // do nothing
     }
 
     // furi tokens
     public static final fURI M_ISA_TID = f("/m");
+    public static final fURI MACH_ISA_TID = M_ISA_TID.extend(MACH);
     public static final fURI SPACE_TID = M_ISA_TID.extend("space");
     public static final fURI M_ISA_INST_TID = M_ISA_TID.extend("inst");
     public static final fURI INST_TID = M_ISA_INST_TID;
