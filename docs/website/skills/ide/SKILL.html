@@ -409,27 +409,21 @@ letting a <strong>subscription</strong> on <code>code/#</code> write back to dis
 <p><strong>NOTE</strong>: these steps are only necessary if the <code>project::T</code> doesn't already exist. As an agent, typically, the project
 uri will be provided to you and thus, this section can be skipped.</p>
 <pre><code class="language-mtron">mtron&gt; import(/m/ide,ide)
-==&gt;instset::[pattern=&gt;/m/ide/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],type=&gt;[/m/ide/serializer::T[][ctor?rng=obj_ide_java&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@obj_ide_java,rec::T[?[classes=&gt;[&lt;#&gt;::T=&gt;lst::T],{?}package=&gt;str::T,{?}imports=&gt;lst::T,{?}preamble=&gt;str::T,{?}postscript=&gt;str::T]]@java,rec::T[?[status=&gt;union(success,error,halted),runtime=&gt;!*/m/math/time,{?}command=&gt;str::T,{?}project=&gt;project::T,{?}result=&gt;str{*}::T,{?}error=&gt;{?}[fail{?}::T]]]@result,rec::T[?[root=&gt;uri::T,{?}name=&gt;str::T,{?}desc=&gt;str::T,{?}command=&gt;[uri::T=&gt;rec::T[?[status=&gt;union(success,error,halted),runtime=&gt;!*/m/math/time,{?}command=&gt;str::T,{?}project=&gt;project::T,{?}result=&gt;str{*}::T,{?}error=&gt;{?}[fail{?}::T]]]@result],{?}code=&gt;&lt;#&gt;::T]]@project],inst=&gt;[as?rng=project&amp;dom=uri(rec::T[?[root=&gt;uri::T,{?}name=&gt;str::T,{?}desc=&gt;str::T,{?}command=&gt;[uri::T=&gt;rec::T[?[status=&gt;union(success,error,halted),runtime=&gt;!*/m/math/time,{?}command=&gt;str::T,{?}project=&gt;project::T,{?}result=&gt;str{*}::T,{?}error=&gt;{?}[fail{?}::T]]]@result],{?}code=&gt;&lt;#&gt;::T]]@project){&lt;j&gt;},as?rng=skill&amp;dom=project(&lt;#&gt;::T){&lt;j&gt;},as?rng=java&amp;dom=java(rec::T[?[classes=&gt;[&lt;#&gt;::T=&gt;lst::T],{?}package=&gt;str::T,{?}imports=&gt;lst::T,{?}preamble=&gt;str::T,{?}postscript=&gt;str::T]]@java){&lt;j&gt;},as?rng=java&amp;dom=java(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@java){&lt;j&gt;},find?rng=uri{*}&amp;dom=uri(class=&gt;uri::T,member=&gt;str{?}::T,text=&gt;str{?}::T){&lt;j&gt;},search?rng=uri{*}&amp;dom=uri(str::T){&lt;j&gt;},command?rng=inst&amp;dom=#{?}(command=&gt;str::T){&lt;j&gt;}]]@/m/ide
 mtron&gt; import(/m/web,web)
-==&gt;instset::[pattern=&gt;/m/web/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],const=&gt;[[remote_console=&gt;inst(){&lt;j&gt;}]@helper,obj_xml::[=&gt;]@obj_xml,obj_html::[=&gt;]@obj_html,obj_json::[density=&gt;OPAQUE,wrap_uri=&gt;true,bias_towards_uri=&gt;true,bias_towards_objs=&gt;false]@obj_json,obj_markdown::[=&gt;]@obj_markdown,obj_text::[=&gt;]@obj_text,/m/mach/io/serializer/mtron::[clip=&gt;[str=&gt;35,rec=&gt;7,lst=&gt;7]]@clean,bytebuffer::[=&gt;]@bytebuffer,obj_json::[density=&gt;&lt;TRANSPARENT&gt;,wrap_uri=&gt;true,bias_towards_uri=&gt;true,bias_towards_objs=&gt;false]@obj_json,obj_bson::[=&gt;]@obj_bson,obj_xsv::[delimiter=&gt;',',header=&gt;false]@obj_xsv],type=&gt;[uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/x-mtron-ui,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@xml,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@html,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@json,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@yaml,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@xsv,xsv::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@csv,str::T@css,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@markdown,str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@java,serializer::T,serializer::T[?[clip=&gt;[{?}/m/rec=&gt;isa(int::T),{?}/m/lst=&gt;isa(int::T),{?}/m/str=&gt;isa(int::T),{?}/m/uri=&gt;isa(int::T),{?}/m/real=&gt;isa(int::T),{?}/m/bytes=&gt;isa(int::T),{?}/m/fail=&gt;isa(int::T)],{?}pointer=&gt;isa(str::T),{?}pager=&gt;isa(bool::T)]][ctor?rng=obj_mtron&amp;dom=#{?}(obj_mtron::T){&lt;j&gt;}]@obj_mtron,serializer::T[?[{?}wrap_uri=&gt;isa(bool::T),{?}bias_towards_uri=&gt;isa(bool::T),{?}bias_towards_objs=&gt;isa(bool::T)]][ctor?rng=obj_simple_json&amp;dom=#{?}(obj_simple_json::T){&lt;j&gt;}]@obj_simple_json,serializer::T@obj_bson,serializer::T[][ctor?rng=obj_yaml&amp;dom=#{?}(obj_yaml::T){&lt;j&gt;}]@obj_yaml,serializer::T[?[{?}pretty=&gt;bool::T,{?}indent=&gt;2]][ctor?rng=obj_bytebuffer&amp;dom=#{?}(obj_bytebuffer::T){&lt;j&gt;}]@obj_bytebuffer,serializer::T[?[{?}delimiter=&gt;isa(str::T),{?}header=&gt;isa(bool::T)]][ctor?rng=obj_xsv&amp;dom=#{?}(obj_xsv::T){&lt;j&gt;}]@obj_xsv,space::T[][ctor?rng=httpspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@httpspace,space::T[?[host=&gt;uri::T]][ctor?rng=wsspace&amp;dom=#{?}(wsspace::T){&lt;j&gt;}]@wsspace,rec::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/x-mtron-ui,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/x-mtron-ui,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}send=&gt;inst::T,{?}send_recv=&gt;inst::T,{?}on_open=&gt;&lt;#&gt;::T,{?}on_error=&gt;&lt;#&gt;::T,{?}on_message=&gt;&lt;#&gt;::T,{?}on_close=&gt;&lt;#&gt;::T]]@web_socket,web_socket::T[][ctor?rng=web_socket&amp;dom=#{?}(rec::T){&lt;j&gt;}]@ws_handler,web_socket::T[][ctor?rng=web_socket&amp;dom=#{?}(rec::T){&lt;j&gt;}]@ws_client,mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_ws&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_ws,mcp_ws::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_emulator_ws&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_emulator_ws,mtron::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/x-mtron-ui,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/x-mtron-ui,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron-ui)]][ctor?rng=mtron_ws&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mtron_ws,rec::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/x-mtron-ui,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/x-mtron-ui,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime),{?}send=&gt;inst::T,{?}on_get=&gt;&lt;#&gt;::T,{?}on_post=&gt;&lt;#&gt;::T,{?}on_put=&gt;&lt;#&gt;::T,{?}on_delete=&gt;&lt;#&gt;::T,{?}on_patch=&gt;&lt;#&gt;::T,{?}on_head=&gt;&lt;#&gt;::T,{?}on_options=&gt;&lt;#&gt;::T,{?}on_error=&gt;&lt;#&gt;::T,{?}on_close=&gt;&lt;#&gt;::T]]@http_socket,http_socket::T[][ctor?rng=http_handler&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@http_handler,http_socket::T[][ctor?rng=http_client&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@http_client,mcp_http::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_emulator_http&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_emulator_http,mtron::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/x-mtron-ui,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/x-mtron-ui,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron)]][ctor?rng=mtron_http&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mtron_http,mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_http&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_http,mcp::T[?[host=&gt;mcp_server::T,{?}in=&gt;uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/x-mtron-ui,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime,{?}out=&gt;uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/x-mtron-ui,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime,{?}status=&gt;bool::T]][ctor?rng=mcp_stdio&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_stdio,rest::T[?[{?}in=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/x-mtron-ui,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron),{?}out=&gt;isa(uri::T[?union(application/bson,application/json,application/ld+json,media/,media/mpeg,application/octet-stream,application/atom+xml,application/xml,application/x-mtron,application/x-mtron-ui,application/yaml,application/javascript,text/html,text/plain,text/css,text/markdown,text/javascript,text/x-shellscript,text/x-java,text/x-python,text/event-stream,image/png,image/jpeg,image/gif,image/svg+xml,image/x-icon,application/xhtml+xml)]@mime).else(application/x-mtron),{?}web_root=&gt;&lt;#&gt;::T,{?}default_page=&gt;&lt;#&gt;::T,{?}read_only=&gt;&lt;#&gt;::T]][ctor?rng=web_http&amp;dom=#{?}(rec::T){&lt;j&gt;}]@web_http,mcp_server::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_mtron&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_mtron,mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_server&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_server,rec::T@route,protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream,stream::T@sse,rec::T[?union(protocol::T@http,protocol::T@ws,protocol::T@mcp,http::T@rest,protocol::T@mtron,protocol::T@stream)]@protocol,rec::T[?[{?}host=&gt;uri::T,{?}transport=&gt;uri::T,{?}command=&gt;lst::T,{?}env=&gt;[uri::T=&gt;&lt;#&gt;::T],{?}tool=&gt;[uri::T=&gt;rec::T[?[inst=&gt;&lt;#&gt;::T,name=&gt;uri::T,desc=&gt;str::T,{?}arg=&gt;&lt;#&gt;::T]]@tool],{?}status=&gt;bool::T]][ctor?rng=mcp_client&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_client],inst=&gt;[ping?rng=time&amp;dom=#{?}(uri::T){&lt;j&gt;},format?rng=str&amp;dom=markdown(){&lt;j&gt;},as?rng=skill&amp;dom=markdown(str::T){&lt;j&gt;},as?rng=rec&amp;dom=json(rec::T){&lt;j&gt;},as?rng=rec&amp;dom=yaml(rec::T){&lt;j&gt;},as?rng=json&amp;dom=rec(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@json){&lt;j&gt;},as?rng=rec&amp;dom=xml(rec::T){&lt;j&gt;},as?rng=xml&amp;dom=rec(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@xml){&lt;j&gt;},as?rng=rec&amp;dom=html(rec::T){&lt;j&gt;},as?rng=html&amp;dom=rec(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@html){&lt;j&gt;},as?rng=rec&amp;dom=markdown(rec::T){&lt;j&gt;},as?rng=html&amp;dom=markdown(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@html){&lt;j&gt;},as?rng=markdown&amp;dom=html(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@markdown){&lt;j&gt;},as?rng=markdown&amp;dom=rec(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@markdown){&lt;j&gt;},as?rng=rec&amp;dom=java(rec::T){&lt;j&gt;},as?rng=java&amp;dom=rec(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@java){&lt;j&gt;},as?rng=java&amp;dom=str(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@java){&lt;j&gt;},as?rng=xsv&amp;dom=str(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@xsv){&lt;j&gt;},as?rng=csv&amp;dom=str(xsv::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@csv){&lt;j&gt;},as?rng=json&amp;dom=mcp_client(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@json){&lt;j&gt;},as?rng=mcp_client{+}&amp;dom=json(rec::T[?[{?}host=&gt;uri::T,{?}transport=&gt;uri::T,{?}command=&gt;lst::T,{?}env=&gt;[uri::T=&gt;&lt;#&gt;::T],{?}tool=&gt;[uri::T=&gt;rec::T[?[inst=&gt;&lt;#&gt;::T,name=&gt;uri::T,desc=&gt;str::T,{?}arg=&gt;&lt;#&gt;::T]]@tool],{?}status=&gt;bool::T]][ctor?rng=mcp_client&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_client){&lt;j&gt;},as?rng=mcp_server&amp;dom=skill(mcp::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],{?}resource=&gt;&lt;#&gt;::T,{?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_server&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mcp_server){&lt;j&gt;}]]@/m/web
 mtron&gt; import(/m/math,math)
-==&gt;instset::[pattern=&gt;/m/math/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],type=&gt;[int::T[is(gt(0))]@nat,real::T@datasize,uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime,datasize::T[][ctor?rng=bB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@bB,datasize::T[][ctor?rng=kB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@kB,datasize::T[][ctor?rng=mB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mB,datasize::T[][ctor?rng=gB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@gB,datasize::T[][ctor?rng=tB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@tB,datasize::T[][ctor?rng=pB&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@pB,real::T@currency,currency::T@usd,currency::T@euro,real::T@time,time::T[][ctor?rng=millis&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@millis,time::T[][ctor?rng=second&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@second,time::T[][ctor?rng=minute&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@minute,time::T[][ctor?rng=hour&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@hour,time::T[][ctor?rng=day&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@day,real::T@metric,metric::T[][ctor?rng=mm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mm,metric::T[][ctor?rng=cm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@cm,metric::T[][ctor?rng=dm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@dm,metric::T[][ctor?rng=meter&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@meter,metric::T[][ctor?rng=km&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@km,real::T@imperial,imperial::T[][ctor?rng=inch&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@inch,imperial::T[][ctor?rng=foot&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@foot,imperial::T[][ctor?rng=yard&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@yard,imperial::T[][ctor?rng=mile&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mile],inst=&gt;[datetime_now?rng=datetime&amp;dom=#{?}(){&lt;j&gt;},plus?rng=time&amp;dom=time(real::T@time){&lt;j&gt;},plus?rng=metric&amp;dom=metric(real::T@metric){&lt;j&gt;},plus?rng=imperial&amp;dom=imperial(real::T@imperial){&lt;j&gt;},as?rng=time&amp;dom=time(real::T@time){&lt;j&gt;},plus?rng=datetime&amp;dom=datetime(real::T@time){&lt;j&gt;},minus?rng=datetime&amp;dom=datetime(real::T@time){&lt;j&gt;},minus?rng=time&amp;dom=datetime(uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime){&lt;j&gt;},as?rng=datetime&amp;dom=uri(uri::T){&lt;j&gt;},as?rng=int&amp;dom=datetime(int::T){&lt;j&gt;},as?rng=str&amp;dom=datetime(str::T){&lt;j&gt;},as?rng=datetime&amp;dom=str(uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime){&lt;j&gt;},normalize?rng=time&amp;dom=time(){&lt;j&gt;},normalize?rng=datasize&amp;dom=datasize(){&lt;j&gt;},normalize?rng=metric&amp;dom=metric(){&lt;j&gt;},normalize?rng=imperial&amp;dom=imperial(){&lt;j&gt;},as?rng=metric&amp;dom=metric(real::T@metric){&lt;j&gt;},as?rng=imperial&amp;dom=imperial(real::T@imperial){&lt;j&gt;},as?rng=imperial&amp;dom=metric(real::T@imperial){&lt;j&gt;},as?rng=metric&amp;dom=imperial(real::T@metric){&lt;j&gt;},cos?rng=real&amp;dom=#{?}(as(real::T)){&lt;j&gt;},sin?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},tan?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},sqrt?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},atan?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},atan2?rng=real&amp;dom=#{?}(real{2}::T){&lt;j&gt;},log?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},log10?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},exp?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},abs?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},ceil?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},floor?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},round?rng=int&amp;dom=#{?}(real::T){&lt;j&gt;}],const=&gt;[2.718281828459045@/m/math/e?constq,3.141592653589793@/m/math/pi?constq]]@/m/math
 mtron&gt; memspace::[
          pattern =&gt; &lt;/dev/scratch/#&gt;,
                q =&gt; [mintq::[=&gt;],docq::[=&gt;],subq::[=&gt;],
                      mimeq::[=&gt;], lineq::[=&gt;],lockq::[=&gt;],
                      incrq::[=&gt;]]]@&lt;/sys/space/dev/metatron&gt;
-==&gt;memspace::[pattern=&gt;/dev/scratch/#,q=&gt;[mintq::[pattern=&gt;mintq,pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}],docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],subq::[pattern=&gt;subq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},qless_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;[,]],mimeq::[pattern=&gt;mimeq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}],lineq::[pattern=&gt;lineq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}],lockq::[pattern=&gt;lockq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},qless_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;[,]],incrq::[pattern=&gt;incrq,pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}]]]@/sys/space/dev/metatron
 mtron&gt; fsspace::[pattern      =&gt; mfs:#,
                   route       =&gt; [mfs:=&gt;&lt;.&gt;]]@/sys/space/fs/mfs
-==&gt;fsspace::[pattern=&gt;mfs:#,route=&gt;[mfs:=&gt;&lt;&gt;]]@/sys/space/fs/mfs
 mtron&gt; tblespace::[pattern    =&gt; &lt;/log/scratch/#&gt;,
                    host       =&gt; &lt;sqlite:target/log_scratch.sqlite&gt;,
                    driver     =&gt; &lt;org.sqlite.JDBC&gt;,
                    table      =&gt; [,],
                    q          =&gt; [incrq::[=&gt;],subq::[=&gt;],mimeq::[=&gt;]],
                    route      =&gt; [/log/scratch/ =&gt; &lt;&gt;]]@&lt;/sys/space/log/scratch&gt;
-==&gt;tblespace::[pattern=&gt;/log/scratch/#,host=&gt;&lt;sqlite:target/log_scratch.sqlite&gt;,driver=&gt;&lt;org.sqlite.JDBC&gt;,table=&gt;[,],q=&gt;[incrq::[pattern=&gt;incrq,pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}],subq::[pattern=&gt;subq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},qless_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;[,]],mimeq::[pattern=&gt;mimeq,post_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;}]],route=&gt;[/log/scratch/=&gt;&lt;&gt;]]@/sys/space/log/scratch
 </code></pre>
 <h3>understanding source embeddings</h3>
 <p>A loaded Java file has two embeddings:</p>
@@ -462,24 +456,38 @@ asserted in the acceptance test).</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:src/test/resources/scratch/pom.xml&gt;.
          as(rec::T).
          repeat(code=&gt;&gt;&gt;,until=&gt;&lt;&lt;.-&lt;[has(Id),has(version)]&gt;-,emit=&gt;false).take(3)
-==&gt;groupId=&gt;[node=&gt;[,],text=&gt;'com.example.scratch']
-==&gt;artifactId=&gt;[node=&gt;[,],text=&gt;'scratch']
-==&gt;version=&gt;[node=&gt;[,],text=&gt;'0.1.0-SNAPSHOT']
 </code></pre>
 <p>A <code>project::T</code> consolidates source code, various space embeddings, and build commands under one <code>rec::T</code>. There exists
 an <code>as()</code>-mapping from <code>uri::T</code> to <code>project::T</code>. The resultant <code>project::T</code> is saved to the user home graph. Finally.
 maven build commands are attached to the <code>project::T</code> for each of access.</p>
 <pre><code class="language-mtron">mtron&gt; &lt;mfs:src/test/resources/scratch&gt;@&lt;/dev/scratch&gt;.as(project::T).to(/dev/scratch)
-==&gt;fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project&lt;84&gt;]][unable to convert mcode to rec::T [Project&lt;84&gt;]][class studio.phaseshift.metatron.isa.m.type.impl.MCode cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MCode and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/248
+==&gt;fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project&lt;84&gt;]][unable to convert mcode to rec::T [Project&lt;84&gt;]][class studio.phaseshift.metatron.isa.m.type.impl.MCode cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MCode and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/352
 </code></pre>
 <p>Now that the project is stored in space, build commands can be added and the project can be built.</p>
 <pre><code class="language-mtron">mtron&gt; @/dev/scratch &gt;&gt;= +[command =&gt; [mvn_build =&gt; !ide:command('mvn -f src/test/resources/scratch compile'),
                                        mvn_clean =&gt; !ide:command('mvn -f src/test/resources/scratch clean'),
                                        mvn_exec  =&gt; !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
-==&gt;[root=&gt;mfs:src/test/resources/scratch,src=&gt;[Operation=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},Echo=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},Calculator=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},EchoTest=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],code=&gt;[,],idx=&gt;[=&gt;],command=&gt;[read_file=&gt;/dev/scratch/command/read_file(file=&gt;uri::T,min=&gt;isa(int::T).else(0),max=&gt;isa(int::T).else(9223372036854775807)){*file.split(&quot;&quot;&quot;
-   &quot;&quot;&quot;).as(rec::T).select([is(gte(*min))=&gt;id()]).select([is(lt(*max))=&gt;id()])},mvn_build=&gt;!ide:command('mvn -f src/test/resources/scratch compile'),mvn_clean=&gt;!ide:command('mvn -f src/test/resources/scratch clean'),mvn_exec=&gt;!ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
+==&gt;[
+    root=&gt;mfs:src/test/resources/scratch,
+    src=&gt;[
+     Operation=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
+     Echo=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
+     Calculator=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
+     EchoTest=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
+    code=&gt;[,],
+    idx=&gt;[=&gt;],
+    command=&gt;[
+     read_file=&gt;/dev/scratch/command/read_file(file=&gt;uri::T,min=&gt;isa(int::T).else(0),max=&gt;isa(int::T).else(9223372036854775807)){*file.split(&quot;&quot;&quot;
+   &quot;&quot;&quot;).as(rec::T).select([is(gte(*min))=&gt;id()]).select([is(lt(*max))=&gt;id()])},
+     mvn_build=&gt;!ide:command('mvn -f src/test/resources/scratch ...'),
+     mvn_clean=&gt;!ide:command('mvn -f src/test/resources/scratch ...'),
+     mvn_exec=&gt;!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron&gt; */dev/scratch/command/mvn_clean
-==&gt;/m/ide/inst/command/runner{2}?rng=result&amp;dom=#{?}(to=&gt;#::T){&lt;j&gt;}
+==&gt;result::[
+    status=&gt;success,
+    runtime=&gt;millis::840.0000,
+    command=&gt;'mvn -f src/test/resources/scratch ...',
+    output=&gt;!*/sys/tmp/5ccf890a]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
@@ -510,48 +518,57 @@ In this way, edits to the subscription code entries will automatically take hold
 <p>The file name serves as the key and a lambda <code>inst</code> serves as a lazy constructor of an <code>ide:java::T</code>. Calling the file
 name pulls the raw <code>src</code> into both <code>code</code> and <code>idx</code>.</p>
 <pre><code class="language-mtron">mtron&gt; /dev/scratch/src/Echo()
-==&gt;[Echo=&gt;[field=&gt;[PREFIX=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/0/PREFIX,name=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/1/name],constructor=&gt;[Echo=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/2/Echo],comment=&gt;[=&gt;],method=&gt;[speak=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/4/speak,name=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/6/name]]]
+==&gt;[Echo=&gt;[
+    field=&gt;[
+     PREFIX=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
+     name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
+    constructor=&gt;[Echo=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
+    comment=&gt;[=&gt;],
+    method=&gt;[
+     speak=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
+     name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]]
 mtron&gt; */dev/scratch/code/0
-==&gt;java::[package=&gt;'package com.example.scratch;',preamble=&gt;&quot;&quot;&quot;package com.example.scratch;
+==&gt;java::[
+    package=&gt;'package com.example.scratch;',
+    preamble=&gt;&quot;&quot;&quot;package com.example.scratch;
    
    /**
-    * A simple greeter used as a scratch fixture for the agent IDE.
-    */
-   &quot;&quot;&quot;,classes=&gt;[Echo=&gt;[[kind=&gt;class_declaration,name=&gt;'Echo',header=&gt;'public class Echo {',members=&gt;[[PREFIX=&gt;[kind=&gt;field,text=&gt;&quot;&quot;&quot;
+   ...&quot;&quot;&quot;,
+    classes=&gt;[Echo=&gt;[[
+    kind=&gt;class_declaration,
+    name=&gt;'Echo',
+    header=&gt;'public class Echo {',
+    members=&gt;[
+     [PREFIX=&gt;[
+    kind=&gt;field,
+    text=&gt;&quot;&quot;&quot;
    
-       public static final String PREFIX = &quot;...thus spoke&quot;;&quot;&quot;&quot;,name=&gt;'PREFIX']],[name=&gt;[kind=&gt;field,text=&gt;&quot;&quot;&quot;
+       public static final String P...&quot;&quot;&quot;,
+    name=&gt;'PREFIX']],
+     [name=&gt;[
+    kind=&gt;field,
+    text=&gt;&quot;&quot;&quot;
    
-       private final String name;&quot;&quot;&quot;,name=&gt;'name']],[Echo=&gt;[kind=&gt;constructor,name=&gt;'Echo',signature=&gt;'Echo(String name)',header=&gt;&quot;&quot;&quot;
-   
-       public Echo(String name) &quot;&quot;&quot;,body=&gt;&quot;&quot;&quot;{
-           this.name = name;
-       }&quot;&quot;&quot;,footer=&gt;'',text=&gt;&quot;&quot;&quot;
-   
-       public Echo(String name) {
-           this.name = name;
-       }&quot;&quot;&quot;]],[comment=&gt;[kind=&gt;comment,text=&gt;&quot;&quot;&quot;
-   
-       /**
-        * Speak to a person.
-        *
-        * @param who the person to speak with
-        * @return the spoken words
-        */&quot;&quot;&quot;]],[speak=&gt;[kind=&gt;method,name=&gt;'speak',signature=&gt;'String speak(String who)',header=&gt;&quot;&quot;&quot;
+       private final String name;&quot;&quot;&quot;,
+    name=&gt;'name']],
+     [Echo=&gt;[
+    kind=&gt;constructor,
    ...
 mtron&gt; */dev/scratch/idx/Echo
-==&gt;[field=&gt;[PREFIX=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/0/PREFIX,name=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/1/name],constructor=&gt;[Echo=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/2/Echo],comment=&gt;[=&gt;],method=&gt;[speak=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/4/speak,name=&gt;!@/dev/scratch/code/1/classes/Echo/0/members/6/name]]
+==&gt;[
+    field=&gt;[
+     PREFIX=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
+     name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
+    constructor=&gt;[Echo=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
+    comment=&gt;[=&gt;],
+    method=&gt;[
+     speak=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
+     name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]
 mtron&gt; tree_widget::[root=&gt;/dev/scratch, max=&gt;4, xref=&gt;[=&gt;]].as?str&lt;=widget(str::T)
 ==&gt;&quot;&quot;&quot;
    scratch
    ├─ code
-   │   ├─ 0
-   │   │   ├─ classes
-   │   │   │   └─ Echo
-   │   │   ├─ location
-   │   │   ├─ package
-   │   │   ├─ postscript
-   │   │   └─ preamble
-   │   └─ 1
+   │   └─ 0
    │       ├─ classes
    │       │   └─ Echo
    │       ├─ location
@@ -612,29 +629,40 @@ representation of the project's source code.</p>
            └─ speak
    &quot;&quot;&quot;
 mtron&gt; */dev/scratch/idx/Echo/method/speak
-==&gt;[kind=&gt;method,name=&gt;'speak',signature=&gt;'String speak(String who)',header=&gt;&quot;&quot;&quot;
-       public String speak(String who) &quot;&quot;&quot;,body=&gt;&quot;&quot;&quot;{
+==&gt;[
+    kind=&gt;method,
+    name=&gt;'speak',
+    signature=&gt;'String speak(String who)',
+    header=&gt;&quot;&quot;&quot;
+       public String speak(String wh...&quot;&quot;&quot;,
+    body=&gt;&quot;&quot;&quot;{
            return who;
-       }&quot;&quot;&quot;,footer=&gt;'',text=&gt;&quot;&quot;&quot;
-       public String speak(String who) {
-           return who;
-       }&quot;&quot;&quot;]
+       }&quot;&quot;&quot;,
+    footer=&gt;'',
+    text=&gt;&quot;&quot;&quot;
+       public String speak(String wh...&quot;&quot;&quot;]
 </code></pre>
 <p>To edit the existing <code>Echo::speak</code> method source code, update the component using an anchored uri. The <code>&gt;&gt;=</code> edit lands
 in <code>code</code> (due to <code>idx</code> redirection) and then the <code>auto_save</code> subscription fires and serializes the code <code>rec::T</code> to a
 <code>ide:java::T</code> before writing to disk.</p>
 <pre><code class="language-mtron">mtron&gt; @/dev/scratch/idx/Echo/method/speak &gt;&gt;= [body=&gt; &quot;&quot;&quot;{ return &quot;marko&quot;; }&quot;&quot;&quot;]
-==&gt;[body=&gt;'{ return &quot;marko&quot;; }',kind=&gt;method,name=&gt;'speak',signature=&gt;'String speak(String who)',header=&gt;&quot;&quot;&quot;
-       public String speak(String who) &quot;&quot;&quot;,footer=&gt;'',text=&gt;&quot;&quot;&quot;
-       public String speak(String who) {
-           return who;
-       }&quot;&quot;&quot;]
+==&gt;[
+    body=&gt;'{ return &quot;marko&quot;; }',
+    kind=&gt;method,
+    name=&gt;'speak',
+    signature=&gt;'String speak(String who)',
+    header=&gt;&quot;&quot;&quot;
+       public String speak(String wh...&quot;&quot;&quot;,
+    footer=&gt;'',
+    text=&gt;&quot;&quot;&quot;
+       public String speak(String wh...&quot;&quot;&quot;]
 </code></pre>
 <p>A &quot;saved&quot; messages is displayed via <code>stdout</code>. However, to be certain the registered <code>sub::T</code> wrote the updated
 <code>Echo::speak</code> to disk, dereference the respective <code>fsspace::T</code> pointer. That is, pull the Java source code (as an
 <code>str::T</code>) back into metatron.</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.java&gt;
-==&gt;java::&quot;&quot;&quot;package com.example.scratch;
+==&gt;
+   java::&quot;&quot;&quot;package com.example.scratch;
    
    /**
     * A simple greeter used as a scratch fixture for the agent IDE.
@@ -669,6 +697,8 @@ in <code>code</code> (due to <code>idx</code> redirection) and then the <code>au
        }
    }
    &quot;&quot;&quot;
+   
+   
 </code></pre>
 <p>The standard template for selective editing of code is provided below where <code>[X=&gt;Y]</code> is a placeholder for patterns
 itemized in the subsequent table.</p>
@@ -697,9 +727,29 @@ with it, then save (<code>code/N.to</code>).</p>
          [?&gt;2.?&lt;4 =&gt; 'return &quot;marko&quot;;'])&gt;&gt;.
          &gt;-?str&lt;=str{*}('
 ')].explain()
-==&gt;[format=&gt;inst?rng=str&amp;dom=#{0}(){&lt;j&gt;},desc=&gt;[rng=&gt;&lt;#&gt;,insts=&gt;2],per_inst=&gt;[[op=&gt;at,args=&gt;[/dev/scratch/idx/Echo/method/speak],f=&gt;'&lt;j&gt;',form=&gt;standard,c_dom=&gt;0,c_rng=&gt;0],[op=&gt;update,dom=&gt;&lt;#&gt;,rng=&gt;&lt;#&gt;,args=&gt;[[body=&gt;split('
-').as(rec::T).update([is(gt(2)).is(lt(4))=&gt;'return &quot;marko&quot;;']).rshift().merge?rng=str&amp;dom=str{*}('
-')]],form=&gt;mapper,c_dom=&gt;1,c_rng=&gt;1]]]@explanation
+==&gt;explanation::[
+    format=&gt;!inst?rng=str&amp;dom=#{?}(){&lt;j&gt;},
+    desc=&gt;[
+     rng=&gt;&lt;#&gt;,
+     insts=&gt;2],
+    per_inst=&gt;[
+     [
+      op=&gt;at,
+      args=&gt;[/dev/scratch/idx/Echo/method/speak],
+      f=&gt;'&lt;j&gt;',
+      form=&gt;standard,
+      c_dom=&gt;0,
+      c_rng=&gt;0],
+     [
+      op=&gt;update,
+      dom=&gt;&lt;#&gt;,
+      rng=&gt;&lt;#&gt;,
+      args=&gt;[[body=&gt;split('
+   ').as(rec::T).update([is(gt(2)).is(lt(4))=&gt;'return &quot;marko&quot;;']).rshift().merge?rng=str&amp;dom=str{*}('
+   ')]],
+      form=&gt;mapper,
+      c_dom=&gt;1,
+      c_rng=&gt;1]]]
 </code></pre>
 <p><strong>NOTE</strong>: when working in the <code>console::T</code>, the the interactive <code>explain_tool::T</code> provides a much richer analysis of an
 expression with pre- and post- compilation switching, drill down into nested code structures, and access reified

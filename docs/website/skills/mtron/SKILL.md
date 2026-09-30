@@ -194,7 +194,7 @@ and the unsugar'd text table is the lazy `>>format` inst (materialized in the in
 
 ```mtron
 mtron> start(/a).rshift().rshift().rshift().explain()>>format
-==>{2}"""
+==>"""
     op      dom          rng      args   f    desc      c_dom  c_rng 
     start   noobj{0}::T  uri::T   /a     <j>  initial   {0}    {1}   
     rshift  uri::T       #{*}::T  noobj  <j>  standard  {1}    {*}   
@@ -202,7 +202,7 @@ mtron> start(/a).rshift().rshift().rshift().explain()>>format
     rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
    """
 mtron> /a.>>.>>.>>.explain()>>format
-==>{2}"""
+==>"""
     op      dom          rng      args   f    desc      c_dom  c_rng 
     start   noobj{0}::T  uri::T   /a     <j>  initial   {0}    {1}   
     rshift  uri::T       #{*}::T  noobj  <j>  standard  {1}    {*}   
@@ -321,6 +321,9 @@ mtron> person::[name=>'marko', age=>29]
 
 Do not guess at instruction signatures. Every instruction ships with documentation attached via the `?docq` query
 processor. **Read the documentation of the code you are about to execute.**
+
+IMPORTANT: An `inst::T` is identified by its operation, its domain and its range. If `dom` or `rng` are not provided,
+the default values are `#{?}` and `#{*}`, respectively.
 
 ```mtron
 mtron> *plus?docq

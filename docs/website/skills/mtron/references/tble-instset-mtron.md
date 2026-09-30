@@ -23,7 +23,6 @@ docs pipeline and inlined with their results; a plain `mtron` block is only show
 
 ```mtron
 mtron> import(/m/tble)
-==>instset::[pattern=>/m/tble/#,q=>[docq::[pattern=>docq,pre_read=>inst?rng=#{*}&dom=#{?}(uri::T){<j>},pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,<#>::T){<j>},obj=>memspace::[pattern=><#>],inst=>instset::[pattern=><#>]]],space=>[super=>!*/m],const=>[[llm_chat_schema=>inst?rng=#{*}&dom=#{*}(){<j>}]@helper],type=>[space::T[?[host=>uri::T,driver=>uri::T]][ctor?rng=tblespace&dom=#{?}(rec::T){<j>}]@tblespace],inst=>[sql?rng=rec{*}&dom=tblespace(str::T){<j>}],rewrite=>[/m/tble/inst/rewrite/sql_count?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_sum?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_mean?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_limit?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_offset?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_offset_limit?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_where?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_where_count?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_where_order?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_where_order_offset?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_where_limit?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_where_offset?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_where_offset_limit?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_select?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_order?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_distinct?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/kv_count?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/kv_limit?rng=code{?}&dom=code(){<j>}]]@/m/tble
 mtron> tblespace::[pattern => tbledoc:#,
                    host    => <sqlite:/tmp/mtron-tbledoc.db>,
                    driver  => <org.sqlite.JDBC>,
@@ -32,7 +31,6 @@ mtron> tblespace::[pattern => tbledoc:#,
                                  desc    => "a person row: name, age, and a skill once one is written",
                                  example => ["*tbledoc:person/+.count()"]]]],
                    route   => [tbledoc: => <>]]@/sys/space/tbledoc
-==>tblespace::[pattern=>tbledoc:#,host=><sqlite:/tmp/mtron-tbledoc.db>,driver=><org.sqlite.JDBC>,q=>[incrq::[pattern=>incrq,pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,<#>::T){<j>}],docq::[pattern=>docq,pre_read=>inst?rng=#{*}&dom=#{?}(uri::T){<j>},pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,<#>::T){<j>},obj=>memspace::[pattern=><#>],inst=>instset::[pattern=><#>]]],route=>[tbledoc:=><>]]@/sys/space/tbledoc
 ```
 The two `q` entries are the space's **query processors**, and both earn their place: `docq` is what lets *a space
 document its own tables* — so `?docq` on a table tells an agent what it is looking at before it queries it — and `incrq`
@@ -47,7 +45,12 @@ is what makes a `_?incrq` write assign its own key (see *keys the database assig
 
 ```mtron
 mtron> *tblespace?docq      [-- the type, its ctor, and the space's own summary --]
-==>docs::[obj=>space::T[?[host=>uri::T,driver=>uri::T]][ctor?rng=tblespace&dom=#{?}(rec::T){<j>}]@tblespace,desc=>'[structural] a metatron realization of a relational database',example=>['*<http://metatron.phaseshift.studio/skills/mtron/references/tble-instset-mtron.md>']]
+==>docs::[
+    obj=>space::T[?[
+    host=>uri::T,
+    driver=>uri::T]][ctor?rng=tblespace&dom=#{?}(rec::T){<j>}]@/m/tble/space/tblespace,
+    desc=>'[structural] a metatron realizatio...',
+    example=>['*<http://metatron.phaseshift.studi...']]
 mtron> *</m/tble/helper>    [-- the instset's helper rec: the llm chat schema, as a str --]
 ==>[llm_chat_schema=>inst?rng=#{*}&dom=#{*}(){<j>}]
 ```
@@ -75,23 +78,74 @@ collection's type with it.
 
 ```mtron
 mtron> tbledoc:person/1 -> [name=>'marko',age=>29]
-==>[name=>'marko',age=>29]
+==>[
+    name=>'marko',
+    age=>29]
 mtron> tbledoc:person/2 -> [name=>'grant',age=>25]
-==>[name=>'grant',age=>25]
+==>[
+    name=>'grant',
+    age=>25]
 mtron> tbledoc:person/3 -> [name=>'metis',age=>41]
-==>[name=>'metis',age=>41]
+==>[
+    name=>'metis',
+    age=>41]
 mtron> tbledoc:person/4 -> [name=>'xilo',age=>33,skill=>'graph']    [-- a field the table has not seen --]
-==>[name=>'xilo',age=>33,skill=>'graph']
+==>[
+    name=>'xilo',
+    age=>33,
+    skill=>'graph']
 ```
 SQL column types follow the obj types, and the column catalog is readable as data — `_mtron_meta` is where metatron
 keeps what SQL cannot say:
 
 ```mtron
 mtron> */sys/space/tbledoc.sql('SELECT table_name, column_name, base_vid, obj_tid, ref_table FROM _mtron_meta')
-==>[table_name=>'person',column_name=>'$table',base_vid=>'/m/rec',obj_tid=>'/m/rec']
-==>[table_name=>'person',column_name=>'name',base_vid=>'/m/str',obj_tid=>'/m/str']
-==>[table_name=>'person',column_name=>'age',base_vid=>'/m/int',obj_tid=>'/m/int']
-==>[table_name=>'person',column_name=>'skill',base_vid=>'/m/str',obj_tid=>'/m/str']
+==>[
+    table_name=>'person',
+    column_name=>'$table',
+    base_vid=>'/m/rec',
+    obj_tid=>'/m/rec']
+==>[
+    table_name=>'person',
+    column_name=>'skill',
+    base_vid=>'/m/str',
+    obj_tid=>'/m/str']
+==>[
+    table_name=>'award',
+    column_name=>'$table',
+    base_vid=>'/m/rec',
+    obj_tid=>'/m/rec']
+==>[
+    table_name=>'award',
+    column_name=>'trophy',
+    base_vid=>'/m/str',
+    obj_tid=>'/m/str']
+==>[
+    table_name=>'award',
+    column_name=>'recipient',
+    base_vid=>'/m/inst',
+    obj_tid=>'/m/inst/auto_from',
+    ref_table=>'person']
+==>[
+    table_name=>'person',
+    column_name=>'age',
+    base_vid=>'/m/int',
+    obj_tid=>'/m/int']
+==>[
+    table_name=>'person',
+    column_name=>'name',
+    base_vid=>'/m/str',
+    obj_tid=>'/m/str{2}']
+==>[
+    table_name=>'note',
+    column_name=>'$table',
+    base_vid=>'/m/rec',
+    obj_tid=>'/m/rec']
+==>[
+    table_name=>'note',
+    column_name=>'body',
+    base_vid=>'/m/str',
+    obj_tid=>'/m/str']
 ```
 A structural obj (`tags=>['a','b']`) rides in a `TEXT` column with its type preserved in `obj_tid`, so a read
 reconstructs the lst rather than a string that looks like one.
@@ -100,26 +154,54 @@ reconstructs the lst rather than a string that looks like one.
 
 ```mtron
 mtron> *tbledoc:person/+              [-- every row as a rec --]
-==>[name=>'xilo',age=>33,skill=>'graph']
-==>[name=>'marko',age=>29]
-==>[name=>'metis',age=>41]
-==>[name=>'grant',age=>25]
+==>[
+    name=>'xilo',
+    age=>33,
+    skill=>'graph']
+==>[
+    name=>'marko',
+    age=>29]
+==>[
+    name=>'metis',
+    age=>41]
+==>[
+    name=>'grant',
+    age=>25]
+==>[
+    name=>'vela',
+    age=>53]
 mtron> *tbledoc:person/1              [-- one row --]
-==>[name=>'marko',age=>29]
+==>[
+    name=>'marko',
+    age=>29]
 mtron> *tbledoc:person/+/             [-- vid => row --]
-==>tbledoc:person/4=>[name=>'xilo',age=>33,skill=>'graph']
-==>tbledoc:person/1=>[name=>'marko',age=>29]
-==>tbledoc:person/3=>[name=>'metis',age=>41]
-==>tbledoc:person/2=>[name=>'grant',age=>25]
+==>tbledoc:person/4=>[
+    name=>'xilo',
+    age=>33,
+    skill=>'graph']
+==>tbledoc:person/1=>[
+    name=>'marko',
+    age=>29]
+==>tbledoc:person/3=>[
+    name=>'metis',
+    age=>41]
+==>tbledoc:person/2=>[
+    name=>'grant',
+    age=>25]
+==>tbledoc:person/5=>[
+    name=>'vela',
+    age=>53]
 mtron> *tbledoc:person/+/name         [-- one column, across rows --]
 ==>'metis'
 ==>'grant'
+==>'vela'
 ==>'marko'
 ==>'xilo'
 mtron> *tbledoc:person/1/name         [-- one field: the row is unrolled --]
 ==>'marko'
 mtron> *tbledoc:person/+/id           [-- the keys: they live in the vid, not in the body --]
 ==>1
+==>5
 ==>2
 ==>4
 ==>3
@@ -138,6 +220,8 @@ mtron> *tbledoc:person/+/+      [-- clone: fields detached from their rows --]
 ==>41
 ==>'grant'
 ==>25
+==>53
+==>'vela'
 ==>33
 ==>29
 ==>'graph'
@@ -148,6 +232,8 @@ mtron> @tbledoc:person/+/+      [-- anchor: the same fields, each still addresse
 ==>41@tbledoc:person/3/age
 ==>'grant'@tbledoc:person/2/name
 ==>25@tbledoc:person/2/age
+==>53@tbledoc:person/5/age
+==>'vela'@tbledoc:person/5/name
 ==>33@tbledoc:person/4/age
 ==>29@tbledoc:person/1/age
 ==>'graph'@tbledoc:person/4/skill
@@ -159,11 +245,19 @@ the anchored form is the one to keep when the rows might be written back:
 
 ```mtron
 mtron> *tbledoc:person/+.take(2)     [-- clone path --]
-==>{2}[name=>'marko',age=>29]@tbledoc:person/noobj
-==>{2}[name=>'grant',age=>25]@tbledoc:person/noobj
+==>{2}[
+    name=>'marko',
+    age=>29]@tbledoc:person/noobj
+==>{2}[
+    name=>'grant',
+    age=>25]@tbledoc:person/noobj
 mtron> @tbledoc:person/+.take(2)     [-- anchor path --]
-==>{2}[name=>'marko',age=>29]@tbledoc:person/noobj
-==>{2}[name=>'grant',age=>25]@tbledoc:person/noobj
+==>{2}[
+    name=>'marko',
+    age=>29]@tbledoc:person/noobj
+==>{2}[
+    name=>'grant',
+    age=>25]@tbledoc:person/noobj
 ```
 ## the rewrites — reads that become SQL
 
@@ -173,36 +267,68 @@ same expression over a `memspace` stays in mtron.
 
 ```mtron
 mtron> *tbledoc:person/+.?[age=>?<30]        [-- SELECT * FROM person WHERE age < 30 --]
-==>[name=>'marko',age=>29]@tbledoc:person/noobj
-==>[name=>'grant',age=>25]@tbledoc:person/noobj
+==>[
+    name=>'marko',
+    age=>29]@tbledoc:person/noobj
+==>[
+    name=>'grant',
+    age=>25]@tbledoc:person/noobj
 mtron> *tbledoc:person/+.count()               [-- SELECT COUNT(*) FROM person --]
-==>4
+==>5
 mtron> *tbledoc:person/+/age.sum()             [-- SELECT SUM(age) FROM person --]
-==>128.0
+==>181.0000
 mtron> *tbledoc:person/+/age.mean()            [-- SELECT AVG(age) FROM person --]
-==>32.0
+==>36.2000
 mtron> *tbledoc:person/+.==[name=>_]           [-- SELECT name FROM person --]
 ==>[name=>'xilo']
 ==>[name=>'marko']
 ==>[name=>'metis']
 ==>[name=>'grant']
+==>[name=>'vela']
 mtron> *tbledoc:person/+.order(select(age))    [-- ... ORDER BY age --]
-==>{2}[name=>'grant',age=>25]@tbledoc:person/noobj
-==>{2}[name=>'marko',age=>29]@tbledoc:person/noobj
-==>{2}[name=>'xilo',age=>33,skill=>'graph']@tbledoc:person/noobj
-==>{2}[name=>'metis',age=>41]@tbledoc:person/noobj
+==>{2}[
+    name=>'grant',
+    age=>25]@tbledoc:person/noobj
+==>{2}[
+    name=>'marko',
+    age=>29]@tbledoc:person/noobj
+==>{2}[
+    name=>'xilo',
+    age=>33,
+    skill=>'graph']@tbledoc:person/noobj
+==>{2}[
+    name=>'metis',
+    age=>41]@tbledoc:person/noobj
+==>{2}[
+    name=>'vela',
+    age=>53]@tbledoc:person/noobj
 mtron> *tbledoc:person/+.dedup(select(name))   [-- SELECT DISTINCT name FROM person --]
 ==>{2}'marko'
 ==>{2}'grant'
 ==>{2}'metis'
 ==>{2}'xilo'
+==>{2}'vela'
 mtron> *tbledoc:person/+.take(2)               [-- ... LIMIT 2 --]
-==>{2}[name=>'marko',age=>29]@tbledoc:person/noobj
-==>{2}[name=>'grant',age=>25]@tbledoc:person/noobj
+==>{2}[
+    name=>'marko',
+    age=>29]@tbledoc:person/noobj
+==>{2}[
+    name=>'grant',
+    age=>25]@tbledoc:person/noobj
 mtron> *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
-==>{2}[name=>'grant',age=>25]@tbledoc:person/noobj
-==>{2}[name=>'metis',age=>41]@tbledoc:person/noobj
-==>{2}[name=>'xilo',age=>33,skill=>'graph']@tbledoc:person/noobj
+==>{2}[
+    name=>'grant',
+    age=>25]@tbledoc:person/noobj
+==>{2}[
+    name=>'metis',
+    age=>41]@tbledoc:person/noobj
+==>{2}[
+    name=>'xilo',
+    age=>33,
+    skill=>'graph']@tbledoc:person/noobj
+==>{2}[
+    name=>'vela',
+    age=>53]@tbledoc:person/noobj
 ```
 | rewrite                  | mtron                                   | sql                                                 |
 |--------------------------|-----------------------------------------|-----------------------------------------------------|
@@ -229,7 +355,32 @@ The instset prints that list itself, and each rewrite documents its own before/a
 
 ```mtron
 mtron> */m/tble?docq
-==>docs::[obj=>instset::[pattern=>/m/tble/#,q=>[docq::[pattern=>docq,pre_read=>inst?rng=#{*}&dom=#{?}(uri::T){<j>},pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,<#>::T){<j>},obj=>memspace::[pattern=><#>],inst=>instset::[pattern=><#>]]],space=>[super=>!*/m],const=>[[llm_chat_schema=>inst?rng=#{*}&dom=#{*}(){<j>}]@helper],type=>[space::T[?[host=>uri::T,driver=>uri::T]][ctor?rng=tblespace&dom=#{?}(rec::T){<j>}]@tblespace],inst=>[sql?rng=rec{*}&dom=tblespace(str::T){<j>}],rewrite=>[/m/tble/inst/rewrite/sql_count?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_sum?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_mean?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_limit?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_offset?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_offset_limit?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_where?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_where_count?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_where_order?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_where_order_offset?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_where_limit?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_where_offset?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_where_offset_limit?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_select?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_order?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/sql_distinct?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/kv_count?rng=code{?}&dom=code(){<j>},/m/tble/inst/rewrite/kv_limit?rng=code{?}&dom=code(){<j>}]]@/m/tble,desc=>'relational tables, typed rows, and SQL rewrites within the metatron',example=>['*acme:customer.where[person=>[name=>_=>age=>?>29]]']]
+==>docs::[
+    obj=>instset::[
+     pattern=>/m/tble/#,
+     q=>[docq::[
+    pattern=>docq,
+    pre_read=>inst?rng=#{*}&dom=#{?}(uri::T){<j>},
+    pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,<#>::T){<j>},
+    obj=>memspace::[pattern=><#>],
+    inst=>instset::[pattern=><#>]]],
+     space=>[super=>!*/m],
+     const=>[[llm_chat_schema=>inst?rng=#{*}&dom=#{*}(){<j>}]@/m/web/helper],
+     type=>[space::T[?[
+    host=>uri::T,
+    driver=>uri::T]][ctor?rng=tblespace&dom=#{?}(rec::T){<j>}]@/m/tble/space/tblespace],
+     inst=>[sql?rng=rec{*}&dom=tblespace(str::T){<j>}],
+     rewrite=>[
+      /m/tble/inst/rewrite/sql_count?rng=code{?}&dom=code(){<j>},
+      /m/tble/inst/rewrite/sql_sum?rng=code{?}&dom=code(){<j>},
+      /m/tble/inst/rewrite/sql_mean?rng=code{?}&dom=code(){<j>},
+      /m/tble/inst/rewrite/sql_limit?rng=code{?}&dom=code(){<j>},
+      /m/tble/inst/rewrite/sql_offset?rng=code{?}&dom=code(){<j>},
+      /m/tble/inst/rewrite/sql_offset_limit?rng=code{?}&dom=code(){<j>},
+      /m/tble/inst/rewrite/sql_where?rng=code{?}&dom=code(){<j>},
+   ...(11 more)]]@/m/tble,
+    desc=>'relational tables, typed rows, and...',
+    example=>['*acme:customer.where[person=>[name...']]
 ```
 ## native sql
 
@@ -238,8 +389,12 @@ which mtron then treats like any other objs.
 
 ```mtron
 mtron> */sys/space/tbledoc.sql('SELECT name, age FROM person WHERE age < 30')
-==>[name=>'marko',age=>29]
-==>[name=>'grant',age=>25]
+==>[
+    name=>'marko',
+    age=>29]
+==>[
+    name=>'grant',
+    age=>25]
 mtron> */sys/space/tbledoc.sql('SELECT name, age FROM person WHERE age < 30')>>age.sum()
 ==>54
 ```
@@ -255,14 +410,24 @@ relationship.
 
 ```mtron
 mtron> tbledoc:award/1 -> [trophy=>'gold',recipient=>!*tbledoc:person/1]
-==>[trophy=>'gold',recipient=>!*tbledoc:person/1]
+==>[
+    trophy=>'gold',
+    recipient=>!*tbledoc:person/1]
 mtron> tbledoc:award/2 -> [trophy=>'silver',recipient=>!*tbledoc:person/2]
-==>[trophy=>'silver',recipient=>!*tbledoc:person/2]
+==>[
+    trophy=>'silver',
+    recipient=>!*tbledoc:person/2]
 mtron> *tbledoc:award/+                [-- the cell renders as an unresolved pointer --]
-==>[trophy=>'silver',recipient=>!*tbledoc:person/2]
-==>[trophy=>'gold',recipient=>!*tbledoc:person/1]
+==>[
+    trophy=>'silver',
+    recipient=>!*tbledoc:person/2]
+==>[
+    trophy=>'gold',
+    recipient=>!*tbledoc:person/1]
 mtron> *tbledoc:award/1/recipient      [-- traversal resolves it to the row --]
-==>[name=>'marko',age=>29]
+==>[
+    name=>'marko',
+    age=>29]
 ```
 The SQL footprint is deliberately plain: the column is a bare `INTEGER` (`TEXT` for string keys), there is no SQL
 `FOREIGN KEY` constraint, and the pointer metadata — including `ref_table` — lives in `_mtron_meta`. An intra-space
@@ -276,8 +441,18 @@ kinds may sit in one row.
 mtron> */sys/space/tbledoc/schema/pattern      [-- where the discovered types are published --]
 ==>/sys/space/tbledoc/instset/#
 mtron> */sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
-==>/sys/space/tbledoc/instset/person=>rec::T[?[{?}name=>str::T,{?}age=>int::T,{?}skill=>str::T,uri{?}::T=><#>::T]]@/sys/space/tbledoc/instset/person
-==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,recipient=>isa(person/+/id).!*id(),uri{?}::T=><#>::T]]@/sys/space/tbledoc/instset/award
+==>/sys/space/tbledoc/instset/award=>rec::T[?[
+    {?}trophy=>str::T,
+    recipient=>isa(person/+/id).!*id(),
+    uri::T=><#>::T]]@/sys/space/tbledoc/instset/award
+==>/sys/space/tbledoc/instset/note=>rec::T[?[
+    {?}body=>str::T,
+    uri::T=><#>::T]]@/sys/space/tbledoc/instset/note
+==>/sys/space/tbledoc/instset/person=>rec::T[?[
+    {?}name=>str::T,
+    {?}age=>int::T,
+    {?}skill=>str::T,
+    uri::T=><#>::T]]@/sys/space/tbledoc/instset/person
 ```
 Reading the schema is how you meet a table you have never seen: each entry is an `isa([{?}name=>str::T,…])` refinement
 of `rec::T`, and a foreign-key column appears as `recipient=>isa(person/+/id).!*id()` — the column *is* the pointer.
@@ -299,7 +474,9 @@ mtron> tbledoc:kv/greeting -> 'salve, metatron'
 mtron> *tbledoc:kv/greeting
 ==>'salve, metatron'
 mtron> tbledoc:kv/session/1 -> [user=>'marko',cart=>['fig','olive']]
-==>[user=>'marko',cart=>['fig','olive']]
+==>[
+    user=>'marko',
+    cart=>['fig','olive']]
 mtron> *tbledoc:kv/session/1/cart      [-- a field of the stored document --]
 ==>['fig','olive']
 mtron> *tbledoc:kv/+/                  [-- vid => value --]
@@ -311,7 +488,9 @@ A write to an existing key **replaces the row body** — fields left out of the 
 
 ```mtron
 mtron> tbledoc:person/5 -> [name=>'vela',age=>52]
-==>[name=>'vela',age=>52]
+==>[
+    name=>'vela',
+    age=>52]
 mtron> tbledoc:person/5 -> [age=>53]        [-- a partial write: `name` is cleared --]
 ==>[age=>53]
 mtron> *tbledoc:person/5
@@ -322,9 +501,13 @@ field it does not (creating the column, if the table has never had one):
 
 ```mtron
 mtron> @tbledoc:person/5 >>= +[name=>'vela']     [-- set promotion --]
-==>[name=>{2}'vela',age=>53]
+==>[
+    age=>53,
+    name=>'vela']
 mtron> *tbledoc:person/5
-==>[name=>'vela',age=>53]
+==>[
+    name=>'vela',
+    age=>53]
 ```
 ## keys the database assigns
 
@@ -334,14 +517,16 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/2
+==>[body=>'a note with a database-assigned key']@tbledoc:note/5
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/4
+==>[body=>'another one']@tbledoc:note/6
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==>1
 ==>3
 ==>2
 ==>4
+==>5
+==>6
 ```
 ## taking the space down
 
@@ -357,13 +542,17 @@ mtron> tblespace::[pattern => tbledoc:#,
                    host    => <sqlite:/tmp/mtron-tbledoc.db>,
                    driver  => <org.sqlite.JDBC>,
                    route   => [tbledoc: => <>]]@/sys/space/tbledoc
-==>tblespace::[pattern=>tbledoc:#,host=><sqlite:/tmp/mtron-tbledoc.db>,driver=><org.sqlite.JDBC>,route=>[tbledoc:=><>]]@/sys/space/tbledoc
 mtron> *tbledoc:person/+.count()                   [-- 0: a fresh mount has not discovered its tables yet --]
 ==>0
 mtron> */sys/space/tbledoc/instset/+/              [-- reading the instset is what walks the catalog --]
-==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,recipient=>isa(person/+/id).!*id()]]@award
-==>/sys/space/tbledoc/instset/note=>rec::T[?[{?}body=>str::T]]@note
-==>/sys/space/tbledoc/instset/person=>rec::T[?[{?}name=>str::T,{?}age=>int::T,{?}skill=>str::T]]@person
+==>/sys/space/tbledoc/instset/award=>rec::T[?[
+    {?}trophy=>str::T,
+    recipient=>isa(person/+/id).!*id()]]@/sys/space/tbledoc/instset/award
+==>/sys/space/tbledoc/instset/note=>rec::T[?[{?}body=>str::T]]@/sys/space/tbledoc/instset/note
+==>/sys/space/tbledoc/instset/person=>rec::T[?[
+    {?}name=>str::T,
+    {?}age=>int::T,
+    {?}skill=>str::T]]@/sys/space/tbledoc/instset/person
 mtron> *tbledoc:person/+.count()                   [-- the rows were in the file all along --]
 ==>5
 mtron> /sys/space/tbledoc -> noobj                 [-- leave the graph as we found it --]

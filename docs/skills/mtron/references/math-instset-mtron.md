@@ -17,6 +17,8 @@ under `/m/math/+` and available via the standard type resolution system.
 | `datetime::T` | `uri::T`      | calendar datetime URI     |
 | **time**      |               |                           |
 | `time::T`     | `real::T`     | time unit base            |
+| `nanos::T`    | `time::T`     | nanosecond unit           |
+| `micros::T`   | `time::T`     | microsecond unit          |
 | `millis::T`   | `time::T`     | millisecond unit          |
 | `second::T`   | `time::T`     | second unit (1000 millis) |
 | `minute::T`   | `time::T`     | minute unit (60 seconds)  |
@@ -156,25 +158,31 @@ All standard uri operations apply: `==` (select), `=?=` (where), plus `>>=` (rec
 
 ### time::T (`/m/math/time`)
 
-`time::T` is a `real::T` refinement. The time unit types (`millis::T` … `day::T`) convert to each other via `.as()`; a
+`time::T` is a `real::T` refinement. The time unit types (`nanos::T` … `day::T`) convert to each other via `.as()`; a
 conversion preserves the total millis, changing only the unit label.
 
 #### conversion
 
 ```mtron_pre
 [-- upward: value shrinks, unit grows --]
+nanos::1000.0.as(micros::T)
+micros::1000.0.as(millis::T)
 millis::1000.0.as(second::T)
 second::60.0.as(minute::T)
 minute::60.0.as(hour::T)
 hour::24.0.as(day::T)
 
 [-- downward: value grows, unit shrinks --]
+micros::1.0.as(nanos::T)
+millis::1.0.as(micros::T)
 second::1.0.as(millis::T)
 minute::1.0.as(second::T)
 hour::1.0.as(minute::T)
 day::1.0.as(hour::T)
 
 [-- multi-step: levels can be skipped --]
+nanos::3600000000000.0.as(hour::T)
+micros::3600000000.0.as(hour::T)
 millis::3600000.0.as(hour::T)
 millis::86400000.0.as(day::T)
 
@@ -182,6 +190,9 @@ millis::86400000.0.as(day::T)
 hour::36.0.as(day::T)
 second::90.0.as(minute::T)
 day::1.5.as(hour::T)
+nanos::5400000000000.0.as(hour::T)
+micros::1500000.0.as(second::T)
+hour::0.5.as(nanos::T)
 
 [-- bare real: re-label only, no conversion --]
 30000.0.as(minute::T)
@@ -191,13 +202,17 @@ A converted value tests as its target unit:
 
 ```mtron_pre
 millis::1000.0.as(second::T).matches(second::T)
+micros::1000.0.as(millis::T).matches(millis::T)
+nanos::1000000.0.as(millis::T).matches(millis::T)
 ```
 
 Time units require a real-backed value — an int-backed time is a type violation:
 
 ```mtron_pre
-day::2.as(millis::T)         [-- int-backed time (bad) --]
-hour::2.as(minute::T)        [-- int-backed time (bad) --]
+[ERROR] day::2.as(millis::T)         [-- int-backed time (bad) --]
+[ERROR] hour::2.as(minute::T)        [-- int-backed time (bad) --]
+[ERROR] nanos::2.as(millis::T)       [-- int-backed time (bad) --]
+[ERROR] micros::2.as(millis::T)      [-- int-backed time (bad) --]
 ```
 
 #### relational operators
@@ -206,12 +221,16 @@ hour::2.as(minute::T)        [-- int-backed time (bad) --]
 
 ```mtron_pre
 [-- equality across units --]
+nanos::1000.0.eq(micros::1.0)
+micros::1000.0.eq(millis::1.0)
 millis::1000.0.eq(second::1.0)
 second::60.0.eq(minute::1.0)
 minute::60.0.eq(hour::1.0)
 day::1.0.eq(hour::24.0)
 
 [-- ordering across units --]
+nanos::500000.0.lt(millis::1.0)
+micros::500.0.lt(millis::1.0)
 second::60.0.gt(millis::500.0)
 hour::12.0.lt(day::1.0)
 minute::60.0.lte(hour::1.0)
@@ -224,6 +243,8 @@ minute::60.0.gte(hour::1.0)
 
 | from   | threshold | to     |
 |--------|-----------|--------|
+| nanos  | ≥ 2000    | micros |
+| micros | ≥ 2000    | millis |
 | millis | ≥ 2000    | second |
 | second | ≥ 120     | minute |
 | minute | ≥ 120     | hour   |
@@ -231,9 +252,13 @@ minute::60.0.gte(hour::1.0)
 
 ```mtron_pre
 [-- below threshold: unchanged --]
+nanos::1999.0.normalize()
+micros::1999.0.normalize()
 millis::1500.0.normalize()
 
 [-- cascade until stable --]
+nanos::2000.0.normalize()
+micros::2000.0.normalize()
 millis::9000.0.normalize()
 minute::150.0.normalize()
 hour::72.0.normalize()

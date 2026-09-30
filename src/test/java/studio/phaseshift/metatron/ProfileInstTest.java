@@ -59,6 +59,19 @@ public class ProfileInstTest extends AbstractMetatronTest {
     }
 
     @Test
+    public void testProfileFormatIsOneReport() {
+        // profile_analysis' dom is maybe (not maybeSome): a bulk/gather dom made the monad loop
+        // apply the report closure a second time on the barrier flush, so the table came back
+        // twice (distinct timings, so they printed as two strings rather than a merged {2})
+        final Obj r = ObjmtronSerializer.eval("1.plus(2).profile()");
+        assertFalse(r.isFail(), "profile() should not fail: " + r);
+        assertTrue(r.tid().c().isOne(), "profile() should be one report rec, not a multiplicity: " + r.tid());
+        final Obj fmt = ObjmtronSerializer.eval("1.plus(2).profile()>>format");
+        assertFalse(fmt.isFail(), "profile()>>format should not fail: " + fmt);
+        assertTrue(fmt.tid().c().isOne(), ">>format should be one text table, not a multiplicity: " + fmt.tid());
+    }
+
+    @Test
     public void testBareProfileIsNoOp() {
         // bare profile() with no preceding code is a no-op (returns the lhs), like bare explain()
         assertFalse(ObjmtronSerializer.eval("1.plus(2)").isFail(), "sanity: 1.plus(2) evals");

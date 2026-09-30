@@ -16,7 +16,7 @@ inst, code, bytes, etc. Expressions chain left-to-right: `lhs.inst(rhs)`.
 mtron> 1           [-- int (64-bit signed) --]
 ==>1
 mtron> 1.0         [-- real (double) --]
-==>1.0
+==>1.0000
 mtron> true        [-- bool --]
 ==>true
 mtron> false       [-- bool --]
@@ -47,9 +47,13 @@ mtron> noobj       [-- "no obj" (empty, none) --]
 mtron> [1, 2, 3]         [-- List of 3 ints --]
 ==>[1,2,3]
 mtron> [1, [2, 3]]       [-- Nested list --]
-==>[1,[2,3]]
+==>[
+    1,
+    [2,3]]
 mtron> [a=>1, b=>2]      [-- Record (key-value pairs) --]
-==>[a=>1,b=>2]
+==>[
+    a=>1,
+    b=>2]
 mtron> [,]               [-- Empty list --]
 ==>[,]
 ```
@@ -57,9 +61,14 @@ mtron> [,]               [-- Empty list --]
 
 ```mtron
 mtron> [name=>'marko', age=>29]
-==>[name=>'marko',age=>29]
+==>[
+    name=>'marko',
+    age=>29]
 mtron> [1=>2, 2=>3, 3=>4]
-==>[1=>2,2=>3,3=>4]
+==>[
+    1=>2,
+    2=>3,
+    3=>4]
 ```
 ### objs (`{ , }` — unordered, streamed and bulked)
 
@@ -101,13 +110,15 @@ mtron> [a=>1]@a                 [-- rec anchored at uri myVid --]
 mtron> [1,2,3,4]@b              [-- lst anchored at *a --]
 ==>[1,2,3,4]@b
 mtron> *a + [b=>2]
-==>[a=>1,b=>2]
+==>[
+    a=>1,
+    b=>2]
 mtron> *a
 ==>[a=>1]
 mtron> @b + [5,6]
-==>[1,2,3,4,5,6,5,6]@b
+==>[1,2,3,4,5,6]@b
 mtron> *b
-==>[1,2,3,4,5,6,5,6]
+==>[1,2,3,4,5,6]
 ```
 ---
 
@@ -275,23 +286,24 @@ mtron> "/a/b/c".as(uri::T)       [-- /a/b/c --]
 mtron> true.as(int::T)           [-- 1 --]
 ==>1
 mtron> [a=>1,b=>2].as(lst::T)    [-- [(0=>(a=>1)),(1=>(b=>2))] --]
-==>[0=>a=>1,1=>b=>2]
+==>[
+    0=>a=>1,
+    1=>b=>2]
 mtron> [a,b].as(rec::T)          [-- [0=>a,1=>b] --]
-==>[0=>a,1=>b]
+==>[
+    0=>a,
+    1=>b]
 ```
 Custom types via `tid::T[predicate][constructor]@vid`:
 
 ```mtron
 mtron> int::T[is(gt(0))]@nat     [-- type nat, only positive ints --]
-==>int::T[is(gt(0))]@nat
 mtron> int::T[?>0]@nat           [-- syntax sugar on is(gt(0)) --]
-==>int::T[is(gt(0))]@nat
 mtron> nat::2                    [-- ok --]
 ==>nat::2
 mtron> nat::-1                   [-- <ERROR> --]
 ==>fail::[-1 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-1
-   	at offset 19]@/sys/fail/394
+   	while parsing: nat::-1]@/sys/fail/428
 ```
 ---
 
@@ -314,7 +326,7 @@ mtron> {1,2,3,4}.map(map(+2))           [-- nested --]
 ==>5
 ==>6
 mtron> {1,2,3}.where(gt(1))             [-- {2,3}  (filter: keep if predicate matches) --]
-==>fail{3}::[lhs range does not match inst domain: int::T => uri::T [where?rng=uri{?}&dom=uri(gt(1)){<j>}@<1>]]@/sys/fail/402
+==>fail{3}::[lhs range does not match inst domain: int::T => uri::T [where?rng=uri{?}&dom=uri(gt(1)){<j>}@<1>]]@/sys/fail/430
 mtron> {1,2,3}.is(gt(1))                [-- {2,3}  (same, filter via is()) --]
 ==>2
 ==>3
@@ -323,9 +335,15 @@ mtron> {1,2,3}.is(gt(1))                [-- {2,3}  (same, filter via is()) --]
 
 ```mtron
 mtron> [a=>1,b=>2,c=>3].select([_=>_])                            [-- [a=>1,b=>2,c=>3] --]
-==>[a=>1,b=>2,c=>3]
+==>[
+    a=>1,
+    b=>2,
+    c=>3]
 mtron> [a=>1,b=>2,c=>3]==[_=>_]                                   [-- syntax sugar for above --]
-==>[a=>1,b=>2,c=>3]
+==>[
+    a=>1,
+    b=>2,
+    c=>3]
 mtron> [a=>1,b=>2,c=>3]==[a=>_]                                   [-- [a=>1] --]
 ==>[a=>1]
 mtron> [a=>1,b=>2,c=>3]==[a=>+10]                                 [-- [a=>11] --]
@@ -340,11 +358,17 @@ mtron> [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3] --
 
 ```mtron
 mtron> {[a=>1],[a=>2],[a=>3]}.where([a=>is(gt(1))])               [-- {[a=>2],[a=>3]} --]
-==>fail{3}::[lhs range does not match inst domain: rec::T => uri::T [where?rng=uri{?}&dom=uri([a=>is(gt(1))]){<j>}@<1>]]@/sys/fail/414
+==>fail{3}::[lhs range does not match inst domain: rec::T => uri::T [where?rng=uri{?}&dom=uri([a=>is(gt(1))]){<j>}@<1>]]@/sys/fail/436
 mtron> {[a=>1],[a=>2],[a=>3]}=?=[a=>is(gt(1))]                    [-- syntax sugar for above --]
-==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at '=?=[a=>is(gt(1))]'
+==>fail::[parse error at line 1, col 23:
+     {[a=>1],[a=>2],[a=>3]}=?=[a=>is(gt(1))]                    
+                           ^
+     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/442
 mtron> [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   [-- [1,7,3] --]
-==>ERROR: infinite recursion detected in parser: parser consumed 0 characters at '=?=[_,is(gt(5)),_]'
+==>fail::[parse error at line 1, col 23:
+     [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   
+                           ^
+     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/444
 ```
 ---
 
@@ -352,9 +376,18 @@ mtron> [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   [-- [1,7,3] --
 
 ```mtron
 mtron> {1,2,3}.group([_=>+10])                [-- [1=>11, 2=>12, 3=>13] --]
-==>[1=>11,2=>12,3=>13]
+==>[
+    1=>11,
+    2=>12,
+    3=>13]
 mtron> [a=>1,b=>2,c=>3].group([_=>_])          [-- [[a=>1,b=>2,c=>3]=>[a=>1,b=>2,c=>3]] --]
-==>[[a=>1,b=>2,c=>3]=>[a=>1,b=>2,c=>3]]
+==>[[
+    a=>1,
+    b=>2,
+    c=>3]=>[
+    a=>1,
+    b=>2,
+    c=>3]]
 ```
 ---
 
@@ -380,7 +413,9 @@ mtron> {1,2,3}>-1                           [-- {1,1,2,3} --]
 ==>2
 ==>3
 mtron> [a=>1,b=>2]>-.>-[b=>2]              [-- [a=>1,b=>2]  (merge into existing rec) --]
-==>[a=>1,b=>{2}2]
+==>[
+    a=>1,
+    b=>{2}2]
 ```
 ### Split (`-<`)
 
@@ -492,9 +527,15 @@ mtron> [1,2]@a >>= [_,+4]                      [-- [1,6]@a  (second element +4) 
 mtron> [a=>1,b=>2] >>= [b=>none]               [-- [a=>1]  (remove field b) --]
 ==>[a=>1]
 mtron> @<people/+>.>>= [name=>"Micky Mouse"]   [-- wildcard update --]
-==>[name=>'Micky Mouse',role=>architect]
-==>[name=>'Micky Mouse',role=>developer]
-==>[name=>'Micky Mouse',role=>oracle]
+==>[
+    name=>'Micky Mouse',
+    role=>developer]
+==>[
+    name=>'Micky Mouse',
+    role=>oracle]
+==>[
+    name=>'Micky Mouse',
+    role=>architect]
 ```
 `@` means "anchor the write-back to the VID" (persist).  `*` means "anonymous copy" (no write-back):
 
@@ -531,11 +572,11 @@ Embedded mathematical expressions:
 
 ```mtron
 mtron> math('1+2')                           [-- 3.0 --]
-==>3.0
+==>3.0000
 mtron> 10.to(a).math('a^2')                  [-- 100.0 --]
-==>100.0
+==>100.0000
 mtron> 10.to(a).plus(10).to(b).math('a+b')   [-- 30.0 --]
-==>30.0
+==>30.0000
 ```
 ---
 
@@ -657,6 +698,8 @@ mtron> ?int::T    [-- check if type is int --]
 ```mtron
 mtron> [-- Chaining example (read test data from test file): --]
 mtron> {1,2,3,4}.sum{2}().sum?int<=int{1,7}().sum()-<[_,_]>-.sum?int<=int{2}()  #
-==>ERROR: monad obj coefficient is greater than inst dom coefficient:
-	40 [{1} X=> {0}] start?rng=A{**}&dom=noobj{0}(<#>){<j>}@<6>
+==>fail::[parse error at line 1, col 74:
+     ...,7}().sum()-<[_,_]>-.sum?int<=int{2}()  #
+                                                ^
+     could not parse at '#' — unclosed '<' — missing '>'?]@/sys/fail/472
 ```
