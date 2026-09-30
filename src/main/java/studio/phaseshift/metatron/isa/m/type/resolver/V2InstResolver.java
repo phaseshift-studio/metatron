@@ -57,9 +57,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
  * {@code print?A<=A(str::T)} binds {@code A→str} from the LHS and propagates
  * to the range, so the next instruction sees {@code str} not {@code #}).
  *
- * @see InstResolver
+ * @see Resolver
  */
-public class V2InstResolver implements InstResolver {
+public class V2InstResolver implements InstSelector {
 
     private static final int SCORE_REFINEMENT_MATCH = 2000;
     private static final int SCORE_TEST_MATCH = 1000;

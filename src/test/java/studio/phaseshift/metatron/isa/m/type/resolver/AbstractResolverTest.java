@@ -41,7 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 /**
- * Abstract test class for InstResolver implementations.
+ * Abstract test class for InstSelector implementations.
  * <p>
  * Subclasses should provide the specific resolver to test via the constructor.
  * All parameterized tests will run against that resolver, making it easy to
@@ -49,32 +49,32 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
  * <p>
  * To add a new resolver test:
  * <ol>
- *   <li>Create a new test class extending AbstractInstResolverTest</li>
+ *   <li>Create a new test class extending AbstractInstSelectorTest</li>
  *   <li>Pass the resolver supplier to the constructor</li>
  *   <li>Optionally override tests or add resolver-specific tests</li>
  * </ol>
  */
-public abstract class AbstractInstResolverTest extends AbstractMetatronTest {
+public abstract class AbstractResolverTest extends AbstractMetatronTest {
 
-    protected final Supplier<InstResolver> resolverSupplier;
-    private InstResolver previousResolver;
+    protected final Supplier<InstSelector> resolverSupplier;
+    private InstSelector previousResolver;
 
-    protected AbstractInstResolverTest(final Supplier<InstResolver> resolverSupplier) {
+    protected AbstractResolverTest(final Supplier<InstSelector> resolverSupplier) {
         this.resolverSupplier = resolverSupplier;
     }
 
     @BeforeEach
     protected void setupResolver() {
         // Save current resolver and install test resolver
-        this.previousResolver = InstResolver.get();
-        InstResolver.set(this.resolverSupplier.get());
+        this.previousResolver = InstSelector.get();
+        InstSelector.set(this.resolverSupplier.get());
     }
 
     @AfterEach
     protected void restoreResolver() {
         // Restore previous resolver
         if (this.previousResolver != null) {
-            InstResolver.set(this.previousResolver);
+            InstSelector.set(this.previousResolver);
         }
     }
 
@@ -209,7 +209,7 @@ public abstract class AbstractInstResolverTest extends AbstractMetatronTest {
     @Test
     public void testResolverIsInstalled() {
         // Verify the correct resolver is active
-        InstResolver current = InstResolver.get();
+        InstSelector current = InstSelector.get();
         assertNotNull(current);
         assertEquals(resolverSupplier.get().getClass(), current.getClass());
     }

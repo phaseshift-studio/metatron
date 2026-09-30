@@ -347,24 +347,21 @@ public class MarkdownRunner {
     // ═══════════════════════════════════════════════════════════════════
 
     /**
-     * KaTeX plus the theory-article stylesheet, injected through the shared
-     * header's {@code {{EXTRA_HEAD}}} token. KaTeX auto-render is scoped to
-     * {@code $…$} (inline only) so it never fights the site's global MathJax,
-     * which owns {@code \(…\)} and {@code $$…$$}. The article stylesheet href is
+     * The theory-article stylesheet, injected through the shared header's
+     * {@code {{EXTRA_HEAD}}} token. Its href is
      * depth-rewritten by hand because {@code {{EXTRA_HEAD}}} is substituted after
      * {@link SiteChrome} has already depth-rewritten the header template.
+     *
+     * <p>Math needs no injection here: authored {@code $…$} is converted by
+     * {@link HTMLMarkdownSerializer} into {@code \(…\)} / {@code \[…\]}, the
+     * delimiters the site's global MathJax owns, so one engine renders math on
+     * every page. The KaTeX auto-render that used to be injected here scoped
+     * itself to {@code $…$} precisely to avoid fighting that MathJax; with the
+     * conversion in the serializer there is nothing left for it to find.
      */
     private static String articleExtraHead(final String depth) {
         final String pre = depth == null || depth.isEmpty() ? "" : depth + "/";
-        return "    <link href=\"" + pre + "css/theory-article.css\" rel=\"stylesheet\">\n"
-                + "    <link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css\">\n"
-                + "    <script defer src=\"https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js\"></script>\n"
-                + "    <script defer src=\"https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js\"></script>\n"
-                + "    <script>\n"
-                + "        document.addEventListener(\"DOMContentLoaded\", function () {\n"
-                + "            renderMathInElement(document.body, { delimiters: [{ left: \"$\", right: \"$\", display: false }] });\n"
-                + "        });\n"
-                + "    </script>";
+        return "    <link href=\"" + pre + "css/theory-article.css\" rel=\"stylesheet\">";
     }
 
     /**

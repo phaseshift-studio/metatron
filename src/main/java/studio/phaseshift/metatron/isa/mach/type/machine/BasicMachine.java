@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Processor;
-import studio.phaseshift.metatron.isa.mach.type.compiler.FixPointCompiler;
+import studio.phaseshift.metatron.isa.mach.type.compiler.DefaultCompiler;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -57,7 +57,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class BasicMachine extends AbstractMachine {
 
     private Processor cachedProcessor = null;// SwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null);
-    private Compiler cachedCompiler = null;//new FixPointCompiler();
+    private Compiler cachedCompiler = null;//new FixPointRewriter();
 
     public BasicMachine(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -66,7 +66,7 @@ public class BasicMachine extends AbstractMachine {
     public static BasicMachine of(final fURI tid, final fURI vid) {
         return new BasicMachine(mutableMap(
                 uri(INSTSET), instLambda(ignore -> null),
-                uri(COMPILER), instLambda(ignore -> new FixPointCompiler()),
+                uri(COMPILER), instLambda(ignore -> DefaultCompiler.fixpointScoringCompiler()),
                 uri(PROCESSOR), instLambda(ignore -> SwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null))), tid, vid);
     }
 
@@ -88,7 +88,7 @@ public class BasicMachine extends AbstractMachine {
         if (null != this.cachedProcessor)
             return this.cachedProcessor.clone().as();
         final Obj proto = this.at(PROCESSOR).orThrow(MTronException.of("machine has no processor: %s", this.type().vid()));
-        return (this.cachedProcessor = proto.isCode() ? proto.apply().as() : proto.as()).clone().as();
+        return (this.cachedProcessor = proto.isCall() ? proto.apply().as() : proto.as()).clone().as();
     }
 
     @Override
@@ -96,7 +96,7 @@ public class BasicMachine extends AbstractMachine {
         if (null != this.cachedCompiler)
             return this.cachedCompiler.clone().as();
         final Obj proto = this.at(COMPILER).orThrow(MTronException.of("machine has no processor: %s", this.type().vid()));
-        return (this.cachedCompiler = proto.isCode() ? proto.apply().as() : proto.as()).clone().as();
+        return (this.cachedCompiler = proto.isCall() ? proto.apply().as() : proto.as()).clone().as();
     }
 
     // ======================== setters invalidate the cache ========================

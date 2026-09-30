@@ -18,44 +18,35 @@
 
 package studio.phaseshift.metatron.isa.mach.type;
 
-import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.m.type.resolver.ScoringInstResolver;
-import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.resolver.Resolver;
+import studio.phaseshift.metatron.isa.mach.type.compiler.*;
+
+import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /**
- * Compiler — lowers {@code code::T} to {@code code::T} by composing a schedule of named, overridable
- * stages. This is the strategic contract, not a black box: the members are the discrete steps every
- * compiler author will reach for, each with a rock-solid default, so writing a compiler is "override
- * the one stage you disagree with" rather than "implement {@code apply} from scratch."
- * <p>
- * The vocabulary:
+ * Compiler — lowers {@code code::T} to {@code code::T} by composing three atomic, overridable
+ * stages, each a machine component ({@code rewriter::T}, {@code resolver::T}, {@code typer::T}):
  * <ul>
- *   <li>{@link #rewrite} / {@link #applyRewrite} — fixpoint over the machine's rewrite rules;</li>
- *   <li>{@link #resolve} / {@link #resolveInst} — thread the type through, resolving one inst at a
- *       time (the resolved inst's {@code rng()} is the "rhs" threaded to the next);</li>
- *   <li>{@link #bind} — the generic-binding stage (currently folded into {@code resolveInst} via
- *       {@code Inst.Helper.bindGenerics}; identity until separated);</li>
- *   <li>{@link #type} — compile-time type resolution, the Typer (currently the global
- *       {@code TypeGraph}; identity until separated).</li>
+ *   <li>{@link #rewrite()} — the {@link Rewriter} (fixpoint over the rewrite rules);</li>
+ *   <li>{@link #resolver()} — the {@link Resolver} (threads the type, resolves one inst at a
+ *       time; generic binding runs inside per-candidate selection, so there is no separate
+ *       binder);</li>
+ *   <li>{@link #typer()} — the {@link Typer} (runtime type assertions).</li>
  * </ul>
- * {@link #apply} is only the default schedule over that vocabulary — {@code rewrite → resolve →
- * bind → type}. A different schedule (e.g. a fixpoint of {@code rewrite → resolve}) is a different
- * {@code apply}, or a different mtron expression composed from the same stage insts.
+ * {@link #apply} is the default schedule over that vocabulary — {@code rewrite → resolve → type}.
+ * The stage methods ({@link #rewrite(Code)}, {@link #resolve(Code)}, {@link #type(Code)}) remain as
+ * the overridable seams a compiler author reaches for, each defaulting to its component accessor.
  * <p>
- * <b>Java first, inst-ify later.</b> These stages stay Java methods while we perfect them — the
- * {@code TID}/{@code TYPE}/{(lhs, inst) -> …} wrapping is fixed noise until the algorithm under it
- * is settled. Once happy, each method becomes a native inst with the same name, a one-line body:
- * <pre>
- *   rewrite  →  instC(REWRITE_INST_TID, lst(), (lhs, inst) -> this.rewrite(lhs.asCode()))
- *   resolve  →  instC(RESOLVE_INST_TID, lst(), (lhs, inst) -> this.resolve(lhs.asCode()))
- *   bind     →  instC(BIND_INST_TID,    lst(), (lhs, inst) -> this.bind(lhs.asCode()))
- *   type     →  instC(TYPE_INST_TID,    lst(), (lhs, inst) -> this.type(lhs.asCode()))
- * </pre>
- * so {@code rewrite => resolve => bind => type} becomes a compiler in mtron.
+ * <b>Java first, inst-ify later.</b> The stage components are mtron recs now; the composition
+ * {@code typer(resolver(rewriter(code)))} is expressible in mtron once the stage insts exist.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -64,54 +55,65 @@ public interface Compiler extends Machine.Component, Rec {
     // ======================== schedule ========================
 
     /**
-     * The default schedule — {@code rewrite → resolve → bind → type}. Override to re-order, repeat,
-     * or interleave the stages; a compiler is the composition, the stages are the vocabulary.
+     * The default schedule — {@code rewrite → resolve → type}. Override to re-order, repeat, or
+     * interleave the stages; a compiler is the composition, the stages are the vocabulary.
      */
     @Override
     default Code apply(final Obj code) {
         Type.Helper.typeCheck(code, CODE_TYPE);
         Code c = code.asCode();
-        c = this.rewrite(c);
-        c = this.resolve(c);
-        c = this.bind(c);
-        c = this.type(c);
+        c = this.rewrite().apply(c);
+        c = this.resolver().apply(c);
+        c = this.typer().apply(c);
         return c;
+    }
+
+    // ======================== stage components ========================
+
+    /**
+     * @return the rewriter stage component ({@code rewriter::T}) — identity by default
+     */
+    default Rewriter rewrite() {
+        return IdentityRewriter.single();
+    }
+
+    /**
+     * @return the resolver stage component ({@code resolver::T}) — identity by default
+     */
+    default Resolver resolver() {
+        return IdentityResolver.single();
+    }
+
+    /**
+     * @return the typer stage component ({@code typer::T})
+     */
+    default Typer typer() {
+        return TypeTyper.single();
     }
 
     // ======================== stage · rewrite ========================
 
     /**
-     * Apply the machine's rewrite rules until the code stabilizes (fixpoint). The convergence
-     * window is the {@code loop} rec entry (default one stable pass); each pass applies every rule
-     * via {@link #applyRewrite}.
-     * <p>
-     * default is identity (no rewrite).
+     * Identity — the rewrite algorithm lives in the {@link #rewrite()} component
+     * ({@code fixpoint_rewriter::T}), not on the compiler. Override to re-order or interleave the
+     * stage, but the default carries no algorithm.
      */
     default Code rewrite(final Code code) {
         return code;
     }
 
-    /**
-     * Apply one rewrite rule to the code. A rule may yield new code, {@code noobj} (empty), or
-     * fail — anything else is a malformed rewrite.
-     */
-    default Code applyRewrite(final Obj rewrite, final Code code) {
-        final Obj rewritten = rewrite.apply(code);
-        if (rewritten.isCode())
-            return rewritten.asCode();
-        if (rewritten.isNoObj())
-            return MCode.code0();
-        throw MTronException.of("rewrite %s rewrote to non-code %s", rewrite, rewritten);
-    }
-
     // ======================== stage · resolve ========================
 
     /**
-     * Resolve the whole code against its start obj — threads the type, one inst at a time.
+     * Resolve the whole code — threads the type, one inst at a time. The compile-time lhs is
+     * {@code noobj}: the element type is threaded through the initial inst's own argument
+     * ({@code start(1)} seeds {@code int}), and resolving against the start <em>value</em> would
+     * bind {@code start}'s domain to a non-zeroable type, short-circuiting {@code start.apply(noobj)}
+     * to {@code noobj} at runtime.
      */
     default Code resolve(final Code code) {
         Type.Helper.typeCheck(code, CODE_TYPE);
-        return this.resolve(Helper.getStartObj(code), code);
+        return this.resolve(noobj(), code);
     }
 
     /**
@@ -119,34 +121,14 @@ public interface Compiler extends Machine.Component, Rec {
      */
     default Code resolve(final Obj lhs, final Obj code) {
         Type.Helper.typeCheck(code, CODE_TYPE);
-        return ScoringInstResolver.INSTANCE.get().resolveCode(lhs, code.asCode());
-    }
-
-    /**
-     * Resolve a single instruction against its lhs. The resolved inst's {@code rng()} is the "rhs"
-     * threaded into the next instruction — that coefficient is the boundary where a gather
-     * ({@code dom_c = *}) must survive, not be flattened to a mapper.
-     */
-    default Inst resolveInst(final Obj lhs, final Inst inst) {
-        return ScoringInstResolver.INSTANCE.get().resolveInst(lhs, inst);
-    }
-
-    // ======================== stage · bind ========================
-
-    /**
-     * Bind generic variables. Identity for now — the binding runs inside {@link #resolveInst}
-     * ({@code Inst.Helper.bindGenerics}); this is the seam a compiler overrides once binding is
-     * split out as its own pass.
-     */
-    default Code bind(final Code code) {
-        return code;
+        return Helper.resolve(lhs, code.asCode());
     }
 
     // ======================== stage · type ========================
 
     /**
-     * Compile-time type resolution (the Typer). Identity for now — this is the global
-     * {@code TypeGraph}; this is the seam a machine overrides to carry its own resolver.
+     * Identity — the type-assertion algorithm lives in the {@link #typer()} component
+     * ({@code typer::T}), not on the compiler.
      */
     default Code type(final Code code) {
         return code;
@@ -160,12 +142,58 @@ public interface Compiler extends Machine.Component, Rec {
             // do nothing
         }
 
+        // compile-once memo of nested-code resolution, keyed by (code identity, runtime lhs type id).
+        public static final ConcurrentHashMap<ResolveKey, Code> RESOLVE_CACHE = new ConcurrentHashMap<>();
+        public static final int RESOLVE_CACHE_MAX = 4096;
+
+        public static final class ResolveKey {
+            final Code code;
+            final fURI typeId;
+            final int identity;
+
+            ResolveKey(final Code code, final fURI typeId) {
+                this.code = code;
+                this.typeId = typeId;
+                this.identity = System.identityHashCode(code);
+            }
+
+            @Override
+            public int hashCode() {
+                return 31 * this.identity + this.typeId.hashCode();
+            }
+
+            @Override
+            public boolean equals(final Object other) {
+                return other instanceof ResolveKey k && k.code == this.code && k.typeId.equals(this.typeId);
+            }
+        }
+
         /**
-         * The obj a code starts from — the initial instruction's argument, or {@code noobj()}.
+         * Resolve {@code code} against {@code lhs}. Compile-once: already fully-resolved code skips
+         * the resolve walk; nested-code resolution is memoized by (code identity, runtime lhs type).
+         * The type matters — overload selection (e.g. pointwise vs gather sum) depends on the lhs
+         * type, so generic types are not cached and only fully-resolved results are cached. The
+         * rewrite is delegated to the rewriter component.
          */
-        public static Obj getStartObj(final Code code) {
-            final Inst startInst = code.insts().getFirst();
-            return startInst.isInitial() ? startInst.arg(0) : noobj();
+        public static Code resolve(final Obj lhs, final Code code) {
+            // compile-once: already fully-resolved code skips the resolve walk.
+            if (code.isResolved(true))
+                return code;
+            final fURI typeId = Obj.Helper.specificTypeId(lhs);
+            if (!typeId.isGeneric()) {
+                final ResolveKey key = new ResolveKey(code, typeId);
+                final Code cached = RESOLVE_CACHE.get(key);
+                if (cached != null)
+                    return cached;
+                final Code resolved = ScoringResolver.resolveCode(lhs, FixPointRewriter.single().apply(code));
+                if (resolved.isResolved(true)) {
+                    if (RESOLVE_CACHE.size() >= RESOLVE_CACHE_MAX)
+                        RESOLVE_CACHE.clear();
+                    RESOLVE_CACHE.putIfAbsent(key, resolved);
+                }
+                return resolved;
+            }
+            return ScoringResolver.resolveCode(lhs, FixPointRewriter.single().apply(code));
         }
     }
 }

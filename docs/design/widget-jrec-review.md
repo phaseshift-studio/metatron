@@ -20,14 +20,14 @@ marked *code* are quoted from the tree with `file:line`.
   `flush`, `BUFFER_FLUSH_THRESHOLD`, the `field(jvmRead(), key)` name-fallback reader,
   `jvmRead`/`jvmWrite`). One read path (`read()`), one write path (`put()`), state in the rec only;
   what remains in Java is render scratch (`lastRenderHeight`, `cursor`).
-* **Append trade (deliberate).** A rec-held *list* body with `add(line, MUTABLE)` gives O(1) appends
+* **Append trade (deliberate).** A rec-held *list* body with `add(line, MUTABLE)` gives O (1) appends
   with no buffer, but the widget type declares `body => str{?}` and the typer's `obj_write` check
   rejects a list body — so the body stays a `str` and each append is one read-merge-write. Cost: the
-  join is O(body) per append (≈0.5 GB of memcpy across a 3,200-line session) and the rec-map copy is
+  join is O (body) per append (≈0.5 GB of memcpy across a 3,200-line session) and the rec-map copy is
   shallow. If that ever matters the fix is a rec-native list **type**, never a Java buffer.
 * **Field rule in force.** A widget field whose name matches a key the widget `Type` declares is a
-  bug — the map is that field's home. `AccordionWidget` now has *no* state fields at all
-  (`style` is declared by the widget base type; `cursor` was write-only; `lastRenderHeight` only
+  bug — the map is that field's home. `AccordionWidget` now has *no* state fields at all (`style` is declared by the
+  widget base type; `cursor` was write-only; `lastRenderHeight` only
   served `renderInPlace()`/`renderFresh()`, which nothing calls). `PanelWidget` lost its dead
   `cursor` and its `maxWidth` field — the wrap width is the style's `width`, a declared key.
 * **State slice two — `PanelWidget` and `TreeWidget` are done.** Neither has a state field left:
@@ -68,13 +68,13 @@ marked *code* are quoted from the tree with `file:line`.
   members, so the first table read saw one row where there were two and one cell where there were
   four. `getLines` had already worked around this privately; it now shares the rule.
 * **State slice four — `AbstractWidget` is done, and the widget tree is off `JRec`.** The base of the
-  interactive widgets and every tool moved to `SpaceRec` in one change, so 17 classes
-  (`GridWidget`, `CardWidget`, `Selector`, `SubsWidget`, `SelectorWidget`, `AbstractLineWidget`,
+  interactive widgets and every tool moved to `SpaceRec` in one change, so 17 classes (`GridWidget`, `CardWidget`,
+  `Selector`, `SubsWidget`, `SelectorWidget`, `AbstractLineWidget`,
   `Separator`, `MenuBarWidget`, `ProfileTool`, `TreeSelectTool`, `ExplainTool`, `TypeDiffTool`,
   `ModalTool`, `SwipePanelWidgetTool`, `TraceTool`, …) left the reflection bridge at once. There were
   no `@JRecElement` fields left in that tree, so the only porting was the JRec *API*: six
   `jvmWrite(key, value)` sites became `put(key, value)`, and two style reads went through `read()`.
-  `JRec`'s remaining clients are exactly the frozen ones — `Console`, `Pane`, and `Rewriter`.
+  `JRec`'s remaining clients are exactly the frozen ones — `Console`, `Pane`, and `RewriterBuilder`.
 * **What the base swap changed underneath, for the better.** `jvmWrite` wrote straight into the map:
   no type check, and on a vid-less widget no space write either. `put` is `at(k, v, MUTABLE)`, which
   type-checks and saves — so the shapes those six sites write are now covered by
@@ -103,7 +103,7 @@ marked *code* are quoted from the tree with `file:line`.
   widgets do not, they are drawn by the bar that holds them). That is not new with the migration, but
   it is why "display a line widget and look for its text" asserts nothing.
 * **Where things stand:** every widget and every tool is on `SpaceRec`; `Console`, `Pane` and
-  `Rewriter` are `JRec`'s only clients, and `JRec` is frozen.
+  `RewriterBuilder` are `JRec`'s only clients, and `JRec` is frozen.
 * **`SpaceRec` is deliberately a shim, and it should dissolve.** Its two rules belong to recs in
   general, not to widgets: `put(k,v)` is already `at(k,v,MUTABLE)`, and `read()` is what `jvmRead()`
   did badly. Two ways it can end: (a) fold `read()`/`put()` into `Rec` as defaults (a platform change
@@ -111,8 +111,8 @@ marked *code* are quoted from the tree with `file:line`.
   widget-facing base permanently. Until then it is the thing that lets each widget move over one at
   a time instead of as a big-bang rewrite.
 * What `SpaceRec` does **not** solve: it cannot stop a widget from declaring a state field (that is
-  the guard test / the type-key rule), it does not fix `Obj.hashCode`/`equals` being content-derived
-  (any Java map keyed by a mutable rec is still unsafe), and it does not touch `Console`/`Pane`.
+  the guard test / the type-key rule), it does not fix `Obj.hashCode`/`equals` being content-derived (any Java map keyed
+  by a mutable rec is still unsafe), and it does not touch `Console`/`Pane`.
 * **Open, and outside the widget layer:** a widget that is *anchored* (has a `vid`) does not see its
   own post-construction writes through `read()`. Measured: with a widget built at `local:x` and then
   `at(max, 3, MUTABLE)`, the instance's own map holds `max=3` and renders 10 rows, while
@@ -123,18 +123,18 @@ marked *code* are quoted from the tree with `file:line`.
   later write replaces it — needs its own investigation. It does not affect rendering today (a widget
   renders from its own rec) and it is not caused by `SpaceRec`, but any "write the rec from outside
   and watch the widget follow" pattern depends on the answer.
-* **A state-durability footgun, measured while building the drag.** An anchored widget's style write
-  *does* reach the store, and a re-hydrated instance (constructed from the stored rec, as mtron and the
+* **A state-durability footgun, measured while building the drag.** An anchored widget's style write *does* reach the
+  store, and a re-hydrated instance (constructed from the stored rec, as mtron and the
   console do) reads it back — the drag's `top`/`left` survive `.display()` (verified: `top=5 left=3`
-  written, 5/3 read back by a fresh instance).  But a widget constructed in Java from a **partial map**
+  written, 5/3 read back by a fresh instance). But a widget constructed in Java from a **partial map**
   with a vid **clobbers** what the store held: the constructor writes the instance to the store before
   any read (`objCheckAndSave`), so `read()` then answers *the instance being constructed*, `readStyle()`
-  finds no style, materializes a default and persists that — wiping the stored style.  Anything that
+  finds no style, materializes a default and persists that — wiping the stored style. Anything that
   constructs a widget with a vid must hand it the rec the store already holds; that is what the type
   constructor does, and what a hand-made map must not fail to do.
 * Remaining: the guard test (now mechanical: parse the widget `Type` keys, fail on a matching field);
-  `Console`/`Pane` stay on frozen `JRec`. The tools still hold per-session Java state
-  (`TreeSelectTool.expandedNodes`, `SwipePanelWidgetTool.selectorTable`, …) — that is *interaction*
+  `Console`/`Pane` stay on frozen `JRec`. The tools still hold per-session Java state (`TreeSelectTool.expandedNodes`,
+  `SwipePanelWidgetTool.selectorTable`, …) — that is *interaction*
   state belonging to a live session, not widget data, but it is the next place the same question will
   be asked.
 * **Tests as the guard, since the widgets had none.** `TableWidgetTest` is new (10 cases: the
@@ -155,14 +155,13 @@ the space leave different leftovers.
 Recommendation, in one line: **keep Rec-ness, drop JRec-ness.**
 
 * Phase 0 — make the widget layer obey the rule the code already states ("the rec map is the single
-  source of truth for widget data" — `AbstractWidget.java:41-43`), killing the two live dualities
-  (a `Style` copy in a Java field, and TableWidget's `@JRecElement` fields).
+  source of truth for widget data" — `AbstractWidget.java:41-43`), killing the two live dualities (a `Style` copy in a
+  Java field, and TableWidget's `@JRecElement` fields).
 * Phase 1 — change the widget base class from `JRec<W>` to a plain rec (`MRec` + a ~100-line
   `WidgetRec`/`RecState` helper for space-aware reads/writes). This is mechanical because the
-  library barely uses JRec (numbers in §2) and `MRec` already provides everything a widget needs
-  (§5, Option B).
-* Phase 2 (separate initiative, not part of this) — fix JRec itself for its *other* clients
-  (`BasicRouter`, `Rewriter`) or freeze it; the defects are listed in §10.
+  library barely uses JRec (numbers in §2) and `MRec` already provides everything a widget needs (§5, Option B).
+* Phase 2 (separate initiative, not part of this) — fix JRec itself for its *other* clients (`BasicRouter`,
+  `RewriterBuilder`) or freeze it; the defects are listed in §10.
 
 Doing nothing is not the cheap option: this class of bug has produced at least eight distinct
 workarounds in the tree (§3).
@@ -172,11 +171,11 @@ workarounds in the tree (§3).
 `JRec` presents a Java object as a metatron `Rec` by bridging fields/methods with a
 `Map<Obj,Obj>`. That gives state **three** possible homes:
 
-| Home | Written by | Read by |
-|---|---|---|
-| Java field (`sjvm`), opt-in via `@JRecElement` | `at(k,v)` — `JRec.java:80-91` | `at(k)` — `JRec.java:93-118`; `jvm()` — `JRec.java:126-151` |
-| the rec's own map (`this.jvm`) | `at(k,v)` (same call); ephemeral `jvmWrite` — `JRec.java:182-190` | `at(k)`, `jvm()` |
-| the space (vid-backed objects only) | `jvmWrite` — `JRec.java:192-200` | `jvmRead()` — `JRec.java:162-170` |
+| Home                                           | Written by                                                        | Read by                                                     |
+|------------------------------------------------|-------------------------------------------------------------------|-------------------------------------------------------------|
+| Java field (`sjvm`), opt-in via `@JRecElement` | `at(k,v)` — `JRec.java:80-91`                                     | `at(k)` — `JRec.java:93-118`; `jvm()` — `JRec.java:126-151` |
+| the rec's own map (`this.jvm`)                 | `at(k,v)` (same call); ephemeral `jvmWrite` — `JRec.java:182-190` | `at(k)`, `jvm()`                                            |
+| the space (vid-backed objects only)            | `jvmWrite` — `JRec.java:192-200`                                  | `jvmRead()` — `JRec.java:162-170`                           |
 
 Nothing reconciles the three. In particular:
 
@@ -192,11 +191,10 @@ Nothing reconciles the three. In particular:
   surprise reads as "expanded", a wrong answer with no error. Note this hazard is **Rec-level too**,
   so Option B does not remove it — it argues for a single normalising read helper in either option.
 * **A write is not a write.** For a vid-backed widget `jvmWrite` updates **only the space**; the
-  local map and the annotated field keep the old value.
-  *measured* on `AccordionWidget` with vid `/sys/jrec_probe`:
+  local map and the annotated field keep the old value. *measured* on `AccordionWidget` with vid `/sys/jrec_probe`:
 
   | read | value |
-  |---|---|
+    |---|---|
   | `bodyLines()` (goes through `jvmRead()` → space) | `[written-through-jvmWrite]` ✅ |
   | `at(uri("body"))` | `'initial'` ❌ stale |
   | `jvm().get(uri("body"))` | `'initial'` ❌ stale |
@@ -218,12 +216,12 @@ Nothing reconciles the three. In particular:
 
 *What it uses* (grep census over `isa/mach/type/ui/**`):
 
-| JRec-specific surface | sites | where |
-|---|---|---|
-| `@JRecElement` (the reflective field bridge) | **17** | `TableWidget` 3, `Console` 11, `Pane` 3 — nothing else |
-| `jvmRead()` / `jvmWrite()` | 9 / 18 | `AccordionWidget` 15, `PanelWidget` 3, `MenuBarWidget` 2, `CardWidget` 2, `LabelLineWidget` 1, `AbstractWidget` 1, `TreeSelectTool` 1 |
-| `this.at(...)` **data reads** (1-arg) in widget classes | ≈34 | `TreeWidget` 6, `TreeSelectTool` 5, `SwipePanelWidgetTool` 5, `MenuBarWidget` 4, `TableWidget` 3, `AbstractLineWidget` 3, `PanelWidget` 3, `CardWidget` 2, others 1 each |
-| `this.at(key, value, MUTABLE)` inst latching | 45 | almost all `CommandPalette` (39) — that is config-as-rec, appropriate; `AccordionWidget` 4 |
+| JRec-specific surface                                   | sites  | where                                                                                                                                                                    |
+|---------------------------------------------------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `@JRecElement` (the reflective field bridge)            | **17** | `TableWidget` 3, `Console` 11, `Pane` 3 — nothing else                                                                                                                   |
+| `jvmRead()` / `jvmWrite()`                              | 9 / 18 | `AccordionWidget` 15, `PanelWidget` 3, `MenuBarWidget` 2, `CardWidget` 2, `LabelLineWidget` 1, `AbstractWidget` 1, `TreeSelectTool` 1                                    |
+| `this.at(...)` **data reads** (1-arg) in widget classes | ≈34    | `TreeWidget` 6, `TreeSelectTool` 5, `SwipePanelWidgetTool` 5, `MenuBarWidget` 4, `TableWidget` 3, `AbstractLineWidget` 3, `PanelWidget` 3, `CardWidget` 2, others 1 each |
+| `this.at(key, value, MUTABLE)` inst latching            | 45     | almost all `CommandPalette` (39) — that is config-as-rec, appropriate; `AccordionWidget` 4                                                                               |
 
 The reflective bridge — the thing that makes fields *be* rec state — is used by **three classes**.
 Everything else in the library works against the rec map or against plain Java fields.
@@ -232,16 +230,16 @@ Everything else in the library works against the rec map or against plain Java f
 
 All eight of these exist in the tree today; each is a symptom of the missing single source of truth.
 
-| # | Symptom | Site |
-|---|---|---|
+| # | Symptom                                                                                                                                                                                                                        | Site                                                   |
+|---|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|
 | 1 | A widget cannot be a `HashMap` key: `Obj.hashCode() = Objects.hash(jvm())` and a widget mutates its jvm as it renders, so the slot registry silently lost widgets mid-session. Fixed this session by making it identity-keyed. | `FloatingSurface.java` (slot registry), `Obj.java:999` |
-| 2 | `JRec.jvm()` synthesises new inst objects per call, so `Map.equals` on derived state is unreliable → panes had to be compared by `id()`. | `Console.java:704`, `Console.java:735-737` |
-| 3 | JRec's map round-trip destroyed Java-constructed tables → a `javaPopulated` flag now arbitrates who wins. | `TableWidget.java:64-68`, `TableWidget.sync()` |
-| 4 | Store-backed reads missed mtron's writes → an ad-hoc `field(jvmRead(), key)` reader with a uri-name fallback was added. | `AccordionWidget.java:173-203` |
-| 5 | JRec rehydration bypasses the constructor, so transient fields are null → `ensureRehydrated()` (7 sites). | `AccordionWidget.java:82-90` |
-| 6 | Appends are staged in a Java buffer so the rec lags the object, needing an explicit `flush()` discipline. | `AccordionWidget.java:64`, `flush()` |
-| 7 | The widget's style is a **detached copy** of the rec's `style` key, so a Java-side style write never reaches the rec (and a re-hydration loses it). | `Stylable.java:236-251`, `readStyle()` in 5 widgets |
-| 8 | `jvmWrite` + store-backed widgets: rec/field reads go stale (measured, §1). | `JRec.java:192-200` |
+| 2 | `JRec.jvm()` synthesises new inst objects per call, so `Map.equals` on derived state is unreliable → panes had to be compared by `id()`.                                                                                       | `Console.java:704`, `Console.java:735-737`             |
+| 3 | JRec's map round-trip destroyed Java-constructed tables → a `javaPopulated` flag now arbitrates who wins.                                                                                                                      | `TableWidget.java:64-68`, `TableWidget.sync()`         |
+| 4 | Store-backed reads missed mtron's writes → an ad-hoc `field(jvmRead(), key)` reader with a uri-name fallback was added.                                                                                                        | `AccordionWidget.java:173-203`                         |
+| 5 | JRec rehydration bypasses the constructor, so transient fields are null → `ensureRehydrated()` (7 sites).                                                                                                                      | `AccordionWidget.java:82-90`                           |
+| 6 | Appends are staged in a Java buffer so the rec lags the object, needing an explicit `flush()` discipline.                                                                                                                      | `AccordionWidget.java:64`, `flush()`                   |
+| 7 | The widget's style is a **detached copy** of the rec's `style` key, so a Java-side style write never reaches the rec (and a re-hydration loses it).                                                                            | `Stylable.java:236-251`, `readStyle()` in 5 widgets    |
+| 8 | `jvmWrite` + store-backed widgets: rec/field reads go stale (measured, §1).                                                                                                                                                    | `JRec.java:192-200`                                    |
 
 Counter-example worth copying: the parts of the library that are *reliable* — keyboard focus,
 resize, scrolling — are reliable because their state was moved **out of the widget** into the
@@ -251,8 +249,8 @@ not an accident.
 
 ## 4. What any solution must preserve
 
-1. **A widget is a Rec.** mtron holds widgets in the graph (`ui_widget::T`), merges into them
-   (`@<w>>>=[body=>...]`), and renders them (`ui.display`). "Remove JRec" must not mean "stop being
+1. **A widget is a Rec.** mtron holds widgets in the graph (`ui_widget::T`), merges into them (`@<w>>>=[body=>...]`),
+   and renders them (`ui.display`). "Remove JRec" must not mean "stop being
    a rec".
 2. **The Type-constructor wiring** in `uiInstSet` (`Type.Builder...constructor(arg -> new
    XWidget(arg.asRec().jvm(), TID, arg.vid()))`) — widgets are constructed from a rec, with a vid
@@ -268,6 +266,7 @@ not an accident.
 ## 5. Options
 
 ### Option A — keep JRec, enforce state-in-map discipline
+
 Rule set: rec map (and, for vid-backed, the space) is the only home for data; Java fields may hold
 only injected collaborators, per-render scratch, and caches with explicit invalidation; no
 annotated fields in widgets; reads go through one helper (space-aware, shape-normalised); writes go
@@ -280,6 +279,7 @@ keys.
   `AbstractWidget extends JRec` keeps exposing all of it.
 
 ### Option B — widgets stop being JRecs (recommended)
+
 Widgets keep being **recs**, but not *JRecs*: `extends MRec` (or a small `WidgetRec extends MRec`)
 instead of `extends JRec<X>`.
 
@@ -301,6 +301,7 @@ instead of `extends JRec<X>`.
   `Console`/`Pane` (11 + 3 annotated fields, 42 + 9 fields) which can be migrated last or left.
 
 ### Option C — fix JRec's semantics instead
+
 Make `at()` non-mutating and single-valued, make `jvmWrite` refresh the local map, fix `clone`,
 and give mutable recs stable `equals/hashCode`. Right long-term, but: `Obj.equals/hashCode` is used
 across the whole VM (not just widgets), so this is a platform change with a much larger blast
@@ -308,39 +309,40 @@ radius, and it still does not fix "a Java field cannot hold state that must surv
 Worth doing *for JRec's remaining clients*, separately.
 
 ### Option D — split data from view inside the rec (a modifier, not a rival)
-Give widgets a rec shape of `[data=>[...], style=>...]` and keep view state out of the rec entirely
-(it lives in the slot). This is what the surface already does for geometry/scroll; adopting it
+
+Give widgets a rec shape of `[data=>[...], style=>...]` and keep view state out of the rec entirely (it lives in the
+slot). This is what the surface already does for geometry/scroll; adopting it
 explicitly prevents future "which layer owns this?" confusion. It composes with A or B.
 
-| | A | B | C |
-|---|---|---|---|
-| fixes stale reads/writes | mostly (by discipline) | **yes** (one read, one write path) | yes |
-| re-hydration-safe state | yes, if discipline held | **yes, structurally** | no |
-| blast radius | widget layer | widget layer | whole VM |
-| removes the reflective bridge | no | **yes** | no |
-| effort | 300-500 LOC | 600-900 LOC + tests | large, uncapped |
-| can be staged | yes | yes (after A) | no |
+|                               | A                       | B                                  | C               |
+|-------------------------------|-------------------------|------------------------------------|-----------------|
+| fixes stale reads/writes      | mostly (by discipline)  | **yes** (one read, one write path) | yes             |
+| re-hydration-safe state       | yes, if discipline held | **yes, structurally**              | no              |
+| blast radius                  | widget layer            | widget layer                       | whole VM        |
+| removes the reflective bridge | no                      | **yes**                            | no              |
+| effort                        | 300-500 LOC             | 600-900 LOC + tests                | large, uncapped |
+| can be staged                 | yes                     | yes (after A)                      | no              |
 
 ## 6. Recommendation
 
 **B, prepared by A.** Concretely, four steps that each ship on their own:
 
 1. **Phase 0 (do now, ~300-500 LOC, low risk).**
-   * Style leaves the field: the widget reads/writes the rec's `style` key (a `Style` instance may
-     remain as a *view* over that key, but it must not be a detached copy — `Style.from()` currently
-     copies, `Stylable.java:236-251`).
-   * `TableWidget`'s three `@JRecElement` fields become rec keys read through the state helper;
-     delete `javaPopulated`/`sync` once round-tripping is one-directional.
-   * Add `RecState` (one place to read/write; space-aware; normalises `Objs`; never mutates on read)
-     and use it for every widget data access.
-   * Convert the eight workarounds in §3 into either "deleted" or "explicit, documented view state".
+    * Style leaves the field: the widget reads/writes the rec's `style` key (a `Style` instance may
+      remain as a *view* over that key, but it must not be a detached copy — `Style.from()` currently
+      copies, `Stylable.java:236-251`).
+    * `TableWidget`'s three `@JRecElement` fields become rec keys read through the state helper;
+      delete `javaPopulated`/`sync` once round-tripping is one-directional.
+    * Add `RecState` (one place to read/write; space-aware; normalises `Objs`; never mutates on read)
+      and use it for every widget data access.
+    * Convert the eight workarounds in §3 into either "deleted" or "explicit, documented view state".
 2. **Phase 1 (the base swap, ~400-600 LOC, mechanical).**
    `AbstractWidget extends JRec<W>` → `WidgetRec<W> extends MRec`; same for `AccordionWidget`,
    `PanelWidget`, `TableWidget`, `TreeWidget`. Port the ~27 `jvmRead/jvmWrite` sites to the helper.
 3. **Phase 2 (Console/Pane, decide then).** Recommended eventually: `Console` keeps a small rec for
    its 2-3 settings (`prefix`, `postfix`, `metatron_version`) and everything else is runtime state;
    `Pane` likewise. Lowest priority because they are interactive components, not data recs.
-4. **Phase 3 (separate initiative).** JRec platform defects (§10) for `BasicRouter`/`Rewriter`, or
+4. **Phase 3 (separate initiative).** JRec platform defects (§10) for `BasicRouter`/`RewriterBuilder`, or
    freeze JRec and migrate those two later.
 
 Enforcement (makes Phase 0 stick): a unit test that reflects over every class implementing
@@ -349,11 +351,13 @@ allow-list (collaborators, render scratch, caches) — the rule then lives in CI
 comment.
 
 ### Suggested migration order and why
+
 `AccordionWidget` (most JRec-touching, best understood, pty-covered) → `PanelWidget` → `TreeWidget`
 → `TableWidget` (annotated fields) → `AbstractWidget` base swap → the ~20 tools (no changes needed,
 they only inherit) → `Console`/`Pane` last.
 
 ### What could go wrong, and the guards
+
 * *A widget that mtron mutates stops seeing the mutation* — guarded by: one read path, and the pty
   suites that drive `>>=[body=>...]`, fold, scroll, and pointer gestures against a store-backed
   widget (`bin/test/console-widget-*.steps`, 26 checks).
@@ -364,16 +368,16 @@ they only inherit) → `Console`/`Pane` last.
 
 ## 7. Field disposition (abridged)
 
-| Class | Rec-state in Java fields (must move) | Legitimately Java (stays) |
-|---|---|---|
-| `AbstractWidget` | `style` (dup of rec `style`) | `terminal`, `size`, `display`, `cursor`, `attributes`, pane bounds, `lastRenderHeight` |
-| `AccordionWidget` | `style`; `pendingBuffer` (staging — keep only as an explicit cache with a flush contract) | `lastRenderHeight`, `cursor` |
-| `PanelWidget` | `style`; `maxWidth` (render setting mtron cannot see) | `cursor` |
-| `TableWidget` | `style`; `headers`/`table`/`metadata` (annotated, dual) ; `javaPopulated` (arbitration flag to delete) | `cursor`, `lastRenderHeight` |
-| `TreeWidget` | *(done — none)* | `rows` (now a local), `forceExpand` (now `expand` in the rec) |
-| `MenuBarWidget`, `AbstractLineWidget`, `ProgressTableWidget` | `style` (via `readStyle`/`Style.from`) | render scratch |
-| `Console` | `prefix`, `postfix`, `metatron_version` (annotated) | ~35 runtime fields (terminal, reader, panes, watcher flags, focus/pointer state) |
-| `Pane` | annotated fields (3) | `id`, `language`, `machine`, `outputBuffer`, `maxOutputLines`, … |
+| Class                                                        | Rec-state in Java fields (must move)                                                                   | Legitimately Java (stays)                                                              |
+|--------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| `AbstractWidget`                                             | `style` (dup of rec `style`)                                                                           | `terminal`, `size`, `display`, `cursor`, `attributes`, pane bounds, `lastRenderHeight` |
+| `AccordionWidget`                                            | `style`; `pendingBuffer` (staging — keep only as an explicit cache with a flush contract)              | `lastRenderHeight`, `cursor`                                                           |
+| `PanelWidget`                                                | `style`; `maxWidth` (render setting mtron cannot see)                                                  | `cursor`                                                                               |
+| `TableWidget`                                                | `style`; `headers`/`table`/`metadata` (annotated, dual) ; `javaPopulated` (arbitration flag to delete) | `cursor`, `lastRenderHeight`                                                           |
+| `TreeWidget`                                                 | *(done — none)*                                                                                        | `rows` (now a local), `forceExpand` (now `expand` in the rec)                          |
+| `MenuBarWidget`, `AbstractLineWidget`, `ProgressTableWidget` | `style` (via `readStyle`/`Style.from`)                                                                 | render scratch                                                                         |
+| `Console`                                                    | `prefix`, `postfix`, `metatron_version` (annotated)                                                    | ~35 runtime fields (terminal, reader, panes, watcher flags, focus/pointer state)       |
+| `Pane`                                                       | annotated fields (3)                                                                                   | `id`, `language`, `machine`, `outputBuffer`, `maxOutputLines`, …                       |
 
 Field declarations were extracted mechanically (regex over `isa/mach/type/ui/**`) for this table:
 `AccordionWidget` 6, `PanelWidget` 1, `TableWidget` 3, `TreeWidget` 2, `AbstractWidget` 9,
@@ -388,7 +392,7 @@ inherits from `AbstractWidget.java:58`.
 3. Console/Pane: migrate in this initiative, or leave on JRec indefinitely?
 4. Do we add the CI guard test (no state fields in widget classes)?
 5. Do we fix JRec's platform defects for its other clients, or freeze JRec and migrate
-   `BasicRouter`/`Rewriter` off it later?
+   `BasicRouter`/`RewriterBuilder` off it later?
 
 ## Appendix A — the probe (deleted after the run)
 

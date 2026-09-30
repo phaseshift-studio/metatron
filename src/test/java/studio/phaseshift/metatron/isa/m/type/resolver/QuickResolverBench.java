@@ -114,7 +114,7 @@ public class QuickResolverBench extends AbstractMetatronTest {
         }));
 
         System.out.println("\n========================================");
-        System.out.println("RESOLVER: " + InstResolver.get().getClass().getSimpleName());
+        System.out.println("RESOLVER: " + InstSelector.get().getClass().getSimpleName());
         System.out.println("========================================");
         results.forEach(r -> System.out.println(r.toString()));
         System.out.println("========================================");

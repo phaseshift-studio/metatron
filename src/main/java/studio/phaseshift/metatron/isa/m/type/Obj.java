@@ -1473,7 +1473,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "@a >>= [b=>[c=>+3]]     [-- [b=>[c=>5]]@a     --]",
                             "@a >>= [b=>+[c=>4]]     [-- [b=>[c=>{5,4}]]@a --]",
                             "@a >>= [b=>[c=>sum()]]  [-- [b=>[c=>9]]@a     --]"),
-                    instC(EXPLAIN_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> {
+                    instC(EXPLAIN_INST_TID.dom(ALL.maybe()).rng(EXPLANATION_TID), lst(), (lhs, inst) -> {
                         // explain_rewrite handles normal case; bare explain() is a no-op
                         return lhs;
                     }),

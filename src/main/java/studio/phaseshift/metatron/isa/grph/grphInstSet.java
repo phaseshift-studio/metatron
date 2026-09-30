@@ -30,7 +30,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
-import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
+import studio.phaseshift.metatron.algebra.rewrite.RewriterBuilder;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -64,8 +64,6 @@ import static studio.phaseshift.metatron.isa.grph.space.schema.modernSchema.MODE
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -333,7 +331,7 @@ public class grphInstSet extends AbstractInstSet {
                                 InstSet.Helper.rewriter(
                                         GRPH_REWRITE_TID.extend("gremlin_count"),
                                         code -> code.selfJVM(
-                                                Rewriter.search(code.insts())
+                                                RewriterBuilder.search(code.insts())
                                                         .match(List.of(instB(FROM_INST_TID, lst()), instB(COUNT_INST_TID, lst())))
                                                         .rewrite(map -> {
                                                             final java.util.List<Inst> matchList = new java.util.ArrayList<>(map.values());
@@ -394,7 +392,7 @@ public class grphInstSet extends AbstractInstSet {
                                 InstSet.Helper.rewriter(
                                         GRPH_REWRITE_TID.extend("gremlin_where_count"),
                                         code -> code.selfJVM(
-                                                Rewriter.search(code.insts())
+                                                RewriterBuilder.search(code.insts())
                                                         .match(List.of(instB(ALL, lst()), instB(COUNT_INST_TID, lst())))
                                                         .rewrite(map -> {
                                                             final java.util.List<Inst> matchList = new java.util.ArrayList<>(map.values());
@@ -429,7 +427,7 @@ public class grphInstSet extends AbstractInstSet {
                                 InstSet.Helper.rewriter(
                                         GRPH_REWRITE_TID.extend("gremlin_where_limit"),
                                         code -> code.selfJVM(
-                                                Rewriter.search(code.insts())
+                                                RewriterBuilder.search(code.insts())
                                                         .match(List.of(instB(ALL, lst()), instB(TAKE_INST_TID, lst())))
                                                         .rewrite(map -> {
                                                             final java.util.List<Inst> matchList = new java.util.ArrayList<>(map.values());
@@ -460,11 +458,11 @@ public class grphInstSet extends AbstractInstSet {
                                         ).asCode()),
                                 "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's has().limit() filtering-barrier for vrtx collections"),
                         InstSet.Helper.rewriter(GRPH_REWRITE_TID.extend("out_incident_adjacent"), code -> code.selfJVM(
-                                Rewriter.search(code.insts())
+                                RewriterBuilder.search(code.insts())
                                         .match(List.of(instA(OUTE_INST_TID), instA(INV_INST_TID)))
                                         .rewrite(map -> List.of(instB(OUT_INST_TID, map.entrySet().iterator().next().getValue().args())))).asCode()),
                         InstSet.Helper.rewriter(GRPH_REWRITE_TID.extend("in_incident_adjacent"), code -> code.selfJVM(
-                                Rewriter.search(code.insts())
+                                RewriterBuilder.search(code.insts())
                                         .match(List.of(instA(INE_INST_TID), instA(OUTV_INST_TID)))
                                         .rewrite(map -> List.of(instB(IN_INST_TID, map.entrySet().iterator().next().getValue().args())))).asCode()))));
         docWrap(this, "from vertex to vertex, the edge of the metatron is traversed");

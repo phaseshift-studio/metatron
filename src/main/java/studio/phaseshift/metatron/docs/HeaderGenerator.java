@@ -188,6 +188,7 @@ public class HeaderGenerator {
         try (final var stream = Files.list(dir)) {
             return stream.filter(Files::isRegularFile)
                     .map(Path::getFileName)
+                    .filter(path -> !path.endsWith(".sqlite"))
                     .map(Path::toString)
                     .sorted()
                     .toList();

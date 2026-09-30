@@ -1,7 +1,9 @@
 [discrete]
 == Rewrite Architecture
 
-The **metatron** rewrite system optimizes instruction chains before evaluation by replacing recognized patterns with native database operations. A query like `*table/+.where([age\=>?>30]).count()` would naively load all rows, filter in memory, and count the survivors. The rewrite layer intercepts the instruction chain `from \=> where \=> count` and compiles it down to a single native operation that delegates the work to the underlying database.
+The **metatron** rewrite system optimizes instruction chains before evaluation by replacing recognized patterns with native database operations.
+A query like `*table/+.where([age\=>?>30]).count()` would naively load all rows, filter in memory, and count the survivors.
+The rewrite layer intercepts the instruction chain `from \=> where \=> count` and compiles it down to a single native operation that delegates the work to the underlying database.
 
 [discrete]
 === Core Classes
@@ -21,7 +23,7 @@ Factory class providing `countRewrite()`, `sumRewrite()`, `whereRewrite()`, and 
 Fluent builder for assembling a rewrite: match pattern, result type, optimization function, and optional space-guard predicate. The base `forDatabase(Class)` constructor scopes the rewrite to a particular space type.
 
 🧱
-`Rewriter`
+`RewriterBuilder`
 🧱
 Low-level search-and-replace engine. Given a match pattern (list of instruction TIDs), it walks the instruction list, identifies contiguous matches, and replaces them with the optimized output via a caller-supplied rewrite function.
 
@@ -37,12 +39,15 @@ Functional interface for combining multiple conditions into a single filter expr
 |===
 
 The flow is:
-`RewriteBuilder` assembles a match pattern (e.g. `FROM_INST_TID, WHERE_INST_TID`) and an optimization function. The result is an `Inst` whose `f()` rewrites the instruction chain at evaluation time via `Rewriter.search(code.insts()).match(...).rewrite(...)`. The rewrite function extracts the predicate from the where-instruction, translates it through `ConditionFormatter` and `PredicateJoiner`, and produces a single native instruction that replaces both matched instructions.
+`RewriteBuilder` assembles a match pattern (e.g. `FROM_INST_TID, WHERE_INST_TID`) and an optimization function.
+The result is an `Inst` whose `f()` rewrites the instruction chain at evaluation time via `Rewriter.search(code.insts()).match(...).rewrite(...)`.
+The rewrite function extracts the predicate from the where-instruction, translates it through `ConditionFormatter` and `PredicateJoiner`, and produces a single native instruction that replaces both matched instructions.
 
 [discrete]
 === Rewrite Lifecycle
 
-Before execution, `Code.resolve(lhs)` calls `Code.rewrite()` which runs all registered rewrites in a convergence loop — each rewrite's `Inst.f()` is applied to the current instruction list, and the loop repeats until the hash stabilizes (no more rewrites fire). The rewritten code then goes through `InstResolver.resolveCode()` for type resolution, and finally the `Machine` monadic loop executes the resolved instructions.
+Before execution, `Code.resolve(lhs)` calls `Code.rewrite()` which runs all registered rewrites in a convergence loop — each rewrite's `Inst.f()` is applied to the current instruction list, and the loop repeats until the hash stabilizes (no more rewrites fire).
+The rewritten code then goes through `InstResolver.resolveCode()` for type resolution, and finally the `Machine` monadic loop executes the resolved instructions.
 
 [discrete]
 === Language-Specific Utilities
@@ -77,13 +82,16 @@ Used by `dcmntInstSet` for MongoDB-backed document spaces.
 [discrete]
 === Where Rewrite in Detail
 
-The `whereRewrite()` path is the most involved. It replaces `from(furi).where(predicate)` with a single native filter instruction:
+The `whereRewrite()` path is the most involved.
+It replaces `from(furi).where(predicate)` with a single native filter instruction:
 
-1. `WhereRewriteBuilder.match(FROM_INST_TID, WHERE_INST_TID)` — the `Rewriter` scans for contiguous `from :: where` pairs.
+1. `WhereRewriteBuilder.match(FROM_INST_TID, WHERE_INST_TID)` — the `RewriterBuilder` scans for contiguous `from :: where` pairs.
 2. On match, the rewrite function extracts the predicate from the where-instruction's argument.
-3. `tryTranslatePredicate()` decomposes the predicate `Rec` into a list of individual conditions. Each condition is classified — equality for literal values, comparison for `gt/lt/gte/lte/neq/eq` instructions, existence for wildcard `_` — and formatted through the backend's `ConditionFormatter`.
+3. `tryTranslatePredicate()` decomposes the predicate `Rec` into a list of individual conditions.
+Each condition is classified — equality for literal values, comparison for `gt/lt/gte/lte/neq/eq` instructions, existence for wildcard `_` — and formatted through the backend's `ConditionFormatter`.
 4. The `PredicateJoiner` combines multiple conditions into the backend's conjunction.
-5. An `instC` is returned with a function closure that calls the `WhereOperation` — the caller-supplied lambda that executes the native query. The closure includes a barrier-reapplication guard (`if (lhs.isObjs()) return lhs`) to prevent the SwarmMachine from re-executing the native query when processing the gather barrier.
+5. An `instC` is returned with a function closure that calls the `WhereOperation` — the caller-supplied lambda that executes the native query.
+The closure includes a barrier-reapplication guard (`if (lhs.isObjs()) return lhs`) to prevent the SwarmMachine from re-executing the native query when processing the gather barrier.
 
 [source,java]
 ----
@@ -121,6 +129,7 @@ Matches `native_where :: take`. Extracts the filter clause and limit value, emit
 |===
 
 The composition pattern is:
+
 ```
 from(V/+).where([age=>?>30]).count()
   → gremlin_where(V/+, "age > 30").count()       (whereRewrite)
@@ -141,7 +150,8 @@ public enum ComparisonOp {
 }
 ----
 
-The `tryTranslatePredicate()` method inside `WhereRewriteBuilder` converts metatron instruction names (`gt`, `lt`, `gte`, `lte`, `neq`, `eq`) to `ComparisonOp` values. Each backend's `ConditionFormatter.comparison()` receives the enum and can map it to native syntax — `>` for SQL, `$gt` for MQL, etc.
+The `tryTranslatePredicate()` method inside `WhereRewriteBuilder` converts metatron instruction names (`gt`, `lt`, `gte`, `lte`, `neq`, `eq`) to `ComparisonOp` values.
+Each backend's `ConditionFormatter.comparison()` receives the enum and can map it to native syntax — `>` for SQL, `$gt` for MQL, etc.
 
 [discrete]
 === Extending with a New Backend

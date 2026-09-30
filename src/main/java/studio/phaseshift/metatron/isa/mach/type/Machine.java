@@ -19,18 +19,18 @@
 package studio.phaseshift.metatron.isa.mach.type;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Call;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.router.BasicRouter;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.instset0;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
 
 /**
  * Machine — the container that binds an ISA to its lowering and execution axes. A Machine IS-A
@@ -51,6 +51,15 @@ public interface Machine extends Router {
         return Helper.Machine0.single();
     }
 
+    /**
+     * The default machine — the {@code /sys/mach} constant bootstrapped by {@code machInstSet.setup()}.
+     * Falls back to {@link #mach0()} before the constant is loaded.
+     */
+    static Machine defaultMachine() {
+        final Obj machine = Router.readFromSpace(SYS.extend(MACH));
+        return machine.isNoObj() ? mach0() : machine.as();
+    }
+
     interface Component extends Rec {
         default Machine machine() {
             Obj mach = this.parent();
@@ -62,7 +71,18 @@ public interface Machine extends Router {
 
     @Override
     default Obj apply(final Obj call) {
-        return this.processor().apply(this.compiler().apply(call));
+        return this.apply(call.asCode(), noobj());
+    }
+
+    /**
+     * The machine's single source of truth for code execution: compile once (rewrite → resolve →
+     * type) then run the compiled code against {@code start} on this machine's processor. The
+     * processor does not re-resolve — the compiled code short-circuits via its
+     * {@code isResolved(true)} gate, and runtime (element-type-dependent) resolution is memoized by
+     * the compiler's resolver.
+     */
+    default Obj apply(final Code code, final Obj start) {
+        return this.processor().code(this.compiler().apply(code).asCode()).apply(start);
     }
 
     /**
@@ -90,7 +110,7 @@ public interface Machine extends Router {
      */
     default Compiler compiler() {
         final Obj protoCompiler = this.atDirect(COMPILER).orThrow(MTronException.of("machine has no compiler: %s", this.type().vid()));
-        if (protoCompiler.isCode())
+        if (protoCompiler.isCall())
             return protoCompiler.apply().as();
         return protoCompiler.as();
     }
@@ -113,7 +133,7 @@ public interface Machine extends Router {
      */
     default Processor processor() {
         final Obj protoProcessor = this.atDirect(PROCESSOR).orThrow(MTronException.of("machine has no processor: %s", this.type().vid()));
-        if (protoProcessor.isCode())
+        if (protoProcessor.isCall())
             return protoProcessor.apply().as();
         return protoProcessor.clone().as();
     }

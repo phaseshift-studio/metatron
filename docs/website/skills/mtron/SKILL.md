@@ -10,25 +10,33 @@ mtron is a functional, fluent, monadic language that manipulates the metatron en
 To understand mtron, it's necessary to first understand how structures and processes are organized in metatron.
 
 metatron's **structure** forms a [split graph](https://en.wikipedia.org/wiki/Split_graph) with two vertex sets:
-`V = U + O`. The set `U` is the set of uris (**uniform resource identifies**) and they maintain an
-intra-edge set defined solely by path uri **path adjacency**. The set `O` is the set of objs (objects) whose
-intra-edge set denote **shared/coupled state**. Finally, there exists an **inter-edge** set linking vertices in `U` to
-vertices in `O` by according to a **reference/referent** relationship.
+$V = U \cup O$. The set $U$ is the set of [uris](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) (**uniform
+resource identifiers**) and they maintain an _intra-edge_ set defined by uri **path adjacency**. The set $O$ is the set
+of objs (objects) whose _intra-edge_ set denote **shared/coupled state**. Finally, there exists a bi-directional
+**inter-edge** set linking the uris in $U$ to
+the objs in $O$ in a **reference/referent** relationship.
 
-**IMPORTANT**: the metatron uri/obj split graph will more conveniently be referred to as **the metatron graph**.
+**NOTE**: the metatron uri/obj split graph will more conveniently be referred to as **the metatron graph**.
 
-metatron's **process** is realized as a swarm of monadic traversers whose abstract path through the graph is defined by
-a functional ringoid -- a collection of functions structured using * (serial compose) and + (parallel branch). The
-functional language is called **mtron**.
+metatron's **process** is realized as a swarm of monadic traversers traversing the graph until they are either
+filtered out of the computation or they reach a halt-state (the end of code they are processing).
+A monad is defined as $M \subseteq (O \times I \times \Sigma)$, where $O$ is the set of objs of previous denoting the
+current location of the monad, $I \subset O$ is the set of instructions/functions that update the monad's obj location
+in $O$, and $\Sigma$ is any auxiliary state used by monads computing
+beyond the stateless requirements of [regular path](https://en.wikipedia.org/wiki/Regular_language) traversals.
+Instructions are assembled into code with two algebraic operations: $*$ for **serial
+composition** and $+$ for **parallel branching**. In this way, the structure of code obeys the laws set forth by ring
+theory. Code is written in
+the functional **mtron**
+language and compiled and executed using any of the various types of _machines_ within metatron.
 
 ## space: storage
 
 A system that exposes a subset of the metatron graph is called a `space`. In the example below, a simple in-memory space
-implementation is used to maintain a subset of the uri address space that matches `/a/#` (`#` is recursive wildcard).
+implementation is responsible for the declared `/a/#` subset of the uri address space (`#` is recursive wildcard).
 
 ```mtron
 mtron> memspace::[pattern=>/a/#]@/sys/space/a
-==>memspace::[pattern=>/a/#]@/sys/space/a
 ```
 ```mtron
      1  2  3
@@ -56,11 +64,10 @@ mtron> /a/x/y/z -> 3
 mtron> /a/b     -> [q=>r]
 ==>[q=>r]
 mtron> /a/b/c   -> |plus(2)
-==>plus(2)
 mtron> /a/b/d   -> 'm'
 ==>'m'
 mtron> /a/b/d/e -> [1.0,0xa5,true]
-==>[1.0,0xa5,true]
+==>[1.0000,0xa5,true]
 ```
 To retrieve stored objs, dereference their uris. The uri is the **reference**, the obj is the **referent** and the
 process of moving from one to the other is called **dereferencing** (also known as **resolving**).
@@ -71,11 +78,13 @@ mtron> */a
 mtron> */a/x
 ==>1
 mtron> */a/b
-==>[q=>r,c=>plus(2),d=>[e=>[1.0,0xa5,true]]]
+==>[
+    q=>r,
+    c=>plus(2),
+    d=>[e=>[1.0000,0xa5,true]]]
 mtron> */a/b/c
-==>plus(2)
 mtron> */a/b/d
-==>[e=>[1.0,0xa5,true]]
+==>[e=>[1.0000,0xa5,true]]
 ```
 Of particular significance is the result of `*/a/b`: polys (`lst`, `rec`, `rel`)
 maintain an internal uri scheme that interacts with the outer space's uri scheme. That interplay recurs throughout
@@ -84,38 +93,41 @@ mtron.
 ### uri categories
 
 . **absolute**: a uri with a `/` prefix -- `/a/b`. . **relative**: with no `/` prefix -- `a/b`.
-
 . **branch** : a uri with a `/` suffix -- `a/b/`. . **node** : with no `/` suffix -- `a/b`.
 
-## graph crud cheat-sheet
+## mtron crud cheat-sheet
 
-|     do      | mtron sugar      | mtron inst                | what it does                                     |
-|:-----------:|------------------|---------------------------|--------------------------------------------------|
-|    write    | `a -> 5`         | `ref?A{?}<=uri(A{?}::T)`  | store `int::5` at address `a`                    |
-|  read copy  | `*a`             | `from?A{?}<=#{?}(uri::T)` | clone (dereference) the obj stored at `a`        |
-| read anchor | `@a`             | `at?A{?}<=#{?}(uri::T)`   | couple (main reference) to the obj stored at `a` |
-|   update    | `@/a >>= [d=>5]` | `update?A{?}<=#(A{?}::T)` | update the obj (from/at) `a`                     |
+|      do       | mtron sugar      | mtron inst                | what it does                                |
+|:-------------:|------------------|---------------------------|---------------------------------------------|
+|     write     | `a -> 5`         | `ref?A{?}<=uri(A{?}::T)`  | store `int::5` at address `a`               |
+|  read clone   | `*a`             | `from?A{?}<=#{?}(uri::T)` | copy (dereference) the obj stored at `a`    |
+|  read anchor  | `@a`             | `at?A{?}<=#{?}(uri::T)`   | couple (reference) to the obj stored at `a` |
+| update anchor | `*/a >>= [d=>5]` | `update?A{?}<=#(A{?}::T)` | update a copy of the obj from `a`           |
+| update anchor | `@/a >>= [d=>5]` | `update?A{?}<=#(A{?}::T)` | update the obj at `a`                       |
 
-`*` is a **clone reference**. `*a` copies the referent, where subsequent mutations do not affect the source obj.
+. `*` is a **clone reference**. `*a` copies the referent, where subsequent mutations do not affect the source obj.
 
 ```mtron
-mtron> a -> 5
+mtron> /a -> 5
 ==>5
-mtron> *a + 6
+mtron> */a + 6
 ==>11
-mtron> *a
+mtron> */a
 ==>5
 ```
-`@` is an **anchor reference**. `@a` couples the referent, where edits propagate back to the source obj.
+`@` is an **anchor reference**. `@a` couples the referent, where mutations propagate back to the source obj.
 
 ```mtron
-mtron> a -> 5
+mtron> /a -> 5
 ==>5
-mtron> @a + 6
-==>17@a
-mtron> *a
-==>17
+mtron> @/a + 6
+==>11@/a
+mtron> */a
+==>11
 ```
+NOTE: `update` (sugar'd `>>=`) is primarily used for a bulk mutation to a poly structure (a `rec` or `lst`). In
+principle,any alteration to a reference is an "updating" operation.
+
 ### obj types
 
 #### mono types
@@ -142,12 +154,14 @@ mtron> *a
 |  type  | examples                                           |
 |:------:|----------------------------------------------------|
 | `inst` | `inst?rng<=dom(arg0=>A::T,arg1=>B::T){ inst* }@op` |
+| `code` | `[inst1,inst2,...,]`                               |
 
 Finally, within the base types, there is `noobj` which is a mono/poly/call.
 
 #### space types
 
-A `space::T` refines `rec::T`. Common spaces include:
+A `space::T` refines `rec::T`. There are numerous spaces which tailored to storing and processing objs in uri space
+according to their intended use and have different time and space considerations in doing so. Common spaces include:
 
 |     type     | description                                                    |
 |:------------:|----------------------------------------------------------------|
@@ -163,17 +177,38 @@ A `space::T` refines `rec::T`. Common spaces include:
 
 ## processing: the fluent chain
 
-mtron is built on **chained/nested function composition** with attention to each function's domain, range, and argument
-types. Any expression, desugar'd, is a fluent chain of nested instruction calls. Append `.explain()` to any expression
-to get its structured explanation — the expression-level head (dom/rng/inst count) is `>>desc`, the per-instruction stages
-(the ops, their dom/rng, args, and form) are `>>per_inst`, and the unsugar'd text table is the lazy `>>format` inst
-(materialized in the interactive console):
+mtron is built on **chained/nested function composition** with attention to each function's _domain_, _range_, and
+_argument_ types. A function is encapsulated in an instruction (and `inst::T`). There are two types of instruction whose
+difference is a function of whether their arguments are a `lst::T` or a `rec::T` where `rec::T` defined instructions
+have a `lst::T` realization (the keys are stripped and value order determines argument order in the `lst::T` form).
 
 ```mtron
-mtron> start(/a).rshift().rshift().rshift().explain()>>desc
-==>[insts=>4]
-mtron> /a.>>.>>.>>.explain()>>desc>>insts
-==>4
+inst?dom<=rng(arg1,arg2,...)     { body }
+inst?dom<=rng(k1=>v1,k2=>v2,...) { body }
+```
+
+IMPORTANT: mtron sugar can make the language appear complex. Realize that every expression is a fluent chain of nested
+instruction calls. Append `.explain()` to any expression to get its structured explanation — the expression-level head
+(dom/rng/inst count) is `>>desc`, the per-instruction stages (the ops, their dom/rng, args, and form) are `>>per_inst`,
+and the unsugar'd text table is the lazy `>>format` inst (materialized in the interactive console):
+
+```mtron
+mtron> start(/a).rshift().rshift().rshift().explain()>>format
+==>{2}"""
+    op      dom          rng      args   f    desc      c_dom  c_rng 
+    start   noobj{0}::T  uri::T   /a     <j>  initial   {0}    {1}   
+    rshift  uri::T       #{*}::T  noobj  <j>  standard  {1}    {*}   
+    rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
+    rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
+   """
+mtron> /a.>>.>>.>>.explain()>>format
+==>{2}"""
+    op      dom          rng      args   f    desc      c_dom  c_rng 
+    start   noobj{0}::T  uri::T   /a     <j>  initial   {0}    {1}   
+    rshift  uri::T       #{*}::T  noobj  <j>  standard  {1}    {*}   
+    rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
+    rshift  A::T         B{*}::T         <j>  standard  {1}    {*}   
+   """
 ```
 Traversing the graph non-sugar'd vs sugar'd (`>>` = `rshift`):
 
@@ -276,11 +311,11 @@ is structural validation during projection):
 
 ```mtron
 mtron> int::T[?>0]@nat
-==>int::T[is(gt(0))]@nat
 mtron> rec::T[?[name=>str::T, age=>nat::T]]@person
-==>rec::T[?[name=>str::T,age=>int::T[is(gt(0))]@nat]]@person
 mtron> person::[name=>'marko', age=>29]
-==>person::[name=>'marko',age=>29]
+==>person::[
+    name=>'marko',
+    age=>29]
 ```
 ## docq: read the code you are about to run
 
@@ -289,13 +324,43 @@ processor. **Read the documentation of the code you are about to execute.**
 
 ```mtron
 mtron> *plus?docq
-==>docs::[obj=>plus?rng=int&dom=int(int::T){<j>},dom=>'the lhs int',rng=>'the result of the addition',args=>[int::T=>'the int to add to the lhs'],desc=>"""[mapper] add the argument int to the lhs int
-   one-to-one obj transformation (dom_c = rng_c = 1)""",example=>['1.plus(2)          [-- 3                    --]',"1+2                [-- 3 sugar'd form       --]",'1.plus(plus(1))    [-- 3 nested application --]','1+(+1)             [-- 3 sugar nested form  --]']]
-mtron> *select?docq
-==>docs::[obj=>select?rng=lst&dom=str(str::T){<j>},dom=>'a str to split by regex',rng=>'the regex capture groups (or full matches) of the lhs str',args=>[0=>'regex'],desc=>"""[mapper] split the lhs str by regex matches; if the regex has capture groups, each match is a lst of [fullMatch, group1, group2, ...], otherwise a flat lst of full matches
-   one-to-one obj transformation (dom_c = rng_c = 1)""",example=>["'abc.cde'.regex('[^.]+') [-- ['abc','cde'] --]","'abc.cde'.regex('.\..') [-- ['c.c'] --]","'241G'.regex('(\d+)([KMGT])') [-- [['241G','241','G']] --]"]]
-mtron> */a/b?docq
-==>[q=>r,c=>plus(2),d=>[e=>[1.0,0xa5,true]]]
+==>docs::[
+    obj=>plus?rng=int&dom=int(int::T){<j>},
+    dom=>'the lhs int',
+    rng=>'the result of the addition',
+    args=>[int::T=>'the int to add to the lhs'],
+    desc=>'[mapper] add the argument int to t...',
+    example=>[
+     '1.plus(2)          [-- 3          ...',
+     "1+2                [-- 3 sugar'd f...",
+     '1.plus(plus(1))    [-- 3 nested ap...',
+     '1+(+1)             [-- 3 sugar nes...']]
+==>docs::[
+    obj=>plus?rng=str&dom=str(str::T){<j>},
+    dom=>'a prefix str',
+    rng=>'the concatenated str',
+    args=>[0=>'a postfix str'],
+    desc=>'[mapper] concatenate two str::T va...',
+    example=>['"a" + "b" [-- "ab" --]']]
+mtron> *plus?str<=str&docq
+==>docs::[
+    obj=>plus?rng=str&dom=str(str::T){<j>},
+    dom=>'a prefix str',
+    rng=>'the concatenated str',
+    args=>[0=>'a postfix str'],
+    desc=>'[mapper] concatenate two str::T va...',
+    example=>['"a" + "b" [-- "ab" --]']]
+mtron> *select?<=str&docq
+==>docs::[
+    obj=>select?rng=lst&dom=str(str::T){<j>},
+    dom=>'a str to split by regex',
+    rng=>'the regex capture groups (or full ...',
+    args=>[0=>'regex'],
+    desc=>'[mapper] split the lhs str by rege...',
+    example=>[
+     "'abc.cde'.regex('[^.]+') [-- ['abc...",
+     "'abc.cde'.regex('.\..') [-- ['c.c'...",
+     "'241G'.regex('(\d+)([KMGT])') [-- ..."]]
 ```
 ## references
 

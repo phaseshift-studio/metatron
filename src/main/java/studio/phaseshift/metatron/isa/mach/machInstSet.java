@@ -25,7 +25,10 @@ import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.space.clstrSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.compiler.FixPointCompiler;
+import studio.phaseshift.metatron.isa.mach.type.compiler.DefaultCompiler;
+import studio.phaseshift.metatron.isa.mach.type.compiler.FixPointRewriter;
+import studio.phaseshift.metatron.isa.mach.type.compiler.ScoringResolver;
+import studio.phaseshift.metatron.isa.mach.type.compiler.TypeTyper;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
@@ -96,7 +99,7 @@ public class machInstSet extends AbstractInstSet {
                             uri(RUNTIME).maybe(), TIME_TYPE,
                             uri(YIELD).maybe(), T(MACH_THREAD_TID),
                             uri(LOOP).maybe(), TIME_TYPE,
-                            uri(STATE).maybe().asUri(), is_(or_(eq_(uri(STOP)), eq_(uri(RUN)), eq_(uri(PAUSE)))),
+                            uri(STATE).maybe().asUri(), union_(uri(STOP), uri(RUN), uri(PAUSE)).tryToInst(),
                             uri(RESULT).maybe(), T(ALL.maybeSome())))
             .create();
     public static Type MACH_CORE_THREAD_TYPE;
@@ -112,11 +115,24 @@ public class machInstSet extends AbstractInstSet {
     public static Type MACH_PROCESSOR_TYPE;
     public static Type MACH_MONAD_PROCESSOR_TYPE;
     public static Type MACH_SWARM_PROCESSOR_TYPE;
-    // the compiler family — structural apply(code)->code contract, then concrete strategies
+    // the compiler family — structural apply(code)->code contract, then the three stage families it composes
     public static final fURI MACH_COMPILER_TID = MACH_MACHINE_COMPONENT_TID.extend(COMPILER);
-    public static final fURI MACH_FIXPOINT_COMPILER_TID = MACH_COMPILER_TID.extend("fixpoint");
+    public static final fURI MACH_DEFAULT_COMPILER_TID = MACH_COMPILER_TID.extend("default");
     public static Type MACH_COMPILER_TYPE;
-    public static Type MACH_FIXPOINT_COMPILER_TYPE;
+    public static Type MACH_DEFAULT_COMPILER_TYPE;
+    // the rewriter family — structural rewrite(code)->code contract, concrete fixpoint strategy
+    public static final fURI MACH_REWRITER_TID = MACH_MACHINE_COMPONENT_TID.extend(REWRITER);
+    public static final fURI MACH_FIXPOINT_REWRITER_TID = MACH_REWRITER_TID.extend("fixpoint");
+    public static Type MACH_REWRITER_TYPE;
+    public static Type MACH_FIXPOINT_REWRITER_TYPE;
+    // the resolver family — structural resolve(code)->code contract, concrete scoring strategy
+    public static final fURI MACH_RESOLVER_TID = MACH_MACHINE_COMPONENT_TID.extend(RESOLVER);
+    public static final fURI MACH_SCORING_RESOLVER_TID = MACH_RESOLVER_TID.extend("scoring");
+    public static Type MACH_RESOLVER_TYPE;
+    public static Type MACH_SCORING_RESOLVER_TYPE;
+    // the typer family — structural type(code)->code contract
+    public static final fURI MACH_TYPER_TID = MACH_MACHINE_COMPONENT_TID.extend(TYPER);
+    public static Type MACH_TYPER_TYPE;
     public static Type MACH_MACHINE_COMPONENT_TYPE;
 
 
@@ -145,7 +161,7 @@ public class machInstSet extends AbstractInstSet {
                                 .tid(MACH_MACHINE_COMPONENT_TID)
                                 .vid(MACH_PROCESSOR_TID)
                                 .isaPredicate(rec(
-                                        uri(STATE).maybe().asUri(), is_(or_(eq_(uri(STOP)), eq_(uri(RUN)), eq_(uri(PAUSE)))),
+                                        uri(STATE).maybe().asUri(), union_(uri(STOP), uri(RUN), uri(PAUSE)).tryToInst(),
                                         uri(RESULT).maybe(), T(ALL.maybeSome())))
                                 .create(),
                         MACH_MONAD_PROCESSOR_TYPE = Type.Builder.build()
@@ -158,17 +174,46 @@ public class machInstSet extends AbstractInstSet {
                                         .constructor(machine -> SwarmProcessor.processor(machine.jvm(), machine.tid(), machine.vid()))
                                         .create(), null, null, Map.of(uri(CODE), "the code the processor will evaluate"),
                                 "a swarm processor schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result"),
-                        // the compiler family — structural apply(code)->code contract, concrete fixpoint strategy
+                        // the compiler family — structural apply(code)->code contract holding its three stages
                         MACH_COMPILER_TYPE = Type.Builder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
                                 .vid(MACH_COMPILER_TID)
-                                .isaPredicate(rec(uri(INSTSET).maybe().asUri(), T(INSTSET_TID)))
+                                .isaPredicate(rec(
+                                        uri(REWRITER).maybe().asUri(), T(MACH_REWRITER_TID),
+                                        uri(RESOLVER).maybe().asUri(), T(MACH_RESOLVER_TID),
+                                        uri(TYPER).maybe().asUri(), T(MACH_TYPER_TID)))
                                 .create(),
-                        MACH_FIXPOINT_COMPILER_TYPE = Type.Builder.build()
+                        MACH_DEFAULT_COMPILER_TYPE = Type.Builder.build()
                                 .tid(MACH_COMPILER_TID)
-                                .vid(MACH_FIXPOINT_COMPILER_TID)
-                                .isaPredicate(rec(uri(LOOP).maybe().asUri(), isa_(INT_TYPE).else_(jnt(2))))
-                                .constructor(arg -> new FixPointCompiler(arg.asRec().jvm(), MACH_FIXPOINT_COMPILER_TID, arg.vid()))
+                                .vid(MACH_DEFAULT_COMPILER_TID)
+                                .constructor(arg -> new DefaultCompiler(arg.asRec().jvm(), MACH_DEFAULT_COMPILER_TID, arg.vid()))
+                                .create(),
+                        // the rewriter family — structural contract, concrete fixpoint strategy
+                        MACH_REWRITER_TYPE = Type.Builder.build()
+                                .tid(MACH_MACHINE_COMPONENT_TID)
+                                .vid(MACH_REWRITER_TID)
+                                .create(),
+                        MACH_FIXPOINT_REWRITER_TYPE = Type.Builder.build()
+                                .tid(MACH_REWRITER_TID)
+                                .vid(MACH_FIXPOINT_REWRITER_TID)
+                                .isaPredicate(rec(uri(MAX).maybe().asUri(), isa_(INT_TYPE).else_(jnt(2))))
+                                .constructor(arg -> new FixPointRewriter(arg.asRec().jvm(), MACH_FIXPOINT_REWRITER_TID, arg.vid()))
+                                .create(),
+                        // the resolver family — structural contract, concrete scoring strategy (empty config)
+                        MACH_RESOLVER_TYPE = Type.Builder.build()
+                                .tid(MACH_MACHINE_COMPONENT_TID)
+                                .vid(MACH_RESOLVER_TID)
+                                .create(),
+                        MACH_SCORING_RESOLVER_TYPE = Type.Builder.build()
+                                .tid(MACH_RESOLVER_TID)
+                                .vid(MACH_SCORING_RESOLVER_TID)
+                                .constructor(arg -> new ScoringResolver(arg.asRec().jvm(), MACH_SCORING_RESOLVER_TID, arg.vid()))
+                                .create(),
+                        // the typer family — structural contract, runtime type assertions (identity for now)
+                        MACH_TYPER_TYPE = Type.Builder.build()
+                                .tid(MACH_MACHINE_COMPONENT_TID)
+                                .vid(MACH_TYPER_TID)
+                                .constructor(arg -> new TypeTyper(arg.asRec().jvm(), MACH_TYPER_TID, arg.vid()))
                                 .create(),
                         // the old swarm_machine::T — transition alias, re-parented under monad_processor
                         MACH_SWARM_MACHINE_TYPE = docWrap(Type.Builder.build()
@@ -202,18 +247,16 @@ public class machInstSet extends AbstractInstSet {
                         MACH_CORE_THREAD_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_THREAD_TID)
                                         .vid(MACH_CORE_THREAD_TID)
-                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MACH_CORE_THREAD_TID), lst(T(REC_TID)), (lhs, inst) -> new CoreThread(inst.arg(0).jvm(), MACH_CORE_THREAD_TID, inst.arg(0).vid()).apply(lhs)))
+                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MACH_CORE_THREAD_TID), lst(T(REC_TID)),
+                                                (lhs, inst) -> new CoreThread(inst.arg(0).jvm(), MACH_CORE_THREAD_TID, inst.arg(0).vid()).applyAsync(lhs)))
                                         .create(), null, null, Map.of(),
                                 "run a concurrent core thread",
                                 "core::[code=>ping(<phaseshift.studio:80>),loop=>second::1.0]@/sys/thread/ping"),
                         MACH_VIRTUAL_THREAD_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_THREAD_TID)
                                         .vid(MACH_VIRTUAL_THREAD_TID)
-                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MACH_VIRTUAL_THREAD_TID), lst(T(REC_TID)), (lhs, inst) -> {
-                                            final VirtualThread vt = new VirtualThread(inst.arg(0).jvm(), MACH_VIRTUAL_THREAD_TID, inst.arg(0).vid());
-                                            vt.applyAsync(lhs);
-                                            return vt;
-                                        }))
+                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MACH_VIRTUAL_THREAD_TID), lst(T(REC_TID)),
+                                                (lhs, inst) -> new VirtualThread(inst.arg(0).jvm(), MACH_VIRTUAL_THREAD_TID, inst.arg(0).vid()).applyAsync(lhs)))
                                         .create(), null, null, Map.of(),
                                 "run a concurrent virtual thread",
                                 "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@/sys/thread/ping"),

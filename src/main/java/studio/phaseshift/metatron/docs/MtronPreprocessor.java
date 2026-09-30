@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.docs;
 
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
@@ -107,10 +107,10 @@ public final class MtronPreprocessor {
     private static final Pattern NOPROMPT = Pattern.compile("\\[NO_PROMPT]");
     private static final Pattern MAXOUTPUT = Pattern.compile("\\[MAXOUTPUT (\\d+)]");
 
-    private static final ObjmtronSerializer SER;
+    private static final ObjmtronUISerializer SER;
 
     static {
-        SER = ObjmtronSerializer.single();
+        SER = ObjmtronUISerializer.blackWhite();
         SER.at(uri("clip"), rec("str", jnt(35), "rec", jnt(7), "lst", jnt(7)), MUTABLE);
     }
 
@@ -266,8 +266,8 @@ public final class MtronPreprocessor {
             final var outputs = new ArrayList<String>();
             try {
                 TypeCheck.disable(TypeCheck.code_resolve, TypeCheck.inst_rng);
-                final Obj input = ObjmtronSerializer.single().read(expr);
-                final Obj result = ObjmtronSerializer.eval(expr);
+                final Obj input = SER.read(expr);
+                final Obj result = input.apply();
                 if (result.isFail() && !error) {
                     LOG.error("no [ERROR] modifier in code block (docs are buggy): %s\n\t[{{r}}bad expression{{X}}]: %s\n", result, expr);
                     //System.exit(1);
@@ -280,7 +280,7 @@ public final class MtronPreprocessor {
                     outputs.add("==>" + SER.write(input).replace("\n", "\n   ")); // replacement so second+ lines are indented past the result prompt
                 }
                 // Clear fail stack so errors don't leak across blocks
-                if (!hidden) ObjmtronSerializer.single().inputBytes("/sys/fail/+ -> noobj").apply();
+                if (!hidden) SER.inputBytes("/sys/fail/+ -> noobj").apply();
             } catch (final Exception e) {
                 if (!hidden) outputs.add("==>ERROR: " + e.getMessage());
             }

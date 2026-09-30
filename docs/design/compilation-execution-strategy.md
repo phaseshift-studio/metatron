@@ -238,7 +238,7 @@ Notes:
 - The stamp must ride on the *Code obj itself* (e.g., a field on `MCode`, default SWARM) so nested call args carry it
   naturally; `Code.apply` dispatches on the stamp. **Watch clone semantics** — the stamp must survive `MCode.clone`/
   `self`.
-- `resolveCode` (from `InstResolver`) migrates into the default `Strategy.compile`, producing `CompiledCode`.
+- `resolveCode` (from `Resolver`) migrates into the default `Strategy.compile`, producing `CompiledCode`.
 
 ---
 
@@ -335,4 +335,4 @@ The container's root filesystem is **read-only** (`/` is `ro`; `/usr`, `/opt`, `
 - **Structural regression guard, not just wall-clock**: add counters (compiles per code identity, resolves per inst,
   framework executions) so tests can assert e.g. "same code applied 1000× ⇒ 1 compile, 1000 executes" and "nested
   non-monadic arg ⇒ 0 SwarmMachine creations".
-- Existing `InstResolverBenchmarkTest` (currently `@Disabled`; run manually) is the wall-clock baseline.
+- Existing `ResolverBenchmarkTest` (currently `@Disabled`; run manually) is the wall-clock baseline.

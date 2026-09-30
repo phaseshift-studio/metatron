@@ -38,7 +38,7 @@ import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
  * <p>
  * This is preserved for backward compatibility and A/B testing against newer resolvers.
  */
-public class FirstFindInstResolver implements InstResolver {
+public class FirstFindInstResolver implements InstSelector {
 
     @Override
     public Inst resolveInst(final Obj lhs, final Inst userInst) {
