@@ -35,7 +35,6 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.OBJ_SERIALIZER_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 

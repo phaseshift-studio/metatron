@@ -110,7 +110,7 @@ mtron.
 */a
 ```
 
-NOTE: `update` (sugar'd `>>=`) is primarily used for a bulk mutation to a poly structure (a `rec` or `lst`). In
+**NOTE**: `update` (sugar'd `>>=`) is primarily used for a bulk mutation to a poly structure (a `rec` or `lst`). In
 principle,any alteration to a reference is an "updating" operation.
 
 ### obj types
@@ -172,7 +172,8 @@ inst?dom<=rng(arg1,arg2,...)     { body }
 inst?dom<=rng(k1=>v1,k2=>v2,...) { body }
 ```
 
-IMPORTANT: mtron sugar can make the language appear complex. Realize that every expression is a fluent chain of nested
+**IMPORTANT**: mtron sugar can make the language appear complex. Realize that every expression is a fluent chain of
+nested
 instruction calls. Append `.explain()` to any expression to get its structured explanation — the expression-level head
 (dom/rng/inst count) is `>>desc`, the per-instruction stages (the ops, their dom/rng, args, and form) are `>>per_inst`,
 and the unsugar'd text table is the lazy `>>format` inst (materialized in the interactive console):
@@ -249,7 +250,8 @@ person::[name=>'marko', age=>29]
 Do not guess at instruction signatures. Every instruction ships with documentation attached via the `?docq` query
 processor. **Read the documentation of the code you are about to execute.**
 
-IMPORTANT: An `inst::T` is identified by its operation, its domain and its range. If `dom` or `rng` are not provided,
+**IMPORTANT**: An `inst::T` is identified by its operation, its domain and its range. If `dom` or `rng` are not
+provided,
 the default values are `#{?}` and `#{*}`, respectively.
 
 ```mtron_pre

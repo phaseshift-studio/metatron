@@ -8,10 +8,6 @@
 ----
 [NO_OUTPUT] import(/m/web)
 [NO_OUTPUT] import(/m/llm)
-catalog::[host         => <http://localhost:1234/v1>, /
-          pattern      => <lmstudio:#>,               /
-          name         => <openai>,                   /
-          route        => [<lmstudio:>=><>]]@/sys/space/lmstudio
 ----
 ====
 
@@ -34,10 +30,10 @@ When `http://#` is the pattern, the world wide web becomes a source of metatron 
 httpspace::[                                                   /
  host     => http://localhost:8777,                            /
  pattern  => http://#,                                         /
+ q        => [mimeq::[=>]],                                    / 
  route    => [/        => <>,                                  /
               /mcp     => mcp_mtron_http,                      /
-              /docs    => target/docs,                         /
-              /console => src/main/resources/web/console]      /
+              /docs    => target/docs]                         /
 ]@/sys/space/web/http
 ----
 
@@ -77,10 +73,10 @@ The http://ollama.com/[Ollama] endpoint will serve to demonstrate how to leverag
 
 [mtron]
 ----
-*<http://localhost:11434>                                      [-- <1> --]
-*<http://localhost:11434/api/tags>                             [-- <2> --]
-*<http://localhost:11434/api/tags?mimeq=application/x-mtron>   [-- <3> --]
-*<http://localhost:11434/api/tags>.as(rec::T)                  [-- <4> --]
+[MAXOUTPUT 5] *<http://localhost:11434>                                      [-- <1> --]
+[MAXOUTPUT 5] *<http://localhost:11434/api/tags>                             [-- <2> --]
+[MAXOUTPUT 5] *<http://localhost:11434/api/tags?mimeq=application/x-mtron>   [-- <3> --]
+[MAXOUTPUT 5] *<http://localhost:11434/api/tags>.as(rec::T)                  [-- <4> --]
 ----
 
 <1> Ollama is up and running.
@@ -105,11 +101,11 @@ When the REST resource is manipulated to fit the structural specification of `mo
 
 [mtron]
 ----
-*<http://localhost:11434/api/tags?mimeq=application/x-mtron>/0.>>data/1.  /
-  -<[provider=> ollama,                                                   /
-     protocol=> ollama,                                                   /
-     host    => <http://localhost:11434>,                                 /
-     name    => >>id.as(uri::T)].as(model::T)                             /
+*<http://localhost:11434/api/tags?mimeq=application/x-mtron>.>>0.>>data/1. /
+  -<[provider=> ollama,                                                    /
+     protocol=> ollama,                                                    /
+     host    => <http://localhost:11434>,                                  /
+     name    => >>id.as(uri::T)].as(model::T)                              /
   .chat('are you there?')
 ----
 

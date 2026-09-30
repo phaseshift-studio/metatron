@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -36,9 +36,9 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 
+import static studio.phaseshift.metatron.Tokens.MACH_ISA_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class LogObj extends MRec {
@@ -46,7 +46,7 @@ public class LogObj extends MRec {
     public static final fURI LOG_TID = MACH_ISA_TID.extend("log");
 
     public LogObj(final Obj log) {
-        super(new LinkedHashMap<>(log.recValue()), LOG_TID,null);
+        super(new LinkedHashMap<>(log.recValue()), LOG_TID, null);
     }
 
     protected LogObj(final Rec levels, final fURI vid) {
@@ -91,7 +91,7 @@ public class LogObj extends MRec {
             filter.setLevel(level);
             filter.start();
             if (appender != null)
-                appender.addFilter((Filter)filter);
+                appender.addFilter((Filter) filter);
             return uri(level);
         }
     }

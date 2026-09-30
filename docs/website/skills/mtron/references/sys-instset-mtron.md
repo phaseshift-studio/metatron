@@ -56,8 +56,8 @@ mtron> *bash?docq
     dom=>'maybe an obj',
     rng=>'a lst[str] of results',
     args=>[
-     cmd=>'the terminal command to evaluate (...',
-     {?}timeout=>'a real number denoting timeout of ...'],
+     {?}timeout=>'a real number denoting timeout of ...',
+     cmd=>'the terminal command to evaluate (...'],
     desc=>'evaluate bash command. *important*...',
     example=>["bash('ls')                        ..."]]
 ```
@@ -77,10 +77,10 @@ mtron> bash(cmd=>'whoami')
 mtron> bash('df -h')
 ==>[
     'Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.4M ...',
+    'tmpfs                  6.1G  6.2M ...',
     'efivarfs               128K   42K ...',
     '/dev/nvme0n1p2         916G  511G ...',
-    'tmpfs                   31G  277M ...',
+    'tmpfs                   31G  199M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
    ...(4 more)]
@@ -91,10 +91,10 @@ A timeout and a failed exit are both fails, and both are inspectable:
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
 ==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/560
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 4ms:
+    (at /m/sys/inst/bash) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder<228>]]@/sys/fail/562
@@ -189,8 +189,8 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>[
     '  File: AGENTS.md',
-    '  Size: 34192     	Blocks: 72     ...',
-    'Device: 259,5	Inode: 26348579    L...',
+    '  Size: 35822     	Blocks: 72     ...',
+    'Device: 259,5	Inode: 25690647    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
    ...
 ```
@@ -203,7 +203,7 @@ converts against itself, so no `awk`, `grep`, or `du`:
 ```mtron
 mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"')>>0.as?int<=str(int::T).as(bB::T)]
 ==>[
-    bB::34192.0000,
+    bB::35822.0000,
     bB::4096.0000,
     bB::4096.0000,
     bB::4096.0000,
