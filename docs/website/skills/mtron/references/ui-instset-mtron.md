@@ -87,25 +87,25 @@ mtron> */m/mach/ui/widget?docq
     desc=>'[structural] the base widget type',
     accordion_widget=>docs::[
      obj=>widget::T[?[
-    {?}title=>str::T,
-    {?}body=>str::T]][ctor?rng=accordion_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/accordion_widget,
+      {?}title=>str::T,
+      {?}body=>str::T]][ctor?rng=accordion_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/accordion_widget,
      dom=>'maybe an obj',
      rng=>'an accordion obj',
      args=>[
-      {?}title=>'the title of the accordion',
-      {?}body=>'the body content of the accordion'],
+      {?}body=>'the body content of the accordion',
+      {?}title=>'the title of the accordion'],
      desc=>'[structural] an expandable/collaps...'],
     progress_table_widget=>docs::[
      obj=>widget::T[?[
-    {?}header=>lst::T,
-    {?}row=>lst::T]][ctor?rng=progress_table_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/progress_table_widget,
+      {?}header=>lst::T,
+      {?}row=>lst::T]][ctor?rng=progress_table_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/progress_table_widget,
      desc=>'[structural] a table of progress b...',
      example=>["progress_table::[row=>[[text=>'lay..."]],
     table_widget=>docs::[
      obj=>widget::T[?[
-    {?}header=>lst::T,
-    {?}row=>lst::T,
-    {?}metadata=>lst::T]][ctor?rng=table_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/table_widget,
+      {?}header=>lst::T,
+      {?}row=>lst::T,
+      {?}metadata=>lst::T]][ctor?rng=table_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/table_widget,
      dom=>'maybe an obj',
      rng=>'a table widget',
      args=>[
@@ -115,21 +115,21 @@ mtron> */m/mach/ui/widget?docq
      desc=>'[structural] a tabular data widget'],
     tree_widget=>docs::[
      obj=>widget::T[?[
-    root=>uri::T,
-    max=>int::T,
-    {?}code=><#>::T,
-    {?}flatten=>bool::T,
-    {?}xref=>rec::T,
-    {?}expand=>uri::T]][ctor?rng=tree_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/tree_widget,
+      root=>uri::T,
+      max=>int::T,
+      {?}code=><#>::T,
+      {?}flatten=>bool::T,
+      {?}xref=>rec::T,
+      {?}expand=>uri::T]][ctor?rng=tree_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/tree_widget,
      dom=>'maybe an obj',
      rng=>'a tree widget',
      args=>[
+      root=>'the root uri to traverse from',
+      {?}flatten=>'fold single-folder chains into one...',
       max=>'the max depth to traverse',
       {?}xref=>'xref=>[max=>N, code=><call>] cross...',
       {?}expand=>'branch uris whose children are rea...',
-      {?}code=>'transform obj prior to insertion i...',
-      root=>'the root uri to traverse from',
-      {?}flatten=>'fold single-folder chains into one...'],
+      {?}code=>'transform obj prior to insertion i...'],
      desc=>'[structural] the root uri space is...'],
     ...(9 more)]
 ```

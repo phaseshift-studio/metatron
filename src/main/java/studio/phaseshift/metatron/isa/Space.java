@@ -266,6 +266,7 @@ public interface Space extends Rec, Closeable {
             }
             if (results.isEmpty()) {
                 poly.indexedStream()
+                        .filter(r -> null != r.jvm().get1())          // a slot's value can be absent (noobj);
                         .filter(r -> r.jvm().get1().isPoly() || polyvid.extend(f(r.jvm().get0().jvm().toString())).test(pattern))
                         .forEach(r -> {
                             final fURI key = polyvid.extend(f(r.jvm().get0().jvm().toString()));

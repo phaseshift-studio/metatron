@@ -262,7 +262,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/type-system-java.html">type-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/scripts/wsplus">wsplus</a>
                             </div>
                         </div>
                     </li>
@@ -280,8 +280,6 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
@@ -290,8 +288,8 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/README.md">README.md</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
@@ -464,7 +462,7 @@ under <code>/m/math/+</code> and available via the standard type resolution syst
 <h5>construction</h5>
 <pre><code class="language-mtron">mtron&gt; [-- current system time --]
 mtron&gt; datetime_now()
-==&gt;datetime:://2026.09:30/01/12/16/788?tz=-0600
+==&gt;datetime:://2026.09:30/18/56/03/549?tz=-0600
 mtron&gt; [-- from record (goes through .as(uri::T) first) --]
 mtron&gt; [host=&gt;&lt;2024.12&gt;,port=&gt;25,path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
         c=&gt;[min=&gt;1,max=&gt;1],q=&gt;[tz=&gt;'-0500']].as(uri::T).as(datetime::T)
@@ -530,21 +528,22 @@ mtron&gt; &lt;//2024.12:25/09/60/00/000?tz=-0500&gt;.?datetime::T [-- second 60 
 mtron&gt; &lt;//2024.12:25/09/00/00&gt;.?datetime::T              [-- missing tz (bad) --]
 </code></pre>
 <h5>mutating and filtering</h5>
-<p>All standard uri operations apply: <code>==</code> (select), <code>=?=</code> (where), plus <code>&gt;&gt;=</code> (rec update) after <code>.as(rec::T)</code>.</p>
+<p>All standard uri operations apply: <code>==</code> (select), <code>?</code> (is), plus <code>&gt;&gt;=</code> (rec update) after <code>.as(rec::T)</code>.</p>
 <pre><code class="language-mtron">mtron&gt; [-- select mutation: change day --]
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)==[port=&gt;31]&gt;&gt;port
 ==&gt;31
 mtron&gt; [-- where filter: match day 25 --]
-mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)=?=[port=&gt;25]
-==&gt;fail::[parse error at line 1, col 48:
-     ....12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)=?=[port=&gt;25]
-                                                ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/538
-mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)=?=[port=&gt;26]
-==&gt;fail::[parse error at line 1, col 48:
-     ....12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)=?=[port=&gt;26]
-                                                ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/540
+mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)?[port=&gt;25]
+==&gt;[
+    host=&gt;&lt;2024.12&gt;,
+    port=&gt;25,
+    authority=&gt;&lt;2024.12:25&gt;,
+    path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
+    c=&gt;[
+     min=&gt;1,
+     max=&gt;1],
+    q=&gt;[tz=&gt;'-0500']]
+mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)?[port=&gt;26]
 mtron&gt; [-- rec update: change timezone --]
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)&gt;&gt;=[q=&gt;[tz=&gt;'+0000']]&gt;&gt;q&gt;&gt;tz
 ==&gt;'+0000'
@@ -616,16 +615,16 @@ mtron&gt; nanos::1000000.0.as(millis::T).matches(millis::T)
 <p>Time units require a real-backed value — an int-backed time is a type violation:</p>
 <pre><code class="language-mtron">mtron&gt; day::2.as(millis::T)         [-- int-backed time (bad) --]
 ==&gt;fail::[2 is not a time::T[][ctor?rng=day&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@day
-   	while parsing: day::2.as(millis::T)]@/sys/fail/542
+   	while parsing: day::2.as(millis::T)]@/sys/fail/78
 mtron&gt; hour::2.as(minute::T)        [-- int-backed time (bad) --]
 ==&gt;fail::[2 is not a time::T[][ctor?rng=hour&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@hour
-   	while parsing: hour::2.as(minute::T)]@/sys/fail/544
+   	while parsing: hour::2.as(minute::T)]@/sys/fail/80
 mtron&gt; nanos::2.as(millis::T)       [-- int-backed time (bad) --]
 ==&gt;fail::[2 is not a time::T[][ctor?rng=nanos&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@nanos
-   	while parsing: nanos::2.as(millis::T)]@/sys/fail/546
+   	while parsing: nanos::2.as(millis::T)]@/sys/fail/82
 mtron&gt; micros::2.as(millis::T)      [-- int-backed time (bad) --]
 ==&gt;fail::[2 is not a time::T[][ctor?rng=micros&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@micros
-   	while parsing: micros::2.as(millis::T)]@/sys/fail/548
+   	while parsing: micros::2.as(millis::T)]@/sys/fail/84
 </code></pre>
 <h5>relational operators</h5>
 <p><code>eq</code>, <code>neq</code>, <code>lt</code>, <code>gt</code>, <code>lte</code>, and <code>gte</code> auto-convert across units before comparing:</p>

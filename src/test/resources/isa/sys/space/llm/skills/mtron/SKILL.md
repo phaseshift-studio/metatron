@@ -25,13 +25,10 @@ eval-mcp-metatron(code: "*/sys/console/history")    # Get history
 eval-mcp-metatron(code: "*acme:customers.*(_).limit(5)")  # Query data
 ```
 
-If the MCP server is not available, you can use the script `scripts/mtron_ws_client.py`.
+If the MCP server is not available, you can use `wsplus` (a self-contained, bundled script in the `scripts/` dir):
 
-Examples::
-```python
-from mtron_ws_client import mtronWebSocketClient
-client = mtronWebSocketClient(host="<the users metatron websocket endpoint>")
-result = client.eval(code="<an mtron expression>")
+```
+wsplus -e "<your mtron expression>" ws://<host>:8555/mtron
 ```
 
 Either of the two `eval()` options above can be used for **all** mtron expression execution — reads, writes, queries, introspection, etc.

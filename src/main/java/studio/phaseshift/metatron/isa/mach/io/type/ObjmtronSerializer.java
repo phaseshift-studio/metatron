@@ -187,12 +187,12 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     @Override
     public String writeFail(final Fail fail) {
         final StringBuilder sb = new StringBuilder();
-        // Serializing a fail IS the report boundary — the console result
-        // line, a headless -e print, an MCP/WS reply, a log line. This is
-        // where the tracer fires: the deepest mtron stack capture of the
-        // chain, once per chain (each failure chain emits exactly one
-        // trace, no matter how many retries died before it).
-        MTronException.emitStackTrace(fail.jvm());
+        // Serialization is data-only: it does NOT emit the stack trace.  Emitting
+        // here fired the tracer in the middle of toString() — the [ERROR] line landed
+        // before the fail text it describes, and a space write (the tracer's own fail
+        // registration) happened during what should be a pure read.  The reporting
+        // boundary (console result line, headless -e, WS/MCP reply) emits the trace
+        // explicitly after the value is written, via MTronException.emitStackTrace.
         // Walk the cause chain (outermost first, reading right gets to the
         // root) and serialize each level's OWN message as one bracket. A
         // level whose text is already embedded in the level above's message
@@ -378,7 +378,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String writeType(final Type type) {
-        return this.generateType(new StringBuilder(), type).toString();
+        return this.generateType(new StringBuilder(), type, 0).toString();
     }
 
     @Override
@@ -498,7 +498,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     // ── Type generation ──────────────────────────────────────────
 
-    private StringBuilder generateType(final StringBuilder sb, final Type type) {
+    protected StringBuilder generateType(final StringBuilder sb, final Type type, final int depth) {
         // the type's own name is a uri too, so it is written through writeUri: a renderer tags uris
         // where the serializer writes them, and appending the raw string left every type named in a
         // result (inst::T, union(…), #::T, uri::T) unclickable while the plain uri values beside it
@@ -509,7 +509,10 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             if (type.isIsaPredicate()) {
                 sb.append("[?");
                 final StringBuilder temp = new StringBuilder();
-                this.renderValue(temp, type.isPredicateObj());
+                // renderInstArg, not renderValue: it carries the depth so a nested type's predicate
+                // rec indents one level deeper than its parent (the same hook generateInst already
+                // uses for inst arguments)
+                this.renderInstArg(temp, depth, type.isPredicateObj());
                 sb.append(temp);
                 sb.append("]");
             } else {
@@ -521,7 +524,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                 sb.append("[]");
             sb.append("[");
             final StringBuilder temp = new StringBuilder();
-            this.renderValue(temp, type.constructor());
+            this.renderInstArg(temp, depth, type.constructor());
             this.cleanEnding(temp);
             sb.append(temp);
             sb.append("]");

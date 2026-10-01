@@ -66,9 +66,14 @@ public interface WebSocketObj extends Rec, Closeable {
      * Text-frame entry point: parse the raw frame through the configured input
      * serializer and delegate to {@link #onMessage(WebSocket, Obj)}.  Handlers that
      * need the raw string (e.g. schema-aware MCP argument parsing) override this.
+     * <p>
+     * An uncaught fail is propagated through the handler's {@code ON_MESSAGE} inst by
+     * the processor (a fail lhs skips a non-catch inst's function), so it is caught here
+     * first — otherwise the handler never runs and no reply is sent.
      */
     default void onMessage(final WebSocket conn, final String message) {
-        this.onMessage(conn, this.getIO().input().fromBytes(message));
+        final Obj obj = this.getIO().input().fromBytes(message);
+        this.onMessage(conn, obj.isFail() ? obj.asFail().caughtTransient() : obj);
     }
 
     void onError(final WebSocket conn, final Exception ex);

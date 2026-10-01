@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.isa.mach.type.router.BasicRouter;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
@@ -328,6 +329,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 if (!result.isNoObj()) {
                     System.out.print(Graphitty.string("{{-X-}}{{<100}}"));
                     System.out.print(CommonUtil.removeQuotes(ObjmtronSerializer.single().write(result)) + "\n");
+                    if (result.isFail() || result.isCaughtFail())
+                        MTronException.emitStackTrace(result.asFail().jvm());
                 }
             } finally {
                 spinner.stop();
@@ -366,8 +369,11 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 } else {
                     result = mParser.eval(new java.io.File(filePath));
                 }
-                if (!result.isNoObj())
+                if (!result.isNoObj()) {
                     System.out.print(ObjmtronSerializer.single().write(result) + "\n");
+                    if (result.isFail() || result.isCaughtFail())
+                        MTronException.emitStackTrace(result.asFail().jvm());
+                }
             } catch (final Exception e) {
                 System.err.println("metatron: " + e.getMessage());
                 exitCode = 1;

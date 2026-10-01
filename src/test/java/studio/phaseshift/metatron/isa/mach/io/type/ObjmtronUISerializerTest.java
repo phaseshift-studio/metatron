@@ -22,10 +22,12 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.REC_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_AT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -182,5 +184,26 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         assertTrue(written.contains("\n"), String.format("a rec of type values must nest onto its own lines: %s", written));
         assertFalse(written.substring(0, written.indexOf('\n')).contains("=>"),
                 String.format("no entry may sit on the opening line: %s", written));
+    }
+
+    @Test
+    public void testNestedTypePredicateMaintainsDepth() {
+        // the *mach shape: a rec whose value is a type whose own predicate is a multi-entry rec.
+        // before the type path threaded depth, the inner predicate's entries came out at the same
+        // one-space indent as the outer rec's entries instead of one level deeper
+        final Type inner = Type.Builder.build()
+                .tid(REC_TID)
+                .isaPredicate(rec(
+                        "p0", uri(f("/predicate/0")).type(),
+                        "p1", uri(f("/predicate/1")).type(),
+                        "p2", uri(f("/predicate/2")).type()))
+                .create();
+        final Obj outer = rec("child", inner, "other", str("leaf"));
+        final String written = ObjmtronUISerializer.prettyPrint().write(outer);
+        LOG.debug("nested type rec => %s", written);
+        // the outer rec's own entry sits at depth 1, the nested type's predicate at depth 2
+        assertTrue(written.contains("\n child=>"), String.format("the outer entry must be at depth 1: %s", written));
+        assertTrue(written.contains("\n  p0=>"), String.format("the nested type's predicate entries must be at depth 2: %s", written));
+        assertFalse(written.contains("\n p0=>"), String.format("the nested predicate must not reset to depth 1: %s", written));
     }
 }

@@ -262,7 +262,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/type-system-java.html">type-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/scripts/wsplus">wsplus</a>
                             </div>
                         </div>
                     </li>
@@ -280,8 +280,6 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
@@ -290,8 +288,8 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/README.md">README.md</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
@@ -396,14 +394,47 @@
     <div class="markdown-body">
 <h2>the category graph (<code>/m/math/cat</code>)</h2>
 <p><code>/m/math/cat</code> realizes types and insts as a <strong>category</strong>: types are the objects (the vertices), insts are the
-morphisms (the edges), and an inst's dom/rng are its endpoints. The lift is a type constructor, not a query
-processor — cast a type to a vertex, cast an inst to an edge:</p>
-<pre><code class="language-mtron">mtron&gt; int::T.as(object::T)&gt;&gt;obj
+morphisms (the edges), and an inst's dom/rng are its source and target endpoints.</p>
+<pre><code class="language-mtron">mtron&gt; import(/m/math/cat)
+...
 </code></pre>
-<pre><code class="language-mtron">mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)&gt;&gt;form
-==&gt;fail::[inst apply failure: plus?rng=int&amp;dom=int(int::T) is not a morphism::T [nominal] (at /m/inst/as@1)]@/sys/fail/380
+<p>The lift is a type constructor. An <em>object</em> is constructed from a type and a <em>morphism</em> from an inst. The cat-graph is
+dynamically generated, not apriori defined.</p>
+<p><strong>IMPORTANT</strong>: when referencing an instruction directly in a <code>console::T</code>, a <code>block</code> inst (sugar'd <code>|</code>) prevents the
+instruction from being evaluated.</p>
+<pre><code class="language-mtron">mtron&gt; int::T.as(object::T)
+==&gt;object::[
+    obj=&gt;int::T,
+    law=&gt;[
+     ring=&gt;ring_theory::[
+      add=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
+      mul=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
+      zero=&gt;0,
+      one=&gt;1],
+     add_group=&gt;group_theory::[
+      op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
+      id=&gt;0,
+      inv=&gt;!*/m/inst/neg?rng=/m/int&amp;dom=/m/int],
+     add_monoid=&gt;monoid_theory::[
+      op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
+      id=&gt;0],
+     mult_monoid=&gt;monoid_theory::[
+      op=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
+      id=&gt;1]],
+    morphed_to=&gt;!inst?rng=#&amp;dom=#(){&lt;j&gt;},
+    morphed_from=&gt;!inst?rng=#&amp;dom=#(){&lt;j&gt;}]
+mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)
+==&gt;morphism::[
+    form=&gt;mapper,
+    src=&gt;inst?rng=#&amp;dom=plus?rng=int&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    trgt=&gt;inst?rng=#&amp;dom=plus?rng=int&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;plus?rng=int&amp;dom=int(int::T),
+    law=&gt;[
+     commutative,
+     right_distributive,
+     action]]
 </code></pre>
-<p>Every registered inst is a morphism and every type an object — the graph is emergent, not declared edge-by-edge.</p>
 <h3>the two blocks</h3>
 <h4>the object block — <code>object::T</code> (a vertex)</h4>
 <table>
@@ -412,11 +443,114 @@ processor — cast a type to a vertex, cast an inst to an edge:</p>
 </thead>
 <tbody>
 <tr><td><code>obj</code></td><td>the type itself — the down-elevator to the vertex's source type</td></tr>
-<tr><td><code>morphed_to</code></td><td>the morphisms <strong>sourced from</strong> this object (the OUT edges)</td></tr>
-<tr><td><code>morphed_from</code></td><td>the morphisms <strong>targeted at</strong> this object (the IN edges)</td></tr>
+<tr><td><code>morphed_to</code></td><td>the morphisms <strong>sourced from</strong> this object (the outgoing edges)</td></tr>
+<tr><td><code>morphed_from</code></td><td>the morphisms <strong>targeted at</strong> this object (the incoming edges)</td></tr>
 <tr><td><code>law</code></td><td>the structural theories this object models (see <em>theories</em>)</td></tr>
 </tbody>
 </table>
+<pre><code class="language-mtron">mtron&gt; int::T.as(object::T).morphed_to()
+==&gt;morphism::[
+    form=&gt;mapper,
+    src=&gt;inst?rng=#&amp;dom=as?rng=bool&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    trgt=&gt;inst?rng=#&amp;dom=as?rng=bool&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;as?rng=bool&amp;dom=int(bool::T){&lt;j&gt;}]
+==&gt;morphism::[
+    form=&gt;mapper,
+    src=&gt;inst?rng=#&amp;dom=as?rng=bytes&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    trgt=&gt;inst?rng=#&amp;dom=as?rng=bytes&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;as?rng=bytes&amp;dom=int(bytes::T){&lt;j&gt;}]
+==&gt;morphism::[
+    form=&gt;mapper,
+    src=&gt;inst?rng=#&amp;dom=as?rng=real&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    trgt=&gt;inst?rng=#&amp;dom=as?rng=real&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;as?rng=real&amp;dom=int(real::T){&lt;j&gt;}]
+==&gt;morphism::[
+    form=&gt;mapper,
+    src=&gt;inst?rng=#&amp;dom=as?rng=str&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    trgt=&gt;inst?rng=#&amp;dom=as?rng=str&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;as?rng=str&amp;dom=int(str::T){&lt;j&gt;}]
+==&gt;morphism::[
+    form=&gt;mapper,
+    src=&gt;inst?rng=#&amp;dom=as?rng=uri&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    trgt=&gt;inst?rng=#&amp;dom=as?rng=uri&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;as?rng=uri&amp;dom=int(uri::T){&lt;j&gt;}]
+==&gt;morphism::[
+    form=&gt;mapper,
+    src=&gt;inst?rng=#&amp;dom=as?rng=rec&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    trgt=&gt;inst?rng=#&amp;dom=as?rng=rec&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;as?rng=rec&amp;dom=int(rec::T){&lt;j&gt;}]
+==&gt;morphism::[
+    form=&gt;mapper,
+    src=&gt;inst?rng=#&amp;dom=plus?rng=int&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    trgt=&gt;inst?rng=#&amp;dom=plus?rng=int&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;plus?rng=int&amp;dom=int(int::T){&lt;j&gt;},
+    law=&gt;[
+     commutative,
+     right_distributive,
+     action]]
+==&gt;morphism::[
+    form=&gt;mapper,
+    src=&gt;inst?rng=#&amp;dom=mult?rng=int&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    trgt=&gt;inst?rng=#&amp;dom=mult?rng=int&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;mult?rng=int&amp;dom=int(int::T){&lt;j&gt;},
+    law=&gt;[
+     commutative,
+     right_distributive,
+     action]]
+==&gt;morphism::[
+    form=&gt;mapper,
+    src=&gt;inst?rng=#&amp;dom=zero?rng=int&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    trgt=&gt;inst?rng=#&amp;dom=zero?rng=int&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;zero?rng=int&amp;dom=int(){&lt;j&gt;}]
+==&gt;morphism::[
+    form=&gt;mapper,
+    src=&gt;inst?rng=#&amp;dom=one?rng=int&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    trgt=&gt;inst?rng=#&amp;dom=one?rng=int&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;one?rng=int&amp;dom=int(){&lt;j&gt;}]
+==&gt;morphism::[
+    form=&gt;mapper,
+    src=&gt;inst?rng=#&amp;dom=neg?rng=int&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    trgt=&gt;inst?rng=#&amp;dom=neg?rng=int&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;neg?rng=int&amp;dom=int(){&lt;j&gt;}]
+==&gt;morphism::[
+    form=&gt;mapper,
+    src=&gt;inst?rng=#&amp;dom=div?rng=int&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    trgt=&gt;inst?rng=#&amp;dom=div?rng=int&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;div?rng=int&amp;dom=int(int::T){&lt;j&gt;}]
+==&gt;morphism::[
+    form=&gt;mapper,
+    src=&gt;inst?rng=#&amp;dom=minus?rng=int&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    trgt=&gt;inst?rng=#&amp;dom=minus?rng=int&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;minus?rng=int&amp;dom=int(int::T){&lt;j&gt;},
+    law=&gt;[action]]
+==&gt;morphism::[
+    form=&gt;mapper,
+    src=&gt;inst?rng=#&amp;dom=gt?rng=bool&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    trgt=&gt;inst?rng=#&amp;dom=gt?rng=bool&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;gt?rng=bool&amp;dom=int(int::T){&lt;j&gt;},
+    law=&gt;[right_distributive]]
+==&gt;morphism::[
+    form=&gt;mapper,
+    src=&gt;inst?rng=#&amp;dom=gte?rng=bool&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    trgt=&gt;inst?rng=#&amp;dom=gte?rng=bool&amp;dom=int(&lt;#&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;gte?rng=bool&amp;dom=int(int::T){&lt;j&gt;},
+   ...
+</code></pre>
 <h4>the morphism block — <code>morphism::T</code> (an edge)</h4>
 <table>
 <thead>
@@ -493,7 +627,10 @@ instance. <code>algebraic_theory::T</code> is the nominal super-type grouping th
 <p>The morphism's <code>law</code> field is a set of <strong>process</strong> law labels served from <code>CatLawTable</code> (the <code>declared ∩ process</code>
 cell):</p>
 <pre><code class="language-mtron">mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)&gt;&gt;law
-==&gt;fail::[inst apply failure: plus?rng=int&amp;dom=int(int::T) is not a morphism::T [nominal] (at /m/inst/as@1)]@/sys/fail/382
+==&gt;[
+    commutative,
+    right_distributive,
+    action]
 </code></pre>
 <p>Examples: <code>commutative</code> (<code>f(x,y) = f(y,x)</code>), <code>right_distributive</code>, <code>action</code>, <code>monoidic</code>, <code>involution</code>, <code>absorbing</code>,
 <code>idempotent</code>. A law has a <em>provenance</em> tier (<code>syntactic</code> — derived from the n-tid, <code>declared</code> — proved once per

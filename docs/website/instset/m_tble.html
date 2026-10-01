@@ -409,7 +409,32 @@
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[pattern=&gt;/m/tble/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],const=&gt;[[llm_chat_schema=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]@helper],type=&gt;[space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?rng=tblespace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@tblespace],inst=&gt;[sql?rng=rec{*}&amp;dom=tblespace(str::T){&lt;j&gt;}],rewrite=&gt;[/m/tble/inst/rewrite/sql_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_sum?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_mean?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_offset?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_offset_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_order?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_order_offset?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_offset?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_where_offset_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_select?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_order?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/sql_distinct?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/kv_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/tble/inst/rewrite/kv_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;}]]@/m/tble</code></pre>
+                        <pre><code>instset::[
+ {{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}/m/tble/#{{/link}}{{/b}},
+ {{b}}{{link}}q{{/link}}{{/b}}=&gt;[docq::[
+ {{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}docq{{/link}}{{/b}},
+ {{b}}{{link}}pre_read{{/link}}{{/b}}=&gt;inst?rng=#{*}&amp;dom=#{?}({{b}}{{link}}uri{{/link}}{{/b}}::T){&lt;j&gt;},
+ {{b}}{{link}}pre_write{{/link}}{{/b}}=&gt;inst?rng=#{*}&amp;dom=#{?}({{b}}{{link}}uri{{/link}}{{/b}}::T,&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T){&lt;j&gt;},
+ {{b}}{{link}}obj{{/link}}{{/b}}=&gt;memspace::[{{b}}{{link}}pattern{{/link}}{{/b}}=&gt;&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;],
+ {{b}}{{link}}inst{{/link}}{{/b}}=&gt;instset::[{{b}}{{link}}pattern{{/link}}{{/b}}=&gt;&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;]]],
+ {{b}}{{link}}space{{/link}}{{/b}}=&gt;[{{b}}{{link}}super{{/link}}{{/b}}=&gt;!*{{b}}{{link}}/m{{/link}}{{/b}}],
+ {{b}}{{link}}const{{/link}}{{/b}}=&gt;[[{{b}}{{link}}llm_chat_schema{{/link}}{{/b}}=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]{{y}}@{{/y}}{{y}}{{link}}/m/web/helper{{/link}}{{/y}}],
+ {{b}}{{link}}type{{/link}}{{/b}}=&gt;[{{b}}{{link}}space{{/link}}{{/b}}::T[?[
+ {{b}}{{link}}host{{/link}}{{/b}}=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T,
+ {{b}}{{link}}driver{{/link}}{{/b}}=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T]][ctor?rng=tblespace&amp;dom=#{?}({{b}}{{link}}rec{{/link}}{{/b}}::T){&lt;j&gt;}]{{y}}@{{/y}}{{y}}{{link}}/m/tble/space/tblespace{{/link}}{{/y}}],
+ {{b}}{{link}}inst{{/link}}{{/b}}=&gt;[sql?rng=rec{*}&amp;dom=tblespace({{b}}{{link}}str{{/link}}{{/b}}::T){&lt;j&gt;}],
+ {{b}}{{link}}rewrite{{/link}}{{/b}}=&gt;[
+  /m/tble/inst/rewrite/sql_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/tble/inst/rewrite/sql_sum?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/tble/inst/rewrite/sql_mean?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/tble/inst/rewrite/sql_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/tble/inst/rewrite/sql_offset?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/tble/inst/rewrite/sql_offset_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/tble/inst/rewrite/sql_where?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/tble/inst/rewrite/sql_where_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/tble/inst/rewrite/sql_where_order?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/tble/inst/rewrite/sql_where_order_offset?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+...(8 more)]]{{y}}@{{/y}}{{y}}{{link}}/m/tble{{/link}}{{/y}}</code></pre>
                     </div>
                 </div>
             </div>
@@ -506,7 +531,7 @@
         <span class="code text-secondary fw-bold">helper</span>
         <small class="text-muted code">/m/tble/helper</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">[llm_chat_schema=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]@helper</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">[{{b}}{{link}}llm_chat_schema{{/link}}{{/b}}=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]{{y}}@{{/y}}{{y}}{{link}}/m/web/helper{{/link}}{{/y}}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a collection of tble related utilities</p>
 </div>
@@ -519,7 +544,17 @@
         <small class="text-muted code">/m/tble/space/tblespace</small>
     </div>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?rng=tblespace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@tblespace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,{?}pre_write=&gt;inst::T,{?}post_write=&gt;inst::T,{?}qless_write=&gt;inst::T,{?}pre_read=&gt;inst::T,{?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@qproc],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T,
+ {?}{{b}}{{link}}q{{/link}}{{/b}}=&gt;[{{b}}{{link}}rec{{/link}}{{/b}}::T[?[
+ {{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T,
+ {?}{{b}}{{link}}pre_write{{/link}}{{/b}}=&gt;{{b}}{{link}}inst{{/link}}{{/b}}::T,
+ {?}{{b}}{{link}}post_write{{/link}}{{/b}}=&gt;{{b}}{{link}}inst{{/link}}{{/b}}::T,
+ {?}{{b}}{{link}}qless_write{{/link}}{{/b}}=&gt;{{b}}{{link}}inst{{/link}}{{/b}}::T,
+ {?}{{b}}{{link}}pre_read{{/link}}{{/b}}=&gt;{{b}}{{link}}inst{{/link}}{{/b}}::T,
+ {?}{{b}}{{link}}post_read{{/link}}{{/b}}=&gt;{{b}}{{link}}inst{{/link}}{{/b}}::T]][inst?rng=qproc&amp;dom=#{?}({{b}}{{link}}qproc{{/link}}{{/b}}::T){&lt;j&gt;}]{{y}}@{{/y}}{{y}}{{link}}/m/qproc{{/link}}{{/y}}],
+ {?}{{b}}{{link}}route{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T],
+ {?}{{b}}{{link}}schema{{/link}}{{/b}}=&gt;{{b}}{{link}}instset{{/link}}{{/b}}::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a metatron realization of a relational database</p>
 </div><div class="card-body border-top py-2">
@@ -537,7 +572,7 @@
         </span>
         <small class="text-muted code">/m/tble/inst/sql?rng=/m/rec{*}&amp;dom=/m/tble/space/tblespace</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__tble__inst__sql?rng=__m__rec{*}&dom=__m__tble__space__tblespace-doc-0-tab').click();document.getElementById('__m__tble__inst__sql?rng=__m__rec{*}&dom=__m__tble__space__tblespace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sql?rng=rec{*}&dom=tblespace(str::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__tble__inst__sql?rng=__m__rec{*}&dom=__m__tble__space__tblespace-doc-0-tab').click();document.getElementById('__m__tble__inst__sql?rng=__m__rec{*}&dom=__m__tble__space__tblespace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sql?rng=rec{*}&dom=tblespace({{b}}{{link}}str{{/link}}{{/b}}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">query a relational database in native sql and yield an mtron mapped result set</p>

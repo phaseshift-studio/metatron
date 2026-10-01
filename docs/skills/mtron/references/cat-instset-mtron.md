@@ -13,18 +13,22 @@ description: |
 # the category graph (`/m/math/cat`)
 
 `/m/math/cat` realizes types and insts as a **category**: types are the objects (the vertices), insts are the
-morphisms (the edges), and an inst's dom/rng are its endpoints. The lift is a type constructor, not a query
-processor — cast a type to a vertex, cast an inst to an edge:
+morphisms (the edges), and an inst's dom/rng are its source and target endpoints.
 
 ```mtron_pre
-int::T.as(object::T)>>obj
+[NO_OUTPUT] import(/m/math/cat)
 ```
+
+The lift is a type constructor. An _object_ is constructed from a type and a _morphism_ from an inst. The cat-graph is
+dynamically generated, not apriori defined.
+
+**IMPORTANT**: when referencing an instruction directly in a `console::T`, a `block` inst (sugar'd `|`) prevents the
+instruction from being evaluated.
 
 ```mtron_pre
-|plus?int<=int(int::T).as(morphism::T)>>form
+int::T.as(object::T)
+|plus?int<=int(int::T).as(morphism::T)
 ```
-
-Every registered inst is a morphism and every type an object — the graph is emergent, not declared edge-by-edge.
 
 ## the two blocks
 
@@ -33,9 +37,13 @@ Every registered inst is a morphism and every type an object — the graph is em
 | field          | what it is                                                      |
 |----------------|-----------------------------------------------------------------|
 | `obj`          | the type itself — the down-elevator to the vertex's source type |
-| `morphed_to`   | the morphisms **sourced from** this object (the OUT edges)      |
-| `morphed_from` | the morphisms **targeted at** this object (the IN edges)        |
+| `morphed_to`   | the morphisms **sourced from** this object (the outgoing edges) |
+| `morphed_from` | the morphisms **targeted at** this object (the incoming edges)  |
 | `law`          | the structural theories this object models (see *theories*)     |
+
+```mtron_pre
+int::T.as(object::T).morphed_to()
+```
 
 ### the morphism block — `morphism::T` (an edge)
 

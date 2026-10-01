@@ -1390,6 +1390,10 @@ public class Console extends MRec implements Closeable, Runnable {
             // terminal, so this is where they reach the screen
             this.renderScreen(false);
         }
+        // emit the fail stack trace after the result is on screen, not during its
+        // serialization (which used to interleave the [ERROR] line before the value)
+        result.stream().filter(o -> o.isFail() || o.isCaughtFail())
+                .forEach(o -> MTronException.emitStackTrace(o.asFail().jvm()));
     }
 
     private void renderTrace(final Obj failObj) {

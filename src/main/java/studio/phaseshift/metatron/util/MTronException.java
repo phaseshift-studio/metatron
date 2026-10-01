@@ -228,7 +228,7 @@ public class MTronException extends RuntimeException {
         carrier.mtronTraceEmitted = true;
         lastMtronTrace = carrier.mtronTrace;
         mtronTracesEmitted.incrementAndGet();
-        Graphitty.log(Tracer.class).error(carrier.mtronTrace);
+        Graphitty.log(MFail.fail(carrier)).none("%s", CommonUtil.indent(carrier.mtronTrace, 2));
     }
 
     /**

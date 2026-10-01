@@ -262,7 +262,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/type-system-java.html">type-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/scripts/wsplus">wsplus</a>
                             </div>
                         </div>
                     </li>
@@ -280,8 +280,6 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
@@ -290,8 +288,8 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/README.md">README.md</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
@@ -642,7 +640,7 @@ mtron&gt; nat::2                    [-- ok --]
 ==&gt;nat::2
 mtron&gt; nat::-1                   [-- &lt;ERROR&gt; --]
 ==&gt;fail::[-1 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-1]@/sys/fail/428
+   	while parsing: nat::-1]@/sys/fail/464
 </code></pre>
 <hr />
 <h3>8. Mapping &amp; Filtering</h3>
@@ -662,7 +660,7 @@ mtron&gt; {1,2,3,4}.map(map(+2))           [-- nested --]
 ==&gt;5
 ==&gt;6
 mtron&gt; {1,2,3}.where(gt(1))             [-- {2,3}  (filter: keep if predicate matches) --]
-==&gt;fail{3}::[lhs range does not match inst domain: int::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri(gt(1)){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/430
+==&gt;fail{3}::[lhs range does not match inst domain: int::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri(gt(1)){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/506
 mtron&gt; {1,2,3}.is(gt(1))                [-- {2,3}  (same, filter via is()) --]
 ==&gt;2
 ==&gt;3
@@ -690,17 +688,17 @@ mtron&gt; [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3]
 </code></pre>
 <h4>Where (filter)</h4>
 <pre><code class="language-mtron">mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}.where([a=&gt;is(gt(1))])               [-- {[a=&gt;2],[a=&gt;3]} --]
-==&gt;fail{3}::[lhs range does not match inst domain: rec::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri([a=&gt;is(gt(1))]){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/436
+==&gt;fail{3}::[lhs range does not match inst domain: rec::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri([a=&gt;is(gt(1))]){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/512
 mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}=?=[a=&gt;is(gt(1))]                    [-- syntax sugar for above --]
 ==&gt;fail::[parse error at line 1, col 23:
      {[a=&gt;1],[a=&gt;2],[a=&gt;3]}=?=[a=&gt;is(gt(1))]                    
                            ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/442
+     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/518
 mtron&gt; [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   [-- [1,7,3] --]
 ==&gt;fail::[parse error at line 1, col 23:
      [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   
                            ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/444
+     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/520
 </code></pre>
 <hr />
 <h3>9. Grouping</h3>
@@ -966,7 +964,7 @@ mtron&gt; {1,2,3,4}.sum{2}().sum?int&lt;=int{1,7}().sum()-&lt;[_,_]&gt;-.sum?int
 ==&gt;fail::[parse error at line 1, col 74:
      ...,7}().sum()-&lt;[_,_]&gt;-.sum?int&lt;=int{2}()  #
                                                 ^
-     could not parse at '#' — unclosed '&lt;' — missing '&gt;'?]@/sys/fail/472
+     could not parse at '#' — unclosed '&lt;' — missing '&gt;'?]@/sys/fail/556
 </code></pre>
 
     </div>

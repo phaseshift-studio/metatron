@@ -56,7 +56,19 @@ public class Highlighter implements org.jline.reader.Highlighter {
     private ObjSerializer<String> serializer;
     private Terminal terminal;
 
-    private static final Highlighter INSTANCE = new Highlighter(SyntaxHighlighter.build(Highlighter.configurations.getConfig("jnanorc"), "mtron"));
+    private static final Highlighter INSTANCE;
+    static {
+        // The one-arg constructor is not used here on purpose: it assigns the link serializer
+        // (ObjmtronUISerializer.linkBodies()), and that setup calls back into Highlighter.format
+        // to render a probe.  If we assigned the serializer *inside* the constructor, that
+        // re-entrant format call would read INSTANCE before it was assigned below and NPE on
+        // `INSTANCE.highlight(object)` — which is the spam that was surfacing in every test JVM.
+        // So we construct with a deferred (null) serializer, publish INSTANCE, then attach the
+        // serializer in a step where the re-entrant read is safe.
+        final Highlighter built = new Highlighter(SyntaxHighlighter.build(Highlighter.configurations.getConfig("jnanorc"), "mtron"), true);
+        INSTANCE = built;
+        built.serializer = ObjmtronUISerializer.linkBodies();
+    }
 
     /**
      * The instance that colors the user's OWN text: built without graphitty, so a rule in it is
@@ -362,11 +374,21 @@ public class Highlighter implements org.jline.reader.Highlighter {
     }
 
     private Highlighter(final SyntaxHighlighter syntaxHighlighter) {
+        this(syntaxHighlighter, false);
+    }
+
+    /*
+     * {@code deferSerializer=true} leaves {@link #serializer} null on the new instance: the single
+     * INSTANCE initialization path uses this so that the link-serializer setup (which calls back into
+     * {@code Highlighter.format} to render a probe) does not read {@code INSTANCE} before it is
+     * published.  The caller attaches the serializer once the instance is visible.
+     */
+    private Highlighter(final SyntaxHighlighter syntaxHighlighter, final boolean deferSerializer) {
         this.syntaxHighlighter = syntaxHighlighter;
         this.graphitty = new Graphitty(Map.of(), new ByteArrayOutputStream());
         // the link serializer, not the plain one: this is the instance every renderer formats
-        // objs with, and a uri reaches writeUri only if the serializer that draws it tags it
-        this.serializer = ObjmtronUISerializer.linkBodies();
+        // objs with, and a uri reaches writeUri only if the serializer that draws it tags it.
+        this.serializer = deferSerializer ? null : ObjmtronUISerializer.linkBodies();
     }
 
     public Highlighter(final ObjSerializer<String> serializer) {
@@ -392,11 +414,14 @@ public class Highlighter implements org.jline.reader.Highlighter {
     }
 
     public static String format(final Object object) {
-        return INSTANCE.highlight(object);
+        // re-entrant while INSTANCE is still being built: it is not yet published, so return the
+        // raw text instead of NPE'ing on a null INSTANCE (that was surfacing in every test JVM).
+        return null == INSTANCE ? object.toString() : INSTANCE.highlight(object);
     }
 
     public static String format(final String f, final Object... args) {
-        return INSTANCE.highlight(f.formatted(args));
+        final String text = f.formatted(args);
+        return null == INSTANCE ? text : INSTANCE.highlight(text);
     }
 
     public static String unformat(final String string) {

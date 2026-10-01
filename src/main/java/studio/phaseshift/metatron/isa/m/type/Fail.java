@@ -84,6 +84,15 @@ public interface Fail extends Obj, PlusMonoid<Fail> {
 
     Fail caught();
 
+    /**
+     * The caught wrap without the space write.  {@link #caught()} removes the fail
+     * from the fail space (a caught fail leaves the uncaught ledger); this is the
+     * same {@code MCaughtFail} wrap with that write skipped, for callers that only
+     * need the caught form to serialize and round-trip (a websocket reply, a log
+     * line) and must not mutate the ledger as a side effect.
+     */
+    Fail caughtTransient();
+
     @Override
     default boolean isFail() {
         return true;

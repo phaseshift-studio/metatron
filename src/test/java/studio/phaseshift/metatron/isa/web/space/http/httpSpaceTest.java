@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space.http;
 
+import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -35,11 +38,15 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.sys.space.fsSpace;
+import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.io.File;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -211,6 +218,50 @@ public class httpSpaceTest extends AbstractSpaceTest {
         final Obj direct = Router.readFromSpace("local:web/test.txt");
         assertNotEquals(noobj(), direct, "direct fsSpace read should not be noobj");
         assertTrue(direct.isStr(), "test.txt should be a string, got: " + direct.tid());
+    }
+
+    // ===================================================================
+    //  POST body: the MIME serialization of the obj, sent verbatim
+    // ===================================================================
+
+    /**
+     * A json POST used to fail before the client connected: the writer re-parsed the serialized body and called
+     * {@code JsonElement.getAsString()} on it, which throws for the JsonObject a rec serializes to. These rows
+     * pin the bytes that actually reach the socket, for the shapes a body comes in as — a rec (the document), a
+     * str already typed json (a document too), and a plain str (a JSON string) — and for the two things a body
+     * must survive on the way: a quote inside a <em>value</em> (escaped once, as JSON requires — the document
+     * itself is never quoted again) and non-ASCII text (the bytes must not go through a decode/encode pair).
+     */
+    @ParameterizedTest
+    @CsvSource(quoteCharacter = '~', delimiter = '%', value = {
+            "[model=>'laya:en',state=>[message=>\"I want money.\"]]  %  {\"model\":\"laya:en\",\"state\":{\"message\":\"I want money.\"}}",
+            "[model=>'laya:en'].as(json::T)                          %  {\"model\":\"laya:en\"}",
+            "'a/b'                                                   %  \"a/b\"",
+            "[message=>'he said \"money\".']                         %  {\"message\":\"he said \\\"money\\\".\"}",
+            "[message=>'caf\u00e9 \u00a55']                          %  {\"message\":\"caf\u00e9 \u00a55\"}",
+    })
+    void testJsonPostBodyBytes(final String mtron, final String expectedBody) throws Exception {
+        final AtomicReference<String> body = new AtomicReference<>();
+        final AtomicReference<String> contentType = new AtomicReference<>();
+        final HttpServer echo = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        echo.createContext("/decide", exchange -> {
+            body.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+            contentType.set(exchange.getRequestHeaders().getFirst(MIME.MIMEType.VALUE));
+            final byte[] out = "{\"ok\":true}".getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, out.length);
+            exchange.getResponseBody().write(out);
+            exchange.close();
+        });
+        echo.start();
+        try {
+            final String uri = "http://127.0.0.1:" + echo.getAddress().getPort() + "/decide?mimeq=" + MIME.MIMEType.APPLICATION_JSON.value;
+            final Obj response = ObjmtronSerializer.parse("<" + uri + "> -> " + mtron).apply();
+            assertFalse(response.isFail(), "POST must reach the server, got: " + response);
+            assertEquals(expectedBody, body.get(), "body for " + mtron);
+            assertEquals(MIME.MIMEType.APPLICATION_JSON.value, contentType.get(), "content-type for " + mtron);
+        } finally {
+            echo.stop(0);
+        }
     }
 
     @Test

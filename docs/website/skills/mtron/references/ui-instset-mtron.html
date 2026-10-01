@@ -262,7 +262,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/type-system-java.html">type-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/scripts/wsplus">wsplus</a>
                             </div>
                         </div>
                     </li>
@@ -280,8 +280,6 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
@@ -290,8 +288,8 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/README.md">README.md</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
@@ -464,25 +462,25 @@ the same declarations the type checker uses:</p>
     desc=&gt;'[structural] the base widget type',
     accordion_widget=&gt;docs::[
      obj=&gt;widget::T[?[
-    {?}title=&gt;str::T,
-    {?}body=&gt;str::T]][ctor?rng=accordion_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/accordion_widget,
+      {?}title=&gt;str::T,
+      {?}body=&gt;str::T]][ctor?rng=accordion_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/accordion_widget,
      dom=&gt;'maybe an obj',
      rng=&gt;'an accordion obj',
      args=&gt;[
-      {?}title=&gt;'the title of the accordion',
-      {?}body=&gt;'the body content of the accordion'],
+      {?}body=&gt;'the body content of the accordion',
+      {?}title=&gt;'the title of the accordion'],
      desc=&gt;'[structural] an expandable/collaps...'],
     progress_table_widget=&gt;docs::[
      obj=&gt;widget::T[?[
-    {?}header=&gt;lst::T,
-    {?}row=&gt;lst::T]][ctor?rng=progress_table_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/progress_table_widget,
+      {?}header=&gt;lst::T,
+      {?}row=&gt;lst::T]][ctor?rng=progress_table_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/progress_table_widget,
      desc=&gt;'[structural] a table of progress b...',
      example=&gt;[&quot;progress_table::[row=&gt;[[text=&gt;'lay...&quot;]],
     table_widget=&gt;docs::[
      obj=&gt;widget::T[?[
-    {?}header=&gt;lst::T,
-    {?}row=&gt;lst::T,
-    {?}metadata=&gt;lst::T]][ctor?rng=table_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/table_widget,
+      {?}header=&gt;lst::T,
+      {?}row=&gt;lst::T,
+      {?}metadata=&gt;lst::T]][ctor?rng=table_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/table_widget,
      dom=&gt;'maybe an obj',
      rng=&gt;'a table widget',
      args=&gt;[
@@ -492,21 +490,21 @@ the same declarations the type checker uses:</p>
      desc=&gt;'[structural] a tabular data widget'],
     tree_widget=&gt;docs::[
      obj=&gt;widget::T[?[
-    root=&gt;uri::T,
-    max=&gt;int::T,
-    {?}code=&gt;&lt;#&gt;::T,
-    {?}flatten=&gt;bool::T,
-    {?}xref=&gt;rec::T,
-    {?}expand=&gt;uri::T]][ctor?rng=tree_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/tree_widget,
+      root=&gt;uri::T,
+      max=&gt;int::T,
+      {?}code=&gt;&lt;#&gt;::T,
+      {?}flatten=&gt;bool::T,
+      {?}xref=&gt;rec::T,
+      {?}expand=&gt;uri::T]][ctor?rng=tree_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/tree_widget,
      dom=&gt;'maybe an obj',
      rng=&gt;'a tree widget',
      args=&gt;[
+      root=&gt;'the root uri to traverse from',
+      {?}flatten=&gt;'fold single-folder chains into one...',
       max=&gt;'the max depth to traverse',
       {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...',
       {?}expand=&gt;'branch uris whose children are rea...',
-      {?}code=&gt;'transform obj prior to insertion i...',
-      root=&gt;'the root uri to traverse from',
-      {?}flatten=&gt;'fold single-folder chains into one...'],
+      {?}code=&gt;'transform obj prior to insertion i...'],
      desc=&gt;'[structural] the root uri space is...'],
     ...(9 more)]
 </code></pre>

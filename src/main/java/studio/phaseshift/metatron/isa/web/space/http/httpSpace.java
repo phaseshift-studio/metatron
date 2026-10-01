@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.web.space.http;
 
-import com.google.gson.JsonElement;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.jsoup.Connection;
@@ -33,7 +32,6 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import studio.phaseshift.metatron.isa.web.webHelper;
@@ -88,7 +86,6 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             .create();
 
     private final memSpace cache;
-    private static final ObjJSONSerializer JSON_TRANSLATOR = ObjJSONSerializer.simple();
 
     public static final Type HTTP_HANDLER_TYPE = Type.Builder.build()
             .tid(HTTP_SOCKET_TID)
@@ -508,7 +505,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
             // 1 — Try local route
-           /* if (pattern.test(this.pattern)) {
+          /* if (pattern.test(this.pattern)) {
                 final fURI location = Space.Helper.routeFromSpace(pattern.scheme(null).host(null), this.routes());
                 if (location != null && !location.toString().isEmpty()) {
                     return Router.global().write(location, obj);
@@ -517,11 +514,15 @@ public class httpSpace extends AbstractSpace<HttpServer> {
 
             // 2 — Remote POST via HttpClient
             try {
-                final JsonElement json = JSON_TRANSLATOR.write(obj);
+                final MIME.MIMEType mime = Optional.ofNullable(MIME.MIMEType.of(pattern.q(MIMEQ_PATTERN))).orElse(MIME.MIMEType.APPLICATION_JSON);
+                // the mime's serializer already produced the body, so sending those bytes is the whole job.
+                // re-parsing them here is what broke this write: a rec serializes to a JsonObject, and
+                // JsonElement.getAsString() throws on a JsonObject -- so every json POST failed locally,
+                // before the client ever connected (a dead host reproduces it).
                 final HttpRequest request = HttpRequest.newBuilder()
-                        .header(MIME.MIMEType.VALUE, MIME.MIMEType.APPLICATION_JSON.value)
-                        .uri(java.net.URI.create(pattern.toString()))
-                        .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
+                        .header(MIME.MIMEType.VALUE, mime.value)
+                        .uri(java.net.URI.create(pattern.removeQ(MIMEQ_PATTERN).toString()))
+                        .POST(HttpRequest.BodyPublishers.ofByteArray(mime.toBytes(obj)))
                         .build();
                 final HttpResponse<byte[]> response;
                 try (final HttpClient client = HttpClient.newHttpClient()) {

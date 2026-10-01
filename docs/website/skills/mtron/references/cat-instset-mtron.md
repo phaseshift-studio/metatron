@@ -13,18 +13,52 @@ description: |
 # the category graph (`/m/math/cat`)
 
 `/m/math/cat` realizes types and insts as a **category**: types are the objects (the vertices), insts are the
-morphisms (the edges), and an inst's dom/rng are its endpoints. The lift is a type constructor, not a query
-processor — cast a type to a vertex, cast an inst to an edge:
+morphisms (the edges), and an inst's dom/rng are its source and target endpoints.
 
 ```mtron
-mtron> int::T.as(object::T)>>obj
+mtron> import(/m/math/cat)
+...
 ```
-```mtron
-mtron> |plus?int<=int(int::T).as(morphism::T)>>form
-==>fail::[inst apply failure: plus?rng=int&dom=int(int::T) is not a morphism::T [nominal] (at /m/inst/as@1)]@/sys/fail/380
-```
-Every registered inst is a morphism and every type an object — the graph is emergent, not declared edge-by-edge.
+The lift is a type constructor. An _object_ is constructed from a type and a _morphism_ from an inst. The cat-graph is
+dynamically generated, not apriori defined.
 
+**IMPORTANT**: when referencing an instruction directly in a `console::T`, a `block` inst (sugar'd `|`) prevents the
+instruction from being evaluated.
+
+```mtron
+mtron> int::T.as(object::T)
+==>object::[
+    obj=>int::T,
+    law=>[
+     ring=>ring_theory::[
+      add=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
+      mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
+      zero=>0,
+      one=>1],
+     add_group=>group_theory::[
+      op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
+      id=>0,
+      inv=>!*/m/inst/neg?rng=/m/int&dom=/m/int],
+     add_monoid=>monoid_theory::[
+      op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
+      id=>0],
+     mult_monoid=>monoid_theory::[
+      op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
+      id=>1]],
+    morphed_to=>!inst?rng=#&dom=#(){<j>},
+    morphed_from=>!inst?rng=#&dom=#(){<j>}]
+mtron> |plus?int<=int(int::T).as(morphism::T)
+==>morphism::[
+    form=>mapper,
+    src=>inst?rng=#&dom=plus?rng=int&dom=int(<#>::T){<j>},
+    trgt=>inst?rng=#&dom=plus?rng=int&dom=int(<#>::T){<j>},
+    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+    obj=>plus?rng=int&dom=int(int::T),
+    law=>[
+     commutative,
+     right_distributive,
+     action]]
+```
 ## the two blocks
 
 ### the object block — `object::T` (a vertex)
@@ -32,10 +66,114 @@ Every registered inst is a morphism and every type an object — the graph is em
 | field          | what it is                                                      |
 |----------------|-----------------------------------------------------------------|
 | `obj`          | the type itself — the down-elevator to the vertex's source type |
-| `morphed_to`   | the morphisms **sourced from** this object (the OUT edges)      |
-| `morphed_from` | the morphisms **targeted at** this object (the IN edges)        |
+| `morphed_to`   | the morphisms **sourced from** this object (the outgoing edges) |
+| `morphed_from` | the morphisms **targeted at** this object (the incoming edges)  |
 | `law`          | the structural theories this object models (see *theories*)     |
 
+```mtron
+mtron> int::T.as(object::T).morphed_to()
+==>morphism::[
+    form=>mapper,
+    src=>inst?rng=#&dom=as?rng=bool&dom=int(<#>::T){<j>},
+    trgt=>inst?rng=#&dom=as?rng=bool&dom=int(<#>::T){<j>},
+    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+    obj=>as?rng=bool&dom=int(bool::T){<j>}]
+==>morphism::[
+    form=>mapper,
+    src=>inst?rng=#&dom=as?rng=bytes&dom=int(<#>::T){<j>},
+    trgt=>inst?rng=#&dom=as?rng=bytes&dom=int(<#>::T){<j>},
+    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+    obj=>as?rng=bytes&dom=int(bytes::T){<j>}]
+==>morphism::[
+    form=>mapper,
+    src=>inst?rng=#&dom=as?rng=real&dom=int(<#>::T){<j>},
+    trgt=>inst?rng=#&dom=as?rng=real&dom=int(<#>::T){<j>},
+    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+    obj=>as?rng=real&dom=int(real::T){<j>}]
+==>morphism::[
+    form=>mapper,
+    src=>inst?rng=#&dom=as?rng=str&dom=int(<#>::T){<j>},
+    trgt=>inst?rng=#&dom=as?rng=str&dom=int(<#>::T){<j>},
+    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+    obj=>as?rng=str&dom=int(str::T){<j>}]
+==>morphism::[
+    form=>mapper,
+    src=>inst?rng=#&dom=as?rng=uri&dom=int(<#>::T){<j>},
+    trgt=>inst?rng=#&dom=as?rng=uri&dom=int(<#>::T){<j>},
+    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+    obj=>as?rng=uri&dom=int(uri::T){<j>}]
+==>morphism::[
+    form=>mapper,
+    src=>inst?rng=#&dom=as?rng=rec&dom=int(<#>::T){<j>},
+    trgt=>inst?rng=#&dom=as?rng=rec&dom=int(<#>::T){<j>},
+    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+    obj=>as?rng=rec&dom=int(rec::T){<j>}]
+==>morphism::[
+    form=>mapper,
+    src=>inst?rng=#&dom=plus?rng=int&dom=int(<#>::T){<j>},
+    trgt=>inst?rng=#&dom=plus?rng=int&dom=int(<#>::T){<j>},
+    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+    obj=>plus?rng=int&dom=int(int::T){<j>},
+    law=>[
+     commutative,
+     right_distributive,
+     action]]
+==>morphism::[
+    form=>mapper,
+    src=>inst?rng=#&dom=mult?rng=int&dom=int(<#>::T){<j>},
+    trgt=>inst?rng=#&dom=mult?rng=int&dom=int(<#>::T){<j>},
+    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+    obj=>mult?rng=int&dom=int(int::T){<j>},
+    law=>[
+     commutative,
+     right_distributive,
+     action]]
+==>morphism::[
+    form=>mapper,
+    src=>inst?rng=#&dom=zero?rng=int&dom=int(<#>::T){<j>},
+    trgt=>inst?rng=#&dom=zero?rng=int&dom=int(<#>::T){<j>},
+    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+    obj=>zero?rng=int&dom=int(){<j>}]
+==>morphism::[
+    form=>mapper,
+    src=>inst?rng=#&dom=one?rng=int&dom=int(<#>::T){<j>},
+    trgt=>inst?rng=#&dom=one?rng=int&dom=int(<#>::T){<j>},
+    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+    obj=>one?rng=int&dom=int(){<j>}]
+==>morphism::[
+    form=>mapper,
+    src=>inst?rng=#&dom=neg?rng=int&dom=int(<#>::T){<j>},
+    trgt=>inst?rng=#&dom=neg?rng=int&dom=int(<#>::T){<j>},
+    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+    obj=>neg?rng=int&dom=int(){<j>}]
+==>morphism::[
+    form=>mapper,
+    src=>inst?rng=#&dom=div?rng=int&dom=int(<#>::T){<j>},
+    trgt=>inst?rng=#&dom=div?rng=int&dom=int(<#>::T){<j>},
+    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+    obj=>div?rng=int&dom=int(int::T){<j>}]
+==>morphism::[
+    form=>mapper,
+    src=>inst?rng=#&dom=minus?rng=int&dom=int(<#>::T){<j>},
+    trgt=>inst?rng=#&dom=minus?rng=int&dom=int(<#>::T){<j>},
+    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+    obj=>minus?rng=int&dom=int(int::T){<j>},
+    law=>[action]]
+==>morphism::[
+    form=>mapper,
+    src=>inst?rng=#&dom=gt?rng=bool&dom=int(<#>::T){<j>},
+    trgt=>inst?rng=#&dom=gt?rng=bool&dom=int(<#>::T){<j>},
+    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+    obj=>gt?rng=bool&dom=int(int::T){<j>},
+    law=>[right_distributive]]
+==>morphism::[
+    form=>mapper,
+    src=>inst?rng=#&dom=gte?rng=bool&dom=int(<#>::T){<j>},
+    trgt=>inst?rng=#&dom=gte?rng=bool&dom=int(<#>::T){<j>},
+    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+    obj=>gte?rng=bool&dom=int(int::T){<j>},
+   ...
+```
 ### the morphism block — `morphism::T` (an edge)
 
 | field      | what it is                                                                   |
@@ -106,7 +244,10 @@ cell):
 
 ```mtron
 mtron> |plus?int<=int(int::T).as(morphism::T)>>law
-==>fail::[inst apply failure: plus?rng=int&dom=int(int::T) is not a morphism::T [nominal] (at /m/inst/as@1)]@/sys/fail/382
+==>[
+    commutative,
+    right_distributive,
+    action]
 ```
 Examples: `commutative` (`f(x,y) = f(y,x)`), `right_distributive`, `action`, `monoidic`, `involution`, `absorbing`,
 `idempotent`. A law has a *provenance* tier (`syntactic` — derived from the n-tid, `declared` — proved once per

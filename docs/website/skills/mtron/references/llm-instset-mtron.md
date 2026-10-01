@@ -333,11 +333,9 @@ A harness registers it like any other stdio server, which is the point:
 
 ## see also
 
-* [web instruction set](web-instset-mtron.md) — the `protocol::T` lattice, route tables, `sse::T`, and the
-  `mcp::T` surfaces a carrier realizes.
-* [MCP server architecture](mcp-server-architecture.md) — `mcp_server`, tool registration, the carrier split.
-* [MCP server notifications](mcp-server-notifications.md) — server→client push over a `?subq` subscription, and
-  the `json::` / `.inst()` split-pattern those notifications ride on.
+* [web instruction set](web-instset-mtron.md) — the `protocol::T` lattice, route tables, `sse::T`, the `mcp::T`
+  surfaces a carrier realizes, tool registration, and the `?subq` server→client notification envelope (the `json::`
+  type, and the `-<` / `.inst()` split those notifications ride on).
 * `docs/design/mcp-stdio.md` — the stdio carrier in full: stdout discipline, the constructor reshape, and why the
   tools are being pulled out into instructions.
 * `.metatron/skills/drstynx/assets/drstynx.boot.mtron` — a real boot file with two MCP clients (one http, one a

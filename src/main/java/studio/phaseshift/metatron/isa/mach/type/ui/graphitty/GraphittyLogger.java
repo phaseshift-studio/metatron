@@ -24,7 +24,9 @@ import ch.qos.logback.core.LayoutBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 
@@ -38,7 +40,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.LOG_ENTRY_TID;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     private static final Map<String, String> COLORS = new HashMap<>() {{
@@ -260,6 +268,14 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
                 paneWriter.accept(effectivePaneId(), formatPaneMessage(level, f, args));
             } else {
                 this.logger().makeLoggingEventBuilder(level).log(() -> this.makeMessage(true, f, args));
+                final Obj roots = Router.readFromSpace(SYS.extend(LOGG).extend(ROOT));
+                roots.stream().filter(Obj::isUri).forEach(root -> {
+                    rec(mutableMap(
+                            uri(TIME), mathInstSet.nowDatetime(),
+                            uri(LEVEL), uri(level.name().toLowerCase()),
+                            uri(SOURCE), uri(this.toSourceString()),
+                            uri(MESSAGE), str(f.toString().formatted(args))), LOG_ENTRY_TID, root.uriValue().extend("_").addQ(INCRQ));
+                });
             }
         } catch (final Exception e) {
             System.err.println(e);

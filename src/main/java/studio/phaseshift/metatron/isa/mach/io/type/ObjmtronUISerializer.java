@@ -40,6 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -105,9 +106,14 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     // inherited hands out the wrong type: a factory on the base answers with a plain
     // serializer whose writeUri emits the uri as text, so a subclass that only overrides
     // writeUri is never the one asked to write it.
-    private static final ObjmtronUISerializer CONSOLE_INSTANCE = new ObjmtronUISerializer(str("address"), true, false);
-    private static final ObjmtronUISerializer BODIES_INSTANCE = new ObjmtronUISerializer(str(Tokens.BODY), false, false);
-    private static final ObjmtronUISerializer BW_INSTANCE = new ObjmtronUISerializer(str("address"), false, true);
+    private static final ObjmtronUISerializer CONSOLE_INSTANCE = new ObjmtronUISerializer(str("address"), true, true);
+    private static final ObjmtronUISerializer BODIES_INSTANCE = new ObjmtronUISerializer(str(Tokens.BODY), false, true);
+    private static final ObjmtronUISerializer BW_INSTANCE = new ObjmtronUISerializer(str("address"), false, false);
+    private static final ObjmtronUISerializer PRETTY_PRINT_INSTANCE = new ObjmtronUISerializer(Map.of(
+            uri(KEY_CLIP), noClip(),
+            uri(KEY_COLOR), BOOL_FALSE,
+            uri(KEY_PAGER), BOOL_FALSE),
+            OBJ_MTRON_SERIALIZER_TID, VID);
 
     /**
      * The console instance: clipped, indented, linked, paged where a terminal is present,
@@ -129,6 +135,10 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
      */
     public static ObjmtronUISerializer blackWhite() {
         return BW_INSTANCE;
+    }
+
+    public static ObjmtronUISerializer prettyPrint() {
+        return PRETTY_PRINT_INSTANCE;
     }
 
     /**
@@ -177,6 +187,18 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
                 "real", jnt(4),
                 "bytes", jnt(60),
                 "fail", jnt(60)
+        );
+    }
+
+    private static Rec noClip() {
+        return rec(
+                "rec", jnt(Integer.MAX_VALUE),
+                "lst", jnt(Integer.MAX_VALUE),
+                "str", jnt(Integer.MAX_VALUE),
+                "uri", jnt(Integer.MAX_VALUE),
+                "real", jnt(Integer.MAX_VALUE),
+                "bytes", jnt(Integer.MAX_VALUE),
+                "fail", jnt(Integer.MAX_VALUE)
         );
     }
 
@@ -237,7 +259,11 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
      * as their address ({@code address} — the default, the console REPL style).
      */
     private boolean pointerIsBody() {
-        return this.at(KEY_POINTER).orElse(str("address")).strValue().equals(Tokens.BODY);
+        return this.has(KEY_POINTER) && this.at(KEY_POINTER).strValue().equals(Tokens.BODY);
+    }
+
+    private boolean linking() {
+        return this.has(KEY_POINTER);
     }
 
     /**
@@ -250,8 +276,12 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     /**
      * Whether a render is stripped of color or not (default black and white).
      */
-    private boolean bwOn() {
+    private boolean colorOn() {
         return this.at(KEY_COLOR).orElse(bool(true)).boolValue();
+    }
+
+    private String postWrite(final String write) {
+        return colorOn() ? write : Graphitty.strip(write);
     }
 
     // ── Top-level write: the pager is this class's, and only when a terminal is here ──
@@ -260,7 +290,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     public String write(final Obj obj) {
         final String written = super.write(obj);
         final String output = this.pagerOn() ? this.page(written) : written;
-        return bwOn() ? Graphitty.strip(output) : output;
+        return postWrite(output);
     }
 
     /**
@@ -291,7 +321,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         this.handleTID(sb, real, true);
         sb.append(String.format("%." + this.clipReal() + "f", real.jvm()));
         this.handleVID(sb, real);
-        return sb.toString();
+        return postWrite(sb.toString());
     }
 
     private String generateString(final Str str, boolean clip) {
@@ -311,7 +341,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
 
     @Override
     public String writeStr(final Str str) {
-        return this.generateString(str, false);
+        return this.postWrite(this.generateString(str, false));
     }
 
     // ── Inst writer: the pointer styles ──────────────────────────
@@ -332,14 +362,20 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     @Override
     public String writeInst(final Inst inst) {
         if (inst.isNoObj())
-            return super.writeInst(inst);
+            return this.postWrite(super.writeInst(inst));
         if (Obj.Helper.isAutoPointer(inst)) {
+            // the pointer's target (arg 0) is normally a vid; some auto-pointer forms carry a
+            // non-vid expression there, and Obj.uriValue() throws on it.  Fall back to the
+            // plain instruction rendering in that case rather than aborting the whole write.
+            final Obj target = inst.arg(0);
+            if (null == target || !target.isUri())
+                return this.postWrite(super.writeInst(inst));
             final fURI pointer = Obj.Helper.getAutoPointer(inst).get();
             if (this.pointerIsBody())
-                return "{{link:" + pointer + "}}" + super.writeInst(inst) + "{{/link}}";
-            return (inst.isAutoFrom() ? "!*" : "!@") + this.writeUri(pointer.toUri());
+                return this.postWrite("{{link:" + pointer + "}}" + super.writeInst(inst) + "{{/link}}");
+            return this.postWrite((inst.isAutoFrom() ? "!*" : "!@") + this.writeUri(pointer.toUri()));
         }
-        return super.writeInst(inst);
+        return this.postWrite(super.writeInst(inst));
     }
 
     // ── URI / VID: the link tagging ──────────────────────────────
@@ -361,14 +397,18 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         final StringBuilder sb = new StringBuilder();
         this.handleTID(sb, uri, true);
         sb.append(quoted ? "<" : "");
-        sb.append("{{").append(color).append("}}{{link}}").append(big ? uri.uriValue().one().big() : uri.uriValue().one()).append("{{/link}}{{/").append(color).append("}}");
+        if (this.linking())
+            sb.append("{{").append(color).append("}}{{link}}").append(big ? uri.uriValue().one().big() : uri.uriValue().one()).append("{{/link}}{{/").append(color).append("}}");
+        else
+            sb.append("{{").append(color).append("}}").append(big ? uri.uriValue().one().big() : uri.uriValue().one()).append("{{/").append(color).append("}}");
+
         sb.append(quoted ? ">" : "");
         return sb.toString();
     }
 
     @Override
     public String writeUri(final Uri uri) {
-        return this.writeUriExtension(uri, "b", false);
+        return this.postWrite(this.writeUriExtension(uri, "b", false));
     }
 
     // ── Nesting detection ────────────────────────────────────────
@@ -390,7 +430,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
 
     @Override
     public String writeLst(final Lst lst) {
-        return this.generateLst(new StringBuilder(), lst, 0).toString();
+        return this.postWrite(this.generateLst(new StringBuilder(), lst, 0).toString());
     }
 
     private StringBuilder generateLst(final StringBuilder sb, final Lst lst, final int depth) {
@@ -433,7 +473,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
 
     @Override
     public String writeRec(final Rec rec) {
-        return this.generateRec(new StringBuilder(), rec, 0).toString();
+        return this.postWrite(this.generateRec(new StringBuilder(), rec, 0).toString());
     }
 
     private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
@@ -501,6 +541,8 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             this.generateRec(sb, v.as(), depth);
         } else if (v.isLst()) {
             this.generateLst(sb, v.as(), depth);
+        } else if (v.isType()) {
+            this.generateType(sb, v.asType(), depth);
         } else {
             this.writeClip(sb, v);
         }
@@ -512,6 +554,8 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             this.generateRec(sb, arg.asRec(), depth);
         } else if (arg.isLst()) {
             this.generateLst(sb, arg.asLst(), depth);
+        } else if (arg.isType()) {
+            this.generateType(sb, arg.asType(), depth);
         } else {
             this.writeClip(sb, arg);
         }

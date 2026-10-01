@@ -213,13 +213,6 @@ public class machInstSet extends AbstractInstSet {
                                 .vid(MACH_TYPER_TID)
                                 .constructor(arg -> new TypeTyper(arg.asRec().jvm(), MACH_TYPER_TID, arg.vid()))
                                 .create(),
-                        // the old swarm_machine::T — transition alias, re-parented under monad_processor
-                        MACH_SWARM_MACHINE_TYPE = docWrap(Type.Builder.build()
-                                        .tid(MACH_MONAD_PROCESSOR_TID)
-                                        .vid(MACH_SWARM_MACHINE_TID)
-                                        .constructor(machine -> SwarmProcessor.processor(machine.jvm(), machine.tid(), machine.vid()))
-                                        .create(), null, null, Map.of(uri(CODE), "the code the machine will evaluate"),
-                                "a swarm machine makes use of a set of independently executing monads that move across the code inst chain. barriers serve as synchronization points where all running monads must aggregate before being released on the post-barrier segment of code. the objs referenced by the monads that halt are the result of the machine execution."),
                         MACH_MACHINE_TYPE = Type.Builder.build()
                                 .tid(REC_TID)
                                 .vid(MACH_MACHINE_TID)

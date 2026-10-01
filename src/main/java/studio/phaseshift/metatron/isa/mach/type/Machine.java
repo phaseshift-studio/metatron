@@ -20,11 +20,13 @@ package studio.phaseshift.metatron.isa.mach.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.router.BasicRouter;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.instset0;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -57,6 +59,21 @@ public interface Machine extends Router {
     static Machine defaultMachine() {
         final Obj machine = Router.readFromSpace(SYS.extend(MACH));
         return machine.isNoObj() ? mach0() : machine.as();
+    }
+
+    static Machine accessMachine(final fURI uri, final Machine defaultMachine) {
+        fURI running = uri;
+        while (!running.isEmpty()) {
+            try {
+                final Obj machine = Router.readFromSpace(running);
+                if (MACH_MACHINE_TID.extend(ALL).test(machine.tid()))
+                    return Rec.wrap(machine, BasicMachine.class);
+                running = running.retract(1);
+            } catch (final MTronException e) {
+                break; // TODO: allow no active space pass through
+            }
+        }
+        return defaultMachine;
     }
 
     interface Component extends Rec {
