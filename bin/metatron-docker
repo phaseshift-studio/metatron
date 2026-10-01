@@ -25,6 +25,7 @@
 #   bin/metatron-docker build                         # isolated: mvn package -DskipTests
 #   bin/metatron-docker build test -Dtest=HotkeysTest # isolated: mvn test
 #   bin/metatron-docker build docs [dir|file.md]      # isolated: MarkdownRunner --html (jar rebuilt when stale)
+#   NO_HTML=1 bin/metatron-docker build docs f.md     # markdown pass only: iterate on one doc fast
 #   bin/metatron-docker build console [args]          # isolated: pty console harness
 #   bin/metatron-docker build shell '<cmd>'           # isolated: raw shell (alias: run)
 #   bin/metatron-docker build image                   # rebuild the build image
@@ -250,7 +251,14 @@ cmd_build() {
                     ;;
             esac
             ensure_build_image
-            # MarkdownRunner --html: markdown pass + site-html render in one VM run.
+            # NO_HTML=1 (probe mode for iterating on one doc): markdown pass only — no
+            # --html site render, no wsplus bundle (neither touches the file under test,
+            # and both slow the loop down). The default keeps the full site build.
+            html_flag="--html"
+            bundle="echo \"==> bundling bin/wsplus into the skill scripts dir(s)\"
+                python3 bin/build-wsplus.py docs/website/skills/mtron/scripts docs/website/skills/metatron/scripts"
+            if [ "${NO_HTML:-0}" = "1" ]; then html_flag=""; bundle=":"; fi
+            # MarkdownRunner: markdown pass (+ site-html render in one VM run, unless NO_HTML).
             # The jar name carries the pom version, so it is resolved by glob inside
             # the container (a version bump must not leave us pointing at a missing jar).
             # The jar is rebuilt when missing or STALE: any src/ file or the pom newer
@@ -262,9 +270,8 @@ cmd_build() {
                     mvn $MVN_OPTS -DskipTests package
                     JAR=\$(ls -1 target/metatron-*-jar-with-dependencies.jar | head -1)
                 fi
-                java $JVM_FLAGS -cp \"\$JAR\" $DOCS_RUNNER $target -o $out_dir --html
-                echo \"==> bundling bin/wsplus into the skill scripts dir(s)\"
-                python3 bin/build-wsplus.py docs/website/skills/mtron/scripts docs/website/skills/metatron/scripts"
+                java $JVM_FLAGS -cp \"\$JAR\" $DOCS_RUNNER $target -o $out_dir $html_flag
+                $bundle"
             build_run sh -c "$cmd"
             ;;
         console)

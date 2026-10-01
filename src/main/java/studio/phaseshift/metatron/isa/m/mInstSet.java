@@ -627,10 +627,15 @@ public class mInstSet extends AbstractInstSet {
                         Obj.Helper.isaInsts().stream(),
                         Stream.of(docWrap(instC(M_ISA_INST_TID.extend("save").dom(ALL).rng(ALL), lst(), (lhs, inst) -> lhs.save()),
                                         "persist the lhs obj at its own vid — a no-op when the lhs has no vid",
-                                        "42@abc.save()   [-- 42@abc --]")),
-                        Stream.of(docWrap(instA(INST_CTOR_TID),
+                                        "42@abc.save()   [-- 42@abc --]"),
+                                docWrap(instA(INST_CTOR_TID),
                                         "the generic type constructor — the base of the type-literal syntax, refined by each type to its own constructor: \\(c_{\\tau}(\\mathrm{spec}) \\mapsto v : \\tau\\)",
-                                        "memspace::[data=>/usr/marko]   [-- a memspace::T built from its constructor arg --]"))
+                                        "memspace::[data=>/usr/marko]   [-- a memspace::T built from its constructor arg --]"),
+                                docWrap(instC(M_ISA_INST_TID.extend("lcd").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL_STAR)), (lhs, inst) -> Type.Helper.findLCD(inst.arg(0).stream().map(o -> o.isType() ? o.asType() : o.type()).toList())),
+                                        null,
+                                        "the lcd of the arg type set",
+                                        Map.of(jnt(0), "a collection of objs (non-type obj types are extracted)"),
+                                        "calculates the deepest branch of the type hierarchy for which all the argument types are a refinement off"))
                 ).flatMap(i -> i)),
                 uri(REWRITE), lst(
                         // capture the original (pre-collapse) code for profile(): runs FIRST so the

@@ -10,34 +10,25 @@ description: |
 
 # web instruction set (`/m/web`)
 
-`/m/web` is the instruction set has web *transport protocol* types, *MIME*
-types, and *endpoint* types to provide server logic. The two spaces of `/m/web` are
+`/m/web` is the instruction set that carries the web *transport protocol* types, *MIME*
+types, and *endpoint* types that provide the server logic. The two spaces of `/m/web` are
 `httpspace` and `wsspace` — each carrying a `route::T` rec for routing connections to mounted services.
 
 ```mtron
+mtron> dckrspace::[pattern => docker:#, route => [docker: => <>]]@/sys/space/docker
+mtron> [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
+mtron> mcp_server::[tool => [!*eval]]@/sys/space/mcp/web_basic
+==>mcp_server::[tool=>[m_inst_eval=>eval?rng=#{*}&dom=#{?}(<#>::T){<j>}]]@/sys/space/mcp/web_basic
 mtron> httpspace::[pattern=> http://#,
                    host   => http://localhost:8777,
-                   route  => [/mcp       => mcp_mtron,
-                              /docker    => docker:,
-                              /usr       => /usr,
-                              /mfs       => mfs:,
-                              /          => mfs:docs/website/]]@/sys/space/web/http
-==>fail::[unable to construct httpspace::T: fail::[inst apply failure: Address already in use [Net<-2>] (at /m/inst/ctor) [Net<-2>]]@/sys/fail/690
-   	while parsing: httpspace::[pattern=> http://#,
-   host   => http://localhost:8777,
-   route  => [/mcp       => mcp_mtron,
-   /docker    => docker:,
-   /usr       => /usr,
-   /mfs       => mfs:,
-   /          => mfs:docs/website/]]@/sys/space/web/http]@/sys/fail/692
+                   route  => [/mcp    => mcp_mtron,
+                              /docker => docker:,
+                              /usr    => /usr]]@/sys/space/web/http
+mtron> [-- the live profile mounts the drstynx agent at /drstynx (a route *building* its target); here we point the --]
+mtron> [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
 mtron> wsspace::[pattern=> ws:#,
-                 host   => ws://localhost:8555
-                 route  => [/drstynx   => *dr.as(skill::T).as(mcp_server::T)]]@/sys/space/web/ws
-==>fail::[parse error at line 1, col 1:
-     wsspace::[pattern=> ws:#,
-                 ...
-     ^
-     could not parse at 'w']@/sys/fail/694
+                 host   => ws://localhost:8555,
+                 route  => [/basic   => !*</sys/space/mcp/web_basic>]]@/sys/space/web/ws
 ```
 The organizing idea is that **a protocol is a projection of an obj, not a copy of it**. An `mcp_server` rides http,
 websockets and stdio alike; a `str` that is css is `css::T` whoever asks for it. A mount then only has to say which
@@ -45,11 +36,41 @@ obj and which encoding. Below is metatron accessing this document.
 
 ```mtron
 mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>
-==>fail::[inst apply failure: no active space supports pattern <http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md> (at /m/inst/from)]@/sys/fail/696
+==>
+   markdown::"""---
+   name: web instruction set
+   description: |
+     The `/m/web` vocabulary for exposing mtron objs over http, ws and mcp: protocol surfaces, MIME document
+     types, route tables, the `mtron::T` apply protocol, and the conventions a mount follows.
+     TRIGGER: When mounting an obj to a route, serving mtron objs over http or websockets, making an obj an MCP
+     server, shipping an obj for remote evaluation (`mtron::T`), choosing a `?mimeq=` rendering, or wondering why
+     a route, an image, or a css file does not serve.
+   ---
+   ...
 mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>.as(html::T)
-==>fail::[inst apply failure: no active space supports pattern <http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md> (at /m/inst/from@0)]@/sys/fail/698
+==>
+   html::"""<h1>web instruction set (<code>/m/web</code>)</h1>
+   <p><code>/m/web</code> is the instruction set has web <em>transport protocol</em> types, <em>MIME</em>
+   types, and <em>endpoint</em> types to provide server logic. The two spaces of <code>/m/web</code> are
+   <code>httpspace</code> and <code>wsspace</code> — each carrying a <code>route::T</code> rec for routing connections to mounted services.</p>
+   <pre><code class="language-mtron">mtron&gt; httpspace::[pattern=&gt; http://#,
+                      host   =&gt; http://localhost:8777,
+                      route  =&gt; [/mcp       =&gt; mcp_mtron,
+                                 /docker    =&gt; docker:,
+                                 /usr       =&gt; /usr,
+   ...
 mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>.as(html::T).as(rec::T)
-==>fail::[inst apply failure: no active space supports pattern <http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md> (at /m/inst/from@0)]@/sys/fail/704
+==>[html=>[
+    head=>[=>],
+    body=>[out=>[
+    [
+    tag=>h1,
+    out=>[[
+    tag=>code,
+    text=>'/m/web']],
+    text=>'web instruction set ()'],
+    [
+   ...
 ```
 ## the space these examples use
 
@@ -58,7 +79,8 @@ A mount is only as real as the space behind it, so this document builds one firs
 blocks are executed by the docs pipeline and inlined with their results; a plain `mtron` block is only shown.)
 
 ```mtron
-mtron> memspace::[pattern=>/usr/#]@/sys/space/usr
+mtron> [-- the mimeq qproc is what makes ?mimeq= renderings below possible — the q-procs are the space's own --]
+mtron> memspace::[pattern=>/usr/#, q=>[mimeq::[=>]]]@/sys/space/usr
 mtron> person::[name=>'marko',age=>29]@/usr/person/1
 ==>person::[
     name=>'marko',
@@ -115,16 +137,16 @@ rule has two halves, because either alone leaves a hole:
 
 ## `?mimeq=` — choosing the rendering
 
-The rendering is chosen per request with `?mimeq=<media type>`:
+The rendering is chosen per request with `?mimeq=<media type>`. Against a live carrier with a daemon behind the
+`/docker` mount the same request reads:
 
 ```mtron
-mtron> http://localhost:8777/docker/image?mimeq=application/json      [-- the docker images as JSON --]
-==>http://localhost:8777/docker/image?mimeq=application/json
-mtron> */docker/image?mimeq=text/plain                                [-- the same objs, mtron-typed, as plain text --]
-==>fail::[inst apply failure: no active space supports pattern /docker/image?mimeq=text/plain (at /m/inst/from)]@/sys/fail/712
-mtron> */docker/image                                                 [-- the native mtron rendering --]
-==>fail::[inst apply failure: no active space supports pattern /docker/image (at /m/inst/from)]@/sys/fail/714
+[-- shown, not run: the docs environment has no docker daemon behind this mount --]
+http://localhost:8777/docker/image?mimeq=application/json      [-- the docker images as JSON --]
+http://localhost:8777/docker/image?mimeq=text/plain            [-- the same objs, mtron-typed, as plain text --]
+http://localhost:8777/docker/image                             [-- the native mtron rendering --]
 ```
+
 `application/x-mtron` is the **structural parse gate**: it asks for the content parsed into mtron objs rather than
 handed back as text. Read any mount's own documentation with `?docq`.
 
@@ -167,14 +189,18 @@ binding step, and a route is debuggable by looking at the request uri.
   request while the same protocol engine serves them all.
 
 ```mtron
-mtron> */usr/person/1
+mtron> */usr/person/1                                              [-- straight from the space --]
 ==>person::[
     name=>'marko',
     age=>29]
-mtron> *http://localhost:8777/usr/person/1
-==>fail::[inst apply failure: no active space supports pattern http://localhost:8777/usr/person/1 (at /m/inst/from)]@/sys/fail/732
-mtron> *http://localhost:8777/usr/person/1?mimeq=application/json
-==>fail::[inst apply failure: no active space supports pattern http://localhost:8777/usr/person/1?mimeq=application/json (at /m/inst/from)]@/sys/fail/734
+mtron> *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
+==>person::[
+    name=>'marko',
+    age=>29]
+mtron> *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
+==>'{"name":"marko","age":29}'
+mtron> *http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
+==>"person::[name=>'marko',age=>29]@/usr/person/1"
 ```
 `/person/1` serves that obj and `/person/2` serves the other, through the *same* handler — and `/person/3` is a 404,
 because the space is live rather than a lookup table of two.

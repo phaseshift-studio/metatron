@@ -2,7 +2,7 @@
 [web    => [
    http/host  => <http://0.0.0.0:8777>,
    ws/host    => <ws://0.0.0.0:8555>],
- typer/stages => [inst_dom     => false, 
+ typer/stage  => [inst_dom     => false, 
                   inst_rng     => false,
                   type_ctor    => false,
                   obj_write    => true,

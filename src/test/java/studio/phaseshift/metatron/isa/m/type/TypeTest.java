@@ -1875,4 +1875,25 @@ public class TypeTest extends AbstractMetatronTest {
         LOG.warn("lst4b::[1,2,3,4] => %s", e.getMessage());
     }
 
+    @TestData({
+            "import(/m/math)",
+            "nat -> int::T[?>10]"})
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*nat                         % int::T[?>10]",
+            "*nat.type()                  % #::T",
+            "*nat.type().type()           % #::T",
+            "*/m/math/nat                 % /m/int::T[?>10]@/m/math/nat",
+            "*/m/math/nat                 % /m/int::T[?>10]@nat",
+            "*/m/math/nat                 % int::T[?>10]@nat",
+            //   "*/m/math/nat.type()          % int::T",
+            //   "*/m/math/nat.type().type()   % #::T",
+            "nat::T.type()                % int::T",
+            "[#::T]                       % [#::T]",
+            "[int::T]                     % [/m/int::T]",
+            "[nat::T]                     % [/m/int::T[?>0]@/m/math/nat]"}, delimiter = '%')
+    public void testTypeCorruption(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
+    }
+
 }

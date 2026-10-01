@@ -411,13 +411,13 @@ categorical realization of types and insts as objects and morphisms</p>
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[
- pattern=&gt;/m/math/cat/#,
  q=&gt;[docq::[
  pattern=&gt;docq,
  pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
  pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+ pattern=&gt;/m/math/cat/#,
  space=&gt;[super=&gt;!*/m/math],
  type=&gt;[
   rec::T[?[
@@ -631,8 +631,7 @@ categorical realization of types and insts as objects and morphisms</p>
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an inst as a categorical morphism incident to a source object (dom) and a target object (rng)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#trgt" class="text-light">trgt</a> <span class="text-light">=&gt;</span> <a href="#'the target object the morphism enters: \(\mathrm{trgt}(f) = \mathrm{rng}(f)\)'" class="text-info">&#39;the target object the morphism enters: \(\mathrm{trgt}(f) = \mathrm{rng}(f)\)&#39;</a>
-  <a href="#{?}analysis__contested" class="text-light">contested</a> <span class="text-light">=&gt;</span> <a href="#'the witness edges behind the ambiguous__incomparable labels: \(\mathrm{contested}(f) = {g : \mathrm{trgt}(g) = \mathrm{trgt}(f) \wedge \mathrm{src}(g) \perp \mathrm{src}(f)} \cup {g : \mathrm{src}(g) = \mathrm{src}(f) \wedge \mathrm{trgt}(g) \perp \mathrm{trgt}(f)}\)'" class="text-info">incomparable labels: \(\mathrm{contested}(f) = {g : \mathrm{trgt}(g) = \mathrm{trgt}(f) \wedge \mathrm{src}(g) \perp \mathrm{src}(f)} \cup {g : \mathrm{src}(g) = \mathrm{src}(f) \wedge \mathrm{trgt}(g) \perp \mathrm{trgt}(f)}\)&#39;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}analysis__contested" class="text-light">contested</a> <span class="text-light">=&gt;</span> <a href="#'the witness edges behind the ambiguous__incomparable labels: \(\mathrm{contested}(f) = {g : \mathrm{trgt}(g) = \mathrm{trgt}(f) \wedge \mathrm{src}(g) \perp \mathrm{src}(f)} \cup {g : \mathrm{src}(g) = \mathrm{src}(f) \wedge \mathrm{trgt}(g) \perp \mathrm{trgt}(f)}\)'" class="text-info">incomparable labels: \(\mathrm{contested}(f) = {g : \mathrm{trgt}(g) = \mathrm{trgt}(f) \wedge \mathrm{src}(g) \perp \mathrm{src}(f)} \cup {g : \mathrm{src}(g) = \mathrm{src}(f) \wedge \mathrm{trgt}(g) \perp \mathrm{trgt}(f)}\)&#39;</a>
   <a href="#{?}analysis__position" class="text-light">position</a> <span class="text-light">=&gt;</span> <a href="#"the edge's place among its siblings: \(\mathrm{position}(f) \subseteq {\mathrm{duplicate}, \mathrm{ambiguous}, \mathrm{incomparable}, \mathrm{coupling}, \mathrm{isochain}, \mathrm{retract}}\)"" class="text-info">&quot;the edge&#39;s place among its siblings: \(\mathrm{position}(f) \subseteq {\mathrm{duplicate}, \mathrm{ambiguous}, \mathrm{incomparable}, \mathrm{coupling}, \mathrm{isochain}, \mathrm{retract}}\)&quot;</a>
   <a href="#form" class="text-light">form</a> <span class="text-light">=&gt;</span> <a href="#'the n-tid coefficient shape \((c_{\mathrm{dom}}, c_{\mathrm{rng}})\) in regex notation: \(\mathrm{mapper} = (1,1),\; \mathrm{filter} = (1, ?),\; \mathrm{reducer} = (^{\ast}, 1),\; \mathrm{flatmapper} = (1, ^{+}),\; \ldots\)'" class="text-info">&#39;the n-tid coefficient shape \((c_{\mathrm{dom}}, c_{\mathrm{rng}})\) in regex notation: \(\mathrm{mapper} = (1,1),\; \mathrm{filter} = (1, ?),\; \mathrm{reducer} = (^{\ast}, 1),\; \mathrm{flatmapper} = (1, ^{+}),\; \ldots\)&#39;</a>
   <a href="#{?}analysis__inverse" class="text-light">inverse</a> <span class="text-light">=&gt;</span> <a href="#'the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\)'" class="text-info">&#39;the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\)&#39;</a>
@@ -640,6 +639,7 @@ categorical realization of types and insts as objects and morphisms</p>
   <a href="#law" class="text-light">law</a> <span class="text-light">=&gt;</span> <a href="#'the declared process laws \(\mathcal{L}\) the morphism obeys, e.g. \(\mathrm{commutative}: f(x,y) = f(y,x)\)'" class="text-info">&#39;the declared process laws \(\mathcal{L}\) the morphism obeys, e.g. \(\mathrm{commutative}: f(x,y) = f(y,x)\)&#39;</a>
   <a href="#src" class="text-light">src</a> <span class="text-light">=&gt;</span> <a href="#'the source object the morphism leaves: \(\mathrm{src}(f) = \mathrm{dom}(f)\)'" class="text-info">&#39;the source object the morphism leaves: \(\mathrm{src}(f) = \mathrm{dom}(f)\)&#39;</a>
   <a href="#{?}analysis__orbit" class="text-light">orbit</a> <span class="text-light">=&gt;</span> <a href="#"the reversible-core component of the morphism's dom: \(\mathrm{orbit}(f) = {X : \mathrm{dom}(f) \sim^{*} X}\)"" class="text-info">&quot;the reversible-core component of the morphism&#39;s dom: \(\mathrm{orbit}(f) = {X : \mathrm{dom}(f) \sim^{*} X}\)&quot;</a>
+  <a href="#trgt" class="text-light">trgt</a> <span class="text-light">=&gt;</span> <a href="#'the target object the morphism enters: \(\mathrm{trgt}(f) = \mathrm{rng}(f)\)'" class="text-info">&#39;the target object the morphism enters: \(\mathrm{trgt}(f) = \mathrm{rng}(f)\)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category__object">

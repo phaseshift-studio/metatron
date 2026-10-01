@@ -633,14 +633,13 @@ mtron&gt; [a,b].as(rec::T)          [-- [0=&gt;a,1=&gt;b] --]
     0=&gt;a,
     1=&gt;b]
 </code></pre>
-<p>Custom types via <code>tid::T[predicate][constructor]@vid</code>:</p>
-<pre><code class="language-mtron">mtron&gt; int::T[is(gt(0))]@nat     [-- type nat, only positive ints --]
-mtron&gt; int::T[?&gt;0]@nat           [-- syntax sugar on is(gt(0)) --]
-mtron&gt; nat::2                    [-- ok --]
-==&gt;nat::2
-mtron&gt; nat::-1                   [-- &lt;ERROR&gt; --]
-==&gt;fail::[-1 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-1]@/sys/fail/458
+<p>Custom types, created with <code>tid::T[predicate][constructor]@vid</code> (see the <em>type system</em> doc):</p>
+<pre><code class="language-mtron">mtron&gt; int::T[is(gt(0))]@posint     [-- a new type: positive integers --]
+mtron&gt; posint::2                    [-- posint::2  (admitted: the predicate lets it through) --]
+==&gt;posint::2
+mtron&gt; posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
+==&gt;fail::[-1 is not a int::T[is(gt(0))]@posint
+   	while parsing: posint::-1]@/sys/fail/462
 </code></pre>
 <hr />
 <h3>8. Mapping &amp; Filtering</h3>
@@ -659,9 +658,7 @@ mtron&gt; {1,2,3,4}.map(map(+2))           [-- nested --]
 ==&gt;4
 ==&gt;5
 ==&gt;6
-mtron&gt; {1,2,3}.where(gt(1))             [-- {2,3}  (filter: keep if predicate matches) --]
-==&gt;fail{3}::[lhs range does not match inst domain: int::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri(gt(1)){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/500
-mtron&gt; {1,2,3}.is(gt(1))                [-- {2,3}  (same, filter via is()) --]
+mtron&gt; {1,2,3}.is(gt(1))                [-- {2,3}  (filter: keep the members the predicate admits) --]
 ==&gt;2
 ==&gt;3
 </code></pre>
@@ -686,19 +683,22 @@ mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}==[a=&gt;?&gt;=2.+10]                  
 mtron&gt; [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3] --]
 ==&gt;[1,7,3]
 </code></pre>
-<h4>Where (filter)</h4>
-<pre><code class="language-mtron">mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}.where([a=&gt;is(gt(1))])               [-- {[a=&gt;2],[a=&gt;3]} --]
-==&gt;fail{3}::[lhs range does not match inst domain: rec::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri([a=&gt;is(gt(1))]){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/506
-mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}=?=[a=&gt;is(gt(1))]                    [-- syntax sugar for above --]
-==&gt;fail::[parse error at line 1, col 23:
-     {[a=&gt;1],[a=&gt;2],[a=&gt;3]}=?=[a=&gt;is(gt(1))]                    
-                           ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/512
-mtron&gt; [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   [-- [1,7,3] --]
-==&gt;fail::[parse error at line 1, col 23:
-     [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   
-                           ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/514
+<h4>Filtering (<code>?</code> and <code>is()</code>)</h4>
+<p><code>lhs ? predicate</code> is the filter: it keeps the lhs when the predicate admits it and yields <code>noobj</code> when it does
+not. A rec predicate matches structurally — the value's field is checked against the field's type:</p>
+<pre><code class="language-mtron">mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}?[a=&gt;is(gt(1))]   [-- {[a=&gt;2],[a=&gt;3]}  (the rec predicate matches each rec's a-field) --]
+==&gt;[a=&gt;2]
+==&gt;[a=&gt;3]
+mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}?[a=&gt;is(lt(3))]   [-- {[a=&gt;1],[a=&gt;2]}  (the same shape admits the low fields) --]
+==&gt;[a=&gt;1]
+==&gt;[a=&gt;2]
+</code></pre>
+<p><strong><code>where()</code> is for uris, not values.</strong> Its live row is <code>where?uri&lt;=uri(rec)</code>: the arg is a profile over the uri's
+fields, the uri is projected against it, and the uri passes through only when the projection agrees with the
+original — a profile matcher, and <code>noobj</code> when the profile is contradicted:</p>
+<pre><code class="language-mtron">mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?where([host=&gt;2024.12, port=&gt;25])  [-- the uri (the profile matches) --]
+==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
+mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?where([host=&gt;2024.12, port=&gt;26])  [-- noobj  (the port contradicts the profile) --]
 </code></pre>
 <hr />
 <h3>9. Grouping</h3>
@@ -720,38 +720,38 @@ mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3].group([_=&gt;_])          [-- [[a=&gt;1,b=&g
 <h3>10. Merging &amp; Splitting</h3>
 <h4>Merge (<code>&gt;-</code>)</h4>
 <p>Unwraps collections: <code>{1,2,3}&gt;-</code>   # {1,2,3} (flattens coefficient barriers)</p>
-<pre><code class="language-mtron">mtron&gt; {1,2,3}&gt;-                            [-- {1,2,3} --]
+<pre><code class="language-mtron">mtron&gt; {1,2,3}&gt;-                            [-- {1,2,3}  (the bare members, unbarriered) --]
 ==&gt;1
 ==&gt;2
 ==&gt;3
-mtron&gt; [1=&gt;2,2=&gt;3,3=&gt;4]&gt;-                  [-- {1=&gt;2,2=&gt;3,3=&gt;4} --]
+mtron&gt; [1=&gt;2,2=&gt;3,3=&gt;4]&gt;-                  [-- the rels, unwrapped --]
 ==&gt;1=&gt;2
 ==&gt;2=&gt;3
 ==&gt;3=&gt;4
-mtron&gt; {1,2}&gt;-[3,4]                         [-- [1,2,3,4] --]
+mtron&gt; {1,2}&gt;-[3,4]                         [-- [1,2,3,4]  (the barrier joins into the existing lst) --]
 ==&gt;[1,2,3,4]
-mtron&gt; {1,2,3}&gt;-1                           [-- {1,1,2,3} --]
+mtron&gt; {1,2,3}&gt;-1                           [-- {1,1,2,3}  (1 is added to the stream) --]
 ==&gt;{2}1
 ==&gt;2
 ==&gt;3
-mtron&gt; [a=&gt;1,b=&gt;2]&gt;-.&gt;-[b=&gt;2]              [-- [a=&gt;1,b=&gt;2]  (merge into existing rec) --]
+mtron&gt; [a=&gt;1,b=&gt;2]&gt;-.&gt;-[b=&gt;2]              [-- [a=&gt;1, b=&gt;{2}2]  (the incoming 2 stacks under the existing 2 as a coefficient) --]
 ==&gt;[
     a=&gt;1,
     b=&gt;{2}2]
 </code></pre>
 <h4>Split (<code>-&lt;</code>)</h4>
 <p>Distributes elements:</p>
-<pre><code class="language-mtron">mtron&gt; 1-&lt;[_,_]                            [-- [1,1] --]
+<pre><code class="language-mtron">mtron&gt; 1-&lt;[_,_]                            [-- [1,1]  (duplicated along the branches) --]
 ==&gt;[1,1]
-mtron&gt; {1,2,3}-&lt;[plus(1),plus(2)]          [-- {2,3,4,5} --]
+mtron&gt; {1,2,3}-&lt;[plus(1),plus(2)]          [-- {[2,3],[3,4],[4,5]}  (each member against each branch) --]
 ==&gt;[2,3]
 ==&gt;[3,4]
 ==&gt;[4,5]
 </code></pre>
 <h4>Conditional branch: <code>-&lt;|[?pred=&gt;a, _=&gt;b]</code></h4>
-<pre><code class="language-mtron">mtron&gt; 1-&lt;|[?&gt;1 =&gt; +100, _=&gt; +2]          [-- {3,102}  (1
+<pre><code class="language-mtron">mtron&gt; 1-&lt;|[?&gt;1 =&gt; +100, _=&gt; +2]          [-- 1=&gt;3  (1 fails ?&gt;1, so the default branch +2 takes it) --]
 ==&gt;1=&gt;3
-mtron&gt; {1,2}-&lt;|[?&gt;1 =&gt; +100, _=&gt; +2]&gt;&gt;    [-- {3,102} --]
+mtron&gt; {1,2}-&lt;|[?&gt;1 =&gt; +100, _=&gt; +2]&gt;&gt;    [-- 1=&gt;3, 2=&gt;102  (each member takes its own branch) --]
 ==&gt;3
 ==&gt;102
 </code></pre>
@@ -946,8 +946,8 @@ mtron&gt; ?int::T    [-- check if type is int --]
 <tr><td><code>-&gt;</code></td><td><code>ref()</code></td><td>Write to URI reference</td></tr>
 <tr><td><code>;</code></td><td><code>end()</code></td><td>Sequence separator</td></tr>
 <tr><td><code>?pred</code></td><td><code>is(pred)</code></td><td>Type/condition check</td></tr>
+<tr><td><code>lhs ? p</code></td><td><code>lhs.isa(p)</code></td><td>Filter: keep if <code>p</code> admits</td></tr>
 <tr><td><code>==</code></td><td><code>select()</code></td><td>Structural select</td></tr>
-<tr><td><code>=?=</code></td><td><code>where()</code></td><td>Filter after select</td></tr>
 </tbody>
 </table>
 <hr />
@@ -959,12 +959,25 @@ mtron&gt; ?int::T    [-- check if type is int --]
 <li><strong>Write-back:</strong> <code>@</code>-prefixed writes persist through <code>&gt;&gt;=</code> back to space</li>
 <li><strong>No mutation of existing objects</strong> — operations create new Objs (immutable)</li>
 </ol>
-<pre><code class="language-mtron">mtron&gt; [-- Chaining example (read test data from test file): --]
-mtron&gt; {1,2,3,4}.sum{2}().sum?int&lt;=int{1,7}().sum()-&lt;[_,_]&gt;-.sum?int&lt;=int{2}()  #
-==&gt;fail::[parse error at line 1, col 74:
-     ...,7}().sum()-&lt;[_,_]&gt;-.sum?int&lt;=int{2}()  #
-                                                ^
-     could not parse at '#' — unclosed '&lt;' — missing '&gt;'?]@/sys/fail/550
+<pre><code class="language-mtron">chains: every inst's output is the next inst's input
+mtron&gt; {1,2,3,4}.sum()                [-- 10 --]
+==&gt;10
+mtron&gt; {1,2,3,4}.sum{2}()             [-- {2}10  (the same job, run twice in parallel) --]
+==&gt;{2}10
+mtron&gt; {1,2,3,4}.sum{2}().sum()       [-- 20  (the outer sum folds the coefficient in) --]
+==&gt;20
+mtron&gt; {1,2,3,4}-&lt;[plus(1), plus(10)]&gt;-    [-- 2, 11, 3, 12, 4, 13, 5, 14  (distribute to each function, then merge) --]
+==&gt;2
+==&gt;11
+==&gt;3
+==&gt;12
+==&gt;4
+==&gt;13
+==&gt;5
+==&gt;14
+mtron&gt; {1,2,3,4}.skip(1).take(2)      [-- {2,3}  (window: drop the first, keep two) --]
+==&gt;2
+==&gt;3
 </code></pre>
 
     </div>

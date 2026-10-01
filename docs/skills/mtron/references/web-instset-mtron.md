@@ -10,23 +10,26 @@ description: |
 
 # web instruction set (`/m/web`)
 
-`/m/web` is the instruction set has web *transport protocol* types, *MIME*
-types, and *endpoint* types to provide server logic. The two spaces of `/m/web` are
+`/m/web` is the instruction set that carries the web *transport protocol* types, *MIME*
+types, and *endpoint* types that provide the server logic. The two spaces of `/m/web` are
 `httpspace` and `wsspace` — each carrying a `route::T` rec for routing connections to mounted services.
 
 ```mtron_pre
-[HIDDEN] /sys/space/web/http -> noobj       
+[HIDDEN] /sys/space/web/http -> noobj
 [HIDDEN] /sys/space/web/ws   -> noobj
+dckrspace::[pattern => docker:#, route => [docker: => <>]]@/sys/space/docker
+[-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
+mcp_server::[tool => [!*eval]]@/sys/space/mcp/web_basic
 httpspace::[pattern=> http://#,                    /
             host   => http://localhost:8777,       /
-            route  => [/mcp       => mcp_mtron,    /
-                       /docker    => docker:,      /
-                       /usr       => /usr,         /
-                       /mfs       => mfs:,         /
-                       /          => mfs:docs/website/]]@/sys/space/web/http
+            route  => [/mcp    => mcp_mtron,       /
+                       /docker => docker:,         /
+                       /usr    => /usr]]@/sys/space/web/http
+[-- the live profile mounts the drstynx agent at /drstynx (a route *building* its target); here we point the --]
+[-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
 wsspace::[pattern=> ws:#,                          /
-          host   => ws://localhost:8555            /
-          route  => [/drstynx   => *dr.as(skill::T).as(mcp_server::T)]]@/sys/space/web/ws
+          host   => ws://localhost:8555,           /
+          route  => [/basic   => !*</sys/space/mcp/web_basic>]]@/sys/space/web/ws
 ```
 
 The organizing idea is that **a protocol is a projection of an obj, not a copy of it**. An `mcp_server` rides http,
@@ -46,7 +49,8 @@ A mount is only as real as the space behind it, so this document builds one firs
 blocks are executed by the docs pipeline and inlined with their results; a plain `mtron` block is only shown.)
 
 ```mtron_pre
-memspace::[pattern=>/usr/#]@/sys/space/usr
+[-- the mimeq qproc is what makes ?mimeq= renderings below possible — the q-procs are the space's own --]
+memspace::[pattern=>/usr/#, q=>[mimeq::[=>]]]@/sys/space/usr
 person::[name=>'marko',age=>29]@/usr/person/1
 person::[name=>'grant',age=>25]@/usr/person/2
 ```
@@ -98,12 +102,14 @@ rule has two halves, because either alone leaves a hole:
 
 ## `?mimeq=` — choosing the rendering
 
-The rendering is chosen per request with `?mimeq=<media type>`:
+The rendering is chosen per request with `?mimeq=<media type>`. Against a live carrier with a daemon behind the
+`/docker` mount the same request reads:
 
-```mtron_pre
+```mtron
+[-- shown, not run: the docs environment has no docker daemon behind this mount --]
 http://localhost:8777/docker/image?mimeq=application/json      [-- the docker images as JSON --]
-*/docker/image?mimeq=text/plain                                [-- the same objs, mtron-typed, as plain text --]
-*/docker/image                                                 [-- the native mtron rendering --]
+http://localhost:8777/docker/image?mimeq=text/plain            [-- the same objs, mtron-typed, as plain text --]
+http://localhost:8777/docker/image                             [-- the native mtron rendering --]
 ```
 
 `application/x-mtron` is the **structural parse gate**: it asks for the content parsed into mtron objs rather than
@@ -148,9 +154,10 @@ binding step, and a route is debuggable by looking at the request uri.
   request while the same protocol engine serves them all.
 
 ```mtron_pre
-*/usr/person/1
-*http://localhost:8777/usr/person/1
-*http://localhost:8777/usr/person/1?mimeq=application/json
+*/usr/person/1                                              [-- straight from the space --]
+*http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
+*http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
+*http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
 ```
 
 `/person/1` serves that obj and `/person/2` serves the other, through the *same* handler — and `/person/3` is a 404,
