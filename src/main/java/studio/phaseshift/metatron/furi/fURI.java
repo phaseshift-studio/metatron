@@ -286,6 +286,20 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return parts.length == 2 ? this.host(parts[0]).port(Integer.parseInt(parts[1])) : this.host(parts[0]);
     }
 
+    /**
+     * Strip the scheme and authority, yielding the address as the <em>owner</em> of that authority would spell
+     * it: {@code ws://hostB:8555/usr/x} becomes {@code /usr/x}. This is the transport boundary operation — what
+     * crosses the wire is the destination-relative address, and the receiver resolves that against its own
+     * spaces. A URI with neither scheme nor host is already local and is returned unchanged (identity, so
+     * {@code localize()} is safe to apply unconditionally). Mirrors {@link #basePath()} but keeps the
+     * query/coefficient/poly, which are address semantics rather than pattern semantics.
+     */
+    default fURI localize() {
+        if (null == this.scheme() && null == this.host())
+            return this;
+        return fURI.of(null, null, -1, this.path(), this.c(), this.poly(), this.qMap(), this.templates());
+    }
+
     String host();
 
     fURI host(final String host);

@@ -46,9 +46,14 @@ import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.ref_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
 
 @ObjReflection
 public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router {
@@ -230,6 +235,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
         Space.Helper.spaceOpenLog(this, space);
         // save routes registered by spaceS
         this.at(uri(ROUTE), this.smallToBigRoutes.toRec(), MUTABLE);
+        this.selfAuthoritiesDirty = true;
     }
 
     @Override
@@ -247,6 +253,167 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
                     this.prefixToVID.entrySet().stream().filter(pv -> pv.getValue().uriValue().test(((Space) kv.getValue()).pattern())).forEach(pv -> this.prefixToVID.remove(pv.getKey()));
                 })
                 .forEach(kv -> Space.Helper.spaceCloseLog(this, (Space) kv.getValue()));
+        this.selfAuthoritiesDirty = true;
+    }
+
+    // ======================== authority dispatch ========================
+
+    /**
+     * The declared peer roster: a rec of {@code <authority-uri> => <transport-inst>}. The value is the
+     * transport — an inst that takes the message ({@code from(localized)} for a read, {@code start(localized)
+     * .ref(obj)} for a write) and returns the peer's response. Keeping it an inst is what keeps the Router
+     * free of any transport dependency: swapping ws for http, mqtt or a gRPC client is a roster change.
+     * <p>
+     * It lives at {@code /sys/peer}, beside {@code /sys/thread}, and <em>not</em> under {@code /sys/mach}: the
+     * Machine claims {@code /sys/mach} and {@code AbstractSpace}'s default writer is a no-op, so a roster
+     * written there is silently dropped — a failure mode worth remembering, because the symptom is a peer that
+     * quietly resolves to the local wildcard-host space instead and <em>appears to work</em>.
+     */
+    public static fURI peerRosterPath() {
+        return SYS.extend(PEER);
+    }
+
+    private volatile Set<String> selfAuthorities;
+    private volatile boolean selfAuthoritiesDirty = true;
+
+    /**
+     * The authorities this machine owns — the {@code host} of every mounted space that declares one. Declared
+     * configuration, never derived from traffic: a URI must not be able to make itself a peer.
+     */
+    public Set<String> selfAuthorities() {
+        if (this.selfAuthoritiesDirty || null == this.selfAuthorities) {
+            final Set<String> authorities = new LinkedHashSet<>();
+            for (final Obj obj : this.spaces().jvm().values()) {
+                if (!(obj instanceof Space))
+                    continue;
+                final Obj host = ((Space) obj).at(uri(HOST));
+                if (!host.isNoObj() && host.isUri()) {
+                    final String authority = host.uriValue().authority();
+                    if (null != authority)
+                        authorities.add(authority);
+                }
+            }
+            this.selfAuthorities = authorities;
+            this.selfAuthoritiesDirty = false;
+        }
+        return this.selfAuthorities;
+    }
+
+    /**
+     * True when this machine owns {@code vid}'s authority, alias-awarely — a server declared as
+     * {@code 0.0.0.0:8555} owns {@code localhost:8555} ({@link Router.Helper#sameAuthority}).
+     */
+    @Override
+    public boolean own(final fURI vid) {
+        final String authority = null == vid ? null : vid.authority();
+        if (null == authority)
+            return false;
+        for (final String self : this.selfAuthorities())
+            if (Router.Helper.sameAuthority(self, authority))
+                return true;
+        return false;
+    }
+
+    /**
+     * The declared transport for {@code authority}, or {@code noobj} when it is not a peer. Looks up the raw
+     * jvm map rather than {@code Rec.at}, because a roster key is an authority-only URI and {@code at} treats
+     * URI keys as path navigation.
+     */
+    private Obj peerTransport(final String authority) {
+        final Obj roster = Router.readFromSpace(peerRosterPath());
+        if (!roster.isRec())
+            return noobj();
+        return roster.asRec().jvm().entrySet().stream()
+                .filter(e -> e.getKey().isUri())
+                .filter(e -> Router.Helper.sameAuthority(e.getKey().uriValue().authority(), authority))
+                .map(Map.Entry::getValue)
+                .filter(v -> !v.isNoObj())
+                .findFirst()
+                .orElse(noobj());
+    }
+
+    /**
+     * True when {@code vid}'s authority is a declared peer: not ours, and named in the roster. Membership is
+     * declared configuration — nothing becomes a peer merely by being addressed.
+     */
+    @Override
+    public boolean isPeer(final fURI vid) {
+        if (null == vid || !vid.hasHost() || null == vid.authority() || this.own(vid))
+            return false;
+        return !this.peerTransport(vid.authority()).isNoObj();
+    }
+
+    /**
+     * The authority guard. Three outcomes, and the third is the important one:
+     * <ol>
+     *   <li><b>mine, and unclaimed by any served space</b> — strip the authority and resolve locally
+     *       ({@code localize}), so {@code ws://localhost:8555/usr/x} reaches the local {@code /usr/#} space
+     *       rather than the ws <em>server</em> space whose wildcard host would otherwise claim it;</li>
+     *   <li><b>a declared peer</b> — delegate over its declared transport;</li>
+     *   <li><b>anything else</b> — fall through untouched, so a wildcard space can still legitimately claim
+     *       it ({@code httpspace}'s Jsoup fetch, {@code wsspace} as a server). Fail-closed: an undeclared host
+     *       simply is not a peer.</li>
+     * </ol>
+     * Runs <em>before</em> {@code getSpaceFor}, never inside it — {@code getSpaceFor} is a local primitive
+     * with ~20 call sites (including compile-time rewrites) that must not reach the network.
+     *
+     * @return the dispatched result, or empty when authority dispatch does not apply
+     */
+    private Optional<Obj> dispatchForeign(final fURI vid, final Obj obj) {
+        if (null == vid || !vid.hasHost() || null == vid.authority())
+            return Optional.empty();
+        if (this.own(vid)) {
+            // A space whose pattern names a host is *serving* that address — `wsspace`/`httpspace` pattern on
+            // `ws://#`/`http://#` and keep a session under `ws://localhost:PORT/<route>/<n>`. Localizing such a
+            // uri would strip the authority and hand it to a different space, so the session write would vanish
+            // and the peer on the socket would simply never be answered. But the same authority is also a
+            // legitimate way to name our *own* data (`ws://localhost:PORT/usr/x`), so defer only when
+            // localizing would land on nothing: if the path still resolves, the authority was decoration.
+            if (this.servesAddress(vid) && !this.localizesToSpace(vid))
+                return Optional.empty();
+            return Optional.of(null == obj ? this.read(vid.localize()) : this.write(vid.localize(), obj));
+        }
+        final Obj transport = this.peerTransport(vid.authority());
+        if (transport.isNoObj() || !transport.isObjInst())
+            return Optional.empty();
+        final fURI remote = vid.localize();
+        try {
+            final Obj message = null == obj
+                    ? from_(uri(remote)).tryToInst()
+                    : start_(remote.toUri()).ref_(obj);
+            LOG.debug("dispatching %s %s to peer %s", null == obj ? "read" : "write", remote, vid.authority());
+            final Obj response = transport.apply(message);
+            return Optional.of(response.isNoObj()
+                    ? fail("no response from peer %s for %s", vid.authority(), remote)
+                    : response);
+        } catch (final Exception e) {
+            return Optional.of(fail(e));
+        }
+    }
+
+    /**
+     * True when a mounted space's pattern names a host <em>and</em> matches {@code vid} — that space is the
+     * server for this address and must win over the guard's localization. The host test is what keeps this
+     * from being trivially true: a plain path space ({@code /usr/#}) or the catch-all pattern matches almost
+     * anything, while only an authority-claiming space can legitimately own an authority-addressed uri.
+     */
+    private boolean servesAddress(final fURI vid) {
+        final fURI base = vid.basePath();
+        return this.spaces().values()
+                .map(Obj::<Space>as)
+                .anyMatch(s -> s.pattern().hasHost() && base.test(s.pattern()));
+    }
+
+    /**
+     * True when the authority-free form of {@code vid} is claimed by a plain (hostless) space — the test for
+     * "the authority was decoration". Only hostless patterns count: a host-pattern space claiming it is the
+     * very ambiguity this is deciding.
+     */
+    private boolean localizesToSpace(final fURI vid) {
+        final fURI local = vid.localize().basePath();
+        return this.spaces().values()
+                .map(Obj::<Space>as)
+                .anyMatch(s -> !s.pattern().hasHost() && local.test(s.pattern()));
     }
 
     @Override
@@ -309,9 +476,10 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
             return noobj();
         if (vid.equals(this.vid()))
             return this;
-        // if (vid.hasAuthority())
-        //   return this.server().sendRecv((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, from_(vid.localize().toUri()).tryToInst());
-        //   return this.server().sendRecv((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, from_(vid.localize().toUri()).tryToInst());
+        // authority guard — mine resolves locally, a declared peer delegates, everything else falls through
+        final Optional<Obj> foreign = this.dispatchForeign(vid, null);
+        if (foreign.isPresent())
+            return foreign.get();
         final fURI readableVID = this.alignPrefix(vid);
         /// ///////////////////
         if (readableVID.isGeneric())
@@ -334,14 +502,14 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        /*if (vid.hasAuthority()) {
-            this.server().send((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, start_(obj.vid(null)).to_(vid.localize().toUri()).tryToInst());
-            return obj;
-        }*/
         if (null == vid) {
             LOG.warn("the provided write uri was null");
             return noobj();
         }
+        // authority guard — mirrors read()
+        final Optional<Obj> foreign = this.dispatchForeign(vid, obj);
+        if (foreign.isPresent())
+            return foreign.get();
         final fURI writableVID = this.alignPrefix(vid);
         /// ///////////////
         final Space space = this.getSpaceFor(writableVID);

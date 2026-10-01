@@ -68,10 +68,6 @@ mqttspace::[pattern  => <z2m:#>,
             host     => <mqtt://localhost:1883>,
             q        => [subq::[=>]],
             route    => [z2m:=><>]]@/sys/space/mqtt;   
-clstrspace::[pattern => <ws://+/cluster/#>,
-             host    => <ws://localhost:8555/cluster>,
-             route   => [<ws://localhost:8555/cluster> => <>],
-             peer    => [<localhost:${*boot/args/port2}> => wsclient::[host=><ws://localhost:${*boot/args/port2}/mtron>]]]@/sys/space/cluster;    
 [===================================================================================================]
 [===================================================================================================]
 console::[header=>!*boot/args/header]@/usr/ui/console;
