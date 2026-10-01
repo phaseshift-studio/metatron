@@ -432,8 +432,8 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
     dom=&gt;'maybe an obj',
     rng=&gt;'a lst[str] of results',
     args=&gt;[
-     cmd=&gt;'the terminal command to evaluate (...',
-     {?}timeout=&gt;'a real number denoting timeout of ...'],
+     {?}timeout=&gt;'a real number denoting timeout of ...',
+     cmd=&gt;'the terminal command to evaluate (...'],
     desc=&gt;'evaluate bash command. *important*...',
     example=&gt;[&quot;bash('ls')                        ...&quot;]]
 </code></pre>
@@ -452,10 +452,10 @@ mtron&gt; bash(cmd=&gt;'whoami')
 mtron&gt; bash('df -h')
 ==&gt;[
     'Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.3M ...',
+    'tmpfs                  6.1G  6.2M ...',
     'efivarfs               128K   42K ...',
     '/dev/nvme0n1p2         916G  513G ...',
-    'tmpfs                   31G  208M ...',
+    'tmpfs                   31G  200M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
    ...(4 more)]

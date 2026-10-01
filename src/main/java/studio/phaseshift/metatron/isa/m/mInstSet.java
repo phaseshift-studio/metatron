@@ -544,7 +544,7 @@ public class mInstSet extends AbstractInstSet {
                                             not all spaces have the same set of attached qprocs.
                                             qprocs must be attached to a space before use. a space's qprocs are accessible at
                                             
-                                                 \\(\\texttt{*space/vid/qProc => lst[qProc]::T}\\)
+                                                 *space/vid/qProc — i.e. a space \\(\\mathcal{S}\\) exposes its qprocs as \\(\\mathrm{qprocs}(\\mathcal{S})\\)
                                             """),
                         /// ///////////////////////////////////
                         docWrap(REGEX_TYPE = Type.Builder.build().tid(STR_TID).vid(REGEX_TID).create(), "a str refined to a regex pattern"),
@@ -629,7 +629,7 @@ public class mInstSet extends AbstractInstSet {
                                         "persist the lhs obj at its own vid — a no-op when the lhs has no vid",
                                         "42@abc.save()   [-- 42@abc --]")),
                         Stream.of(docWrap(instA(INST_CTOR_TID),
-                                        "the generic type constructor — the base of the type-literal syntax, refined by each type to its own constructor",
+                                        "the generic type constructor — the base of the type-literal syntax, refined by each type to its own constructor: \\(c_{\\tau}(\\mathrm{spec}) \\mapsto v : \\tau\\)",
                                         "memspace::[data=>/usr/marko]   [-- a memspace::T built from its constructor arg --]"))
                 ).flatMap(i -> i)),
                 uri(REWRITE), lst(
@@ -661,14 +661,14 @@ public class mInstSet extends AbstractInstSet {
                                         }
                                     }
                                     return code.jvm(bundledCode);
-                                }), "rewrites a().b().c().profile() to profile_analysis(a().b().c())"),
+                                }), "rewrites a().b().c().profile() to profile_analysis(a().b().c()): \\(\\mathrm{profile} \\leadsto \\mathrm{profile\\_analysis}(\\ldots)\\)"),
 
                         // Remove identity instructions (no-op)
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("id_removal"),
                                 code -> code.selfJVM(
                                         RewriterBuilder.search(code.insts())
                                                 .match(instA(ID_INST_TID).insts())
-                                                .rewrite(x -> List.of())).asCode()), "removes identity instructions"),
+                                                .rewrite(x -> List.of())).asCode()), "removes identity instructions: \\(g \\cdot \\mathrm{id} \\leadsto g\\)"),
 
                         // Flatten nested map instructions
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_nest"),
@@ -676,13 +676,13 @@ public class mInstSet extends AbstractInstSet {
                                         RewriterBuilder.search(code.insts())
                                                 .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(ALL_TYPE)))).insts())
                                                 .repeat()
-                                                .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens nested map instructions"),
+                                                .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens nested map instructions: \\(\\mathrm{map}(f) \\cdot \\mathrm{map}(g) \\leadsto \\mathrm{map}(f \\cdot g)\\)"),
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_inst"),
                                 code -> code.selfJVM(
                                         RewriterBuilder.search(code.insts())
                                                 .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(M_ISA_INST_TID.extend("#"), lst(T(ALL.maybeSome()))))).insts())
                                                 .repeat()
-                                                .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens a mapping of an inst to the inst"),
+                                                .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens a mapping of an inst to the inst: \\(f \\in \\mathrm{inst} \\Rightarrow \\mathrm{map}(f) \\leadsto f\\)"),
                         // Eliminate else() after non-maybe instruction (dead code)
                         // Pattern: .count().else(x) → .count() (count always returns a value)
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("else_after_count"),
@@ -693,7 +693,7 @@ public class mInstSet extends AbstractInstSet {
                                                     final List<Inst> matched = map.values().stream().toList();
                                                     // COUNT always returns int, so ELSE is dead code
                                                     return List.of(matched.getFirst());
-                                                })).asCode()), "removes the else following a count — count always yields a value, so the fallback is dead code"),
+                                                })).asCode()), "removes the else following a count — \\(\\mathrm{count}\\) is total, so the fallback is dead code: \\(\\mathrm{count}(x) \\cdot \\mathrm{else}(y) \\leadsto \\mathrm{count}(x)\\)"),
                         // Compress a bare rshift chain into a single walk: >>.>>.>> => >> 3.
                         // DISABLED: the fold is only referentially sound on a uri (where
                         // >> N is a depth walk); on a rec >> N is still positional, so
@@ -725,7 +725,7 @@ public class mInstSet extends AbstractInstSet {
                                                         return List.of();
                                                     }
                                                     return List.of(plusInst);
-                                                })).asCode()), "removes plus(0) — the additive identity of a plus-monoid"),
+                                                })).asCode()), "removes plus(0) — the additive identity of a plus-monoid: \\(x + 0 \\leadsto x\\)"),
 
                         // Optimize mult(1) for integers (identity)
                         // Pattern: .mult(1) → identity (no-op)
@@ -742,7 +742,7 @@ public class mInstSet extends AbstractInstSet {
                                                         return List.of();
                                                     }
                                                     return List.of(multInst);
-                                                })).asCode()), "removes mult(1) — the multiplicative identity of a mult-monoid"),
+                                                })).asCode()), "removes mult(1) — the multiplicative identity of a mult-monoid: \\(x \\cdot 1 \\leadsto x\\)"),
 
                         // Collapse identical branches in split-merge by summing coefficients
                         // Pattern: -<[inst,inst,...]>- → inst{n}
@@ -790,7 +790,7 @@ public class mInstSet extends AbstractInstSet {
                                                         }
                                                     }
                                                     return matched;
-                                                })).asCode()), "applies abelian monoid law on split code paths"),
+                                                })).asCode()), "applies the abelian monoid law on split code paths: \\(\\mathrm{split}([f, \\ldots, f]) \\cdot \\mathrm{merge} \\leadsto f\\{\\sum_i c_i\\}\\)"),
 
                         // Left factoring: pull out common prefix from split branches
                         // Pattern: a-<[b.c.d, b.c.e]>- → a.b.c-<[d, e]>-
@@ -858,7 +858,7 @@ public class mInstSet extends AbstractInstSet {
                                                     }
                                                     // No optimization possible, return original
                                                     return matched;
-                                                })).asCode()), "leverages distributive ring law to pull common monoidally bound components to the right"),
+                                                })).asCode()), "leverages distributive ring law to pull common monoidally bound components to the right: \\(\\mathrm{split}([p \\cdot d, p \\cdot e]) \\cdot \\mathrm{merge} \\leadsto p \\cdot \\mathrm{split}([d, e]) \\cdot \\mathrm{merge}\\)"),
 
                         // Right factoring: pull out common suffix from split branches
                         // Pattern: a-<[b.d, c.d]>- → a-<[b, c]>-.d
@@ -932,7 +932,7 @@ public class mInstSet extends AbstractInstSet {
                                                     }
                                                     // No optimization possible, return original
                                                     return matched;
-                                                })).asCode()), "leverages distributive ring law to pull common monoidally bound components to the left"),
+                                                })).asCode()), "leverages distributive ring law to pull common monoidally bound components to the left: \\(\\mathrm{split}([d \\cdot r, e \\cdot r]) \\cdot \\mathrm{merge} \\leadsto \\mathrm{split}([d, e]) \\cdot \\mathrm{merge} \\cdot r\\)"),
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("range_skip_take"),
                                 code -> code.selfJVM(
                                         RewriterBuilder.search(code.asCode().insts())
@@ -944,7 +944,7 @@ public class mInstSet extends AbstractInstSet {
                                                     return Stream.of(
                                                             instB(SKIP_INST_TID, lst(rangeInst.arg(0))),
                                                             instB(TAKE_INST_TID, lst(jnt(rangeInst.arg(1).intValue() - rangeInst.arg(0).intValue())))).toList();
-                                                })).asCode()), "rewrites virtual range inst rewritten to skip/take"),
+                                                })).asCode()), "rewrites a range inst to skip/take: \\(\\mathrm{range}(i, n) \\leadsto \\mathrm{skip}(i) \\cdot \\mathrm{take}(n - i)\\)"),
 
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("explain_analysis"),
                                 code -> {
@@ -972,7 +972,7 @@ public class mInstSet extends AbstractInstSet {
                                         }
                                     }
                                     return code.jvm(bundledCode);
-                                }), "rewrites a().b().c().explain() to explain_analysis(a().b().c()), carrying trailing insts (e.g. >>format) — mirror of profile_analysis"))
+                                }), "rewrites a().b().c().explain() to explain_analysis(a().b().c()), carrying trailing insts (e.g. >>format) — \\(\\mathrm{explain} \\leadsto \\mathrm{explain\\_analysis}(\\ldots)\\), mirror of profile_analysis"))
 
                 /*uri(SUGAR), lst(sugars().stream()
                         .map(s -> rec(

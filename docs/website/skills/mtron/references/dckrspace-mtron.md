@@ -164,6 +164,20 @@ mtron> *docker:container/+                  [-- all containers                  
     local_volumes=>0,
     mounts=></home/killswitch/software/metatron/boot,/home/killswitch/software/metatron/conf,/var/run/docker.sock>,
     ...(6 more)]
+==>[ command=></app/entrypoint.sh [boot=><boot/_D4.boot.mtron>,log=>info]>,
+    created_at=>datetime:://2026.09:2/19/02/53/000?tz=-0600,
+    id=><54b670e5e380797fa5c5b4c58bebfb9ebfcc1fe548f882498f0a6610041234e4>,
+    image=>!*<docker:image/ghcr.io/phaseshift-studio/metatron:main>,
+    labels=>[
+     <org.opencontainers.image.description>=>'a distributed data-oriented comput...',
+     <org.opencontainers.image.licenses>=><AGPL-3.0>,
+     <org.opencontainers.image.source>=><https://github.com/phaseshift-studio/metatron>,
+     <org.opencontainers.image.title>=>metatron,
+     <org.opencontainers.image.vendor>=>'PhaseShift Studio',
+     <org.opencontainers.image.version>=>start(0.1).minus(SNAPSHOT)],
+    local_volumes=>0,
+    mounts=>/home/killswitch/software/metatron/boot,/home/killswitch/software/metatron,
+    ...(6 more)]
 ==>[ command=></usr/local/bin/mvn-entrypoint.sh sh -c 'java --enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/sun.nio.cs=ALL-UNNAMED -cp target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar studio.phaseshift.metatron.BootLoader '[boot=><_probe/http-probe.resolved.mtron>,log=>debug]>,
     created_at=>datetime:://2026.08:29/19/16/23/000?tz=-0600,
     id=>d0f09b6598e94e8c63b2ff38bde902b046aa71a83d30f9f6cf4949d0746c23ec,
@@ -179,8 +193,8 @@ mtron> *docker:container/+                  [-- all containers                  
     mounts=>/home/killswitch/software/metatron,
     ...(6 more)]
 ==>[ command=></docker-entrypoint.sh nginx -g 'daemon off;>,
-    created_at=>datetime:://2026.10:1/10/22/39/000?tz=-0600,
-    id=>ba63f68127770e11efff1990663292b2757595e5ee4542935078ef87ebcae3d3,
+    created_at=>datetime:://2026.10:1/10/58/54/000?tz=-0600,
+    id=><65be756b3b04ef275936553c51d811a96df32d8dc155ee798f0653a19e85cc4d>,
     image=>!*docker:image/nginx:alpine,
     labels=>[maintainer=>'NGINX Docker Maintainers <docker-m...'],
     local_volumes=>1,
@@ -200,40 +214,25 @@ mtron> *docker:container/+                  [-- all containers                  
     local_volumes=>0,
     names=>admiring_lalande,
     ...(5 more)]
-==>[ command=><docker-entrypoint.sh mariadbd>,
-    created_at=>datetime:://2026.09:2/02/36/13/000?tz=-0600,
-    id=><8673b240288781fb2d0dddc76a2cf3cac3fce71bca6830f95e7ac8a75ea7c70d>,
-    image=>!*<docker:image/mariadb:11.2>,
-    labels=>[  <com.docker.compose.config-hash>=>c0d9b351c9f96fc5f6c650960fd4fee862d6ef67c0e79cbc28ddd1b365a63f81,
+==>[ command=></usr/bin/tini -- /usr/local/bin/deepseek-harness-entrypoint web --patch /opt/deepseek-harness/web.cordis.patch.yml --no-open>,
+    created_at=>datetime:://2026.10:1/10/55/06/000?tz=-0600,
+    id=><4ddda355b9fda5a662e60a8099f644f5e3c4b9f34e524368fa362b0c9c06ee67>,
+    image=>!*<docker:image/docker.io/runzhliu/deepseek-harness:0.2.0-rc.2-r1>,
+    labels=>[  <com.docker.compose.config-hash>=><8bc7c7e75647bcf81d5d6ff095bc40b8434ced0fd04ac186fa38843561bf6aab>,
      <com.docker.compose.container-number>=>1,
-     <com.docker.compose.image>=>sha256:35d26c822908fba9f7ff591a95e6abcd7e9c6a0b354af8cb0f4dbd6441dac0fb,
+     <com.docker.compose.image>=>sha256:5b0cc43e9d233e94093100c65f62d6e91016a380de5fbf5f6862be22221c9e52,
      <com.docker.compose.oneoff>=>False,
-     <com.docker.compose.project.config_files>=></tmp/metatron-docker/vtest_a/docker-compose.yml>,
-     <com.docker.compose.project.working_dir>=>/tmp/metatron-docker/vtest_a,
-     <com.docker.compose.project>=>vtest_a,
-     ...(13 more)],
-    local_volumes=>1,
-    names=>vtest_a-a-1,
-    ...(6 more)]
-==>[ command=><tail -f /dev/null>,
-    created_at=>datetime:://2026.08:27/08/33/01/000?tz=-0600,
-    id=><14ffc8d6d3a69e2a2fa0070cd1dd8d0b1d748cb52555c594bbe42e79a55abce1>,
-    image=>!*docker:image/hibitdev/sqlite:latest,
-    labels=>[  <com.docker.compose.config-hash>=>c9c4e6a1111dc264bc25cd6ea400d6781d6073334ce4a5211f661f2469e9128d,
-     <com.docker.compose.container-number>=>1,
-     <com.docker.compose.image>=>sha256:5edbbb6fc06708277219996bdca7bd2921e2f340d8fac1156ae4615d4af2735c,
-     <com.docker.compose.oneoff>=>False,
-     <com.docker.compose.project.config_files>=></tmp/metatron-docker/metatron_sqlite/docker-compose.yml>,
-     <com.docker.compose.project.working_dir>=>/tmp/metatron-docker/metatron_sqlite,
-     <com.docker.compose.project>=>metatron_sqlite,
-     ...(2 more)],
-    local_volumes=>0,
-    mounts=>/tmp/metatron_data,
-    ...(6 more)]
-==>[ command=></app/entrypoint.sh --help>,
-    created_at=>datetime:://2026.09:2/12/04/38/000?tz=-0600,
-    id=>ceca8355aa92d350e2fe559146569f74206e2a31bce4bf26c5e2ea224109644b,
-    image=>!*<docker:image/ghcr.io/phaseshift-studio/metatron:latest>,
+     <com.docker.compose.project.config_files>=></home/killswitch/software/deepseek-harness-docker/compose.yaml>,
+     <com.docker.compose.project.working_dir>=>/home/killswitch/software/deepseek-harness-docker,
+     <com.docker.compose.project>=>deepseek-harness-docker,
+     ...(19 more)],
+    local_volumes=>2,
+    names=>deepseek-harness-docker-deepseek-harness-1,
+    ...(5 more)]
+==>[ command=></app/entrypoint.sh [boot=><boot/_b4.boot.mtron>,log=>info]>,
+    created_at=>datetime:://2026.09:2/18/49/18/000?tz=-0600,
+    id=><43e3c45618061959569f2998b17a25afa01bee99dc1507b09e18a19ed57f2bad>,
+    image=>!*<docker:image/ghcr.io/phaseshift-studio/metatron:main>,
     labels=>[
      <org.opencontainers.image.description>=>'a distributed data-oriented comput...',
      <org.opencontainers.image.licenses>=><AGPL-3.0>,
@@ -242,14 +241,15 @@ mtron> *docker:container/+                  [-- all containers                  
      <org.opencontainers.image.vendor>=>'PhaseShift Studio',
      <org.opencontainers.image.version>=>start(0.1).minus(SNAPSHOT)],
     local_volumes=>0,
-    names=>laughing_galileo,
-    ...(5 more)]
-==>[ command=></app/entrypoint.sh [boot=><boot/docker.boot.mtron>,log=>info,console=>true]>,
-    created_at=>datetime:://2026.09:3/00/20/05/000?tz=-0600,
-    id=><3c861c4a8a66856c8e0f1befdd6b95bfee0cf1a9009b6edf16bfd0e15ab92af6>,
-    image=>!*<docker:image/ghcr.io/phaseshift-studio/metatron:main>,
-    labels=>[
-     <org.opencontainers.image.description>=>'a distributed data-oriented comput...',
+    mounts=>/home/killswitch/software/metatron,/home/killswitch/software/metatron/boot,
+    ...(6 more)]
+==>[ command=><docker-entrypoint.sh mariadbd>,
+    created_at=>datetime:://2026.09:2/02/36/13/000?tz=-0600,
+    id=><8673b240288781fb2d0dddc76a2cf3cac3fce71bca6830f95e7ac8a75ea7c70d>,
+    image=>!*<docker:image/mariadb:11.2>,
+    labels=>[  <com.docker.compose.config-hash>=>c0d9b351c9f96fc5f6c650960fd4fee862d6ef67c0e79cbc28ddd1b365a63f81,
+     <com.docker.compose.container-number>=>1,
+     <com.docker.compose.image>=>sha256:35d26c822908fba9f7ff591a95e6abcd7e9c6a0b354af8cb0f4dbd6441dac0fb,
    ...
 mtron> *docker:volume/+                     [-- all volumes                              --]
 ==>[
@@ -361,10 +361,10 @@ mtron> *docker:network/+                    [-- all networks                    
     ipv6=>false,
     internal=>false,
     labels=>[
+     <com.docker.compose.config-hash>=>df437304bb211fbfc4b353c55c6fef38b07f9ae28b57ebc6c8b7b315709a02af,
      <com.docker.compose.network>=>default,
      <com.docker.compose.project>=>l3c,
-     <com.docker.compose.version>=><2.40.3>,
-     <com.docker.compose.config-hash>=>df437304bb211fbfc4b353c55c6fef38b07f9ae28b57ebc6c8b7b315709a02af],
+     <com.docker.compose.version>=><2.40.3>],
     ...(2 more)]
 ==>[ created_at=>datetime:://2026.08:27/08/33/01/479?tz=+0000,
     driver=>bridge,
@@ -373,10 +373,10 @@ mtron> *docker:network/+                    [-- all networks                    
     ipv6=>false,
     internal=>false,
     labels=>[
-     <com.docker.compose.version>=><2.40.3>,
      <com.docker.compose.config-hash>=>edf7769ebc38e22fe8be401f97ddeabc2328a412e6a2f42ed79e2e88fa012357,
      <com.docker.compose.network>=>default,
-     <com.docker.compose.project>=>metatron_sqlite],
+     <com.docker.compose.project>=>metatron_sqlite,
+     <com.docker.compose.version>=><2.40.3>],
     ...(3 more)]
 ==>[ created_at=>datetime:://2026.09:1/02/54/30/746?tz=+0000,
     driver=>bridge,
@@ -421,7 +421,7 @@ mtron> *docker:network/+                    [-- all networks                    
      <com.docker.compose.network>=>default,
      <com.docker.compose.project>=>dr_sqlite,
      <com.docker.compose.version>=><2.40.3>],
-    ...(3 more)]
+    ...(2 more)]
 ==>[ created_at=>datetime:://2026.08:6/14/09/25/425?tz=+0000,
     driver=>bridge,
     id=><12f02ba20a4f>,
@@ -453,7 +453,7 @@ mtron> *docker:network/+                    [-- all networks                    
     ipv6=>false,
     internal=>false,
     labels=>[
-     <com.docker.compose.version>=><2.40.3>,
+     <com.docker.compose.config-hash>=>f850c0d7969233d546cdeb36790876382fa1b66d873393e19366fd7f86e9de62,
    ...
 ```
 ### Inspect a resource
@@ -470,8 +470,8 @@ mtron> *docker:image/nginx:alpine           [-- full image rec --]
     ...(1 more)]
 mtron> *docker:container/web                [-- full container rec --]
 ==>[ command=></docker-entrypoint.sh nginx -g 'daemon off;>,
-    created_at=>datetime:://2026.10:1/10/22/39/000?tz=-0600,
-    id=>ba63f68127770e11efff1990663292b2757595e5ee4542935078ef87ebcae3d3,
+    created_at=>datetime:://2026.10:1/10/58/54/000?tz=-0600,
+    id=><65be756b3b04ef275936553c51d811a96df32d8dc155ee798f0653a19e85cc4d>,
     image=>!*docker:image/nginx:alpine,
     labels=>[maintainer=>'NGINX Docker Maintainers <docker-m...'],
     local_volumes=>1,
@@ -550,9 +550,9 @@ mtron> docker:volume/myvol -> noobj
 
 ```mtron
 mtron> docker:network/mynet -> [driver => bridge]
-==>[ created_at=>datetime:://2026.10:1/10/22/43/915?tz=+0000,
+==>[ created_at=>datetime:://2026.10:1/10/58/59/348?tz=+0000,
     driver=>bridge,
-    id=>b332822fa857,
+    id=><4bf226de935d>,
     ipv4=>true,
     ipv6=>false,
     internal=>false,
@@ -645,8 +645,8 @@ mtron> docker:container/sqlite -> [
          volumes => ['/tmp/mtron-dbs:/data']
        ]
 ==>[ command=>"/sbin/tini -g -- sh -c 'sqlite3 /d...",
-    created_at=>datetime:://2026.10:1/10/22/55/000?tz=-0600,
-    id=><89260911c3af32aba92816fb747c260821fc112b11b6b04d4d2360bcdc169a86>,
+    created_at=>datetime:://2026.10:1/10/59/00/000?tz=-0600,
+    id=><68708e202d6314f50c96cabe1637aea783d9dc3d5df78753894f084440b48e06>,
     image=>!*docker:image/keinos/sqlite3:latest,
     local_volumes=>0,
     mounts=>/tmp/mtron-dbs,
