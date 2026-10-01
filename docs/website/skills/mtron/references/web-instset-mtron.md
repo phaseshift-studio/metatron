@@ -29,7 +29,7 @@ mtron> wsspace::[pattern=> ws:#,
      wsspace::[pattern=> ws:#,
                  ...
      ^
-     could not parse at 'w']@/sys/fail/700
+     could not parse at 'w']@/sys/fail/696
 ```
 The organizing idea is that **a protocol is a projection of an obj, not a copy of it**. An `mcp_server` rides http,
 websockets and stdio alike; a `str` that is css is `css::T` whoever asks for it. A mount then only has to say which
@@ -143,9 +143,9 @@ The rendering is chosen per request with `?mimeq=<media type>`:
 mtron> http://localhost:8777/docker/image?mimeq=application/json      [-- the docker images as JSON --]
 ==>http://localhost:8777/docker/image?mimeq=application/json
 mtron> */docker/image?mimeq=text/plain                                [-- the same objs, mtron-typed, as plain text --]
-==>fail::[inst apply failure: no active space supports pattern /docker/image?mimeq=text/plain (at /m/inst/from)]@/sys/fail/702
+==>fail::[inst apply failure: no active space supports pattern /docker/image?mimeq=text/plain (at /m/inst/from)]@/sys/fail/698
 mtron> */docker/image                                                 [-- the native mtron rendering --]
-==>fail::[inst apply failure: no active space supports pattern /docker/image (at /m/inst/from)]@/sys/fail/704
+==>fail::[inst apply failure: no active space supports pattern /docker/image (at /m/inst/from)]@/sys/fail/700
 ```
 `application/x-mtron` is the **structural parse gate**: it asks for the content parsed into mtron objs rather than
 handed back as text. Read any mount's own documentation with `?docq`.
@@ -194,9 +194,11 @@ mtron> */usr/person/1
     name=>'marko',
     age=>29]
 mtron> *http://localhost:8777/usr/person/1
-==>"person::[name=>'marko',age=>29]@/usr/person/1"
+==>person::[
+    name=>'marko',
+    age=>29]
 mtron> *http://localhost:8777/usr/person/1?mimeq=application/json
-==>fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from)]@/sys/fail/722
+==>fail::[inst apply failure: no mimeq query processor attached to /sys/space/usr [/usr/#] (at /m/inst/from)]@/sys/fail/718
 ```
 `/person/1` serves that obj and `/person/2` serves the other, through the *same* handler — and `/person/3` is a 404,
 because the space is live rather than a lookup table of two.

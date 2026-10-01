@@ -165,14 +165,14 @@ public class sysInstSet extends AbstractInstSet {
         this.jvm().putAll(Map.of(
                 uri(CONST), lst(ThreadExecutor.instance()),
                 uri(TYPE), lst(
-                        FS_SPACE_TYPE,
-                        SERIAL_SPACE_TYPE,
-                        LOG_ENTRY_TYPE,
-                        DIR_TYPE,
-                        FILE_TYPE,
-                        IMAGE_FILE_TYPE),
+                        docWrap(FS_SPACE_TYPE, "the fsspace — a java file system (default: the local disk) exposed as a metatron space"),
+                        docWrap(SERIAL_SPACE_TYPE, "the serial space — serial port / terminal i/o exposed as a metatron space"),
+                        docWrap(LOG_ENTRY_TYPE, "a structured log entry — level, datetime, source, and message"),
+                        docWrap(DIR_TYPE, "a reference to a directory within fsspace"),
+                        docWrap(FILE_TYPE, "a reference to a file within fsspace, resolved through the router's redirects"),
+                        docWrap(IMAGE_FILE_TYPE, "a file reference that decodes to an image renderable as ascii art")),
                 uri(INST), lst(
-                        instC(AS_INST_TID.dom(URI_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
+                        docWrap(instC(AS_INST_TID.dom(URI_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
                             try {
                                 final File file = fsSpace.staticObjToFile(lhs);
                                 LOG.debug("translating file to bytes: %s", file);
@@ -186,20 +186,20 @@ public class sysInstSet extends AbstractInstSet {
                             } catch (final Exception e) {
                                 throw MTronException.of(e);
                             }
-                        }),
-                        instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID), else_(real(1.0d))),
-                                (lhs, inst) -> str(ImageUtil.convertToAscii(lhs.bytesValue(), inst.arg(1).realValue())).tid(IMAGE_TID)),
-                        instC(SYS_INST_TID.extend("close").dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+                        }), "read a file uri to its raw bytes — the file must resolve to an fsspace", "<mfs:.>/README.md.as(bytes::T)   [-- the file's raw bytes --]"),
+                        docWrap(instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID), else_(real(1.0d))),
+                                (lhs, inst) -> str(ImageUtil.convertToAscii(lhs.bytesValue(), inst.arg(1).realValue())).tid(IMAGE_TID)), "render an image's bytes as ascii art — the second arg scales the rendering (default 1.0)", "<mfs:.>/photo.png.as(image::T, 0.5)   [-- the image as a multi-line ascii str --]"),
+                        docWrap(instC(SYS_INST_TID.extend("close").dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
                             if (lhs instanceof Router)
                                 return Stream.of(noobj()).peek(o -> System.exit(0)).iterator().next();
                             CommonUtil.close(lhs);
                             if (lhs.isNoObj())
                                 BootLoader.close();
                             return noobj();
-                        }),
-                        instC(SYS_INST_TID.extend("redirect").dom(ALL.maybe()).rng(f("rec[short=>uri,long=>uri]")), lst(URI_TYPE), (lhs, inst) -> rec(
+                        }), "close the lhs — release its resources; a router exits the vm, and a noobj runs the boot loader teardown"),
+                        docWrap(instC(SYS_INST_TID.extend("redirect").dom(ALL.maybe()).rng(f("rec[short=>uri,long=>uri]")), lst(URI_TYPE), (lhs, inst) -> rec(
                                 uri(SHORT), uri(Router.global().redirect(inst.arg(0).uriValue(), false)),
-                                uri(LONG), uri(Router.global().redirect(inst.arg(0).uriValue(), true)))),
+                                uri(LONG), uri(Router.global().redirect(inst.arg(0).uriValue(), true)))), "map a uri to its registered redirect forms — returning [short, long] of the rewritten uri"),
                         docWrap(instC(SYS_INST_TID.extend("sys_stat").dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) -> ThreadExecutor.instance().summary()), "a summary of thread counts"),
                         docWrap(instC(SYS_INST_TID.extend("find_file").dom(ALL.maybe()).rng(LST_TID), rec(
                                         uri(NAME), STR_TYPE,
@@ -367,6 +367,7 @@ public class sysInstSet extends AbstractInstSet {
                             return str(null == input ? "" : input);
                         }), "maybe an obj", "a single line of input", Map.of(), "read a line of input from the running terminal"))))
         ;
+        docWrap(this, "the machine bridge of metatron — terminal i/o, process execution, and raw file operations");
         super.setup();
     }
 }

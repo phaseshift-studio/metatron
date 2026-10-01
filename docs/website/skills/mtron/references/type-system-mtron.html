@@ -233,7 +233,6 @@
                     agent skills
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/agent/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
@@ -256,6 +255,7 @@
                         <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -543,7 +543,7 @@ mtron&gt; [-- Constructor application: coerce to fit --]
 mtron&gt; 2.as(nat::T)          [-- nat::2 --]
 ==&gt;nat::2
 mtron&gt; -2.as(nat::T)         [-- nat::2  (constructor applied: abs) --]
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@nat [structural] (at /m/inst/as@1)]@/sys/fail/662
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@nat [structural] (at /m/inst/as@1)]@/sys/fail/658
 </code></pre>
 <p>The <code>as()</code> instruction applies the constructor. If the predicate passes, the value is returned as-is. If not, the
 constructor runs. If the constructor's result passes the predicate, the transformed value is returned. Otherwise, it
@@ -581,7 +581,7 @@ mtron&gt; human -&gt; being::T@human
 mtron&gt; chicken -&gt; being::T@chicken
 mtron&gt; [-- A human is NOT a chicken, despite identical structure --]
 mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T)
-==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal] (at /m/inst/as@1)]@/sys/fail/664
+==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal] (at /m/inst/as@1)]@/sys/fail/660
 </code></pre>
 <p>This is the difference between <strong>experiential knowledge</strong> (structural — what can be observed) and <strong>authoritative
 knowledge</strong> (nominal — what has been declared).</p>
@@ -615,7 +615,7 @@ mtron&gt; /m/inst?#{*}&lt;=#{?}(#::T)
 ==&gt;fail::[unable to determine inst function:
    	noobj       =&gt; inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T)   | [inst]
    	noobj       =&gt; &lt;#{?}&gt;::T   |  \_dom
-   	noobj      X=&gt; [&lt;#&gt;::T]   |  \_args]@/sys/fail/666
+   	noobj      X=&gt; [&lt;#&gt;::T]   |  \_args]@/sys/fail/662
 </code></pre>
 <h3>type checking and casting</h3>
 <h4><code>.test()</code> — predicate membership</h4>
@@ -638,10 +638,10 @@ returned as-is. Otherwise, the constructor transforms it:</p>
 mtron&gt; 2.as(nat::T)             [-- nat::2  (already fits) --]
 ==&gt;nat::2
 mtron&gt; -2.as(nat::T)            [-- nat::2  (constructor applied) --]
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@nat [structural] (at /m/inst/as@1)]@/sys/fail/668
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@nat [structural] (at /m/inst/as@1)]@/sys/fail/664
 mtron&gt; [-- Without a constructor, .as() is a pure test --]
 mtron&gt; -2.as(int::T[?&gt;0])  [-- fails: no constructor to rescue --]
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural] (at /m/inst/as@1)]@/sys/fail/670
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural] (at /m/inst/as@1)]@/sys/fail/666
 </code></pre>
 <p><code>.as()</code> is also used for nominal type casting:</p>
 <pre><code class="language-mtron">mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)    [-- ok: structurally a chicken --]
@@ -649,7 +649,7 @@ mtron&gt; -2.as(int::T[?&gt;0])  [-- fails: no constructor to rescue --]
     name=&gt;'fuzzy feet',
     age=&gt;2]
 mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T) [-- ERROR: nominally not a chicken --]
-==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal] (at /m/inst/as@1)]@/sys/fail/672
+==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal] (at /m/inst/as@1)]@/sys/fail/668
 </code></pre>
 <h3>lowest common denominator</h3>
 <p>The most specific type that subsumes a set of types. Two types always have an LCD:</p>
@@ -657,10 +657,10 @@ mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T) [-- ERROR: nominal
 mtron&gt; int::T[?&gt;0] + int::T[?&lt;120]
 mtron&gt; [-- rec with isa predicates: merge fields structurally --]
 mtron&gt; rec::T[?[age=&gt;int::T,name=&gt;str::T]]@person + rec::T[?[age=&gt;int::T]]@artifact
-==&gt;fail::[inst apply failure: unable to convert type to rec::T [Obj&lt;632&gt;] (at /m/inst/plus@1) [Obj&lt;632&gt;]][class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/674
+==&gt;fail::[inst apply failure: unable to convert type to rec::T [Obj&lt;632&gt;] (at /m/inst/plus@1) [Obj&lt;632&gt;]][class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/670
 mtron&gt; [-- Disjoint hierarchies: fall back to universal type --]
 mtron&gt; int::T + str::T
-==&gt;fail::[inst apply failure: int::T [int::T] unable to convert str::T (at /m/inst/plus@1)]@/sys/fail/676
+==&gt;fail::[inst apply failure: int::T [int::T] unable to convert str::T (at /m/inst/plus@1)]@/sys/fail/672
 </code></pre>
 
     </div>

@@ -233,7 +233,6 @@
                     agent skills
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/agent/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
@@ -256,6 +255,7 @@
                         <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -280,8 +280,6 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
@@ -468,8 +466,7 @@
    stop=&gt;[,]]]@/m/mach/thread_executor,
   rec::T[inst([code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;inst(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T])]@/m/mach/thread,
   thread::T[][ctor?rng=core&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/mach/thread/core,
-  thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/mach/thread/virtual,
-  space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/uri/authority=&gt;&lt;#&gt;::T]]][ctor?rng=clstrspace&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/clstrspace],
+  thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/mach/thread/virtual],
  inst=&gt;[
   /m/inst/thread?rng=thread&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
   stop?rng=thread&amp;dom=thread(){&lt;j&gt;},
@@ -487,17 +484,14 @@
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">19</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">18</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
         <div class="card-header"><h5 class="mb-0 text-primary">index</h5></div>
         <div class="card-body"><div class="mb-3">
     <h6 class="text-primary mb-2">types</h6>
-    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">mach</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__clstrspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">clstrspace</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__mach__component" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">mach</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__component" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">component</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__mach__factory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -567,37 +561,8 @@
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">19</span></h3>
-    <div class="card mb-3" id="__m__mach__clstrspace">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">clstrspace::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__space" class="instset-doc-small-code text-info code">/m/space::T</a></span>
-        </span>
-        <small class="text-muted code">/m/mach/clstrspace</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/uri/authority=&gt;&lt;#&gt;::T]]][ctor?rng=clstrspace&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/clstrspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- pattern=&gt;uri::T,
- {?}q=&gt;[rec::T[?[
- pattern=&gt;uri::T,
- {?}pre_write=&gt;inst::T,
- {?}post_write=&gt;inst::T,
- {?}qless_write=&gt;inst::T,
- {?}pre_read=&gt;inst::T,
- {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
- {?}route=&gt;[uri::T=&gt;uri::T],
- {?}schema=&gt;instset::T]</code></div></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a peer is a wsclient to a mtron_ws handler.
-*x and x-&gt;y are the respective read/write insts sent to the peer for evaluation.
-</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#peer" class="text-light">peer</a> <span class="text-light">=&gt;</span> <a href="#'known metatron instance elsewhere in ws or http space'" class="text-info">&#39;known metatron instance elsewhere in ws or http space&#39;</a>
-</pre>
-</div>
-</div><div class="card mb-3" id="__m__mach__component__compiler">
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">18</span></h3>
+    <div class="card mb-3" id="__m__mach__component__compiler">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">compiler::T</span>
@@ -809,12 +774,12 @@
     <p class="mb-0 text-light">[structural] the thread base type</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
-  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
-  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
   <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
   <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
   <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
+  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
+  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__thread_executor">

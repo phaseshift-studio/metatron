@@ -765,7 +765,7 @@ public class mathInstSet extends AbstractInstSet {
                 uri(PATTERN), uri(MATH_ISA_TID.extend(ALL)),
                 uri(TYPE), lst(
                         docWrap(NAT_TYPE, "a positive integer"),
-                        DATA_SIZE_TYPE,
+                        docWrap(DATA_SIZE_TYPE, "the nominal base type of data size"),
                         docWrap(DATETIME_TYPE = Type.Builder.build()
                                 .tid(URI_TID)
                                 .vid(MATH_DATETIME_TID)
@@ -998,68 +998,68 @@ public class mathInstSet extends AbstractInstSet {
                                     };
                                 }).create(), "a mile of distance (1760 yards)")),
                 uri(INST), lst(
-                        instC(MATH_DATETIME_NOW_TID.dom(ALL.maybe()).rng(MATH_DATETIME_TID), lst(), (lhs, inst) -> nowDatetime()),
+                        docWrap(instC(MATH_DATETIME_NOW_TID.dom(ALL.maybe()).rng(MATH_DATETIME_TID), lst(), (lhs, inst) -> nowDatetime()), "returns the current system datetime as a datetime uri", "datetime_now()   [-- <//2026.08.09/14/30/52/123?tz=+0000> (the moment you run it) --]"),
                         // datetime arithmetic: datetime + time -> datetime, datetime - time -> datetime,
                         // datetime - datetime -> millis::T
-                        instC(PLUS_INST_TID.dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(TIME_TYPE), (lhs, inst) -> {
+                        docWrap(instC(PLUS_INST_TID.dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(TIME_TYPE), (lhs, inst) -> {
                             final fURI normalizedTID = inst.arg(0).tid().basePath().equals(REAL_TID) ? lhs.tid().basePath() : MATH_MILLIS_TID;
                             return real(lhs.tid(normalizedTID).realValue() +
                                     inst.arg(0).tid(normalizedTID).realValue(), normalizedTID, lhs.vid()).tid(lhs.tid());
-                        }),
-                        instC(PLUS_INST_TID.dom(MATH_METRIC_TID).rng(MATH_METRIC_TID), lst(METRIC_TYPE), (lhs, inst) -> {
+                        }), "add two durations of the same time unit", "millis::1500.0 + millis::500.0   [-- millis::2000.0 --]"),
+                        docWrap(instC(PLUS_INST_TID.dom(MATH_METRIC_TID).rng(MATH_METRIC_TID), lst(METRIC_TYPE), (lhs, inst) -> {
                             final fURI normalizedTID = inst.arg(0).tid().basePath().equals(REAL_TID) ? lhs.tid().basePath() : MATH_METER_TID;
                             return real(lhs.tid(normalizedTID).realValue() +
                                     inst.arg(0).tid(normalizedTID).realValue(), normalizedTID, lhs.vid()).tid(lhs.tid());
-                        }),
-                        instC(PLUS_INST_TID.dom(MATH_IMPERIAL_TID).rng(MATH_IMPERIAL_TID), lst(IMPERIAL_TYPE), (lhs, inst) -> {
+                        }), "add two distances of the same metric unit", "meter::1500.0 + meter::500.0   [-- meter::2000.0 --]"),
+                        docWrap(instC(PLUS_INST_TID.dom(MATH_IMPERIAL_TID).rng(MATH_IMPERIAL_TID), lst(IMPERIAL_TYPE), (lhs, inst) -> {
                             final fURI normalizedTID = inst.arg(0).tid().basePath().equals(REAL_TID) ? lhs.tid().basePath() : MATH_FOOT_TID;
                             return real(lhs.tid(normalizedTID).realValue() +
                                     inst.arg(0).tid(normalizedTID).realValue(), normalizedTID, lhs.vid()).tid(lhs.tid());
-                        }),
-                        instC(AS_INST_TID.dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(TIME_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vid())),
-                        instC(PLUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_DATETIME_TID), lst(TIME_TYPE), (lhs, inst) ->
-                                buildDatetimeUri(ZonedDateTime.ofInstant(Instant.ofEpochMilli(datetimeToMillis(lhs.asUri()) + (long) timeToMillis(inst.arg(0))), ZoneOffset.UTC))),
-                        instC(MINUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_DATETIME_TID), lst(TIME_TYPE), (lhs, inst) ->
-                                buildDatetimeUri(ZonedDateTime.ofInstant(Instant.ofEpochMilli(datetimeToMillis(lhs.asUri()) - (long) timeToMillis(inst.arg(0))), ZoneOffset.UTC))),
-                        instC(MINUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_TIME_TID), lst(DATETIME_TYPE), (lhs, inst) ->
-                                normalizeTime(real((double) (datetimeToMillis(lhs.asUri()) - datetimeToMillis(inst.arg(0).asUri())), MATH_MILLIS_TID, null))),
-                        // uri → datetime identity cast (predicate validates in Type.apply)
-                        instC(AS_INST_TID.dom(URI_TID).rng(MATH_DATETIME_TID), lst(URI_TYPE), (lhs, inst) -> lhs.asUri().tid(MATH_DATETIME_TID)),
-                        instC(AS_INST_TID.dom(MATH_DATETIME_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> jnt(datetimeToMillis(lhs.asUri()))),
-                        instC(AS_INST_TID.dom(MATH_DATETIME_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(humanReadableDatetime(lhs.asUri()))),
-                        // str → datetime (parse ISO-8601 / Docker timestamps)
-                        instC(AS_INST_TID.dom(STR_TID).rng(MATH_DATETIME_TID), lst(DATETIME_TYPE), (lhs, inst) -> parseDatetime(lhs.strValue())),
+                        }), "add two distances of the same imperial unit", "foot::12.0 + foot::36.0   [-- foot::48.0 --]"),
+                        docWrap(instC(AS_INST_TID.dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(TIME_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vid())), "convert a duration to another time unit — the total is preserved, only the unit label changes", "millis::1500.0.as(second::T)   [-- second::1.5 --]", "second::90.0.as(minute::T)   [-- minute::1.5 --]"),
+                        docWrap(instC(PLUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_DATETIME_TID), lst(TIME_TYPE), (lhs, inst) ->
+                                buildDatetimeUri(ZonedDateTime.ofInstant(Instant.ofEpochMilli(datetimeToMillis(lhs.asUri()) + (long) timeToMillis(inst.arg(0))), ZoneOffset.UTC))), "shift a datetime forward by a duration", "<//2026.08:09/14/30/00/000?tz=+0000> + second::30.0   [-- <//2026.08:09/14/30/30/000?tz=+0000> --]"),
+                        docWrap(instC(MINUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_DATETIME_TID), lst(TIME_TYPE), (lhs, inst) ->
+                                buildDatetimeUri(ZonedDateTime.ofInstant(Instant.ofEpochMilli(datetimeToMillis(lhs.asUri()) - (long) timeToMillis(inst.arg(0))), ZoneOffset.UTC))), "shift a datetime backward by a duration", "<//2026.08:09/14/30/30/000?tz=+0000> - second::30.0   [-- <//2026.08:09/14/30/00/000?tz=+0000> --]"),
+                        docWrap(instC(MINUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_TIME_TID), lst(DATETIME_TYPE), (lhs, inst) ->
+                                normalizeTime(real((double) (datetimeToMillis(lhs.asUri()) - datetimeToMillis(inst.arg(0).asUri())), MATH_MILLIS_TID, null))), "the elapsed duration between two datetimes (in millis — normalize it for a readable unit)", "<//2026.08:09/14/31/00/000?tz=+0000> - <//2026.08:09/14/30/00/000?tz=+0000>   [-- millis::60000.0 --]"),
+                        // uri -> datetime identity cast (predicate validates in Type.apply)
+                        docWrap(instC(AS_INST_TID.dom(URI_TID).rng(MATH_DATETIME_TID), lst(URI_TYPE), (lhs, inst) -> lhs.asUri().tid(MATH_DATETIME_TID)), "cast a uri to a datetime — the datetime predicate validates the uri structure first", "<//2026.08.09/14/30/52/123?tz=+0000>.as(datetime::T)   [-- //2026.08.09/14/30/52/123?tz=+0000 --]"),
+                        docWrap(instC(AS_INST_TID.dom(MATH_DATETIME_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> jnt(datetimeToMillis(lhs.asUri()))), "a datetime to epoch millis", "<//2026.08.09/14/30/52/123?tz=+0000>.as(int::T)   [-- the epoch millis of that moment --]"),
+                        docWrap(instC(AS_INST_TID.dom(MATH_DATETIME_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(humanReadableDatetime(lhs.asUri()))), "a datetime to a human readable str", "<//2026.08.07/19/48/02/251?tz=+0000>.as(str::T)   [-- Friday, August 7, 2026 07:48:02 PM +00:00 --]"),
+                        // str -> datetime (parse ISO-8601 / Docker timestamps)
+                        docWrap(instC(AS_INST_TID.dom(STR_TID).rng(MATH_DATETIME_TID), lst(DATETIME_TYPE), (lhs, inst) -> parseDatetime(lhs.strValue())), "parse an ISO-8601 or docker-style timestamp str into a datetime", "'2026-08-07T19:48:02Z'.as(datetime::T)   [-- <//2026.08.07/19/48/02/000?tz=+0000> --]"),
                         /*instC(MATH_NOW_INST_TID.dom(ALL.maybe()).rng(MATH_TIME_TID), lst(), (lhs, inst) -> real((double) System.currentTimeMillis(), MATH_TIME_TID, null)),
                         instC(AS_INST_TID.dom(MATH_TIME_TID).rng(STR_TID), lst(TIME_TYPE), (lhs, inst) -> {
                             Date date = new Date(lhs.realValue().intValue());
                             DateFormat formatter = new SimpleDateFormat("yyyy.MM.dd 'at' HH:mm:ss z");
                             formatter.setTimeZone(TimeZone.getTimeZone(ZoneId.systemDefault()));
                             return str(formatter.format(date));
-                        }),*/
-                        instC(MATH_INST_TID.extend("normalize").dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(), (lhs, inst) -> normalizeTime(lhs.asReal())),
-                        instC(MATH_INST_TID.extend("normalize").dom(MATH_DATASIZE_TID).rng(MATH_DATASIZE_TID), lst(), (lhs, inst) -> normalizeData(lhs.asReal())),
-                        instC(MATH_INST_TID.extend("normalize").dom(MATH_METRIC_TID).rng(MATH_METRIC_TID), lst(), (lhs, inst) -> normalizeMetric(lhs.asReal())),
-                        instC(MATH_INST_TID.extend("normalize").dom(MATH_IMPERIAL_TID).rng(MATH_IMPERIAL_TID), lst(), (lhs, inst) -> normalizeImperial(lhs.asReal())),
+                            }),*/
+                        docWrap(instC(MATH_INST_TID.extend("normalize").dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(), (lhs, inst) -> normalizeTime(lhs.asReal())), "auto-scale a duration to the most human readable time unit", "millis::2500.0.normalize()   [-- second::2.5 --]"),
+                        docWrap(instC(MATH_INST_TID.extend("normalize").dom(MATH_DATASIZE_TID).rng(MATH_DATASIZE_TID), lst(), (lhs, inst) -> normalizeData(lhs.asReal())), "auto-scale a data size to the most human readable data unit", "bB::2097152.0.normalize()   [-- mB::2.0 --]"),
+                        docWrap(instC(MATH_INST_TID.extend("normalize").dom(MATH_METRIC_TID).rng(MATH_METRIC_TID), lst(), (lhs, inst) -> normalizeMetric(lhs.asReal())), "auto-scale a metric distance to the most human readable metric unit", "mm::2500.0.normalize()   [-- meter::2.5 --]"),
+                        docWrap(instC(MATH_INST_TID.extend("normalize").dom(MATH_IMPERIAL_TID).rng(MATH_IMPERIAL_TID), lst(), (lhs, inst) -> normalizeImperial(lhs.asReal())), "auto-scale an imperial distance to the most human readable imperial unit", "inch::24.0.normalize()   [-- foot::2.0 --]"),
                         // metric / imperial distance: within-system casts, and the two cross-system
-                        // mappings (metric ↔ imperial) bridged through 25.4 mm per inch
-                        instC(AS_INST_TID.dom(MATH_METRIC_TID).rng(MATH_METRIC_TID), lst(METRIC_TYPE), (lhs, inst) -> convertTo(lhs, inst.arg(0).vid())),
-                        instC(AS_INST_TID.dom(MATH_IMPERIAL_TID).rng(MATH_IMPERIAL_TID), lst(IMPERIAL_TYPE), (lhs, inst) -> convertTo(lhs, inst.arg(0).vid())),
-                        instC(AS_INST_TID.dom(MATH_METRIC_TID).rng(MATH_IMPERIAL_TID), lst(IMPERIAL_TYPE), (lhs, inst) -> convertTo(lhs, inst.arg(0).vid())),
-                        instC(AS_INST_TID.dom(MATH_IMPERIAL_TID).rng(MATH_METRIC_TID), lst(METRIC_TYPE), (lhs, inst) -> convertTo(lhs, inst.arg(0).vid())),
-                        instC(MATH_COS_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(as_(REAL_TYPE).tryToInst()), (lhs, inst) -> real(Math.cos(inst.arg(0).realValue()))),
-                        instC(MATH_SIN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.sin(inst.arg(0).realValue()))),
-                        instC(MATH_TAN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.tan(inst.arg(0).realValue()))),
-                        instC(MATH_SQRT_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.sqrt(inst.arg(0).realValue()))),
-                        instC(MATH_ATAN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.atan(inst.arg(0).realValue()))),
-                        instC(MATH_ATAN2_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE.c(cInt.of(2))), (lhs, inst) -> real(Math.atan2(inst.arg(0).take(cInt.ONE()).get0().realValue(), inst.arg(0).take(cInt.ONE()).get0().realValue()))),
-                        instC(MATH_LOG_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.log(inst.arg(0).realValue()))),
-                        instC(MATH_LOG10_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.log10(inst.arg(0).realValue()))),
-                        instC(MATH_EXP_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.exp(inst.arg(0).realValue()))),
-                        instC(MATH_ABS_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.abs(inst.arg(0).realValue()))),
-                        instC(MATH_CEIL_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.ceil(inst.arg(0).realValue()))),
-                        instC(MATH_FLOOR_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.floor(inst.arg(0).realValue()))),
-                        instC(MATH_ROUND_INST_TID.dom(ALL.maybe()).rng(INT_TID), lst(REAL_TYPE), (lhs, inst) -> jnt(Math.round(inst.arg(0).realValue())))),
-                uri(CONST), lst(real(Math.E, REAL_TID, MATH_ISA_TID.extend("e").constant()), real(Math.PI, REAL_TID, MATH_ISA_TID.extend("pi").constant()))));
+                        // mappings (metric <-> imperial) bridged through 25.4 mm per inch
+                        docWrap(instC(AS_INST_TID.dom(MATH_METRIC_TID).rng(MATH_METRIC_TID), lst(METRIC_TYPE), (lhs, inst) -> convertTo(lhs, inst.arg(0).vid())), "convert a metric distance to another metric unit", "meter::1500.0.as(km::T)   [-- km::1.5 --]"),
+                        docWrap(instC(AS_INST_TID.dom(MATH_IMPERIAL_TID).rng(MATH_IMPERIAL_TID), lst(IMPERIAL_TYPE), (lhs, inst) -> convertTo(lhs, inst.arg(0).vid())), "convert an imperial distance to another imperial unit", "inch::144.0.as(yard::T)   [-- yard::4.0 --]"),
+                        docWrap(instC(AS_INST_TID.dom(MATH_METRIC_TID).rng(MATH_IMPERIAL_TID), lst(IMPERIAL_TYPE), (lhs, inst) -> convertTo(lhs, inst.arg(0).vid())), "convert a metric distance to an imperial one — bridged through the exact 25.4 millimeters per inch", "meter::1.0.as(inch::T)   [-- inch::39.37007874015748 --]"),
+                        docWrap(instC(AS_INST_TID.dom(MATH_IMPERIAL_TID).rng(MATH_METRIC_TID), lst(METRIC_TYPE), (lhs, inst) -> convertTo(lhs, inst.arg(0).vid())), "convert an imperial distance to a metric one — bridged through the exact 25.4 millimeters per inch", "foot::1.0.as(cm::T)   [-- cm::30.48 --]"),
+                        docWrap(instC(MATH_COS_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(as_(REAL_TYPE).tryToInst()), (lhs, inst) -> real(Math.cos(inst.arg(0).realValue()))), "the cosine (radians) of a real", "cos(1.0)   [-- 0.5403023058681398 --]"),
+                        docWrap(instC(MATH_SIN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.sin(inst.arg(0).realValue()))), "the sine (radians) of a real", "sin(1.0)   [-- 0.8414709848078965 --]"),
+                        docWrap(instC(MATH_TAN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.tan(inst.arg(0).realValue()))), "the tangent (radians) of a real", "tan(1.0)   [-- 1.557407724654902 --]"),
+                        docWrap(instC(MATH_SQRT_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.sqrt(inst.arg(0).realValue()))), "the square root of a real", "sqrt(9)   [-- 3.0 --]"),
+                        docWrap(instC(MATH_ATAN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.atan(inst.arg(0).realValue()))), "the arctangent (radians) of a real", "atan(1)   [-- 0.7853981633974483 (pi/4) --]"),
+                        docWrap(instC(MATH_ATAN2_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE.c(cInt.of(2))), (lhs, inst) -> real(Math.atan2(inst.arg(0).take(cInt.ONE()).get0().realValue(), inst.arg(0).take(cInt.ONE()).get0().realValue()))), "the four quadrant arctangent of the two reals [x,y]", "atan2([3.0,4.0])   [-- 1.0303768265243125 --]"),
+                        docWrap(instC(MATH_LOG_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.log(inst.arg(0).realValue()))), "the natural logarithm of a real", "log(2.718281828459045)   [-- 1.0 --]"),
+                        docWrap(instC(MATH_LOG10_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.log10(inst.arg(0).realValue()))), "the base-10 logarithm of a real", "log10(1000)   [-- 3.0 --]"),
+                        docWrap(instC(MATH_EXP_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.exp(inst.arg(0).realValue()))), "e to the power of a real", "exp(1.0)   [-- 2.718281828459045 --]"),
+                        docWrap(instC(MATH_ABS_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.abs(inst.arg(0).realValue()))), "the absolute value of a real", "abs(-3.14)   [-- 3.14 --]"),
+                        docWrap(instC(MATH_CEIL_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.ceil(inst.arg(0).realValue()))), "the smallest real greater than or equal to the arg — the ceiling", "ceil(2.1)   [-- 3.0 --]"),
+                        docWrap(instC(MATH_FLOOR_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.floor(inst.arg(0).realValue()))), "the largest real less than or equal to the arg — the floor", "floor(2.9)   [-- 2.0 --]"),
+                        docWrap(instC(MATH_ROUND_INST_TID.dom(ALL.maybe()).rng(INT_TID), lst(REAL_TYPE), (lhs, inst) -> jnt(Math.round(inst.arg(0).realValue()))), "the arg rounded to the nearest int", "round(2.5)   [-- 3 --]")),
+                 uri(CONST), lst(real(Math.E, REAL_TID, MATH_ISA_TID.extend("e").constant()), real(Math.PI, REAL_TID, MATH_ISA_TID.extend("pi").constant()))));
         docWrap(this, "the collection of mathematical instructions, algebraic and numeric data types, and associated constants");
         super.setup();
     }

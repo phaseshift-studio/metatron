@@ -233,7 +233,6 @@
                     agent skills
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/agent/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
@@ -256,13 +255,14 @@
                         <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/wsplus">wsplus</a>
                             </div>
                         </div>
                     </li>
@@ -280,8 +280,6 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
@@ -290,8 +288,8 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/README.md">README.md</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
@@ -410,65 +408,65 @@
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[
- {{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}/m/ide/#{{/link}}{{/b}},
- {{b}}{{link}}q{{/link}}{{/b}}=&gt;[docq::[
- {{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}docq{{/link}}{{/b}},
- {{b}}{{link}}pre_read{{/link}}{{/b}}=&gt;inst?rng=#{*}&amp;dom=#{?}({{b}}{{link}}uri{{/link}}{{/b}}::T){&lt;j&gt;},
- {{b}}{{link}}pre_write{{/link}}{{/b}}=&gt;inst?rng=#{*}&amp;dom=#{?}({{b}}{{link}}uri{{/link}}{{/b}}::T,&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T){&lt;j&gt;},
- {{b}}{{link}}obj{{/link}}{{/b}}=&gt;memspace::[{{b}}{{link}}pattern{{/link}}{{/b}}=&gt;&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;],
- {{b}}{{link}}inst{{/link}}{{/b}}=&gt;instset::[{{b}}{{link}}pattern{{/link}}{{/b}}=&gt;&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;]]],
- {{b}}{{link}}space{{/link}}{{/b}}=&gt;[{{b}}{{link}}super{{/link}}{{/b}}=&gt;!*{{b}}{{link}}/m{{/link}}{{/b}}],
- {{b}}{{link}}type{{/link}}{{/b}}=&gt;[
-  {{b}}{{link}}/m/ide/serializer{{/link}}{{/b}}::T[][ctor?rng=obj_ide_java&amp;dom=#{?}(&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T){&lt;j&gt;}]{{y}}@{{/y}}{{y}}{{link}}/m/ide/serializer/obj_ide_java{{/link}}{{/y}},
-  {{b}}{{link}}rec{{/link}}{{/b}}::T[?[
- {{b}}{{link}}classes{{/link}}{{/b}}=&gt;[&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T=&gt;{{b}}{{link}}lst{{/link}}{{/b}}::T],
- {?}{{b}}{{link}}package{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}imports{{/link}}{{/b}}=&gt;{{b}}{{link}}lst{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}preamble{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}postscript{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T]]{{y}}@{{/y}}{{y}}{{link}}/m/ide/java{{/link}}{{/y}},
-  {{b}}{{link}}rec{{/link}}{{/b}}::T[?[
- {{b}}{{link}}status{{/link}}{{/b}}=&gt;union({{b}}{{link}}success{{/link}}{{/b}},{{b}}{{link}}error{{/link}}{{/b}},{{b}}{{link}}halted{{/link}}{{/b}}),
- {{b}}{{link}}runtime{{/link}}{{/b}}=&gt;!*{{b}}{{link}}/m/math/time{{/link}}{{/b}},
- {?}{{b}}{{link}}command{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}project{{/link}}{{/b}}=&gt;{{b}}{{link}}project{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}result{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}error{{/link}}{{/b}}=&gt;{?}[{{b}}{{link}}fail{{/link}}{{/b}}::T]]]{{y}}@{{/y}}{{y}}{{link}}/m/ide/result{{/link}}{{/y}},
-  {{b}}{{link}}rec{{/link}}{{/b}}::T[?[
- {{b}}{{link}}root{{/link}}{{/b}}=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}name{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}desc{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}command{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}rec{{/link}}{{/b}}::T[?[
- {{b}}{{link}}status{{/link}}{{/b}}=&gt;union({{b}}{{link}}success{{/link}}{{/b}},{{b}}{{link}}error{{/link}}{{/b}},{{b}}{{link}}halted{{/link}}{{/b}}),
- {{b}}{{link}}runtime{{/link}}{{/b}}=&gt;!*{{b}}{{link}}/m/math/time{{/link}}{{/b}},
- {?}{{b}}{{link}}command{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}project{{/link}}{{/b}}=&gt;{{b}}{{link}}project{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}result{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}error{{/link}}{{/b}}=&gt;{?}[{{b}}{{link}}fail{{/link}}{{/b}}::T]]]{{y}}@{{/y}}{{y}}{{link}}/m/ide/result{{/link}}{{/y}}],
- {?}{{b}}{{link}}code{{/link}}{{/b}}=&gt;&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T]]{{y}}@{{/y}}{{y}}{{link}}/m/ide/project{{/link}}{{/y}}],
- {{b}}{{link}}inst{{/link}}{{/b}}=&gt;[
-  as?rng=project&amp;dom=uri({{b}}{{link}}rec{{/link}}{{/b}}::T[?[
- {{b}}{{link}}root{{/link}}{{/b}}=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}name{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}desc{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}command{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}rec{{/link}}{{/b}}::T[?[
- {{b}}{{link}}status{{/link}}{{/b}}=&gt;union({{b}}{{link}}success{{/link}}{{/b}},{{b}}{{link}}error{{/link}}{{/b}},{{b}}{{link}}halted{{/link}}{{/b}}),
- {{b}}{{link}}runtime{{/link}}{{/b}}=&gt;!*{{b}}{{link}}/m/math/time{{/link}}{{/b}},
- {?}{{b}}{{link}}command{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}project{{/link}}{{/b}}=&gt;{{b}}{{link}}project{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}result{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}error{{/link}}{{/b}}=&gt;{?}[{{b}}{{link}}fail{{/link}}{{/b}}::T]]]{{y}}@{{/y}}{{y}}{{link}}/m/ide/result{{/link}}{{/y}}],
- {?}{{b}}{{link}}code{{/link}}{{/b}}=&gt;&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T]]{{y}}@{{/y}}{{y}}{{link}}/m/ide/project{{/link}}{{/y}}){&lt;j&gt;},
-  as?rng=skill&amp;dom=project(&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T){&lt;j&gt;},
-  as?rng=java&amp;dom=java({{b}}{{link}}rec{{/link}}{{/b}}::T[?[
- {{b}}{{link}}classes{{/link}}{{/b}}=&gt;[&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T=&gt;{{b}}{{link}}lst{{/link}}{{/b}}::T],
- {?}{{b}}{{link}}package{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}imports{{/link}}{{/b}}=&gt;{{b}}{{link}}lst{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}preamble{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}postscript{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T]]{{y}}@{{/y}}{{y}}{{link}}/m/ide/java{{/link}}{{/y}}){&lt;j&gt;},
-  as?rng=java&amp;dom=java({{b}}{{link}}str{{/link}}{{/b}}::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]{{y}}@{{/y}}{{y}}{{link}}/m/ide/java{{/link}}{{/y}}){&lt;j&gt;},
+ pattern=&gt;/m/ide/#,
+ q=&gt;[docq::[
+ pattern=&gt;docq,
+ pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
+ pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[super=&gt;!*/m],
+ type=&gt;[
+  /m/ide/serializer::T[][ctor?rng=obj_ide_java&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/ide/serializer/obj_ide_java,
+  rec::T[?[
+   classes=&gt;[&lt;#&gt;::T=&gt;lst::T],
+   {?}package=&gt;str::T,
+   {?}imports=&gt;lst::T,
+   {?}preamble=&gt;str::T,
+   {?}postscript=&gt;str::T]]@/m/ide/java,
+  rec::T[?[
+   status=&gt;union(success,error,halted),
+   runtime=&gt;!*/m/math/time,
+   {?}command=&gt;str::T,
+   {?}project=&gt;project::T,
+   {?}result=&gt;str::T,
+   {?}error=&gt;{?}[fail::T]]]@/m/ide/result,
+  rec::T[?[
+   root=&gt;uri::T,
+   {?}name=&gt;str::T,
+   {?}desc=&gt;str::T,
+   {?}command=&gt;[uri::T=&gt;rec::T[?[
+ status=&gt;union(success,error,halted),
+ runtime=&gt;!*/m/math/time,
+ {?}command=&gt;str::T,
+ {?}project=&gt;project::T,
+ {?}result=&gt;str::T,
+ {?}error=&gt;{?}[fail::T]]]@/m/ide/result],
+   {?}code=&gt;&lt;#&gt;::T]]@/m/ide/project],
+ inst=&gt;[
+  as?rng=project&amp;dom=uri(rec::T[?[
+  root=&gt;uri::T,
+  {?}name=&gt;str::T,
+  {?}desc=&gt;str::T,
+  {?}command=&gt;[uri::T=&gt;rec::T[?[
+ status=&gt;union(success,error,halted),
+ runtime=&gt;!*/m/math/time,
+ {?}command=&gt;str::T,
+ {?}project=&gt;project::T,
+ {?}result=&gt;str::T,
+ {?}error=&gt;{?}[fail::T]]]@/m/ide/result],
+  {?}code=&gt;&lt;#&gt;::T]]@/m/ide/project){&lt;j&gt;},
+  as?rng=skill&amp;dom=project(&lt;#&gt;::T){&lt;j&gt;},
+  as?rng=java&amp;dom=java(rec::T[?[
+  classes=&gt;[&lt;#&gt;::T=&gt;lst::T],
+  {?}package=&gt;str::T,
+  {?}imports=&gt;lst::T,
+  {?}preamble=&gt;str::T,
+  {?}postscript=&gt;str::T]]@/m/ide/java){&lt;j&gt;},
+  as?rng=java&amp;dom=java(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/ide/java){&lt;j&gt;},
   find?rng=uri{*}&amp;dom=uri(class=&gt;uri::T,member=&gt;str{?}::T,text=&gt;str{?}::T){&lt;j&gt;},
-  search?rng=uri{*}&amp;dom=uri({{b}}{{link}}str{{/link}}{{/b}}::T){&lt;j&gt;},
-  command?rng=inst&amp;dom=#{?}(command=&gt;str::T){&lt;j&gt;}]]{{y}}@{{/y}}{{y}}{{link}}/m/ide{{/link}}{{/y}}</code></pre>
+  search?rng=uri{*}&amp;dom=uri(str::T){&lt;j&gt;},
+  command?rng=inst&amp;dom=#{?}(command=&gt;str::T){&lt;j&gt;}]]@/m/ide</code></pre>
                     </div>
                 </div>
             </div>
@@ -520,12 +518,12 @@
         </span>
         <small class="text-muted code">/m/ide/java</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">{{b}}{{link}}rec{{/link}}{{/b}}::T[?[
- {{b}}{{link}}classes{{/link}}{{/b}}=&gt;[&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T=&gt;{{b}}{{link}}lst{{/link}}{{/b}}::T],
- {?}{{b}}{{link}}package{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}imports{{/link}}{{/b}}=&gt;{{b}}{{link}}lst{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}preamble{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}postscript{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T]]{{y}}@{{/y}}{{y}}{{link}}/m/ide/java{{/link}}{{/y}}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+ classes=&gt;[&lt;#&gt;::T=&gt;lst::T],
+ {?}package=&gt;str::T,
+ {?}imports=&gt;lst::T,
+ {?}preamble=&gt;str::T,
+ {?}postscript=&gt;str::T]]@/m/ide/java</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a coarse rec encoding of a java source file optimized for semantic editing</p>
@@ -538,7 +536,7 @@
         </span>
         <small class="text-muted code">/m/ide/serializer/obj_ide_java</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">{{b}}{{link}}/m/ide/serializer{{/link}}{{/b}}::T[][ctor?rng=obj_ide_java&amp;dom=#{?}(&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T){&lt;j&gt;}]{{y}}@{{/y}}{{y}}{{link}}/m/ide/serializer/obj_ide_java{{/link}}{{/y}}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/ide/serializer::T[][ctor?rng=obj_ide_java&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/ide/serializer/obj_ide_java</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__ide__project">
@@ -549,18 +547,18 @@
         </span>
         <small class="text-muted code">/m/ide/project</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">{{b}}{{link}}rec{{/link}}{{/b}}::T[?[
- {{b}}{{link}}root{{/link}}{{/b}}=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}name{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}desc{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}command{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}rec{{/link}}{{/b}}::T[?[
- {{b}}{{link}}status{{/link}}{{/b}}=&gt;union({{b}}{{link}}success{{/link}}{{/b}},{{b}}{{link}}error{{/link}}{{/b}},{{b}}{{link}}halted{{/link}}{{/b}}),
- {{b}}{{link}}runtime{{/link}}{{/b}}=&gt;!*{{b}}{{link}}/m/math/time{{/link}}{{/b}},
- {?}{{b}}{{link}}command{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}project{{/link}}{{/b}}=&gt;{{b}}{{link}}project{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}result{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}error{{/link}}{{/b}}=&gt;{?}[{{b}}{{link}}fail{{/link}}{{/b}}::T]]]{{y}}@{{/y}}{{y}}{{link}}/m/ide/result{{/link}}{{/y}}],
- {?}{{b}}{{link}}code{{/link}}{{/b}}=&gt;&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T]]{{y}}@{{/y}}{{y}}{{link}}/m/ide/project{{/link}}{{/y}}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+ root=&gt;uri::T,
+ {?}name=&gt;str::T,
+ {?}desc=&gt;str::T,
+ {?}command=&gt;[uri::T=&gt;rec::T[?[
+ status=&gt;union(success,error,halted),
+ runtime=&gt;!*/m/math/time,
+ {?}command=&gt;str::T,
+ {?}project=&gt;project::T,
+ {?}result=&gt;str::T,
+ {?}error=&gt;{?}[fail::T]]]@/m/ide/result],
+ {?}code=&gt;&lt;#&gt;::T]]@/m/ide/project</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] the project descriptor (the pom.xml of a metatron ide) — a project.mtron file at the project root</p>
@@ -576,13 +574,13 @@
         </span>
         <small class="text-muted code">/m/ide/result</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">{{b}}{{link}}rec{{/link}}{{/b}}::T[?[
- {{b}}{{link}}status{{/link}}{{/b}}=&gt;union({{b}}{{link}}success{{/link}}{{/b}},{{b}}{{link}}error{{/link}}{{/b}},{{b}}{{link}}halted{{/link}}{{/b}}),
- {{b}}{{link}}runtime{{/link}}{{/b}}=&gt;!*{{b}}{{link}}/m/math/time{{/link}}{{/b}},
- {?}{{b}}{{link}}command{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}project{{/link}}{{/b}}=&gt;{{b}}{{link}}project{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}result{{/link}}{{/b}}=&gt;{{b}}{{link}}str{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}error{{/link}}{{/b}}=&gt;{?}[{{b}}{{link}}fail{{/link}}{{/b}}::T]]]{{y}}@{{/y}}{{y}}{{link}}/m/ide/result{{/link}}{{/y}}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+ status=&gt;union(success,error,halted),
+ runtime=&gt;!*/m/math/time,
+ {?}command=&gt;str::T,
+ {?}project=&gt;project::T,
+ {?}result=&gt;str::T,
+ {?}error=&gt;{?}[fail::T]]]@/m/ide/result</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] the standardized build/test/status outcome — rec::T with a union status verdict</p>
@@ -610,7 +608,7 @@ x&gt;&gt;runtime.normalize()</code></pre>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#noobj — ide_command is a factory (the lhs is unused)" class="text-info">noobj — ide_command is a factory (the lhs is unused)</a> <span class="text-light">=&gt;</span> <a href="#an enriched instruction that runs the command and returns ide:result::T" class="text-success">an enriched instruction that runs the command and returns ide:result::T</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{{b}}{{link}}command{{__link}}{{__b}}" class="text-light">b}}</a> <span class="text-light">=&gt;</span> <a href="#'the shell command to wrap'" class="text-info">&#39;the shell command to wrap&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#command" class="text-light">command</a> <span class="text-light">=&gt;</span> <a href="#'the shell command to wrap'" class="text-info">&#39;the shell command to wrap&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -633,7 +631,7 @@ my_build -&gt; ide_command(command=&gt;&#39;mvn clean install&#39;)  [-- name it
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a project" class="text-info">a project</a> <span class="text-light">=&gt;</span> <a href="#the location of found resources" class="text-success">the location of found resources</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{{b}}{{link}}uri{{__link}}{{__b}}::T" class="text-light">b}}::T</a> <span class="text-light">=&gt;</span> <a href="#'a uri fragment to match'" class="text-info">&#39;a uri fragment to match&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#uri::T" class="text-light">uri::T</a> <span class="text-light">=&gt;</span> <a href="#'a uri fragment to match'" class="text-info">&#39;a uri fragment to match&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -647,14 +645,14 @@ my_build -&gt; ide_command(command=&gt;&#39;mvn clean install&#39;)  [-- name it
         </span>
         <small class="text-muted code">/m/ide/inst/search?rng=/m/uri{*}&amp;dom=/m/uri</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ide__inst__search?rng=__m__uri{*}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__ide__inst__search?rng=__m__uri{*}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">search?rng=uri{*}&dom=uri({{b}}{{link}}str{{/link}}{{/b}}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ide__inst__search?rng=__m__uri{*}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__ide__inst__search?rng=__m__uri{*}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">search?rng=uri{*}&dom=uri(str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">searches project resources whose contents match provided regex</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a project" class="text-info">a project</a> <span class="text-light">=&gt;</span> <a href="#the location of found resources" class="text-success">the location of found resources</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{{b}}{{link}}str{{__link}}{{__b}}::T" class="text-light">b}}::T</a> <span class="text-light">=&gt;</span> <a href="#'a regex string to match in resource contents'" class="text-info">&#39;a regex string to match in resource contents&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#str::T" class="text-light">str::T</a> <span class="text-light">=&gt;</span> <a href="#'a regex string to match in resource contents'" class="text-info">&#39;a regex string to match in resource contents&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>

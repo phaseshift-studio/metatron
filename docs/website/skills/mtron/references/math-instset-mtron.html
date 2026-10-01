@@ -233,7 +233,6 @@
                     agent skills
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/agent/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
@@ -256,6 +255,7 @@
                         <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -462,7 +462,7 @@ under <code>/m/math/+</code> and available via the standard type resolution syst
 <h5>construction</h5>
 <pre><code class="language-mtron">mtron&gt; [-- current system time --]
 mtron&gt; datetime_now()
-==&gt;datetime:://2026.09:30/18/56/03/549?tz=-0600
+==&gt;datetime:://2026.10:1/10/23/06/156?tz=-0600
 mtron&gt; [-- from record (goes through .as(uri::T) first) --]
 mtron&gt; [host=&gt;&lt;2024.12&gt;,port=&gt;25,path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
         c=&gt;[min=&gt;1,max=&gt;1],q=&gt;[tz=&gt;'-0500']].as(uri::T).as(datetime::T)
@@ -615,16 +615,16 @@ mtron&gt; nanos::1000000.0.as(millis::T).matches(millis::T)
 <p>Time units require a real-backed value — an int-backed time is a type violation:</p>
 <pre><code class="language-mtron">mtron&gt; day::2.as(millis::T)         [-- int-backed time (bad) --]
 ==&gt;fail::[2 is not a time::T[][ctor?rng=day&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@day
-   	while parsing: day::2.as(millis::T)]@/sys/fail/78
+   	while parsing: day::2.as(millis::T)]@/sys/fail/622
 mtron&gt; hour::2.as(minute::T)        [-- int-backed time (bad) --]
 ==&gt;fail::[2 is not a time::T[][ctor?rng=hour&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@hour
-   	while parsing: hour::2.as(minute::T)]@/sys/fail/80
+   	while parsing: hour::2.as(minute::T)]@/sys/fail/624
 mtron&gt; nanos::2.as(millis::T)       [-- int-backed time (bad) --]
 ==&gt;fail::[2 is not a time::T[][ctor?rng=nanos&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@nanos
-   	while parsing: nanos::2.as(millis::T)]@/sys/fail/82
+   	while parsing: nanos::2.as(millis::T)]@/sys/fail/626
 mtron&gt; micros::2.as(millis::T)      [-- int-backed time (bad) --]
 ==&gt;fail::[2 is not a time::T[][ctor?rng=micros&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@micros
-   	while parsing: micros::2.as(millis::T)]@/sys/fail/84
+   	while parsing: micros::2.as(millis::T)]@/sys/fail/628
 </code></pre>
 <h5>relational operators</h5>
 <p><code>eq</code>, <code>neq</code>, <code>lt</code>, <code>gt</code>, <code>lte</code>, and <code>gte</code> auto-convert across units before comparing:</p>

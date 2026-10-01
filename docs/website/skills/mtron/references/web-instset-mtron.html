@@ -233,7 +233,6 @@
                     agent skills
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/agent/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
@@ -256,6 +255,7 @@
                         <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -410,7 +410,7 @@ mtron&gt; wsspace::[pattern=&gt; ws:#,
      wsspace::[pattern=&gt; ws:#,
                  ...
      ^
-     could not parse at 'w']@/sys/fail/700
+     could not parse at 'w']@/sys/fail/696
 </code></pre>
 <p>The organizing idea is that <strong>a protocol is a projection of an obj, not a copy of it</strong>. An <code>mcp_server</code> rides http,
 websockets and stdio alike; a <code>str</code> that is css is <code>css::T</code> whoever asks for it. A mount then only has to say which
@@ -516,9 +516,9 @@ rule has two halves, because either alone leaves a hole:</p>
 <pre><code class="language-mtron">mtron&gt; http://localhost:8777/docker/image?mimeq=application/json      [-- the docker images as JSON --]
 ==&gt;http://localhost:8777/docker/image?mimeq=application/json
 mtron&gt; */docker/image?mimeq=text/plain                                [-- the same objs, mtron-typed, as plain text --]
-==&gt;fail::[inst apply failure: no active space supports pattern /docker/image?mimeq=text/plain (at /m/inst/from)]@/sys/fail/702
+==&gt;fail::[inst apply failure: no active space supports pattern /docker/image?mimeq=text/plain (at /m/inst/from)]@/sys/fail/698
 mtron&gt; */docker/image                                                 [-- the native mtron rendering --]
-==&gt;fail::[inst apply failure: no active space supports pattern /docker/image (at /m/inst/from)]@/sys/fail/704
+==&gt;fail::[inst apply failure: no active space supports pattern /docker/image (at /m/inst/from)]@/sys/fail/700
 </code></pre>
 <p><code>application/x-mtron</code> is the <strong>structural parse gate</strong>: it asks for the content parsed into mtron objs rather than
 handed back as text. Read any mount's own documentation with <code>?docq</code>.</p>
@@ -560,9 +560,11 @@ request while the same protocol engine serves them all.</li>
     name=&gt;'marko',
     age=&gt;29]
 mtron&gt; *http://localhost:8777/usr/person/1
-==&gt;&quot;person::[name=&gt;'marko',age=&gt;29]@/usr/person/1&quot;
+==&gt;person::[
+    name=&gt;'marko',
+    age=&gt;29]
 mtron&gt; *http://localhost:8777/usr/person/1?mimeq=application/json
-==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from)]@/sys/fail/722
+==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/usr [/usr/#] (at /m/inst/from)]@/sys/fail/718
 </code></pre>
 <p><code>/person/1</code> serves that obj and <code>/person/2</code> serves the other, through the <em>same</em> handler — and <code>/person/3</code> is a 404,
 because the space is live rather than a lookup table of two.</p>
