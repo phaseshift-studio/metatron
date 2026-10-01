@@ -230,9 +230,9 @@ public class InstSetDocGenerator {
                     allConsts.add(consts);
                     allRewrites.add(rewrites);
                     allSpaces.add(spaces);
-                } catch (final Exception e) {
+                } catch (final Throwable e) {   // TEMP DIAGNOSTIC: was Exception
                     LOG.info("Failed to process " + vid + ": " + e.getMessage());
-                    if (verbose) e.printStackTrace();
+                    e.printStackTrace();
                 }
             }
 

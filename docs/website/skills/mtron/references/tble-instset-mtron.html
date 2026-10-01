@@ -233,7 +233,6 @@
                     agent skills
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/agent/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
@@ -256,6 +255,7 @@
                         <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -519,7 +519,7 @@ keeps what SQL cannot say:</p>
     table_name=&gt;'person',
     column_name=&gt;'name',
     base_vid=&gt;'/m/str',
-    obj_tid=&gt;'/m/str{2}']
+    obj_tid=&gt;'/m/str']
 ==&gt;[
     table_name=&gt;'note',
     column_name=&gt;'body',
@@ -863,9 +863,9 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/27
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/31
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/28
+==&gt;[body=&gt;'another one']@tbledoc:note/32
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;12
 ==&gt;17
@@ -875,12 +875,15 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;27
 ==&gt;4
 ==&gt;6
+==&gt;31
 ==&gt;16
 ==&gt;3
 ==&gt;24
 ==&gt;28
 ==&gt;20
 ==&gt;7
+==&gt;32
+==&gt;29
 ==&gt;15
 ==&gt;19
 ==&gt;23
@@ -895,6 +898,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;18
 ==&gt;5
 ==&gt;9
+==&gt;30
 </code></pre>
 <h3>taking the space down</h3>
 <p>A space is a <strong>mount</strong>, not a copy. Writing <code>noobj</code> to its vid takes it down: the pattern stops routing, the JDBC

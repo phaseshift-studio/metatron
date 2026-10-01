@@ -233,7 +233,6 @@
                     agent skills
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/agent/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
@@ -256,13 +255,14 @@
                         <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/wsplus">wsplus</a>
                             </div>
                         </div>
                     </li>
@@ -280,8 +280,6 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
@@ -290,8 +288,8 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/README.md">README.md</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
@@ -410,57 +408,59 @@
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[
- {{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}/m/grph/#{{/link}}{{/b}},
- {{b}}{{link}}q{{/link}}{{/b}}=&gt;[docq::[
- {{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}docq{{/link}}{{/b}},
- {{b}}{{link}}pre_read{{/link}}{{/b}}=&gt;inst?rng=#{*}&amp;dom=#{?}({{b}}{{link}}uri{{/link}}{{/b}}::T){&lt;j&gt;},
- {{b}}{{link}}pre_write{{/link}}{{/b}}=&gt;inst?rng=#{*}&amp;dom=#{?}({{b}}{{link}}uri{{/link}}{{/b}}::T,&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T){&lt;j&gt;},
- {{b}}{{link}}obj{{/link}}{{/b}}=&gt;memspace::[{{b}}{{link}}pattern{{/link}}{{/b}}=&gt;&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;],
- {{b}}{{link}}inst{{/link}}{{/b}}=&gt;instset::[{{b}}{{link}}pattern{{/link}}{{/b}}=&gt;&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;]]],
- {{b}}{{link}}space{{/link}}{{/b}}=&gt;[{{b}}{{link}}super{{/link}}{{/b}}=&gt;!*{{b}}{{link}}/m{{/link}}{{/b}}],
- {{b}}{{link}}constq{{/link}}{{/b}}=&gt;[/m/web/serializer/obj_tp3::[=&gt;]{{y}}@{{/y}}{{y}}{{link}}/m/web/serializer/obj_tp3{{/link}}{{/y}}],
- {{b}}{{link}}type{{/link}}{{/b}}=&gt;[
-  {{b}}{{link}}rec{{/link}}{{/b}}::T{{y}}@{{/y}}{{y}}{{link}}/m/grph/elmt{{/link}}{{/y}},
-  {{b}}{{link}}elmt{{/link}}{{/b}}::T[?[
- {?}{{b}}{{link}}OUT{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}edge{{/link}}{{/b}}::T],
- {?}{{b}}{{link}}IN{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}edge{{/link}}{{/b}}::T]]]{{y}}@{{/y}}{{y}}{{link}}/m/grph/vrtx{{/link}}{{/y}},
-  {{b}}{{link}}elmt{{/link}}{{/b}}::T[?[
- {{b}}{{link}}OUT{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}elmt{{/link}}{{/b}}::T[?[
- {?}{{b}}{{link}}OUT{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}edge{{/link}}{{/b}}::T],
- {?}{{b}}{{link}}IN{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}edge{{/link}}{{/b}}::T]]]{{y}}@{{/y}}{{y}}{{link}}/m/grph/vrtx{{/link}}{{/y}}],
- {{b}}{{link}}IN{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}elmt{{/link}}{{/b}}::T[?[
- {?}{{b}}{{link}}OUT{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}edge{{/link}}{{/b}}::T],
- {?}{{b}}{{link}}IN{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}edge{{/link}}{{/b}}::T]]]{{y}}@{{/y}}{{y}}{{link}}/m/grph/vrtx{{/link}}{{/y}}]]]{{y}}@{{/y}}{{y}}{{link}}/m/grph/edge{{/link}}{{/y}},
-  {{b}}{{link}}space{{/link}}{{/b}}::T[?[
- {?}{{b}}{{link}}schema{{/link}}{{/b}}=&gt;{{b}}{{link}}rec{{/link}}{{/b}}::T[?[
- {?}{{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}const{{/link}}{{/b}}=&gt;[&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T],
- {?}{{b}}{{link}}type{{/link}}{{/b}}=&gt;{?}[&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T],
- {?}{{b}}{{link}}inst{{/link}}{{/b}}=&gt;{?}[{{b}}{{link}}inst{{/link}}{{/b}}::T],
- {?}{{b}}{{link}}rewrite{{/link}}{{/b}}=&gt;{?}[{{b}}{{link}}inst{{/link}}{{/b}}::T],
- {?}{{b}}{{link}}sugar{{/link}}{{/b}}=&gt;{?}[{{b}}{{link}}lst{{/link}}{{/b}}::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T){&lt;j&gt;}]{{y}}@{{/y}}{{y}}{{link}}/m/instset{{/link}}{{/y}},
- {?}{{b}}{{link}}config{{/link}}{{/b}}=&gt;{{b}}{{link}}rec{{/link}}{{/b}}::T]][ctor?rng=grphspace&amp;dom=#{?}({{b}}{{link}}rec{{/link}}{{/b}}::T){&lt;j&gt;}]{{y}}@{{/y}}{{y}}{{link}}/m/grph/space/grphspace{{/link}}{{/y}},
-  {{b}}{{link}}modern{{/link}}{{/b}}::T],
- {{b}}{{link}}inst{{/link}}{{/b}}=&gt;[
-  gremlin?rng=#{*}&amp;dom=grphspace({{b}}{{link}}str{{/link}}{{/b}}::T){&lt;j&gt;},
+ pattern=&gt;/m/grph/#,
+ q=&gt;[docq::[
+ pattern=&gt;docq,
+ pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
+ pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[super=&gt;!*/m],
+ constq=&gt;[/m/web/serializer/obj_tp3::[=&gt;]@/m/web/serializer/obj_tp3],
+ type=&gt;[
+  rec::T@/m/grph/elmt,
+  elmt::T[?[
+   {?}OUT=&gt;[uri::T=&gt;edge::T],
+   {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx,
+  elmt::T[?[
+   OUT=&gt;[uri::T=&gt;elmt::T[?[
+ {?}OUT=&gt;[uri::T=&gt;edge::T],
+ {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx],
+   IN=&gt;[uri::T=&gt;elmt::T[?[
+ {?}OUT=&gt;[uri::T=&gt;edge::T],
+ {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx]]]@/m/grph/edge,
+  space::T[?[
+   {?}schema=&gt;rec::T[?[
+    {?}pattern=&gt;uri::T,
+    {?}const=&gt;[&lt;#&gt;::T],
+    {?}type=&gt;{?}[&lt;#&gt;::T],
+    {?}inst=&gt;{?}[inst::T],
+    {?}rewrite=&gt;{?}[inst::T],
+    {?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/instset,
+   {?}config=&gt;rec::T]][ctor?rng=grphspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/grph/space/grphspace,
+  modern::T],
+ inst=&gt;[
+  gremlin?rng=#{*}&amp;dom=grphspace(str::T){&lt;j&gt;},
   label?rng=uri&amp;dom=rec(){&lt;j&gt;},
-  values?rng=#{*}&amp;dom=rec({{b}}{{link}}uri{{/link}}{{/b}}::T){&lt;j&gt;},
+  values?rng=#{*}&amp;dom=rec(uri::T){&lt;j&gt;},
   inV?rng=vrtx&amp;dom=edge(){&lt;j&gt;},
   outV?rng=vrtx&amp;dom=edge(){&lt;j&gt;},
   bothV?rng=vrtx{2}&amp;dom=edge(){&lt;j&gt;},
-  out?rng=vrtx{*}&amp;dom=vrtx({{b}}{{link}}uri{{/link}}{{/b}}::T){&lt;j&gt;},
-  in?rng=vrtx{*}&amp;dom=vrtx({{b}}{{link}}uri{{/link}}{{/b}}::T){&lt;j&gt;},
-  both?rng=vrtx{*}&amp;dom=vrtx({{b}}{{link}}uri{{/link}}{{/b}}::T){&lt;j&gt;},
-  outE?rng=edge{*}&amp;dom=vrtx({{b}}{{link}}uri{{/link}}{{/b}}::T){&lt;j&gt;},
-...(3 more)],
- {{b}}{{link}}rewrite{{/link}}{{/b}}=&gt;[
+  out?rng=vrtx{*}&amp;dom=vrtx(uri::T){&lt;j&gt;},
+  in?rng=vrtx{*}&amp;dom=vrtx(uri::T){&lt;j&gt;},
+  both?rng=vrtx{*}&amp;dom=vrtx(uri::T){&lt;j&gt;},
+  outE?rng=edge{*}&amp;dom=vrtx(uri::T){&lt;j&gt;},
+  inE?rng=edge{*}&amp;dom=vrtx(uri::T){&lt;j&gt;},
+  bothE?rng=edge{*}&amp;dom=vrtx(uri::T){&lt;j&gt;},
+  addE?rng=edge&amp;dom=vrtx(uri::T,rec::T,rec::T){&lt;j&gt;}],
+ rewrite=&gt;[
   /m/grph/inst/rewrite/gremlin_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},
   /m/grph/inst/rewrite/gremlin_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},
   /m/grph/inst/rewrite/gremlin_where?rng=code{?}&amp;dom=code(){&lt;j&gt;},
   /m/grph/inst/rewrite/gremlin_where_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},
   /m/grph/inst/rewrite/gremlin_where_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},
   /m/grph/inst/rewrite/out_incident_adjacent?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-  /m/grph/inst/rewrite/in_incident_adjacent?rng=code{?}&amp;dom=code(){&lt;j&gt;}]]{{y}}@{{/y}}{{y}}{{link}}/m/grph{{/link}}{{/y}}</code></pre>
+  /m/grph/inst/rewrite/in_incident_adjacent?rng=code{?}&amp;dom=code(){&lt;j&gt;}]]@/m/grph</code></pre>
                     </div>
                 </div>
             </div>
@@ -572,13 +572,13 @@
         </span>
         <small class="text-muted code">/m/grph/edge</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">{{b}}{{link}}elmt{{/link}}{{/b}}::T[?[
- {{b}}{{link}}OUT{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}elmt{{/link}}{{/b}}::T[?[
- {?}{{b}}{{link}}OUT{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}edge{{/link}}{{/b}}::T],
- {?}{{b}}{{link}}IN{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}edge{{/link}}{{/b}}::T]]]{{y}}@{{/y}}{{y}}{{link}}/m/grph/vrtx{{/link}}{{/y}}],
- {{b}}{{link}}IN{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}elmt{{/link}}{{/b}}::T[?[
- {?}{{b}}{{link}}OUT{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}edge{{/link}}{{/b}}::T],
- {?}{{b}}{{link}}IN{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}edge{{/link}}{{/b}}::T]]]{{y}}@{{/y}}{{y}}{{link}}/m/grph/vrtx{{/link}}{{/y}}]]]{{y}}@{{/y}}{{y}}{{link}}/m/grph/edge{{/link}}{{/y}}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T[?[
+ OUT=&gt;[uri::T=&gt;elmt::T[?[
+ {?}OUT=&gt;[uri::T=&gt;edge::T],
+ {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx],
+ IN=&gt;[uri::T=&gt;elmt::T[?[
+ {?}OUT=&gt;[uri::T=&gt;edge::T],
+ {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx]]]@/m/grph/edge</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a directed key/value attributed binary edge</p>
@@ -591,7 +591,7 @@
         </span>
         <small class="text-muted code">/m/grph/elmt</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">{{b}}{{link}}rec{{/link}}{{/b}}::T{{y}}@{{/y}}{{y}}{{link}}/m/grph/elmt{{/link}}{{/y}}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/grph/elmt</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[nominal] </p>
@@ -604,7 +604,7 @@
         </span>
         <small class="text-muted code">/m/grph/schema/modern</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">{{b}}{{link}}modern{{/link}}{{/b}}::T</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">modern::T</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[nominal] </p>
@@ -617,9 +617,9 @@
         </span>
         <small class="text-muted code">/m/grph/vrtx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">{{b}}{{link}}elmt{{/link}}{{/b}}::T[?[
- {?}{{b}}{{link}}OUT{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}edge{{/link}}{{/b}}::T],
- {?}{{b}}{{link}}IN{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}edge{{/link}}{{/b}}::T]]]{{y}}@{{/y}}{{y}}{{link}}/m/grph/vrtx{{/link}}{{/y}}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T[?[
+ {?}OUT=&gt;[uri::T=&gt;edge::T],
+ {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a key/value attributed vertex</p>
@@ -634,16 +634,16 @@
     </div>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset,{?}config=&gt;rec::T]][ctor?rng=grphspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@grphspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- {{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}q{{/link}}{{/b}}=&gt;[{{b}}{{link}}rec{{/link}}{{/b}}::T[?[
- {{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}pre_write{{/link}}{{/b}}=&gt;{{b}}{{link}}inst{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}post_write{{/link}}{{/b}}=&gt;{{b}}{{link}}inst{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}qless_write{{/link}}{{/b}}=&gt;{{b}}{{link}}inst{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}pre_read{{/link}}{{/b}}=&gt;{{b}}{{link}}inst{{/link}}{{/b}}::T,
- {?}{{b}}{{link}}post_read{{/link}}{{/b}}=&gt;{{b}}{{link}}inst{{/link}}{{/b}}::T]][inst?rng=qproc&amp;dom=#{?}({{b}}{{link}}qproc{{/link}}{{/b}}::T){&lt;j&gt;}]{{y}}@{{/y}}{{y}}{{link}}/m/qproc{{/link}}{{/y}}],
- {?}{{b}}{{link}}route{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T],
- {?}{{b}}{{link}}schema{{/link}}{{/b}}=&gt;{{b}}{{link}}instset{{/link}}{{/b}}::T]</code></div></div>
+ pattern=&gt;uri::T,
+ {?}q=&gt;[rec::T[?[
+ pattern=&gt;uri::T,
+ {?}pre_write=&gt;inst::T,
+ {?}post_write=&gt;inst::T,
+ {?}qless_write=&gt;inst::T,
+ {?}pre_read=&gt;inst::T,
+ {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}route=&gt;[uri::T=&gt;uri::T],
+ {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a space for graph traversal</p>
 </div>
@@ -658,7 +658,7 @@
         </span>
         <small class="text-muted code">/m/grph/inst/addE?rng=/m/grph/edge&amp;dom=/m/grph/vrtx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__addE?rng=__m__grph__edge&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__addE?rng=__m__grph__edge&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">addE?rng=edge&dom=vrtx({{b}}{{link}}uri{{/link}}{{/b}}::T,{{b}}{{link}}rec{{/link}}{{/b}}::T,{{b}}{{link}}rec{{/link}}{{/b}}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__addE?rng=__m__grph__edge&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__addE?rng=__m__grph__edge&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">addE?rng=edge&dom=vrtx(uri::T,rec::T,rec::T){<j>}</code></pre>
 </div>
     
 </div><div class="card mb-3" id="__m__grph__inst__both?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx">
@@ -669,7 +669,7 @@
         </span>
         <small class="text-muted code">/m/grph/inst/both?rng=/m/grph/vrtx{*}&amp;dom=/m/grph/vrtx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__both?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__both?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">both?rng=vrtx{*}&dom=vrtx({{b}}{{link}}uri{{/link}}{{/b}}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__both?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__both?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">both?rng=vrtx{*}&dom=vrtx(uri::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">returns the lhs vertex arg-adjacent incoming and outgoing vertices</p>
@@ -687,7 +687,7 @@
         </span>
         <small class="text-muted code">/m/grph/inst/bothE?rng=/m/grph/edge{*}&amp;dom=/m/grph/vrtx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__bothE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__bothE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bothE?rng=edge{*}&dom=vrtx({{b}}{{link}}uri{{/link}}{{/b}}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__bothE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__bothE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bothE?rng=edge{*}&dom=vrtx(uri::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">returns the lhs vertex arg-adjacent incoming and outgoing edges</p>
@@ -721,7 +721,7 @@ one-to-many obj transformation (dom_c = 1, rng_c &gt; 1)</p>
         </span>
         <small class="text-muted code">/m/grph/inst/gremlin?rng=#{*}&amp;dom=/m/grph/space/grphspace</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__gremlin?rng=#{*}&dom=__m__grph__space__grphspace-doc-0-tab').click();document.getElementById('__m__grph__inst__gremlin?rng=#{*}&dom=__m__grph__space__grphspace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">gremlin?rng=<span class="code text-success">#{*}</span>&dom=grphspace({{b}}{{link}}str{{/link}}{{/b}}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__gremlin?rng=#{*}&dom=__m__grph__space__grphspace-doc-0-tab').click();document.getElementById('__m__grph__inst__gremlin?rng=#{*}&dom=__m__grph__space__grphspace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">gremlin?rng=<span class="code text-success">#{*}</span>&dom=grphspace(str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">executes the gremlin expression on the graph space</p>
@@ -736,7 +736,7 @@ one-to-many obj transformation (dom_c = 1, rng_c &gt; 1)</p>
         </span>
         <small class="text-muted code">/m/grph/inst/in?rng=/m/grph/vrtx{*}&amp;dom=/m/grph/vrtx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__in?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__in?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">in?rng=vrtx{*}&dom=vrtx({{b}}{{link}}uri{{/link}}{{/b}}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__in?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__in?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">in?rng=vrtx{*}&dom=vrtx(uri::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">returns the lhs vertex arg-adjacent incoming vertices</p>
@@ -754,7 +754,7 @@ one-to-many obj transformation (dom_c = 1, rng_c &gt; 1)</p>
         </span>
         <small class="text-muted code">/m/grph/inst/inE?rng=/m/grph/edge{*}&amp;dom=/m/grph/vrtx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__inE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__inE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inE?rng=edge{*}&dom=vrtx({{b}}{{link}}uri{{/link}}{{/b}}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__inE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__inE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inE?rng=edge{*}&dom=vrtx(uri::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">returns the lhs vertex arg-adjacent incoming edges</p>
@@ -804,7 +804,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/grph/inst/out?rng=/m/grph/vrtx{*}&amp;dom=/m/grph/vrtx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__out?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__out?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">out?rng=vrtx{*}&dom=vrtx({{b}}{{link}}uri{{/link}}{{/b}}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__out?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__out?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">out?rng=vrtx{*}&dom=vrtx(uri::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">returns the lhs vertex arg-adjacent outgoing vertices</p>
@@ -822,7 +822,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/grph/inst/outE?rng=/m/grph/edge{*}&amp;dom=/m/grph/vrtx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__outE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__outE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">outE?rng=edge{*}&dom=vrtx({{b}}{{link}}uri{{/link}}{{/b}}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__outE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__outE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">outE?rng=edge{*}&dom=vrtx(uri::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">returns the lhs vertex arg-adjacent outgoing edges</p>
@@ -856,7 +856,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/grph/inst/values?rng=#{*}&amp;dom=/m/rec</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__values?rng=#{*}&dom=__m__rec-doc-0-tab').click();document.getElementById('__m__grph__inst__values?rng=#{*}&dom=__m__rec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">values?rng=<span class="code text-success">#{*}</span>&dom=rec({{b}}{{link}}uri{{/link}}{{/b}}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__values?rng=#{*}&dom=__m__rec-doc-0-tab').click();document.getElementById('__m__grph__inst__values?rng=#{*}&dom=__m__rec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">values?rng=<span class="code text-success">#{*}</span>&dom=rec(uri::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">returns the lhs element arg-labeled values</p>

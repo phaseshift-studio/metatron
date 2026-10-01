@@ -547,7 +547,7 @@ public class mInstSet extends AbstractInstSet {
                                                  \\(\\texttt{*space/vid/qProc => lst[qProc]::T}\\)
                                             """),
                         /// ///////////////////////////////////
-                        REGEX_TYPE = Type.Builder.build().tid(STR_TID).vid(REGEX_TID).create(),
+                        docWrap(REGEX_TYPE = Type.Builder.build().tid(STR_TID).vid(REGEX_TID).create(), "a str refined to a regex pattern"),
                         /// ///////////////////////////////////
                         SUBQ_TYPE = docWrap(Type.Builder.build()
                                         .tid(QPROC_TID)
@@ -625,8 +625,12 @@ public class mInstSet extends AbstractInstSet {
                         ObjType.insts().stream(),
                         NoObj.NoObjType.insts().stream(),
                         Obj.Helper.isaInsts().stream(),
-                        Stream.of(instC(M_ISA_INST_TID.extend("save").dom(ALL).rng(ALL), lst(), (lhs, inst) -> lhs.save())),
-                        Stream.of(instA(INST_CTOR_TID))
+                        Stream.of(docWrap(instC(M_ISA_INST_TID.extend("save").dom(ALL).rng(ALL), lst(), (lhs, inst) -> lhs.save()),
+                                        "persist the lhs obj at its own vid — a no-op when the lhs has no vid",
+                                        "42@abc.save()   [-- 42@abc --]")),
+                        Stream.of(docWrap(instA(INST_CTOR_TID),
+                                        "the generic type constructor — the base of the type-literal syntax, refined by each type to its own constructor",
+                                        "memspace::[data=>/usr/marko]   [-- a memspace::T built from its constructor arg --]"))
                 ).flatMap(i -> i)),
                 uri(REWRITE), lst(
                         // capture the original (pre-collapse) code for profile(): runs FIRST so the
@@ -681,7 +685,7 @@ public class mInstSet extends AbstractInstSet {
                                                 .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens a mapping of an inst to the inst"),
                         // Eliminate else() after non-maybe instruction (dead code)
                         // Pattern: .count().else(x) → .count() (count always returns a value)
-                        InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("else_after_count"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("else_after_count"),
                                 code -> code.selfJVM(
                                         RewriterBuilder.search(code.insts())
                                                 .match(List.of(instA(COUNT_INST_TID), instA(ELSE_INST_TID)))
@@ -689,8 +693,7 @@ public class mInstSet extends AbstractInstSet {
                                                     final List<Inst> matched = map.values().stream().toList();
                                                     // COUNT always returns int, so ELSE is dead code
                                                     return List.of(matched.getFirst());
-                                                })).asCode()),
-
+                                                })).asCode()), "removes the else following a count — count always yields a value, so the fallback is dead code"),
                         // Compress a bare rshift chain into a single walk: >>.>>.>> => >> 3.
                         // DISABLED: the fold is only referentially sound on a uri (where
                         // >> N is a depth walk); on a rec >> N is still positional, so
@@ -711,7 +714,7 @@ public class mInstSet extends AbstractInstSet {
                         // DISABLED: This rewrite is interfering with Rec operations (RecTest.testAt() failures)
                         // The rewrite removes .plus(0) operations that are needed for record access patterns
 
-                        InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("plus_zero"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("plus_zero"),
                                 code -> code.selfJVM(
                                         RewriterBuilder.search(code.insts())
                                                 .match(cachedMatch(PLUS_ZERO_MATCH, () -> List.of(instB(PLUS_INST_TID, lst()))))
@@ -722,14 +725,13 @@ public class mInstSet extends AbstractInstSet {
                                                         return List.of();
                                                     }
                                                     return List.of(plusInst);
-                                                })).asCode()),
-
+                                                })).asCode()), "removes plus(0) — the additive identity of a plus-monoid"),
 
                         // Optimize mult(1) for integers (identity)
                         // Pattern: .mult(1) → identity (no-op)
                         // DISABLED: This rewrite is interfering with list operations
 
-                        InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("mult_one"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("mult_one"),
                                 code -> code.selfJVM(
                                         RewriterBuilder.search(code.insts())
                                                 .match(cachedMatch(MULT_ONE_MATCH, () -> List.of(instB(MULT_INST_TID, lst()))))
@@ -740,8 +742,7 @@ public class mInstSet extends AbstractInstSet {
                                                         return List.of();
                                                     }
                                                     return List.of(multInst);
-                                                })).asCode()),
-
+                                                })).asCode()), "removes mult(1) — the multiplicative identity of a mult-monoid"),
 
                         // Collapse identical branches in split-merge by summing coefficients
                         // Pattern: -<[inst,inst,...]>- → inst{n}

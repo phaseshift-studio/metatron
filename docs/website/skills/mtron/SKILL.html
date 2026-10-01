@@ -233,7 +233,6 @@
                     agent skills
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../skills/agent/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
@@ -256,6 +255,7 @@
                         <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -700,6 +700,34 @@ the default values are <code>#{?}</code> and <code>#{*}</code>, respectively.</p
     args=&gt;[0=&gt;'a postfix str'],
     desc=&gt;'[mapper] concatenate two str::T va...',
     example=&gt;['&quot;a&quot; + &quot;b&quot; [-- &quot;ab&quot; --]']]
+==&gt;docs::[
+    obj=&gt;plus?rng=time&amp;dom=time(real::T@/m/math/time){&lt;j&gt;},
+    dom=&gt;'/m/math/time',
+    rng=&gt;'/m/math/time',
+    args=&gt;[0=&gt;'/m/real'],
+    desc=&gt;'[mapper] add two durations of the ...',
+    example=&gt;['millis::1500.0 + millis::500.0   [...']]
+==&gt;docs::[
+    obj=&gt;plus?rng=metric&amp;dom=metric(real::T@/m/math/metric){&lt;j&gt;},
+    dom=&gt;'/m/math/metric',
+    rng=&gt;'/m/math/metric',
+    args=&gt;[0=&gt;'/m/real'],
+    desc=&gt;'[mapper] add two distances of the ...',
+    example=&gt;['meter::1500.0 + meter::500.0   [--...']]
+==&gt;docs::[
+    obj=&gt;plus?rng=imperial&amp;dom=imperial(real::T@/m/math/imperial){&lt;j&gt;},
+    dom=&gt;'/m/math/imperial',
+    rng=&gt;'/m/math/imperial',
+    args=&gt;[0=&gt;'/m/real'],
+    desc=&gt;'[mapper] add two distances of the ...',
+    example=&gt;['foot::12.0 + foot::36.0   [-- foot...']]
+==&gt;docs::[
+    obj=&gt;plus?rng=datetime&amp;dom=datetime(real::T@/m/math/time){&lt;j&gt;},
+    dom=&gt;'/m/math/datetime',
+    rng=&gt;'/m/math/datetime',
+    args=&gt;[0=&gt;'/m/real'],
+    desc=&gt;'[mapper] shift a datetime forward ...',
+    example=&gt;['&lt;//2026.08:09/14/30/00/000?tz=+000...']]
 mtron&gt; *plus?str&lt;=str&amp;docq
 ==&gt;docs::[
     obj=&gt;plus?rng=str&amp;dom=str(str::T){&lt;j&gt;},

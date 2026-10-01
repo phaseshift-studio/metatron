@@ -233,7 +233,6 @@
                     agent skills
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/agent/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
@@ -256,13 +255,14 @@
                         <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/wsplus">wsplus</a>
                             </div>
                         </div>
                     </li>
@@ -280,8 +280,6 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
@@ -290,8 +288,8 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/README.md">README.md</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
@@ -419,7 +417,7 @@
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
  type=&gt;[
-  int::T[is(gt(0))]@/m/math/nat,
+  int::T[inst(inst(0))]@/m/math/nat,
   real::T@/m/math/datasize,
   uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/math/datetime,
   datasize::T[][ctor?rng=bB&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/datasize/bB,
@@ -429,7 +427,27 @@
   datasize::T[][ctor?rng=tB&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/datasize/tB,
   datasize::T[][ctor?rng=pB&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/datasize/pB,
   real::T@/m/math/currency,
-...(21 more)],
+  currency::T@/m/math/currency/usd,
+  currency::T@/m/math/currency/euro,
+  real::T@/m/math/time,
+  time::T[][ctor?rng=nanos&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/time/nanos,
+  time::T[][ctor?rng=micros&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/time/micros,
+  time::T[][ctor?rng=millis&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/time/millis,
+  time::T[][ctor?rng=second&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/time/second,
+  time::T[][ctor?rng=minute&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/time/minute,
+  time::T[][ctor?rng=hour&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/time/hour,
+  time::T[][ctor?rng=day&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/time/day,
+  real::T@/m/math/metric,
+  metric::T[][ctor?rng=mm&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/metric/mm,
+  metric::T[][ctor?rng=cm&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/metric/cm,
+  metric::T[][ctor?rng=dm&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/metric/dm,
+  metric::T[][ctor?rng=meter&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/metric/meter,
+  metric::T[][ctor?rng=km&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/metric/km,
+  real::T@/m/math/imperial,
+  imperial::T[][ctor?rng=inch&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/imperial/inch,
+  imperial::T[][ctor?rng=foot&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/imperial/foot,
+  imperial::T[][ctor?rng=yard&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/imperial/yard,
+  imperial::T[][ctor?rng=mile&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/imperial/mile],
  inst=&gt;[
   datetime_now?rng=datetime&amp;dom=#{?}(){&lt;j&gt;},
   plus?rng=time&amp;dom=time(real::T@/m/math/time){&lt;j&gt;},
@@ -441,7 +459,29 @@
   minus?rng=time&amp;dom=datetime(uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/math/datetime){&lt;j&gt;},
   as?rng=datetime&amp;dom=uri(uri::T){&lt;j&gt;},
   as?rng=int&amp;dom=datetime(int::T){&lt;j&gt;},
-...(23 more)],
+  as?rng=str&amp;dom=datetime(str::T){&lt;j&gt;},
+  as?rng=datetime&amp;dom=str(uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/math/datetime){&lt;j&gt;},
+  normalize?rng=time&amp;dom=time(){&lt;j&gt;},
+  normalize?rng=datasize&amp;dom=datasize(){&lt;j&gt;},
+  normalize?rng=metric&amp;dom=metric(){&lt;j&gt;},
+  normalize?rng=imperial&amp;dom=imperial(){&lt;j&gt;},
+  as?rng=metric&amp;dom=metric(real::T@/m/math/metric){&lt;j&gt;},
+  as?rng=imperial&amp;dom=imperial(real::T@/m/math/imperial){&lt;j&gt;},
+  as?rng=imperial&amp;dom=metric(real::T@/m/math/imperial){&lt;j&gt;},
+  as?rng=metric&amp;dom=imperial(real::T@/m/math/metric){&lt;j&gt;},
+  cos?rng=real&amp;dom=#{?}(as(real::T)){&lt;j&gt;},
+  sin?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},
+  tan?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},
+  sqrt?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},
+  atan?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},
+  atan2?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},
+  log?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},
+  log10?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},
+  exp?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},
+  abs?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},
+  ceil?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},
+  floor?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},
+  round?rng=int&amp;dom=#{?}(real::T){&lt;j&gt;}],
  const=&gt;[
   2.7183@/m/math/e?constq,
   3.1416@/m/math/pi?constq]]@/m/math</code></pre>
@@ -680,7 +720,9 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T@/m/math/datasize</code></pre></div>
     
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[nominal] </p>
+</div>
 </div><div class="card mb-3" id="__m__math__datetime">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -949,7 +991,7 @@
         </span>
         <small class="text-muted code">/m/math/nat</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[is(gt(0))]@/m/math/nat</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[inst(inst(0))]@/m/math/nat</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a positive integer</p>
@@ -1045,7 +1087,17 @@
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__abs?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__abs?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">abs?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the absolute value of a real</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="m.html#__m__real" class="text-success">real</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">abs(-3.14)   [-- 3.14 --]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__math__inst__atan?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1056,7 +1108,17 @@
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__atan?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__atan?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">atan?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the arctangent (radians) of a real</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="m.html#__m__real" class="text-success">real</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">atan(1)   [-- 0.7853981633974483 (pi/4) --]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__math__inst__atan2?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1067,7 +1129,17 @@
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__atan2?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__atan2?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">atan2?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the four quadrant arctangent of the two reals [x,y]</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="m.html#__m__real" class="text-success">real</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real{2}'" class="text-info">real{2}&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">atan2([3.0,4.0])   [-- 1.0303768265243125 --]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__math__inst__ceil?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1078,7 +1150,17 @@
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__ceil?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__ceil?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">ceil?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the smallest real greater than or equal to the arg — the ceiling</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="m.html#__m__real" class="text-success">real</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">ceil(2.1)   [-- 3.0 --]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__math__inst__cos?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1089,7 +1171,17 @@
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__cos?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__cos?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">cos?rng=real&dom=<span class="code text-info">#{?}</span>(as(real::T)){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the cosine (radians) of a real</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="m.html#__m__real" class="text-success">real</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__inst__as'" class="text-info">as&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cos(1.0)   [-- 0.5403023058681398 --]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__math__inst__datetime_now?rng=__m__math__datetime&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1100,7 +1192,14 @@
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__datetime_now?rng=__m__math__datetime&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__datetime_now?rng=__m__math__datetime&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">datetime_now?rng=datetime&dom=<span class="code text-info">#{?}</span>(){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">returns the current system datetime as a datetime uri</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="#__m__math__datetime" class="text-success">datetime</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">datetime_now()   [-- &lt;//2026.08.09/14/30/52/123?tz=+0000&gt; (the moment you run it) --]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__math__inst__exp?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1111,7 +1210,17 @@
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__exp?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__exp?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">exp?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">e to the power of a real</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="m.html#__m__real" class="text-success">real</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">exp(1.0)   [-- 2.718281828459045 --]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__math__inst__floor?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1122,7 +1231,17 @@
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__floor?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__floor?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">floor?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the largest real less than or equal to the arg — the floor</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="m.html#__m__real" class="text-success">real</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">floor(2.9)   [-- 2.0 --]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__math__inst__log?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1133,7 +1252,17 @@
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__log?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__log?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">log?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the natural logarithm of a real</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="m.html#__m__real" class="text-success">real</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">log(2.718281828459045)   [-- 1.0 --]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__math__inst__log10?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1144,7 +1273,17 @@
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__log10?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__log10?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">log10?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the base-10 logarithm of a real</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="m.html#__m__real" class="text-success">real</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">log10(1000)   [-- 3.0 --]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1154,11 +1293,89 @@
         <small class="text-muted code">/m/math/inst/normalize?rng=/m/math/time&amp;dom=/m/math/time</small>
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=time&dom=time(){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=datasize&dom=datasize(){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=metric&dom=metric(){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=imperial&dom=imperial(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-1-tab').click();document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=datasize&dom=datasize(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-2-tab').click();document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=metric&dom=metric(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-3-tab').click();document.getElementById('__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">normalize?rng=imperial&dom=imperial(){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top p-0">
+    <ul class="nav nav-pills p-2 bg-dark" id="__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-pills" role="tablist">
+        <li class="nav-item disabled me-2">
+            <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
+        </li>
+        <li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2 active text-start h-100"
+        id="__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0"
+        type="button" role="tab" aria-selected="true"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 1
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-1"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 2
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-2"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 3
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-3"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 4
+    </button>
+</li>
+    </ul>
+    <div class="tab-content" id="__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-content">
+        <div class="tab-pane fade show active" id="__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0" role="tabpanel" aria-labelledby="__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-0-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[mapper] auto-scale a duration to the most human readable time unit
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__time" class="text-info">time</a> <span class="text-light">=&gt;</span> <a href="#__m__math__time" class="text-success">time</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">millis::2500.0.normalize()   [-- second::2.5 --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-1" role="tabpanel" aria-labelledby="__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-1-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[mapper] auto-scale a data size to the most human readable data unit
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__datasize" class="text-info">datasize</a> <span class="text-light">=&gt;</span> <a href="#__m__math__datasize" class="text-success">datasize</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">bB::2097152.0.normalize()   [-- mB::2.0 --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-2" role="tabpanel" aria-labelledby="__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-2-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[mapper] auto-scale a metric distance to the most human readable metric unit
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__metric" class="text-info">metric</a> <span class="text-light">=&gt;</span> <a href="#__m__math__metric" class="text-success">metric</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">mm::2500.0.normalize()   [-- meter::2.5 --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-3" role="tabpanel" aria-labelledby="__m__math__inst__normalize?rng=__m__math__time&dom=__m__math__time-doc-3-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[mapper] auto-scale an imperial distance to the most human readable imperial unit
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__imperial" class="text-info">imperial</a> <span class="text-light">=&gt;</span> <a href="#__m__math__imperial" class="text-success">imperial</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">inch::24.0.normalize()   [-- foot::2.0 --]</code></pre>
+</div>
+</div>
+    </div>
+</div>
 </div><div class="card mb-3" id="__m__math__inst__round?rng=__m__int&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1169,7 +1386,17 @@
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__round?rng=__m__int&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__round?rng=__m__int&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">round?rng=int&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the arg rounded to the nearest int</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="m.html#__m__int" class="text-success">int</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">round(2.5)   [-- 3 --]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__math__inst__sin?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1180,7 +1407,17 @@
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__sin?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__sin?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sin?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the sine (radians) of a real</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="m.html#__m__real" class="text-success">real</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">sin(1.0)   [-- 0.8414709848078965 --]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__math__inst__sqrt?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1191,7 +1428,17 @@
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__sqrt?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__sqrt?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sqrt?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the square root of a real</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="m.html#__m__real" class="text-success">real</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">sqrt(9)   [-- 3.0 --]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__math__inst__tan?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1202,7 +1449,17 @@
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__tan?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__tan?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">tan?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">the tangent (radians) of a real</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="m.html#__m__real" class="text-success">real</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">tan(1.0)   [-- 1.557407724654902 --]</code></pre>
+</div>
 </div>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">

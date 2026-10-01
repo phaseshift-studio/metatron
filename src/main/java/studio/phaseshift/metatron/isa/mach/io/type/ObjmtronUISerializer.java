@@ -319,7 +319,10 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     public String writeReal(final Real real) {
         final StringBuilder sb = new StringBuilder();
         this.handleTID(sb, real, true);
-        sb.append(String.format("%." + this.clipReal() + "f", real.jvm()));
+        // 17 is the most decimal digits a double can distinguish; a clip setting beyond it
+        // carries no information, and one near Integer.MAX_VALUE (the noClip "no clipping"
+        // setting) asks the formatter for a ~2^31-character buffer and OOMs the JVM.
+        sb.append(String.format("%." + Math.min(this.clipReal(), 17) + "f", real.jvm()));
         this.handleVID(sb, real);
         return postWrite(sb.toString());
     }

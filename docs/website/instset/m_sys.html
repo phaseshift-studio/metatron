@@ -233,7 +233,6 @@
                     agent skills
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/agent/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>agent</a></li>
                     <li class="skill-group">
                         <div class="d-flex align-items-center">
                             <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
@@ -256,6 +255,7 @@
                         <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -280,8 +280,6 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
@@ -418,9 +416,6 @@
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- const=&gt;[thread_executor::[
- stop=&gt;[,],
- run=&gt;[!*/sys/thread/main]]@/sys/thread/executor],
  type=&gt;[
   space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?rng=fsspace&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/space/fsspace,
   space::T[][ctor?rng=serialspace&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/space/serialspace,
@@ -443,7 +438,10 @@
   bash?rng=lst[str]&amp;dom=#{?}(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},
   sleep?rng=A{?}&amp;dom=A{?}(real::T@/m/math/time){&lt;j&gt;},
   stdout?rng=#{?}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-  stdin?rng=str&amp;dom=#{?}(){&lt;j&gt;}]]@/m/sys</code></pre>
+  stdin?rng=str&amp;dom=#{?}(){&lt;j&gt;}],
+ const=&gt;[thread_executor::[
+ stop=&gt;[,],
+ run=&gt;[!*/sys/thread/main]]@/sys/thread/executor]]@/m/sys</code></pre>
                     </div>
                 </div>
             </div>
@@ -527,7 +525,9 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][ctor?rng=dir&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/dir</code></pre></div>
     
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] a reference to a directory within fsspace</p>
+</div>
 </div><div class="card mb-3" id="__m__sys__file">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -538,7 +538,9 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][ctor?rng=file&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/file</code></pre></div>
     
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] a reference to a file within fsspace, resolved through the router&#39;s redirects</p>
+</div>
 </div><div class="card mb-3" id="__m__sys__file__image">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -549,7 +551,9 @@
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">file::T@/m/sys/file/image</code></pre></div>
     
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[nominal] </p>
+</div>
 </div><div class="card mb-3" id="__m__sys__log_entry">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -563,7 +567,9 @@
  source=&gt;&lt;#&gt;::T,
  message=&gt;str::T]]@/m/sys/log_entry</code></pre></div>
     
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] a structured log entry — level, datetime, source, and message</p>
+</div>
 </div>
 </div><div class="container-xxl mb-4" id="spaces">
     <h3 class="text-primary mb-3">spaces <span class="pill-label badge bg-info">2</span></h3>
@@ -584,7 +590,9 @@
  {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
  {?}route=&gt;[uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] the fsspace — a java file system (default: the local disk) exposed as a metatron space</p>
+</div>
 </div><div class="card mb-3" id="__m__sys__space__serialspace">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <a href="m_sys_space_serialspace.html" class="code text-primary fw-bold text-decoration-none">serialspace</a>
@@ -602,7 +610,9 @@
  {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
  {?}route=&gt;[uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] the serial space — serial port / terminal i/o exposed as a metatron space</p>
+</div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
     <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">10</span></h3>
@@ -645,7 +655,12 @@ note that this field is optional, so when in doubt, just don&#39;t fill it out
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__close?rng=noobj{0}&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__close?rng=noobj{0}&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">close?rng=<span class="code text-success">noobj{0}</span>&dom=<span class="code text-info">#{?}</span>(){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[terminal] close the lhs — release its resources; a router exits the vm, and a noobj runs the boot loader teardown
+maps objs to nothing (rng_c = 0)</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="#noobj{0}" class="text-success">noobj{0}</a></pre>
+</div>
 </div><div class="card mb-3" id="__m__sys__inst__edit_file?rng=__m__rec&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -664,10 +679,10 @@ if both min and max are provided, then those lines are removed and the text is i
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a status report on the write" class="text-success">a status report on the write</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
-  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
   <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the text to add to the file'" class="text-info">&#39;the text to add to the file&#39;</a>
   <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
+  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__find_file?rng=__m__lst&dom=#{?}">
@@ -685,11 +700,11 @@ if both min and max are provided, then those lines are removed and the text is i
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a lst of all files whose path matches str regex" class="text-success">a lst of all files whose path matches str regex</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}pattern" class="text-light">{?}pattern</a> <span class="text-light">=&gt;</span> <a href="#'if the search string should be treated as a regex pattern (default: false)'" class="text-info">&#39;if the search string should be treated as a regex pattern (default: false)&#39;</a>
-  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root directory for searching (default: current working directory -- <mfs:.>)'" class="text-info">&#39;the root directory for searching (default: current working directory -- &lt;mfs:.&gt;)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root directory for searching (default: current working directory -- <mfs:.>)'" class="text-info">&#39;the root directory for searching (default: current working directory -- &lt;mfs:.&gt;)&#39;</a>
   <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the max number of results to return (default: 50)'" class="text-info">&#39;the max number of results to return (default: 50)&#39;</a>
   <a href="#{?}depth" class="text-light">{?}depth</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to search directories (default: 50)'" class="text-info">&#39;the max depth to search directories (default: 50)&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a regex or plain string to match file paths against'" class="text-info">&#39;a regex or plain string to match file paths against&#39;</a>
+  <a href="#{?}pattern" class="text-light">{?}pattern</a> <span class="text-light">=&gt;</span> <a href="#'if the search string should be treated as a regex pattern (default: false)'" class="text-info">&#39;if the search string should be treated as a regex pattern (default: false)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__read_file?rng=__m__lst&dom=#{?}">
@@ -710,9 +725,9 @@ if only a min is provided, then the file is read from that line till the end.
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#read file indexed lines" class="text-success">read file indexed lines</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}min" class="text-light">{?}min</a> <span class="text-light">=&gt;</span> <a href="#'the start line to read'" class="text-info">&#39;the start line to read&#39;</a>
-  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
   <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
+  <a href="#{?}min" class="text-light">{?}min</a> <span class="text-light">=&gt;</span> <a href="#'the start line to read'" class="text-info">&#39;the start line to read&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__redirect?rng=__m__rec[short=>uri,long=>uri]&dom=#{?}">
@@ -725,7 +740,14 @@ if only a min is provided, then the file is read from that line till the end.
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__redirect?rng=__m__rec[short=>uri,long=>uri]&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__redirect?rng=__m__rec[short=>uri,long=>uri]&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">redirect?rng=rec[short=>uri,long=>uri]&dom=<span class="code text-info">#{?}</span>(uri::T){<j>}</code></pre>
 </div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">map a uri to its registered redirect forms — returning [short, long] of the rewritten uri</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="m.html#__m__rec[short=>uri,long=>uri]" class="text-success">rec[short=&gt;uri,long=&gt;uri]</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__uri'" class="text-info">uri&#39;</a>
+</pre>
+</div>
 </div><div class="card mb-3" id="__m__sys__inst__sleep?rng=A{?}&dom=A{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>

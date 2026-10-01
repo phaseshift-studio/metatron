@@ -347,6 +347,34 @@ mtron> *plus?docq
     args=>[0=>'a postfix str'],
     desc=>'[mapper] concatenate two str::T va...',
     example=>['"a" + "b" [-- "ab" --]']]
+==>docs::[
+    obj=>plus?rng=time&dom=time(real::T@/m/math/time){<j>},
+    dom=>'/m/math/time',
+    rng=>'/m/math/time',
+    args=>[0=>'/m/real'],
+    desc=>'[mapper] add two durations of the ...',
+    example=>['millis::1500.0 + millis::500.0   [...']]
+==>docs::[
+    obj=>plus?rng=metric&dom=metric(real::T@/m/math/metric){<j>},
+    dom=>'/m/math/metric',
+    rng=>'/m/math/metric',
+    args=>[0=>'/m/real'],
+    desc=>'[mapper] add two distances of the ...',
+    example=>['meter::1500.0 + meter::500.0   [--...']]
+==>docs::[
+    obj=>plus?rng=imperial&dom=imperial(real::T@/m/math/imperial){<j>},
+    dom=>'/m/math/imperial',
+    rng=>'/m/math/imperial',
+    args=>[0=>'/m/real'],
+    desc=>'[mapper] add two distances of the ...',
+    example=>['foot::12.0 + foot::36.0   [-- foot...']]
+==>docs::[
+    obj=>plus?rng=datetime&dom=datetime(real::T@/m/math/time){<j>},
+    dom=>'/m/math/datetime',
+    rng=>'/m/math/datetime',
+    args=>[0=>'/m/real'],
+    desc=>'[mapper] shift a datetime forward ...',
+    example=>['<//2026.08:09/14/30/00/000?tz=+000...']]
 mtron> *plus?str<=str&docq
 ==>docs::[
     obj=>plus?rng=str&dom=str(str::T){<j>},

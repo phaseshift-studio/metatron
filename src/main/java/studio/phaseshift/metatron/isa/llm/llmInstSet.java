@@ -584,7 +584,7 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(FEATURE), "the ordered lst of capabilities attached to the agent"),
                                 "an agent is an llm enriched with embodied capabilities"),
                         // -- concrete feature types ------------------------------------------
-                        Type.Builder.build()
+                        docWrap(Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_CHAT_FEATURE_TID)
                                 .isaPredicate(rec(
@@ -594,56 +594,56 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri("complete").maybe(), ALL_TYPE).maybe(),
                                         uri(FORMAT).maybe(), ALL_TYPE))
                                 .constructor(arg -> createStageLambdas(new ChatFeature(arg.asRec().jvm(), LLM_CHAT_FEATURE_TID, arg.vid())))
-                                .create(),
-                        Type.Builder.build()
+                                .create(), "the agent's chat configuration — the model, the optional response-shaping hooks (to/complete), and the response format"),
+                        docWrap(Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_SUMMARIZE_FEATURE_TID)
                                 .constructor(arg -> createStageLambdas(new SummarizeFeature(arg.asRec().jvm(), LLM_SUMMARIZE_FEATURE_TID, arg.vid())))
-                                .create(),
-                        Type.Builder.build()
+                                .create(), "distills a message or a whole session into claims and loose ends — the feature behind the <<mtron:summarize>> block"),
+                        docWrap(Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_TOKEN_MESSAGE_FEATURE_TID)
                                 .isaPredicate(rec(SESSION, URI_TYPE))
                                 .constructor(arg -> createStageLambdas(new TokenMessageFeature(arg.asRec().jvm(), LLM_TOKEN_MESSAGE_FEATURE_TID, arg.vid())))
-                                .create(),
-                        Type.Builder.build()
+                                .create(), "message history aggregated by a token budget (algorithm => [max => N tokens])"),
+                        docWrap(Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_WINDOW_MESSAGE_FEATURE_TID)
                                 .isaPredicate(rec(SESSION, URI_TYPE))
                                 .constructor(arg -> createStageLambdas(new WindowMessageFeature(arg.asRec().jvm(), LLM_WINDOW_MESSAGE_FEATURE_TID, arg.vid())))
-                                .create(),
-                        Type.Builder.build()
+                                .create(), "message history aggregated by a message-count window (algorithm => [max => N messages])"),
+                        docWrap(Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_PERSISTED_FRAME_FEATURE_TID)
                                 .constructor(arg -> createStageLambdas(new PersistedFrameFeature(arg.asRec().jvm(), LLM_PERSISTED_FRAME_FEATURE_TID, arg.vid())))
-                                .create(),
-                        Type.Builder.build()
+                                .create(), "a frame provider that never discards frames — the whole frame tree stays introspectable (compute memory)"),
+                        docWrap(Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_TRANSIENT_FRAME_FEATURE_TID)
                                 .constructor(arg -> createStageLambdas(new TransientFrameFeature(arg.asRec().jvm(), LLM_TRANSIENT_FRAME_FEATURE_TID, arg.vid())))
-                                .create(),
-                        Type.Builder.build()
+                                .create(), "a frame provider that discards frames on completion — frames are an ephemeral call stack, not durable compute memory"),
+                        docWrap(Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_TOOL_FEATURE_TID)
                                 .isaPredicate(rec(uri(TOOL).maybe().asUri(), T(LST_TID.maybe()), uri(MAX).maybe().asUri(), isa_(INT_TYPE).else_(jnt(-1))))
                                 .constructor(arg -> createStageLambdas(new ToolFeature(arg.asRec().jvm(), LLM_TOOL_FEATURE_TID, arg.vid())))
-                                .create(),
-                        Type.Builder.build()
+                                .create(), "the gatekeeper of the agent's tool channel — its collection of tools with an optional per-chat max"),
+                        docWrap(Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_EMBED_FEATURE_TID)
                                 .isaPredicate(rec(uri(f(MODEL)).maybe().asUri(), LLM_MODEL_TYPE))
                                 .constructor(arg -> createStageLambdas(new EmbedFeature(arg.asRec().jvm(), LLM_EMBED_FEATURE_TID, arg.vid())))
-                                .create(),
-                        Type.Builder.build()
+                                .create(), "the embedding model and hooks the agent uses to vectorize content into vec::T"),
+                        docWrap(Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_SKILL_FEATURE_TID)
                                 .constructor(arg -> createStageLambdas(new SkillFeature(arg.asRec().jvm(), LLM_SKILL_FEATURE_TID, arg.vid())))
-                                .create(),
-                        Type.Builder.build()
+                                .create(), "the gateway of the agent's skill channel — the collection of skills, and the composition point for the tools they carry"),
+                        docWrap(Type.Builder.build()
                                 .tid(LLM_FEATURE_TID)
                                 .vid(LLM_SYSTEM_FEATURE_TID)
                                 .constructor(arg -> createStageLambdas(new SystemFeature(arg.asRec().jvm(), LLM_SYSTEM_FEATURE_TID, arg.vid())))
-                                .create(),
+                                .create(), "the owner of the agent's system messages — the persistent base instruction plus per-chat contributions"),
                         // [parked stub] SimilarityRecall — out of the active roster during the
                         // channel refactor (skill/tool/message owners); un-comment to revive.
 //                         Type.Builder.build()
