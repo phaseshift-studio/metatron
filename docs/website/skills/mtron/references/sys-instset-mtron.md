@@ -56,8 +56,8 @@ mtron> *bash?docq
     dom=>'maybe an obj',
     rng=>'a lst[str] of results',
     args=>[
-     cmd=>'the terminal command to evaluate (...',
-     {?}timeout=>'a real number denoting timeout of ...'],
+     {?}timeout=>'a real number denoting timeout of ...',
+     cmd=>'the terminal command to evaluate (...'],
     desc=>'evaluate bash command. *important*...',
     example=>["bash('ls')                        ..."]]
 ```
@@ -77,10 +77,10 @@ mtron> bash(cmd=>'whoami')
 mtron> bash('df -h')
 ==>[
     'Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.3M ...',
+    'tmpfs                  6.1G  6.2M ...',
     'efivarfs               128K   42K ...',
     '/dev/nvme0n1p2         916G  513G ...',
-    'tmpfs                   31G  208M ...',
+    'tmpfs                   31G  200M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
    ...(4 more)]

@@ -3013,13 +3013,13 @@ mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T)     ​4​
     name=&gt;'marko',
     age=&gt;29]
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7].as(human::T)     ​5​
-==&gt;fail::[inst apply failure: chicken::[name=&gt;'snowbutt',age=&gt;7] is not a being::T@human [nominal] (at /m/inst/as)]@/sys/fail/712
+==&gt;fail::[inst apply failure: chicken::[name=&gt;'snowbutt',age=&gt;7] is not a being::T@human [nominal] (at /m/inst/as)]@/sys/fail/708
 mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)     ​6​
 ==&gt;chicken::[
     name=&gt;'fuzzy feet',
     age=&gt;2]
 mtron&gt; 'punky'.as(chicken::T)     ​7​
-==&gt;fail::[inst apply failure: Cannot invoke "studio.phaseshift.metatron.isa.m.type.Call.apply(studio.phaseshift.metatron.isa.m.type.Obj)" because the return value of "studio.phaseshift.metatron.isa.m.type.Type.constructor()" is null (at /m/inst/as@1) [Rec$RecType&lt;384&gt;]][Cannot invoke "studio.phaseshift.metatron.isa.m.type.Call.apply(studio.phaseshift.metatron.isa.m.type.Obj)" because the return value of "studio.phaseshift.metatron.isa.m.type.Type.constructor()" is null [Rec$RecType&lt;384&gt;]]@/sys/fail/716</code></pre>
+==&gt;fail::[inst apply failure: Cannot invoke "studio.phaseshift.metatron.isa.m.type.Call.apply(studio.phaseshift.metatron.isa.m.type.Obj)" because the return value of "studio.phaseshift.metatron.isa.m.type.Type.constructor()" is null (at /m/inst/as@1) [Rec$RecType&lt;384&gt;]][Cannot invoke "studio.phaseshift.metatron.isa.m.type.Call.apply(studio.phaseshift.metatron.isa.m.type.Obj)" because the return value of "studio.phaseshift.metatron.isa.m.type.Type.constructor()" is null [Rec$RecType&lt;384&gt;]]@/sys/fail/714</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3159,7 +3159,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{r}}m{{g}}E{{y}}t{{r}}A{{m}}T{{c}}r{{y}}o{{r}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{y}}m{{y}}e{{g}}t{{b}}a{{c}}t{{c}}r{{r}}O{{g}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3921,9 +3921,9 @@ mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
 ==&gt;fail::[-10 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-10]@/sys/fail/774
+   	while parsing: nat::-10]@/sys/fail/772
 mtron&gt; int::-10.as(nat::T)
-==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/778</code></pre>
+==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/774</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3944,15 +3944,15 @@ mtron&gt; int::T</code></pre>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat::125
 ==&gt;fail::[125 is not a int::T[is(lt(120))]@nat
-   	while parsing: nat::125]@/sys/fail/782
+   	while parsing: nat::125]@/sys/fail/776
 mtron&gt; age::125
 ==&gt;fail::[125 is not a int::T[is(lt(120))]@nat
-   	while parsing: age::125]@/sys/fail/784
+   	while parsing: age::125]@/sys/fail/778
 mtron&gt; nat::125.as(age::T)
 ==&gt;fail::[125 is not a int::T[is(lt(120))]@nat
-   	while parsing: nat::125.as(age::T)]@/sys/fail/786
+   	while parsing: nat::125.as(age::T)]@/sys/fail/780
 mtron&gt; 125.as(nat::T).as(age::T)
-==&gt;fail::[inst apply failure: 125 is not a int::T[is(lt(120))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/788</code></pre>
+==&gt;fail::[inst apply failure: 125 is not a int::T[is(lt(120))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/786</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -7041,16 +7041,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355856       6356   6349500   1% /run'
+==&gt;'tmpfs                    6355856       6316   6349540   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme0n1p2         959786032  537411944 373545880  59% /'
-==&gt;'tmpfs                   31779272     212584  31566688   1% /dev/shm'
+==&gt;'/dev/nvme0n1p2         959786032  537463380 373494444  59% /'
+==&gt;'tmpfs                   31779272     202240  31577032   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779272          0  31779272   0% /run/qemu'
 ==&gt;'/dev/nvme0n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        256   6355596   1% /run/user/1000'
+==&gt;'tmpfs                    6355852        252   6355600   1% /run/user/1000'
 ==&gt;'/dev/nvme1n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1346038264 575170280  71% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1346041380 575167164  71% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;articles
@@ -7072,7 +7072,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;fail::[MacHINE FaIlEd][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/130</code></pre>
+==&gt;fail::[maChINE FailED][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/130</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7260,7 +7260,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime:://2026.10:1/10/21/45/098?tz=-0600
+==&gt;datetime:://2026.10:1/10/58/04/396?tz=-0600
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -9174,7 +9174,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
      code=&gt;at(ab).plus('B'),
      loop=&gt;second::1.0000,
      state=&gt;pause]@/sys/thread/b,
-    time=&gt;datetime:://2026.10:1/10/21/50/224?tz=-0600,
+    time=&gt;datetime:://2026.10:1/10/58/09/224?tz=-0600,
     runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
     ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)
@@ -9260,7 +9260,7 @@ mtron&gt; */sys/thread/example/state     ​5​</code></pre>
 ==&gt;core::[
     code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
     state=&gt;stop,
-    time=&gt;datetime:://2026.10:1/10/21/19/694?tz=-0600,
+    time=&gt;datetime:://2026.10:1/10/57/48/450?tz=-0600,
     runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[
@@ -9268,7 +9268,7 @@ mtron&gt; */sys/thread/main?docq
      code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
      start=&gt;noobj,
      state=&gt;stop,
-     time=&gt;datetime:://2026.10:1/10/21/19/694?tz=-0600,
+     time=&gt;datetime:://2026.10:1/10/57/48/450?tz=-0600,
      runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
      result=&gt;noobj]@/sys/thread/main,
     desc=&gt;'this root thread waits till all ch...']</code></pre>

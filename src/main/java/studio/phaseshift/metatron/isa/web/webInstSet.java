@@ -532,13 +532,13 @@ public class webInstSet extends AbstractInstSet {
                                 "<http://metatron.phaseshift.studio>.ping(_)",
                                 "ping(localhost:8777)",
                                 "virtual::[code=>ping(localhost:8777)-<{@x+*0,@y+1},loop=>second::2.0]"),
-                        instC(WEB_ISA_TID.extend("inst/format").dom(MARKDOWN_TID).rng(STR_TID), lst(), (lhs, inst) -> str(ObjMarkdownSerializer.format(ObjMarkdownSerializer.single().write(lhs).getChars().toString()))),
-                        instC(AS_INST_TID.dom(MARKDOWN_TID).rng(LLM_SKILL_TID), lst(STR_TYPE), (lhs, inst) -> mSkill.of(lhs.asStr())),
-                        instC(AS_INST_TID.dom(WEB_JSON_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjJSONSerializer.simple().inputBytes(lhs.strValue())),
-                        instC(AS_INST_TID.dom(YAML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjYAMLSerializer.single().inputBytes(lhs.strValue())),
-                        instC(AS_INST_TID.dom(REC_TID).rng(WEB_JSON_TID), lst(WEB_JSON_TYPE), (lhs, inst) -> str(new String(ObjJSONSerializer.web().outputBytes(lhs).array(), StandardCharsets.UTF_8), WEB_JSON_TID, null)),
-                        instC(AS_INST_TID.dom(XML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjXMLSerializer.parse(lhs.strValue())),
-                        instC(AS_INST_TID.dom(REC_TID).rng(XML_TID), lst(XML_TYPE), (lhs, inst) -> str(new String(ObjXMLSerializer.single().outputBytes(lhs).array(), StandardCharsets.UTF_8), XML_TID, null)),
+                        docWrap(instC(WEB_ISA_TID.extend("inst/format").dom(MARKDOWN_TID).rng(STR_TID), lst(), (lhs, inst) -> str(ObjMarkdownSerializer.format(ObjMarkdownSerializer.single().write(lhs).getChars().toString()))), "render a markdown::T document into a formatted str for the terminal", "*<mfs:.>/README.md.format(_)   [-- the document as formatted str --]"),
+                        docWrap(instC(AS_INST_TID.dom(MARKDOWN_TID).rng(LLM_SKILL_TID), lst(STR_TYPE), (lhs, inst) -> mSkill.of(lhs.asStr())), "parse a markdown skill document into an llm_skill::T", "*<mfs:.>/.metatron/skills/mtron/SKILL.md.as(llm_skill::T)   [-- an llm_skill::T with the skill's tools and resources --]"),
+                        docWrap(instC(AS_INST_TID.dom(WEB_JSON_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjJSONSerializer.simple().inputBytes(lhs.strValue())), "parse a json document into a rec", "*<http://localhost:8555/api/status>.as(rec::T)   [-- a json response parsed into rec::T --]"),
+                        docWrap(instC(AS_INST_TID.dom(YAML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjYAMLSerializer.single().inputBytes(lhs.strValue())), "parse a yaml document into a rec", "*<mfs:conf/settings.yaml>.as(rec::T)   [-- a yaml document parsed into rec::T --]"),
+                        docWrap(instC(AS_INST_TID.dom(REC_TID).rng(WEB_JSON_TID), lst(WEB_JSON_TYPE), (lhs, inst) -> str(new String(ObjJSONSerializer.web().outputBytes(lhs).array(), StandardCharsets.UTF_8), WEB_JSON_TID, null)), "serialize a rec as a json document", "[name=>'metatron',port=>8555].as(web_json::T)   [-- the rec as a json document --]"),
+                        docWrap(instC(AS_INST_TID.dom(XML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjXMLSerializer.parse(lhs.strValue())), "parse an xml document into a rec", "*<mfs:conf/settings.xml>.as(rec::T)   [-- an xml document parsed into rec::T --]"),
+                        docWrap(instC(AS_INST_TID.dom(REC_TID).rng(XML_TID), lst(XML_TYPE), (lhs, inst) -> str(new String(ObjXMLSerializer.single().outputBytes(lhs).array(), StandardCharsets.UTF_8), XML_TID, null)), "serialize a rec as an xml document", "[config=>[port=>8555]].as(xml::T)   [-- the rec as an xml document --]"),
                         docWrap(instC(AS_INST_TID.dom(HTML_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.strValue())), """
                                                                                                                                                       html::[html=>
                                                                                                                                                              [head=>
@@ -547,28 +547,28 @@ public class webInstSet extends AbstractInstSet {
                                                                                                                                                                [out=>[
                                                                                                                                                                 [tag=>a,href=>...],
                                                                                                                                                                 [tag...]]]]"""),
-                        instC(AS_INST_TID.dom(REC_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> str(ObjHTMLSerializer.single().write(lhs).outerHtml(), HTML_TID, null)),
-                        instC(AS_INST_TID.dom(MARKDOWN_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjMarkdownSerializer.parse(lhs.strValue())),
+                        docWrap(instC(AS_INST_TID.dom(REC_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> str(ObjHTMLSerializer.single().write(lhs).outerHtml(), HTML_TID, null)), "serialize a rec as an html document", "[head=>[title=>'metatron']].as(html::T)   [-- the rec as an html document --]"),
+                        docWrap(instC(AS_INST_TID.dom(MARKDOWN_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjMarkdownSerializer.parse(lhs.strValue())), "parse a markdown document into a rec", "*<mfs:.>/README.md.as(rec::T)   [-- the markdown document parsed into rec::T structure --]"),
                         // md ⇄ html via HTMLMarkdownSerializer — the generalized markdown⇄html
                         // converter (flexmark + tables/strikethrough/tasklists/autolink/jekyll-fm),
                         // the same engine the docs site-html pass uses. html::T → markdown::T
                         // (its read() direction) was added together with that swap. A dereferenced
                         // .md file already comes back as a markdown::T str (fsSpace MIME-read), so
                         // the instructions run on the raw document text.
-                        instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> str(HTMLMarkdownSerializer.toHTML(lhs.strValue()), HTML_TID, null)),
-                        instC(AS_INST_TID.dom(HTML_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> str(HTMLMarkdownSerializer.toMarkdown(lhs.strValue()), MARKDOWN_TID, null)),
+                        docWrap(instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> str(HTMLMarkdownSerializer.toHTML(lhs.strValue()), HTML_TID, null)), "convert a markdown document to html — the same engine the docs site-html pass uses", "*<mfs:docs/website/skills/mtron/README.md>.as(html::T)   [-- the document as an html::T --]"),
+                        docWrap(instC(AS_INST_TID.dom(HTML_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> str(HTMLMarkdownSerializer.toMarkdown(lhs.strValue()), MARKDOWN_TID, null)), "convert an html document back to markdown", "*<http://metatron.phaseshift.studio>.as(markdown::T)   [-- the page's html as markdown --]"),
 
-                        instC(AS_INST_TID.dom(REC_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().write(lhs).getChars().toString(), MARKDOWN_TID, null)),
-                        instC(AS_INST_TID.dom(JAVA_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjJavaSerializer.single().inputBytes(lhs.strValue().getBytes())),
-                        instC(AS_INST_TID.dom(REC_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> str(new String(ObjJavaSerializer.single().outputBytes(lhs).array()), JAVA_TID, null)),
-                        instC(AS_INST_TID.dom(STR_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> str(lhs.strValue(), JAVA_TID, null)),
-                        instC(AS_INST_TID.dom(STR_TID).rng(XSV_TID), lst(XSV_TYPE), (lhs, inst) -> str(ObjXSVSerializer.single().write(ObjXSVSerializer.single().read(lhs.strValue())), XSV_TID, null)),
-                        instC(AS_INST_TID.dom(STR_TID).rng(CSV_TID), lst(CSV_TYPE), (lhs, inst) -> str(ObjXSVSerializer.csv().write(ObjXSVSerializer.csv().read(lhs.strValue())), CSV_TID, null)),
+                        docWrap(instC(AS_INST_TID.dom(REC_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().write(lhs).getChars().toString(), MARKDOWN_TID, null)), "serialize a rec as a markdown document", "[title=>'metatron',body=>'greeting'].as(markdown::T)   [-- the rec as a markdown::T document --]"),
+                        docWrap(instC(AS_INST_TID.dom(JAVA_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> ObjJavaSerializer.single().inputBytes(lhs.strValue().getBytes())), "parse a java source file into a rec", "*<mfs:.>/Tokens.java.as(rec::T)   [-- the java source parsed into a rec --]"),
+                        docWrap(instC(AS_INST_TID.dom(REC_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> str(new String(ObjJavaSerializer.single().outputBytes(lhs).array()), JAVA_TID, null)), "serialize a rec as java source", "[name=>'port',value=>8555].as(java::T)   [-- the rec as java source text --]"),
+                        docWrap(instC(AS_INST_TID.dom(STR_TID).rng(JAVA_TID), lst(JAVA_TYPE), (lhs, inst) -> str(lhs.strValue(), JAVA_TID, null)), "tag a plain str as java source, without validation", "'int x = 3;'.as(java::T)   [-- int x = 3; tagged as java::T --]"),
+                        docWrap(instC(AS_INST_TID.dom(STR_TID).rng(XSV_TID), lst(XSV_TYPE), (lhs, inst) -> str(ObjXSVSerializer.single().write(ObjXSVSerializer.single().read(lhs.strValue())), XSV_TID, null)), "normalize a plain str as an xsv document", "'city,population; santa fe,45000'.as(xsv::T)   [-- the text as a canonical xsv::T --]"),
+                        docWrap(instC(AS_INST_TID.dom(STR_TID).rng(CSV_TID), lst(CSV_TYPE), (lhs, inst) -> str(ObjXSVSerializer.csv().write(ObjXSVSerializer.csv().read(lhs.strValue())), CSV_TID, null)), "normalize a plain str as a csv document", "'city,population; santa fe,45000'.as(csv::T)   [-- the text as a canonical csv::T --]"),
 
                         // cs (coarse schema) — cs_java::T is a rec::T refinement: the parse IS the
                         // cast.  as?cs_java<=java(cs_java::T) parses a dereferenced java::T str into
                         // the coarse rec; the rec↔cs_java paths re-tag (rec::T <-> cs_java::T).
-                        instC(AS_INST_TID.dom(MCP_CLIENT_TID).rng(WEB_JSON_TID), lst(WEB_JSON_TYPE), (lhs, inst) -> {
+                        docWrap(instC(AS_INST_TID.dom(MCP_CLIENT_TID).rng(WEB_JSON_TID), lst(WEB_JSON_TYPE), (lhs, inst) -> {
                             final mcpClient client = (mcpClient) lhs;
                             final Map<Obj, Obj> configMap = new LinkedHashMap<>();
                             // type
@@ -585,8 +585,8 @@ public class webInstSet extends AbstractInstSet {
                             final Rec configRec = rec(configMap, REC_TID, null);
                             final byte[] jsonBytes = ObjJSONSerializer.simple().outputBytes(configRec).array();
                             return str(new String(jsonBytes, StandardCharsets.UTF_8), WEB_JSON_TID, null);
-                        }),
-                        instC(AS_INST_TID.dom(WEB_JSON_TID).rng(MCP_CLIENT_TID.some()), lst(MCP_CLIENT_TYPE), (lhs, inst) -> {
+                        }), "export an mcp client's connection settings (type, url, headers) as a json document", "*/usr/ai/mcp/mtron.as(web_json::T)   [-- the client's settings as a json document --]"),
+                        docWrap(instC(AS_INST_TID.dom(WEB_JSON_TID).rng(MCP_CLIENT_TID.some()), lst(MCP_CLIENT_TYPE), (lhs, inst) -> {
                             final Rec parse = ObjJSONSerializer.simple().inputBytes(lhs.strValue()).asRec();
                             List<Rec> servers = new ArrayList<>();
                             if (parse.has(MCP_SERVERS)) {
@@ -620,7 +620,7 @@ public class webInstSet extends AbstractInstSet {
                                 }
                                 return new mcpClient(next.asRec().jvm(), MCP_CLIENT_TID, lhs.vid());
                             }));
-                        }),
+                        }), "import a json document as mcp client(s), merging command/args and env/headers", "*<mfs:conf/mcp.json>.as(mcp_client::T)   [-- an mcp client imported from the json document --]"),
                         docWrap(instC(AS_INST_TID.dom(LLM_SKILL_TID).rng(MCP_SERVER_TID), lst(MCP_SERVER_TYPE), (lhs, inst) -> mcpServer.of(lhs.<mSkill>as())),
                                 "a skill",
                                 "an mcp server",
