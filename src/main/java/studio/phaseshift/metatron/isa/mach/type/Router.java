@@ -136,6 +136,26 @@ public interface Router extends Space {
 
     boolean hasSpaceFor(final fURI vid);
 
+    /**
+     * True when this machine owns {@code vid}'s authority — the ownership half of the authority guard, and the
+     * test that decides whether a dereference stays local or is delegated to a peer. Declared configuration
+     * (the {@code host} of mounted spaces), never derived from traffic: a URI must not be able to make itself
+     * a peer.
+     */
+    default boolean own(final fURI vid) {
+        return false;
+    }
+
+    /**
+     * True when {@code vid}'s authority is a <em>declared</em> peer of this machine — neither ours nor
+     * undeclared. That an address is foreign is not enough: only a roster entry makes it a peer, which is what
+     * keeps the guard fail-closed and stops a web fetch ({@code http://example.com}) being mistaken for a
+     * metatron node.
+     */
+    default boolean isPeer(final fURI vid) {
+        return false;
+    }
+
     void addSpace(final Space space);
 
     void removeSpace(final fURI vid);
@@ -153,8 +173,70 @@ public interface Router extends Space {
     <SPACE extends Space> SPACE getSpaceFor(final fURI vid);
 
     class Helper {
+
+        /** Hosts that all denote "this machine" — a server bound to the first is reachable at the others. */
+        private static final Set<String> LOOPBACK_HOSTS = Set.of("0.0.0.0", "127.0.0.1", "localhost", "::1", "[::1]");
+
         public static String routerToString(final Router router) {
             return router.tid() + "::[pattern=>#]@" + router.vid();
+        }
+
+        /**
+         * Host component of an authority ({@code "localhost:8555"} to {@code "localhost"}), handling the
+         * bracketed IPv6 form ({@code "[::1]:8555"} to {@code "[::1]"}).
+         */
+        public static String hostOf(final String authority) {
+            if (null == authority)
+                return null;
+            if (authority.startsWith("[")) {
+                final int close = authority.indexOf(']');
+                return close < 0 ? authority : authority.substring(0, close + 1);
+            }
+            final int colon = authority.lastIndexOf(':');
+            return colon < 0 ? authority : authority.substring(0, colon);
+        }
+
+        /**
+         * Port component of an authority, or {@code null} when none was given.
+         */
+        public static String portOf(final String authority) {
+            if (null == authority)
+                return null;
+            if (authority.startsWith("[")) {
+                final int close = authority.indexOf(']');
+                return close < 0 || close + 1 >= authority.length() ? null : authority.substring(close + 2);
+            }
+            final int colon = authority.lastIndexOf(':');
+            return colon < 0 || colon + 1 >= authority.length() ? null : authority.substring(colon + 1);
+        }
+
+        /**
+         * True when {@code host} names this machine. A server declared as {@code 0.0.0.0:8555} (all local
+         * interfaces) is the same service as {@code localhost:8555} — and getting this wrong is not cosmetic:
+         * the boot binds the wildcard while a peer addresses the loopback name, so an alias-blind comparison
+         * makes the Router forward a request to <em>itself</em>.
+         */
+        public static boolean isLoopbackHost(final String host) {
+            return null != host && LOOPBACK_HOSTS.contains(host);
+        }
+
+        /**
+         * True when two authorities denote the same service. Ports must agree when both are present; hosts
+         * match exactly, or by loopback aliasing. This is the ownership test the Router's authority guard
+         * runs before it will delegate anywhere.
+         */
+        public static boolean sameAuthority(final String a, final String b) {
+            if (null == a || null == b)
+                return false;
+            if (a.equals(b))
+                return true;
+            final String aPort = portOf(a);
+            final String bPort = portOf(b);
+            if (null != aPort && null != bPort && !aPort.equals(bPort))
+                return false;
+            final String aHost = hostOf(a);
+            final String bHost = hostOf(b);
+            return aHost.equals(bHost) || (isLoopbackHost(aHost) && isLoopbackHost(bHost));
         }
     }
 

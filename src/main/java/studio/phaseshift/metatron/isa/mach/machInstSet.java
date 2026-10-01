@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.space.clstrSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.compiler.DefaultCompiler;
 import studio.phaseshift.metatron.isa.mach.type.compiler.FixPointRewriter;
@@ -39,7 +38,6 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -70,10 +68,6 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_THREAD_TID = MACH_ISA_TID.extend("thread");
     public static final fURI MACH_VIRTUAL_THREAD_TID = MACH_THREAD_TID.extend("virtual");
     public static final fURI MACH_CORE_THREAD_TID = MACH_THREAD_TID.extend("core");
-    public static final fURI DROP_TID = MACH_INST_TID.extend("drop");
-    public static final fURI RING_BINARY = MACH_INST_TID.extend("ring").extend("op").extend("+");
-    public static final fURI CLSTR_SPACE_TID = MACH_ISA_TID.extend("clstrspace");
-    public static Type CLSTR_SPACE_TYPE;
     public static final fURI FACTORY_TID = MACH_ISA_TID.extend("factory");
     public static final fURI THREAD_EXECUTOR_TID = MACH_ISA_TID.extend("thread_executor");
 
@@ -102,8 +96,6 @@ public class machInstSet extends AbstractInstSet {
             .create();
     public static Type MACH_CORE_THREAD_TYPE;
     public static Type MACH_MACHINE_TYPE;
-    public static final fURI MACH_SWARM_MACHINE_TID = MACH_MACHINE_TID.extend("swarm");
-    public static Type MACH_SWARM_MACHINE_TYPE;
 
     public static final fURI MACH_MACHINE_COMPONENT_TID = MACH_ISA_TID.extend("component");
     // the processor family — structural apply(code)->obj contract, then nominal monad marker, then concrete strategies
@@ -136,7 +128,6 @@ public class machInstSet extends AbstractInstSet {
 
     public machInstSet() {
         super(mutableMap(uri(PATTERN), uri(MACH_ISA_TID.extend(ALL))), INSTSET_TID, MACH_ISA_TID);
-        // Router.global().registerPrefix(f("mach"), MACH_ISA_TID);
     }
 
     @Override
@@ -250,18 +241,7 @@ public class machInstSet extends AbstractInstSet {
                                                 (lhs, inst) -> new VirtualThread(inst.arg(0).jvm(), MACH_VIRTUAL_THREAD_TID, inst.arg(0).vid()).applyAsync(lhs)))
                                         .create(), null, null, Map.of(),
                                 "run a concurrent virtual thread",
-                                "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@/sys/thread/ping"),
-                        docWrap(CLSTR_SPACE_TYPE = Type.Builder.build()
-                                        .tid(SPACE_TID)
-                                        .vid(CLSTR_SPACE_TID)
-                                        .isaPredicate(rec(uri(PEER).maybe().asUri(), rec(AUTHORITY_TYPE, ALL_TYPE).maybe()))
-                                        .constructor(obj -> new clstrSpace(new ConcurrentHashMap<>(), obj.asRec().jvm(), CLSTR_SPACE_TID, obj.vid())).create(),
-                                null, null,
-                                Map.of(uri(PEER), "known metatron instance elsewhere in ws or http space"),
-                                """
-                                a peer is a wsclient to a mtron_ws handler. 
-                                *x and x->y are the respective read/write insts sent to the peer for evaluation.
-                                """)),
+                                "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@/sys/thread/ping")),
                 uri(INST), lst(Stream.concat(Router.RouterType.insts().stream(), Stream.of(
                         instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
                             final fURI baseVID = f("/sys/thread");

@@ -183,16 +183,23 @@ public @interface TestData {
                         this.testDataLoaded = true;
                     }
 
-                    // Also load inline values (with $$ substitution for AbstractSpaceTest)
+                    // Also load inline values (with $$ substitution for AbstractSpaceTest, and $n peer
+                    // substitution whenever a distributed cluster is running)
                     final java.lang.reflect.Method testMethod = context.getRequiredTestMethod();
                     final Object testInstance = context.getRequiredTestInstance();
+                    final studio.phaseshift.metatron.distributed.PeerCluster cluster =
+                            studio.phaseshift.metatron.distributed.PeerCluster.active();
                     Arrays.stream(annotation.value())
                             .filter(value -> !value.trim().isEmpty())
                             .peek(v -> this.testDataLoaded = true)
                             .forEach(v -> {
-                                final String resolved = testInstance instanceof studio.phaseshift.metatron.isa.AbstractSpaceTest
+                                final String made = testInstance instanceof studio.phaseshift.metatron.isa.AbstractSpaceTest
                                         ? ((studio.phaseshift.metatron.isa.AbstractSpaceTest) testInstance).make(v, testMethod)
                                         : v;
+                                // $n resolves to the n-th peer's live prefix, so a @TestData value can seed a
+                                // peer without ever naming a port — and with no cluster running there is no
+                                // rewrite, leaving every existing @TestData exactly as it was.
+                                final String resolved = null == cluster ? made : cluster.rewrite(made);
                                 final Obj result = ObjmtronSerializer.parse(resolved).apply();
                                 LOG.debug("loaded test data: %s -> %s", resolved, result);
                             });
