@@ -391,9 +391,12 @@
         <h1 class="text-primary glow-text mb-1">
             <span class="text-light">/m/</span>mach
         </h1>
-        <p style="margin-top:0;margin-bottom:0;" class="subtitle text-light">instruction set reference</p>
+        <p class="set-desc text-light" style="max-width:1100px;margin:0.2rem auto 0.9rem;font-size:1.05rem;line-height:1.5;">
+the reflective instruction set of metatron featuring process, monad, and code introspection</p>
+
+        <p class="subtitle text-muted"
+           style="margin-top:0.15rem;margin-bottom:0;font-size:0.95rem;letter-spacing:0.16em;text-transform:uppercase;">instruction set reference</p>
     </div>
-    <div class="text-light"></div>
     <div class="instset-accordion-wrapper">
         <div class="accordion accordion-flush" id="accordionInstSet">
             <div class="accordion-item">
@@ -605,7 +608,7 @@
   {?}state=&gt;inst(stop,run,pause),
   {?}result=&gt;&lt;#&gt;::T])</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] run a concurrent core thread</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> run a concurrent core thread</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">core::[code=&gt;ping(&lt;phaseshift.studio:80&gt;),loop=&gt;second::1.0]@/sys/thread/ping</code></pre>
@@ -754,7 +757,7 @@
  {?}state=&gt;union(stop,run,pause),
  {?}result=&gt;&lt;#&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a swarm processor schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a swarm processor schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code the processor will evaluate'" class="text-info">&#39;the code the processor will evaluate&#39;</a>
@@ -771,15 +774,15 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[inst([code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;inst(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T])]@/m/mach/thread</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] the thread base type</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the thread base type</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
-  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
-  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
-  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
   <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
-  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
+  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
+  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
+  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__thread_executor">
@@ -795,7 +798,7 @@
  stop=&gt;[,]]]@/m/mach/thread_executor</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] the gateway interface for all threads in metatron</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the gateway interface for all threads in metatron</p>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__typer">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -826,7 +829,7 @@
   {?}state=&gt;inst(stop,run,pause),
   {?}result=&gt;&lt;#&gt;::T])</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] run a concurrent virtual thread</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> run a concurrent virtual thread</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">virtual::[code=&gt;ping(&lt;phaseshift.studio:80&gt;),loop=&gt;second::1.5]@/sys/thread/ping</code></pre>

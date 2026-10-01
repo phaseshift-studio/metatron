@@ -391,9 +391,12 @@
         <h1 class="text-primary glow-text mb-1">
             <span class="text-light">/m/</span>dcmnt
         </h1>
-        <p style="margin-top:0;margin-bottom:0;" class="subtitle text-light">instruction set reference</p>
+        <p class="set-desc text-light" style="max-width:1100px;margin:0.2rem auto 0.9rem;font-size:1.05rem;line-height:1.5;">
+nested documents, typed collections, and schema-enforced writes — all within metatron</p>
+
+        <p class="subtitle text-muted"
+           style="margin-top:0.15rem;margin-bottom:0;font-size:0.95rem;letter-spacing:0.16em;text-transform:uppercase;">instruction set reference</p>
     </div>
-    <div class="text-light"></div>
     <div class="instset-accordion-wrapper">
         <div class="accordion accordion-flush" id="accordionInstSet">
             <div class="accordion-item">
@@ -559,16 +562,16 @@
  {?}route=&gt;[uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] an interface to document-oriented databases (MongoDB wire protocol)</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an interface to document-oriented databases (MongoDB wire protocol)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a rec describing a document database connection" class="text-info">a rec describing a document database connection</a> <span class="text-light">=&gt;</span> <a href="#a rec with fields for configuring a document database connection" class="text-success">a rec with fields for configuring a document database connection</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#'the route for accessing documents'" class="text-info">&#39;the route for accessing documents&#39;</a>
-  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root type constraint — writes at document root must satisfy this type; defaults to rec::T'" class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</a>
-  <a href="#{?}schema" class="text-light">{?}schema</a> <span class="text-light">=&gt;</span> <a href="#'an instset of collection types auto-discovered from the live database'" class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</a>
-  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'connection uri (mongodb:____host:port__database?options)'" class="text-info">database?options)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}serializer" class="text-light">{?}serializer</a> <span class="text-light">=&gt;</span> <a href="#'the serializer for BSON documents'" class="text-info">&#39;the serializer for BSON documents&#39;</a>
   <a href="#pattern" class="text-light">pattern</a> <span class="text-light">=&gt;</span> <a href="#'the pattern for accessing documents'" class="text-info">&#39;the pattern for accessing documents&#39;</a>
-  <a href="#{?}serializer" class="text-light">{?}serializer</a> <span class="text-light">=&gt;</span> <a href="#'the serializer for BSON documents'" class="text-info">&#39;the serializer for BSON documents&#39;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'connection uri (mongodb:____host:port__database?options)'" class="text-info">database?options)&#39;</a>
+  <a href="#{?}schema" class="text-light">{?}schema</a> <span class="text-light">=&gt;</span> <a href="#'an instset of collection types auto-discovered from the live database'" class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</a>
+  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root type constraint — writes at document root must satisfy this type; defaults to rec::T'" class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</a>
+  <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#'the route for accessing documents'" class="text-info">&#39;the route for accessing documents&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -596,7 +599,7 @@
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0-tab').click();document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mql?rng=rec{*}&dom=collection(rec::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">the provided rec is translated to an bson query document and evaluated against the domain collection</p>
+    <p class="mb-0 text-light"> the provided rec is translated to an bson query document and evaluated against the domain collection</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a document collection" class="text-info">a document collection</a> <span class="text-light">=&gt;</span> <a href="#the result of the mql query" class="text-success">the result of the mql query</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>

@@ -391,9 +391,12 @@
         <h1 class="text-primary glow-text mb-1">
             <span class="text-light">/m/</span>ide
         </h1>
-        <p style="margin-top:0;margin-bottom:0;" class="subtitle text-light">instruction set reference</p>
+        <p class="set-desc text-light" style="max-width:1100px;margin:0.2rem auto 0.9rem;font-size:1.05rem;line-height:1.5;">
+the agent ide — project::T definition, build result::T and the links between them.</p>
+
+        <p class="subtitle text-muted"
+           style="margin-top:0.15rem;margin-bottom:0;font-size:0.95rem;letter-spacing:0.16em;text-transform:uppercase;">instruction set reference</p>
     </div>
-    <div class="text-light"></div>
     <div class="instset-accordion-wrapper">
         <div class="accordion accordion-flush" id="accordionInstSet">
             <div class="accordion-item">
@@ -526,7 +529,7 @@
  {?}postscript=&gt;str::T]]@/m/ide/java</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a coarse rec encoding of a java source file optimized for semantic editing</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a coarse rec encoding of a java source file optimized for semantic editing</p>
 </div>
 </div><div class="card mb-3" id="__m__ide__serializer__obj_ide_java">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -561,7 +564,7 @@
  {?}code=&gt;&lt;#&gt;::T]]@/m/ide/project</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] the project descriptor (the pom.xml of a metatron ide) — a project.mtron file at the project root</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the project descriptor (the pom.xml of a metatron ide) — a project.mtron file at the project root</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">project::[name=&gt;metatron,root=&gt;&lt;fs:/foo&gt;,code=&gt;!*&lt;fs:/foo/src&gt;]</code></pre>
@@ -583,7 +586,7 @@
  {?}error=&gt;{?}[fail::T]]]@/m/ide/result</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] the standardized build/test/status outcome — rec::T with a union status verdict</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the standardized build/test/status outcome — rec::T with a union status verdict</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">x&gt;&gt;status
@@ -604,7 +607,7 @@ x&gt;&gt;runtime.normalize()</code></pre>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ide__inst__command?rng=__m__inst&dom=#{?}-doc-0-tab').click();document.getElementById('__m__ide__inst__command?rng=__m__inst&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">command?rng=inst&dom=<span class="code text-info">#{?}</span>(command=>str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">wrap a command into an enriched instruction that runs it and returns ide:result::T</p>
+    <p class="mb-0 text-light"> wrap a command into an enriched instruction that runs it and returns ide:result::T</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#noobj — ide_command is a factory (the lhs is unused)" class="text-info">noobj — ide_command is a factory (the lhs is unused)</a> <span class="text-light">=&gt;</span> <a href="#an enriched instruction that runs the command and returns ide:result::T" class="text-success">an enriched instruction that runs the command and returns ide:result::T</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -627,7 +630,7 @@ my_build -&gt; ide_command(command=&gt;&#39;mvn clean install&#39;)  [-- name it
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ide__inst__find?rng=__m__uri{*}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__ide__inst__find?rng=__m__uri{*}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">find?rng=uri{*}&dom=uri(class=>uri::T,member=>str{?}::T,text=>str{?}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">finds project resources that contain provided uri fragment</p>
+    <p class="mb-0 text-light"> finds project resources that contain provided uri fragment</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a project" class="text-info">a project</a> <span class="text-light">=&gt;</span> <a href="#the location of found resources" class="text-success">the location of found resources</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -648,7 +651,7 @@ my_build -&gt; ide_command(command=&gt;&#39;mvn clean install&#39;)  [-- name it
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ide__inst__search?rng=__m__uri{*}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__ide__inst__search?rng=__m__uri{*}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">search?rng=uri{*}&dom=uri(str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">searches project resources whose contents match provided regex</p>
+    <p class="mb-0 text-light"> searches project resources whose contents match provided regex</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a project" class="text-info">a project</a> <span class="text-light">=&gt;</span> <a href="#the location of found resources" class="text-success">the location of found resources</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>

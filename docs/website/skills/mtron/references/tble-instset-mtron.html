@@ -863,9 +863,9 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/33
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/37
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/34
+==&gt;[body=&gt;'another one']@tbledoc:note/38
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;12
 ==&gt;17
@@ -875,6 +875,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;27
 ==&gt;4
 ==&gt;6
+==&gt;35
 ==&gt;31
 ==&gt;16
 ==&gt;3
@@ -882,6 +883,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;28
 ==&gt;20
 ==&gt;7
+==&gt;36
 ==&gt;32
 ==&gt;29
 ==&gt;15
@@ -890,6 +892,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;2
 ==&gt;8
 ==&gt;33
+==&gt;37
 ==&gt;1
 ==&gt;13
 ==&gt;22
@@ -900,6 +903,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;5
 ==&gt;9
 ==&gt;34
+==&gt;38
 ==&gt;30
 </code></pre>
 <h3>taking the space down</h3>

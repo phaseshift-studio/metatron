@@ -391,9 +391,12 @@
         <h1 class="text-primary glow-text mb-1">
             <span class="text-light">/m/</span>grph
         </h1>
-        <p style="margin-top:0;margin-bottom:0;" class="subtitle text-light">instruction set reference</p>
+        <p class="set-desc text-light" style="max-width:1100px;margin:0.2rem auto 0.9rem;font-size:1.05rem;line-height:1.5;">
+from vertex to vertex, the edge of the metatron is traversed</p>
+
+        <p class="subtitle text-muted"
+           style="margin-top:0.15rem;margin-bottom:0;font-size:0.95rem;letter-spacing:0.16em;text-transform:uppercase;">instruction set reference</p>
     </div>
-    <div class="text-light"></div>
     <div class="instset-accordion-wrapper">
         <div class="accordion accordion-flush" id="accordionInstSet">
             <div class="accordion-item">
@@ -581,7 +584,7 @@
  {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx]]]@/m/grph/edge</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a directed key/value attributed binary edge</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a directed key/value attributed binary edge</p>
 </div>
 </div><div class="card mb-3" id="__m__grph__elmt">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -594,7 +597,7 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/grph/elmt</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[nominal] </p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> a key/value attributed element that is refined by vrtx::T and edge::T</p>
 </div>
 </div><div class="card mb-3" id="__m__grph__schema__modern">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -607,7 +610,7 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">modern::T</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[nominal] </p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> a schema for the modern graph dataset</p>
 </div>
 </div><div class="card mb-3" id="__m__grph__vrtx">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -622,7 +625,7 @@
  {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a key/value attributed vertex</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a key/value attributed vertex</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="spaces">
@@ -645,7 +648,7 @@
  {?}route=&gt;[uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a space for graph traversal</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a space for graph traversal</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
@@ -672,7 +675,7 @@
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__both?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__both?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">both?rng=vrtx{*}&dom=vrtx(uri::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">returns the lhs vertex arg-adjacent incoming and outgoing vertices</p>
+    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent incoming and outgoing vertices</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#both adjacent vertices" class="text-success">both adjacent vertices</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -690,7 +693,7 @@
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__bothE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__bothE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bothE?rng=edge{*}&dom=vrtx(uri::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">returns the lhs vertex arg-adjacent incoming and outgoing edges</p>
+    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent incoming and outgoing edges</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#both adjacent edges" class="text-success">both adjacent edges</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -708,7 +711,7 @@
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__bothV?rng=__m__grph__vrtx{2}&dom=__m__grph__edge-doc-0-tab').click();document.getElementById('__m__grph__inst__bothV?rng=__m__grph__vrtx{2}&dom=__m__grph__edge-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bothV?rng=vrtx{2}&dom=edge(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[flatmapper] returns the lhs edge&#39;s head and tail vertices
+    <p class="mb-0 text-light"><span class="spec-chip spec-flatmapper">flatmapper</span> returns the lhs edge&#39;s head and tail vertices
 one-to-many obj transformation (dom_c = 1, rng_c &gt; 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an edge" class="text-info">an edge</a> <span class="text-light">=&gt;</span> <a href="#both vertices" class="text-success">both vertices</a></pre>
@@ -724,7 +727,7 @@ one-to-many obj transformation (dom_c = 1, rng_c &gt; 1)</p>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__gremlin?rng=#{*}&dom=__m__grph__space__grphspace-doc-0-tab').click();document.getElementById('__m__grph__inst__gremlin?rng=#{*}&dom=__m__grph__space__grphspace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">gremlin?rng=<span class="code text-success">#{*}</span>&dom=grphspace(str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">executes the gremlin expression on the graph space</p>
+    <p class="mb-0 text-light"> executes the gremlin expression on the graph space</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#execute a gremlin traversal" class="text-info">execute a gremlin traversal</a> <span class="text-light">=&gt;</span> <a href="#the gremlin expression" class="text-success">the gremlin expression</a></pre>
 </div>
@@ -739,7 +742,7 @@ one-to-many obj transformation (dom_c = 1, rng_c &gt; 1)</p>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__in?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__in?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">in?rng=vrtx{*}&dom=vrtx(uri::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">returns the lhs vertex arg-adjacent incoming vertices</p>
+    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent incoming vertices</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#in adjacent vertices" class="text-success">in adjacent vertices</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -757,7 +760,7 @@ one-to-many obj transformation (dom_c = 1, rng_c &gt; 1)</p>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__inE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__inE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inE?rng=edge{*}&dom=vrtx(uri::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">returns the lhs vertex arg-adjacent incoming edges</p>
+    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent incoming edges</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#in adjacent edges" class="text-success">in adjacent edges</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -775,7 +778,7 @@ one-to-many obj transformation (dom_c = 1, rng_c &gt; 1)</p>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__inV?rng=__m__grph__vrtx&dom=__m__grph__edge-doc-0-tab').click();document.getElementById('__m__grph__inst__inV?rng=__m__grph__vrtx&dom=__m__grph__edge-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inV?rng=vrtx&dom=edge(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[mapper] returns the lhs edge head vertex
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> returns the lhs edge head vertex
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an edge" class="text-info">an edge</a> <span class="text-light">=&gt;</span> <a href="#the incoming vertex" class="text-success">the incoming vertex</a></pre>
@@ -791,7 +794,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__label?rng=__m__uri&dom=__m__rec-doc-0-tab').click();document.getElementById('__m__grph__inst__label?rng=__m__uri&dom=__m__rec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">label?rng=uri&dom=rec(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[mapper] returns the lhs element label (the tid)
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> returns the lhs element label (the tid)
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an element" class="text-info">an element</a> <span class="text-light">=&gt;</span> <a href="#the element label" class="text-success">the element label</a></pre>
@@ -807,7 +810,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__out?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__out?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">out?rng=vrtx{*}&dom=vrtx(uri::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">returns the lhs vertex arg-adjacent outgoing vertices</p>
+    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent outgoing vertices</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#out adjacent vertices" class="text-success">out adjacent vertices</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -825,7 +828,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__outE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__outE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">outE?rng=edge{*}&dom=vrtx(uri::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">returns the lhs vertex arg-adjacent outgoing edges</p>
+    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent outgoing edges</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#out adjacent edges" class="text-success">out adjacent edges</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -843,7 +846,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__outV?rng=__m__grph__vrtx&dom=__m__grph__edge-doc-0-tab').click();document.getElementById('__m__grph__inst__outV?rng=__m__grph__vrtx&dom=__m__grph__edge-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">outV?rng=vrtx&dom=edge(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[mapper] returns the lhs edge tail vertex
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> returns the lhs edge tail vertex
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an edge" class="text-info">an edge</a> <span class="text-light">=&gt;</span> <a href="#the outgoing vertex" class="text-success">the outgoing vertex</a></pre>
@@ -859,7 +862,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__values?rng=#{*}&dom=__m__rec-doc-0-tab').click();document.getElementById('__m__grph__inst__values?rng=#{*}&dom=__m__rec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">values?rng=<span class="code text-success">#{*}</span>&dom=rec(uri::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">returns the lhs element arg-labeled values</p>
+    <p class="mb-0 text-light"> returns the lhs element arg-labeled values</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an element" class="text-info">an element</a> <span class="text-light">=&gt;</span> <a href="#the element values" class="text-success">the element values</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -879,7 +882,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_count?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages gremlin&#39;s count()-reducer for vrtx/edge collections
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s count()-reducer for vrtx/edge collections
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
@@ -894,7 +897,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages gremlin&#39;s limit()-barrier for vrtx/edge collections
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s limit()-barrier for vrtx/edge collections
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
@@ -909,7 +912,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_where?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages gremlin&#39;s has()-filtering for vrtx collections
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s has()-filtering for vrtx collections
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
@@ -924,7 +927,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_where_count?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages gremlin&#39;s has().count() filtering-reduction for vrtx collections
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s has().count() filtering-reduction for vrtx collections
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
@@ -939,7 +942,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_where_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[filter] leverages gremlin&#39;s has().limit() filtering-barrier for vrtx collections
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s has().limit() filtering-barrier for vrtx collections
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>

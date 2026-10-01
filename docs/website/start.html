@@ -594,8 +594,6 @@ For now, create the following bootloader as plain text&#8201;&#8212;&#8201;it wi
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">import(/m/web);
 memspace::[pattern  =&gt;/usr/#, q     =&gt;[docq::[=&gt;],subq::[=&gt;]]]@/sys/space/usr;
-==&gt;fail::[unable to construct memspace::T: fail::[inst apply failure: Cannot invoke "dev.langchain4j.mcp.client.McpClient.listTools()" because "this.client" is null (at /m/inst/ctor) [mcpClient&lt;163&gt;]][Cannot invoke "dev.langchain4j.mcp.client.McpClient.listTools()" because "this.client" is null [mcpClient&lt;163&gt;]]@/sys/fail/596
-   	while parsing: memspace::[pattern  =&gt;/usr/#, q     =&gt;[docq::[=&gt;],subq::[=&gt;]]]@/sys/space/usr]@/sys/fail/598
 memspace::[pattern  =&gt;g:#,    q     =&gt;[subq::[=&gt;]]]           @/sys/space/graph;
 fsspace::[pattern   =&gt;local:#,route =&gt;[local: =&gt; &lt;~/&gt;]]       @/sys/space/fs;
 httpspace::[pattern =&gt;http://#,

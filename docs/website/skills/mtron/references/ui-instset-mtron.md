@@ -124,12 +124,12 @@ mtron> */m/mach/ui/widget?docq
      dom=>'maybe an obj',
      rng=>'a tree widget',
      args=>[
+      root=>'the root uri to traverse from',
       {?}code=>'transform obj prior to insertion i...',
       {?}expand=>'branch uris whose children are rea...',
       {?}xref=>'xref=>[max=>N, code=><call>] cross...',
       max=>'the max depth to traverse',
-      {?}flatten=>'fold single-folder chains into one...',
-      root=>'the root uri to traverse from'],
+      {?}flatten=>'fold single-folder chains into one...'],
      desc=>'[structural] the root uri space is...'],
     ...(9 more)]
 ```

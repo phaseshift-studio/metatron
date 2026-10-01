@@ -32,6 +32,7 @@ public interface ObjSerializer<T> extends Rec, Serializer<Obj, T> {
 
     fURI OBJ_SERIAL_TID = fURI.Singleton.f("/m/mach/io");
     fURI OBJ_MTRON_SERIALIZER_TID = OBJ_SERIAL_TID.extend("serializer").extend("mtron");
+    fURI OBJ_MTRON_UI_SERIALIZER_VID = OBJ_SERIAL_TID.extend("serializer").extend("mtron-ui");
     fURI OBJ_BYTE_BUFFER_SERIALIZER_TID = OBJ_SERIAL_TID.extend("serializer").extend("bytebuffer");
     fURI OBJ_SIMPLE_JSON_SERIALIZER_TID = OBJ_SERIAL_TID.extend("serializer").extend("json").extend("simple");
     fURI OBJ_MTRON_STRING_SERIALIZER_VID = OBJ_SERIAL_TID.extend("serializer").extend("string").extend("clean");

@@ -303,7 +303,7 @@ mtron> nat::2                    [-- ok --]
 ==>nat::2
 mtron> nat::-1                   [-- <ERROR> --]
 ==>fail::[-1 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-1]@/sys/fail/464
+   	while parsing: nat::-1]@/sys/fail/458
 ```
 ---
 
@@ -326,7 +326,7 @@ mtron> {1,2,3,4}.map(map(+2))           [-- nested --]
 ==>5
 ==>6
 mtron> {1,2,3}.where(gt(1))             [-- {2,3}  (filter: keep if predicate matches) --]
-==>fail{3}::[lhs range does not match inst domain: int::T => uri::T [where?rng=uri{?}&dom=uri(gt(1)){<j>}@<1>]]@/sys/fail/506
+==>fail{3}::[lhs range does not match inst domain: int::T => uri::T [where?rng=uri{?}&dom=uri(gt(1)){<j>}@<1>]]@/sys/fail/500
 mtron> {1,2,3}.is(gt(1))                [-- {2,3}  (same, filter via is()) --]
 ==>2
 ==>3
@@ -358,17 +358,17 @@ mtron> [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3] --
 
 ```mtron
 mtron> {[a=>1],[a=>2],[a=>3]}.where([a=>is(gt(1))])               [-- {[a=>2],[a=>3]} --]
-==>fail{3}::[lhs range does not match inst domain: rec::T => uri::T [where?rng=uri{?}&dom=uri([a=>is(gt(1))]){<j>}@<1>]]@/sys/fail/512
+==>fail{3}::[lhs range does not match inst domain: rec::T => uri::T [where?rng=uri{?}&dom=uri([a=>is(gt(1))]){<j>}@<1>]]@/sys/fail/506
 mtron> {[a=>1],[a=>2],[a=>3]}=?=[a=>is(gt(1))]                    [-- syntax sugar for above --]
 ==>fail::[parse error at line 1, col 23:
      {[a=>1],[a=>2],[a=>3]}=?=[a=>is(gt(1))]                    
                            ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/518
+     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/512
 mtron> [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   [-- [1,7,3] --]
 ==>fail::[parse error at line 1, col 23:
      [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   
                            ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/520
+     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/514
 ```
 ---
 
@@ -701,5 +701,5 @@ mtron> {1,2,3,4}.sum{2}().sum?int<=int{1,7}().sum()-<[_,_]>-.sum?int<=int{2}()  
 ==>fail::[parse error at line 1, col 74:
      ...,7}().sum()-<[_,_]>-.sum?int<=int{2}()  #
                                                 ^
-     could not parse at '#' — unclosed '<' — missing '>'?]@/sys/fail/556
+     could not parse at '#' — unclosed '<' — missing '>'?]@/sys/fail/550
 ```
