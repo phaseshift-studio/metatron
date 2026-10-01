@@ -3,7 +3,7 @@
 [== contacted, so this profile is safe to boot beside a live server. ==]
 [space  => /sys/space,
  log    => info,
- typer/stages => [code_resolve => false]]
+ typer/stage  => [code_resolve => false]]
 [===============]
 print("{{y}}console boot{{X}} {{k}}— no ports bound, no external services{{X}}\n");
 [== mount instruction sets ==]

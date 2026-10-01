@@ -282,7 +282,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                 jvm.remove(noobj());
                 jvm.entrySet().stream().filter(e -> e.getValue() == null || e.getValue().isNoObj()).map(Map.Entry::getKey).toList().forEach(jvm::remove);
             } catch (final UnsupportedOperationException e) {
-                LOG.error("underlying jvm object is immutable: %s", jvm.getClass().getName().toLowerCase());
+                LOG.error("underlying jvm object is immutable: %s %s", jvm.getClass().getName().toLowerCase(), jvm);
             }
             return jvm;
         }

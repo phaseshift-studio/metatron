@@ -32,12 +32,13 @@ import java.util.Objects;
 
 import static studio.phaseshift.metatron.Tokens.BASE_TYPES;
 import static studio.phaseshift.metatron.Tokens.REC_TID;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 
 
 public class MType extends MObj implements Type {
 
     protected MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
-        this(jvm, tid, vid, true);
+        this(jvm, tid, vid, vid != null && !tid.equals(vid));
     }
 
     private MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid, final boolean register) {
@@ -76,7 +77,7 @@ public class MType extends MObj implements Type {
         assert checkID != null;
         if (checkID.isGeneric())
             return new MType(Tuple.Pair.with(null, null), checkID, checkID);
-        if (!checkID.basePath().equals(Tokens.REL_TID) && !checkID.basePath().equals(Tokens.LST_TID) && !checkID.basePath().equals(REC_TID) && !checkID.poly().isEmpty())
+        if (!checkID.poly().isEmpty() && !checkID.basePath().equals(Tokens.REL_TID) && !checkID.basePath().equals(Tokens.LST_TID) && !checkID.basePath().equals(REC_TID))
             throw MTronException.of("only poly types can have polynomials: %s {{r}}X=>{{X}} %s", checkID.basePath(), checkID.poly());
         if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && Router.loaded()) { // TODO: remove the pattern constraint - why not a type be the set of other types?
             Obj obj = Router.readFromSpace(checkID);
@@ -92,15 +93,15 @@ public class MType extends MObj implements Type {
                             null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), obj.tid(), obj.vid()).selfTID(obj.tid().c(checkID.c())).as(); // coefficient specific type doesn't exist, create it
             }
         }
-        final boolean isBaseType = BASE_TYPES.contains(checkID.basePath());
-        if (isBaseType)
+        // final boolean isBaseType = ;
+        if (BASE_TYPES.contains(checkID.basePath()) || bigTID.basePath().equals(ALL))
             return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigTID);
-        if (Objects.equals(bigVID, bigTID))
-            return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
-        if ((null != vid && null != tid) || checkID.hasPattern())
-            return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
+        //if (Objects.equals(bigVID, bigTID))
+        //    return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
+        //if ((null != vid && null != tid) || checkID.hasPattern())
+        //    return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
         //throw MTronException.of("type not found: %s@%s", tid, vid); // TODO: a few cases fail --namely around equality checks. fix and then replace the bottom with this/
-        return new MType(Tuple.Pair.with(predicate, constructor), null == bigTID ? checkID : bigTID, null == bigVID ? checkID : bigVID).c(checkID.c()).as();
+        return new MType(Tuple.Pair.with(predicate, constructor), bigTID, null == bigVID ? checkID : bigVID)/*.c(checkID.c()).as()*/;
     }
 
     @Override

@@ -111,7 +111,7 @@ mtron.
 ```
 
 **NOTE**: `update` (sugar'd `>>=`) is primarily used for a bulk mutation to a poly structure (a `rec` or `lst`). In
-principle,any alteration to a reference is an "updating" operation.
+principle, any alteration to a reference is an "updating" operation.
 
 ### obj types
 
@@ -236,13 +236,16 @@ The `*` in `dom=A{*}` is a **barrier** that greedily aggregates the dom, and the
 being `A` (i.e. `A{1}`) means the barrier is *reducing* -- it takes many to one.
 `sum`, `prod`, and `reduce` are the same instruction in different clothing.
 
-**Types and validation** -- define a type, validate a value against it (`.as(type::T)`
-is structural validation during projection):
+**Types and validation** -- create a type with `tid::T[predicate][constructor]@vid` (stock types the VM and the
+loaded modules already provide, like `person`, never need creating), then build values under it — construction
+runs the type's checks, and casting (`.as(type::T)`) validates an existing value:
 
 ```mtron_pre
-int::T[?>0]@nat
-rec::T[?[name=>str::T, age=>nat::T]]@person
-person::[name=>'marko', age=>29]
+import(/m/math,math)                     [-- module import, namespaced math --]
+int::T[?>0]@posint                       [-- a new type: positive integers --]
+rec::T[?[name=>str::T, age=>int::T]]@being
+person::[name=>'marko', age=>29]         [-- the stock person type, constructed --]
+being::[name=>'stynx', age=>33]
 ```
 
 ## docq: read the code you are about to run

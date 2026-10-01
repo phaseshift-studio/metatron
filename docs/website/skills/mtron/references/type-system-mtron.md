@@ -88,29 +88,40 @@ Shorthand: `#::T` is often used when cardinality is known to be `{1}` (the defau
 
 ## type definition
 
-### defining a named type
+### creating a type
 
-The full type syntax is `tid::T[predicate][constructor]@vid`:
+A type is created with `tid::T[predicate][constructor]@vid` — a bare statement; the predicate, the constructor, and the
+vid are each optional, and a type without a vid is a **lambda** (ephemeral) type:
 
 ```mtron
-mtron> person -> rec::T[?[age=>int::T,name=>str::T]]@person
-mtron> nat -> int::T[is(gt(0))]@nat
-mtron> nat -> int::T[?>0][-<|[is(lt(0)) => * -1, _ => _]>>]@nat
-mtron> bignat -> nat::T[is(gt(100))]@bignat
+creating types
+mtron> import(/m/math,math)      [-- module import, namespaced math — its types read math:nat, math:minute, ... --]
+mtron> int::T[is(gt(0))]@posint  [-- a new member of the hierarchy: integers greater than zero --]
+mtron> posint::T[is(gt(100))]@hundreds
+mtron> int::T[is(gt(0))][mult(10)]@int2x
+mtron> rec::T[?[name=>str::T,age=>int::T]]@being
 ```
-The `->` syntax defines a type in the current space. The right side is the full type definition; the left side is the
-name under which it is stored.
+A created type is first-class: it refines (`posint` refines `int`), is refined (`hundreds` refines `posint`), builds
+values under its own name, and other values can be cast onto it. The stock types the VM ships with (base types,
+`person`, and the module types the boot loads) are created the same way — you just don't spell the creation.
+
+One distinction that matters: `xxx -> <type>` is *not* type creation. The arrow writes a **type value** to the uri
+`/xxx` — a reference (an alias) that takes over the short name for value lookups (`*xxx`) — while type references
+(`xxx::T`) still resolve to the real type when one exists. A refinement built on a bare reference with no type behind
+it (`xxx::T[?]@yyy`) lands off the type hierarchy; types refine types, not references.
 
 ### instantiation
 
 ```mtron
-mtron> person::[name=>'enoch',age=>365]@enoch
-==>person::[
-    name=>'enoch',
-    age=>365]@enoch
-mtron> 23.as(nat::T)
-==>nat::23
-mtron> int::42@the_answer
+mtron> hundreds::150                  [-- 150, checked against the whole predicate stack, stamped --]
+==>hundreds::150
+mtron> 23.as(posint::T)               [-- posint::23 --]
+==>posint::23
+mtron> being::[name=>'marko',age=>29] [-- a rec built under its type --]
+==>being::[
+    name=>'marko',
+    age=>29]
+mtron> int::42@the_answer             [-- a plain value, addressed in the space --]
 ==>42@the_answer
 ```
 ## predicates
@@ -119,25 +130,26 @@ A predicate is a **constraint** that values must satisfy to be members of the ty
 
 ### isa-predicates (structural)
 
-Created with `?[...]` — defines a required **record structure**:
+Created with `?[...]` — defines a required **record structure** (`being`, created above, is one of these):
 
 ```mtron
-mtron> being -> rec::T[?[age=>int::T]]
-mtron> person -> being::T[?[name=>str::T]]
-mtron> team -> rec::T[?[flag=>str{2}::T, member=>being{+}::T]]
+mtron> rec::T[?[age=>int::T]]                              [-- a lambda type: a rec whose age field is an int --]
+mtron> rec::T[?[name=>str::T, address=>str{?}::T]]         [-- address optional (str{?}::T) --]
+mtron> rec::T[?[flag=>str{2}::T, member=>being{+}::T]]@roster
 ```
-Field types can be optional with `?`:
+A field's type can be any type — including a lambda type or a created one like `being`.
+
+**Multi-level stacking**: every refinement inherits the **whole predicate stack** of its ancestors, and the stack is
+checked level by level:
 
 ```mtron
-mtron> rec::T[?[name=>str::T, address=>str{?}::T]]
+mtron> [-- hundreds::T = [is(gt(100))] on top of posint's [is(gt(0))] on top of int --]
+mtron> hundreds::150                [-- 150  (passes both levels) --]
+==>hundreds::150
+mtron> hundreds::50         [-- dies at posint's level — the ancestor stack is enforced, not just the top --]
+==>fail::[50 is not a posint::T[is(gt(100))]@hundreds
+   	while parsing: hundreds::50]@/sys/fail/640
 ```
-**Multi-level stacking**: a type inherits all isa constraints from its ancestors:
-
-```mtron
-mtron> mortal -> person::T[?<120]  [-- adds a non-isa constraint on top --]
-```
-The full predicate stack for `mortal` is: `[?<120, isa([age=>int::T,name=>str::T])]`.
-
 ### non-isa predicates (nominal)
 
 Freeform functional constraints using instructions:
@@ -168,36 +180,56 @@ mtron> int::T[?>0]   [-- only accepts positive integers --]
 ```
 ### type constructors
 
-A type can also define a **constructor** — an instruction that transforms any value of the base type into a valid value
-of the defined type. The constructor sits alongside the predicate in the type definition:
+A type can also carry a **constructor** — an instruction the type applies to values. The constructor sits alongside
+the predicate in the type definition:
 
 ```
-int::T[?>0][abs]@nat
-  │    │     │
-  │    │     └── constructor (transforms values to fit)
-  │    └──────── predicate (tests if values fit)
-  └───────────── tid (type being refined)
+int::T[is(gt(0))][abs]@intabs
+  │    │            │
+  │    │            └── constructor (an instruction, applied to the value)
+  │    └───────────── predicate (tests whether a value fits)
+  └────────────────── tid (type being refined)
 ```
 
-The predicate **tests** membership; the constructor **produces** membership:
+Two doors take a value through a type, and they treat the constructor differently.
+
+**Construction applies the constructor.** `type::value` builds the value by running the constructor, so at this door
+a negative is welcome — it is simply made positive on the way in (created below with an absolute-value constructor):
 
 ```mtron
-mtron> nat -> int::T[?>0][-<|[is(lt(0)) => * -1, _ => _]>>]
-mtron> [-- Predicate test: is it > 0? --]
-mtron> 2.isa(nat::T)           [-- true --]
-==>2
-mtron> -2.isa(nat::T)  [-- false --]
-mtron> [-- Constructor application: coerce to fit --]
-mtron> 2.as(nat::T)          [-- nat::2 --]
-==>nat::2
-mtron> -2.as(nat::T)         [-- nat::2  (constructor applied: abs) --]
-==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@nat [structural] (at /m/inst/as@1)]@/sys/fail/652
+construction: type::value runs the constructor
+mtron> int::T[is(gt(0))][-<|[is(lt(0)) => * -1, _ => _]>>]@intabs
+mtron> intabs::-2                       [-- intabs::2  (the constructor ran on the way in) --]
+==>intabs::2
+mtron> intabs::2                        [-- intabs::2 --]
+==>intabs::2
 ```
-The `as()` instruction applies the constructor. If the predicate passes, the value is returned as-is. If not, the
-constructor runs. If the constructor's result passes the predicate, the transformed value is returned. Otherwise, it
-fails.
+**Casting tests first.** `.as(type)` checks the predicate before the constructor gets a turn, so a value that cannot
+fit is refused rather than coerced; a value that does fit still goes through the constructor:
 
-A type with no constructor is a pure constraint — values must already satisfy the predicate to be members.
+```mtron
+casting: the predicate gates before the constructor
+mtron> 2.isa(intabs::T)                 [-- 2  (the predicate admits it) --]
+==>2
+mtron> -2.isa(intabs::T)                [-- noobj  (the filter drops it: the verdict doubles as the output) --]
+mtron> 2.as(intabs::T)                  [-- intabs::2  (admitted; the id branch of the ctor leaves it as-is) --]
+==>intabs::2
+mtron> -2.as(intabs::T)         [-- refused: the predicate tests before the constructor could run --]
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]@/sys/fail/642
+```
+A converting constructor is visible the same way — it runs on the admitted value, and on nothing else:
+
+```mtron
+a converting constructor (int2x, created above)
+mtron> int2x::2                         [-- int2x::20  (the constructor mult(10) ran on the way in) --]
+==>int2x::20
+mtron> 2.as(int2x::T)                   [-- int2x::20  (admitted at the gate, then converted) --]
+==>int2x::20
+mtron> -2.as(int2x::T)          [-- refused for the same reason — the gate runs first --]
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][mult(10)]@int2x [structural] (at /m/inst/as@1)]@/sys/fail/644
+```
+A type with no constructor is a pure constraint — values must already satisfy the predicate to be members; there is
+nothing to run them through.
 
 ## nominal vs structural types
 
@@ -205,7 +237,7 @@ The distinction depends solely on the existence of a **predicate**:
 
 | Kind                       | Has predicate? | Has vid?         | Example                                           |
 |----------------------------|----------------|------------------|---------------------------------------------------|
-| **structural**             | yes            | optional         | `int::T[?>0]@nat` — constraint defines membership |
+| **structural**             | yes            | optional         | `int::T[?>0]@posint` — constraint defines membership |
 | **nominal**                | no             | yes (tid ≠ vid)  | `int::T@age` — label defines membership           |
 | **base type** (structural) | no             | yes (tid == vid) | `int::T` (= `int::T@int`) — primitive             |
 
@@ -227,26 +259,35 @@ Structural types alone can over-match. A `rec::T` with name and age could repres
 types prevent this:
 
 ```mtron
-mtron> being -> rec::T[?[name=>str::T,age=>int::T]]@being
-mtron> human -> being::T@human
-mtron> chicken -> being::T@chicken
+mtron> being::T@human                 [-- nominal siblings under being --]
+mtron> being::T@chicken
 mtron> [-- A human is NOT a chicken, despite identical structure --]
 mtron> human::[name=>'marko',age=>29].as(chicken::T)
-==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as@1)]@/sys/fail/654
+==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/sys/fail/650
 ```
 This is the difference between **experiential knowledge** (structural — what can be observed) and **authoritative
 knowledge** (nominal — what has been declared).
 
 ## type hierarchy and refinement
 
-Types form a tree rooted at `#::T` (ALL). Each type has exactly one parent via `parentType()`:
+Types form a tree rooted at `#{*}::T` (ALL). Each type has exactly one parent — the type its tid refines:
 
-- If `tid == vid` (base type or self-referential): parent is `#::T`
+- If `tid == vid` (base type or self-referential): parent is `#{*}::T`
 - Otherwise: parent is `T(tid)` — the base type being refined
 
 ```
-mortal::T  →  person::T  →  being::T  →  rec::T  →  #{*}::T
-[?<120]        [?[name=>]]   [?[age=>]]   (base)     (root/universal)
+hundreds::T  →  posint::T  →  int::T      (the int-branch, built above)
+[is(gt(100))]   [is(gt(0))]   (base)
+```
+
+You can walk the hierarchy back to the root:
+
+```mtron
+[-- the hierarchy walk — verified under a production VM boot --]
+hundreds::T.type()                  [-- posint — the parent --]
+hundreds::T.type().type()           [-- int --]
+hundreds::T.repeat?<=int(code=>type(),until=>vid().?=#,emit=>true)
+                                    [-- the whole chain, emitted one type per line, until the universal root --]
 ```
 
 ## pattern and generic types
@@ -262,16 +303,20 @@ URIs with wildcards create **pattern types** that match multiple concrete types:
 | `int{*}::T` | integers of any cardinality                       |
 | `int{?}::T` | zero or one integer                               |
 
-**Generic types** use polymorphic URIs:
+**Generic types** use polymorphic URIs — `#{*}::T` is the universal type that every value belongs to, which is why
+it shows up in every contract: `inst?rng=#{*}&dom=#{?}(<#>::T)` reads "an instruction from maybe some of *any*
+input to any output," and it is the notation `?docq` prints for the insts you see everywhere in these docs:
 
 ```mtron
-mtron> [-- a function from any type to maybe some of any type --]
-mtron> /m/inst?#{*}<=#{?}(#::T)
-==>fail::[unable to determine inst function:
-   	noobj       => inst?rng=#{*}&dom=#{?}(<#>::T)   | [inst]
-   	noobj       => <#{?}>::T   |  \_dom
-   	noobj      X=> [<#>::T]   |  \_args]@/sys/fail/656
+mtron> 1.isa(#{*}::T)                   [-- 1  (every value is a citizen of the universal type) --]
+==>1
+mtron> 'mtron'.isa(#{*}::T)             [-- 'mtron' --]
+==>'mtron'
+mtron> int::T.isa(#{*}::T)              [-- noobj  (the `isa` rows admit values, not types) --]
 ```
+Note the direction: values test against `#{*}::T` and pass, while type-vs-type — "is `posint` a refinement of
+`int`?" — is asked of the type *hierarchy* (see *type hierarchy and refinement* above), not of a value.
+
 ## type checking and casting
 
 ### `.test()` — predicate membership
@@ -279,53 +324,68 @@ mtron> /m/inst?#{*}<=#{?}(#::T)
 Tests whether a value satisfies a type's predicate (and nominal ancestry):
 
 ```mtron
-mtron> [-- value vs type --]
-mtron> 1.isa(int::T)           [-- true --]
+mtron> 1.isa(int::T)           [-- 1  (admitted: the value is printed) --]
 ==>1
-mtron> 'a string'.isa(int::T)  [-- false --]
-mtron> 2.isa(nat::T)           [-- true (2 > 0) --]
+mtron> 'a string'.isa(int::T)  [-- noobj  (refused: the filter prints nothing) --]
+mtron> 2.isa(posint::T)        [-- 2  (admitted: 2 > 0) --]
 ==>2
-mtron> -1.isa(nat::T)          [-- false (-1 is not > 0) --]
-mtron> [-- type vs type (refinement check) --]
-mtron> nat::T.isa(int::T)      [-- true (nat is-a int) --]
-mtron> int::T.isa(nat::T)      [-- false (int is not-a nat) --]
+mtron> -1.isa(posint::T)       [-- noobj  (refused: -1 is not > 0) --]
 ```
-### `.as()` — constructor application
+So the filter's verdict doubles as its output: admit and the value comes back, refuse and there is nothing to
+print. (Refining *type against type* — "is `hundreds` a refinement of `posint`?" — is a question for the type
+hierarchy, seen in *type hierarchy and refinement*.)
 
-Applies the type's constructor to coerce a value into the type. If the value already satisfies the predicate, it is
-returned as-is. Otherwise, the constructor transforms it:
+### `.as()` — the cast
+
+`.as(type)` is the cast: the type's predicate tests the value first, and only an admitted value is re-stamped
+with the type's vid (and, if the type carries one, run through its constructor — see *type constructors* above):
 
 ```mtron
-mtron> [-- nat has constructor: absolute value --]
-mtron> 2.as(nat::T)             [-- nat::2  (already fits) --]
-==>nat::2
-mtron> -2.as(nat::T)            [-- nat::2  (constructor applied) --]
-==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@nat [structural] (at /m/inst/as@1)]@/sys/fail/658
-mtron> [-- Without a constructor, .as() is a pure test --]
-mtron> -2.as(int::T[?>0])  [-- fails: no constructor to rescue --]
-==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural] (at /m/inst/as@1)]@/sys/fail/660
+mtron> [-- intabs has a constructor (absolute value), but the gate still runs first --]
+mtron> 2.as(intabs::T)          [-- intabs::2  (admitted, re-stamped) --]
+==>intabs::2
+mtron> -2.as(intabs::T) [-- refused: -2 is not an intabs — construction (intabs::-2) is the door that coerces --]
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]@/sys/fail/652
+mtron> [-- Without a constructor the cast is a pure test --]
+mtron> -2.as(int::T[?>0])  [-- fails: a lambda type, no constructor, nothing to coerce --]
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural] (at /m/inst/as@1)]@/sys/fail/654
 ```
-`.as()` is also used for nominal type casting:
+`.as()` is also used for nominal type casting — a rec is admitted to a nominal rec type when it nominally fits,
+and the stamp records the fit:
 
 ```mtron
-mtron> [name=>'fuzzy feet',age=>2].as(chicken::T)    [-- ok: structurally a chicken --]
+mtron> [name=>'fuzzy feet',age=>2].as(chicken::T)    [-- chicken::[name=>'fuzzy feet',age=>2]  (nominally a being: the stamp goes on) --]
 ==>chicken::[
     name=>'fuzzy feet',
     age=>2]
-mtron> human::[name=>'marko',age=>29].as(chicken::T) [-- ERROR: nominally not a chicken --]
-==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as@1)]@/sys/fail/662
+mtron> human::[name=>'marko',age=>29].as(chicken::T)  [-- refused: a human is not a chicken, nominally --]
+==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/sys/fail/660
 ```
+Note the asymmetry: an anonymous rec has no lineage to contradict it, so its fields alone decide the fit — the
+`chicken` demands `age=>int::T`, and the rec supplies it. A stamped `human`, though, carries a lineage — `human`
+and `chicken` are *siblings* under `being`, and a sibling does not refine a sibling. Nominal fit follows the actual
+refinement path, not structural overlap.
+
 ## lowest common denominator
 
-The most specific type that subsumes a set of types. Two types always have an LCD:
+The most specific type that subsumes a set of types. The VM computes LCDs on the way: a mapped result over mixed
+values, a rec whose fields carry different types, a poly whose members disagree — each settles on the LCD of the
+pieces it is combining.
+
+The `lcd()` instruction asks for one on demand over a set of related types — verified under a production VM boot:
 
 ```mtron
-mtron> [-- mono with non-isa predicates: OR the constraints --]
-mtron> int::T[?>0] + int::T[?<120]
-mtron> [-- rec with isa predicates: merge fields structurally --]
-mtron> rec::T[?[age=>int::T,name=>str::T]]@person + rec::T[?[age=>int::T]]@artifact
-==>fail::[inst apply failure: unable to convert type to rec::T [Obj<632>] (at /m/inst/plus@1) [Obj<632>]][class studio.phaseshift.metatron.isa.m.type.impl.MType cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MType and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/664
-mtron> [-- Disjoint hierarchies: fall back to universal type --]
-mtron> int::T + str::T
-==>fail::[inst apply failure: int::T [int::T] unable to convert str::T (at /m/inst/plus@1)]@/sys/fail/666
+int::T[?>1]@aa
+aa::T[?>2]@bb
+bb::T[?>3]@cc
+aa::T[?>22]@aabb
+aabb::T[?>33]@cccc
+lcd(aabb::T,bb::T,cccc::T)      [-- aabb, the set's denominator --]
+lcd(bb::T,cc::T)
+```
+
+`type + type` itself has no instruction — summing types is refused (the fail text you get today, shown not run):
+
+```mtron
+posint::T + hundreds::T         [-- fail: int::T[is(gt(0))]@posint [type] unable to convert int::T (at plus) --]
 ```

@@ -48,6 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * The UI serializer: {@link ObjmtronSerializer} plus everything a human gets out of it.
@@ -109,7 +110,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     private static final ObjmtronUISerializer CONSOLE_INSTANCE = new ObjmtronUISerializer(str("address"), true, true);
     private static final ObjmtronUISerializer BODIES_INSTANCE = new ObjmtronUISerializer(str(Tokens.BODY), false, true);
     private static final ObjmtronUISerializer BW_INSTANCE = new ObjmtronUISerializer(str("address"), false, false);
-    private static final ObjmtronUISerializer PRETTY_PRINT_INSTANCE = new ObjmtronUISerializer(Map.of(
+    private static final ObjmtronUISerializer PRETTY_PRINT_INSTANCE = new ObjmtronUISerializer(mutableMap(
             uri(KEY_CLIP), noClip(),
             uri(KEY_COLOR), BOOL_FALSE,
             uri(KEY_PAGER), BOOL_FALSE),

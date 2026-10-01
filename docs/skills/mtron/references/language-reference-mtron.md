@@ -206,13 +206,12 @@ true.as(int::T)           [-- 1 --]
 [a,b].as(rec::T)          [-- [0=>a,1=>b] --]
 ```
 
-Custom types via `tid::T[predicate][constructor]@vid`:
+Custom types, created with `tid::T[predicate][constructor]@vid` (see the *type system* doc):
 
 ```mtron_pre
-int::T[is(gt(0))]@nat     [-- type nat, only positive ints --]
-int::T[?>0]@nat           [-- syntax sugar on is(gt(0)) --]
-nat::2                    [-- ok --]
-nat::-1                   [-- <ERROR> --]
+int::T[is(gt(0))]@posint     [-- a new type: positive integers --]
+posint::2                    [-- posint::2  (admitted: the predicate lets it through) --]
+[ERROR] posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ```
 
 ---
@@ -223,8 +222,7 @@ nat::-1                   [-- <ERROR> --]
 {1,2,3,4}.map(+2)                [-- {3,4,5,6} --]
 {1,2,3,4}.map(_).plus(2)         [-- same --]
 {1,2,3,4}.map(map(+2))           [-- nested --]
-{1,2,3}.where(gt(1))             [-- {2,3}  (filter: keep if predicate matches) --]
-{1,2,3}.is(gt(1))                [-- {2,3}  (same, filter via is()) --]
+{1,2,3}.is(gt(1))                [-- {2,3}  (filter: keep the members the predicate admits) --]
 ```
 
 ### Select (structural projection)
@@ -238,12 +236,23 @@ nat::-1                   [-- <ERROR> --]
 [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3] --]
 ```
 
-### Where (filter)
+### Filtering (`?` and `is()`)
+
+`lhs ? predicate` is the filter: it keeps the lhs when the predicate admits it and yields `noobj` when it does
+not. A rec predicate matches structurally — the value's field is checked against the field's type:
 
 ```mtron_pre
-{[a=>1],[a=>2],[a=>3]}.where([a=>is(gt(1))])               [-- {[a=>2],[a=>3]} --]
-{[a=>1],[a=>2],[a=>3]}=?=[a=>is(gt(1))]                    [-- syntax sugar for above --]
-[1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   [-- [1,7,3] --]
+{[a=>1],[a=>2],[a=>3]}?[a=>is(gt(1))]   [-- {[a=>2],[a=>3]}  (the rec predicate matches each rec's a-field) --]
+{[a=>1],[a=>2],[a=>3]}?[a=>is(lt(3))]   [-- {[a=>1],[a=>2]}  (the same shape admits the low fields) --]
+```
+
+**`where()` is for uris, not values.** Its live row is `where?uri<=uri(rec)`: the arg is a profile over the uri's
+fields, the uri is projected against it, and the uri passes through only when the projection agrees with the
+original — a profile matcher, and `noobj` when the profile is contradicted:
+
+```mtron_pre
+<//2024.12:25/09/00/00/000?tz=-0500>?where([host=>2024.12, port=>25])  [-- the uri (the profile matches) --]
+<//2024.12:25/09/00/00/000?tz=-0500>?where([host=>2024.12, port=>26])  [-- noobj  (the port contradicts the profile) --]
 ```
 
 ---
@@ -264,11 +273,11 @@ nat::-1                   [-- <ERROR> --]
 Unwraps collections: `{1,2,3}>-`   # {1,2,3} (flattens coefficient barriers)
 
 ```mtron_pre
-{1,2,3}>-                            [-- {1,2,3} --]
-[1=>2,2=>3,3=>4]>-                  [-- {1=>2,2=>3,3=>4} --]
-{1,2}>-[3,4]                         [-- [1,2,3,4] --]
-{1,2,3}>-1                           [-- {1,1,2,3} --]
-[a=>1,b=>2]>-.>-[b=>2]              [-- [a=>1,b=>2]  (merge into existing rec) --]
+{1,2,3}>-                            [-- {1,2,3}  (the bare members, unbarriered) --]
+[1=>2,2=>3,3=>4]>-                  [-- the rels, unwrapped --]
+{1,2}>-[3,4]                         [-- [1,2,3,4]  (the barrier joins into the existing lst) --]
+{1,2,3}>-1                           [-- {1,1,2,3}  (1 is added to the stream) --]
+[a=>1,b=>2]>-.>-[b=>2]              [-- [a=>1, b=>{2}2]  (the incoming 2 stacks under the existing 2 as a coefficient) --]
 ```
 
 ### Split (`-<`)
@@ -276,15 +285,15 @@ Unwraps collections: `{1,2,3}>-`   # {1,2,3} (flattens coefficient barriers)
 Distributes elements:
 
 ```mtron_pre
-1-<[_,_]                            [-- [1,1] --]
-{1,2,3}-<[plus(1),plus(2)]          [-- {2,3,4,5} --]
+1-<[_,_]                            [-- [1,1]  (duplicated along the branches) --]
+{1,2,3}-<[plus(1),plus(2)]          [-- {[2,3],[3,4],[4,5]}  (each member against each branch) --]
 ```
 
 ### Conditional branch: `-<|[?pred=>a, _=>b]`
 
 ```mtron_pre
-1-<|[?>1 => +100, _=> +2]          [-- {3,102}  (1
-{1,2}-<|[?>1 => +100, _=> +2]>>    [-- {3,102} --]
+1-<|[?>1 => +100, _=> +2]          [-- 1=>3  (1 fails ?>1, so the default branch +2 takes it) --]
+{1,2}-<|[?>1 => +100, _=> +2]>>    [-- 1=>3, 2=>102  (each member takes its own branch) --]
 ```
 
 ---
@@ -489,8 +498,8 @@ int{?}::10                     [-- optional coefficient {0,1} --]
 | `->`       | `ref()`          | Write to URI reference   |
 | `;`        | `end()`          | Sequence separator       |
 | `?pred`    | `is(pred)`       | Type/condition check     |
+| `lhs ? p`  | `lhs.isa(p)`     | Filter: keep if `p` admits |
 | `==`       | `select()`       | Structural select        |
-| `=?=`      | `where()`        | Filter after select      |
 
 ---
 
@@ -503,6 +512,10 @@ int{?}::10                     [-- optional coefficient {0,1} --]
 5. **No mutation of existing objects** — operations create new Objs (immutable)
 
 ```mtron_pre
-[-- Chaining example (read test data from test file): --]
-{1,2,3,4}.sum{2}().sum?int<=int{1,7}().sum()-<[_,_]>-.sum?int<=int{2}()  #
+[HEADER] chains: every inst's output is the next inst's input
+{1,2,3,4}.sum()                [-- 10 --]
+{1,2,3,4}.sum{2}()             [-- {2}10  (the same job, run twice in parallel) --]
+{1,2,3,4}.sum{2}().sum()       [-- 20  (the outer sum folds the coefficient in) --]
+{1,2,3,4}-<[plus(1), plus(10)]>-    [-- 2, 11, 3, 12, 4, 13, 5, 14  (distribute to each function, then merge) --]
+{1,2,3,4}.skip(1).take(2)      [-- {2,3}  (window: drop the first, keep two) --]
 ```

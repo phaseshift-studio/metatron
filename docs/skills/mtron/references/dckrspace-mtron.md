@@ -71,11 +71,18 @@ docker:network/<name>                -- network by name
 docker:compose/<stack-name>          -- compose config/stack
 ```
 
+**A note on what runs here.** Every block this far — the type, its doc, the space configuration — evaluates in the
+docs environment, because none of them touches a daemon: `dckrspace::T` is lazy, and it reports
+`docker cli not found` the moment a command would actually go out. Everything below that speaks to a daemon is
+therefore *shown* (a plain `mtron` block) rather than run, and the end-to-end section marks which of its steps the
+headless loop executes.
+
 ## Writing — Containers
 
 ### Run a container
 
-```mtron_pre
+```mtron
+[-- runs against a live daemon --]
 docker:container/web -> [/
   image       => 'nginx:alpine',/
   ports       => [<8080:80>, <443:443>],/
@@ -99,7 +106,7 @@ configured.
 
 ### List all resources
 
-```mtron_pre
+```mtron
 *docker:image/+.take(5)              [-- first 5 images (keyed by repository:tag) --]
 *docker:container/+                  [-- all containers                           --]
 *docker:volume/+                     [-- all volumes                              --]
@@ -108,7 +115,7 @@ configured.
 
 ### Inspect a resource
 
-```mtron_pre
+```mtron
 *docker:image/nginx:alpine           [-- full image rec --]
 *docker:container/web                [-- full container rec --]
 *docker:image/nginx:alpine/size      [-- specific field --]
@@ -117,7 +124,7 @@ configured.
 
 ### Graph navigation
 
-```mtron_pre
+```mtron
 *docker:container/web/image           [-- uri ref to the container's image             --]
 *docker:image/nginx:alpine/containers [-- list of container refs using this image      --]
 *docker:container/web/networks        [-- uri ref to the container's network           --]
@@ -133,33 +140,33 @@ their referent upon access.
 
 ### Stop and remove a container
 
-```mtron_pre
-docker:container/web -> noobj       [-- stops and removes container --]
+```mtron
+docker:container/web -> noobj       [-- stops and removes the container --]
 ```
 
-## Writing — Images
+## Reading — Images
 
 Images are read-only from Docker Hub. The space auto-discovers images from
-`docker image ls` and from containers' image references.
+`docker image ls` and from containers' image references:
 
-```mtron_pre
-*docker:image/nginx:alpine/id          [-- Docker hash (f7949ff70415) --]
-*docker:image/nginx:alpine/size        [-- mB::142.0 --]
-*docker:image/nginx:alpine/repository  [-- nginx --]
-*docker:image/nginx:alpine/tag         [-- alpine --]
+```mtron
+*docker:image/nginx:alpine/id          [-- the Docker hash --]
+*docker:image/nginx:alpine/size        [-- the size, in a unit type --]
+*docker:image/nginx:alpine/repository  [-- the repository name --]
+*docker:image/nginx:alpine/tag         [-- the tag --]
 ```
 
 ## Writing — Volumes
 
 ### Create a volume
 
-```mtron_pre
+```mtron
 docker:volume/myvol -> [driver => local]
 ```
 
 ### Remove a volume
 
-```mtron_pre
+```mtron
 docker:volume/myvol -> noobj
 ```
 
@@ -167,13 +174,13 @@ docker:volume/myvol -> noobj
 
 ### Create a network
 
-```mtron_pre
+```mtron
 docker:network/mynet -> [driver => bridge]
 ```
 
 ### Remove a network
 
-```mtron_pre
+```mtron
 docker:network/mynet -> noobj
 ```
 
@@ -181,7 +188,7 @@ docker:network/mynet -> noobj
 
 ### Start a stack
 
-```mtron_pre
+```mtron
 docker:compose/my-stack -> [/
   services => [/
     web => [/
@@ -201,23 +208,23 @@ Compose YAML is generated to `/tmp/metatron-docker/<name>/docker-compose.yml` an
 
 ### Stop a stack
 
-```mtron_pre
+```mtron
 docker:compose/my-stack -> noobj     [-- docker compose down + cleanup --]
 ```
 
 ### Read compose config
 
-```mtron_pre
+```mtron
 *docker:compose/my-stack/services/web/image    [-- nginx:alpine --]
 *docker:compose/my-stack/services              [-- all services --]
 ```
 
 ## Remote Docker Hosts
 
-Connect to a remote Docker daemon by specifying `host` in the boot config:
+Connect to a remote Docker daemon by specifying `host` in the space config:
 
 ```mtron
-dockerspace::[host => <tcp://192.168.1.100:2375>, ...]@/sys/space/remote
+dckrspace::[host => <tcp://192.168.1.100:2375>, ...]@/sys/space/remote
 ```
 
 All Docker CLI commands are prefixed with `-H <host>`. Supports `tcp://`, `unix://`, and `ssh://` schemes.
@@ -225,7 +232,8 @@ All Docker CLI commands are prefixed with `-H <host>`. Supports `tcp://`, `unix:
 ## End-to-End: SQLite Container + tbleSpace
 
 This example pulls a SQLite Docker image, runs it with a bind-mounted data directory, and exposes the database through
-tbleSpace — all from mtron.
+`tblespace::T` — all from mtron. The daemon-facing steps (1 and 6) are *shown*; the data steps (2 through 4) run in
+every docs build, and they run identically against a local socket — the tble half needs only the file.
 
 ```
 ┌────────────────────────────────────────┐
@@ -246,7 +254,8 @@ tbleSpace — all from mtron.
 
 ### Step 1: Pull + run the SQLite container
 
-```mtron_pre
+```mtron
+[-- runs against a live daemon; the bind mount is what creates the host directory the steps below use --]
 docker:container/sqlite -> [/
   user    => root,/
   image   => 'keinos/sqlite3:latest',/
@@ -261,6 +270,8 @@ command permissions.
 ### Step 2: Mount the database via tbleSpace
 
 ```mtron_pre
+[-- on a live daemon step 1 created this directory; here the loop creates the same scratch path itself --]
+bash('mkdir -p /tmp/mtron-dbs')
 tblespace::[pattern => mydb:#,/
             host    => <sqlite:/tmp/mtron-dbs/mydb.sqlite>,/
             table   => [,],/
@@ -297,8 +308,9 @@ Container writes go to the file → visible to tbleSpace on next read.
 
 ### Step 6: Tear down
 
-```mtron_pre
-docker:container/sqlite -> noobj     [-- stop + remove container --]
+```mtron
+[-- runs against a live daemon --]
+docker:container/sqlite -> noobj     [-- stop + remove the container --]
 ```
 
 The database file persists at `/tmp/mtron-dbs/mydb.sqlite`. Re-mount `tblespace::T` later to pick up where the database
@@ -321,13 +333,13 @@ mtron write.
 
 | Task                  | Expression                                                                 |
 |-----------------------|----------------------------------------------------------------------------|
-| Mount space           | `dockerspace::[pattern=>docker:#,route=>[docker:=>...]]@/sys/space/docker` |
+| Mount space           | `dckrspace::[pattern=>docker:#,route=>[docker:=>...]]@/sys/space/docker` |
 | Run container         | `docker:container/<name> -> [image => 'img:tag']`                          |
 | Run with ports        | `docker:container/<name> -> [image => 'img', ports => [<8080:80>]]`        |
 | Run with env          | `[image => 'img', environment => [KEY => val]]`                            |
 | Run with volume       | `[image => 'img', volumes => ['vol:/path']]`                               |
 | Run with network      | `[image => 'img', network => netname]`                                     |
-| Stop container        | `docker:container/<name> -> {0}id()`                                       |
+| Stop container        | `docker:container/<name> -> noobj`                                       |
 | List images           | `*docker:image/+`                                                          |
 | List containers       | `*docker:container/+`                                                      |
 | Inspect image         | `*docker:image/repo:tag`                                                   |
@@ -339,9 +351,9 @@ mtron write.
 | Container's volumes   | `*docker:container/<name>/mounts`                                          |
 | Volume's containers   | `*docker:volume/<name>/containers`                                         |
 | Create volume         | `docker:volume/<name> -> [driver => local]`                                |
-| Remove volume         | `docker:volume/<name> -> {0}id()`                                          |
+| Remove volume         | `docker:volume/<name> -> noobj`                                          |
 | Create network        | `docker:network/<name> -> [driver => bridge]`                              |
-| Remove network        | `docker:network/<name> -> {0}id()`                                         |
+| Remove network        | `docker:network/<name> -> noobj`                                         |
 | Start compose stack   | `docker:compose/<name> -> [services => [...]]`                             |
-| Stop compose stack    | `docker:compose/<name> -> {0}id()`                                         |
+| Stop compose stack    | `docker:compose/<name> -> noobj`                                         |
 | Remote host           | Add `host => <tcp://host:port>` to space config                            |
