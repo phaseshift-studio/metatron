@@ -9,6 +9,13 @@
 # + arrow keys when run on a TTY.
 import asyncio
 import sys
+from pathlib import Path
+from urllib.parse import urlsplit, parse_qs
+
+from lib.nanorc_highlight import load_highlighter
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+NANORC_PATH = SCRIPT_DIR.parent / "conf" / "nanorc"
 
 """ ANSI color codes """
 # ─── Foreground ───────────────────────────────────────────
@@ -71,7 +78,8 @@ try:
     import os
 
     history = os.path.join(os.path.expanduser("~"), ".wsplus_history")
-    atexit.register(readline.write_history_file, history)
+    if os.access(os.path.expanduser("~"), os.W_OK):
+        atexit.register(readline.write_history_file, history)  # $HOME may be read-only (sandbox)
     readline.set_history_length(1000)
     readline.read_history_file(history)
 except ImportError:
@@ -92,10 +100,11 @@ BANNER = rf"""{BLUE}                _        _
 \ \ /\ / / __|{CYAN}{RED} _|{BG_RED} {BG_RESET}|_    {BLACK}PhaseShift Studio              
 {CYAN} \ V  V /\__ \{RED}|{BG_RED}_   _{BG_RESET}|                 
 {CYAN}  \_/\_/ {BLUE}/___/{RED}  |{BG_RED}_{BG_RESET}|                                         
-{DARK_GRAY} a web socket mtron console ({BROWN}ctrl-c {DARK_GRAY}to {BROWN}:quit{DARK_GRAY}){NC}"""
+{DARK_GRAY} an mtron websocket console ({BROWN}ctrl-c {DARK_GRAY}to {BROWN}:quit{DARK_GRAY})({BROWN}:help{DARK_GRAY}){NC}"""
 
 
 async def repl(url):
+    hl = load_highlighter(str(NANORC_PATH) + "/mtron.nanorc", 'mtron')
     async with websockets.connect(url) as ws:
         while True:
             try:
@@ -107,7 +116,11 @@ async def repl(url):
                 if not line.strip():
                     continue
                 if line.strip() in (":help"):
-                    print(rf"""connection: {url}""")
+                    query_string = urlsplit(url).query
+                    params_dict = parse_qs(query_string)
+                    print(rf"""{GREEN}connection{NC}: {BLUE}{url}{NC}
+ {YELLOW}in{NC} (to metatron)   : {BLUE}{params_dict.get('in', ['application/x-mtron'])[0]}{NC}
+ {YELLOW}out{NC} (from metatron): {BLUE}{params_dict.get('out', ['application/x-mtron'])[0]}{NC}""")
                     continue
                 if line.strip() in (":quit", ":exit"):
                     print()
@@ -121,14 +134,74 @@ async def repl(url):
                 text = result.decode() if isinstance(result, bytes) else str(result)
                 if not text.strip() or text.strip() == "noobj":  # silent for empty/noobj results
                     continue
-                print(GREEN + "==>" + NC + text.replace("\n", "\n   "))
+                print(GREEN + "==>" + NC + hl.highlight_block(text.replace("\n", "\n   ")))
             except asyncio.TimeoutError:
                 print(RED + "==>ERROR: " + NC + "timed out")
                 continue
 
 
+async def oneshot(url, exprs):
+    """evaluate one-shot expressions in a single session, then exit (non-zero on timeout)"""
+    code = 0
+    async with websockets.connect(url) as ws:
+        for expr in exprs:
+            await ws.send(expr)
+            try:
+                result = await asyncio.wait_for(ws.recv(), 30)
+                text = result.decode() if isinstance(result, bytes) else str(result)
+                text = text.strip()
+                if text and text != "noobj":
+                    print(GREEN + "==>" + NC + text.replace("\n", "\n   "))
+            except asyncio.TimeoutError:
+                print(RED + "==>ERROR: " + NC + "timed out")
+                code = 2
+                break
+    return code
+
+
+def usage():
+    sys.stderr.write(
+        "usage: wsplus [-e EXPR ...] [URL]\n"
+        "\n"
+        "  -e <expr>   evaluate EXPR once and exit (repeatable; one shared session)\n"
+        "  <uri>       the metatron ws endpoint (default: ws://localhost:8555/mtron)\n"
+        "\n"
+        "  supported formats\n"
+        "    <uri?out=application/x-mtron>\n"
+        "    <uri?out=application/x-mtron-ui>\n"
+        "    <uri?out=application/json>      \n"
+        "\n"
+        "without -e, an interactive REPL\n")
+
+
 def main():
-    url = sys.argv[1] if len(sys.argv) > 1 else "ws://localhost:8555/mtron"
+    exprs = []
+    url = None
+    i = 1
+    while i < len(sys.argv):
+        arg = sys.argv[i]
+        if arg in ("-h", "--help"):
+            usage()
+            return
+        elif arg == "-e":
+            if i + 1 >= len(sys.argv):
+                sys.stderr.write("==>ERROR: -e needs an expression argument\n")
+                sys.exit(2)
+            exprs.append(sys.argv[i + 1])
+            i += 2
+        else:
+            url = arg
+            i += 1
+    if url is None:
+        url = "ws://localhost:8555/mtron"
+    if exprs:
+        try:
+            sys.exit(asyncio.run(oneshot(url, exprs)))
+        except KeyboardInterrupt:
+            print()
+        except Exception as e:
+            print(RED + "==>ERROR: " + NC + f"{e}")
+            sys.exit(1)
     print(BANNER)
     try:
         asyncio.run(repl(url))

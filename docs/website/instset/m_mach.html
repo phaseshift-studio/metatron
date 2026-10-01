@@ -262,7 +262,7 @@
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/wsplus">wsplus</a>
                             </div>
                         </div>
                     </li>
@@ -290,8 +290,8 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/README.md">README.md</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
@@ -409,7 +409,77 @@
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[pattern=&gt;/m/mach/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],type=&gt;[rec::T[?[pattern=&gt;uri::T,{?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,{?}pre_write=&gt;inst::T,{?}post_write=&gt;inst::T,{?}qless_write=&gt;inst::T,{?}pre_read=&gt;inst::T,{?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@qproc],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]]@space,rec::T@factory,factory::T[][ctor?rng=mfactory&amp;dom=#{?}(){&lt;j&gt;}]@mfactory,rec::T[?[{?}machine=&gt;machine::T]]@component,component::T[?[{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]]@processor,processor::T@monad,processor::T[][ctor?rng=swarm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@swarm,component::T[?[{?}rewriter=&gt;rewriter::T,{?}resolver=&gt;resolver::T,{?}typer=&gt;typer::T]]@compiler,compiler::T[][ctor?rng=default&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@default,component::T@rewriter,rewriter::T[?[{?}max=&gt;isa(int::T).else(2)]][ctor?rng=fixpoint&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@fixpoint,component::T@resolver,resolver::T[][ctor?rng=scoring&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@scoring,component::T[][ctor?rng=typer&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@typer,monad::T[][ctor?rng=swarm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@swarm,rec::T[?[{?}instset=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset,{?}compiler=&gt;component::T[?[{?}rewriter=&gt;rewriter::T,{?}resolver=&gt;resolver::T,{?}typer=&gt;typer::T]]@compiler,{?}processor=&gt;component::T[?[{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]]@processor]]@machine,rec::T[?[run=&gt;[,],stop=&gt;[,]]]@thread_executor,rec::T[?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]]@thread,thread::T[][ctor?rng=core&amp;dom=#{?}(rec::T){&lt;j&gt;}]@core,thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual,space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@authority=&gt;&lt;#&gt;::T]]][ctor?rng=clstrspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@clstrspace],inst=&gt;[/m/inst/thread?rng=thread&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},stop?rng=thread&amp;dom=thread(){&lt;j&gt;},pause?rng=thread&amp;dom=thread(){&lt;j&gt;},resume?rng=thread&amp;dom=thread(){&lt;j&gt;}],const=&gt;[machine::[instset=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},compiler=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},processor=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},route=&gt;[=&gt;]]@/sys/mach]]@/m/mach</code></pre>
+                        <pre><code>instset::[
+ pattern=&gt;/m/mach/#,
+ q=&gt;[docq::[
+ pattern=&gt;docq,
+ pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
+ pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[super=&gt;!*/m],
+ type=&gt;[
+  rec::T[?[
+   pattern=&gt;uri::T,
+   {?}q=&gt;[rec::T[?[
+ pattern=&gt;uri::T,
+ {?}pre_write=&gt;inst::T,
+ {?}post_write=&gt;inst::T,
+ {?}qless_write=&gt;inst::T,
+ {?}pre_read=&gt;inst::T,
+ {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
+   {?}route=&gt;[uri::T=&gt;uri::T],
+   {?}schema=&gt;instset::T]]@/m/space,
+  rec::T@/m/mach/factory,
+  factory::T[][ctor?rng=mfactory&amp;dom=#{?}(){&lt;j&gt;}]@/m/mach/mfactory,
+  rec::T[?[{?}machine=&gt;machine::T]]@/m/mach/component,
+  component::T[?[
+   {?}state=&gt;union(stop,run,pause),
+   {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor,
+  processor::T@/m/mach/component/processor/monad,
+  processor::T[][ctor?rng=swarm&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/processor/monad/swarm,
+  component::T[?[
+   {?}rewriter=&gt;rewriter::T,
+   {?}resolver=&gt;resolver::T,
+   {?}typer=&gt;typer::T]]@/m/mach/component/compiler,
+  compiler::T[][ctor?rng=default&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/compiler/default,
+  component::T@/m/mach/component/rewriter,
+  rewriter::T[?[{?}max=&gt;isa(int::T).else(2)]][ctor?rng=fixpoint&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/rewriter/fixpoint,
+  component::T@/m/mach/component/resolver,
+  resolver::T[][ctor?rng=scoring&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/resolver/scoring,
+  component::T[][ctor?rng=typer&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/typer,
+  rec::T[?[
+   {?}instset=&gt;rec::T[?[
+    {?}pattern=&gt;uri::T,
+    {?}const=&gt;[&lt;#&gt;::T],
+    {?}type=&gt;{?}[&lt;#&gt;::T],
+    {?}inst=&gt;{?}[inst::T],
+    {?}rewrite=&gt;{?}[inst::T],
+    {?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/instset,
+   {?}compiler=&gt;component::T[?[
+    {?}rewriter=&gt;rewriter::T,
+    {?}resolver=&gt;resolver::T,
+    {?}typer=&gt;typer::T]]@/m/mach/component/compiler,
+   {?}processor=&gt;component::T[?[
+    {?}state=&gt;union(stop,run,pause),
+    {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]]@/m/mach/machine,
+  rec::T[?[
+   run=&gt;[,],
+   stop=&gt;[,]]]@/m/mach/thread_executor,
+  rec::T[inst([code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;inst(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T])]@/m/mach/thread,
+  thread::T[][ctor?rng=core&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/mach/thread/core,
+  thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/mach/thread/virtual,
+  space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/uri/authority=&gt;&lt;#&gt;::T]]][ctor?rng=clstrspace&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/clstrspace],
+ inst=&gt;[
+  /m/inst/thread?rng=thread&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
+  stop?rng=thread&amp;dom=thread(){&lt;j&gt;},
+  pause?rng=thread&amp;dom=thread(){&lt;j&gt;},
+  resume?rng=thread&amp;dom=thread(){&lt;j&gt;}],
+ const=&gt;[machine::[
+ instset=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
+ compiler=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
+ processor=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
+ route=&gt;[=&gt;]]@/sys/mach]]@/m/mach</code></pre>
                     </div>
                 </div>
             </div>
@@ -417,7 +487,7 @@
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">20</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">19</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -460,9 +530,6 @@
 </a><a href="#__m__mach__component__typer" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">typer</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">machine</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__machine__swarm" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">swarm</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">thread</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__thread__core" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">core</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -500,7 +567,7 @@
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">20</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">19</span></h3>
     <div class="card mb-3" id="__m__mach__clstrspace">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -509,8 +576,18 @@
         </span>
         <small class="text-muted code">/m/mach/clstrspace</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@authority=&gt;&lt;#&gt;::T]]][ctor?rng=clstrspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@clstrspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,{?}pre_write=&gt;inst::T,{?}post_write=&gt;inst::T,{?}qless_write=&gt;inst::T,{?}pre_read=&gt;inst::T,{?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@qproc],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}peer=&gt;{?}[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/uri/authority=&gt;&lt;#&gt;::T]]][ctor?rng=clstrspace&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/clstrspace</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ pattern=&gt;uri::T,
+ {?}q=&gt;[rec::T[?[
+ pattern=&gt;uri::T,
+ {?}pre_write=&gt;inst::T,
+ {?}post_write=&gt;inst::T,
+ {?}qless_write=&gt;inst::T,
+ {?}pre_read=&gt;inst::T,
+ {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}route=&gt;[uri::T=&gt;uri::T],
+ {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a peer is a wsclient to a mtron_ws handler.
 *x and x-&gt;y are the respective read/write insts sent to the peer for evaluation.
@@ -528,7 +605,10 @@
         </span>
         <small class="text-muted code">/m/mach/component/compiler</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[{?}rewriter=&gt;rewriter::T,{?}resolver=&gt;resolver::T,{?}typer=&gt;typer::T]]@compiler</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[
+ {?}rewriter=&gt;rewriter::T,
+ {?}resolver=&gt;resolver::T,
+ {?}typer=&gt;typer::T]]@/m/mach/component/compiler</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__mach__component">
@@ -539,7 +619,7 @@
         </span>
         <small class="text-muted code">/m/mach/component</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}machine=&gt;machine::T]]@component</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}machine=&gt;machine::T]]@/m/mach/component</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__mach__thread__core">
@@ -550,8 +630,15 @@
         </span>
         <small class="text-muted code">/m/mach/thread/core</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][ctor?rng=core&amp;dom=#{?}(rec::T){&lt;j&gt;}]@core</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][ctor?rng=core&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/mach/thread/core</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">inst([
+  code=&gt;&lt;#&gt;::T,
+  {?}source=&gt;uri::T,
+  {?}runtime=&gt;real::T@/m/math/time,
+  {?}yield=&gt;thread::T,
+  {?}loop=&gt;real::T@/m/math/time,
+  {?}state=&gt;inst(stop,run,pause),
+  {?}result=&gt;&lt;#&gt;::T])</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] run a concurrent core thread</p>
 </div><div class="card-body border-top py-2">
@@ -566,8 +653,11 @@
         </span>
         <small class="text-muted code">/m/mach/component/compiler/default</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">compiler::T[][ctor?rng=default&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@default</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__compiler" class="code inherited-link">compiler::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}rewriter=&gt;rewriter::T,{?}resolver=&gt;resolver::T,{?}typer=&gt;typer::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">compiler::T[][ctor?rng=default&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/compiler/default</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__compiler" class="code inherited-link">compiler::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}rewriter=&gt;rewriter::T,
+ {?}resolver=&gt;resolver::T,
+ {?}typer=&gt;typer::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__mach__factory">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -577,7 +667,7 @@
         </span>
         <small class="text-muted code">/m/mach/factory</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@factory</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/mach/factory</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__mach__component__rewriter__fixpoint">
@@ -588,7 +678,7 @@
         </span>
         <small class="text-muted code">/m/mach/component/rewriter/fixpoint</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rewriter::T[?[{?}max=&gt;isa(int::T).else(2)]][ctor?rng=fixpoint&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@fixpoint</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rewriter::T[?[{?}max=&gt;isa(int::T).else(2)]][ctor?rng=fixpoint&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/rewriter/fixpoint</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__mach__machine">
@@ -599,7 +689,21 @@
         </span>
         <small class="text-muted code">/m/mach/machine</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}instset=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset,{?}compiler=&gt;component::T[?[{?}rewriter=&gt;rewriter::T,{?}resolver=&gt;resolver::T,{?}typer=&gt;typer::T]]@compiler,{?}processor=&gt;component::T[?[{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]]@processor]]@machine</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+ {?}instset=&gt;rec::T[?[
+  {?}pattern=&gt;uri::T,
+  {?}const=&gt;[&lt;#&gt;::T],
+  {?}type=&gt;{?}[&lt;#&gt;::T],
+  {?}inst=&gt;{?}[inst::T],
+  {?}rewrite=&gt;{?}[inst::T],
+  {?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/instset,
+ {?}compiler=&gt;component::T[?[
+  {?}rewriter=&gt;rewriter::T,
+  {?}resolver=&gt;resolver::T,
+  {?}typer=&gt;typer::T]]@/m/mach/component/compiler,
+ {?}processor=&gt;component::T[?[
+  {?}state=&gt;union(stop,run,pause),
+  {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]]@/m/mach/machine</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__mach__mfactory">
@@ -610,7 +714,7 @@
         </span>
         <small class="text-muted code">/m/mach/mfactory</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">factory::T[][ctor?rng=mfactory&amp;dom=#{?}(){&lt;j&gt;}]@mfactory</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">factory::T[][ctor?rng=mfactory&amp;dom=#{?}(){&lt;j&gt;}]@/m/mach/mfactory</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__mach__component__processor__monad">
@@ -621,8 +725,10 @@
         </span>
         <small class="text-muted code">/m/mach/component/processor/monad</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">processor::T@monad</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__processor" class="code inherited-link">processor::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">processor::T@/m/mach/component/processor/monad</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__processor" class="code inherited-link">processor::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}state=&gt;union(stop,run,pause),
+ {?}result=&gt;&lt;#&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__mach__component__processor">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -632,7 +738,9 @@
         </span>
         <small class="text-muted code">/m/mach/component/processor</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]]@processor</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[
+ {?}state=&gt;union(stop,run,pause),
+ {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__mach__component__resolver">
@@ -643,7 +751,7 @@
         </span>
         <small class="text-muted code">/m/mach/component/resolver</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T@resolver</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T@/m/mach/component/resolver</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__mach__component__rewriter">
@@ -654,7 +762,7 @@
         </span>
         <small class="text-muted code">/m/mach/component/rewriter</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T@rewriter</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T@/m/mach/component/rewriter</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__mach__component__resolver__scoring">
@@ -665,26 +773,9 @@
         </span>
         <small class="text-muted code">/m/mach/component/resolver/scoring</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">resolver::T[][ctor?rng=scoring&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@scoring</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">resolver::T[][ctor?rng=scoring&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/resolver/scoring</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     
-</div><div class="card mb-3" id="__m__mach__machine__swarm">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">swarm::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__component__processor__monad" class="instset-doc-small-code text-info code">/m/mach/component/processor/monad::T</a></span>
-        </span>
-        <small class="text-muted code">/m/mach/machine/swarm</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">monad::T[][ctor?rng=swarm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@swarm</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__processor" class="code inherited-link">processor::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a swarm machine makes use of a set of independently executing monads that move across the code inst chain. barriers serve as synchronization points where all running monads must aggregate before being released on the post-barrier segment of code. the objs referenced by the monads that halt are the result of the machine execution.</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code the machine will evaluate'" class="text-info">&#39;the code the machine will evaluate&#39;</a>
-</pre>
-</div>
 </div><div class="card mb-3" id="__m__mach__component__processor__monad__swarm">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -693,8 +784,10 @@
         </span>
         <small class="text-muted code">/m/mach/component/processor/monad/swarm</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">processor::T[][ctor?rng=swarm&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@swarm</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__processor" class="code inherited-link">processor::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">processor::T[][ctor?rng=swarm&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/processor/monad/swarm</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__processor" class="code inherited-link">processor::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}state=&gt;union(stop,run,pause),
+ {?}result=&gt;&lt;#&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] a swarm processor schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result</p>
 </div><div class="card-body py-2">
@@ -710,18 +803,18 @@
         </span>
         <small class="text-muted code">/m/mach/thread</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]]@thread</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[inst([code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;inst(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T])]@/m/mach/thread</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] the thread base type</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
-  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
   <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
   <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
   <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
   <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
+  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__thread_executor">
@@ -732,7 +825,9 @@
         </span>
         <small class="text-muted code">/m/mach/thread_executor</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[run=&gt;[,],stop=&gt;[,]]]@thread_executor</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+ run=&gt;[,],
+ stop=&gt;[,]]]@/m/mach/thread_executor</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] the gateway interface for all threads in metatron</p>
@@ -745,7 +840,7 @@
         </span>
         <small class="text-muted code">/m/mach/component/typer</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[][ctor?rng=typer&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@typer</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[][ctor?rng=typer&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/typer</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__mach__thread__virtual">
@@ -756,8 +851,15 @@
         </span>
         <small class="text-muted code">/m/mach/thread/virtual</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/mach/thread/virtual</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">inst([
+  code=&gt;&lt;#&gt;::T,
+  {?}source=&gt;uri::T,
+  {?}runtime=&gt;real::T@/m/math/time,
+  {?}yield=&gt;thread::T,
+  {?}loop=&gt;real::T@/m/math/time,
+  {?}state=&gt;inst(stop,run,pause),
+  {?}result=&gt;&lt;#&gt;::T])</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] run a concurrent virtual thread</p>
 </div><div class="card-body border-top py-2">

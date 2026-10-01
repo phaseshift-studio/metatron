@@ -142,15 +142,15 @@ The `datetime::T` predicate ensures base uri has:
 
 #### mutating and filtering
 
-All standard uri operations apply: `==` (select), `=?=` (where), plus `>>=` (rec update) after `.as(rec::T)`.
+All standard uri operations apply: `==` (select), `?` (is), plus `>>=` (rec update) after `.as(rec::T)`.
 
 ```mtron_pre
 [-- select mutation: change day --]
 <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)==[port=>31]>>port
 
 [-- where filter: match day 25 --]
-<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)=?=[port=>25]
-<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)=?=[port=>26]
+<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)?[port=>25]
+<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)?[port=>26]
 
 [-- rec update: change timezone --]
 <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q=>[tz=>'+0000']]>>q>>tz

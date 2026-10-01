@@ -182,6 +182,11 @@ public class MFail extends MObj implements Fail {
                                                         final Throwable tCause) {
         if (null == tCause)
             return mtronCauseHead;
+        // a cause already reachable from the head would close a getCause() cycle —
+        // the cause-walk in writeFail has no cycle guard and would spin forever
+        for (Throwable c = mtronCauseHead; c != null; c = c.getCause())
+            if (c == tCause)
+                return mtronCauseHead;
         // Walk to the tail of the mtron chain
         Throwable tail = mtronCauseHead;
         while (tail.getCause() != null)
@@ -223,6 +228,11 @@ public class MFail extends MObj implements Fail {
     @Override
     public Fail caught() {
         this.delete();
+        return this.caughtTransient();
+    }
+
+    @Override
+    public Fail caughtTransient() {
         return this instanceof MCaughtFail ? this : new MCaughtFail(this);
     }
 

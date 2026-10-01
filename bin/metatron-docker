@@ -262,7 +262,9 @@ cmd_build() {
                     mvn $MVN_OPTS -DskipTests package
                     JAR=\$(ls -1 target/metatron-*-jar-with-dependencies.jar | head -1)
                 fi
-                java $JVM_FLAGS -cp \"\$JAR\" $DOCS_RUNNER $target -o $out_dir --html"
+                java $JVM_FLAGS -cp \"\$JAR\" $DOCS_RUNNER $target -o $out_dir --html
+                echo \"==> bundling bin/wsplus into the skill scripts dir(s)\"
+                python3 bin/build-wsplus.py docs/website/skills/mtron/scripts docs/website/skills/metatron/scripts"
             build_run sh -c "$cmd"
             ;;
         console)

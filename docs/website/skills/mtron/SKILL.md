@@ -125,7 +125,7 @@ mtron> @/a + 6
 mtron> */a
 ==>11
 ```
-NOTE: `update` (sugar'd `>>=`) is primarily used for a bulk mutation to a poly structure (a `rec` or `lst`). In
+**NOTE**: `update` (sugar'd `>>=`) is primarily used for a bulk mutation to a poly structure (a `rec` or `lst`). In
 principle,any alteration to a reference is an "updating" operation.
 
 ### obj types
@@ -187,7 +187,8 @@ inst?dom<=rng(arg1,arg2,...)     { body }
 inst?dom<=rng(k1=>v1,k2=>v2,...) { body }
 ```
 
-IMPORTANT: mtron sugar can make the language appear complex. Realize that every expression is a fluent chain of nested
+**IMPORTANT**: mtron sugar can make the language appear complex. Realize that every expression is a fluent chain of
+nested
 instruction calls. Append `.explain()` to any expression to get its structured explanation — the expression-level head
 (dom/rng/inst count) is `>>desc`, the per-instruction stages (the ops, their dom/rng, args, and form) are `>>per_inst`,
 and the unsugar'd text table is the lazy `>>format` inst (materialized in the interactive console):
@@ -322,7 +323,8 @@ mtron> person::[name=>'marko', age=>29]
 Do not guess at instruction signatures. Every instruction ships with documentation attached via the `?docq` query
 processor. **Read the documentation of the code you are about to execute.**
 
-IMPORTANT: An `inst::T` is identified by its operation, its domain and its range. If `dom` or `rng` are not provided,
+**IMPORTANT**: An `inst::T` is identified by its operation, its domain and its range. If `dom` or `rng` are not
+provided,
 the default values are `#{?}` and `#{*}`, respectively.
 
 ```mtron
@@ -394,8 +396,8 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   cast, how to read an edge that no row declares, the fully generic arg-type cast behind a plain tag, and the
   implicit ancestor casts.
 * [web instruction set](references/web-instset-mtron.md) -- `/m/web`: the protocol surfaces and MIME document types,
-  `route::T` mount tables and the literal-prefix rule, templated route values, mounting an obj, and what is not
-  available yet.
+  `route::T` mount tables and the literal-prefix rule, templated route values, mounting an obj, MCP server->client
+  notifications over a `?subq` envelope, tool registration, and what is not available yet.
 * [tble instruction set](references/tble-instset-mtron.md) -- `/m/tble` and `tblespace::T`: a JDBC database as a space
   -- tables that appear from the first rec write, typed rows, the SQL rewrite family that pushes reads down into the
   backend, the key/value fall-through, `!*` foreign keys, and native `sql()`.
@@ -413,10 +415,6 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 * [llm instruction set](references/llm-instset-mtron.md) -- `/m/llm`: agents, models, features, skills and tools, and
   the Model Context Protocol on both sides -- `mcp_client::T` over streamable-http + sse, websockets or stdio, and
   `mcp_server::T` carried by http, ws or the process's own stdio (`bin/metatron --mcp`).
-* [MCP Server Architecture](references/mcp-server-architecture.md) -- building MCP servers in mtron: `mcp_wsHandler` /
-  `mcp_mtron_wsHandler`, websocket routing, tool registration, `SpaceChatMemoryStore`, and the agent memory flow.
-* [MCP Server Notifications](references/mcp-server-notifications.md) -- server-to-client push via a `?subq` subscription
-  on a WebSocket space; boot integration and the development pitfalls.
 * [DSH Memory Bus](references/dsh-mtron.md) -- the first inter-harness memory adapter: a DSH zstd JSONL transcript
   becomes typed message recs, loaded and written into a native metatron agent memory tree.
 
@@ -431,9 +429,9 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   `?statq` (address-level read/write heat), `?subq` (pubsub), `?asq` (an `as` instruction read as a property-graph
   edge: label `as`, outV its dom, inV its rng, and `?asq` the kinds of as-graph relation that edge participates in --
   `*as?nat<=int&asq`, narrowed by `?asq=[kind,...]`), and the fact that a qproc's data space is independent of
-  the obj's. Only two corners are written down today: `?subq` in
-  [MCP Server Notifications](references/mcp-server-notifications.md), and `?mimeq`/`?lineq` in the fsSpace half of
-  [sys instruction set](references/sys-instset-mtron.md).
+  the obj's. Only two corners are written down today: `?subq` in the
+  [web instruction set](references/web-instset-mtron.md) (the MCP server->client notification envelope), and
+  `?mimeq`/`?lineq` in the fsSpace half of [sys instruction set](references/sys-instset-mtron.md).
 * the rest of the `>>=` update algebra -- `+[v]` set promotion and the HTTP PATCH door. Overlay merge, `+N`, `none`
   delete, and anchor-vs-clone *are* covered (language reference section 14); the door is specified in
   `docs/design/memory-server-architecture.md`.

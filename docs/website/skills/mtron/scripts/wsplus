@@ -1,0 +1,283 @@
+#!/usr/bin/env python3
+# --- bundler-generated bootstrap (regenerate: python3 bin/build-wsplus.py <dir> ...) ---
+import base64 as _b64, sys as _sys, types as _types, zlib as _zlib, re as _re
+
+def _bundle(name, payload):
+    mod = _types.ModuleType(name)
+    mod.__dict__["__builtins__"] = __builtins__
+    mod.__dict__["__package__"] = name.rsplit(".", 1)[0] if "." in name else ""
+    mod.__dict__["__spec__"] = None
+    src = _zlib.decompress(_b64.b64decode(payload)).decode("utf-8")
+    exec(compile(src, name, "exec"), mod.__dict__)
+    if "." in name:
+        head, _, tail = name.rpartition(".")
+        if head not in _sys.modules:
+            _sys.modules[head] = _types.ModuleType(head)
+        setattr(_sys.modules[head], tail, mod)
+    _sys.modules[name] = mod
+    return mod
+
+_M_nanorc_highlight = _bundle('lib.nanorc_highlight', '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')
+
+RX_SYNTAX = 'syntax\\s+"?([^"\\s]+)"?\\s+"(.+)"'
+RX_COLOR = '(i?color)\\s+([^\\s]+)\\s+(.*)'
+RX_STARTEND = 'start="([^"]*)"\\s+end="([^"]*)"'
+RX_QUOTED = '"((?:[^"\\\\]|\\\\.)*)"'
+NANORC_PAYLOAD = 'eNqFVl9v2zYQf/enuChdLNmWnD7Os+TkoQVWdEBR9CGbJAe0TNtqZVIl6bRuVGAfYp9wn2R3lBRbSoAlCEORxx+Pd7/7c3kJe26YUVLA6+DaZ0W5Y3D5vz+DS7hhB7OTCv5g6ouE2wA+yrXKtwf+A+Y7Y8rZdLqnLdUuB5ncRwM6minODF/DBo+/e58LDoIJCfooDPsOu3y7K/DPcIWyIEVxhEwWUk0gb/4zsW6lEXSPnxr0oSylQlg6tOY63wooVS6yvCz4DGj1BA1MAwOdi23B4aByi2h2XCCeeODKINyKsEspuDAacmEk7KXioPgGNV6DXH0+4WkLL3jGtWbqWMMTbo4TcYSSKc3xAmZwRQwRXu45SLxRWSBzLPlg0DzJ2ZM/HHCCURK49sN75QzwCqb1Ac9x1PBodqi9xaeLBtYysCoOnM45A3QSfNXN8pEXhfwGTrJA1GSJwxVKwAbcz5P9ZOH1xR6D5KfTLCp8K64kC1oiVDRFT9699irXX8Sv/V/T+BqHkUfw5BrklT5s8fXNka3iaGQnDma/TcZVeJH8cpOiOvM5DlFEsxCHkGY+DZFPs7nTuzEepbUyyKRikPfUcU+ajL3qeuwlQf3hvon9cbpodhbnShp1yMxBsQKM/MJFT98kJsORpolLg0fDIw1kFKsF8O81WZ6pkwSVvdEbn19P54ghumB6Byivsx3fs/Z07Ul3Wrkx83+g6hhPnlfZD8+1EPVHhfB+de+hhFdDj9ypt6iPVdMquW9uH9WaZlPFC3vzF36Ef//+B1hZFjl6mW0w5GDLBVd5BvOojjpi2YrjS7oWQRdZB6yOhuv+k6+/txre+m+tnht8fdeJk4NYc1VQ9KN8DUZazaMOl+N5Gi+jdBRHqdPVwFKG3vT1g5IZveZJj+zIUOBq4VaXVTJu7IRGqiyz0VRXVVjNQ89dXERI1Y7Jw8Zy9QPQuPd4cmqB6AmdG9x5WF15nQMvSjfOPJdrZWaz3rOI/7SI1EQH8M0mz3JKQc9j9PH1T6QfTWu3Txr3t4G6YXkxOFc3Se5JherW/6u6T8edCA/v+jGWBPTb14783pWbnpYs0l1LDSwQEpe0LB5478xFMkLFL2w2oqmVx4fMP0enzNPG3mP1wlr7yGfJL176qSVNmLrEHI+oQ4tLN4y8tOeTeIIGQavdT/30uS+sH4jkUhb9nLes4uUUQxETB682rNAciYAr1SvvROY2xCRmbJVjVeqEFzllxTdUVcKoy6z5dOHOq6jqUobINSNGXxIxE+2NokSPyN6dw81ZK/ciQOCNmnM9l79CLi1/WgrZVNznkXVwl8feiPZPpqtF0NSLu+cX2PVpS5C6MtTVvMm/vOX5nqGlDGtqQVsGiIA43E8dy2b6XoS2dIT9q2whuerz5pS9nzL6pFZGSCrE/dvtai1ga3Rvezb7VG/ePOTrngI3c8zeZCoMtzaX2HQE6AKbjBZVsvTG9L6bnuisljyTaixmVL8SJg6yG4cRzZ7VySFuDnFv2N/ShikTOon9dYCL9dPHk8nYEc1IMdT4i2rlWSqyAi1O7PsNiu+nzosS5DorEYYoMbCQyBG0psl2QM0ilp8H7LXWeEm+yTlyA+VtmyPgDlwebAP48PHN29/xmIcZ8tOOn3JOi8BWGG3UGO05E8Y2meQ6v76mlDo3uRTaNofUhWJPxgYU41iQqHdzc0EK4M46Z1shtckzPYEY7/gz9QKAW3GmInzbSU0NLPVl1IfmAsGGd0O8mAyNMKsjDMNoCG6r+gT2R3pB3b2VBcPnYWF+yhbYFoJRGFX09DuE2x+0QYIawAgh0TVq8Z5RtVaHApPKt1xMsKXEnRKxUMzqpEsmSB+Lh/g+4lNZoRyBjScHlymFVMCgM5LMiOmaRG1YQhPNdbdMnYEXdIpJHM9YIQ77WYql5CzUzwN38B9LmtOk'
+
+def _parse_nanorc_from_string(text):
+    ns = _M_nanorc_highlight.__dict__
+    syntaxes = []
+    current = None
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("include "):
+            raise ValueError("bundled mtron.nanorc must not use include directives")
+        m = _re.match(RX_SYNTAX, line)
+        if m:
+            current = ns["Syntax"](m.group(1), m.group(2))
+            syntaxes.append(current)
+            continue
+        m = _re.match(RX_COLOR, line)
+        if m and current is not None:
+            ci = (m.group(1) == "icolor")
+            spec = m.group(2)
+            rest = m.group(3)
+            fg, bg = spec.split(",", 1) if "," in spec else (spec, "")
+            se = _re.search(RX_STARTEND, rest)
+            if se:
+                current.rules.append(ns["Rule"](fg, bg, [], ci, start=se.group(1), end=se.group(2)))
+                continue
+            pats = _re.findall(RX_QUOTED, rest)
+            if pats:
+                current.rules.append(ns["Rule"](fg, bg, pats, ci))
+    return syntaxes
+
+_orig_parse_nanorc = _M_nanorc_highlight.parse_nanorc
+def _parse_nanorc_fallback(path):
+    try:
+        return _orig_parse_nanorc(path)
+    except FileNotFoundError:
+        return _parse_nanorc_from_string(_zlib.decompress(_b64.b64decode(NANORC_PAYLOAD)).decode("utf-8"))
+_M_nanorc_highlight.parse_nanorc = _parse_nanorc_fallback
+# --------------------------------------------------------------------------
+
+    ### original bin/wsplus (unmodified; regenerated by bin/build-wsplus.py) ###
+# wsplus — a basic mtron console for a headless metatron ws:// server.
+# Connects to the server's /mtron endpoint and presents a REPL:
+#
+#   mtron> 1 + 2
+#   ==>3
+#
+# Persistent connection (session state carries across lines), readline history
+# + arrow keys when run on a TTY.
+import asyncio
+import sys
+from pathlib import Path
+from urllib.parse import urlsplit, parse_qs
+
+from lib.nanorc_highlight import load_highlighter
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+NANORC_PATH = SCRIPT_DIR.parent / "conf" / "nanorc"
+
+""" ANSI color codes """
+# ─── Foreground ───────────────────────────────────────────
+BLACK = '\u001b[0;30m'
+RED = '\u001b[0;31m'
+GREEN = '\u001b[0;32m'
+BROWN = '\u001b[0;33m'
+BLUE = '\u001b[0;34m'
+MAGENTA = '\u001b[0;35m'
+CYAN = '\u001b[0;36m'
+LIGHT_GRAY = '\u001b[0;37m'
+DARK_GRAY = '\u001b[1;30m'
+LIGHT_RED = '\u001b[1;31m'
+LIGHT_GREEN = '\u001b[1;32m'
+YELLOW = '\u001b[1;33m'
+LIGHT_BLUE = '\u001b[1;34m'
+LIGHT_PURPLE = '\u001b[1;35m'
+WHITE = '\u001b[1;37m'
+
+# ─── Background ───────────────────────────────────────────
+BG_BLACK = '\u001b[40m'
+BG_RED = '\u001b[41m'
+BG_GREEN = '\u001b[42m'
+BG_BROWN = '\u001b[43m'
+BG_BLUE = '\u001b[44m'
+BG_MAGENTA = '\u001b[45m'
+BG_CYAN = '\u001b[46m'
+BG_LIGHT_GRAY = '\u001b[47m'
+BG_DARK_GRAY = '\u001b[100m'
+BG_LIGHT_RED = '\u001b[101m'
+BG_LIGHT_GREEN = '\u001b[102m'
+BG_YELLOW = '\u001b[103m'
+BG_LIGHT_BLUE = '\u001b[104m'
+BG_LIGHT_PURPLE = '\u001b[105m'
+BG_WHITE = '\u001b[107m'
+BG_RESET = '\u001b[49m'  # reset background only
+FG_RESET = '\u001b[39m'  # reset foreground only (bonus)
+# ─── Styles ───────────────────────────────────────────────
+BOLD = '\u001b[1m'
+DIM = '\u001b[2m'
+ITALIC = '\u001b[3m'
+UNDERLINE = '\u001b[4m'
+BLINK = '\u001b[5m'
+REVERSE = '\u001b[7m'
+HIDDEN = '\u001b[8m'
+STRIKETHROUGH = '\u001b[9m'
+
+NC = '\u001b[0m'
+
+try:
+    import websockets
+except ImportError:
+    print("wsplus requires the 'websockets' package: pip install websockets")
+    sys.exit(1)
+
+history = None
+try:
+    import readline  # up-arrow history + line editing for input()
+    import atexit
+    import os
+
+    history = os.path.join(os.path.expanduser("~"), ".wsplus_history")
+    if os.access(os.path.expanduser("~"), os.W_OK):
+        atexit.register(readline.write_history_file, history)  # $HOME may be read-only (sandbox)
+    readline.set_history_length(1000)
+    readline.read_history_file(history)
+except ImportError:
+    print("no readline capability")
+    pass
+except FileNotFoundError:
+    try:
+        readline.write_history_file(history)
+    except Error:
+        pass
+    pass
+
+BANNER = rf"""{BLUE}                _        _                   
+ _ __ ___   ___| |_ __ _| |_ _ __ ___  _ __  
+| '_ ` _ \ / _ \ {CYAN}__/ _` | __| '__/ _ \| '_ \ 
+| | | | | |  __/ || (_| | |_| | | (_) | | | |
+|_|_|_| |_|\___|\__\__,_|\__|_|{WHITE}  \___/|_| |_|
+\ \ /\ / / __|{CYAN}{RED} _|{BG_RED} {BG_RESET}|_    {BLACK}PhaseShift Studio              
+{CYAN} \ V  V /\__ \{RED}|{BG_RED}_   _{BG_RESET}|                 
+{CYAN}  \_/\_/ {BLUE}/___/{RED}  |{BG_RED}_{BG_RESET}|                                         
+{DARK_GRAY} an mtron websocket console ({BROWN}ctrl-c {DARK_GRAY}to {BROWN}:quit{DARK_GRAY})({BROWN}:help{DARK_GRAY}){NC}"""
+
+
+async def repl(url):
+    hl = load_highlighter(str(NANORC_PATH) + "/mtron.nanorc", 'mtron')
+    async with websockets.connect(url) as ws:
+        while True:
+            try:
+                line = input(MAGENTA + "mtron" + GREEN + "> " + NC)
+            except (EOFError, KeyboardInterrupt):
+                print()
+                return
+            try:
+                if not line.strip():
+                    continue
+                if line.strip() in (":help"):
+                    query_string = urlsplit(url).query
+                    params_dict = parse_qs(query_string)
+                    print(rf"""{GREEN}connection{NC}: {BLUE}{url}{NC}
+ {YELLOW}in{NC} (to metatron)   : {BLUE}{params_dict.get('in', ['application/x-mtron'])[0]}{NC}
+ {YELLOW}out{NC} (from metatron): {BLUE}{params_dict.get('out', ['application/x-mtron'])[0]}{NC}""")
+                    continue
+                if line.strip() in (":quit", ":exit"):
+                    print()
+                    return
+                await ws.send(line)
+            except:
+                print(RED + "==>ERROR")
+                continue
+            try:
+                result = await asyncio.wait_for(ws.recv(), 30)
+                text = result.decode() if isinstance(result, bytes) else str(result)
+                if not text.strip() or text.strip() == "noobj":  # silent for empty/noobj results
+                    continue
+                print(GREEN + "==>" + NC + hl.highlight_block(text.replace("\n", "\n   ")))
+            except asyncio.TimeoutError:
+                print(RED + "==>ERROR: " + NC + "timed out")
+                continue
+
+
+async def oneshot(url, exprs):
+    """evaluate one-shot expressions in a single session, then exit (non-zero on timeout)"""
+    code = 0
+    async with websockets.connect(url) as ws:
+        for expr in exprs:
+            await ws.send(expr)
+            try:
+                result = await asyncio.wait_for(ws.recv(), 30)
+                text = result.decode() if isinstance(result, bytes) else str(result)
+                text = text.strip()
+                if text and text != "noobj":
+                    print(GREEN + "==>" + NC + text.replace("\n", "\n   "))
+            except asyncio.TimeoutError:
+                print(RED + "==>ERROR: " + NC + "timed out")
+                code = 2
+                break
+    return code
+
+
+def usage():
+    sys.stderr.write(
+        "usage: wsplus [-e EXPR ...] [URL]\n"
+        "\n"
+        "  -e <expr>   evaluate EXPR once and exit (repeatable; one shared session)\n"
+        "  <uri>       the metatron ws endpoint (default: ws://localhost:8555/mtron)\n"
+        "\n"
+        "  supported formats\n"
+        "    <uri?out=application/x-mtron>\n"
+        "    <uri?out=application/x-mtron-ui>\n"
+        "    <uri?out=application/json>      \n"
+        "\n"
+        "without -e, an interactive REPL\n")
+
+
+def main():
+    exprs = []
+    url = None
+    i = 1
+    while i < len(sys.argv):
+        arg = sys.argv[i]
+        if arg in ("-h", "--help"):
+            usage()
+            return
+        elif arg == "-e":
+            if i + 1 >= len(sys.argv):
+                sys.stderr.write("==>ERROR: -e needs an expression argument\n")
+                sys.exit(2)
+            exprs.append(sys.argv[i + 1])
+            i += 2
+        else:
+            url = arg
+            i += 1
+    if url is None:
+        url = "ws://localhost:8555/mtron"
+    if exprs:
+        try:
+            sys.exit(asyncio.run(oneshot(url, exprs)))
+        except KeyboardInterrupt:
+            print()
+        except Exception as e:
+            print(RED + "==>ERROR: " + NC + f"{e}")
+            sys.exit(1)
+    print(BANNER)
+    try:
+        asyncio.run(repl(url))
+    except KeyboardInterrupt:
+        print()
+    except Exception as e:
+        print(RED + "==>ERROR: " + NC + f"{e}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
+

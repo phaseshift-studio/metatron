@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.webInstSet;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -67,13 +68,24 @@ public class mtron_wsHandler extends WebSocketRec {
         this.jvm().put(uri(ON_MESSAGE), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 final Obj rhs = lhs.apply(noobj());
-                LOG.debug("processed mtron message: %s => %s", lhs, rhs);
-                this.send(rhs);
+                // caughtTransient, not caught(): caught() deletes the fail from the fail
+                // space — a write the message thread must not perform just to format a
+                // reply (the transport boundary already caught the fail; this covers a
+                // direct ON_MESSAGE apply)
+                final Obj result = rhs.isFail() ? rhs.asFail().caughtTransient() : rhs;
+                LOG.debug("processed mtron message: %s => %s", lhs, result);
+                this.send(result);
+                // emit the fail stack trace after the reply is sent, not during its
+                // serialization (where the tracer's own fail registration would delay the
+                // send and leave the client waiting)
+                if (result.isFail() || result.isCaughtFail())
+                    MTronException.emitStackTrace(result.asFail().jvm());
                 return rhs;
             } catch (final Exception e) {
-                final Fail failure = fail(e);
-                LOG.error("error processing message: %s => %s", lhs, failure);
+                final Fail failure = fail(e).caughtTransient();
+                LOG.debug("error processing message: %s => %s", lhs, failure);
                 this.send(failure);
+                MTronException.emitStackTrace(failure.jvm());
                 return failure;
             }
         }));

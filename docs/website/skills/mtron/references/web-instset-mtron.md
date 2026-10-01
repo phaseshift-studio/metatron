@@ -29,7 +29,7 @@ mtron> wsspace::[pattern=> ws:#,
      wsspace::[pattern=> ws:#,
                  ...
      ^
-     could not parse at 'w']@/sys/fail/628
+     could not parse at 'w']@/sys/fail/700
 ```
 The organizing idea is that **a protocol is a projection of an obj, not a copy of it**. An `mcp_server` rides http,
 websockets and stdio alike; a `str` that is css is `css::T` whoever asks for it. A mount then only has to say which
@@ -143,9 +143,9 @@ The rendering is chosen per request with `?mimeq=<media type>`:
 mtron> http://localhost:8777/docker/image?mimeq=application/json      [-- the docker images as JSON --]
 ==>http://localhost:8777/docker/image?mimeq=application/json
 mtron> */docker/image?mimeq=text/plain                                [-- the same objs, mtron-typed, as plain text --]
-==>fail::[inst apply failure: no active space supports pattern /docker/image?mimeq=text/plain (at /m/inst/from)]@/sys/fail/630
+==>fail::[inst apply failure: no active space supports pattern /docker/image?mimeq=text/plain (at /m/inst/from)]@/sys/fail/702
 mtron> */docker/image                                                 [-- the native mtron rendering --]
-==>fail::[inst apply failure: no active space supports pattern /docker/image (at /m/inst/from)]@/sys/fail/632
+==>fail::[inst apply failure: no active space supports pattern /docker/image (at /m/inst/from)]@/sys/fail/704
 ```
 `application/x-mtron` is the **structural parse gate**: it asks for the content parsed into mtron objs rather than
 handed back as text. Read any mount's own documentation with `?docq`.
@@ -196,7 +196,7 @@ mtron> */usr/person/1
 mtron> *http://localhost:8777/usr/person/1
 ==>"person::[name=>'marko',age=>29]@/usr/person/1"
 mtron> *http://localhost:8777/usr/person/1?mimeq=application/json
-==>fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from)]@/sys/fail/650
+==>fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from)]@/sys/fail/722
 ```
 `/person/1` serves that obj and `/person/2` serves the other, through the *same* handler — and `/person/3` is a 404,
 because the space is live rather than a lookup table of two.
@@ -299,6 +299,43 @@ The first consumer is `mcp_httpHandler.doGet` — the Streamable-HTTP GET. It op
 `notifications/resources/updated` as an `event: message`, then holds the stream open with heartbeats until the
 client disconnects.
 
+## MCP server -> client notifications
+
+MCP is client-initiated, but a metatron `mcp_server` can still **push** to its client — and it stays declarative
+mtron, zero Java. The ws carrier registers a `?subq` subscription whose `on_recv` builds a JSON-RPC 2.0 envelope
+and `send()`s it down the connection. The one non-obvious piece on the wire is the envelope shape:
+
+```mtron
+[-- a server->client push is just a JSON-RPC 2.0 envelope, typed as json --]
+json::[jsonrpc => '2.0',
+       method  => 'notifications/resources/updated',
+       params  => [uri  => <ws://localhost:8555/resources/1>,
+                   change => [kind => 'updated', uris => [<ws://localhost:8555/resources/1>]]]]
+```
+
+Three mtron mechanics the pattern leans on (each has bitten before):
+
+* **`json::` over `rec::`.** The `json::` type prefix forces JSON serialization (`"method":"..."`), not mtron
+  record syntax — the client is speaking JSON-RPC, so the envelope must come out as JSON.
+* **`-<` forces evaluation.** A nested template interpolation (`${...}`, a deref, `>>N`) inside a constructed rec is
+  captured as *literal source* unless you wrap the rec in `-<`; the split `... .inst(payload=>_){ *payload>>>send(...)}
+  ` then hands the evaluated rec to the sender, working around the evaluator's nested-call depth limit.
+* **subscriptions are in-memory.** A `?subq` registration lives only for the life of the VM — re-enable it at boot and
+  re-inject it after a crash (`/sys/space/web/ws>>=[q=>+[subq::[=>]]]` then re-register the `sub::`), no restart.
+
+The `?subq` framework is declared on the space the same way as any other q-proc — `wsspace::[q => [subq::[=>]], ...]`
+adds pub/sub semantics to that space. A server may push any of the standard notification methods; every one of them
+says "re-read what you already know":
+
+| method                              | meaning                                          |
+|-------------------------------------|--------------------------------------------------|
+| `notifications/resources/updated`   | a subscribed resource's content changed          |
+| `notifications/resources/list_changed` | the available resource set changed            |
+| `notifications/tools/list_changed`  | the available tool set changed                   |
+| `notifications/prompts/list_changed`| the available prompt set changed                 |
+| `notifications/logging/message`     | a log line for the client                        |
+| `notifications/roots/list_changed`  | the server's accessible filesystem roots changed |
+
 ## not available yet
 
 * the **surface vocabulary** — `*dr.as(mcp::T)`, `person::T.as(rest::T)` — needs `as` rows projecting an obj to a
@@ -314,5 +351,5 @@ client disconnects.
 
 * the webSpace design record at `docs/design/webspace.md` — the lattice, the route contract, and the migration
   stages in full.
-* [MCP server architecture](mcp-server-architecture.md) — `mcp_server`, tools, resources, notifications.
+* [server -> client notifications](#mcp-server---client-notifications) — the `?subq` envelope push (this document).
 * [type system](type-system-mtron.md) — nominal vs structural typing, and why a union classifies values.

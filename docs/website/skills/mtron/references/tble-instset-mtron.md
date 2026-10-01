@@ -47,8 +47,8 @@ is what makes a `_?incrq` write assign its own key (see *keys the database assig
 mtron> *tblespace?docq      [-- the type, its ctor, and the space's own summary --]
 ==>docs::[
     obj=>space::T[?[
-    host=>uri::T,
-    driver=>uri::T]][ctor?rng=tblespace&dom=#{?}(rec::T){<j>}]@/m/tble/space/tblespace,
+     host=>uri::T,
+     driver=>uri::T]][ctor?rng=tblespace&dom=#{?}(rec::T){<j>}]@/m/tble/space/tblespace,
     desc=>'[structural] a metatron realizatio...',
     example=>['*<http://metatron.phaseshift.studi...']]
 mtron> *</m/tble/helper>    [-- the instset's helper rec: the llm chat schema, as a str --]
@@ -140,7 +140,7 @@ mtron> */sys/space/tbledoc.sql('SELECT table_name, column_name, base_vid, obj_ti
     table_name=>'person',
     column_name=>'name',
     base_vid=>'/m/str',
-    obj_tid=>'/m/str']
+    obj_tid=>'/m/str{2}']
 ==>[
     table_name=>'note',
     column_name=>'body',
@@ -517,18 +517,38 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/7
+==>[body=>'a note with a database-assigned key']@tbledoc:note/27
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/8
+==>[body=>'another one']@tbledoc:note/28
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
-==>1
-==>3
-==>2
+==>12
+==>17
+==>21
+==>26
+==>11
+==>27
 ==>4
-==>5
 ==>6
+==>16
+==>3
+==>24
+==>28
+==>20
 ==>7
+==>15
+==>19
+==>23
+==>2
 ==>8
+==>1
+==>13
+==>22
+==>25
+==>10
+==>14
+==>18
+==>5
+==>9
 ```
 ## taking the space down
 

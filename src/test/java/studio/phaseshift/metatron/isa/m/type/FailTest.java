@@ -23,13 +23,23 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -164,6 +174,56 @@ public class FailTest extends AbstractObjTest {
         assertTrue(merged.jvm().getMessage().contains("first"));
         assertNotNull(merged.jvm().getCause());
         assertTrue(merged.jvm().getCause().getMessage().contains("second"));
+    }
+
+    @Test
+    public void testFailPlusSameFailDoesNotCycle() {
+        // threading a throwable already in the chain would close a getCause() cycle,
+        // which writeFail's cause-walk has no guard against and would spin forever
+        final Fail f = fail("once");
+        final Fail merged = f.plus(f);
+
+        final Set<Throwable> seen = new HashSet<>();
+        Throwable c = merged.jvm();
+        int hops = 0;
+        while (c != null && hops < 100) {
+            assertTrue(seen.add(c), "cause chain must not revisit a throwable (cycle)");
+            c = c.getCause();
+            hops++;
+        }
+        assertTrue(hops < 100, "cause chain must terminate");
+    }
+
+    @Test
+    public void testCaughtTransientWrapsWithoutDeleting() {
+        final Fail f = fail("transient");
+        final fURI vid = f.vid();
+        assertNotNull(vid, "an uncaught fail is registered in the fail space");
+        assertFalse(Router.readFromSpace(vid).isNoObj(), "the fail is present before catching");
+
+        final Fail caught = f.caughtTransient();
+        assertTrue(caught.isCaughtFail(), "caughtTransient wraps as caught");
+        assertFalse(caught.isFail(), "a caught fail reports isFail() == false");
+        assertFalse(Router.readFromSpace(vid).isNoObj(), "caughtTransient must not delete the fail from its space");
+
+        f.caught();
+        assertTrue(Router.readFromSpace(vid).isNoObj(), "caught() does delete the fail from its space");
+    }
+
+    @Test
+    public void testUncaughtFailLhsSkipsInstLambda() {
+        // a fail lhs is propagated through a non-catch inst: the inst's function never
+        // runs. this is why the ws handler must catch an uncaught fail before applying
+        // ON_MESSAGE — otherwise no reply is ever sent.
+        final AtomicBoolean ran = new AtomicBoolean(false);
+        final Inst probe = instC(f("/m/inst/probe").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, x) -> {
+            ran.set(true);
+            return lhs;
+        });
+        probe.apply(fail("bad"));
+        assertFalse(ran.get(), "an uncaught fail lhs is propagated, skipping the inst lambda");
+        probe.apply(fail("bad").caught());
+        assertTrue(ran.get(), "a caught fail lhs runs the inst lambda");
     }
 
 }

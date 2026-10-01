@@ -409,7 +409,49 @@
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[pattern=&gt;/m/dcmnt/#,q=&gt;[docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],space=&gt;[super=&gt;!*/m],constq=&gt;[obj_json::[density=&gt;OPAQUE,wrap_uri=&gt;true,bias_towards_uri=&gt;true,bias_towards_objs=&gt;false]@obj_json,_id@/m/dcmnt/_id],type=&gt;[uri::T@collection,space::T[?[pattern=&gt;uri::T,host=&gt;uri::T,{?}serializer=&gt;uri::T,route=&gt;[uri::T=&gt;uri::T],{?}root=&gt;/m/type::T,{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset]][inst?rng=dcmntspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@dcmntspace],inst=&gt;[mql?rng=rec{*}&amp;dom=dcmntspace(uri::T,rec::T){&lt;j&gt;},mql?rng=rec{*}&amp;dom=collection(rec::T){&lt;j&gt;}],rewrite=&gt;[/m/dcmnt/inst/rewrite/mql_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_sum?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_mean?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_where?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_where_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_where_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},/m/dcmnt/inst/rewrite/mql_select?rng=code{?}&amp;dom=code(){&lt;j&gt;}]]@/m/dcmnt</code></pre>
+                        <pre><code>instset::[
+ {{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}/m/dcmnt/#{{/link}}{{/b}},
+ {{b}}{{link}}q{{/link}}{{/b}}=&gt;[docq::[
+ {{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}docq{{/link}}{{/b}},
+ {{b}}{{link}}pre_read{{/link}}{{/b}}=&gt;inst?rng=#{*}&amp;dom=#{?}({{b}}{{link}}uri{{/link}}{{/b}}::T){&lt;j&gt;},
+ {{b}}{{link}}pre_write{{/link}}{{/b}}=&gt;inst?rng=#{*}&amp;dom=#{?}({{b}}{{link}}uri{{/link}}{{/b}}::T,&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T){&lt;j&gt;},
+ {{b}}{{link}}obj{{/link}}{{/b}}=&gt;memspace::[{{b}}{{link}}pattern{{/link}}{{/b}}=&gt;&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;],
+ {{b}}{{link}}inst{{/link}}{{/b}}=&gt;instset::[{{b}}{{link}}pattern{{/link}}{{/b}}=&gt;&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;]]],
+ {{b}}{{link}}space{{/link}}{{/b}}=&gt;[{{b}}{{link}}super{{/link}}{{/b}}=&gt;!*{{b}}{{link}}/m{{/link}}{{/b}}],
+ {{b}}{{link}}constq{{/link}}{{/b}}=&gt;[
+  obj_json::[
+   {{b}}{{link}}density{{/link}}{{/b}}=&gt;{{b}}{{link}}OPAQUE{{/link}}{{/b}},
+   {{b}}{{link}}wrap_uri{{/link}}{{/b}}=&gt;true,
+   {{b}}{{link}}bias_towards_uri{{/link}}{{/b}}=&gt;true,
+   {{b}}{{link}}bias_towards_objs{{/link}}{{/b}}=&gt;false]{{y}}@{{/y}}{{y}}{{link}}/m/web/serializer/obj_json{{/link}}{{/y}},
+  {{b}}{{link}}_id{{/link}}{{/b}}],
+ {{b}}{{link}}type{{/link}}{{/b}}=&gt;[
+  {{b}}{{link}}uri{{/link}}{{/b}}::T{{y}}@{{/y}}{{y}}{{link}}/m/dcmnt/collection{{/link}}{{/y}},
+  {{b}}{{link}}space{{/link}}{{/b}}::T[?[
+ {{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T,
+ {{b}}{{link}}host{{/link}}{{/b}}=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T,
+ {?}{{b}}{{link}}serializer{{/link}}{{/b}}=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T,
+ {{b}}{{link}}route{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T],
+ {?}{{b}}{{link}}root{{/link}}{{/b}}=&gt;{{b}}{{link}}/m/type{{/link}}{{/b}}::T,
+ {?}{{b}}{{link}}schema{{/link}}{{/b}}=&gt;{{b}}{{link}}rec{{/link}}{{/b}}::T[?[
+ {?}{{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T,
+ {?}{{b}}{{link}}const{{/link}}{{/b}}=&gt;[&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T],
+ {?}{{b}}{{link}}type{{/link}}{{/b}}=&gt;{?}[&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T],
+ {?}{{b}}{{link}}inst{{/link}}{{/b}}=&gt;{?}[{{b}}{{link}}inst{{/link}}{{/b}}::T],
+ {?}{{b}}{{link}}rewrite{{/link}}{{/b}}=&gt;{?}[{{b}}{{link}}inst{{/link}}{{/b}}::T],
+ {?}{{b}}{{link}}sugar{{/link}}{{/b}}=&gt;{?}[{{b}}{{link}}lst{{/link}}{{/b}}::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;{{b}}{{link}}#{{/link}}{{/b}}&gt;::T){&lt;j&gt;}]{{y}}@{{/y}}{{y}}{{link}}/m/instset{{/link}}{{/y}}]][inst?rng=dcmntspace&amp;dom=#{?}({{b}}{{link}}rec{{/link}}{{/b}}::T){&lt;j&gt;}]{{y}}@{{/y}}{{y}}{{link}}/m/dcmnt/space/dcmntspace{{/link}}{{/y}}],
+ {{b}}{{link}}inst{{/link}}{{/b}}=&gt;[
+  mql?rng=rec{*}&amp;dom=dcmntspace({{b}}{{link}}uri{{/link}}{{/b}}::T,{{b}}{{link}}rec{{/link}}{{/b}}::T){&lt;j&gt;},
+  mql?rng=rec{*}&amp;dom=collection({{b}}{{link}}rec{{/link}}{{/b}}::T){&lt;j&gt;}],
+ {{b}}{{link}}rewrite{{/link}}{{/b}}=&gt;[
+  /m/dcmnt/inst/rewrite/mql_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/dcmnt/inst/rewrite/mql_sum?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/dcmnt/inst/rewrite/mql_mean?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/dcmnt/inst/rewrite/mql_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/dcmnt/inst/rewrite/mql_where?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/dcmnt/inst/rewrite/mql_where_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/dcmnt/inst/rewrite/mql_where_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/dcmnt/inst/rewrite/mql_select?rng=code{?}&amp;dom=code(){&lt;j&gt;}]]{{y}}@{{/y}}{{y}}{{link}}/m/dcmnt{{/link}}{{/y}}</code></pre>
                     </div>
                 </div>
             </div>
@@ -482,7 +524,7 @@
         <span class="code text-secondary fw-bold">_id</span>
         <small class="text-muted code">/m/dcmnt/_id</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">_id@/m/dcmnt/_id</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">{{b}}{{link}}_id{{/link}}{{/b}}</code></pre></div>
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
@@ -495,7 +537,7 @@
         </span>
         <small class="text-muted code">/m/dcmnt/collection</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T@collection</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">{{b}}{{link}}uri{{/link}}{{/b}}::T{{y}}@{{/y}}{{y}}{{link}}/m/dcmnt/collection{{/link}}{{/y}}</code></pre></div>
     
     
 </div>
@@ -507,18 +549,28 @@
         <small class="text-muted code">/m/dcmnt/space/dcmntspace</small>
     </div>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[pattern=&gt;uri::T,host=&gt;uri::T,{?}serializer=&gt;uri::T,route=&gt;[uri::T=&gt;uri::T],{?}root=&gt;/m/type::T,{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset]][inst?rng=dcmntspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@dcmntspace</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,{?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,{?}pre_write=&gt;inst::T,{?}post_write=&gt;inst::T,{?}qless_write=&gt;inst::T,{?}pre_read=&gt;inst::T,{?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@qproc],{?}route=&gt;[uri{?}::T=&gt;uri::T],{?}schema=&gt;instset::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T,
+ {?}{{b}}{{link}}q{{/link}}{{/b}}=&gt;[{{b}}{{link}}rec{{/link}}{{/b}}::T[?[
+ {{b}}{{link}}pattern{{/link}}{{/b}}=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T,
+ {?}{{b}}{{link}}pre_write{{/link}}{{/b}}=&gt;{{b}}{{link}}inst{{/link}}{{/b}}::T,
+ {?}{{b}}{{link}}post_write{{/link}}{{/b}}=&gt;{{b}}{{link}}inst{{/link}}{{/b}}::T,
+ {?}{{b}}{{link}}qless_write{{/link}}{{/b}}=&gt;{{b}}{{link}}inst{{/link}}{{/b}}::T,
+ {?}{{b}}{{link}}pre_read{{/link}}{{/b}}=&gt;{{b}}{{link}}inst{{/link}}{{/b}}::T,
+ {?}{{b}}{{link}}post_read{{/link}}{{/b}}=&gt;{{b}}{{link}}inst{{/link}}{{/b}}::T]][inst?rng=qproc&amp;dom=#{?}({{b}}{{link}}qproc{{/link}}{{/b}}::T){&lt;j&gt;}]{{y}}@{{/y}}{{y}}{{link}}/m/qproc{{/link}}{{/y}}],
+ {?}{{b}}{{link}}route{{/link}}{{/b}}=&gt;[{{b}}{{link}}uri{{/link}}{{/b}}::T=&gt;{{b}}{{link}}uri{{/link}}{{/b}}::T],
+ {?}{{b}}{{link}}schema{{/link}}{{/b}}=&gt;{{b}}{{link}}instset{{/link}}{{/b}}::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">[structural] an interface to document-oriented databases (MongoDB wire protocol)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a rec describing a document database connection" class="text-info">a rec describing a document database connection</a> <span class="text-light">=&gt;</span> <a href="#a rec with fields for configuring a document database connection" class="text-success">a rec with fields for configuring a document database connection</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}serializer" class="text-light">{?}serializer</a> <span class="text-light">=&gt;</span> <a href="#'the serializer for BSON documents'" class="text-info">&#39;the serializer for BSON documents&#39;</a>
-  <a href="#pattern" class="text-light">pattern</a> <span class="text-light">=&gt;</span> <a href="#'the pattern for accessing documents'" class="text-info">&#39;the pattern for accessing documents&#39;</a>
-  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'connection uri (mongodb:____host:port__database?options)'" class="text-info">database?options)&#39;</a>
-  <a href="#{?}schema" class="text-light">{?}schema</a> <span class="text-light">=&gt;</span> <a href="#'an instset of collection types auto-discovered from the live database'" class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</a>
-  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root type constraint — writes at document root must satisfy this type; defaults to rec::T'" class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</a>
-  <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#'the route for accessing documents'" class="text-info">&#39;the route for accessing documents&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}{{b}}{{link}}serializer{{__link}}{{__b}}" class="text-light">b}}</a> <span class="text-light">=&gt;</span> <a href="#'the serializer for BSON documents'" class="text-info">&#39;the serializer for BSON documents&#39;</a>
+  <a href="#{{b}}{{link}}route{{__link}}{{__b}}" class="text-light">b}}</a> <span class="text-light">=&gt;</span> <a href="#'the route for accessing documents'" class="text-info">&#39;the route for accessing documents&#39;</a>
+  <a href="#{?}{{b}}{{link}}root{{__link}}{{__b}}" class="text-light">b}}</a> <span class="text-light">=&gt;</span> <a href="#'the root type constraint — writes at document root must satisfy this type; defaults to rec::T'" class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</a>
+  <a href="#{?}{{b}}{{link}}schema{{__link}}{{__b}}" class="text-light">b}}</a> <span class="text-light">=&gt;</span> <a href="#'an instset of collection types auto-discovered from the live database'" class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</a>
+  <a href="#{{b}}{{link}}host{{__link}}{{__b}}" class="text-light">b}}</a> <span class="text-light">=&gt;</span> <a href="#'connection uri (mongodb:____host:port__database?options)'" class="text-info">database?options)&#39;</a>
+  <a href="#{{b}}{{link}}pattern{{__link}}{{__b}}" class="text-light">b}}</a> <span class="text-light">=&gt;</span> <a href="#'the pattern for accessing documents'" class="text-info">&#39;the pattern for accessing documents&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -542,8 +594,8 @@
         </span>
         <small class="text-muted code">/m/dcmnt/inst/mql?rng=/m/rec{*}&amp;dom=/m/dcmnt/space/dcmntspace</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0-tab').click();document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mql?rng=rec{*}&dom=dcmntspace(uri::T,rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0-tab').click();document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mql?rng=rec{*}&dom=collection(rec::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0-tab').click();document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mql?rng=rec{*}&dom=dcmntspace({{b}}{{link}}uri{{/link}}{{/b}}::T,{{b}}{{link}}rec{{/link}}{{/b}}::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0-tab').click();document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mql?rng=rec{*}&dom=collection({{b}}{{link}}rec{{/link}}{{/b}}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">the provided rec is translated to an bson query document and evaluated against the domain collection</p>

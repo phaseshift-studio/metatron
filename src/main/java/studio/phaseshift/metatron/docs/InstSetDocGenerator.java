@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -149,7 +150,7 @@ public class InstSetDocGenerator {
         LOG.info("booting metatron VM ...");
         boot(bootFile);
 
-        SER = ObjmtronSerializer.single();
+        SER = ObjmtronUISerializer.prettyPrint();
         final String depth = relativeDepth;
         try {
             final List<Meta> metas = new ArrayList<>();

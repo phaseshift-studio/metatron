@@ -56,8 +56,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class BasicMachine extends AbstractMachine {
 
-    private Processor cachedProcessor = null;// SwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null);
-    private Compiler cachedCompiler = null;//new FixPointRewriter();
+    private Processor cachedProcessor = null;
+    private Compiler cachedCompiler = null;
 
     public BasicMachine(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -73,11 +73,11 @@ public class BasicMachine extends AbstractMachine {
     // ======================== hot slot reads ========================
 
     @Override
-    public <O extends Obj> O at(final Obj key) {
+    public <OBJ extends Obj> OBJ at(final Obj key) {
         if (key.equals(uri(PROCESSOR)))
-            return (O) this.jvm().getOrDefault(uri(PROCESSOR), noobj());
+            return (OBJ) this.jvm().getOrDefault(uri(PROCESSOR), noobj());
         if (key.equals(uri(COMPILER)))
-            return (O) this.jvm().getOrDefault(uri(COMPILER), noobj());
+            return (OBJ) this.jvm().getOrDefault(uri(COMPILER), noobj());
         return super.at(key);
     }
 

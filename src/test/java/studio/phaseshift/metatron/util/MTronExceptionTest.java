@@ -214,9 +214,10 @@ public class MTronExceptionTest extends AbstractMetatronTest {
         }
         if (!result.isFail())
             throw new AssertionError("expected a fail, got " + result);
-        final String rendered = ObjmtronSerializer.single().write(result);   // serialization = the report (console result line)
+        final String rendered = ObjmtronSerializer.single().write(result);   // serialization is data-only
         if (!rendered.contains("3 is not a lst"))
             throw new AssertionError("fail lost its message: " + rendered);
+        MTronException.emitStackTrace(result.asFail().jvm());   // the report boundary emits the trace
         assertEquals(before + 1, MTronException.mtronTracesEmitted(), "one logical failure → one mtron stack trace");
         assertEquals("\\_apply_inst: /m/inst/as?rng=/m/lst&dom=/m/int", MTronException.lastMtronTrace());
     }
@@ -265,8 +266,10 @@ public class MTronExceptionTest extends AbstractMetatronTest {
         final int before = MTronException.mtronTracesEmitted();
         try {
             final Obj result = ObjmtronSerializer.parse("1+ab").apply(noobj());
-            if (result.isFail())
-                ObjmtronSerializer.single().write(result);   // serialize the reported failure
+            if (result.isFail()) {
+                ObjmtronSerializer.single().write(result);   // serialize the reported failure (data-only)
+                MTronException.emitStackTrace(result.asFail().jvm());   // the report boundary emits the trace
+            }
         } catch (final MTronException e) {
             MTronException.emitStackTrace(e);
         }

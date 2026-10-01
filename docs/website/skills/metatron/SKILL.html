@@ -262,7 +262,7 @@
                                 <a class="skill-resource dropdown-item" href="../../skills/metatron/references/type-system-java.html">type-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
                                 <div class="skill-resource-group">scripts</div>
-                                <a class="skill-resource dropdown-item" href="../../skills/metatron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/metatron/scripts/wsplus">wsplus</a>
                             </div>
                         </div>
                     </li>
@@ -280,8 +280,6 @@
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/mcp-server-architecture.html">mcp-server-architecture</a>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/mcp-server-notifications.html">mcp-server-notifications</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
@@ -290,8 +288,8 @@
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
                                 <div class="skill-resource-group">scripts</div>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
-                                <a class="skill-resource dropdown-item" href="../../skills/mtron/scripts/mtron_ws_client.py">mtron_ws_client.py</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/README.md">README.md</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
@@ -405,7 +403,7 @@ snippet is sufficient for the spawned agent to execute mtron code.</p>
 ==&gt;fail::[parse error at line 1, col 2:
      ... 
       ^
-     could not parse at '.']@/sys/fail/360
+     could not parse at '.']@/sys/fail/358
 mtron&gt; feature=&gt;[
         tool_feature::[tool=&gt;[!*eval]]
         ... [-- other features attached to agent --]
@@ -413,12 +411,12 @@ mtron&gt; feature=&gt;[
      feature=&gt;[
            tool_feature::[tool=&gt;[!*eval...
             ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/362
+     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/360
 mtron&gt; ]
 ==&gt;fail::[parse error at line 1, col 1:
      ]
      ^
-     unexpected ']' — missing opening '[' or extra ']'?]@/sys/fail/364
+     unexpected ']' — missing opening '[' or extra ']'?]@/sys/fail/362
 </code></pre>
 <h3>References</h3>
 <ul>

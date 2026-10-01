@@ -52,6 +52,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_JSON_TID;
 
 public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
 
@@ -381,8 +382,26 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
     }
 
     @Override
-    public Obj inputBytes(ByteBuffer bytes) throws MTronException {
-        return this.readString(new String(bytes.array(), StandardCharsets.UTF_8));
+    public Obj inputBytes(final ByteBuffer bytes) throws MTronException {
+        JsonParser parser = new JsonParser();
+        final JsonElement element = parser.parse(new String(bytes.array(), StandardCharsets.UTF_8));
+        return this.read(element);
+    }
+
+    /**
+     * The wire bytes for an obj. A {@code str} typed {@code json} <em>is</em> a document — a MIME document type
+     * is a predicate on text, and {@code x.as(json::T)} yields exactly such a str — so its text goes out as
+     * written instead of as a JSON string of it. Everything else is the JSON text of the written element:
+     * {@code toString()} quotes a plain str ({@code "a/b"}) and, for a rec or lst, <em>is</em> the document.
+     * {@link JsonElement#getAsString()} answers neither question — it throws on a JsonObject/JsonArray (which is
+     * what a rec writes to) and would drop the quotes from a plain str.
+     */
+    @Override
+    public ByteBuffer outputBytes(final Obj obj) throws MTronException {
+        final String json = obj.isStr() && WEB_JSON_TID.equals(Obj.Helper.specificTypeId(obj).basePath())
+                ? obj.strValue()
+                : this.write(obj).toString();
+        return ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
     }
 
     @Override

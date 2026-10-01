@@ -523,7 +523,7 @@ Docker images are built and published to GHCR (`ghcr.io/phaseshift-studio/metatr
 ## MCP (Model Context Protocol)
 
 - WebSocket handler: `mcp_mtron_wsHandler`
-- Test client: `.metatron/skills/mtron/scripts/mtron_ws_client.py`
+- Test client: `bin/wsplus` — self-contained REPL + `-e` one-shot (bundled, with its `bin/lib` deps and `conf/nanorc/mtron.nanorc` inlined by `bin/build-wsplus.py`, into `docs/website/skills/{mtron,metatron}/scripts/wsplus` on site build)
 
 ## Skill Reference Docs
 

@@ -229,7 +229,7 @@ public class MIME {
 
         public ObjSerializer<?> serializer() {
             if (this.isMtron()) return ObjmtronSerializer.single();
-            if (this.isMtronUI()) return ObjmtronUISerializer.blackWhite();
+            if (this.isMtronUI()) return ObjmtronUISerializer.prettyPrint();
             if (this.isJson()) return ObjJSONSerializer.web();
             if (this.isYaml()) return ObjYAMLSerializer.single();
             if (this.isHtml()) return ObjHTMLSerializer.single();

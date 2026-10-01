@@ -51,6 +51,7 @@
         <skipInstSet>false</skipInstSet>
         <skipMarkdown>false</skipMarkdown>
         <skipHeaderMenu>false</skipHeaderMenu>
+        <skipSiteScripts>false</skipSiteScripts>
         <!-- doc-generation experiment toggles: fresh VM per file by default -->
         <mtron.singleBoot>true</mtron.singleBoot>
         <mtron.reverse>false</mtron.reverse>
@@ -759,6 +760,22 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>bundle-site-scripts</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipSiteScripts}</skip>
+                            <executable>python3</executable>
+                            <arguments>
+                                <argument>${project.basedir}/bin/build-wsplus.py</argument>
+                                <argument>${project.basedir}/docs/website/skills/mtron/scripts</argument>
+                                <argument>${project.basedir}/docs/website/skills/metatron/scripts</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>run-header-generator</id>
                         <phase>pre-site</phase>
                         <goals>
@@ -902,35 +919,11 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.asciidoctor</groupId>
-                <artifactId>asciidoctor-maven-plugin</artifactId>
-                <version>${asciidoctor.version}</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.asciidoctor</groupId>
-                        <artifactId>asciidoctorj</artifactId>
-                        <version>${asciidoctorj.version}</version>
-                        <scope>compile</scope>
-                    </dependency>
-                </dependencies>
-                <executions>
-                    <execution>
-                        <id>articles-to-pdf</id>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>process-asciidoc</goal>
-                        </goals>
-                        <configuration>
-                            <sourceDirectory>${project.basedir}/docs/articles</sourceDirectory>
-                            <sourceDocumentName>parametric-identities-in-ring-theory.adoc</sourceDocumentName>
-                            <outputDirectory>${project.basedir}/docs/website/articles</outputDirectory>
-                            <skip>${skipAsciidoc}</skip>
-                            <backend>html</backend>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+            <!-- articles-to-pdf exec removed: its source docs/articles/parametric-identities-in-ring-theory.adoc
+                 no longer exists, but its output docs/website/articles/parametric-identities-in-ring-theory.html
+                 is committed, so the exec was an ENOENT every site build. The main site pages are built by the
+                 separate metatron AsciiDocRunner (skipAsciidoc) and are unaffected. If the .adoc source returns,
+                 re-add an org.asciidoctor:asciidoctor-maven-plugin process-asciidoc exec for it. -->
         </plugins>
         <!--
         ####################################################################################################

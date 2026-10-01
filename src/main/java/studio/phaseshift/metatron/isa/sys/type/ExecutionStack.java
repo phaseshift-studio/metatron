@@ -178,8 +178,7 @@ public class ExecutionStack {
     private static void appendLine(final StringBuilder builder, final int level, final String text) {
         if (!builder.isEmpty())
             builder.append('\n');
-        for (int i = 0; i < level; i++)
-            builder.append("    ");
+        builder.repeat("    ", Math.max(0, level));
         builder.append("\\_").append(text);
     }
 

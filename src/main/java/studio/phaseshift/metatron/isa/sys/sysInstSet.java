@@ -100,6 +100,7 @@ public class sysInstSet extends AbstractInstSet {
     public static final fURI SERIAL_SPACE_TID = SYS_SPACE_TID.extend("serialspace");
     public static final fURI FILE_TID = SYS_ISA_TID.extend("file");
     public static final fURI DIR_TID = SYS_ISA_TID.extend("dir");
+    public static final fURI LOG_ENTRY_TID = SYS_ISA_TID.extend("log_entry");
     public static final fURI IMAGE_TID = FILE_TID.extend("image");
     public static final Type ROUTER_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -110,6 +111,14 @@ public class sysInstSet extends AbstractInstSet {
             .vid(FILE_TID)
             .constructor(lhs -> makeFile(Path.of(lhs.uriValue().basePath().toString())))
             .create();
+    public static final Type LOG_ENTRY_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(LOG_ENTRY_TID)
+            .isaPredicate(rec(
+                    uri(LEVEL), union_(uri(INFO), uri(TRACE), uri(WARN), uri(ERROR), uri(DEBUG)).tryToInst(),
+                    uri(TIME), DATETIME_TYPE,
+                    uri(SOURCE), ALL_TYPE,
+                    uri(MESSAGE), STR_TYPE)).create();
     public static final Type IMAGE_FILE_TYPE = Type.Builder.build()
             .tid(FILE_TID)
             .vid(IMAGE_TID).create();
@@ -158,6 +167,7 @@ public class sysInstSet extends AbstractInstSet {
                 uri(TYPE), lst(
                         FS_SPACE_TYPE,
                         SERIAL_SPACE_TYPE,
+                        LOG_ENTRY_TYPE,
                         DIR_TYPE,
                         FILE_TYPE,
                         IMAGE_FILE_TYPE),
