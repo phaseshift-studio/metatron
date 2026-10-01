@@ -1,0 +1,962 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>cat - metatron Instruction Set</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .terminal-box.click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .terminal-box.click-to-copy:active {
+            background-color: var(--mred);
+        }
+
+        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
+        .terminal-box.click-to-copy .hljs-copy-button {
+            display: none;
+        }
+    </style>
+    <script src="../js/metatron.js" type="text/javascript"></script>
+        <link rel="stylesheet" href="../css/instset_doc.css">
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../index.html" title="metatron"><img src="../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="../start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m.html"><img
+                            src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dckr.html"><img
+                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dcmnt.html"><img
+                            src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_grph.html"><img
+                            src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_ide.html"><img
+                            src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                            alt="ide"/>/m/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_iot.html"><img
+                            src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_llm.html"><img
+                            src="../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                            alt="llm"/>/m/llm</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_mach.html"><img
+                            src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                            alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_mach_ui.html"><img
+                            src="../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                            alt="ui"/>/m/mach/ui</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math.html"><img
+                            src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math_cat.html"><img
+                            src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_sys.html"><img
+                            src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_tble.html"><img
+                            src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                            alt="tble"/>/m/tble</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_vec.html"><img
+                            src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/vec</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_web.html"><img
+                            src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../tractatus.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../articles/geometry-is-the-program.html"><i
+                            class="bi bi-diagram-3 icon-color me-2 isa-row"></i>geometry is the program</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../articles/stream-ring-theory.pdf"><i
+                            class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../articles/parametric-identities-in-ring-theory.html"><i
+                            class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../articles/mm-adt.pdf"><i
+                            class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target (no rollover copy button). The :active CSS turns the block
+    // red while pressed; this copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1"><div class="container-xxl py-4">
+    <div class="text-center mb-2">
+        <h1 class="text-primary glow-text mb-1">
+            <span class="text-light">/m/math/</span>cat
+        </h1>
+        <p style="margin-top:0;margin-bottom:0;" class="subtitle text-light">instruction set reference</p>
+    </div>
+    <div class="text-light"></div>
+    <div class="instset-accordion-wrapper">
+        <div class="accordion accordion-flush" id="accordionInstSet">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button collapsed" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#flush-collapseOne"
+                        aria-expanded="false" aria-controls="flush-collapseOne">
+                        <i class="bi bi-code-slash me-2"></i>/m/math/cat instset obj
+                    </button>
+                </h2>
+                <div id="flush-collapseOne" class="accordion-collapse collapse"
+                    aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
+                    <div class="accordion-body">
+                        <pre><code>instset::[
+ pattern=&gt;/m/math/cat/#,
+ q=&gt;[docq::[
+ pattern=&gt;docq,
+ pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
+ pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[super=&gt;!*/m/math],
+ rewrite=&gt;[
+  /m/math/cat/inst/rewrite/ring_theory_unit_removal?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/math/cat/inst/rewrite/group_theory_involution?rng=code{?}&amp;dom=code(){&lt;j&gt;}],
+ inst=&gt;[
+  as?rng=morphism&amp;dom=#(category::T[?[
+  obj=&gt;inst::T,
+  form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
+  {?}src=&gt;object::T,
+  {?}trgt=&gt;object::T,
+  {?}analysis=&gt;rec::T,
+  {?}law=&gt;[rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law]]][ctor?rng=morphism&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/morphism){&lt;j&gt;},
+  as?rng=object&amp;dom=#(category::T[?[
+  obj=&gt;&lt;T&gt;::T,
+  {?}morphed_to=&gt;[category::T[?[
+ obj=&gt;inst::T,
+ form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
+ {?}src=&gt;object::T,
+ {?}trgt=&gt;object::T,
+ {?}analysis=&gt;rec::T,
+ {?}law=&gt;[rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law]]][ctor?rng=morphism&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
+  {?}morphed_from=&gt;[category::T[?[
+ obj=&gt;inst::T,
+ form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
+ {?}src=&gt;object::T,
+ {?}trgt=&gt;object::T,
+ {?}analysis=&gt;rec::T,
+ {?}law=&gt;[rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law]]][ctor?rng=morphism&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
+  {?}law=&gt;[=&gt;]]][ctor?rng=object&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/object){&lt;j&gt;}],
+ type=&gt;[
+  rec::T[?[
+   obj=&gt;&lt;#&gt;::T,
+   {?}instset=&gt;[uri::T],
+   {?}orbit=&gt;category::T]]@/m/math/cat/category,
+  rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law,
+  category::T[?[
+   obj=&gt;inst::T,
+   form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
+   {?}src=&gt;object::T,
+   {?}trgt=&gt;object::T,
+   {?}analysis=&gt;rec::T,
+   {?}law=&gt;[rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law]]][ctor?rng=morphism&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/morphism,
+  category::T[?[
+   obj=&gt;&lt;T&gt;::T,
+   {?}morphed_to=&gt;[category::T[?[
+ obj=&gt;inst::T,
+ form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
+ {?}src=&gt;object::T,
+ {?}trgt=&gt;object::T,
+ {?}analysis=&gt;rec::T,
+ {?}law=&gt;[rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law]]][ctor?rng=morphism&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
+   {?}morphed_from=&gt;[category::T[?[
+ obj=&gt;inst::T,
+ form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
+ {?}src=&gt;object::T,
+ {?}trgt=&gt;object::T,
+ {?}analysis=&gt;rec::T,
+ {?}law=&gt;[rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law]]][ctor?rng=morphism&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
+   {?}law=&gt;[=&gt;]]][ctor?rng=object&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/object,
+  rec::T[?[=&gt;]]@/m/math/cat/theory,
+  theory::T[?[
+   add=&gt;inst::T,
+   mul=&gt;inst::T,
+   zero=&gt;&lt;#&gt;::T,
+   one=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/ring_theory,
+  theory::T[?[
+   op=&gt;inst::T,
+   id=&gt;&lt;#&gt;::T,
+   inv=&gt;inst::T]]@/m/math/cat/theory/group_theory,
+  theory::T[?[
+   op=&gt;inst::T,
+   id=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/monoid_theory]]@/m/math/cat</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><div class="container-xxl mb-4">
+    <div class="d-flex justify-content-center gap-2 flex-wrap">
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">8</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>insts <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">2</span></a>
+    </div>
+</div><div class="container-xxl mb-4">
+    <div class="card">
+        <div class="card-header"><h5 class="mb-0 text-primary">index</h5></div>
+        <div class="card-body"><div class="mb-3">
+    <h6 class="text-primary mb-2">types</h6>
+    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">cat</small></div><div class="d-flex flex-wrap"><a href="#__m__math__cat__category" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">category</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__cat__law" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">law</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__cat__theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">theory</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">category</small></div><div class="d-flex flex-wrap"><a href="#__m__math__cat__category__morphism" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">morphism</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__cat__category__object" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">object</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">theory</small></div><div class="d-flex flex-wrap"><a href="#__m__math__cat__theory__group_theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">group_theory</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__cat__theory__monoid_theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">monoid_theory</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__cat__theory__ring_theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">ring_theory</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div>
+</div><div class="mb-3">
+    <h6 class="text-primary mb-2">rewrites</h6>
+    <div class="d-flex flex-wrap"><a href="#__m__math__cat__inst__rewrite__group_theory_involution?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">group_theory_involution</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__math__cat__inst__rewrite__ring_theory_unit_removal?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">ring_theory_unit_removal</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a></div>
+</div></div>
+    </div>
+</div><div class="container-xxl mb-4" id="types">
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">8</span></h3>
+    <div class="card mb-3" id="__m__math__cat__category">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">category::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/category</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+ obj=&gt;&lt;#&gt;::T,
+ {?}instset=&gt;[uri::T],
+ {?}orbit=&gt;category::T]]@/m/math/cat/category</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] a categorical structure to be refined into an object or morphism</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the type \(X\) lifted to a vertex: \(\mathrm{obj} = X\)'" class="text-info">&#39;the type \(X\) lifted to a vertex: \(\mathrm{obj} = X\)&#39;</a>
+  <a href="#{?}orbit" class="text-light">{?}orbit</a> <span class="text-light">=&gt;</span> <a href="#'the reversible-core component: \(\mathrm{orbit}(X) = {Y : X \sim^{*} Y}\), where \(X \sim Y \iff X 	o Y \wedge Y 	o X\)'" class="text-info">&#39;the reversible-core component: \(\mathrm{orbit}(X) = {Y : X \sim^{*} Y}\), where \(X \sim Y \iff X 	o Y \wedge Y 	o X\)&#39;</a>
+  <a href="#{?}instset" class="text-light">{?}instset</a> <span class="text-light">=&gt;</span> <a href="#"uri patterns \(P\) selecting the instsets \(\mathcal{S}\) from which the category's morphisms are generated"" class="text-info">&quot;uri patterns \(P\) selecting the instsets \(\mathcal{S}\) from which the category&#39;s morphisms are generated&quot;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__math__cat__theory__group_theory">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">group_theory::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__cat__theory" class="instset-doc-small-code text-info code">/m/math/cat/theory::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/theory/group_theory</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">theory::T[?[
+ op=&gt;inst::T,
+ id=&gt;&lt;#&gt;::T,
+ inv=&gt;inst::T]]@/m/math/cat/theory/group_theory</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__theory" class="code inherited-link">theory::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[=&gt;]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</p>
+</div>
+</div><div class="card mb-3" id="__m__math__cat__law">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">law::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/law</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] the process laws a morphism obeys — the union of the process-law labels</p>
+</div>
+</div><div class="card mb-3" id="__m__math__cat__theory__monoid_theory">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">monoid_theory::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__cat__theory" class="instset-doc-small-code text-info code">/m/math/cat/theory::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/theory/monoid_theory</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">theory::T[?[
+ op=&gt;inst::T,
+ id=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/monoid_theory</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__theory" class="code inherited-link">theory::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[=&gt;]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</p>
+</div>
+</div><div class="card mb-3" id="__m__math__cat__category__morphism">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">morphism::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__cat__category" class="instset-doc-small-code text-info code">/m/math/cat/category::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/category/morphism</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">category::T[?[
+ obj=&gt;inst::T,
+ form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
+ {?}src=&gt;object::T,
+ {?}trgt=&gt;object::T,
+ {?}analysis=&gt;rec::T,
+ {?}law=&gt;[rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law]]][ctor?rng=morphism&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/morphism</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__category" class="code inherited-link">category::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ obj=&gt;&lt;#&gt;::T,
+ {?}instset=&gt;[uri::T],
+ {?}orbit=&gt;category::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] an inst as a categorical morphism incident to a source object (dom) and a target object (rng)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#law" class="text-light">law</a> <span class="text-light">=&gt;</span> <a href="#'the declared process laws \(\mathcal{L}\) the morphism obeys, e.g. \(\mathrm{commutative}: f(x,y) = f(y,x)\)'" class="text-info">&#39;the declared process laws \(\mathcal{L}\) the morphism obeys, e.g. \(\mathrm{commutative}: f(x,y) = f(y,x)\)&#39;</a>
+  <a href="#src" class="text-light">src</a> <span class="text-light">=&gt;</span> <a href="#'the source object the morphism leaves: \(\mathrm{src}(f) = \mathrm{dom}(f)\)'" class="text-info">&#39;the source object the morphism leaves: \(\mathrm{src}(f) = \mathrm{dom}(f)\)&#39;</a>
+  <a href="#{?}analysis__orbit" class="text-light">orbit</a> <span class="text-light">=&gt;</span> <a href="#"the reversible-core component of the morphism's dom: \(\mathrm{orbit}(f) = {X : \mathrm{dom}(f) \sim^{*} X}\)"" class="text-info">&quot;the reversible-core component of the morphism&#39;s dom: \(\mathrm{orbit}(f) = {X : \mathrm{dom}(f) \sim^{*} X}\)&quot;</a>
+  <a href="#trgt" class="text-light">trgt</a> <span class="text-light">=&gt;</span> <a href="#'the target object the morphism enters: \(\mathrm{trgt}(f) = \mathrm{rng}(f)\)'" class="text-info">&#39;the target object the morphism enters: \(\mathrm{trgt}(f) = \mathrm{rng}(f)\)&#39;</a>
+  <a href="#{?}analysis__contested" class="text-light">contested</a> <span class="text-light">=&gt;</span> <a href="#'the witness edges behind the ambiguous__incomparable labels: \(\mathrm{contested}(f) = {g : \mathrm{trgt}(g) = \mathrm{trgt}(f) \wedge \mathrm{src}(g) \perp \mathrm{src}(f)} \cup {g : \mathrm{src}(g) = \mathrm{src}(f) \wedge \mathrm{trgt}(g) \perp \mathrm{trgt}(f)}\)'" class="text-info">incomparable labels: \(\mathrm{contested}(f) = {g : \mathrm{trgt}(g) = \mathrm{trgt}(f) \wedge \mathrm{src}(g) \perp \mathrm{src}(f)} \cup {g : \mathrm{src}(g) = \mathrm{src}(f) \wedge \mathrm{trgt}(g) \perp \mathrm{trgt}(f)}\)&#39;</a>
+  <a href="#{?}analysis__position" class="text-light">position</a> <span class="text-light">=&gt;</span> <a href="#"the edge's place among its siblings: \(\mathrm{position}(f) \subseteq {\mathrm{duplicate}, \mathrm{ambiguous}, \mathrm{incomparable}, \mathrm{coupling}, \mathrm{isochain}, \mathrm{retract}}\)"" class="text-info">&quot;the edge&#39;s place among its siblings: \(\mathrm{position}(f) \subseteq {\mathrm{duplicate}, \mathrm{ambiguous}, \mathrm{incomparable}, \mathrm{coupling}, \mathrm{isochain}, \mathrm{retract}}\)&quot;</a>
+  <a href="#form" class="text-light">form</a> <span class="text-light">=&gt;</span> <a href="#'the n-tid coefficient shape \((c_{\mathrm{dom}}, c_{\mathrm{rng}})\) in regex notation: \(\mathrm{mapper} = (1,1),\; \mathrm{filter} = (1, ?),\; \mathrm{reducer} = (^{\ast}, 1),\; \mathrm{flatmapper} = (1, ^{+}),\; \ldots\)'" class="text-info">&#39;the n-tid coefficient shape \((c_{\mathrm{dom}}, c_{\mathrm{rng}})\) in regex notation: \(\mathrm{mapper} = (1,1),\; \mathrm{filter} = (1, ?),\; \mathrm{reducer} = (^{\ast}, 1),\; \mathrm{flatmapper} = (1, ^{+}),\; \ldots\)&#39;</a>
+  <a href="#{?}analysis__inverse" class="text-light">inverse</a> <span class="text-light">=&gt;</span> <a href="#'the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\)'" class="text-info">&#39;the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\)&#39;</a>
+  <a href="#{?}analysis__family" class="text-light">family</a> <span class="text-light">=&gt;</span> <a href="#'the same-name siblings: \(\mathrm{family}(f) = {g : \mathrm{op}(g) = \mathrm{op}(f)}\)'" class="text-info">&#39;the same-name siblings: \(\mathrm{family}(f) = {g : \mathrm{op}(g) = \mathrm{op}(f)}\)&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__math__cat__category__object">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">object::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__cat__category" class="instset-doc-small-code text-info code">/m/math/cat/category::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/category/object</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">category::T[?[
+ obj=&gt;&lt;T&gt;::T,
+ {?}morphed_to=&gt;[category::T[?[
+ obj=&gt;inst::T,
+ form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
+ {?}src=&gt;object::T,
+ {?}trgt=&gt;object::T,
+ {?}analysis=&gt;rec::T,
+ {?}law=&gt;[rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law]]][ctor?rng=morphism&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
+ {?}morphed_from=&gt;[category::T[?[
+ obj=&gt;inst::T,
+ form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
+ {?}src=&gt;object::T,
+ {?}trgt=&gt;object::T,
+ {?}analysis=&gt;rec::T,
+ {?}law=&gt;[rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law]]][ctor?rng=morphism&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
+ {?}law=&gt;[=&gt;]]][ctor?rng=object&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/object</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__category" class="code inherited-link">category::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ obj=&gt;&lt;#&gt;::T,
+ {?}instset=&gt;[uri::T],
+ {?}orbit=&gt;category::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] a type as a categorical object incident to targeting morphisms and sourcing morphisms</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#morphed_from" class="text-light">morphed_from</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)'" class="text-info">&#39;the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)&#39;</a>
+  <a href="#morphed_to" class="text-light">morphed_to</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)'" class="text-info">&#39;the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)&#39;</a>
+  <a href="#law" class="text-light">law</a> <span class="text-light">=&gt;</span> <a href="#'the structural theories \(\mathcal{T}\) the object models'" class="text-info">&#39;the structural theories \(\mathcal{T}\) the object models&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__math__cat__theory__ring_theory">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">ring_theory::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__cat__theory" class="instset-doc-small-code text-info code">/m/math/cat/theory::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/theory/ring_theory</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">theory::T[?[
+ add=&gt;inst::T,
+ mul=&gt;inst::T,
+ zero=&gt;&lt;#&gt;::T,
+ one=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/ring_theory</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__theory" class="code inherited-link">theory::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[=&gt;]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, and \(a \cdot (b + c) = a \cdot b + a \cdot c\)</p>
+</div>
+</div><div class="card mb-3" id="__m__math__cat__theory">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">theory::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/theory</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[=&gt;]]@/m/math/cat/theory</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">[structural] the nominal super-type of the algebraic theories: a theory names its operations by role, e.g. \(\mathrm{ring} \mapsto \{\mathrm{add}, \mathrm{mul}, \mathrm{zero}, \mathrm{one}\}\)</p>
+</div>
+</div>
+</div><div class="container-xxl mb-4" id="rewrites">
+    <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">2</span></h3>
+    <div class="card mb-3" id="__m__math__cat__inst__rewrite__group_theory_involution?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">group_theory_involution</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/inst/rewrite/group_theory_involution?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/cat/inst/rewrite/group_theory_involution?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    
+</div><div class="card mb-3" id="__m__math__cat__inst__rewrite__ring_theory_unit_removal?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">ring_theory_unit_removal</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/inst/rewrite/ring_theory_unit_removal?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/cat/inst/rewrite/ring_theory_unit_removal?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    
+</div>
+</div><div class="container-xxl py-3 text-center">
+    <hr class="border-secondary">
+    <small class="text-muted">
+        generated by metatron instset doc generator on build 0-0.1-SNAPSHOT<br>
+        (c) PhaseShift Studio, LLC
+    </small>
+</div></main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>
