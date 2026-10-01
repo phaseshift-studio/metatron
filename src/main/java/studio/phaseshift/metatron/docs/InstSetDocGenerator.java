@@ -279,7 +279,14 @@ public class InstSetDocGenerator {
 
     private static Meta extractMeta(final InstSet is, final String vid) {
         final String name = vid.substring(vid.lastIndexOf('/') + 1);
-        final String desc = fieldStr(is, "desc");
+        String desc = fieldStr(is, "desc");
+        if (desc == null || desc.isEmpty()) {
+            // the set's own doc is attached via docWrap(this, ...) — read it off the set's ?docq
+            final Rec isDoc = fetchDoc(f(vid));
+            final String docDesc = isDoc == null ? null : fieldStr(isDoc, "desc");
+            if (docDesc != null && !docDesc.isEmpty() && !"null".equals(docDesc))
+                desc = docDesc;
+        }
         final String full = SER.write(is);
 
         // Parent / children from space metadata
@@ -431,13 +438,12 @@ public class InstSetDocGenerator {
 
     private static String sectionHeader(final Meta meta) {
         final String parentPath = meta.vid().substring(0, meta.vid().lastIndexOf('/'));
-        final StringBuilder descHtml = new StringBuilder();
-        if (meta.desc() != null && !meta.desc().isEmpty() && !"null".equals(meta.desc())) {
-            descHtml.append("""
-                            <p class="text-light mt-3 mb-0" style="line-height:2.5em;max-width:1000px;margin:0 auto;">
-                            %s</p>
-                            """.formatted(esc(meta.desc().replace("\n", ""))));
-        }
+        final String descText = meta.desc() != null && !meta.desc().isEmpty() && !"null".equals(meta.desc())
+                ? meta.desc().replace("\n", " ").strip() : "";
+        final String descHtml = descText.isEmpty() ? "" : """
+                        <p class="set-desc text-light" style="max-width:1100px;margin:0.2rem auto 0.9rem;font-size:1.05rem;line-height:1.5;">
+                        %s</p>
+                        """.formatted(esc(descText));
 
         return """
                <div class="container-xxl py-4">
@@ -445,9 +451,10 @@ public class InstSetDocGenerator {
                        <h1 class="text-primary glow-text mb-1">
                            <span class="text-light">%1$s/</span>%2$s
                        </h1>
-                       <p style="margin-top:0;margin-bottom:0;" class="subtitle text-light">instruction set reference</p>
+                       %3$s
+                       <p class="subtitle text-muted"
+                          style="margin-top:0.15rem;margin-bottom:0;font-size:0.95rem;letter-spacing:0.16em;text-transform:uppercase;">instruction set reference</p>
                    </div>
-                   <div class="text-light">%3$s</div>
                    <div class="instset-accordion-wrapper">
                        <div class="accordion accordion-flush" id="accordionInstSet">
                            <div class="accordion-item">
@@ -1114,13 +1121,13 @@ public class InstSetDocGenerator {
         if (doc == null) return "";
         final StringBuilder parts = new StringBuilder();
 
-        // Description
+        // Description — any leading [nominal]/[structural]/[mapper]/... badge renders as a chip
         final String desc = fieldStr(doc, "desc");
         if (desc != null && !desc.isEmpty()) {
             parts.append("""
                          <div class="card-body border-top py-2">
-                             <p class="mb-0 text-light">%s</p>
-                         </div>""".formatted(esc(desc)));
+                             <p class="mb-0 text-light">%1$s %2$s</p>
+                         </div>""".formatted(specChips(desc), esc(specRest(desc))));
         }
 
         // Signature (dom/rng) + args
@@ -1133,13 +1140,15 @@ public class InstSetDocGenerator {
         if (hasSig || hasArgs) {
             final StringBuilder inner = new StringBuilder();
             if (hasSig) {
-                final String domHtml = preLink(dom != null && !dom.isEmpty() ? dom : "?",
+                final String domHtml = preLink(specRest(dom),
                         "text-info", instsetVid);
-                final String rngHtml = preLink(rng != null && !rng.isEmpty() ? rng : "?",
+                final String rngHtml = preLink(specRest(rng),
                         "text-success", instsetVid);
+                final String domChips = specChips(dom);
+                final String rngChips = specChips(rng);
                 final String sigLabel = hasArgs ? "<small class=\"text-muted fw-bold\">sig:</small>\n    " : "";
                 inner.append(sigLabel)
-                        .append(mathPre(domHtml + " <span class=\"text-light\">=&gt;</span> " + rngHtml));
+                        .append(mathPre(domChips + domHtml + " <span class=\"text-light\">=&gt;</span> " + rngChips + rngHtml));
             }
             if (hasArgs) {
                 final StringBuilder rows = new StringBuilder();
@@ -1173,6 +1182,45 @@ public class InstSetDocGenerator {
         }
 
         return parts.toString();
+    }
+
+    // ── Spec / form badges — "[nominal]", "[structural]", "[generic]", "[mapper]", ... ──
+
+    private static final Pattern LEADING_SPEC = Pattern.compile("^\\[([a-z][a-z0-9_]*)\\]\\s*");
+
+    /**
+     * The doc strings of types and instructions are automatically prefixed with a spec or
+     * form badge — {@code [nominal]}/{@code [structural]} on types, {@code [generic]} on
+     * unspecified dom/rng sides, {@code [mapper]}/{@code [fork]}/... on instructions —
+     * extract those leading {@code [word]} prefixes as highlighted chip spans.
+     */
+    static String specChips(final String text) {
+        if (text == null) return "";
+        final StringBuilder chips = new StringBuilder();
+        String rest = text.stripLeading();
+        while (!rest.isEmpty()) {
+            final Matcher m = LEADING_SPEC.matcher(rest);
+            if (!m.find()) break;
+            final String name = m.group(1).toLowerCase();
+            chips.append("<span class=\"spec-chip spec-").append(name)
+                    .append("\">").append(name).append("</span> ");
+            rest = rest.substring(m.end());
+        }
+        return chips.toString().stripTrailing();
+    }
+
+    /**
+     * A doc string with its leading {@code [word]} badge prefixes removed — what remains is the prose.
+     */
+    static String specRest(final String text) {
+        if (text == null) return "";
+        String rest = text.stripLeading();
+        while (!rest.isEmpty()) {
+            final Matcher m = LEADING_SPEC.matcher(rest);
+            if (!m.find()) break;
+            rest = rest.substring(m.end());
+        }
+        return rest.stripLeading();
     }
 
     // ── Type signature HTML ────────────────────────────────────────────

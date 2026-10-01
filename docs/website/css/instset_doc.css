@@ -409,3 +409,42 @@ pre code.hljs {
 .card[id] {
     scroll-margin-top: 5.5rem;
 }
+
+/* ==========================================================================
+   Spec / form badges — the doc prefixes [nominal], [structural], [generic],
+   [mapper], [fork], ... are rendered as small pill chips.
+   Base hue (violet-blue) = instruction forms; nominal/structural = type
+   kind (gold); generic = unspecified dom/rng side (slate).
+   ========================================================================== */
+.spec-chip {
+    display: inline-block;
+    padding: 0.08rem 0.55rem;
+    margin-right: 0.5rem;
+    border-radius: 999px;
+    border: 1px solid;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.07em;
+    vertical-align: 0.08em;
+    white-space: nowrap;
+    background: rgba(25, 28, 36, 0.85);
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.55), inset 0 0 4px rgba(0, 0, 0, 0.4);
+    color: #b18ae0;
+    border-color: rgba(177, 138, 224, 0.55);
+}
+
+.spec-nominal {
+    color: #edbf73;
+    border-color: rgba(237, 191, 115, 0.6);
+}
+
+.spec-structural {
+    color: #8cc084;
+    border-color: rgba(140, 192, 132, 0.6);
+}
+
+.spec-generic {
+    color: #b6b2c2;
+    border-color: rgba(182, 178, 194, 0.55);
+}

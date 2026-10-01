@@ -640,7 +640,7 @@ mtron&gt; nat::2                    [-- ok --]
 ==&gt;nat::2
 mtron&gt; nat::-1                   [-- &lt;ERROR&gt; --]
 ==&gt;fail::[-1 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-1]@/sys/fail/464
+   	while parsing: nat::-1]@/sys/fail/458
 </code></pre>
 <hr />
 <h3>8. Mapping &amp; Filtering</h3>
@@ -660,7 +660,7 @@ mtron&gt; {1,2,3,4}.map(map(+2))           [-- nested --]
 ==&gt;5
 ==&gt;6
 mtron&gt; {1,2,3}.where(gt(1))             [-- {2,3}  (filter: keep if predicate matches) --]
-==&gt;fail{3}::[lhs range does not match inst domain: int::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri(gt(1)){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/506
+==&gt;fail{3}::[lhs range does not match inst domain: int::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri(gt(1)){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/500
 mtron&gt; {1,2,3}.is(gt(1))                [-- {2,3}  (same, filter via is()) --]
 ==&gt;2
 ==&gt;3
@@ -688,17 +688,17 @@ mtron&gt; [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3]
 </code></pre>
 <h4>Where (filter)</h4>
 <pre><code class="language-mtron">mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}.where([a=&gt;is(gt(1))])               [-- {[a=&gt;2],[a=&gt;3]} --]
-==&gt;fail{3}::[lhs range does not match inst domain: rec::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri([a=&gt;is(gt(1))]){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/512
+==&gt;fail{3}::[lhs range does not match inst domain: rec::T =&gt; uri::T [where?rng=uri{?}&amp;dom=uri([a=&gt;is(gt(1))]){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/506
 mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}=?=[a=&gt;is(gt(1))]                    [-- syntax sugar for above --]
 ==&gt;fail::[parse error at line 1, col 23:
      {[a=&gt;1],[a=&gt;2],[a=&gt;3]}=?=[a=&gt;is(gt(1))]                    
                            ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/518
+     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/512
 mtron&gt; [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   [-- [1,7,3] --]
 ==&gt;fail::[parse error at line 1, col 23:
      [1,2,3]==[_,plus(5),_]=?=[_,is(gt(5)),_]                   
                            ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/520
+     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/514
 </code></pre>
 <hr />
 <h3>9. Grouping</h3>
@@ -964,7 +964,7 @@ mtron&gt; {1,2,3,4}.sum{2}().sum?int&lt;=int{1,7}().sum()-&lt;[_,_]&gt;-.sum?int
 ==&gt;fail::[parse error at line 1, col 74:
      ...,7}().sum()-&lt;[_,_]&gt;-.sum?int&lt;=int{2}()  #
                                                 ^
-     could not parse at '#' — unclosed '&lt;' — missing '&gt;'?]@/sys/fail/556
+     could not parse at '#' — unclosed '&lt;' — missing '&gt;'?]@/sys/fail/550
 </code></pre>
 
     </div>

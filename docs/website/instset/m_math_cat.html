@@ -391,9 +391,12 @@
         <h1 class="text-primary glow-text mb-1">
             <span class="text-light">/m/math/</span>cat
         </h1>
-        <p style="margin-top:0;margin-bottom:0;" class="subtitle text-light">instruction set reference</p>
+        <p class="set-desc text-light" style="max-width:1100px;margin:0.2rem auto 0.9rem;font-size:1.05rem;line-height:1.5;">
+categorical realization of types and insts as objects and morphisms</p>
+
+        <p class="subtitle text-muted"
+           style="margin-top:0.15rem;margin-bottom:0;font-size:0.95rem;letter-spacing:0.16em;text-transform:uppercase;">instruction set reference</p>
     </div>
-    <div class="text-light"></div>
     <div class="instset-accordion-wrapper">
         <div class="accordion accordion-flush" id="accordionInstSet">
             <div class="accordion-item">
@@ -408,42 +411,14 @@
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[
+ pattern=&gt;/m/math/cat/#,
  q=&gt;[docq::[
  pattern=&gt;docq,
  pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
  pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- pattern=&gt;/m/math/cat/#,
  space=&gt;[super=&gt;!*/m/math],
- inst=&gt;[
-  as?rng=morphism&amp;dom=#(category::T[?[
-  obj=&gt;inst::T,
-  form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
-  {?}src=&gt;object::T,
-  {?}trgt=&gt;object::T,
-  {?}analysis=&gt;rec::T,
-  {?}law=&gt;[rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law]]][ctor?rng=morphism&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/morphism){&lt;j&gt;},
-  as?rng=object&amp;dom=#(category::T[?[
-  obj=&gt;&lt;T&gt;::T,
-  {?}morphed_to=&gt;[category::T[?[
- obj=&gt;inst::T,
- form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
- {?}src=&gt;object::T,
- {?}trgt=&gt;object::T,
- {?}analysis=&gt;rec::T,
- {?}law=&gt;[rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law]]][ctor?rng=morphism&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
-  {?}morphed_from=&gt;[category::T[?[
- obj=&gt;inst::T,
- form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
- {?}src=&gt;object::T,
- {?}trgt=&gt;object::T,
- {?}analysis=&gt;rec::T,
- {?}law=&gt;[rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law]]][ctor?rng=morphism&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
-  {?}law=&gt;[=&gt;]]][ctor?rng=object&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/object){&lt;j&gt;}],
- rewrite=&gt;[
-  /m/math/cat/inst/rewrite/ring_theory_unit_removal?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-  /m/math/cat/inst/rewrite/group_theory_involution?rng=code{?}&amp;dom=code(){&lt;j&gt;}],
  type=&gt;[
   rec::T[?[
    obj=&gt;&lt;#&gt;::T,
@@ -486,7 +461,35 @@
    inv=&gt;inst::T]]@/m/math/cat/theory/group_theory,
   theory::T[?[
    op=&gt;inst::T,
-   id=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/monoid_theory]]@/m/math/cat</code></pre>
+   id=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/monoid_theory],
+ rewrite=&gt;[
+  /m/math/cat/inst/rewrite/ring_theory_unit_removal?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/math/cat/inst/rewrite/group_theory_involution?rng=code{?}&amp;dom=code(){&lt;j&gt;}],
+ inst=&gt;[
+  as?rng=morphism&amp;dom=#(category::T[?[
+  obj=&gt;inst::T,
+  form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
+  {?}src=&gt;object::T,
+  {?}trgt=&gt;object::T,
+  {?}analysis=&gt;rec::T,
+  {?}law=&gt;[rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law]]][ctor?rng=morphism&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/morphism){&lt;j&gt;},
+  as?rng=object&amp;dom=#(category::T[?[
+  obj=&gt;&lt;T&gt;::T,
+  {?}morphed_to=&gt;[category::T[?[
+ obj=&gt;inst::T,
+ form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
+ {?}src=&gt;object::T,
+ {?}trgt=&gt;object::T,
+ {?}analysis=&gt;rec::T,
+ {?}law=&gt;[rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law]]][ctor?rng=morphism&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
+  {?}morphed_from=&gt;[category::T[?[
+ obj=&gt;inst::T,
+ form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
+ {?}src=&gt;object::T,
+ {?}trgt=&gt;object::T,
+ {?}analysis=&gt;rec::T,
+ {?}law=&gt;[rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law]]][ctor?rng=morphism&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
+  {?}law=&gt;[=&gt;]]][ctor?rng=object&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/object){&lt;j&gt;}]]@/m/math/cat</code></pre>
                     </div>
                 </div>
             </div>
@@ -553,11 +556,11 @@
  {?}orbit=&gt;category::T]]@/m/math/cat/category</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a categorical structure to be refined into an object or morphism</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a categorical structure to be refined into an object or morphism</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}instset" class="text-light">{?}instset</a> <span class="text-light">=&gt;</span> <a href="#"uri patterns \(P\) selecting the instsets \(\mathcal{S}\) from which the category's morphisms are generated"" class="text-info">&quot;uri patterns \(P\) selecting the instsets \(\mathcal{S}\) from which the category&#39;s morphisms are generated&quot;</a>
-  <a href="#{?}orbit" class="text-light">{?}orbit</a> <span class="text-light">=&gt;</span> <a href="#'the reversible-core component: \(\mathrm{orbit}(X) = {Y : X \sim^{*} Y}\), where \(X \sim Y \iff X 	o Y \wedge Y 	o X\)'" class="text-info">&#39;the reversible-core component: \(\mathrm{orbit}(X) = {Y : X \sim^{*} Y}\), where \(X \sim Y \iff X 	o Y \wedge Y 	o X\)&#39;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}orbit" class="text-light">{?}orbit</a> <span class="text-light">=&gt;</span> <a href="#'the reversible-core component: \(\mathrm{orbit}(X) = {Y : X \sim^{*} Y}\), where \(X \sim Y \iff X 	o Y \wedge Y 	o X\)'" class="text-info">&#39;the reversible-core component: \(\mathrm{orbit}(X) = {Y : X \sim^{*} Y}\), where \(X \sim Y \iff X 	o Y \wedge Y 	o X\)&#39;</a>
+  <a href="#{?}instset" class="text-light">{?}instset</a> <span class="text-light">=&gt;</span> <a href="#"uri patterns \(P\) selecting the instsets \(\mathcal{S}\) from which the category's morphisms are generated"" class="text-info">&quot;uri patterns \(P\) selecting the instsets \(\mathcal{S}\) from which the category&#39;s morphisms are generated&quot;</a>
   <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the type \(X\) lifted to a vertex: \(\mathrm{obj} = X\)'" class="text-info">&#39;the type \(X\) lifted to a vertex: \(\mathrm{obj} = X\)&#39;</a>
 </pre>
 </div>
@@ -575,7 +578,7 @@
  inv=&gt;inst::T]]@/m/math/cat/theory/group_theory</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__theory" class="code inherited-link">theory::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[=&gt;]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__law">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -588,7 +591,7 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?union(absorbing,kleene,partial,floatable,blocked,action,prime,left_distributive,right_distributive,monoidic,commutative,poset,unit,involution,idempotent,nilpotent,zero_divisor,cyclic)]@/m/math/cat/law</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] the process laws a morphism obeys — the union of the process-law labels</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the process laws a morphism obeys — the union of the process-law labels</p>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__theory__monoid_theory">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -603,7 +606,7 @@
  id=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/monoid_theory</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__theory" class="code inherited-link">theory::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[=&gt;]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category__morphism">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -625,18 +628,18 @@
  {?}instset=&gt;[uri::T],
  {?}orbit=&gt;category::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] an inst as a categorical morphism incident to a source object (dom) and a target object (rng)</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an inst as a categorical morphism incident to a source object (dom) and a target object (rng)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}analysis__orbit" class="text-light">orbit</a> <span class="text-light">=&gt;</span> <a href="#"the reversible-core component of the morphism's dom: \(\mathrm{orbit}(f) = {X : \mathrm{dom}(f) \sim^{*} X}\)"" class="text-info">&quot;the reversible-core component of the morphism&#39;s dom: \(\mathrm{orbit}(f) = {X : \mathrm{dom}(f) \sim^{*} X}\)&quot;</a>
-  <a href="#src" class="text-light">src</a> <span class="text-light">=&gt;</span> <a href="#'the source object the morphism leaves: \(\mathrm{src}(f) = \mathrm{dom}(f)\)'" class="text-info">&#39;the source object the morphism leaves: \(\mathrm{src}(f) = \mathrm{dom}(f)\)&#39;</a>
-  <a href="#law" class="text-light">law</a> <span class="text-light">=&gt;</span> <a href="#'the declared process laws \(\mathcal{L}\) the morphism obeys, e.g. \(\mathrm{commutative}: f(x,y) = f(y,x)\)'" class="text-info">&#39;the declared process laws \(\mathcal{L}\) the morphism obeys, e.g. \(\mathrm{commutative}: f(x,y) = f(y,x)\)&#39;</a>
-  <a href="#{?}analysis__family" class="text-light">family</a> <span class="text-light">=&gt;</span> <a href="#'the same-name siblings: \(\mathrm{family}(f) = {g : \mathrm{op}(g) = \mathrm{op}(f)}\)'" class="text-info">&#39;the same-name siblings: \(\mathrm{family}(f) = {g : \mathrm{op}(g) = \mathrm{op}(f)}\)&#39;</a>
-  <a href="#{?}analysis__inverse" class="text-light">inverse</a> <span class="text-light">=&gt;</span> <a href="#'the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\)'" class="text-info">&#39;the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\)&#39;</a>
-  <a href="#form" class="text-light">form</a> <span class="text-light">=&gt;</span> <a href="#'the n-tid coefficient shape \((c_{\mathrm{dom}}, c_{\mathrm{rng}})\) in regex notation: \(\mathrm{mapper} = (1,1),\; \mathrm{filter} = (1, ?),\; \mathrm{reducer} = (^{\ast}, 1),\; \mathrm{flatmapper} = (1, ^{+}),\; \ldots\)'" class="text-info">&#39;the n-tid coefficient shape \((c_{\mathrm{dom}}, c_{\mathrm{rng}})\) in regex notation: \(\mathrm{mapper} = (1,1),\; \mathrm{filter} = (1, ?),\; \mathrm{reducer} = (^{\ast}, 1),\; \mathrm{flatmapper} = (1, ^{+}),\; \ldots\)&#39;</a>
-  <a href="#{?}analysis__position" class="text-light">position</a> <span class="text-light">=&gt;</span> <a href="#"the edge's place among its siblings: \(\mathrm{position}(f) \subseteq {\mathrm{duplicate}, \mathrm{ambiguous}, \mathrm{incomparable}, \mathrm{coupling}, \mathrm{isochain}, \mathrm{retract}}\)"" class="text-info">&quot;the edge&#39;s place among its siblings: \(\mathrm{position}(f) \subseteq {\mathrm{duplicate}, \mathrm{ambiguous}, \mathrm{incomparable}, \mathrm{coupling}, \mathrm{isochain}, \mathrm{retract}}\)&quot;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#trgt" class="text-light">trgt</a> <span class="text-light">=&gt;</span> <a href="#'the target object the morphism enters: \(\mathrm{trgt}(f) = \mathrm{rng}(f)\)'" class="text-info">&#39;the target object the morphism enters: \(\mathrm{trgt}(f) = \mathrm{rng}(f)\)&#39;</a>
   <a href="#{?}analysis__contested" class="text-light">contested</a> <span class="text-light">=&gt;</span> <a href="#'the witness edges behind the ambiguous__incomparable labels: \(\mathrm{contested}(f) = {g : \mathrm{trgt}(g) = \mathrm{trgt}(f) \wedge \mathrm{src}(g) \perp \mathrm{src}(f)} \cup {g : \mathrm{src}(g) = \mathrm{src}(f) \wedge \mathrm{trgt}(g) \perp \mathrm{trgt}(f)}\)'" class="text-info">incomparable labels: \(\mathrm{contested}(f) = {g : \mathrm{trgt}(g) = \mathrm{trgt}(f) \wedge \mathrm{src}(g) \perp \mathrm{src}(f)} \cup {g : \mathrm{src}(g) = \mathrm{src}(f) \wedge \mathrm{trgt}(g) \perp \mathrm{trgt}(f)}\)&#39;</a>
-  <a href="#trgt" class="text-light">trgt</a> <span class="text-light">=&gt;</span> <a href="#'the target object the morphism enters: \(\mathrm{trgt}(f) = \mathrm{rng}(f)\)'" class="text-info">&#39;the target object the morphism enters: \(\mathrm{trgt}(f) = \mathrm{rng}(f)\)&#39;</a>
+  <a href="#{?}analysis__position" class="text-light">position</a> <span class="text-light">=&gt;</span> <a href="#"the edge's place among its siblings: \(\mathrm{position}(f) \subseteq {\mathrm{duplicate}, \mathrm{ambiguous}, \mathrm{incomparable}, \mathrm{coupling}, \mathrm{isochain}, \mathrm{retract}}\)"" class="text-info">&quot;the edge&#39;s place among its siblings: \(\mathrm{position}(f) \subseteq {\mathrm{duplicate}, \mathrm{ambiguous}, \mathrm{incomparable}, \mathrm{coupling}, \mathrm{isochain}, \mathrm{retract}}\)&quot;</a>
+  <a href="#form" class="text-light">form</a> <span class="text-light">=&gt;</span> <a href="#'the n-tid coefficient shape \((c_{\mathrm{dom}}, c_{\mathrm{rng}})\) in regex notation: \(\mathrm{mapper} = (1,1),\; \mathrm{filter} = (1, ?),\; \mathrm{reducer} = (^{\ast}, 1),\; \mathrm{flatmapper} = (1, ^{+}),\; \ldots\)'" class="text-info">&#39;the n-tid coefficient shape \((c_{\mathrm{dom}}, c_{\mathrm{rng}})\) in regex notation: \(\mathrm{mapper} = (1,1),\; \mathrm{filter} = (1, ?),\; \mathrm{reducer} = (^{\ast}, 1),\; \mathrm{flatmapper} = (1, ^{+}),\; \ldots\)&#39;</a>
+  <a href="#{?}analysis__inverse" class="text-light">inverse</a> <span class="text-light">=&gt;</span> <a href="#'the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\)'" class="text-info">&#39;the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\)&#39;</a>
+  <a href="#{?}analysis__family" class="text-light">family</a> <span class="text-light">=&gt;</span> <a href="#'the same-name siblings: \(\mathrm{family}(f) = {g : \mathrm{op}(g) = \mathrm{op}(f)}\)'" class="text-info">&#39;the same-name siblings: \(\mathrm{family}(f) = {g : \mathrm{op}(g) = \mathrm{op}(f)}\)&#39;</a>
+  <a href="#law" class="text-light">law</a> <span class="text-light">=&gt;</span> <a href="#'the declared process laws \(\mathcal{L}\) the morphism obeys, e.g. \(\mathrm{commutative}: f(x,y) = f(y,x)\)'" class="text-info">&#39;the declared process laws \(\mathcal{L}\) the morphism obeys, e.g. \(\mathrm{commutative}: f(x,y) = f(y,x)\)&#39;</a>
+  <a href="#src" class="text-light">src</a> <span class="text-light">=&gt;</span> <a href="#'the source object the morphism leaves: \(\mathrm{src}(f) = \mathrm{dom}(f)\)'" class="text-info">&#39;the source object the morphism leaves: \(\mathrm{src}(f) = \mathrm{dom}(f)\)&#39;</a>
+  <a href="#{?}analysis__orbit" class="text-light">orbit</a> <span class="text-light">=&gt;</span> <a href="#"the reversible-core component of the morphism's dom: \(\mathrm{orbit}(f) = {X : \mathrm{dom}(f) \sim^{*} X}\)"" class="text-info">&quot;the reversible-core component of the morphism&#39;s dom: \(\mathrm{orbit}(f) = {X : \mathrm{dom}(f) \sim^{*} X}\)&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category__object">
@@ -669,12 +672,12 @@
  {?}instset=&gt;[uri::T],
  {?}orbit=&gt;category::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a type as a categorical object incident to targeting morphisms and sourcing morphisms</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a type as a categorical object incident to targeting morphisms and sourcing morphisms</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#morphed_from" class="text-light">morphed_from</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)'" class="text-info">&#39;the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)&#39;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#morphed_to" class="text-light">morphed_to</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)'" class="text-info">&#39;the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)&#39;</a>
   <a href="#law" class="text-light">law</a> <span class="text-light">=&gt;</span> <a href="#'the structural theories \(\mathcal{T}\) the object models'" class="text-info">&#39;the structural theories \(\mathcal{T}\) the object models&#39;</a>
-  <a href="#morphed_to" class="text-light">morphed_to</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)'" class="text-info">&#39;the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)&#39;</a>
+  <a href="#morphed_from" class="text-light">morphed_from</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)'" class="text-info">&#39;the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__theory__ring_theory">
@@ -692,7 +695,7 @@
  one=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/ring_theory</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__theory" class="code inherited-link">theory::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[=&gt;]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, and \(a \cdot (b + c) = a \cdot b + a \cdot c\)</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, and \(a \cdot (b + c) = a \cdot b + a \cdot c\)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__theory">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -705,7 +708,7 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[=&gt;]]@/m/math/cat/theory</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] the nominal super-type of the algebraic theories: a theory names its operations by role, e.g. \(\mathrm{ring} \mapsto \{\mathrm{add}, \mathrm{mul}, \mathrm{zero}, \mathrm{one}\}\)</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the nominal super-type of the algebraic theories: a theory names its operations by role, e.g. \(\mathrm{ring} \mapsto \{\mathrm{add}, \mathrm{mul}, \mathrm{zero}, \mathrm{one}\}\)</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">

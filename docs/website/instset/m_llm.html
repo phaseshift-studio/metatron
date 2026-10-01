@@ -391,9 +391,12 @@
         <h1 class="text-primary glow-text mb-1">
             <span class="text-light">/m/</span>llm
         </h1>
-        <p style="margin-top:0;margin-bottom:0;" class="subtitle text-light">instruction set reference</p>
+        <p class="set-desc text-light" style="max-width:1100px;margin:0.2rem auto 0.9rem;font-size:1.05rem;line-height:1.5;">
+large language model think and reason within the metatron</p>
+
+        <p class="subtitle text-muted"
+           style="margin-top:0.15rem;margin-bottom:0;font-size:0.95rem;letter-spacing:0.16em;text-transform:uppercase;">instruction set reference</p>
     </div>
-    <div class="text-light"></div>
     <div class="instset-accordion-wrapper">
         <div class="accordion accordion-flush" id="accordionInstSet">
             <div class="accordion-item">
@@ -883,11 +886,11 @@
  {?}feature=&gt;lst::T]][ctor?rng=agent&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/agent</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] an agent is an llm enriched with embodied capabilities</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an agent is an llm enriched with embodied capabilities</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
-  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
+  <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
   <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
 </pre>
 </div>
@@ -914,7 +917,7 @@
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] extracts concepts from the agent response and thinking stream via a translator LLM</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> extracts concepts from the agent response and thinking stream via a translator LLM</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__message__ai">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -933,7 +936,7 @@
  {?}contents=&gt;str::T]]@/m/llm/message/tool_request]]]@/m/llm/message/ai</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] an ai/assistant message</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an ai/assistant message</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the response text'" class="text-info">&#39;the response text&#39;</a>
@@ -964,7 +967,7 @@
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] lifecycle audit trail with table text and widget result</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> lifecycle audit trail with table text and widget result</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature__chat_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1006,7 +1009,7 @@
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] the agent&#39;s chat configuration — the model, the optional response-shaping hooks (to/complete), and the response format</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the agent&#39;s chat configuration — the model, the optional response-shaping hooks (to/complete), and the response format</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__chat_result">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1031,7 +1034,7 @@
  {?}error=&gt;fail::T]]@/m/llm/chat_result</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a response message from a chat interaction</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a response message from a chat interaction</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#chat" class="text-light">chat</a> <span class="text-light">=&gt;</span> <a href="#'the chat response — free-text str or structured rec per response format'" class="text-info">&#39;the chat response — free-text str or structured rec per response format&#39;</a>
@@ -1057,7 +1060,7 @@
  {?}tier=&gt;isa(int::T[inst(inst(0))]@nat).else(1)]]@/m/llm/claim</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a distilled claim with provenance — the proposition layer above concept nouns</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a distilled claim with provenance — the proposition layer above concept nouns</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the distilled proposition'" class="text-info">&#39;the distilled proposition&#39;</a>
@@ -1085,13 +1088,13 @@
  {?}compression=&gt;real::T]]@/m/llm/message/compaction</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a compaction represents a stop point for message retrieval and provides a summary of all previous messages</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a compaction represents a stop point for message retrieval and provides a summary of all previous messages</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'total tokens processed (the input digest estimate)'" class="text-info">&#39;total tokens processed (the input digest estimate)&#39;</a>
-  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the summary of all previous messages and compactions'" class="text-info">&#39;the summary of all previous messages and compactions&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}out" class="text-light">{?}out</a> <span class="text-light">=&gt;</span> <a href="#'total tokens generated (the summary estimate)'" class="text-info">&#39;total tokens generated (the summary estimate)&#39;</a>
   <a href="#{?}compression" class="text-light">{?}compression</a> <span class="text-light">=&gt;</span> <a href="#'fraction of tokens removed — 1 - out__in (0.0 to 1.0)'" class="text-info">in (0.0 to 1.0)&#39;</a>
-  <a href="#{?}out" class="text-light">{?}out</a> <span class="text-light">=&gt;</span> <a href="#'total tokens generated (the summary estimate)'" class="text-info">&#39;total tokens generated (the summary estimate)&#39;</a>
+  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the summary of all previous messages and compactions'" class="text-info">&#39;the summary of all previous messages and compactions&#39;</a>
+  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'total tokens processed (the input digest estimate)'" class="text-info">&#39;total tokens processed (the input digest estimate)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature__compaction_feature">
@@ -1132,7 +1135,7 @@
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] compacts historic messages and inserts a compaction message into message stream which acts as a stop sentinel for agents history introspection</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> compacts historic messages and inserts a compaction message into message stream which acts as a stop sentinel for agents history introspection</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#model" class="text-light">model</a> <span class="text-light">=&gt;</span> <a href="#'the model to analyze message history'" class="text-info">&#39;the model to analyze message history&#39;</a>
@@ -1154,12 +1157,12 @@
  {?}message=&gt;{?}[message::T]]]@/m/llm/concept</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a concept related to other concepts and messages.
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a concept related to other concepts and messages.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'the concept name'" class="text-info">&#39;the concept name&#39;</a>
-  <a href="#{?}concept" class="text-light">{?}concept</a> <span class="text-light">=&gt;</span> <a href="#'a lst of related concepts'" class="text-info">&#39;a lst of related concepts&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}concept" class="text-light">{?}concept</a> <span class="text-light">=&gt;</span> <a href="#'a lst of related concepts'" class="text-info">&#39;a lst of related concepts&#39;</a>
+  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'the concept name'" class="text-info">&#39;the concept name&#39;</a>
   <a href="#{?}message" class="text-light">{?}message</a> <span class="text-light">=&gt;</span> <a href="#'a lst of related messages'" class="text-info">&#39;a lst of related messages&#39;</a>
 </pre>
 </div>
@@ -1188,7 +1191,7 @@
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] tracks real token-based LLM costs via CostCalculator, persists in/out/total to space</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> tracks real token-based LLM costs via CostCalculator, persists in/out/total to space</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#rate__in" class="text-light">in</a> <span class="text-light">=&gt;</span> <a href="#'cost per million input tokens'" class="text-info">&#39;cost per million input tokens&#39;</a>
@@ -1233,7 +1236,7 @@
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] the embedding model and hooks the agent uses to vectorize content into vec::T</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the embedding model and hooks the agent uses to vectorize content into vec::T</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1258,7 +1261,7 @@
  {?}on_error=&gt;&lt;#&gt;::T]]@/m/llm/feature</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] each concrete feature refines llm_feature::T with its own hook implementations</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> each concrete feature refines llm_feature::T with its own hook implementations</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri location of feature data'" class="text-info">&#39;the root uri location of feature data&#39;</a>
@@ -1292,7 +1295,7 @@
  time=&gt;!*/m/math/time]]@/m/llm/iteration</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] an iteration groups the messages of a single chat turn within a session and links to prev/next iterations</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an iteration groups the messages of a single chat turn within a session and links to prev/next iterations</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#session" class="text-light">session</a> <span class="text-light">=&gt;</span> <a href="#'the parent session'" class="text-info">&#39;the parent session&#39;</a>
@@ -1326,7 +1329,7 @@
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] supports arbitrary instructions to be run at the different stages of the llm&#39;s lifecycle</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> supports arbitrary instructions to be run at the different stages of the llm&#39;s lifecycle</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}stage" class="text-light">{?}stage</a> <span class="text-light">=&gt;</span> <a href="#'lambdas to execute at the different lifecycle stages'" class="text-info">&#39;lambdas to execute at the different lifecycle stages&#39;</a>
@@ -1359,7 +1362,7 @@
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] multi-pass reasoning loop with iteration control and polling</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> multi-pass reasoning loop with iteration control and polling</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max_loop" class="text-light">{?}max_loop</a> <span class="text-light">=&gt;</span> <a href="#'max iterations (default 10)'" class="text-info">&#39;max iterations (default 10)&#39;</a>
@@ -1388,7 +1391,7 @@
  {?}time=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/math/datetime]]@/m/llm/loose_end</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] an open problem a future session can pick up cold — the continuation point carried across sessions</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an open problem a future session can pick up cold — the continuation point carried across sessions</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'short actionable title'" class="text-info">&#39;short actionable title&#39;</a>
@@ -1425,7 +1428,7 @@
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] extracts concepts from the agent response and thinking stream by TF-IDF over a Lucene message index</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> extracts concepts from the agent response and thinking stream by TF-IDF over a Lucene message index</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__mcp__mcp_message">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1455,7 +1458,7 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}session=&gt;uri::T]]@/m/llm/message</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] polymorphic chat message — one of system, user, ai, tool_result, thinking, or compaction; discriminated by _tid column</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> polymorphic chat message — one of system, user, ai, tool_result, thinking, or compaction; discriminated by _tid column</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature__midchat_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1480,7 +1483,7 @@
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] the mid-chat channel: relays what the model says to the user mid-iteration, and carries what the user says back through the tool result of the call it answered</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the mid-chat channel: relays what the model says to the user mid-iteration, and carries what the user says back through the tool result of the call it answered</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__model">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1505,17 +1508,17 @@
   out=&gt;!*/m/math/currency]]][ctor?rng=model&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/model</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] populate a model reference rec using data from the ai provider&#39;s http-endpoint</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> populate a model reference rec using data from the ai provider&#39;s http-endpoint</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
-  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
-  <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
-  <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
-  <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
-  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#"the model's context window size in tokens"" class="text-info">&quot;the model&#39;s context window size in tokens&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
   <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
-  <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
+  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#"the model's context window size in tokens"" class="text-info">&quot;the model&#39;s context window size in tokens&quot;</a>
+  <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
+  <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
+  <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
+  <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1544,7 +1547,7 @@
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a frame provider that never discards frames — the whole frame tree stays introspectable (compute memory)</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a frame provider that never discards frames — the whole frame tree stays introspectable (compute memory)</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__session">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1560,7 +1563,7 @@
  algorithm=&gt;rec::T]]@/m/llm/session</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] llm session session policy with algorithm config and a resolved lst of messages from sub-path */msg/*</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> llm session session policy with algorithm config and a resolved lst of messages from sub-path */msg/*</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#agent" class="text-light">agent</a> <span class="text-light">=&gt;</span> <a href="#'the agent(s) involved in the chat session'" class="text-info">&#39;the agent(s) involved in the chat session&#39;</a>
@@ -1585,7 +1588,7 @@
   algorithm=&gt;rec::T]]@/m/llm/session)]</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a session::T or agent::T union</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a session::T or agent::T union</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__skill">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1607,10 +1610,10 @@
  {?}tool=&gt;[&lt;#&gt;::T]]]@/m/llm/skill</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a skill.md specification to augment llm with specialized abilities</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a skill.md specification to augment llm with specialized abilities</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a skill.md specification" class="text-info">a skill.md specification</a> <span class="text-light">=&gt;</span> <span class="text-success">?</span></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a skill.md specification" class="text-info">a skill.md specification</a> <span class="text-light">=&gt;</span> ?</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'skill name'" class="text-info">&#39;skill name&#39;</a>
   <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'skill description'" class="text-info">&#39;skill description&#39;</a>
   <a href="#{?}content" class="text-light">{?}content</a> <span class="text-light">=&gt;</span> <a href="#'skill.md document content'" class="text-info">&#39;skill.md document content&#39;</a>
@@ -1644,7 +1647,7 @@
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] the gateway of the agent&#39;s skill channel — the collection of skills, and the composition point for the tools they carry</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the gateway of the agent&#39;s skill channel — the collection of skills, and the composition point for the tools they carry</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature__summarize_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1669,7 +1672,7 @@
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] distills a message or a whole session into claims and loose ends — the feature behind the &lt;&lt;mtron:summarize&gt;&gt; block</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> distills a message or a whole session into claims and loose ends — the feature behind the &lt;&lt;mtron:summarize&gt;&gt; block</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__message__system">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1682,7 +1685,7 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[text=&gt;str::T]]@/m/llm/message/system</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a system message provides behavioral and response-style instructions to the model</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a system message provides behavioral and response-style instructions to the model</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the system message text body'" class="text-info">&#39;the system message text body&#39;</a>
@@ -1711,7 +1714,7 @@
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] the owner of the agent&#39;s system messages — the persistent base instruction plus per-chat contributions</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the owner of the agent&#39;s system messages — the persistent base instruction plus per-chat contributions</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature__tagging_concept_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1736,7 +1739,7 @@
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] extracts concepts from the agent response and thinking stream by parsing inline &lt;&lt;concept:&gt;&gt; tags</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> extracts concepts from the agent response and thinking stream by parsing inline &lt;&lt;concept:&gt;&gt; tags</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature__think_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1761,7 +1764,7 @@
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] think feature captures thinking text during response generation</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> think feature captures thinking text during response generation</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__message__thinking">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1774,7 +1777,7 @@
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[text=&gt;str::T]]@/m/llm/message/thinking</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a thinking/reasoning trace message — stored in the ledger but excluded from the LC4j chat window</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a thinking/reasoning trace message — stored in the ledger but excluded from the LC4j chat window</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#"the model's internal reasoning text"" class="text-info">&quot;the model&#39;s internal reasoning text&quot;</a>
@@ -1800,18 +1803,18 @@
  {?}reference=&gt;lst::T]]@/m/llm/todo</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a todo represents a task to be completed.
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a todo represents a task to be completed.
 links to concepts and messages are automatically attached to the todo at creation.
 reference to artifacts in metatron can be attached.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'datetime of todo creation (default: datetime_now())'" class="text-info">&#39;datetime of todo creation (default: datetime_now())&#39;</a>
-  <a href="#{?}reference" class="text-light">{?}reference</a> <span class="text-light">=&gt;</span> <a href="#'artifacts associated with todo'" class="text-info">&#39;artifacts associated with todo&#39;</a>
-  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the todo information'" class="text-info">&#39;the todo information&#39;</a>
-  <a href="#{?}concept" class="text-light">{?}concept</a> <span class="text-light">=&gt;</span> <a href="#'concepts associated with todo'" class="text-info">&#39;concepts associated with todo&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'current status of todo (default: open)'" class="text-info">&#39;current status of todo (default: open)&#39;</a>
   <a href="#{?}message" class="text-light">{?}message</a> <span class="text-light">=&gt;</span> <a href="#'messages associated with todo'" class="text-info">&#39;messages associated with todo&#39;</a>
-  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'current status of todo (default: open)'" class="text-info">&#39;current status of todo (default: open)&#39;</a>
+  <a href="#{?}concept" class="text-light">{?}concept</a> <span class="text-light">=&gt;</span> <a href="#'concepts associated with todo'" class="text-info">&#39;concepts associated with todo&#39;</a>
+  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the todo information'" class="text-info">&#39;the todo information&#39;</a>
+  <a href="#{?}reference" class="text-light">{?}reference</a> <span class="text-light">=&gt;</span> <a href="#'artifacts associated with todo'" class="text-info">&#39;artifacts associated with todo&#39;</a>
+  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'datetime of todo creation (default: datetime_now())'" class="text-info">&#39;datetime of todo creation (default: datetime_now())&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1840,7 +1843,7 @@ reference to artifacts in metatron can be attached.
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] persistent agent-owned todo list for cross-turn task tracking</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> persistent agent-owned todo list for cross-turn task tracking</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__ui__tool__token_counter_tool">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1861,13 +1864,13 @@ reference to artifacts in metatron can be attached.
   {?}system=&gt;int::T]]][ctor?rng=token_counter_tool&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/ui/tool/token_counter_tool</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a single-line token-usage bar — the tailor-made caller of the general ui stack bar: the est categories as colored sections (smallest first, largest last, an empty one skipped) against the context window (max), with in over max as the percent and the window sized behind the bar</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a single-line token-usage bar — the tailor-made caller of the general ui stack bar: the est categories as colored sections (smallest first, largest last, an empty one skipped) against the context window (max), with in over max as the percent and the window sized behind the bar</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}out" class="text-light">{?}out</a> <span class="text-light">=&gt;</span> <a href="#'actual output tokens of the chat (counted for the record, not drawn)'" class="text-info">&#39;actual output tokens of the chat (counted for the record, not drawn)&#39;</a>
-  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'actual input tokens of the chat'" class="text-info">&#39;actual input tokens of the chat&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}est" class="text-light">{?}est</a> <span class="text-light">=&gt;</span> <a href="#'the estimated composition of the window: [system=>int, ai=>int, user=>int, tool=>int]'" class="text-info">&#39;the estimated composition of the window: [system=&gt;int, ai=&gt;int, user=&gt;int, tool=&gt;int]&#39;</a>
   <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#"the context window's size in tokens — the bar's window: the sections are its share, in__max the percent, the rest the unused tail"" class="text-info">max the percent, the rest the unused tail&quot;</a>
-  <a href="#{?}est" class="text-light">{?}est</a> <span class="text-light">=&gt;</span> <a href="#'the estimated composition of the window: [system=>int, ai=>int, user=>int, tool=>int]'" class="text-info">&#39;the estimated composition of the window: [system=&gt;int, ai=&gt;int, user=&gt;int, tool=&gt;int]&#39;</a>
+  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'actual input tokens of the chat'" class="text-info">&#39;actual input tokens of the chat&#39;</a>
+  <a href="#{?}out" class="text-light">{?}out</a> <span class="text-light">=&gt;</span> <a href="#'actual output tokens of the chat (counted for the record, not drawn)'" class="text-info">&#39;actual output tokens of the chat (counted for the record, not drawn)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1896,7 +1899,7 @@ reference to artifacts in metatron can be attached.
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] message history aggregated by a token budget (algorithm =&gt; [max =&gt; N tokens])</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> message history aggregated by a token budget (algorithm =&gt; [max =&gt; N tokens])</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__tool">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1913,14 +1916,14 @@ reference to artifacts in metatron can be attached.
  {?}arg=&gt;&lt;#&gt;::T]]@/m/llm/tool</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a tool function for the llm to use</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a tool function for the llm to use</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a tool specification" class="text-info">a tool specification</a> <span class="text-light">=&gt;</span> <span class="text-success">?</span></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#'tool instruction'" class="text-info">&#39;tool instruction&#39;</a>
-  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'tool name'" class="text-info">&#39;tool name&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a tool specification" class="text-info">a tool specification</a> <span class="text-light">=&gt;</span> ?</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}arg" class="text-light">{?}arg</a> <span class="text-light">=&gt;</span> <a href="#'tool arguments'" class="text-info">&#39;tool arguments&#39;</a>
   <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'tool description'" class="text-info">&#39;tool description&#39;</a>
-  <a href="#{?}arg" class="text-light">{?}arg</a> <span class="text-light">=&gt;</span> <a href="#'tool arguments'" class="text-info">&#39;tool arguments&#39;</a>
+  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'tool name'" class="text-info">&#39;tool name&#39;</a>
+  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#'tool instruction'" class="text-info">&#39;tool instruction&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature__tool_feature">
@@ -1948,7 +1951,7 @@ reference to artifacts in metatron can be attached.
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] the gatekeeper of the agent&#39;s tool channel — its collection of tools with an optional per-chat max</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the gatekeeper of the agent&#39;s tool channel — its collection of tools with an optional per-chat max</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__message__tool_request">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1965,7 +1968,7 @@ reference to artifacts in metatron can be attached.
  {?}contents=&gt;str::T]]@/m/llm/message/tool_request</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a tool execution request — nested inside an ai message&#39;s tool_requests list</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a tool execution request — nested inside an ai message&#39;s tool_requests list</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'the tool name'" class="text-info">&#39;the tool name&#39;</a>
@@ -1989,7 +1992,7 @@ reference to artifacts in metatron can be attached.
  {?}id=&gt;str::T]]@/m/llm/message/tool_result</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a tool execution result message</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a tool execution result message</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'the tool that was executed'" class="text-info">&#39;the tool that was executed&#39;</a>
@@ -2021,7 +2024,7 @@ reference to artifacts in metatron can be attached.
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a frame provider that discards frames on completion — frames are an ephemeral call stack, not durable compute memory</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a frame provider that discards frames on completion — frames are an ephemeral call stack, not durable compute memory</p>
 </div>
 </div><div class="card mb-3" id="__m__llm__message__user">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2037,7 +2040,7 @@ reference to artifacts in metatron can be attached.
  {?}contents=&gt;&lt;#&gt;::T]]@/m/llm/message/user</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] a user message</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a user message</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}name" class="text-light">{?}name</a> <span class="text-light">=&gt;</span> <a href="#'sender identity for multi-user conversations'" class="text-info">&#39;sender identity for multi-user conversations&#39;</a>
@@ -2063,7 +2066,7 @@ reference to artifacts in metatron can be attached.
  {?}stage=&gt;uri::T]]@/m/llm/watermark</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] one in-band control marker a model wrote into its own output: which feature it addresses, the argument rec of the call it defers, and markup that is removed from the visible text</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> one in-band control marker a model wrote into its own output: which feature it addresses, the argument rec of the call it defers, and markup that is removed from the visible text</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#tag" class="text-light">tag</a> <span class="text-light">=&gt;</span> <a href="#'the body codec the marker named — mtron, json, txt, html, md, xml, bson'" class="text-info">&#39;the body codec the marker named — mtron, json, txt, html, md, xml, bson&#39;</a>
@@ -2098,7 +2101,7 @@ reference to artifacts in metatron can be attached.
  {?}on_complete_response=&gt;&lt;#&gt;::T,
  {?}on_error=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[structural] message history aggregated by a message-count window (algorithm =&gt; [max =&gt; N messages])</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> message history aggregated by a message-count window (algorithm =&gt; [max =&gt; N messages])</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
@@ -2126,7 +2129,7 @@ reference to artifacts in metatron can be attached.
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__llm__inst__compact?rng=__m__rec&dom=__m__llm__session_or_agent{?}-doc-0-tab').click();document.getElementById('__m__llm__inst__compact?rng=__m__rec&dom=__m__llm__session_or_agent{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">compact?rng=rec&dom=session_or_agent{?}({?}session_or_agent=>session_or_agent{?}::T,{?}model=>model::T,{?}prompt=>str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">compact a session&#39;s message ledger into a resume summary sentinel — the same call as the &lt;&lt;mtron:compaction&gt;&gt; block (they share the argument rec::T vocabulary: agent, model, prompt)</p>
+    <p class="mb-0 text-light"> compact a session&#39;s message ledger into a resume summary sentinel — the same call as the &lt;&lt;mtron:compaction&gt;&gt; block (they share the argument rec::T vocabulary: agent, model, prompt)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a session or agent to compact" class="text-info">a session or agent to compact</a> <span class="text-light">=&gt;</span> <a href="#the applied constraints rec — [to, compaction=>vid, in, out, compression]" class="text-success">the applied constraints rec — [to, compaction=&gt;vid, in, out, compression]</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -2149,7 +2152,7 @@ reference to artifacts in metatron can be attached.
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__llm__inst__embed?rng=__m__vec__vec&dom=__m__llm__model-doc-0-tab').click();document.getElementById('__m__llm__inst__embed?rng=__m__vec__vec&dom=__m__llm__model-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">embed?rng=vec&dom=model(<#>::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[mapper] embed an object with an llm
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> embed an object with an llm
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
@@ -2171,7 +2174,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__llm__inst__interrupt?rng=noobj{0}&dom=__m__llm__agent-doc-0-tab').click();document.getElementById('__m__llm__inst__interrupt?rng=noobj{0}&dom=__m__llm__agent-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">interrupt?rng=<span class="code text-success">noobj{0}</span>&dom=agent(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">[terminal] interrupt the agent mid-process
+    <p class="mb-0 text-light"><span class="spec-chip spec-terminal">terminal</span> interrupt the agent mid-process
 maps objs to nothing (rng_c = 0)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__llm__agent" class="text-info">agent</a> <span class="text-light">=&gt;</span> <a href="#noobj{0}" class="text-success">noobj{0}</a></pre>
@@ -2187,7 +2190,7 @@ maps objs to nothing (rng_c = 0)</p>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__llm__inst__summary?rng=__m__rec&dom=__m__llm__session_or_agent{?}-doc-0-tab').click();document.getElementById('__m__llm__inst__summary?rng=__m__rec&dom=__m__llm__session_or_agent{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">summary?rng=rec&dom=session_or_agent{?}({?}session_or_agent=>session_or_agent{?}::T,{?}model=>choose([isa(rec::T[?[{?}provider=>uri::T,host=>uri::T,protocol=>uri::T,llm=>uri::T,{?}api_key=>str::T,{?}timeout=>!*/m/math/time,{?}size=>!*/m/math/datasize,{?}quant=>int::T,{?}context=>int::T,{?}cost=>{?}[in=>!*/m/math/currency,out=>!*/m/math/currency]]][ctor?rng=model&dom=#{?}(<#{*}>::T){<j>}]@model)=>id(),isa(rec::T[?[agent=>uri{+}::T,user=>uri{+}::T,algorithm=>rec::T]]@session)=>*rshift(agent).mult(model)]).rshift(),{?}scope=>union(time::T,datetime::T),{?}kind=>lst::T,{?}concept=>lst::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">distill a session&#39;s message ledger into claim::T and loose_end::T recs via a mini-task — the same call as the &lt;&lt;mtron:summarize&gt;&gt; block (they share the argument rec::T vocabulary: session, model, scope, kind, concept, to)</p>
+    <p class="mb-0 text-light"> distill a session&#39;s message ledger into claim::T and loose_end::T recs via a mini-task — the same call as the &lt;&lt;mtron:summarize&gt;&gt; block (they share the argument rec::T vocabulary: session, model, scope, kind, concept, to)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a session to distill" class="text-info">a session to distill</a> <span class="text-light">=&gt;</span> <a href="#the applied constraints rec — [session, model, scope, kind, concept, to, claim=>[vids], loose_end=>[vids]]" class="text-success">the applied constraints rec — [session, model, scope, kind, concept, to, claim=&gt;[vids], loose_end=&gt;[vids]]</a></pre>
 </div><div class="card-body border-top py-2">
@@ -2205,7 +2208,7 @@ maps objs to nothing (rng_c = 0)</p>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__llm__inst__sweep?rng=__m__rec&dom=__m__llm__session_or_agent{?}-doc-0-tab').click();document.getElementById('__m__llm__inst__sweep?rng=__m__rec&dom=__m__llm__session_or_agent{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sweep?rng=rec&dom=session_or_agent{?}({?}session_or_agent=>session_or_agent{?}::T,{?}repair=>bool::T,{?}prune=>bool::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">fsck a chat ledger: [duplicate=&gt;[call ids written twice], orphan=&gt;[requests whose result is nowhere], misplaced=&gt;[requests whose result is not next to them], misscoped=&gt;[requests whose results stand next to them but are stamped into another scope, so the store&#39;s projection tears the group apart], orphan_result=&gt;[results no request precedes]]. A provider requires the results of an assistant message&#39;s tool_calls to sit immediately after it, as the store projects that turn (one session, one depth, one chat id) — anything else breaks every later chat with insufficient tool messages following tool_calls message. repair restores validity without deleting anything: an unanswered request is dropped, and a misscoped result is moved into the scope of the request it answers; prune is the opt-in to deletion, and is separate because a duplicate&#39;s surviving copy may not carry the same text</p>
+    <p class="mb-0 text-light"> fsck a chat ledger: [duplicate=&gt;[call ids written twice], orphan=&gt;[requests whose result is nowhere], misplaced=&gt;[requests whose result is not next to them], misscoped=&gt;[requests whose results stand next to them but are stamped into another scope, so the store&#39;s projection tears the group apart], orphan_result=&gt;[results no request precedes]]. A provider requires the results of an assistant message&#39;s tool_calls to sit immediately after it, as the store projects that turn (one session, one depth, one chat id) — anything else breaks every later chat with insufficient tool messages following tool_calls message. repair restores validity without deleting anything: an unanswered request is dropped, and a misscoped result is moved into the scope of the request it answers; prune is the opt-in to deletion, and is separate because a duplicate&#39;s surviving copy may not carry the same text</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the session whose ledger is swept — a session::T row; defaults to the lhs" class="text-info">the session whose ledger is swept — a session::T row; defaults to the lhs</a> <span class="text-light">=&gt;</span> <a href="#a rec of call ids per failure mode — every key always present, so it can be counted without inspecting its shape" class="text-success">a rec of call ids per failure mode — every key always present, so it can be counted without inspecting its shape</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
