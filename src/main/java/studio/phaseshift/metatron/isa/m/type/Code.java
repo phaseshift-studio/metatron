@@ -157,7 +157,14 @@ public interface Code extends Call {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(Tokens.CODE_TID).rng(Tokens.LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asCode().codeValue().stream().map(Obj::<Obj>as).toList()).c(c -> c.mult(lhs.c()))),
-                    instC(AS_INST_TID.dom(Tokens.CODE_TID).rng(Tokens.INST_TID), lst(INST_TYPE), (lhs, inst) -> instLambda(lhs.asCode()).c(c -> c.mult(lhs.c())))));
+                    instC(AS_INST_TID.dom(Tokens.CODE_TID).rng(Tokens.INST_TID), lst(INST_TYPE), (lhs, inst) -> instLambda(lhs.asCode()).c(c -> c.mult(lhs.c()))),
+                    // the ring's "·" — serial composition: lhs ∘ rhs = lhs's insts followed by rhs's insts (a then b)
+                    instC(COMPOSE_INST_TID.dom(Tokens.CODE_TID).rng(Tokens.CODE_TID), lst(CODE_TYPE), (lhs, inst) -> {
+                        final List<Inst> insts = new ArrayList<>();
+                        insts.addAll(lhs.asCode().codeValue());
+                        insts.addAll(inst.arg(0).asCode().codeValue());
+                        return MCode.code(insts);
+                    })));
 
         }
 

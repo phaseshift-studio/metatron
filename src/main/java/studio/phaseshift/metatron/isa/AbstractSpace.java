@@ -187,19 +187,28 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
     @Override
     public Space clone() {
-        //Space.Helper.noCloneWarning(this);
-        return this;
+        // Rely on MRec's clone (AbstractSpace extends MRec): a shallow copy whose jvm map is a FRESH LinkedHashMap,
+        // which is the half that matters for a child frame — a naive shallow copy would share the parent's map, so a
+        // write in the child would appear in the parent. Stubbing this to `return this` made every clone-based
+        // derivation silently return the original (and `Obj.vid(fURI)`, which IS clone(jvm, tid, vid), a no-op on a
+        // machine — so `clone().selfVID(v)` retargeted the PARENT instead of minting a child).
+        return (Space) super.clone();
     }
 
 
     @Override
     public Space clone(final Object jvm, final fURI tid, final fURI vid) {
-        return this;
+        return (Space) super.clone(jvm, tid, vid);
     }
 
     @Override
     public Space self(final Object jvm, final fURI tid, final fURI vid) {
-        return (Space) super.self(jvm, null == this.tid() ? tid : this.tid(), null == this.vid() ? vid : this.vid());
+        // Fall back to the current id only when the argument is ABSENT. The previous form was
+        // `null == this.tid() ? tid : this.tid()` — it kept the existing value whenever there was one, so an
+        // EXPLICIT vid was silently ignored. That is why every clone-based derivation on a space returned the
+        // original address: vid(), selfVID() and the 3-arg clone all funnel through here, so `clone().selfVID(v)`
+        // could not retarget a clone that already carried its parent's vid. A null argument still means "leave it".
+        return (Space) super.self(jvm, null == tid ? this.tid() : tid, null == vid ? this.vid() : vid);
     }
 
     @Override

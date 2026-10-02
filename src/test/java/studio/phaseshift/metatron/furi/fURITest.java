@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.furi;
 
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -563,18 +564,47 @@ public class fURITest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "a/b/c         |  a/b/c",
-            "./b/c         |  b/c",
-            "a/./c         |  a/c",
-            "a/b/.         |  a/b",
-            "a/./.         |  a",
-            "a/././d       |  a/d",
-            "a/././d/      |  a/d/",
+            "./b/c         |  ./b/c",
+            "a/./c         |  a/./c",
+            "a/b/.         |  a/b/.",
+            "a/./.         |  a/./.",
+            "a/././d       |  a/././d",
+            "a/././d/      |  a/././d/",
             // "././.      |   ",
-            "a/b/..        |  a",
-            "a/../..       |  ..",
-            "./../../../.  |  ../../..",
-            "./../../a     |  ../../a",
-            "a/./z/../b    | a/b",
+            "a/b/..        |  a/b/..",
+            "a/../..       |  a/../..",
+            "./../../../.  |  ./../../../.",
+            "./../../a     |  ./../../a",
+            "~/../../a     |  ~/../../a",
+            "a/./z/../b    | a/./z/../b",
+    }, delimiter = '|')
+    public void testKeepSentinelOnParse(final String f1, final String f2) {
+        final fURI furi1a = idem(f1);
+        final fURI furi1b = idem(f2);
+        //  final fURI furi2a = mParser.m_furi().parse(f1).get();
+        //  final fURI furi2b = mParser.m_furi().parse(f2).get();
+        // LOG.info("testing {{b}}%s{{/b}} {{g}}=>{{/g}} {{b}}%s{{b}} resolution", furi1a, furi2b);
+        //assertEquals(furi1a.resolve(), furi2b);
+        //assertEquals(furi2a.resolve(), furi1b);
+        assertEquals(furi1a, furi1b);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b/c         |  a/b/c",
+            "./b/c         |  ./b/c",
+            "a/./c         |  a/./c",
+            "a/b/.         |  a/b/.",
+            "a/./.         |  a/./.",
+            "a/././d       |  a/././d",
+            "a/././d/      |  a/././d/",
+            // "././.      |   ",
+            "a/b/..        |  a/b/..",
+            "a/../..       |  a/../..",
+            "./../../../.  |  ./../../../.",
+            "./../../a     |  ./../../a",
+            "~/../../a     |  ~/../../a",
+            "a/./z/../b    | a/./z/../b",
     }, delimiter = '|')
     public void testResolve(final String f1, final String f2) {
         final fURI furi1a = idem(f1);
@@ -586,6 +616,110 @@ public class fURITest extends AbstractMetatronTest {
         //assertEquals(furi2a.resolve(), furi1b);
         assertEquals(furi1a.resolve(), furi1b);
     }
+
+    /*
+     * The sentinel/equality contract. Parsing KEEPS `.` and `..` (see testKeepSentinelOnParse), so a spelling
+     * and its canonical form are different values that must compare EQUAL — otherwise the spellings become
+     * distinct keys in every hashed structure (spaces, routes, the type-graph memo) and a write under one
+     * spelling is unreachable from the other. These pin the three parts of that contract: equal spellings,
+     * equal hashes, and the canonical form as the hash source.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b/..                     |  a",
+            "a/./b                      |  a/b",
+            "/a/b/..                    |  /a",
+            "a/b/c/.                    |  a/b/c",
+            "a/x/../b/c                 |  a/b/c",
+            "/a/b/../../../../../..      |  ../../..",
+            "a/../..                    |  ..",
+    }, delimiter = '|')
+    public void testEqualityIsCanonical(final String f1, final String f2) {
+        final fURI a = idem(f1);
+        final fURI b = idem(f2);
+        LOG.debug("testing canonical equality {{b}}%s{{X}} == {{b}}%s{{X}}", a, b);
+        assertEquals(b, a, "spellings of one address must compare equal");
+        assertEquals(a, b, "and symmetrically");
+        assertEquals(a.hashCode(), b.hashCode(), "equal uris MUST share a hashCode — the hash contract");
+        assertEquals(a.resolve().hashCode(), a.hashCode(), "the canonical form's hash is the value's hash");
+    }
+
+    /**
+     * the machine's actual use of a uri as a key: two spellings, one slot
+     */
+    @Test
+    public void testCanonicalKeying() {
+        final Map<fURI, String> index = new HashMap<>();
+        index.put(idem("a/b/c"), "here");
+        assertEquals("here", index.get(idem("a/b/c/.")), "an alternate spelling must reach the slot");
+        assertEquals("here", index.get(idem("a/x/../b/c")), "and so must an interior ..");
+        index.put(idem("a/b/c/."), "again");
+        assertEquals(1, index.size(), "two spellings of one address must NOT create two keys");
+    }
+
+    /*
+     * The invariant AbstractfURI.equals rests on: equality resolves ONLY when a sentinel is present, otherwise
+     * it compares components directly, while hashCode ALWAYS resolves. If resolve() could change a
+     * sentinel-free spelling, equals would compare the spelling while hashCode hashed the canonical form — a
+     * value that hashes as one thing and compares as another, which breaks hash maps silently, with a miss
+     * rather than an error. This asserts on the REPRESENTATION, not on equals, because equals is insensitive to
+     * resolution and would hide exactly this defect.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b/c",
+            "/a/b/c",
+            "a",
+            "/a/b/",
+            "~/x",
+            "a/b/+",
+            "//x.com/a/b/c",
+            "a/b/c{2,3}",
+    }, delimiter = '|')
+    public void testResolveIsIdentityWithoutSentinel(final String furi) {
+        final fURI f = idem(furi);
+        assertEquals(f.toString(), f.resolve().toString(),
+                "resolve() must not alter a sentinel-free spelling, or equals and hashCode disagree");
+    }
+
+    /*
+     * The deliberate split, pinned so it cannot drift silently: equality is canonical, path() keeps the
+     * spelling. That means path()-derived operations (retract, pretract, extend, test) are NOT substitutable
+     * across equal values — Memory.mostSpecific pattern-tests the path, so a spelled vid can select a
+     * different space than its canonical form would. If this assertNotEquals ever fails, path() became
+     * canonical and this test should be DELETED, not "fixed".
+     */
+    @Test
+    public void testPathKeepsSpellingWhileEqualsIsCanonical() {
+        final fURI spelled = idem("a/b/..");
+        final fURI canonical = idem("a");
+        assertEquals(canonical, spelled, "they compare equal");
+        assertEquals(canonical.hashCode(), spelled.hashCode(), "and hash alike");
+        assertNotEquals(canonical.path(), spelled.path(), "path() keeps the spelling while equals is canonical");
+    }
+
+    /*
+     * Relativity must survive the spelling, because it is what decides frame-chain vs space-index resolution
+     * (Memory.isAbsolute). A leading `/` is the absolute marker; a leading `.`, `..` or `~` is a relative base.
+     * Neither may be consumed while the uri is only a spelling — this is the prerequisite for `~`, `~/..`,
+     * `*./` and every frame address.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "./b              |  true",
+            "../x             |  true",
+            "a/b/..           |  true",
+            "~/x              |  true",
+            "/a/b/..          |  false",
+            "/a/b/../../..    |  false",
+    }, delimiter = '|')
+    public void testRelativitySurvivesSpelling(final String furi, final boolean relative) {
+        final fURI f = f(furi);
+        LOG.debug("testing {{b}}%s{{X}} isRelative [expected: %s]", f, relative);
+        assertEquals(relative, f.isRelative(), "relativity must survive an unresolved spelling");
+        assertEquals(!relative, f.isAbsolute(), "isAbsolute is the complement of isRelative");
+    }
+
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -647,6 +781,7 @@ public class fURITest extends AbstractMetatronTest {
             "a                  |                   | a",
             "a?a=1&b=2          | b?a=3&c=6         | a/b?a=3&b=2&c=6",
             "/a/?a=1&b=2          | /b/?a=3&c=6         | /a/b/?a=3&b=2&c=6"
+            , "x/y/z/a/b/c          | /a/b/../../../../../..   | x/y/z"
     }, delimiter = '|')
     public void testMult(final String f1, final String f2, final String expected) {
         final fURI furi1 = f(f1);

@@ -223,6 +223,14 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return this.test(other) || other.test(this);
     }
 
+    default boolean hasSentinel() {
+        for (final String segment : this.path()) {
+            if (segment.equals(".") || segment.equals(".."))
+                return true;
+        }
+        return false;
+    }
+
     fURI resolve();
 
     default fURI resolve(final Map<fURI, fURI> generics) {
@@ -961,23 +969,40 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                    final List<String> poly,
                    final Map<String, String> query,
                    final List<Tuple.Pair<Component, String>> templates) {
+        // An AUTHORITY IMPLIES an ABSOLUTE path, enforced HERE, once, so every construction agrees.
+        // Rendering alone is not enough: a relative path on an authority-bearing uri renders correctly (see
+        // AbstractfURI.toString) but is a DIFFERENT VALUE from the same address parsed from that string — and
+        // equality, hashing and the string round-trip all compare values, not renderings. That mismatch is exactly
+        // what UriTest.testSelect/testWhere caught once the rendering was fixed: identical strings, unequal uris.
+        // This is the general form of a fix that had been applied at three call sites — Uri.expandTemplate,
+        // buildDatetimeUri, and the rec round trip — because the call sites are where it was noticed, not where the
+        // rule belongs. A hostless relative uri is untouched, since there is no authority to separate from.
+        // DISABLED, and the experiment is recorded because it is half the answer. Enforcing "an authority implies an
+        // absolute path" here DOES fix UriTest.testSelect/testWhere — all 6 gluing failures (`:443api/v2`) go green,
+        // because the value and the string then agree. But it breaks 18 rows of UriTest.testTemplateExpansion with a
+        // DOUBLE slash (`api.com//users`), i.e. the template path ends up with two empty leading segments: something
+        // in the expansion already makes it absolute, so this normalisation lands on top of that. Net worse, so it is
+        // off until the second prepender is found. The seven existing prepend sites are AbstractfURI:86, 238, 479,
+        // 617, 798 and fURI:147 — attribute it by instrumenting expandTemplate's normalizedPath against what
+        // fURI.of receives, or by re-enabling this block and looking for the caller that already added the marker.
+        final List<String> absolutePath = path;
         if (null != templates && !templates.isEmpty())
-            return new SAPPCQTfURI(scheme, host, port, path, poly, coefficient, query, templates);
+            return new SAPPCQTfURI(scheme, host, port, absolutePath, poly, coefficient, query, templates);
         if (null != poly && !poly.isEmpty())
-            return new SAPPCQfURI(scheme, host, port, path, poly, coefficient, query);
+            return new SAPPCQfURI(scheme, host, port, absolutePath, poly, coefficient, query);
         if (null != coefficient && !coefficient.isOne()) {
             if (!query.isEmpty()) {
                 if (null != poly && !poly.isEmpty())
-                    return new SAPPCQfURI(scheme, host, port, path, poly, coefficient, query);
+                    return new SAPPCQfURI(scheme, host, port, absolutePath, poly, coefficient, query);
                 else
-                    return new SAPXCQfURI(scheme, host, port, path, coefficient, query);
+                    return new SAPXCQfURI(scheme, host, port, absolutePath, coefficient, query);
             } else {
                 if (null == scheme && null == host)
                     return new XXPXCXfURI(path, coefficient);
                 else if (null == host)
                     return new SXPXCXfURI(scheme, path, coefficient);
                 else
-                    return new SAPXCXfURI(scheme, host, port, path, coefficient);
+                    return new SAPXCXfURI(scheme, host, port, absolutePath, coefficient);
             }
         } else {
             if (query.isEmpty()) {
@@ -985,12 +1010,12 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                     if (null == host)
                         return new SXPXXXfURI(scheme, path);
                     else
-                        return new SAPXXXfURI(scheme, host, port, path);
+                        return new SAPXXXfURI(scheme, host, port, absolutePath);
                 } else {
-                    return host == null ? new XXPXXXfURI(path) : new SAPXXXfURI(null, host, port, path);
+                    return host == null ? new XXPXXXfURI(path) : new SAPXXXfURI(null, host, port, absolutePath);
                 }
             } else {
-                return new SAPXCQfURI(scheme, host, port, path, coefficient, query);
+                return new SAPXCQfURI(scheme, host, port, absolutePath, coefficient, query);
             }
         }
     }

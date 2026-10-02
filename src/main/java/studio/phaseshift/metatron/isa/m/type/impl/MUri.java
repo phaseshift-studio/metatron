@@ -43,7 +43,7 @@ public class MUri extends MObj implements Uri {
     private volatile List<Tuple.Pair<fURI.Component, Obj>> parsedTemplatesCache = null;
 
     public MUri(final fURI jvm, final fURI tid, final fURI vid) {
-        super(jvm.resolve(), tid, vid);
+        super(jvm, tid, vid);
         if (jvm.isZero())
             this.tid = this.tid.zero();
     }

@@ -121,7 +121,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
 
     default Rec at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
         if (key.isUri()) {
-            final fURI k = key.uriValue();
+            final fURI k = key.uriValue().resolve();
             if (k.path().isEmpty())
                 return this;
             final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
@@ -212,14 +212,15 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             else {
                 //if (key.uriValue().isEmpty())
                 //   return this.c(c -> c.mult(key.c())).as();
-                if (key.uriValue().segmentLength() == 0)
+                final fURI keyF = key.uriValue().resolve();
+                if (keyF.segmentLength() == 0)
                     return (OBJ) noobj();
-                final boolean singleSegment = key.uriValue().segmentLength() == 1;
-                final String step = singleSegment ? key.uriValue().asNode().toString() : key.uriValue().path().getFirst();
+                final boolean singleSegment = keyF.segmentLength() == 1;
+                final String step = singleSegment ? keyF.asNode().toString() : keyF.path().getFirst();
                 Obj result;
-                final Uri asNode = uri(key.uriValue().asNode());
+                final Uri asNode = uri(keyF.asNode());
                 final cInt cKey = key.c();
-                final boolean isBranch = key.uriValue().isBranch();
+                final boolean isBranch = keyF.isBranch();
                 if (step.equals("..")) {
                     result = arec.parent();
                 } else if (step.equals("+") || step.equals("#")) {
@@ -269,7 +270,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                 if (singleSegment) {
                     return result.parent(arec).c(c -> c.mult(cKey)).as();
                 } else {
-                    final fURI nextKey = isBranch ? key.uriValue().pretract(1).asBranch() : key.uriValue().pretract(1);
+                    final fURI nextKey = isBranch ? keyF.pretract(1).asBranch() : keyF.pretract(1);
                     return (OBJ) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(o -> o.parent(arec).<Poly<?, ?>>as()).map(r -> r.<Poly<?, ?>>as().at(uri(nextKey))));
                 }
             }

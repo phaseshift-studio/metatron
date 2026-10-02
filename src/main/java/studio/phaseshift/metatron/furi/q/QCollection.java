@@ -30,7 +30,6 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -634,7 +633,7 @@ public final class QCollection {
         final java.util.Map<String, AtomicLong> counters = new java.util.concurrent.ConcurrentHashMap<>();
         return QProc.Helper.build(INCRQ_TID, INCRQ_PATTERN).
                 preWrite((vid, obj) -> {
-                    final fURI incrPattern = vid.extend(vid.qValue(INCRQ_PATTERN, fURI.class)).resolve();
+                    final fURI incrPattern = vid.extend(vid.qValue(INCRQ_PATTERN, fURI.class));
                     // Per-collection counter so each typed collection has its own ID sequence.
                     final StringBuilder prefix = new StringBuilder();
                     final List<String> newPath = new ArrayList<>();
@@ -764,15 +763,24 @@ public final class QCollection {
         return noobj(); // TODO: walk thread source spine → owner when threads carry it
     }
 
+
     /**
      * True if the {@code expire} datetime::T is in the past.  No expiry → never expires.
+     * <p>
+     * An expiry that cannot be READ does not count as expired: this fails <b>closed</b>. For a lock the
+     * dangerous direction is passing the write, because the region is one someone believes is guarded, and a
+     * silently unguarded write is neither visible nor recoverable. The liveness cost of failing closed — the
+     * region stays locked — is both: the warning below names it, and {@code ?lockq=noobj} releases it. A cache
+     * should choose the other way; a lock should not.
      */
     private static boolean expired(final Obj expire) {
-        if (expire.isNoObj() || !expire.isUri()) return false; // never expires
+        if (expire.isNoObj() || !expire.isUri()) return false; // no expiry — never expires
         try {
             return System.currentTimeMillis() > mathInstSet.datetimeToMillis(expire.asUri());
         } catch (final Exception e) {
-            return true; // malformed expiry — treat as expired so it can't block forever
+            LOG.warn("{{r}}unreadable{{X}} lock expiry {{b}}%s{{X}} — holding the lock (fail-closed): %s",
+                    expire, MTronException.translateMessage(e));
+            return false;
         }
     }
 

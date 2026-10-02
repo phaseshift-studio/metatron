@@ -23,23 +23,18 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMemory;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicNetwork;
+import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import static studio.phaseshift.metatron.BootLoader.ROUTER;
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.instset0;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -270,6 +265,18 @@ public interface Machine extends Space {
     ThreadLocal<Frame> FRAME = new ThreadLocal<>();
 
     /**
+     * The live frames of THIS thread — the owner — keyed by the frame's own address, which encodes its whole parent
+     * chain. This is the DOWNWARD link the frame stack cannot provide: {@code parent} walks up, and a
+     * {@code ThreadLocal<Frame>} holds only the cursor, so without this nothing could resolve an address at all.
+     * <p>
+     * Deliberately a plain ThreadLocal, never eagerly initialized and never touched on a read path, for the same
+     * reason FRAME is: materializing anything while resolving would recurse. A frame another thread pushed is
+     * simply not in this map — ownership is the visibility boundary, so no lock is needed and one thread's frames
+     * cannot appear in another's view.
+     */
+    ThreadLocal<Map<fURI, Frame>> FRAMES = new ThreadLocal<>();
+
+    /**
      * Push a frame for this machine and make it current.
      * <p>
      * Returns {@code this} for fluency, and note what that implies: <b>the machine is not the frame</b>. Two
@@ -278,8 +285,101 @@ public interface Machine extends Space {
      * evaluated by several threads at once, while the frame stack is per-thread.
      */
     default Machine push() {
-        FRAME.set(new Frame(this, FRAME.get()));
-        return this;
+        // The convenience: a frame nobody named. mintShortUUID is called with retryIfCollision=FALSE because its
+        // check is a `readFromSpace` and push() runs on the machine's EXECUTION path (the scoped-import block
+        // below), where a read is the shape that overflowed the stack once already. What is given up is only the
+        // 32-bit birthday guarantee, and only among live siblings under one parent. The exact and cheaper check is
+        // the parent's LIVE CHILDREN — no read, no materialization, and it is the structure Frame.next() needs — and
+        // it lands with the frame tree (t-murdnd40-rpdahi), which is where this becomes `true` or a direct check.
+        return this.push(CommonUtil.mintShortUUID(this.vid(), false));
+    }
+
+    /**
+     * Push a CHILD frame whose vid strictly extends this machine's vid by {@code extension}, and return the CHILD.
+     * <p>
+     * The extension is a URI rather than a label because it is an EXPRESSION: a multi-segment, templated or
+     * composed extension all work through the same path arithmetic. Composition is {@code mult}, and since a `..`
+     * segment is arithmetic, `..`, `../..` and an absolute `/other/path` all collapse into the single violation
+     * below rather than aliasing a sibling or an ancestor.
+     * <p>
+     * The child is minted with {@code clone().selfVID(...)} — a clone whose vid is then set — which mints the
+     * address WITHOUT writing it back to space. {@code vid(...)} would additionally write to space, and that cost
+     * is only worth paying when the frame must be referenceable from outside by address.
+     */
+    default Machine push(final fURI extension) {
+        final fURI parentVID = this.vid();
+        // A machine with NO vid (test machines, and any rootless construct) has no address to extend, so the
+        // extension becomes the child's address outright — and the descendant rule below does not apply, because
+        // there is nothing to descend from. Only when there IS a parent address does a frame have to stay under it.
+        final fURI childVID = (null == parentVID) ? extension.resolve() : parentVID.mult(extension).resolve();
+        if (null != parentVID && !descendsFrom(childVID, parentVID))
+            throw MTronException.of("push(%s) does not descend from %s: a frame's address must strictly extend its parent's", extension, parentVID);
+        final Machine clone = (Machine) this.clone(this.jvm(), this.tid(), childVID);
+        // Why the 3-arg clone rather than clone().selfVID(childVID): AbstractSpace.self() PINS an already-set vid
+        // (`null == this.vid() ? vid : this.vid()`), so on a clone — which already carries the parent's vid —
+        // selfVID is a silent no-op for the vid and the child would keep the parent's address. The 3-arg clone sets
+        // the fields directly, which is what `Obj.vid(fURI)` relies on everywhere else. The guard below turns the
+        // one remaining failure mode (a clone that is not a clone) into a named error instead of a moved parent.
+        if (clone == this)
+            throw MTronException.of("push(%s) cannot mint a child: clone() returned this machine, so the child would BE the parent", extension);
+        final Machine child = clone;
+        final Frame frame = new Frame(child, FRAME.get());
+        FRAME.set(frame);
+        frameRegister(childVID, frame);
+        return child;
+    }
+
+    /**
+     * The strict-descendant test, shared by push() and by the children enumeration so the two cannot disagree about
+     * what "under" means: the child's path must have the parent's as a PREFIX and be strictly longer.
+     */
+    static boolean descendsFrom(final fURI child, final fURI parent) {
+        if (null == child || null == parent)
+            return false;
+        final List<String> parentPath = parent.resolve().path();
+        final List<String> childPath = child.resolve().path();
+        return childPath.size() > parentPath.size() && childPath.subList(0, parentPath.size()).equals(parentPath);
+    }
+
+    /**
+     * The frame AT this address for THIS thread, or null. A frame another thread owns is not visible here — that is
+     * the ownership rule doing its job, not a miss. Null vid frames are never registered, so they resolve to null.
+     */
+    static Frame frameAt(final fURI vid) {
+        final Map<fURI, Frame> live = FRAMES.get();
+        return (null == live || null == vid) ? null : live.get(vid);
+    }
+
+    /**
+     * The addresses of the live frames strictly UNDER parentVID — zero or more, which is why Frame.next() is
+     * {@code {*}} and not {@code {?}}: a leaf and a freshly pushed frame are both honest zeros. Addresses only; no
+     * component is touched, so enumerating the tree never materializes it (a ComponentUnion's own next() would).
+     */
+    static List<fURI> frameAddressesUnder(final fURI parentVID) {
+        final Map<fURI, Frame> live = FRAMES.get();
+        if (null == live || null == parentVID)
+            return List.of();
+        return live.keySet().stream().filter(vid -> descendsFrom(vid, parentVID)).toList();
+    }
+
+    private static void frameRegister(final fURI vid, final Frame frame) {
+        if (null == vid)
+            return; // an addressable frame is one with an address; an unaddressed one is honestly unregistered
+        Map<fURI, Frame> live = FRAMES.get();
+        if (null == live) {
+            live = new LinkedHashMap<>();
+            FRAMES.set(live);
+        }
+        live.put(vid, frame);
+    }
+
+    private static void forget(final Frame frame) {
+        final Map<fURI, Frame> live = FRAMES.get();
+        if (null == live)
+            return;
+        live.remove(frame.machine().vid());
+        if (live.isEmpty())
+            FRAMES.remove(); // do not leave a per-thread structure behind once its owner has unwound
     }
 
     /**
@@ -290,6 +390,7 @@ public interface Machine extends Space {
         final Frame frame = FRAME.get();
         if (null != frame) {
             FRAME.set(frame.parent());
+            forget(frame); // the address is unreachable the moment the owner pops — before anything is released
             frame.close();
         }
     }
@@ -561,20 +662,20 @@ public interface Machine extends Space {
          * It is deliberately inert: every mutator is a no-op, so nothing written against the zero
          * can reach the live router, and — unlike a machine built by {@code BasicMachine.of}, which carries the
          * {@code +/#} stack space and real registration — constructing it has no side effects. It
-         * satisfies {@link Machine} as well as {@link Router}, so the zero of addressing is also
+         * satisfies {@link Machine}, so the zero of addressing is also
          * the zero of execution.
          */
         public static final class Machine0 extends MRec implements Machine {
             private static final Machine0 INSTANCE = new Machine0();
 
             /**
-         * The machine's identity rendering — {@code machine::[pattern=>#]@/vid}.
-         */
-        public static String routerToString(final Machine machine) {
-            return machine.tid() + "::[pattern=>#]@" + machine.vid();
-        }
+             * The machine's identity rendering — {@code machine::[pattern=>#]@/vid}.
+             */
+            public static String routerToString(final Machine machine) {
+                return machine.tid() + "::[pattern=>#]@" + machine.vid();
+            }
 
-        public static Machine0 single() {
+            public static Machine0 single() {
                 return INSTANCE;
             }
 

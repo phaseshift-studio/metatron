@@ -20,14 +20,20 @@ package studio.phaseshift.metatron.isa.mach.type;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.util.MTronException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /**
  * The frame's component views are formed <b>on access and cached</b>.
@@ -131,10 +137,13 @@ public class MachineFrameTest extends AbstractMetatronTest {
         // during boot, where the throw is suppressed.
         final Machine inner = Machine.mach0();
         try {
-            inner.push();
+            // push() MINTS, so the frame belongs to the CHILD it returns, not to the machine that pushed. Tracking
+            // the returned machine is the migration this test needed: the nesting and the two-level union are
+            // unchanged, only which machine answers for the frame's own level.
+            final Machine innerFrame = inner.push();
             final MemoryUnion memory = (MemoryUnion) inner.memory();
-            assertSame(inner, memory.machine(), "the union belongs to the machine of its own frame");
-            assertSame(inner, memory.current().machine(), "current() is this frame's level");
+            assertSame(innerFrame, memory.machine(), "the union belongs to the machine of its own frame");
+            assertSame(innerFrame, memory.current().machine(), "current() is this frame's level");
             assertSame(outer, memory.previous().machine(),
                     "previous() is the level it inherited from — a different machine");
             inner.pop();
@@ -172,4 +181,78 @@ public class MachineFrameTest extends AbstractMetatronTest {
         assertFalse(machine.memory() instanceof MemoryUnion,
                 "with no frame there is no composition here either");
     }
+
+    /*
+     * push(fURI) mints a CHILD whose address strictly extends its parent's, and refuses an extension that escapes.
+     * The refusal matters as much as the minting: `..` is arithmetic, so `push(f(".."))` would otherwise address a
+     * SIBLING or an ANCESTOR while claiming to be a child — and Frame.next() would then report siblings as
+     * children.
+     */
+    @Test
+    public void testPushMintsAChildWithADerivedVid() {
+        final Machine parent = Machine.defaultMachine();
+        final Machine child = parent.push(f("m1"));
+        assertNotSame(parent, child, "push must mint a CHILD, never return the parent");
+        assertEquals(parent.vid().extend("m1"), child.vid(), "the child's vid extends the parent's");
+        assertSame(child, Machine.frame().machine(), "the current frame now belongs to the child");
+        // nest one deeper: the chain encodes the ancestry, which is the property the address space is built on
+        final Machine grandchild = child.push(f("m2"));
+        assertEquals(child.vid().extend("m2"), grandchild.vid(), "the grandchild's vid extends the child's");
+        assertSame(grandchild, Machine.frame().machine());
+        grandchild.pop();
+        assertSame(child, Machine.frame().machine(), "pop returns to the parent's frame, not to none");
+        child.pop();
+        assertNull(Machine.frame(), "the outermost pop leaves no frame on this thread");
+    }
+
+    @Test
+    public void testPushRefusesANonDescendant() {
+        final Machine parent = Machine.defaultMachine().push(f("m1"));
+        assertThrows(MTronException.class, () -> parent.push(f("..")), "a `..` extension escapes the parent and must be refused");
+        parent.pop();
+    }
+
+
+    /*
+     * The frame tree's DOWNWARD links. A frame is reachable at its own address while it is live and gone the moment
+     * its owner pops. parent-only links cannot do this — they walk up, and the ThreadLocal holds only the cursor —
+     * which is why the per-owner registry exists.
+     */
+    @Test
+    public void testALiveFrameResolvesByItsAddress() {
+        final Machine child = Machine.defaultMachine().push(f("m1"));
+        assertSame(Machine.frame(), Machine.frameAt(child.vid()), "a live frame resolves at its own address");
+        child.pop();
+        assertNull(Machine.frameAt(child.vid()), "and is unreachable the moment it is popped");
+    }
+
+    @Test
+    public void testSiblingFramesResolveIndependently() {
+        final Machine root = Machine.defaultMachine();
+        final Machine m1 = root.push(f("m1"));
+        final Machine m11 = m1.push(f("m11"));
+        final Machine m12 = m1.push(f("m12"));
+        assertEquals(List.of(m11.vid(), m12.vid()), Machine.frameAddressesUnder(m1.vid()),
+                "the children of m1 in push order — and m1 itself is not one of them");
+        assertSame(Machine.frame(), Machine.frameAt(m12.vid()), "the deepest frame is the current one");
+        m12.pop();
+        assertNull(Machine.frameAt(m12.vid()), "the popped sibling is gone");
+        assertSame(m11, Machine.frameAt(m11.vid()).machine(), "and its sibling is untouched by that");
+        m11.pop();
+        m1.pop();
+    }
+
+    @Test
+    public void testAFrameIsOwnedByItsThreadNotGlobal() throws Exception {
+        final Machine child = Machine.defaultMachine().push(f("m1"));
+        final fURI address = child.vid();
+        final AtomicBoolean seenElsewhere = new AtomicBoolean(false);
+        final Thread other = new Thread(() -> seenElsewhere.set(null != Machine.frameAt(address)));
+        other.start();
+        other.join();
+        assertFalse(seenElsewhere.get(), "another thread's registry is its own — a frame is owned, not global");
+        assertSame(Machine.frame(), Machine.frameAt(address), "while its owner still resolves it");
+        child.pop();
+    }
+
 }

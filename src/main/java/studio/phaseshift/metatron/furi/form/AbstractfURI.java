@@ -117,20 +117,76 @@ public abstract class AbstractfURI implements fURI {
         return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
     }
 
+    /*
+     * The canonical (sentinel-free) form, computed AT MOST ONCE per uri.
+     *
+     * A uri is compared and hashed far more often than it is created, and the canonical form is what equality
+     * MEANS. resolve() used to be called from equals() (both sides, every comparison) and built a whole new fURI
+     * whenever a sentinel was present — inside the resolver's inner loop that is not merely slow, it hangs: see
+     * target/hang-stack.txt, where ScoringResolver.checkArgs -> Type.isRootType -> Objects.equals -> fURI.equals
+     * -> resolve -> hasSentinel spun for 472s of CPU with a SHALLOW stack (a loop, not recursion).
+     *
+     * Both fields are volatile and the computation is pure, so a race between threads recomputes the same value
+     * instead of corrupting one. `canonical` is written LAST: a reader that sees it is guaranteed to see
+     * `sentinelFound` too, and resolve() can then return the cached instance without touching the path at all.
+     */
+    private transient volatile fURI canonical;
+    private transient volatile boolean sentinelFound;
+
     @Override
     public fURI resolve() {
-        if (this.isEmpty())
+        final fURI cached = this.canonical;
+        if (null != cached)
+            return cached;
+        if (this.isEmpty()) {
+            this.sentinelFound = false;
+            this.canonical = this;
             return this;
-        final List<String> newSegments = new ArrayList<>();
-        for (final String seg : this.path()) {
-            if (seg.equals("."))
-                continue;
-            if (seg.equals("..") && !newSegments.isEmpty() && !newSegments.getLast().equals(".."))
-                newSegments.removeLast();
-            else
-                newSegments.add(seg);
         }
-        return this.path(newSegments);
+        final List<String> folded = foldSentinel(this.path());
+        // Return `this` not merely when no sentinel was SEEN but when the fold CHANGES NOTHING. A leading `..` is
+        // kept by the fold, so it survives with an identical path — and rebuilding an equal-but-fresh instance
+        // there made resolve() non-idempotent (resolve(resolve(x)) != resolve(x) by identity) and cost an
+        // allocation per call. Anything that reasons about whether a resolve changed the uri depends on this.
+        final fURI canonical = (null == folded || folded.equals(this.path())) ? this : this.path(folded);
+        this.sentinelFound = (null != folded); // `..` present but kept still IS a sentinel
+        this.canonical = canonical;
+        return canonical;
+    }
+
+    @Override
+    public boolean hasSentinel() {
+        this.resolve(); // answers both questions from the same pass, and caches it
+        return this.sentinelFound;
+    }
+
+    /**
+     * The folded segments, or null when nothing folds — i.e. when there is no `.` or `..` segment at all, which is
+     * the common case and must stay allocation-free.
+     */
+    private static List<String> foldSentinel(final List<String> path) {
+        List<String> folded = null;
+        for (int i = 0; i < path.size(); i++) {
+            final String seg = path.get(i);
+            if (seg.equals(".")) {
+                if (null == folded) folded = new ArrayList<>(path.subList(0, i)); // the `.` is dropped
+                continue;
+            }
+            if (seg.equals("..")) {
+                // materialize the prefix BEFORE deciding: a `..` must be able to pop a segment that precedes it,
+                // whether or not an earlier `.`/`..` had already started the fold. Getting this wrong is silent —
+                // the `..` is dropped and the path is returned unfolded, which reads as "the sentinel was ignored".
+                if (null == folded) folded = new ArrayList<>(path.subList(0, i));
+                if (!folded.isEmpty() && !folded.getLast().equals(".."))
+                    folded.removeLast();
+                else
+                    folded.add(seg); // a leading `..`, or one after another `..`, is KEPT (a displacement)
+                continue;
+            }
+            if (null != folded)
+                folded.add(seg);
+        }
+        return (null == folded) ? null : List.copyOf(folded); // null <=> no `.` or `..` segment at all
     }
 
     @Override
@@ -468,15 +524,16 @@ public abstract class AbstractfURI implements fURI {
     public fURI mult(final fURI other) {
         if (other.isZero())
             return Singleton.NOOBJ;
-        final List<String> newPath = new ArrayList<>(this.path());
-        if (!other.path().isEmpty()) {
+        final List<String> newPath = new ArrayList<>(this.resolve().path());
+        final fURI otherResolved = other.resolve();
+        if (!otherResolved.path().isEmpty()) {
             if (!newPath.isEmpty() && newPath.getLast().isEmpty())
                 newPath.removeLast();
-            newPath.addAll(other.path().getFirst().isEmpty() ? other.path().subList(1, other.path().size()) : other.path());
+            newPath.addAll(otherResolved.path().getFirst().isEmpty() ? otherResolved.path().subList(1, otherResolved.path().size()) : otherResolved.path());
         }
         final Map<String, String> newQ = new LinkedHashMap<>(this.qMap());
-        newQ.putAll(other.qMap());
-        return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c().mult(other.c()), this.poly(), newQ, this.templates()).resolve();
+        newQ.putAll(otherResolved.qMap());
+        return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c().mult(otherResolved.c()), this.poly(), newQ, this.templates()).resolve();
     }
 
     @Override
@@ -498,11 +555,11 @@ public abstract class AbstractfURI implements fURI {
                 Objects.equals(this.path(), other.path())) {
             final Map<String, String> newQ = new LinkedHashMap<>(this.qMap());
             newQ.putAll(other.qMap());
-            return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c().plus(other.c()), this.poly(), newQ, this.templates()).resolve();
+            return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c().plus(other.c()), this.poly(), newQ, this.templates());
         } else {
             final Map<String, String> newQ = new LinkedHashMap<>(this.qMap());
             newQ.putAll(other.qMap());
-            return fURI.of(null, null, -1, List.of("#"), this.c().plus(other.c()), this.poly(), newQ, this.templates()).resolve();
+            return fURI.of(null, null, -1, List.of("#"), this.c().plus(other.c()), this.poly(), newQ, this.templates());
             // throw MTronException.of("unable to add %s to %s", other, this);
         }
     }
@@ -768,6 +825,10 @@ public abstract class AbstractfURI implements fURI {
                 if (-1 != port())
                     sb.append(":").append(port());
             }
+            // NOTE: the leading separator for an authority-bearing uri is NOT added here. "An authority implies an
+            // absolute path" is enforced once, in fURI.of, for every construction — so by the time anything renders,
+            // an authority's path already begins with the empty marker and the join below supplies the `/`. Adding
+            // it here as well is the natural mistake (this is where it was first noticed) and it DOUBLES the slash.
             if (this.path().size() == 1 && this.path().getFirst().isEmpty())
                 sb.append("/");
             else
@@ -785,26 +846,33 @@ public abstract class AbstractfURI implements fURI {
     @Override
     public int hashCode() {
         // identical to Objects.hash(scheme, path, c, templates) without the Object[] allocation
+        final fURI thisResolved = this.resolve();
         int h = 1;
-        h = 31 * h + (null == this.scheme() ? 0 : this.scheme().hashCode());
-        h = 31 * h + (null == this.path() ? 0 : this.path().hashCode());
-        h = 31 * h + (null == this.c() ? 0 : this.c().hashCode());
-        h = 31 * h + (null == this.templates() ? 0 : this.templates().hashCode());
+        h = 31 * h + (null == thisResolved.scheme() ? 0 : thisResolved.scheme().hashCode());
+        h = 31 * h + (null == thisResolved.path() ? 0 : thisResolved.path().hashCode());
+        h = 31 * h + (null == thisResolved.c() ? 0 : thisResolved.c().hashCode());
+        h = 31 * h + (null == thisResolved.templates() ? 0 : thisResolved.templates().hashCode());
         return h;
     }
+
 
     @Override
     public boolean equals(final Object other) {
         if (!(other instanceof fURI that))
             return false;
-        return Objects.equals(this.scheme(), that.scheme())
-                && Objects.equals(this.host(), that.host())
-                && this.port() == that.port()
-                && Objects.equals(this.path(), that.path())
-                && ((!this.hasPoly() && !that.hasPoly()) || Objects.equals(this.poly(), that.poly()))
-                && Objects.equals(this.c(), that.c())
-                && ((!this.hasTemplates() && !that.hasTemplates()) || Objects.equals(this.templates(), that.templates()))
-                && ((!this.hasQ() && !that.hasQ()) || Objects.equals(new HashMap<>(this.qMap()), new HashMap<>(that.qMap())));
+        if (this == that)
+            return true;
+        final fURI thisResolved = this.resolve();
+        final fURI thatResolved = that.resolve();
+
+        return Objects.equals(thisResolved.scheme(), thatResolved.scheme())
+                && Objects.equals(thisResolved.host(), thatResolved.host())
+                && thisResolved.port() == thatResolved.port()
+                && Objects.equals(thisResolved.path(), thatResolved.path())
+                && ((!thisResolved.hasPoly() && !thatResolved.hasPoly()) || Objects.equals(thisResolved.poly(), thatResolved.poly()))
+                && Objects.equals(thisResolved.c(), thatResolved.c())
+                && ((!thisResolved.hasTemplates() && !thatResolved.hasTemplates()) || Objects.equals(thisResolved.templates(), thatResolved.templates()))
+                && ((!thisResolved.hasQ() && !thatResolved.hasQ()) || Objects.equals(new HashMap<>(thisResolved.qMap()), new HashMap<>(thatResolved.qMap())));
     }
 
 }

@@ -39,12 +39,16 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -63,6 +67,12 @@ public class catInstSet extends AbstractInstSet {
     public static final fURI RING_THEORY_TID = THEORY_TID.extend("ring_theory");
     public static final fURI GROUP_THEORY_TID = THEORY_TID.extend("group_theory");
     public static final fURI MONOID_THEORY_TID = THEORY_TID.extend("monoid_theory");
+    public static final fURI FIELD_THEORY_TID = THEORY_TID.extend("field_theory");
+    public static final fURI RIG_THEORY_TID = THEORY_TID.extend("rig_theory");
+    public static final fURI BOOLEAN_THEORY_TID = THEORY_TID.extend("boolean_theory");
+    public static final fURI LATTICE_THEORY_TID = THEORY_TID.extend("lattice_theory");
+    public static final fURI SEMILATTICE_THEORY_TID = THEORY_TID.extend("semilattice_theory");
+    public static final fURI NEAR_RING_THEORY_TID = THEORY_TID.extend("near_ring_theory");
     public static final fURI LAW_TID = CAT_ISA_TID.extend("law");
 
 
@@ -101,7 +111,12 @@ public class catInstSet extends AbstractInstSet {
      * {@code monoid_theory::T} — (op, id): an associative operation with its identity
      */
     public static Type MONOID_THEORY_TYPE;
-
+    public static Type RIG_THEORY_TYPE;
+    public static Type BOOLEAN_THEORY_TYPE;
+    public static Type SEMILATTICE_THEORY_TYPE;
+    public static Type NEAR_RING_THEORY_TYPE;
+    public static Type FIELD_THEORY_TYPE;
+    public static Type LATTICE_THEORY_TYPE;
     /**
      * {@code law::T} — the process-law union: one label from the morphism's declared process laws
      */
@@ -239,7 +254,60 @@ public class catInstSet extends AbstractInstSet {
                                 .isaPredicate(rec(
                                         uri(OP), INST_TYPE,
                                         uri(ID), ALL_TYPE))
-                                .create(), "the theory of monoids \\(\\langle M, \\cdot, 1 \\rangle\\): \\(m \\cdot 1 = 1 \\cdot m = m\\) and \\((m \\cdot n) \\cdot p = m \\cdot (n \\cdot p)\\)")),
+                                .create(), "the theory of monoids \\(\\langle M, \\cdot, 1 \\rangle\\): \\(m \\cdot 1 = 1 \\cdot m = m\\) and \\((m \\cdot n) \\cdot p = m \\cdot (n \\cdot p)\\)"),
+                        docWrap(FIELD_THEORY_TYPE = Type.Builder.build()
+                                .tid(THEORY_TID)
+                                .vid(FIELD_THEORY_TID)
+                                .isaPredicate(rec(
+                                        uri(ADD), INST_TYPE,
+                                        uri(MUL), INST_TYPE,
+                                        uri(ZERO), ALL_TYPE,
+                                        uri(ONE), ALL_TYPE,
+                                        uri(INV), INST_TYPE))
+                                .create(), "the theory of fields \\(\\langle F, +, \\cdot, 0, 1, {}^{-1} \\rangle\\): a commutative ring where every non-\\(0\\) element has a multiplicative inverse, \\(x \\cdot x^{-1} = 1\\)"),
+                        docWrap(RIG_THEORY_TYPE = Type.Builder.build()
+                                .tid(THEORY_TID)
+                                .vid(RIG_THEORY_TID)
+                                .isaPredicate(rec(
+                                        uri(ADD), INST_TYPE,
+                                        uri(MUL), INST_TYPE,
+                                        uri(ZERO), ALL_TYPE,
+                                        uri(ONE), ALL_TYPE))
+                                .create(), "the theory of rigs (semirings) \\(\\langle S, +, \\cdot, 0, 1 \\rangle\\): an additive and a multiplicative monoid with \\(\\cdot\\) distributive over \\(+\\), and no additive inverses"),
+                        docWrap(BOOLEAN_THEORY_TYPE = Type.Builder.build()
+                                .tid(THEORY_TID)
+                                .vid(BOOLEAN_THEORY_TID)
+                                .isaPredicate(rec(
+                                        uri(OR), INST_TYPE,
+                                        uri(AND), INST_TYPE,
+                                        uri(NOT), INST_TYPE,
+                                        uri(ZERO), ALL_TYPE,
+                                        uri(ONE), ALL_TYPE))
+                                .create(), "the theory of Boolean algebras \\(\\langle B, \\lor, \\land, \\lnot, 0, 1 \\rangle\\): a complemented distributive lattice, \\(b \\lor \\lnot b = 1\\) and \\(b \\land \\lnot b = 0\\)"),
+                        docWrap(LATTICE_THEORY_TYPE = Type.Builder.build()
+                                .tid(THEORY_TID)
+                                .vid(LATTICE_THEORY_TID)
+                                .isaPredicate(rec(
+                                        uri(MEET), INST_TYPE,
+                                        uri(JOIN), INST_TYPE,
+                                        uri(BOTTOM), ALL_TYPE,
+                                        uri(TOP), ALL_TYPE))
+                                .create(), "the theory of lattices \\(\\langle L, \\sqcap, \\sqcup, \\bot, \\top \\rangle\\): every pair of elements has a meet and a join, bounded by \\(\\bot\\) and \\(\\top\\)"),
+                        docWrap(SEMILATTICE_THEORY_TYPE = Type.Builder.build()
+                                .tid(THEORY_TID)
+                                .vid(SEMILATTICE_THEORY_TID)
+                                .isaPredicate(rec(
+                                        uri(OP), INST_TYPE,
+                                        uri(ID), ALL_TYPE))
+                                .create(), "the theory of semilattices \\(\\langle S, \\sqcup, 0 \\rangle\\): an idempotent commutative monoid (a single meet or join side of a lattice)"),
+                        docWrap(NEAR_RING_THEORY_TYPE = Type.Builder.build()
+                                .tid(THEORY_TID)
+                                .vid(NEAR_RING_THEORY_TID)
+                                .isaPredicate(rec(
+                                        uri(ADD), INST_TYPE,
+                                        uri(MUL), INST_TYPE,
+                                        uri(ZERO), ALL_TYPE))
+                                .create(), "the theory of near-rings \\(\\langle N, +, \\cdot, 0 \\rangle\\): \\(+\\) a group, \\(\\cdot\\) a monoid, one-sided distributivity, no multiplicative \\(1\\) (reserved for barrier types)")),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(ALL).rng(MORPHISM_TID), lst(MORPHISM_TYPE), (lhs, inst) -> MORPHISM_TYPE.constructor().apply(lhs)),
                         instC(AS_INST_TID.dom(ALL).rng(OBJECT_TID), lst(OBJECT_TYPE), (lhs, inst) -> OBJECT_TYPE.constructor().apply(lhs))),
@@ -300,7 +368,9 @@ public class catInstSet extends AbstractInstSet {
         }
 
         private static Rec typeLawsUncached(final Type type) {
-            if (type.tid().basePath().equals(INT_TID)) {
+            final fURI t = type.tid().basePath();
+            if (t.equals(INT_TID)) {
+                // int: a ring — (add=+, mul=·, zero=0, one=1) and its constituent group/monoids
                 return rec(mutableMap(
                         uri("ring"), rec(mutableMap(
                                         uri(ADD), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
@@ -322,6 +392,113 @@ public class catInstSet extends AbstractInstSet {
                                         uri(ID), jnt(1)),
                                 MONOID_THEORY_TID, null)));
             }
+            if (t.equals(REAL_TID)) {
+                // real: a field — a ring where the non-zero mult elements are a group (inv = 1/x); plus the constituents
+                return rec(mutableMap(
+                        uri("field"), rec(mutableMap(
+                                        uri(ADD), auto_from_(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
+                                        uri(MUL), auto_from_(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
+                                        uri(Tokens.ZERO), real(0.0d),
+                                        uri(Tokens.ONE), real(1.0d),
+                                        uri(INV), auto_from_(INV_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst()),
+                                FIELD_THEORY_TID, null),
+                        uri("ring"), rec(mutableMap(
+                                        uri(ADD), auto_from_(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
+                                        uri(MUL), auto_from_(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
+                                        uri(Tokens.ZERO), real(0.0d),
+                                        uri(Tokens.ONE), real(1.0d)),
+                                RING_THEORY_TID, null),
+                        uri("add_group"), rec(mutableMap(
+                                        uri(OP), auto_from_(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
+                                        uri(ID), real(0.0d),
+                                        uri(INV), auto_from_(NEG_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst()),
+                                GROUP_THEORY_TID, null),
+                        uri("mult_group"), rec(mutableMap(
+                                        uri(OP), auto_from_(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
+                                        uri(ID), real(1.0d),
+                                        uri(INV), auto_from_(INV_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst()),
+                                GROUP_THEORY_TID, null),
+                        uri("add_monoid"), rec(mutableMap(
+                                        uri(OP), auto_from_(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
+                                        uri(ID), real(0.0d)),
+                                MONOID_THEORY_TID, null),
+                        uri("mult_monoid"), rec(mutableMap(
+                                        uri(OP), auto_from_(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
+                                        uri(ID), real(1.0d)),
+                                MONOID_THEORY_TID, null)));
+            }
+            if (t.equals(BOOL_TID)) {
+                // bool: a Boolean algebra — or=join(PLUS), and=meet(MULT), not=complement — a complemented distributive
+                // lattice and a rig (idempotent semiring) with bottom=false / top=true
+                return rec(mutableMap(
+                        uri("boolean"), rec(mutableMap(
+                                        uri(OR), auto_from_(PLUS_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
+                                        uri(AND), auto_from_(MULT_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
+                                        uri(NOT), auto_from_(NOT_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
+                                        uri(Tokens.ZERO), bool(false),
+                                        uri(Tokens.ONE), bool(true)),
+                                BOOLEAN_THEORY_TID, null),
+                        uri("rig"), rec(mutableMap(
+                                        uri(ADD), auto_from_(PLUS_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
+                                        uri(MUL), auto_from_(MULT_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
+                                        uri(Tokens.ZERO), bool(false),
+                                        uri(Tokens.ONE), bool(true)),
+                                RIG_THEORY_TID, null),
+                        uri("lattice"), rec(mutableMap(
+                                        uri(MEET), auto_from_(MULT_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
+                                        uri(JOIN), auto_from_(PLUS_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
+                                        uri(BOTTOM), bool(false),
+                                        uri(TOP), bool(true)),
+                                LATTICE_THEORY_TID, null)));
+            }
+            if (t.equals(STR_TID)) {
+                // str: a monoid under concatenation (PLUS), identity ""
+                return rec(mutableMap(
+                        uri("concat_monoid"), rec(mutableMap(
+                                        uri(OP), auto_from_(PLUS_INST_TID.dom(STR_TID).rng(STR_TID)).tryToInst(),
+                                        uri(ID), str("")),
+                                MONOID_THEORY_TID, null)));
+            }
+            if (t.equals(URI_TID)) {
+                // uri: monoids under concatenation (both PLUS and MULT concatenate), identity "."
+                return rec(mutableMap(
+                        uri("plus_concat_monoid"), rec(mutableMap(
+                                        uri(OP), auto_from_(PLUS_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
+                                        uri(ID), uri(".")),
+                                MONOID_THEORY_TID, null),
+                        uri("mult_concat_monoid"), rec(mutableMap(
+                                        uri(OP), auto_from_(MULT_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
+                                        uri(ID), uri(".")),
+                                MONOID_THEORY_TID, null)));
+            }
+            if (t.equals(BYTES_TID)) {
+                // bytes: a monoid under concatenation (PLUS), identity the empty buffer
+                return rec(mutableMap(
+                        uri("concat_monoid"), rec(mutableMap(
+                                        uri(OP), auto_from_(PLUS_INST_TID.dom(BYTES_TID).rng(BYTES_TID)).tryToInst(),
+                                        uri(ID), bytes(new byte[0])),
+                                MONOID_THEORY_TID, null)));
+            }
+            if (t.equals(CODE_TID)) {
+                // code: the function/stream ring — add=branch (parallel split/merge), mul=compose (serial),
+                // zero=end (the 0-function, ≡ id{0}::T), one=id (the parametric identity), inv=additive inverse (coeff −1)
+                return rec(mutableMap(
+                        uri("ring"), rec(mutableMap(
+                                        uri(ADD), auto_from_(BRANCH_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
+                                        uri(MUL), auto_from_(COMPOSE_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
+                                        uri(Tokens.ZERO), auto_from_(END_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
+                                        uri(Tokens.ONE), auto_from_(ID_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst()),
+                                RING_THEORY_TID, null),
+                        uri("add_group"), rec(mutableMap(
+                                        uri(OP), auto_from_(BRANCH_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
+                                        uri(ID), auto_from_(END_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
+                                        uri(INV), auto_from_(NEG_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst()),
+                                GROUP_THEORY_TID, null),
+                        uri("mult_monoid"), rec(mutableMap(
+                                        uri(OP), auto_from_(COMPOSE_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
+                                        uri(ID), auto_from_(ID_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst()),
+                                MONOID_THEORY_TID, null)));
+            }
             return rec0();
         }
     }
@@ -330,11 +507,11 @@ public class catInstSet extends AbstractInstSet {
      * The law axis: the process laws a morphism obeys — a property of the operation itself, never the whole
      * algebra (those are the theory types on {@code object::T}).
      */
-    // NOTES: the structural laws — semilattice, boolean, near_ring, ring, group — are not process laws:
-    // they name an algebraic *structure*, so they are theory types on object::T (ring_theory::T, group_theory::T,
-    // monoid_theory::T exist; semilattice_theory::T, boolean_theory::T, near_ring_theory::T are future). The former
-    // provenance axis (syntactic/declared/semantic) is dropped too: CatLawTable serves the declared process laws;
-    // the rest are derived (syntactic) or computed (semantic) when wired.
+    // NOTES: the structural laws — semilattice, boolean, near_ring, field, rig, lattice, ring, group, … — are not
+    // process laws: they name an algebraic *structure*, so they are theory types on object::T (monoid_theory::T,
+    // group_theory::T, ring_theory::T, field_theory::T, rig_theory::T, boolean_theory::T, lattice_theory::T,
+    // semilattice_theory::T, near_ring_theory::T). The former provenance axis (syntactic/declared/semantic) is dropped
+    // too: CatLawTable serves the declared process laws; the rest are derived (syntactic) or computed (semantic) when wired.
     public enum Law {
         /**
          * an annihilator: {@code a·x = a} for every {@code x} (absorbing element of the operation)

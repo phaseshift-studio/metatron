@@ -18,6 +18,9 @@
 
 package studio.phaseshift.metatron.isa.m.math;
 
+import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -25,6 +28,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MType;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -113,4 +117,63 @@ public class DatetimeTypeTest extends AbstractInstSetTest {
         assertTrue(after.hasPredicate(),
                 "post-write resolution must retain the registered predicate: " + after);
     }
+
+    /*
+     * The datetime ENCODING, pinned because it puts meaning in places nobody would guess and nothing asserted it:
+     *
+     *     <//2026.08:09/14/30/00/000?tz=+0000>
+     *          year.month  day   h  m  s  ms
+     *          └─ host ──┘ port   └── path ──┘
+     *
+     * A datetime's value lives in the AUTHORITY — year.month in the HOST (dot included) and the day in the PORT —
+     * with only hour/min/sec/millis as path segments. That is why datetimeToMillis reads host then port then path.
+     * A future normalization of the authority (stripping the dot from 2026.08, or dropping the port) corrupts every
+     * datetime SILENTLY, and the symptom appears somewhere unrelated — an expiry that reads as past, a lock that
+     * stops guarding — rather than here. Hence the assertions below.
+     */
+    private static final ZonedDateTime ROUND_TRIP = ZonedDateTime.of(2026, 8, 9, 14, 30, 0, 0, ZoneOffset.UTC);
+
+    @Test
+    public void testDatetimeEncodingIsAuthorityBearing() {
+        final fURI furi = mathInstSet.buildDatetimeUri(ROUND_TRIP).uriValue();
+        LOG.debug("datetime %s encodes as %s", ROUND_TRIP, furi);
+        assertEquals("2026.08", furi.host(), "year.month is encoded in the HOST, dot included");
+        assertEquals(9, furi.port(), "the day is encoded in the PORT");
+        assertTrue(furi.path().contains("14"), "the hour is a path segment");
+        assertTrue(furi.path().contains("30"), "the minute is a path segment");
+    }
+
+    @Test
+    public void testDatetimeRoundTripIsLossless() {
+        final Uri dt = mathInstSet.buildDatetimeUri(ROUND_TRIP);
+        assertEquals(ROUND_TRIP.toInstant().toEpochMilli(), mathInstSet.datetimeToMillis(dt),
+                "a datetime must survive encode/decode: " + dt.uriValue());
+    }
+
+    @Test
+    public void testDatetimeIsUnaffectedByResolve() {
+        final fURI dt = mathInstSet.buildDatetimeUri(ROUND_TRIP).uriValue();
+        assertEquals(dt, dt.resolve(), "resolve() must be the identity on a datetime: its value lives in the "
+                + "authority, and its path segments (hour/minute/second/millis) contain no `.` or `..`");
+        assertEquals(dt.hashCode(), dt.resolve().hashCode());
+    }
+
+
+    /*
+     * The bug this catches, and it was not cosmetic: a datetime with a RELATIVE path on an authority-bearing uri
+     * renders without the authority/path separator, gluing the day (port) to the hour — day 22 hour 21 became
+     * `//2026.10:221/26/…`. The console and every serializer round trip a datetime through its string, and the
+     * GLUED form reparses as a different instant. A lock whose expire was written correctly, one second in the
+     * future, came back as an expiry in the past — so the lock never blocked, silently.
+     */
+    @Test
+    public void testDatetimeSurvivesAStringRoundTrip() {
+        final Uri dt = mathInstSet.buildDatetimeUri(ROUND_TRIP);
+        final fURI reparsed = f(dt.uriValue().toString());
+        LOG.debug("datetime %s round trips as %s", dt.uriValue(), reparsed);
+        assertEquals(dt.uriValue(), reparsed, "a datetime must survive its own string form");
+        assertEquals(ROUND_TRIP.toInstant().toEpochMilli(), mathInstSet.datetimeToMillis(uri(reparsed)),
+                "...and still decode to the same instant after being reparsed");
+    }
+
 }

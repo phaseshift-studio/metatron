@@ -26,15 +26,12 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mcp.mcpClient;
+import studio.phaseshift.metatron.isa.m.type.InstSet.JREService;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjYAMLSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.*;
 import studio.phaseshift.metatron.isa.web.parser.*;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
@@ -52,18 +49,16 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.JREService;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_MILLIS_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_TIME_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
-import static studio.phaseshift.metatron.isa.m.type.Bool.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -74,10 +69,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_emulator_httpHandler.HTTP_MCP_EMULTATOR_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler.HTTP_MCP_HANDLER_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.stdio.handler.mcp_stdioHandler.STDIO_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mtron_httpHandler.HTTP_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.web_httpHandler.WEB_HTTP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.*;
+import static studio.phaseshift.metatron.isa.web.space.stdio.handler.mcp_stdioHandler.STDIO_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_emulator_wsHandler.WS_MCP_EMULTATOR_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TYPE;
@@ -411,10 +406,10 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(HTTP_MTRON_HANDLER_TYPE, "a simple http handler accepting mtron expressions and return mtron results", "mtron_http::[=>]"),
                         docWrap(HTTP_MCP_HANDLER_TYPE, "an abstract mcp http handler providing necessary json-rpc infrastructure for mcp servers to leverage"),
                         docWrap(STDIO_MCP_HANDLER_TYPE, """
-                                                                 an mcp stdio carrier — the transport-agnostic mcp server served over the process's own stdin/stdout.
-                                                                 fd 1 is the wire, so the VM's ordinary output (logs, banners, renders) is moved to stderr.
-                                                                 the session ends at EOF on stdin, which is how a client shuts the server down.
-                                                                 """,
+                                                        an mcp stdio carrier — the transport-agnostic mcp server served over the process's own stdin/stdout.
+                                                        fd 1 is the wire, so the VM's ordinary output (logs, banners, renders) is moved to stderr.
+                                                        the session ends at EOF on stdin, which is how a client shuts the server down.
+                                                        """,
                                 "mcp_stdio::[server => !*</sys/space/mcp/basic_server>]@/sys/io/mcp/stdio"),
                         docWrap(WEB_HTTP_HANDLER_TYPE, "a http handler serving web content from a router-backed space"),
                         /// //////////////////////////////

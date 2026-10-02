@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.vec;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.type.InstSet.JREService;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -31,8 +32,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.mult_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.plus_;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;

@@ -30,12 +30,30 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.OBJECT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
-/*
+/**
+ * Theory resolution — reading a type's declared algebraic structures (the theory instances under
+ * {@code object.law}) in a theory-generic way, instead of hard-coding one type's names.
+ *
+ * <p>A type's law block is a rec of <em>named theory instances</em> (e.g. {@code ring}, {@code add_group},
+ * {@code field}, {@code boolean}), each an instance of a theory type ({@code ring_theory :: T},
+ * {@code group_theory :: T}, …) with its operations named by <em>role</em> ({@code add}, {@code mul},
+ * {@code op}, {@code zero}, {@code one}, {@code inv}, …). These helpers navigate that two-level structure:</p>
+ *
+ * <pre>
+ *   type  →  law  →  instance(name)  →  role(role)  →  inst | value
+ * </pre>
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class TheoryHelper extends MRec {
+
+    /**
+     * The instance name a type's law block uses for the additive group (op, id, inv).
+     */
+    public static final String ADD_GROUP = "add_group";
 
     public TheoryHelper(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -45,42 +63,101 @@ public class TheoryHelper extends MRec {
         return rec instanceof TheoryHelper ? (TheoryHelper) rec : new TheoryHelper(rec.jvm(), rec.tid(), rec.vid());
     }
 
-    public static fURI tidToKey(final fURI theoryTID) {
-        return f(theoryTID.name().replace("_theory", ""));
-    }
-
-    public static Obj zeroElement(final fURI theoryTID, final Type type) {
-        final Rec typeTheory = OBJECT_TYPE.constructor().apply(type).orElse(rec0()).at(LAW).orElse(rec0()).at(tidToKey(theoryTID)).orElse(rec0());
-        return typeTheory.at(ZERO);
-    }
-
-    public static Obj oneElement(final fURI theoryTID, final Type type) {
-        final Rec typeTheory = OBJECT_TYPE.constructor().apply(type).orElse(rec0()).at(LAW).orElse(rec0()).at(tidToKey(theoryTID)).orElse(rec0());
-        return typeTheory.at(ONE);
-    }
-
-    public static Inst plusInst(final fURI theoryTID, final Type type) {
-        final Rec typeTheory = OBJECT_TYPE.constructor().apply(type).orElse(rec0()).at(LAW).orElse(rec0()).at(tidToKey(theoryTID)).orElse(rec0());
-        return typeTheory.at(ADD).orElse(typeTheory.at(OP));
-    }
-
-    public static Inst plusZeroInst(final fURI theoryTID, final Type type) {
-        final Rec typeTheory = OBJECT_TYPE.constructor().apply(type).orElse(rec0()).at(LAW).orElse(rec0()).at(tidToKey(theoryTID)).orElse(rec0());
-        return typeTheory.at(ADD).orElse(typeTheory.at(OP)).asInst().args(lst(TheoryHelper.zeroElement(theoryTID, type)));
-    }
-
-    public static Inst multOneInst(final fURI theoryTID, final Type type) {
-        final Rec typeTheory = OBJECT_TYPE.constructor().apply(type).orElse(rec0()).at(LAW).orElse(rec0()).at(tidToKey(theoryTID)).orElse(rec0());
-        return typeTheory.at(MUL).orElse(typeTheory.at(OP)).asInst().args(lst(TheoryHelper.oneElement(theoryTID, type)));
+    /**
+     * The instance name an algebraic theory TID maps to in a law block — {@code ring_theory :: T → ring}.
+     */
+    public static String nameOf(final fURI theoryTID) {
+        return theoryTID.name().replace("_theory", "");
     }
 
     /**
-     * The involution op of the operand's additive group — {@code add_group.inv} (e.g. {@code neg}).
-     * Unlike the ring unit ops, {@code inv} is argless, so this returns the bare inv inst; the caller
-     * matches {@code op()} pairs against it.
+     * Legacy alias for {@link #nameOf} — the law-block key a theory TID resolves to.
+     */
+    public static fURI tidToKey(final fURI theoryTID) {
+        return f(nameOf(theoryTID));
+    }
+
+    /**
+     * The rec of a named theory instance from a type's law block — the empty rec when the type models it not.
+     */
+    public static Rec instance(final Type type, final String name) {
+        return OBJECT_TYPE.constructor().apply(type).orElse(rec0()).at(LAW).orElse(rec0()).at(f(name)).orElse(rec0());
+    }
+
+    public static Rec instance(final Type type, final fURI theoryTID) {
+        return instance(type, nameOf(theoryTID));
+    }
+
+    /**
+     * The value of a role (a {@code zero}, {@code one}, {@code id}, …) — noobj when the type models it not.
+     */
+    public static Obj element(final Type type, final String name, final String role) {
+        final Obj obj = instance(type, name).at(f(role));
+        return obj.isNoObj() ? noobj() : obj;
+    }
+
+    public static Obj element(final Type type, final fURI theoryTID, final String role) {
+        return element(type, nameOf(theoryTID), role);
+    }
+
+    /**
+     * The inst of a role (an {@code op}, {@code add}, {@code mul}, …) — falling back to the generic {@code op} —
+     * noobj when the type models it not.
+     */
+    public static Inst inst(final Type type, final String name, final String role) {
+        final Obj obj = instance(type, name).at(f(role));
+        if (!obj.isNoObj())
+            return obj.asInst();
+        if (role.equals(OP))
+            return noobj().asInst();
+        final Obj op = instance(type, name).at(f(OP));
+        return op.isNoObj() ? noobj().asInst() : op.asInst();
+    }
+
+    public static Inst inst(final Type type, final fURI theoryTID, final String role) {
+        return inst(type, nameOf(theoryTID), role);
+    }
+
+    /**
+     * The inst of {@code opRole} applied to the value of {@code idRole} — the unit pattern, e.g. a type's
+     * {@code add} applied to its {@code zero}.
+     */
+    public static Inst unit(final Type type, final String name, final String opRole, final String idRole) {
+        return inst(type, name, opRole).args(lst(element(type, name, idRole)));
+    }
+
+    public static Inst unit(final Type type, final fURI theoryTID, final String opRole, final String idRole) {
+        return unit(type, nameOf(theoryTID), opRole, idRole);
+    }
+
+    // ---- stable, algebra-specific conveniences (used by the shipped rewrites) -----------------------------------------
+
+    public static Obj zeroElement(final fURI theoryTID, final Type type) {
+        return element(type, theoryTID, ZERO);
+    }
+
+    public static Obj oneElement(final fURI theoryTID, final Type type) {
+        return element(type, theoryTID, ONE);
+    }
+
+    public static Inst plusInst(final fURI theoryTID, final Type type) {
+        return inst(type, theoryTID, ADD);
+    }
+
+    public static Inst plusZeroInst(final fURI theoryTID, final Type type) {
+        return unit(type, theoryTID, ADD, ZERO);
+    }
+
+    public static Inst multOneInst(final fURI theoryTID, final Type type) {
+        return unit(type, theoryTID, MUL, ONE);
+    }
+
+    /**
+     * The involution op of a type's additive group — instance {@link #ADD_GROUP}, role {@code inv}
+     * ({@code neg} for int / real; the coefficient −1 unapply for code).
      */
     public static Inst invInst(final Type type) {
-        final Rec typeTheory = OBJECT_TYPE.constructor().apply(type).orElse(rec0()).at(LAW).orElse(rec0()).at(f("add_group")).orElse(rec0());
-        return typeTheory.at(INV).asInst();
+        final Obj obj = instance(type, ADD_GROUP).at(f(INV));
+        return obj.isNoObj() ? noobj().asInst() : obj.asInst();
     }
 }
