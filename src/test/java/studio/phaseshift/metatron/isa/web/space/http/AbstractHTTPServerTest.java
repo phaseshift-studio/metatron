@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
@@ -67,7 +67,7 @@ public abstract class AbstractHTTPServerTest extends AbstractMetatronTest {
      * Look up the registered Type for this handler from the Router.
      */
     protected Type handlerType() {
-        return Router.global().read(handler.vid()).type();
+        return Machine.current().read(handler.vid()).type();
     }
 
     @BeforeEach
@@ -83,7 +83,7 @@ public abstract class AbstractHTTPServerTest extends AbstractMetatronTest {
     @AfterEach
     public void teardownTestSpace() {
         if (this.testSpace != null) {
-            Router.global().removeSpace(this.testSpace.vid());
+            Machine.current().removeSpace(this.testSpace.vid());
             this.testSpace.close();
             this.testSpace = null;
         }

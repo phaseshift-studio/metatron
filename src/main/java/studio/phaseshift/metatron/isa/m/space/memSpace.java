@@ -25,7 +25,8 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -71,7 +72,7 @@ public class memSpace extends AbstractMemorySpace {
         this.save();
         this.sjvm().entrySet().forEach(kv -> {
             try {
-                if (!(kv.getValue() instanceof Router) && kv.getValue() != this)
+                if (!(kv.getValue() instanceof Machine) && kv.getValue() != this)
                     CommonUtil.close(kv.getValue());
             } catch (final Exception e) {
                 LOG.warn(e);

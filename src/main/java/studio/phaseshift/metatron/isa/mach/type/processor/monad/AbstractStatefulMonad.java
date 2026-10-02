@@ -16,11 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.monad;
+package studio.phaseshift.metatron.isa.mach.type.processor.monad;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.mach.type.Monad;
-import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
+import studio.phaseshift.metatron.isa.mach.type.processor.Monad;
 import studio.phaseshift.metatron.util.MTronException;
 
 /*

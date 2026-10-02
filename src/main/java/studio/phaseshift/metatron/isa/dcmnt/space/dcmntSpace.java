@@ -42,7 +42,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -225,7 +225,7 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
         this.existingCollectionSchema.initialize(this.database);
         final CollectionSchemaInstSet schemaInstset =
                 this.existingCollectionSchema.generateSchemaInstset(this.vid().extend(INSTSET));
-        Router.global().addSpace(schemaInstset);
+        Machine.current().addSpace(schemaInstset);
         schemaInstset.setup();
 
         // Wire schema instset into existingCollectionSchema so that collection

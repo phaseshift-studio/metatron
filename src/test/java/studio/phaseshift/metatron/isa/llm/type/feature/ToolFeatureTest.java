@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -83,7 +83,7 @@ public class ToolFeatureTest extends AbstractFeatureTest {
         if (null != reject) qs.add(REJECT + "=" + mtronLst(reject));
         if (null != env) qs.add(ENV + "=" + env);
         final String uri = SYS_BASH_INST_TID + (qs.isEmpty() ? "" : "?" + String.join("&", qs));
-        return Router.readFromSpace(uri).asInst();
+        return Machine.readFromSpace(uri).asInst();
     }
 
     /**

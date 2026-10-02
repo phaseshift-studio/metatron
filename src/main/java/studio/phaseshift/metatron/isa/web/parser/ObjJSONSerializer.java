@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -206,10 +206,10 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
             JsonObject jo = json.getAsJsonObject();
             if (jo.has(TID_KEY)) {
                 rawTid = f(jo.get(TID_KEY).getAsString());
-                tid = Router.global().redirect(rawTid, true);
+                tid = Machine.current().redirect(rawTid, true);
             }
             if (jo.has(VID_KEY)) vid = f(jo.get(VID_KEY).getAsString());
-            if (jo.has(BID_KEY)) bid = Router.global().redirect(f(jo.get(BID_KEY).getAsString()), true);
+            if (jo.has(BID_KEY)) bid = Machine.current().redirect(f(jo.get(BID_KEY).getAsString()), true);
         }
         // schema-declared type (tool arg) supplies the tid when the wire carries no envelope
         if (tid == null && expectedTid != null) tid = expectedTid;

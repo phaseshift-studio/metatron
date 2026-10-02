@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.isa.mach.type.ui;
 
 import org.jline.terminal.Cursor;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -41,7 +41,7 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
     static <W extends Widget<W>> Widget<W> of(final Rec recWidget) {
         if (recWidget instanceof Widget)
             return (Widget<W>) recWidget;
-        return (Widget<W>) Router.readFromSpace(recWidget.tid()).asType().constructor().asInst().args(lst(recWidget.selfTID(REC_TID))).apply();
+        return (Widget<W>) Machine.readFromSpace(recWidget.tid()).asType().constructor().asInst().args(lst(recWidget.selfTID(REC_TID))).apply();
     }
 
     @Override

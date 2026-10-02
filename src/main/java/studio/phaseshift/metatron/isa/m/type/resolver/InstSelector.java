@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.type.resolver;
 
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.ScoringResolver;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -40,9 +41,10 @@ import java.util.concurrent.atomic.AtomicReference;
 public interface InstSelector {
 
     /**
-     * Holder for the currently active selector instance. Defaults to {@link ScoringInstResolver}.
+     * Holder for the currently active selector instance. Defaults to {@link ScoringResolver} —
+     * the compiler's scoring resolver stage, which doubles as the per-instruction selector.
      */
-    AtomicReference<InstSelector> INSTANCE = new AtomicReference<>(new ScoringInstResolver());
+    AtomicReference<InstSelector> INSTANCE = new AtomicReference<>(ScoringResolver.single());
 
     /**
      * Get the currently active selector.

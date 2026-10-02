@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.space.AbstractLLMSessionIntegrationTest;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.QPROC;
@@ -80,7 +80,7 @@ public class MemSpaceLLMSessionIntegrationTest extends AbstractLLMSessionIntegra
     protected void cleanupSession() throws Exception {
         if (this.space != null) {
             try {
-                Router.global().removeSpace(this.space.vid());
+                Machine.current().removeSpace(this.space.vid());
             } catch (final Exception ignored) {
             }
             this.space.close();

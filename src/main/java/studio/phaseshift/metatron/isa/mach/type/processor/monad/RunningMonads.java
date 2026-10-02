@@ -16,14 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.machine;
+package studio.phaseshift.metatron.isa.mach.type.processor.monad;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Iterator;
@@ -57,7 +56,7 @@ public class RunningMonads implements Obj {
     public RunningMonads append(final Obj monad) {
         assert monad instanceof StatefulMonad;
         monad.forEach(o -> this.instIndex.compute(o.<StatefulMonad>as().inst(), (inst, value) -> null == value ? o.as() : value.obj(value.obj().append(o.<StatefulMonad>as().obj()))));
-        Router.global().stats().monadicStats().incrRunningMonads(1L);
+        Machine.current().stats().monadicStats().incrRunningMonads(1L);
         return this;
     }
 
@@ -80,7 +79,7 @@ public class RunningMonads implements Obj {
             return null;
         for (final Inst key : this.instIndex.keySet()) {
             final StatefulMonad value = this.instIndex.remove(key);
-            Router.global().stats().monadicStats().incrRunningMonads(-1L);
+            Machine.current().stats().monadicStats().incrRunningMonads(-1L);
             return value;
         }
         return null;

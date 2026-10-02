@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -57,7 +57,7 @@ public class TypeQTest extends AbstractMetatronTest {
             "str::T       % /t/b  % /t/b ->\"hello\"    % */t/b        % \"hello\"",
             "bool::T      % /t/c  % /t/c -> 23          % */t/c        % <ERROR>",
             "bool::T      % /t/d  % /t/d -> noobj       % */t/d        % <ERROR>",
-           // "bool{0}::T   % /t/e  % /t/e -> noobj       % */t/e        % noobj",
+            // "bool{0}::T   % /t/e  % /t/e -> noobj       % */t/e        % noobj",
             "int{2}::T    % /t/f  % /t/f -> 32          % */t/f        % <ERROR>",
             "int{2}::T    % /t/g  % /t/g -> {12,34}     % */t/g        % {12,34}",
             "int{3}::T    % /t/g  % /t/g -> {12,34}     % */t/g        % <ERROR>",
@@ -67,11 +67,11 @@ public class TypeQTest extends AbstractMetatronTest {
             "#::T         % /t/k  % /t/k -> \"hello\"   % */t/k        % \"hello\"",
     }, delimiter = '%')
     public void testTypedVID(final String specifyType, final String writeVID, final String writeTo, final String readFrom, final String result) {
-        LOG.warn("%s\n%s", this.space, Router.global().spaces());
+        LOG.warn("%s\n%s", this.space, Machine.current().spaces());
         final Type type = ObjmtronSerializer.parse(specifyType);
         final fURI write = f(writeVID);
-        Router.writeToSpace(write.addQ("T"), type);
-        assertEquals(type, Router.readFromSpace(write.addQ("T")));
+        Machine.writeToSpace(write.addQ("T"), type);
+        assertEquals(type, Machine.readFromSpace(write.addQ("T")));
         assertTrue(type.isType());
         checkCodeParseApply(LOG, writeTo, result);
         if (!result.trim().equals("<ERROR>"))

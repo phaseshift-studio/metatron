@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space.http;
 
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -84,21 +85,21 @@ class httpRouteLadderTest extends AbstractHTTPServerIntegrationTest {
         // it the route expands to an address nothing owns and every request is a 404 — a mount is only as real as
         // the space behind it.
         memSpace.of(rec(uri(PATTERN), uri(f("/data/#"))), f("/sys/space/test/data"));
-        studio.phaseshift.metatron.isa.mach.type.Router.writeToSpace(f("/data/person/34"),
+        studio.phaseshift.metatron.isa.mach.type.Machine.writeToSpace(f("/data/person/34"),
                 rec(uri("name"), str("Ada"), uri("born"), jnt(1815)));
-        studio.phaseshift.metatron.isa.mach.type.Router.writeToSpace(f("/data/person/35"),
+        studio.phaseshift.metatron.isa.mach.type.Machine.writeToSpace(f("/data/person/35"),
                 rec(uri("name"), str("Grace"), uri("born"), jnt(1906)));
         return httpSpace.of(rec(
-                uri(PATTERN), uri(f("/test/httpRouteLadder/#")),
-                uri(HOST), uri(f("http://127.0.0.1:" + generatePort())),
-                uri(ROUTE), rec(
-                        uri(f("/mcp")), uri(f("mcp_mtron")),
-                        uri(f("/content")), uri(f("/m/web/helper")),
-                        // two templated mounts, addressing the same leaf by two different spellings
-                        uri(f("/name")), ObjmtronSerializer.parse("</m/web/${name()}>"),
-                        uri(f("/pos")), ObjmtronSerializer.parse("</m/web/${as(rec::T).>>path/2}>"),
-                        // a templated mount over real data: /person/34 => /data/person/34
-                        uri(f("/person")), ObjmtronSerializer.parse("</data/person/${name()}>"))),
+                        uri(PATTERN), uri(f("/test/httpRouteLadder/#")),
+                        uri(HOST), uri(f("http://127.0.0.1:" + generatePort())),
+                        uri(ROUTE), rec(
+                                uri(f("/mcp")), uri(f("mcp_mtron")),
+                                uri(f("/content")), uri(f("/m/web/helper")),
+                                // two templated mounts, addressing the same leaf by two different spellings
+                                uri(f("/name")), ObjmtronSerializer.parse("</m/web/${name()}>"),
+                                uri(f("/pos")), ObjmtronSerializer.parse("</m/web/${as(rec::T).>>path/2}>"),
+                                // a templated mount over real data: /person/34 => /data/person/34
+                                uri(f("/person")), ObjmtronSerializer.parse("</data/person/${name()}>"))),
                 f("/sys/space/test/httpRouteLadder"));
     }
 

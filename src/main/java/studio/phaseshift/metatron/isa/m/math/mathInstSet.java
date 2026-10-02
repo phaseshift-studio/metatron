@@ -73,6 +73,8 @@ public class mathInstSet extends AbstractInstSet {
     public static final fURI MATH_FLOOR_INST_TID = MATH_INST_TID.extend("floor");
     public static final fURI MATH_ROUND_INST_TID = MATH_INST_TID.extend("round");
     public static final fURI NAT_TID = MATH_ISA_TID.extend("nat");
+
+    public static final fURI MATH_PERCENT_TID = MATH_ISA_TID.extend("percent");
     public static final fURI MATH_DATASIZE_TID = MATH_ISA_TID.extend("datasize");
     public static final fURI MATH_BYTE_TID = MATH_DATASIZE_TID.extend("bB");
     public static final fURI MATH_KBYTE_TID = MATH_DATASIZE_TID.extend("kB");
@@ -764,7 +766,16 @@ public class mathInstSet extends AbstractInstSet {
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(MATH_ISA_TID.extend(ALL)),
                 uri(TYPE), lst(
-                        docWrap(NAT_TYPE, "a positive integer"),
+                        docWrap(Type.Builder.build()
+                                .tid(INT_TID)
+                                .vid(MATH_PERCENT_TID)
+                                .isaPredicate(is_(gte_(jnt(0))).is_(lte_(jnt(100))))
+                                .constructor(arg ->
+                                        (arg.isReal() && (arg.asReal().jvm() < 1.0d)) ?
+                                                jnt(new Double(arg.asReal().jvm() * 100.0d).longValue()) :
+                                                arg.asInt())
+                                .create(), "a percentage; ctor on a real between 0.0 and 1.0 is remapped between 0 and 100"),
+                        docWrap(NAT_TYPE, "a positive integer greater than 0"),
                         docWrap(DATA_SIZE_TYPE, "the nominal base type of data size"),
                         docWrap(DATETIME_TYPE = Type.Builder.build()
                                 .tid(URI_TID)
@@ -1059,7 +1070,7 @@ public class mathInstSet extends AbstractInstSet {
                         docWrap(instC(MATH_CEIL_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.ceil(inst.arg(0).realValue()))), "the smallest real greater than or equal to the arg — the ceiling", "ceil(2.1)   [-- 3.0 --]"),
                         docWrap(instC(MATH_FLOOR_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.floor(inst.arg(0).realValue()))), "the largest real less than or equal to the arg — the floor", "floor(2.9)   [-- 2.0 --]"),
                         docWrap(instC(MATH_ROUND_INST_TID.dom(ALL.maybe()).rng(INT_TID), lst(REAL_TYPE), (lhs, inst) -> jnt(Math.round(inst.arg(0).realValue()))), "the arg rounded to the nearest int", "round(2.5)   [-- 3 --]")),
-                 uri(CONST), lst(real(Math.E, REAL_TID, MATH_ISA_TID.extend("e").constant()), real(Math.PI, REAL_TID, MATH_ISA_TID.extend("pi").constant()))));
+                uri(CONST), lst(real(Math.E, REAL_TID, MATH_ISA_TID.extend("e").constant()), real(Math.PI, REAL_TID, MATH_ISA_TID.extend("pi").constant()))));
         docWrap(this, "the collection of mathematical instructions, algebraic and numeric data types, and associated constants");
         super.setup();
     }

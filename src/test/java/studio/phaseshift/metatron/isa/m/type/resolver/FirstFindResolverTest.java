@@ -21,34 +21,32 @@ package studio.phaseshift.metatron.isa.m.type.resolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.FirstFindResolver;
 
 /**
- * Test suite for {@link FirstFindInstResolver}.
+ * Test suite for {@link FirstFindResolver} — the compiler's {@code firstfind_resolver::T}, a
+ * sibling of the ScoringResolver that pins the original first-match selection strategy.
  * <p>
- * The FirstFindInstResolver uses the original findFirst() algorithm which
- * returns the first matching instruction without considering specificity.
- * This is preserved for backward compatibility and A/B testing.
+ * Note: Some tests that work with the ScoringResolver may fail with first-match selection
+ * due to the non-deterministic nature of findFirst() when multiple instructions match.
  * <p>
- * Note: Some tests that work with ScoringInstResolver may fail here due to
- * the non-deterministic nature of findFirst() when multiple instructions match.
- * <p>
- * Run with: mvn test -Dtest=FirstFindInstResolverTest
+ * Run with: mvn test -Dtest=FirstFindResolverTest
  */
-@DisplayName("FirstFindInstResolver Tests")
+@DisplayName("FirstFindResolver Tests")
 public class FirstFindResolverTest extends AbstractResolverTest {
 
     public FirstFindResolverTest() {
-        super(FirstFindInstResolver::new);
+        super(FirstFindResolver::new);
     }
 
     // ========================================================================
     // FIRST-FIND SPECIFIC TESTS
-    // These tests document the behavior (and limitations) of the original
-    // findFirst() approach.
+    // These tests document the behavior (and limitations) of the
+    // first-match strategy.
     // ========================================================================
 
     /**
-     * Basic operations should work fine with FirstFind since there's typically
+     * Basic operations should work fine with first-match since there's typically
      * only one matching implementation for specific type+operation combinations.
      */
     @ParameterizedTest
@@ -108,7 +106,7 @@ public class FirstFindResolverTest extends AbstractResolverTest {
     }
 
     /**
-     * Note: as() operations may have inconsistent behavior with FirstFind
+     * Note: as() operations may have inconsistent behavior with first-match
      * due to multiple matching implementations. These tests document
      * cases that should work regardless of order.
      */

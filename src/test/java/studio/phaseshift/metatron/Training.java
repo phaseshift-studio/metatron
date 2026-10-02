@@ -24,9 +24,9 @@ import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.compiler.ScoringResolver;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.ScoringResolver;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.annotation.*;
@@ -279,9 +279,9 @@ public @interface Training {
                 for (final Inst inst : insts) {
                     try {
                         final fURI docQID = inst.tid().addQ(DOCQ);
-                        Rec doc = Router.readFromSpace(docQID).orElse(rec());
+                        Rec doc = Machine.readFromSpace(docQID).orElse(rec());
                         if (!hasDocs(doc))
-                            doc = Router.readFromSpace(docQID.basePath().addQ(DOCQ)).orElse(rec());
+                            doc = Machine.readFromSpace(docQID.basePath().addQ(DOCQ)).orElse(rec());
                         if (hasDocs(doc)) {
                             final String desc = doc.at(DESC).strValue();
                             if (!ctx.isEmpty()) ctx.append("; ");

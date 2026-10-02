@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.SkipWhenPortUnavailable;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.tble.MariaDBDatabaseConfig;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
 
@@ -88,7 +88,7 @@ public class MariaDBLLMSessionIntegrationTest extends AbstractLLMSessionIntegrat
     protected void cleanupSession() throws Exception {
         if (this.space != null) {
             try {
-                Router.global().removeSpace(this.space.vid());
+                Machine.current().removeSpace(this.space.vid());
             } catch (final Exception ignored) {
             }
             this.space.close();

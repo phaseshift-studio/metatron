@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
@@ -152,7 +152,7 @@ public final class CardUtil {
         if (obj.isType() || obj.isInst()) {
             final fURI key = Obj.Helper.specificTypeId(obj);
             if (key != null) {
-                final Obj docObj = Router.readFromSpace(key.addQ(QCollection.DOCQ));
+                final Obj docObj = Machine.readFromSpace(key.addQ(QCollection.DOCQ));
                 if (docObj.isRec() && !QCollection.isNoDocs(docObj)) {
                     final QCollection.Docs docs = new QCollection.Docs(docObj.asRec());
                     final StringBuilder sb = new StringBuilder();

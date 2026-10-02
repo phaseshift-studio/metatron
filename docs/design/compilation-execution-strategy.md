@@ -77,7 +77,7 @@ Strategy holder + the default compile loop.
   `resolve(token)`, clones with `selfVID` per slot; on exception keeps the inst unresolved (semi-resolution). **This
   whole method migrates into the `Strategy`/compiler in the new design.**
 
-### `isa/m/type/resolver/ScoringInstResolver.java`
+### `isa/m/type/resolver/ScoringResolver.java`
 
 The default resolver (active in `InstResolver.INSTANCE`).
 

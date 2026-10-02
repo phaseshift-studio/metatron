@@ -18,12 +18,13 @@
 
 package studio.phaseshift.metatron.distributed;
 
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.router.BasicRouter;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable.Style;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -49,6 +50,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -379,11 +381,13 @@ public final class PeerCluster implements AutoCloseable {
     }
 
     /**
-     * The i-th peer's connectable data-root prefix: {@code ws://localhost:<port><root>}. Address a value on
-     * that peer by extending it — {@code prefix(2) + "/a"} is peer 2's {@code /n/a}.
+     * The i-th peer's connectable data-root prefix: {@code ws://localhost:<port><root>}, as a {@link fURI} so
+     * callers <em>extend</em> it rather than splicing strings into an address — {@code prefix(2).extend("a")} is
+     * peer 2's {@code /n/a}. The root is already part of the prefix; extending it again would address
+     * {@code <root>/<root>/…}, which is a silent noobj rather than an error.
      */
-    public String prefix(final int oneBased) {
-        return "ws://localhost:" + this.port(oneBased) + this.root;
+    public fURI prefix(final int oneBased) {
+        return f("ws://localhost:" + this.port(oneBased)).extend(this.root);
     }
 
     // ========================================================================
@@ -399,7 +403,7 @@ public final class PeerCluster implements AutoCloseable {
         final Map<Obj, Obj> roster = new LinkedHashMap<>();
         for (int i = 1; i <= this.size(); i++)
             roster.put(uri("ws://localhost:" + this.port(i)), this.transport(i));
-        Router.writeToSpace(BasicRouter.peerRosterPath(), rec(roster));
+        Machine.writeToSpace(Network.Helper.peerRosterPath(), rec(roster));
         LOG.warn("roster declared (%d peer(s)): %s", roster.size(),
                 roster.keySet().stream().map(Object::toString).reduce((a, b) -> a + ", " + b).orElse("<empty>"));
         this.dispatches.add("declared roster: " + roster.keySet().stream().map(Object::toString).reduce((a, b) -> a + ", " + b).orElse("<empty>"));
@@ -451,7 +455,9 @@ public final class PeerCluster implements AutoCloseable {
         }
     }
 
-    /** a trivial round trip that needs no store at all, so it separates "nothing there" from "not answering" */
+    /**
+     * a trivial round trip that needs no store at all, so it separates "nothing there" from "not answering"
+     */
     private boolean answers(final int oneBased) {
         return !this.rawSend(oneBased, ObjmtronSerializer.parse("1.plus(1)")).isNoObj();
     }
@@ -744,7 +750,9 @@ public final class PeerCluster implements AutoCloseable {
         return Graphitty.string("\n{{B}}%s{{X}}\n%s\n", title, widget.format());
     }
 
-    /** the peer's own numbers — cyan, so identity reads as identity and never as a measured value */
+    /**
+     * the peer's own numbers — cyan, so identity reads as identity and never as a measured value
+     */
     private static String identity(final int value) {
         return "{{C}}" + value + "{{X}}";
     }

@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -324,12 +324,12 @@ public class dckrSpaceTest extends AbstractSpaceTest {
                 uri("image"), str("nginx:alpine"),
                 uri("ports"), lst(str("0:80")),
                 uri("environment"), rec(uri("NGINX_HOST"), str("example.com")));
-        Router.writeToSpace(f("dtest:container/" + name), runConfig);
+        Machine.writeToSpace(f("dtest:container/" + name), runConfig);
 
         final Obj inspected = space.read(f("dtest:container/" + name));
         assertFalse(inspected.isNoObj());
 
-        Router.writeToSpace(f("dtest:container/" + name),
+        Machine.writeToSpace(f("dtest:container/" + name),
                 noobj());
     }
 

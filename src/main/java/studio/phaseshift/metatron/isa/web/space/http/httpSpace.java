@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
@@ -208,7 +208,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                 // may redirect to a different URI where the type has no constructor,
                 // falling through to a plain MRec (same root cause as the wsSpace
                 // ClassCastException fix).
-                final Obj type = Router.global().read(lane.handlerType());
+                final Obj type = Machine.current().read(lane.handlerType());
                 if (type.isType() && type.asType().hasConstructor()) {
                     handler = type.asType().constructor().apply(rec(config)).as();
                     if (!handler.isFail())
@@ -357,7 +357,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
      * a document) is still a mount, and it is exactly the "resolves to nothing, so serve 404" case.
      */
     private RouteLane classify(final Obj routed, final boolean templated) {
-        Obj target = routed.isUri() ? Router.global().read(routed.uriValue()) : routed;
+        Obj target = routed.isUri() ? Machine.current().read(routed.uriValue()) : routed;
         // ── mcp_server type: materialize it so the transport wraps it ──
         if (target.isType() && target.asType().hasConstructor()
                 && Obj.Helper.specificType(target).test(MCP_SERVER_TYPE)) {
@@ -508,7 +508,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
           /* if (pattern.test(this.pattern)) {
                 final fURI location = Space.Helper.routeFromSpace(pattern.scheme(null).host(null), this.routes());
                 if (location != null && !location.toString().isEmpty()) {
-                    return Router.global().write(location, obj);
+                    return Machine.current().write(location, obj);
                 }
             }*/
 

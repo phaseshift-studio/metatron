@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.algebra.MultGroup;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.MathUtil;
 
 import java.util.*;
@@ -138,7 +138,7 @@ public interface Real extends Mono, Ring.O<Real>, MultGroup.O<Real> {
                                 .variables(MathUtil.getVariables(equation))
                                 .build()
                                 .setVariables(variables.stream()
-                                        .map(var -> List.of(var, Router.readFromSpace(var).<Number>jvm().doubleValue()))
+                                        .map(var -> List.of(var, Machine.readFromSpace(var).<Number>jvm().doubleValue()))
                                         .collect(Collectors.toMap(
                                                 a -> a.get(0).toString(),
                                                 b -> (Double) b.get(1),

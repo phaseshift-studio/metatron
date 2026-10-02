@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.iot.miot.miotInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
@@ -65,7 +65,7 @@ public final class Entity {
                     pinholder.logger().warn("no vid associated with %s", pinholder, entityName);
                 else {
                     pinholder.logger().info("writing to vid: %s", toVID.extend(kv.first().uriValue().toString()));
-                    Router.writeToSpace(toVID.extend(kv.first().uriValue().toString()), newValue);
+                    Machine.writeToSpace(toVID.extend(kv.first().uriValue().toString()), newValue);
                 }
                 found.set(true);
             }
@@ -79,7 +79,7 @@ public final class Entity {
                 pinholder.logger().warn("no vid associated with %s", pinholder, entityName);
             else {
                 pinholder.logger().info("writing to vid: %s", toVID.extend(pinUri.uriValue().toString()));
-                Router.writeToSpace(toVID.extend(pinUri.uriValue().toString()), newValue);
+                Machine.writeToSpace(toVID.extend(pinUri.uriValue().toString()), newValue);
             }
         }
         return pinholder;

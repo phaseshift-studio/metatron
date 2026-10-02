@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler;
 
 import java.io.InputStream;
@@ -78,7 +78,7 @@ public class mcpHttpHandlerSseTest extends AbstractMetatronTest {
             this.server = null;
         }
         if (this.testSpace != null) {
-            Router.global().removeSpace(this.testSpace.vid());
+            Machine.current().removeSpace(this.testSpace.vid());
             this.testSpace.close();
             this.testSpace = null;
         }
@@ -90,7 +90,7 @@ public class mcpHttpHandlerSseTest extends AbstractMetatronTest {
         final mcp_httpHandler handler = new mcp_httpHandler(
                 new LinkedHashMap<>(), mcp_httpHandler.HTTP_MCP_HANDLER_TID, f("/test/sse/mcp"));
         // one notification already fired (between subscriptions/listen and this GET)
-        Router.writeToSpace("/test/sse/mcp/subscriptions/30/0", rec(
+        Machine.writeToSpace("/test/sse/mcp/subscriptions/30/0", rec(
                 uri("method"), uri("notifications/resources/updated"),
                 uri("params"), rec(uri("uri"), uri("/usr/demo/age")),
                 uri("subscriptionId"), str("30")));

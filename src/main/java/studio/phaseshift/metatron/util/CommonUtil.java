@@ -22,7 +22,7 @@ import org.apache.lucene.search.spell.LevenshteinDistance;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
@@ -484,7 +484,7 @@ public final class CommonUtil {
             shortId = baseURI.extend(Long.toHexString(uuid.getMostSignificantBits())
                     .substring(0, 8) // Take first 8 hex chars of the MSB
             );
-        } while (retryIfCollision && !Router.readFromSpace(shortId).isNoObj());
+        } while (retryIfCollision && !Machine.readFromSpace(shortId).isNoObj());
         return shortId;
     }
 
@@ -924,7 +924,7 @@ public final class CommonUtil {
                                   final Set<fURI> forceExpand,
                                   final int depth, final boolean isLast,
                                   final fURI xref, final Consumer<TreeEntry> consumer) {
-        final Obj obj = Router.readFromSpace(uri);
+        final Obj obj = Machine.readFromSpace(uri);
         // Directories carry the trailing / (a branch); the display name is the last real
         // segment, so strip the branch marker before naming (keep the branch uri for navigation).
         final String name = uri.asNode().name();
@@ -944,7 +944,7 @@ public final class CommonUtil {
             final java.util.List<fURI> streamedUris = new java.util.ArrayList<>();
             final java.util.Map<fURI, fURI> streamedXrefs = new java.util.HashMap<>();
             try {
-                Router.global().readStream(uri.extend("+/")).forEach(id -> {
+                Machine.current().readStream(uri.extend("+/")).forEach(id -> {
                     final fURI childUri = id.furi();
                     if (null == childUri || childUri.equals(uri) || childUri.hasPattern()) return;
                     streamedUris.add(childUri);
@@ -960,7 +960,7 @@ public final class CommonUtil {
                 childUris.addAll(streamedUris);
                 childXrefs.putAll(streamedXrefs);
             } else {
-                Router.readFromSpace(uri.extend("+/")).stream()
+                Machine.readFromSpace(uri.extend("+/")).stream()
                         .filter(o -> !o.isNoObj())
                         .forEach(o -> {
                             final Rel rel = o.asRel();

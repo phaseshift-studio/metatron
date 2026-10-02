@@ -232,7 +232,7 @@ Each finding is a reason the current shape resists both asks.
 - mount → projection → carrier, with **no new registry**:
   `route: <pattern> ⇒ <obj>.as(<path to a protocol rng>)`
 - the mount config (`web_root`, `default_page`, `read_only`) is the **as-row's argument**, validated by
-  `ScoringInstResolver.checkArgs` against the row's `lst(T(...))` spec and documented by `docWrap`'s map —
+  `ScoringResolver.checkArgs` against the row's `lst(T(...))` spec and documented by `docWrap`'s map —
   not a new `route::T` config rec.
 - the transport is the **last hop of the path**: `(mcp::T => ws::T).>>` is `ws::T`, i.e. "here is the surface,
   here is the rest of the plan". A listener receives a path, pops the head it serves, and binds the tail.
@@ -384,7 +384,7 @@ is the default, and why the mount table enumerates four surfaces rather than 26 
 | capability the design needs | already provided |
 |---|---|
 | dispatch keyed by (what you have × what you want) | the family itself — ~70 rows; `Str`/`Int`/`Bool`/`Real`/`Uri`/`Lst`/`Rec`/`Rel`/`Code`/`Objs` plus `web`/`llm`/`ide`/`math`/`mach`/`ui` |
-| lookup in one call | `ScoringInstResolver` fast path: `Router.readFromSpace(as?dom=specificTypeId(lhs).rng=specificTypeId(arg))` (`:89-97`) |
+| lookup in one call | `ScoringResolver` fast path: `Router.readFromSpace(as?dom=specificTypeId(lhs).rng=specificTypeId(arg))` (`:89-97`) |
 | specificity resolution | `scoreSpecificity` — dom 1000 (+500 exact basePath), args 500 (+250), **+2000 when the rng matches the requested type** (`:242-299`) |
 | wildcards / generics | dom and rng are `fURI` patterns — `ALL.maybeSome()`, `TID.some()`, `TID.maybe()`; per-instruction `A`/`B` generics |
 | refinement-aware matching | `Inst.instDomRngMatch` and `refines` = `testNominally && c().within()` (`Inst.java:445-451`, `:971-973`) |
@@ -423,7 +423,7 @@ a => b => c.>>.>>  ==> c
 | left pop | **live** | `a => b => c.>>.>>` → `"<c>"` |
 | type as a path operand | **not live** | `rec::T => doc::T => inst::T` → parse error, line 1 col 7 (`could not parse at ' '`) |
 | `<...>` token | **not live** | no token |
-| single-hop `as` lookup by (dom, rng) | **live** | `ScoringInstResolver.java:89-97` |
+| single-hop `as` lookup by (dom, rng) | **live** | `ScoringResolver.java:89-97` |
 | `as` specificity scoring | **live** | `+2000` on rng alignment (`:279-286`) |
 | subtype closure of the graph | **live** | `implicitAsGraph` (`Inst.java:940-963`) |
 | as-graph audit | **live but ungated** | `AsGraphTest.java:45-59` logs everything except `INCOMPARABLE` |
@@ -460,7 +460,7 @@ The user's six violation types are the crisp version of the concern the projecti
 as path obligations:
 
 - `DUPLICATE` — two rows for the same hop; the fast path returns `getFirst()` with no arg check and no
-  scoring (`ScoringInstResolver.java:89-97`), so this is a **correctness** precondition, not hygiene.
+  scoring (`ScoringResolver.java:89-97`), so this is a **correctness** precondition, not hygiene.
 - `AMBIGUOUS` — two same-rng doms that overlap with no most-specific winner: the path is not unique. This is
   exactly the "when the path is unambiguous" case in the user's note.
 - `INCOMPARABLE` — disjoint, so dispatch stays total. Benign.
@@ -1024,7 +1024,7 @@ inference, so the table no longer guarantees that *every* mount yields a surface
 
 **Why `/mtron => *mtron_mcp` still type-checks — and why the inference needs no router rule.** The mapping the
 proposal calls for (`as?mcp_server<=uri(mcp_server::T)`) already exists as a *resolver* behaviour:
-`ScoringInstResolver`'s from/at fast resolution (`:76-88`) — for an inst whose tid is `from`/`at` whose arg is a
+`ScoringResolver`'s from/at fast resolution (`:76-88`) — for an inst whose tid is `from`/`at` whose arg is a
 uri — returns
 
 ```
@@ -1464,7 +1464,7 @@ snapshot **after** a re-import is the cheap guard that the rows survive.
    defaults may be **split by argument type** or must be a **single row per (kind, protocol)**. (5-minute
    check.)
 2. **The fast path bypasses scoring.** `result.getFirst()` with no arg check and no scoring
-   (`ScoringInstResolver.java:89-97`). So one row per (dom, rng) is a correctness precondition — variants
+   (`ScoringResolver.java:89-97`). So one row per (dom, rng) is a correctness precondition — variants
    must ride the argument, and `(dom, rng)` uniqueness must hold for every protocol row.
 3. **The audit is ungated.** `AsGraphTest` logs; it does not fail (`:45-59`). Recommend gating
    `DUPLICATE`/`AMBIGUOUS` for protocol rngs only.
@@ -1646,7 +1646,7 @@ points at the code that has since replaced it (marked).
 | `as?tool<=/m/inst`, `as?tool<=docs` | `llmInstSet.java:716`, `:708` |
 | `as?mcp_server<=skill` | `webInstSet.java:535` |
 | `AS_INST_TID` | `mInstSet.java:154`; `mFluent.java:328-330` |
-| `as` fast path + scoring | `ScoringInstResolver.java:89-97`, `:242-299` (`+2000` at `:279-286`) |
+| `as` fast path + scoring | `ScoringResolver.java:89-97`, `:242-299` (`+2000` at `:279-286`) |
 | refinement relation | `Inst.java:445-451`, `:971-973` |
 | audit API + violation classes | `Inst.java:775-806`, `:809-877`, `:879-886`, `:888-925`, `:940-963` |
 | audit ungated | `AsGraphTest.java:45-59` |
@@ -1673,8 +1673,8 @@ points at the code that has since replaced it (marked).
 | template expansion inside inst arguments | `Inst.java:641-652` (`isTemplateExpansion`) |
 | `regex` inst + its two output shapes | `mInstSet.java:169` (`REGEX_INST_TID`), `:220-221` (`str::rx`); body and docq `Str.java:408-431` |
 | `from` / `at` are the pushdown targets | `CommonRewrites.java` matches `FROM_INST_TID` / `AT_INST_TID`; `RewriteBuilder.forDatabase` `:102` |
-| `*X` infers its rng from the obj at X | `ScoringInstResolver.java:76-88`; `Inst.Helper.isFromOrAtInstToUri` `Inst.java:512-514` |
-| `as` rng is rewritten to the requested type | `ScoringInstResolver.java:188`, `:219` |
+| `*X` infers its rng from the obj at X | `ScoringResolver.java:76-88`; `Inst.Helper.isFromOrAtInstToUri` `Inst.java:512-514` |
+| `as` rng is rewritten to the requested type | `ScoringResolver.java:188`, `:219` |
 | the route RHS is applied with no lhs today | `Space.java:244-252` (`resolveApply`) |
 | relevant tokens | `Tokens.java` — `route` `:173`, `transport` `:233`, `protocol` `:234`, `tool` `:115`, `resource` `:128`, `prompt` `:127`, `web_root` `:312`, `default_page` `:313`, `read_only` `:314`, `on_get`… `:221-227` |
 

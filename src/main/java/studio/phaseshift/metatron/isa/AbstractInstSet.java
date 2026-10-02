@@ -27,7 +27,8 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -103,10 +104,10 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                         .filter(c -> checkDepth(c, this.tid.extend(CONST)))
                         .forEach(c -> {
                             if (!checkPattern(c))
-                                Router.writeToSpace(c);
+                                Machine.writeToSpace(c);
                             else {
                                 CONST_TABLE.put(c.vid(), c);
-                                Router.global().registerRedirect(f(c.vid().name()), c.vid());
+                                Machine.current().registerRedirect(f(c.vid().name()), c.vid());
                             }
                         });
             } else if (k.equals(uri(TYPE))) {
@@ -115,10 +116,10 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                         .filter(t -> !Objects.isNull(t))
                         .forEach(t -> {
                             if (!checkPattern(t))
-                                Router.writeToSpace(t);
+                                Machine.writeToSpace(t);
                             else {
                                 TYPE_TABLE.put(t.vid(), t.as());
-                                Router.global().registerRedirect(f(t.vid().name()), t.vid());
+                                Machine.current().registerRedirect(f(t.vid().name()), t.vid());
                             }
                         });
             } else if (k.equals(uri(INST))) {
@@ -126,10 +127,10 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                         .filter(i -> checkDepth(i, this.tid.extend(INST)))
                         .forEach(i -> {
                             if (!checkPattern(i))
-                                Router.writeToSpace(i.tid(), i);
+                                Machine.writeToSpace(i.tid(), i);
                             else {
                                 INST_TABLE.computeIfAbsent(i.tid().basePath(), kk -> new LinkedHashSet<>()).add(i.as());
-                                Router.global().registerRedirect(f(i.tid().name()), i.tid().basePath());
+                                Machine.current().registerRedirect(f(i.tid().name()), i.tid().basePath());
                             }
                         });
             } else if (k.equals(uri(REWRITE))) {
@@ -137,7 +138,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                         .filter(r -> checkDepth(r, this.tid.extend(INST).extend(REWRITE)))
                         .forEach(r -> {
                             if (!checkPattern(r))
-                                Router.writeToSpace(r.tid(), r);
+                                Machine.writeToSpace(r.tid(), r);
                             else
                                 REWRITE_TABLE.put(r.tid(), r.as());
                         });
@@ -145,7 +146,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                 LOG.warn("unable to load sugar: %s", v);
             }
         });
-        Router.global().write(this.vid(), this);
+        Machine.current().write(this.vid(), this);
     }
 
     @Override
@@ -197,10 +198,10 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     @Override
     public void close() {
-        this.types().stream().filter(t -> t.vid() != null).filter(t -> t.vid().test(this.pattern())).forEach(t -> Router.global().unregisterRedirect(f(t.vid().name()), t.vid()));
-        this.consts().stream().filter(c -> c.vid() != null).filter(c -> c.vid().test(this.pattern())).forEach(c -> Router.global().unregisterRedirect(f(c.vid().name()), c.vid()));
-        this.insts().stream().filter(i -> i.tid().test(this.pattern())).forEach(i -> Router.global().unregisterRedirect(f(i.tid().name()), i.tid()));
-        this.rewrites().stream().filter(r -> r.tid().test(this.pattern())).forEach(r -> Router.global().unregisterRedirect(f(r.tid().name()), r.tid()));
+        this.types().stream().filter(t -> t.vid() != null).filter(t -> t.vid().test(this.pattern())).forEach(t -> Machine.current().unregisterRedirect(f(t.vid().name()), t.vid()));
+        this.consts().stream().filter(c -> c.vid() != null).filter(c -> c.vid().test(this.pattern())).forEach(c -> Machine.current().unregisterRedirect(f(c.vid().name()), c.vid()));
+        this.insts().stream().filter(i -> i.tid().test(this.pattern())).forEach(i -> Machine.current().unregisterRedirect(f(i.tid().name()), i.tid()));
+        this.rewrites().stream().filter(r -> r.tid().test(this.pattern())).forEach(r -> Machine.current().unregisterRedirect(f(r.tid().name()), r.tid()));
         super.close();
     }
 
@@ -301,7 +302,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                                 if (inst.dom().isCode()) {
                                     REWRITE_TABLE.put(inst.tid(), inst);
                                 } else {
-                                    Router.global().registerRedirect(f(vid.name()), vid);
+                                    Machine.current().registerRedirect(f(vid.name()), vid);
                                     INST_TABLE.computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashSet<>()).add(inst);
                                 }
                             } else if (obj.isType()) {

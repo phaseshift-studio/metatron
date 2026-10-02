@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -198,7 +198,7 @@ public abstract class AbstractConceptFeature extends AbstractFeature implements 
         if (this.knownConceptNamesLoaded) return;
         this.knownConceptNamesLoaded = true;
         try {
-            Router.readFromSpace(this.getRoot(agent).extend("+/"))
+            Machine.readFromSpace(this.getRoot(agent).extend("+/"))
                     .stream()
                     .forEach(o -> this.knownConceptNames.add(o.asRel().first().uriValue().name()));
             LOG.debug("loaded %d existing concept names from space", this.knownConceptNames.size());
@@ -243,7 +243,7 @@ public abstract class AbstractConceptFeature extends AbstractFeature implements 
             LOG.debug("concepts to process: %s", correctedStrings);
             for (final String concept : correctedStrings) {
                 final fURI conceptURI = this.getRoot(agent).extend(concept);
-                final Rec conceptRec = Router.readFromSpace(conceptURI).orElse(rec());
+                final Rec conceptRec = Machine.readFromSpace(conceptURI).orElse(rec());
                 final Lst conceptLink = conceptRec.at(CONCEPT).orElse(lst());
                 final Set<Obj> conceptLinkList = new LinkedHashSet<>(conceptLink.jvm());
                 final int conceptLinkListSize = conceptLinkList.size();
@@ -262,7 +262,7 @@ public abstract class AbstractConceptFeature extends AbstractFeature implements 
                         }
                     }
                 }
-                Router.writeToSpace(conceptURI, conceptRec.at(NAME, str(conceptURI.name())).tid(LLM_CONCEPT_TID));
+                Machine.writeToSpace(conceptURI, conceptRec.at(NAME, str(conceptURI.name())).tid(LLM_CONCEPT_TID));
                 concepts.add(conceptURI);
                 LOG.debug("extracted concept: %s", conceptURI);
             }
@@ -279,7 +279,7 @@ public abstract class AbstractConceptFeature extends AbstractFeature implements 
     private void injectConceptRecommendations(final Agent agent, final Set<fURI> concepts) {
         for (final fURI conceptURI : new HashSet<>(concepts)) {
             try {
-                final Obj conceptObj = Router.readFromSpace(conceptURI);
+                final Obj conceptObj = Machine.readFromSpace(conceptURI);
                 if (conceptObj.isRec()) {
                     final Rec conceptRec = conceptObj.asRec();
                     if (conceptRec.has(MESSAGE)) {

@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeSpec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.function.Function;
 
@@ -59,9 +59,9 @@ public class EntityBuilder {
         this.writeFunction = null;
         this.readFunction = null;
         final fURI vidOrTid = TypeSpec.Helper.vidOrTid(this.getClass().getConstructors()[0].getParameterTypes()[0].getAnnotation(TypeSpec.class));
-        this.haosSpace = Router.global().getSpaceFor(vidOrTid);
+        this.haosSpace = Machine.current().getSpaceFor(vidOrTid);
         this.haosPrefix = f(Space.Helper.extractRewrite(this.haosSpace.jvm()).get1()).asNode();
-        final Obj deviceType = Router.readFromSpace(vidOrTid);
+        final Obj deviceType = Machine.readFromSpace(vidOrTid);
         assert device.test(deviceType);
         this.settings = rec(uri("unique_id"), uri(entityVID), uri("dev"), rec(uri("identifiers"), uri(device.vid()), uri("name"), device.at(uri("name"))));
     }

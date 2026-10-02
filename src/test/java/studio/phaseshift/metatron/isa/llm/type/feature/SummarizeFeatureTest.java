@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -120,15 +120,15 @@ public class SummarizeFeatureTest extends AbstractFeatureTest {
     @Test
     public void testBriefingFiltersByKindsAndConcepts() {
         final fURI claim1 = f("/usr/test/sum/claim/1");
-        Router.writeToSpace(claim1, rec(uri(TEXT), str("the decision claim"), uri(KIND), uri("decision"),
+        Machine.writeToSpace(claim1, rec(uri(TEXT), str("the decision claim"), uri(KIND), uri("decision"),
                 uri(SOURCE), lst(auto_from_(uri("/usr/test/message/28")).tryToInst())).tid(LLM_CLAIM_TID).selfVID(claim1));
         final fURI claim2 = f("/usr/test/sum/claim/2");
-        Router.writeToSpace(claim2, rec(uri(TEXT), str("the problem claim"), uri(KIND), uri("problem"),
+        Machine.writeToSpace(claim2, rec(uri(TEXT), str("the problem claim"), uri(KIND), uri("problem"),
                 uri(SOURCE), lst(auto_from_(uri("/usr/test/message/31")).tryToInst())).tid(LLM_CLAIM_TID).selfVID(claim2));
         final fURI looseEnd = f("/usr/test/sum/loose_end/1");
-        Router.writeToSpace(looseEnd, rec(uri(TITLE), str("open thread"), uri(STATUS), uri("open"), uri(DESC), str("...")).tid(LLM_LOOSE_END_TID).selfVID(looseEnd));
+        Machine.writeToSpace(looseEnd, rec(uri(TITLE), str("open thread"), uri(STATUS), uri("open"), uri(DESC), str("...")).tid(LLM_LOOSE_END_TID).selfVID(looseEnd));
         final fURI concept = f("/usr/test/concept/AgentExtractor");
-        Router.writeToSpace(concept, rec(uri(MESSAGE), lst(auto_from_(uri("/usr/test/message/28")).tryToInst())).selfVID(concept));
+        Machine.writeToSpace(concept, rec(uri(MESSAGE), lst(auto_from_(uri("/usr/test/message/28")).tryToInst())).selfVID(concept));
 
         final SummarizeFeature summarize = summarize();
         // agent carries a real tagging concept feature (root => /usr/test/concept)
@@ -157,10 +157,10 @@ public class SummarizeFeatureTest extends AbstractFeatureTest {
     @Test
     public void testBriefingAllKindsWhenNoneRequested() {
         final fURI claim1 = f("/usr/test/sum/claim/1");
-        Router.writeToSpace(claim1, rec(uri(TEXT), str("the decision claim"), uri(KIND), uri("decision"),
+        Machine.writeToSpace(claim1, rec(uri(TEXT), str("the decision claim"), uri(KIND), uri("decision"),
                 uri(SOURCE), lst(auto_from_(uri("/usr/test/message/28")).tryToInst())).tid(LLM_CLAIM_TID).selfVID(claim1));
         final fURI claim2 = f("/usr/test/sum/claim/2");
-        Router.writeToSpace(claim2, rec(uri(TEXT), str("the problem claim"), uri(KIND), uri("problem"),
+        Machine.writeToSpace(claim2, rec(uri(TEXT), str("the problem claim"), uri(KIND), uri("problem"),
                 uri(SOURCE), lst(auto_from_(uri("/usr/test/message/31")).tryToInst())).tid(LLM_CLAIM_TID).selfVID(claim2));
 
         final SummarizeFeature summarize = summarize();

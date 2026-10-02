@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -47,7 +47,7 @@ public class AuditFeatureTest extends AbstractFeatureTest {
     @Test
     public void testTrailPersistedWithPhases() {
         runLifecycle(feature());
-        final Obj rows = Router.readFromSpace(f("/usr/test/audit/+"));
+        final Obj rows = Machine.readFromSpace(f("/usr/test/audit/+"));
         assertFalse(rows.isNoObj(), "audit trail should be persisted");
         final Obj trail = rows.stream().reduce((a, b) -> b).orElse(noobj()).asRec().at(uri("trail"));
         assertFalse(trail.isNoObj(), "audit row should carry the trail");

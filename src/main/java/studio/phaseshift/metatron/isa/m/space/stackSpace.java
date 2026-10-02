@@ -25,10 +25,10 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.Memory;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -56,7 +56,7 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
                     lst(isa_(rec(uri(PATTERN), URI_TYPE)).tryToInst()), (lhs, inst) -> {
                         //final Space space = new stackSpace(inst.arg(0).asRec().at(PATTERN).uriValue());
                         //outer.global().addSpace(space);
-                        return Router.THREAD_STACK.get();
+                        return Memory.argStack();
                     })).create();
 
     private final GraphittyLogger LOG = Graphitty.log(this);
@@ -128,7 +128,7 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
     }*/
 
     public boolean pop() {
-        final Poly<?, ?> frame = this.sjvm().pop();
+        final Poly frame = this.sjvm().pop();
         LOG.trace("popped frame {{_&r}}off{{/r&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frame, this.sjvm().size());
         return true;
     }

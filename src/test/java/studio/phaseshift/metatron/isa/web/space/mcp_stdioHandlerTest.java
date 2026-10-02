@@ -24,7 +24,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.space.stdio.handler.mcp_stdioHandler;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
@@ -70,7 +70,7 @@ public class mcp_stdioHandlerTest extends AbstractMcpHandlerTest {
      */
     @Override
     protected mcpServer createMcpServer() {
-        return new mcpServer(mutableMap(uri(TOOL), lst(Router.readFromSpace(f("eval")))),
+        return new mcpServer(mutableMap(uri(TOOL), lst(Machine.readFromSpace(f("eval")))),
                 MCP_SERVER_TID, createTestVid());
     }
 

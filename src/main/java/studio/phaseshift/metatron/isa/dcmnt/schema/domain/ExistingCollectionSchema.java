@@ -29,7 +29,7 @@ import studio.phaseshift.metatron.isa.dcmnt.schema.BsonTypeMapper;
 import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema;
 
 import java.util.*;
@@ -330,7 +330,7 @@ public class ExistingCollectionSchema {
                 .isaPredicate(rec(fields))
                 .create();
 
-        Router.writeToSpace(typeVID, type);
+        Machine.writeToSpace(typeVID, type);
         SchemaSpace.logSchemaChange(this.space.logger(), "collection", "field",
                 collectionName, fieldTypes.keySet(), isNew);
     }
@@ -418,7 +418,7 @@ public class ExistingCollectionSchema {
      * (no dot-notation nesting) are included in the type predicate; sub-document navigation
      * is handled at runtime by the dcmntSpace directReader.
      *
-     * <p>Register the returned instset via {@code Router.global().addSpace(instset)} then
+     * <p>Register the returned instset via {@code Machine.current().addSpace(instset)} then
      * call {@code instset.setup()}.
      *
      * @param schemaVID VID for the schema instset

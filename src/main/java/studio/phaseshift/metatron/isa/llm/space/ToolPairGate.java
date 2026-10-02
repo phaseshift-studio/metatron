@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -168,7 +168,7 @@ public final class ToolPairGate {
                                 final Map<String, Rec> resultsById) {
         final List<String> callIds = toolCallIds(aiMessage);
         if (callIds.isEmpty()) // a plain ai message — nothing to pair
-            return new Verdict(Status.PUBLISHED, Router.writeToSpace(ledger.ledgerWritePath(), aiMessage).asRec());
+            return new Verdict(Status.PUBLISHED, Machine.writeToSpace(ledger.ledgerWritePath(), aiMessage).asRec());
         if (callIds.stream().allMatch(id -> PUBLISHED.containsKey(key(ledger, id))))
             return new Verdict(Status.PUBLISHED, null); // already in the ledger — never write a group twice
         final fURI ledgerPath = ledger.ledgerWritePath();
@@ -317,13 +317,13 @@ public final class ToolPairGate {
                     callIds.size() - outstanding.size(), callIds.size(), outstanding);
             return new Verdict(Status.PARKED, null);
         }
-        final Rec written = Router.writeToSpace(ledger.ledgerWritePath(), aiMessage).asRec();
+        final Rec written = Machine.writeToSpace(ledger.ledgerWritePath(), aiMessage).asRec();
         for (final String callId : callIds) {
             PARKED.remove(key(ledger, callId));
             PUBLISHED.put(key(ledger, callId), Boolean.TRUE);
             final Held held = HELD.remove(key(ledger, callId));
             if (null != held)
-                Router.writeToSpace(ledger.ledgerWritePath(), inScope(held.result(), aiMessage));
+                Machine.writeToSpace(ledger.ledgerWritePath(), inScope(held.result(), aiMessage));
         }
         LOG.debug("published tool group %s (%d results)", callIds, callIds.size());
         return new Verdict(Status.PUBLISHED, written);

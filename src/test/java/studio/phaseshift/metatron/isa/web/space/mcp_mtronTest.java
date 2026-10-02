@@ -29,7 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
 import studio.phaseshift.metatron.isa.web.type.MIME;
@@ -134,16 +134,16 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
     @AfterAll
     public void teardownSpaces() {
         if (this.httpSpace != null) {
-            Router.global().removeSpace(this.httpSpace.vid());
+            Machine.current().removeSpace(this.httpSpace.vid());
             this.httpSpace.close();
             this.httpSpace = null;
         }
         if (this.wsSpace != null) {
-            Router.global().removeSpace(this.wsSpace.vid());
+            Machine.current().removeSpace(this.wsSpace.vid());
             this.wsSpace.close();
             this.wsSpace = null;
         }
-        Router.global().removeSpace(WEB_ISA_TID);
+        Machine.current().removeSpace(WEB_ISA_TID);
         if (this.httpClient != null) {
             this.httpClient.close();
             this.httpClient = null;

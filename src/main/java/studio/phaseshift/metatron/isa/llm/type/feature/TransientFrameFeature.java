@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type.feature;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.Frame;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.Map;
 
@@ -45,6 +45,6 @@ public final class TransientFrameFeature extends AbstractFrameFeature {
     protected void onPopped(final Frame frame, final fURI frameURI) {
         // transient — clear the frame once it stops being top (an ephemeral call stack)
         if (null != frameURI && !frameURI.isEmpty())
-            Router.writeToSpace(frameURI, noobj());
+            Machine.writeToSpace(frameURI, noobj());
     }
 }

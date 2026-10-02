@@ -43,7 +43,7 @@ import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.grph.space.schema.GremlinRewriteUtils;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -146,7 +146,7 @@ public class grphInstSet extends AbstractInstSet {
         fURI path = base.extend(direction.name());
         if (!inst.arg(0).isNoObj())
             path = path.extend(inst.arg(0).uriValue().toString());
-        return Router.readFromSpace(path);
+        return Machine.readFromSpace(path);
     }
 
     private static Obj routeVertexTraversal(final Obj lhs, final Inst inst, final Direction direction) {
@@ -156,7 +156,7 @@ public class grphInstSet extends AbstractInstSet {
         if (!inst.arg(0).isNoObj())
             path = path.extend(inst.arg(0).uriValue().toString());
         path = path.extend(direction.opposite().name());
-        return Router.readFromSpace(path);
+        return Machine.readFromSpace(path);
     }
 
     private static Obj routeBothTraversal(final Obj lhs, final Inst inst) {
@@ -169,8 +169,8 @@ public class grphInstSet extends AbstractInstSet {
                 ? base.extend("IN").extend("+")
                 : base.extend("IN").extend(inst.arg(0).uriValue().toString()).extend(Tokens.OUT);
         return objs(Stream.concat(
-                Router.readFromSpace(outPath).stream(),
-                Router.readFromSpace(inPath).stream()));
+                Machine.readFromSpace(outPath).stream(),
+                Machine.readFromSpace(inPath).stream()));
     }
 
     private static Obj routeBothETraversal(final Obj lhs, final Inst inst) {
@@ -182,8 +182,8 @@ public class grphInstSet extends AbstractInstSet {
         final fURI inPath = inst.arg(0).isNoObj()
                 ? base.extend("IN")
                 : base.extend("IN").extend(inst.arg(0).uriValue().toString());
-        final Obj outResult = Router.readFromSpace(outPath);
-        final Obj inResult = Router.readFromSpace(inPath);
+        final Obj outResult = Machine.readFromSpace(outPath);
+        final Obj inResult = Machine.readFromSpace(inPath);
         if (outResult.isFail()) return outResult;
         if (inResult.isFail()) return inResult;
         return objs(Stream.concat(outResult.stream(), inResult.stream()));
@@ -265,20 +265,20 @@ public class grphInstSet extends AbstractInstSet {
                                 "an element", "the element values", mutableMap(jnt(0), "zero or more element property labels"), "returns the lhs element arg-labeled values"),
                         docWrap(instC(INV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> {
                                     final fURI vid = resolveVid(lhs);
-                                    return vid != null ? Router.readFromSpace(vid.extend("IN")) : lhs.asRec().at(IN);
+                                    return vid != null ? Machine.readFromSpace(vid.extend("IN")) : lhs.asRec().at(IN);
                                 }),
                                 "an edge", "the incoming vertex", Map.of(), "returns the lhs edge head vertex"),
                         docWrap(instC(OUTV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> {
                                     final fURI vid = resolveVid(lhs);
-                                    return vid != null ? Router.readFromSpace(vid.extend("OUT")) : lhs.asRec().at(OUT);
+                                    return vid != null ? Machine.readFromSpace(vid.extend("OUT")) : lhs.asRec().at(OUT);
                                 }),
                                 "an edge", "the outgoing vertex", Map.of(), "returns the lhs edge tail vertex"),
                         docWrap(instC(BOTHV_INST_TID.dom(EDGE_TID).rng(VRTX_TID.c(cInt.of(2))), lst(), (lhs, inst) -> {
                                     final fURI vid = resolveVid(lhs);
                                     if (vid != null)
                                         return objs(Stream.concat(
-                                                Router.readFromSpace(vid.extend("IN")).stream(),
-                                                Router.readFromSpace(vid.extend("OUT")).stream()));
+                                                Machine.readFromSpace(vid.extend("IN")).stream(),
+                                                Machine.readFromSpace(vid.extend("OUT")).stream()));
                                     return objs(Stream.concat(lhs.asRec().at(IN).stream(), lhs.asRec().at(OUT).stream()));
                                 }),
                                 "an edge", "both vertices", Map.of(), "returns the lhs edge's head and tail vertices"),
@@ -346,7 +346,7 @@ public class grphInstSet extends AbstractInstSet {
                                                                     || dp.hasField() || dp.hasExtension())
                                                                 return matchList.stream().map(Obj::asInst).toList();
                                                             final fURI furi = ref.uriValue();
-                                                            final studio.phaseshift.metatron.isa.Space space = Router.global().getSpaceFor(furi);
+                                                            final studio.phaseshift.metatron.isa.Space space = Machine.current().getSpaceFor(furi);
                                                             if (!(space instanceof grphSpace gs))
                                                                 return matchList.stream().map(Obj::asInst).toList();
                                                             final long count = "V".equals(dp.collection())
@@ -405,7 +405,7 @@ public class grphInstSet extends AbstractInstSet {
                                                                 return matchList.stream().map(Obj::asInst).toList();
                                                             final fURI furi = args.asLst().at(0).asUri().uriValue();
                                                             final String filterClause = args.asLst().at(1).asStr().jvm();
-                                                            final studio.phaseshift.metatron.isa.Space space = Router.global().getSpaceFor(furi);
+                                                            final studio.phaseshift.metatron.isa.Space space = Machine.current().getSpaceFor(furi);
                                                             if (!(space instanceof grphSpace gs))
                                                                 return matchList.stream().map(Obj::asInst).toList();
                                                             //final DataPath dp = DataPath.withoutDB(furi);
@@ -441,7 +441,7 @@ public class grphInstSet extends AbstractInstSet {
                                                             final fURI furi = args.asLst().at(0).asUri().uriValue();
                                                             final String filterClause = args.asLst().at(1).asStr().jvm();
                                                             final long limit = takeInst.arg(0).asInt().jvm();
-                                                            final studio.phaseshift.metatron.isa.Space space = Router.global().getSpaceFor(furi);
+                                                            final studio.phaseshift.metatron.isa.Space space = Machine.current().getSpaceFor(furi);
                                                             if (!(space instanceof grphSpace gs))
                                                                 return matchList.stream().map(Obj::asInst).toList();
                                                             final DataPath dp = DataPath.withoutDB(furi);

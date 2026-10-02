@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MType;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -55,7 +55,7 @@ public class DatetimeTypeTest extends AbstractInstSetTest {
 
     @AfterEach
     public void teardown() {
-        Router.writeToSpace(PROBE, noobj());
+        Machine.writeToSpace(PROBE, noobj());
     }
 
     @Test
@@ -106,7 +106,7 @@ public class DatetimeTypeTest extends AbstractInstSetTest {
         // an unrelated registry write bumps the type graph generation --
         // datetime must still resolve to the registered type afterwards
         final Obj probeType = ObjmtronSerializer.parse("int::T@" + PROBE).apply();
-        Router.writeToSpace(probeType.vid(), probeType);
+        Machine.writeToSpace(probeType.vid(), probeType);
         final Type after = MType.T(MATH_DATETIME_TID);
         assertEquals(before, after,
                 "datetime resolution must be stable across an unrelated registry write");

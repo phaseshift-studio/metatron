@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.llm.type;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.type.feature.service.FrameService;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -102,7 +102,7 @@ public class ChatStack implements FrameService {
         frame.session(this.session).chatId(this.chatId).depth(frameDepth);
         if (null != parent)
             frame.parentURI(parent);
-        Router.writeToSpace(uri, frame);
+        Machine.writeToSpace(uri, frame);
         this.stack.push(uri);
         return frame;
     }
@@ -112,18 +112,18 @@ public class ChatStack implements FrameService {
         final fURI uri = this.stack.pop();
         if (null == uri)
             return null;
-        final Obj obj = Router.readFromSpace(uri);
+        final Obj obj = Machine.readFromSpace(uri);
         if (!(obj instanceof Frame frame))
             return null;
         frame.complete();
-        Router.writeToSpace(uri, frame);
+        Machine.writeToSpace(uri, frame);
         return frame;
     }
 
     @Override
     public Obj at(final fURI key) {
         for (final fURI uri : this.stack) {
-            final Obj value = Router.readFromSpace(uri.extend(key));
+            final Obj value = Machine.readFromSpace(uri.extend(key));
             if (!value.isNoObj())
                 return value;
         }
@@ -135,7 +135,7 @@ public class ChatStack implements FrameService {
         final fURI uri = this.current();
         if (null == uri)
             return;
-        Router.writeToSpace(uri.extend(key), value);
+        Machine.writeToSpace(uri.extend(key), value);
     }
 
     @Override

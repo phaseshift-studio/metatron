@@ -23,7 +23,8 @@ import org.jline.utils.WCWidth;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -255,11 +256,11 @@ public class Graphitty {
     }
 
     public static GraphittyLogger log(final Object source) {
-        return source instanceof Obj && !(source instanceof Router) ? new GraphittyObjLogger((Obj) source) : new GraphittyLogger(source);
+        return source instanceof Obj && !(source instanceof Machine) ? new GraphittyObjLogger((Obj) source) : new GraphittyLogger(source);
     }
 
     /*    public static GraphittyLogger log(final Object source, final Level level) {
-        final GraphittyLogger logger = source instanceof Obj && !(source instanceof Router) ? new GraphittyObjLogger((Obj) source) : new GraphittyLogger(source);
+        final GraphittyLogger logger = source instanceof Obj && !(source instanceof Machine) ? new GraphittyObjLogger((Obj) source) : new GraphittyLogger(source);
     }*/
 
     public static void out(final OutputStream out, final String f, final Object... args) {

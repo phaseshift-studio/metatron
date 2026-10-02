@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.iot.haos;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -180,12 +180,12 @@ public class haosInstSet extends AbstractInstSet {
 
 
     private Obj toggle(final Obj lhs) {
-        final Obj currentState = lhs.asRec().at("state").orSupply(() -> Router.readFromSpace(lhs.asRec().at(discoveryAbbrevMap.get("state_topic").get1().toUri()).uriValue()));
-        final Obj payloadOn = Router.readFromSpace(lhs.asRec().at(discoveryAbbrevMap.get("payload_on").get1().toUri()).orElse(NOOBJ_TID.toUri()).uriValue()).orElse(currentState.isInt() ?
+        final Obj currentState = lhs.asRec().at("state").orSupply(() -> Machine.readFromSpace(lhs.asRec().at(discoveryAbbrevMap.get("state_topic").get1().toUri()).uriValue()));
+        final Obj payloadOn = Machine.readFromSpace(lhs.asRec().at(discoveryAbbrevMap.get("payload_on").get1().toUri()).orElse(NOOBJ_TID.toUri()).uriValue()).orElse(currentState.isInt() ?
                 jnt(1) : currentState.isUri() ?
                 uri("on") :
                 str("on"));
-        final Obj payloadOff = Router.readFromSpace(lhs.asRec().at(discoveryAbbrevMap.get("payload_off").get1().toUri()).orElse(NOOBJ_TID.toUri()).uriValue()).orElse(currentState.isInt() ?
+        final Obj payloadOff = Machine.readFromSpace(lhs.asRec().at(discoveryAbbrevMap.get("payload_off").get1().toUri()).orElse(NOOBJ_TID.toUri()).uriValue()).orElse(currentState.isInt() ?
                 jnt(0) : currentState.isUri() ?
                 uri("off") :
                 str("off"));
@@ -205,16 +205,16 @@ public class haosInstSet extends AbstractInstSet {
     public Set<Inst> insts() {
         final List<Inst> insts = List.of(
               /*  instC(HAOS_TOGGLE_INST_TID.dom(HAOS_SWITCH_TID).rng(HAOS_SWITCH_TID), lst(), (lhs, inst) -> {
-                    Router.writeToSpace(getCommandTopic(lhs), toggle(lhs));
+                    Machine.writeToSpace(getCommandTopic(lhs), toggle(lhs));
                     return lhs;
                 }),*/
                /* instC(HAOS_TOGGLE_INST_TID.dom(HAOS_LIGHT_TID).rng(HAOS_LIGHT_TID), lst(), (lhs, inst) -> {
                     final fURI commandTopic = getCommandTopic(lhs);
                     final Obj payload = toggle(lhs);
                     LOG.info("toggling {{b}}%s{{X}} with %s", commandTopic, payload);
-                    Router.writeToSpace(commandTopic, payload);
-                    //Router.writeToSpace(lhs.vid().extend("last_updated"), str(CommonUtil.getTimeStamp(null)));
-                    //Router.writeToSpace(lhs.vid().extend("last_changed"), str(CommonUtil.getTimeStamp(null)));
+                    Machine.writeToSpace(commandTopic, payload);
+                    //Machine.writeToSpace(lhs.vid().extend("last_updated"), str(CommonUtil.getTimeStamp(null)));
+                    //Machine.writeToSpace(lhs.vid().extend("last_changed"), str(CommonUtil.getTimeStamp(null)));
                     return lhs;
                 })*/);
         return new LinkedHashSet<>(insts);

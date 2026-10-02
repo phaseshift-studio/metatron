@@ -22,7 +22,8 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Stats;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -196,9 +197,17 @@ public interface Space extends Rec, Closeable {
         }
 
         public static boolean spaceEquals(final Space space, final Object other) {
-            return other instanceof Space &&
-                    ((Space) other).tid().equals(space.tid()) &&
-                    (space.vid() != null && ((Space) other).vid() != null && ((Space) other).vid().equals(space.vid()));
+            if (!(other instanceof Space))
+                return false;
+            final Space that = (Space) other;
+            if (!that.tid().equals(space.tid()))
+                return false;
+            // A space with no vid is not indexed by the Router -- a service's own bookkeeping memory, for itself,
+            // unaddressed and ephemeral (qprocs lean on this heavily). Having no position, there is nothing to
+            // compare it by, so the answer is identity. Requiring both vids to be non-null made this
+            // non-reflexive: space.equals(space) was false for every vid-less space, silently breaking
+            // Set/Map membership for exactly the spaces that have no other way to be identified.
+            return null == space.vid() || null == that.vid() ? space == that : that.vid().equals(space.vid());
         }
 
         public static void noCloneWarning(final Space space) {
@@ -320,7 +329,7 @@ public interface Space extends Rec, Closeable {
         }
 
         private static Obj writeComplete(final Obj newObj, final Obj currentObj) {
-            //Router.global().logger().info("write complete for %s: %s => %s", writePattern, currentObj, newObj);
+            //Machine.current().logger().info("write complete for %s: %s => %s", writePattern, currentObj, newObj);
             if (newObj.isNoObj()) {
                 currentObj.stream().forEach(CommonUtil::close);
             }
@@ -386,9 +395,9 @@ public interface Space extends Rec, Closeable {
         }
 
         public static void closeSpace(final Space space) {
-            if (Router.loaded()) {
-                // Router.global().removeSpace(space.pattern());
-                Router.global().removeSpace(space.vid());
+            if (Machine.loaded()) {
+                // Machine.current().removeSpace(space.pattern());
+                Machine.current().removeSpace(space.vid());
                 // 
             }
         }

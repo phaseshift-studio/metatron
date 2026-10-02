@@ -24,7 +24,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.Set;
 
@@ -90,7 +90,7 @@ public class RelTest extends AbstractAlgebraTest<Rel> {
             "*a.zero().type()                                            % (a=>1).zero().type()",
     }, delimiter = '%')
     public void testRelZeroCanonical(final String code, final String expected) {
-        Router.global().write("a", rel(uri("a"), jnt(1)));
+        Machine.current().write("a", rel(uri("a"), jnt(1)));
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 

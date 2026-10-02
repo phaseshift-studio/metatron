@@ -29,7 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.sys.space.fsSpace;
 import studio.phaseshift.metatron.util.CommonUtil;
 
@@ -78,7 +78,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
         final fsSpace space = FS_SPACE_TYPE.constructor().asInst().args(lst(rec(
                 uri(PATTERN), uri("isearch:#"),
                 uri(ROUTE), rec(uri("isearch:"), uri(SEARCH_ROOT.toString()))).vid(f("/sys/space/isearch")))).apply(noobj()).as();
-        Router.global().addSpace(space);
+        Machine.current().addSpace(space);
     }
 
     @AfterAll
@@ -143,7 +143,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
 
     @Test
     void testCsCommandWraps() {
-        final Obj wrapper = Router.readFromSpace(IDE_COMMAND_TID);
+        final Obj wrapper = Machine.readFromSpace(IDE_COMMAND_TID);
         assertTrue(wrapper.isInst(), "cs_command must be a registered inst");
         final Obj enriched = wrapper.asInst().args(rec(uri("command"), str("echo hi"))).apply(noobj());
         assertTrue(enriched.isInst(), "cs_command(command=>...) must return an enriched instruction");
@@ -151,7 +151,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
 
     @Test
     void testEnrichedRunsCommand() {
-        final Obj enriched = Router.readFromSpace(IDE_COMMAND_TID)
+        final Obj enriched = Machine.readFromSpace(IDE_COMMAND_TID)
                 .asInst().args(rec(uri("command"), str("echo hi"))).apply(noobj());
         final Obj result = enriched.asInst().apply(noobj());
         assertTrue(result.isRec(), "the enriched instruction must return a cs_result::T rec");
@@ -168,7 +168,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
                     collected.add(lhs.strValue());
                     return lhs;
                 });
-        final Obj enriched = Router.readFromSpace(IDE_COMMAND_TID)
+        final Obj enriched = Machine.readFromSpace(IDE_COMMAND_TID)
                 .asInst().args(rec(uri("command"), str("echo hi"))).apply(noobj());
         // the to conduit is rec-wrapped so the arg machinery keeps it as data
         final Obj result = enriched.asInst().args(rec(uri("to"), rec(uri("code"), to))).apply(noobj());
@@ -178,7 +178,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
 
     @Test
     void testEnrichedFailsOnBadCommand() {
-        final Obj enriched = Router.readFromSpace(IDE_COMMAND_TID)
+        final Obj enriched = Machine.readFromSpace(IDE_COMMAND_TID)
                 .asInst().args(rec(uri("command"), str("definitely-not-a-command-xyz"))).apply(noobj());
         final Obj result = enriched.asInst().apply(noobj());
         assertTrue(result.isRec(), "a failed command must still emit a cs_result::T rec --- %s".formatted(result));
@@ -196,7 +196,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
 
     @Test
     void testCsCommandDocs() {
-        final Obj doc = Router.readFromSpace(IDE_COMMAND_TID.addQ(DOCQ));
+        final Obj doc = Machine.readFromSpace(IDE_COMMAND_TID.addQ(DOCQ));
         assertTrue(doc.isRec(), "cs_command must carry documentation");
         assertTrue(doc.asRec().at(uri("desc")).strValue().contains("wrap"),
                 "the cs_command docs must describe the wrapper");
@@ -207,10 +207,10 @@ public class ideInstSetTest extends AbstractMetatronTest {
         // drstynx.boot.mtron does import(/m/ide, ide) — the second arg is the namespace prefix used
         // to disambiguate short names across instsets. `ide:command` must resolve to the command inst
         // the same way the bare `command` redirect does (insts live under /m/ide/inst/).
-        Router.global().registerPrefix(f("ide"), f("/m/ide"));
-        final Obj viaPrefix = Router.readFromSpace(f("ide:command"));
+        Machine.current().registerPrefix(f("ide"), f("/m/ide"));
+        final Obj viaPrefix = Machine.readFromSpace(f("ide:command"));
         assertTrue(viaPrefix.isInst(), "ide:command must resolve to the command inst — %s".formatted(viaPrefix));
-        assertEquals(Router.readFromSpace(IDE_COMMAND_TID), viaPrefix,
+        assertEquals(Machine.readFromSpace(IDE_COMMAND_TID), viaPrefix,
                 "ide:command must equal the command inst at /m/ide/inst/command");
     }
 
@@ -219,11 +219,11 @@ public class ideInstSetTest extends AbstractMetatronTest {
     void testProjectFindFile() {
         // ide:find — the project tree searched (repeat >> until has|isa) for a uri fragment;
         // yields the location of the found resource
-        final Obj search = Router.readFromSpace(IDE_INST_TID.extend("find"));
+        final Obj search = Machine.readFromSpace(IDE_INST_TID.extend("find"));
         LOG.warn(search);
         assertTrue(search.isInst(), "ide:find must be a registered inst");
         final Obj project = start_(uri("isearch:")).as_(IDE_PROJECT_TYPE).apply();
-        Router.writeToSpace("temp", project);
+        Machine.writeToSpace("temp", project);
         LOG.warn(project);
         final Obj found = search.asInst().args(lst(uri("Greeter"))).apply(uri("temp"));
         LOG.warn(found);
@@ -235,7 +235,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
     @Test
     void testProjectSearchNotFound() {
         // a fragment that is not in the tree must not fabricate a location
-        final Obj search = Router.readFromSpace(IDE_INST_TID.extend("search"));
+        final Obj search = Machine.readFromSpace(IDE_INST_TID.extend("search"));
         final Obj project = rec(uri(ROOT), uri("isearch:")).tid(IDE_PROJECT_TID);
         final Obj found = search.asInst().args(lst(uri("NoSuchFile.java"))).apply(project);
         assertTrue(!found.isUri() || !found.uriValue().toString().contains("NoSuchFile.java"),
@@ -246,7 +246,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
     void testProjectAsSkillView() {
         // as?skill<=project() — the project projects onto the skill contract:
         // name/desc/content/tool pass through, and code is viewed as resource
-        final Obj as = Router.readFromSpace(AS_INST_TID.dom(IDE_PROJECT_TID).rng(LLM_SKILL_TID));
+        final Obj as = Machine.readFromSpace(AS_INST_TID.dom(IDE_PROJECT_TID).rng(LLM_SKILL_TID));
         assertTrue(as.isInst(), "as?skill<=project() must be a registered inst");
         final Obj project = rec(uri(ROOT), uri("isearch:"),
                 uri(NAME), str("scratch"),
@@ -265,7 +265,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
     void testProjectAsSkillViewWithRefCode() {
         // the live shape — a code list of !* references (not plain uris):
         // the view must extract the file uri and keep the reference as lazy text
-        final Obj as = Router.readFromSpace(AS_INST_TID.dom(IDE_PROJECT_TID).rng(LLM_SKILL_TID));
+        final Obj as = Machine.readFromSpace(AS_INST_TID.dom(IDE_PROJECT_TID).rng(LLM_SKILL_TID));
         final Obj project = rec(uri(ROOT), uri("isearch:"),
                 uri(NAME), str("scratch"),
                 uri(CODE), lst((Obj) auto_from_(f("isearch:src/main/java/com/x/Greeter.java")))).tid(IDE_PROJECT_TID);
@@ -280,7 +280,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
         // the bridge is one-way: a skill has no buildable workspace behind it —
         // the reverse as is not registered (noobj reads back, and noobj is polymorphic,
         // so compare identity rather than isInst)
-        final Obj back = Router.readFromSpace(AS_INST_TID.dom(LLM_SKILL_TID).rng(IDE_PROJECT_TID));
+        final Obj back = Machine.readFromSpace(AS_INST_TID.dom(LLM_SKILL_TID).rng(IDE_PROJECT_TID));
         assertEquals(noobj(), back, "skill -> project must not be a registered as-view — %s".formatted(back));
     }
 
@@ -306,7 +306,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
         final fsSpace repoSrc = FS_SPACE_TYPE.constructor().asInst().args(lst(rec(
                 uri(PATTERN), uri("probe:#"),
                 uri(ROUTE), rec(uri("probe:"), uri(System.getProperty("user.dir")))).vid(f("/sys/space/repoProbe")))).apply(noobj()).as();
-        Router.global().addSpace(repoSrc);
+        Machine.current().addSpace(repoSrc);
 
         final String root = "src/test/resources/scratch";
         final String probeRoot = "probe:" + root;
@@ -338,7 +338,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
             // acceptance — the reprojection.  idx is a SEPARATE inst (ide:index) on the
             // code base — code is the source, idx is a re-slice of it: class => kind =>
             // name => the !@ anchors into the code list elements.
-            final Obj indexInst = Router.readFromSpace(IDE_INST_TID.extend("index"));
+            final Obj indexInst = Machine.readFromSpace(IDE_INST_TID.extend("index"));
             if (!indexInst.isInst())
                 throw new AssertionError("ide:index must be a registered inst, but was: " + indexInst);
             final Obj idxGen = indexInst.asInst().apply(uri(probeRoot));
@@ -354,7 +354,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
             // the first entry (class Greeter, kind field, name GREETING) must resolve to
             // the member rec held by code/0.
             final Obj anchor = idxGen.asRec().at("Greeter").asRec().at("field").asRec().at("GREETING").stream().toList().getFirst();
-            final Obj memberAtAnchor = anchor.isUri() ? Router.readFromSpace(anchor.uriValue()) : str("the first idx anchor was not an uri: " + anchor);
+            final Obj memberAtAnchor = anchor.isUri() ? Machine.readFromSpace(anchor.uriValue()) : str("the first idx anchor was not an uri: " + anchor);
             final String memberOut = trunc(memberAtAnchor, 400);
             if (memberOut.contains("no space location") || memberOut.contains("no active space"))
                 throw new AssertionError("the idx anchor did not resolve through the space to the code value: " + memberOut);

@@ -302,7 +302,7 @@ mtron> posint::2                    [-- posint::2  (admitted: the predicate lets
 ==>posint::2
 mtron> posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ==>fail::[-1 is not a int::T[is(gt(0))]@posint
-   	while parsing: posint::-1]@/sys/fail/462
+   	while parsing: posint::-1]@/sys/fail/118
 ```
 ---
 
@@ -530,15 +530,6 @@ mtron> [1,2]@a >>= [_,+4]                      [-- [1,6]@a  (second element +4) 
 mtron> [a=>1,b=>2] >>= [b=>none]               [-- [a=>1]  (remove field b) --]
 ==>[a=>1]
 mtron> @<people/+>.>>= [name=>"Micky Mouse"]   [-- wildcard update --]
-==>[
-    name=>'Micky Mouse',
-    role=>developer]
-==>[
-    name=>'Micky Mouse',
-    role=>oracle]
-==>[
-    name=>'Micky Mouse',
-    role=>architect]
 ```
 `@` means "anchor the write-back to the VID" (persist).  `*` means "anonymous copy" (no write-back):
 

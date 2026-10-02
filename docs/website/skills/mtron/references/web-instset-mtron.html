@@ -429,14 +429,14 @@ obj and which encoding. Below is metatron accessing this document.</p>
 mtron&gt; *&lt;http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md&gt;.as(html::T)
 ==&gt;
    html::&quot;&quot;&quot;&lt;h1&gt;web instruction set (&lt;code&gt;/m/web&lt;/code&gt;)&lt;/h1&gt;
-   &lt;p&gt;&lt;code&gt;/m/web&lt;/code&gt; is the instruction set has web &lt;em&gt;transport protocol&lt;/em&gt; types, &lt;em&gt;MIME&lt;/em&gt;
-   types, and &lt;em&gt;endpoint&lt;/em&gt; types to provide server logic. The two spaces of &lt;code&gt;/m/web&lt;/code&gt; are
+   &lt;p&gt;&lt;code&gt;/m/web&lt;/code&gt; is the instruction set that carries the web &lt;em&gt;transport protocol&lt;/em&gt; types, &lt;em&gt;MIME&lt;/em&gt;
+   types, and &lt;em&gt;endpoint&lt;/em&gt; types that provide the server logic. The two spaces of &lt;code&gt;/m/web&lt;/code&gt; are
    &lt;code&gt;httpspace&lt;/code&gt; and &lt;code&gt;wsspace&lt;/code&gt; — each carrying a &lt;code&gt;route::T&lt;/code&gt; rec for routing connections to mounted services.&lt;/p&gt;
-   &lt;pre&gt;&lt;code class=&quot;language-mtron&quot;&gt;mtron&amp;gt; httpspace::[pattern=&amp;gt; http://#,
-                      host   =&amp;gt; http://localhost:8777,
-                      route  =&amp;gt; [/mcp       =&amp;gt; mcp_mtron,
-                                 /docker    =&amp;gt; docker:,
-                                 /usr       =&amp;gt; /usr,
+   &lt;pre&gt;&lt;code class=&quot;language-mtron&quot;&gt;mtron&amp;gt; dckrspace::[pattern =&amp;gt; docker:#, route =&amp;gt; [docker: =&amp;gt; &amp;lt;&amp;gt;]]@/sys/space/docker
+   mtron&amp;gt; [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
+   mtron&amp;gt; mcp_server::[tool =&amp;gt; [!*eval]]@/sys/space/mcp/web_basic
+   ==&amp;gt;mcp_server::[tool=&amp;gt;[m_inst_eval=&amp;gt;eval?rng=#{*}&amp;amp;dom=#{?}(&amp;lt;#&amp;gt;::T){&amp;lt;j&amp;gt;}]]@/sys/space/mcp/web_basic
+   mtron&amp;gt; httpspace::[pattern=&amp;gt; http://#,
    ...
 mtron&gt; *&lt;http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md&gt;.as(html::T).as(rec::T)
 ==&gt;[html=&gt;[

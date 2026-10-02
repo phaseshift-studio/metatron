@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -443,8 +443,8 @@ public interface Type extends Obj {
                     .orElse(cInt.ONE());
 
             // 7. Assemble the LCD type (clear any prior registration to avoid stale cache)
-            if (Router.loaded()) {
-                Router.writeToSpace(lcdVID, noobj());
+            if (Machine.loaded()) {
+                Machine.writeToSpace(lcdVID, noobj());
             }
             return T(Tuple.Pair.with(combinedPred, null), commonTID.big(), lcdVID.big()).c(lcdC).asType();
         }
@@ -834,7 +834,7 @@ public interface Type extends Obj {
         public Type create() {
             assert this.tid != null;
             //assert this.vid != null;
-            this.insts.forEach(inst -> Router.global().write(inst.tid(), inst));
+            this.insts.forEach(inst -> Machine.current().write(inst.tid(), inst));
             return T(Tuple.Pair.with(this.predicate, this.constructor), this.tid, this.vid);
         }
     }

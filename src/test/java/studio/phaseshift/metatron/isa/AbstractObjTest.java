@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.Tuple;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,6 +40,6 @@ public abstract class AbstractObjTest extends AbstractMetatronTest {
         final Obj retrievedF = mParser.m_obj().parse(retrieved).get();
         final Obj remainingF = mParser.m_obj().parse(remaining).get();
         assertEquals(Tuple.Pair.with(retrievedF, remainingF), currentF.take(removeF.c()));
-        Router.global().at(uri("primary"), uri("/m"));
+        Machine.current().at(uri("primary"), uri("/m"));
     }
 }

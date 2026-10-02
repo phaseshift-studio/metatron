@@ -36,7 +36,7 @@ import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -138,7 +138,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                         try {
                             LOG.debug("received %s => %s", p.getTopic(), topic);
                             StatusLine.message(str("%s => %s".formatted(topic, new String(p.getPayloadAsBytes()))));
-                            Router.global().stats().ioStats().incrBytesRecv(p.getPayload().isPresent() ? p.getPayloadAsBytes().length : 0);
+                            Machine.current().stats().ioStats().incrBytesRecv(p.getPayload().isPresent() ? p.getPayloadAsBytes().length : 0);
                             final Obj obj;
                             if (p.getPayload().isPresent()) {
                                 final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
@@ -233,7 +233,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                             LOG.error("mqtt client error (reconnecting)", t);
                             this.sjvm = this.createConnection(this.jvm(), false);
                         } else
-                            Router.global().stats().ioStats().incrBytesSent(payload.length);
+                            Machine.current().stats().ioStats().incrBytesSent(payload.length);
                     }).get();
             // Write directly to cache so local readers see the data immediately,
             // without waiting for the MQTT subscriber callback to fire on a Netty thread.

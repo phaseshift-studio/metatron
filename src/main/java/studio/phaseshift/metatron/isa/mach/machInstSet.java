@@ -23,12 +23,14 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.compiler.DefaultCompiler;
-import studio.phaseshift.metatron.isa.mach.type.compiler.FixPointRewriter;
-import studio.phaseshift.metatron.isa.mach.type.compiler.ScoringResolver;
 import studio.phaseshift.metatron.isa.mach.type.compiler.TypeTyper;
+import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.FirstFindResolver;
+import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.ScoringResolver;
+import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.FixPointRewriter;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
+import studio.phaseshift.metatron.isa.mach.type.machine.BasicMemory;
+import studio.phaseshift.metatron.isa.mach.type.machine.BasicNetwork;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
@@ -70,6 +72,12 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_CORE_THREAD_TID = MACH_THREAD_TID.extend("core");
     public static final fURI FACTORY_TID = MACH_ISA_TID.extend("factory");
     public static final fURI THREAD_EXECUTOR_TID = MACH_ISA_TID.extend("thread_executor");
+    /// /// CLUSTER AWARENESS /// ///
+    public static final fURI PEER_TID = MACH_ISA_TID.extend("peer");
+    public static final fURI CLUSTER_TID = MACH_ISA_TID.extend("cluster");
+    public static final fURI CLUSTER_STATUS_INST_TID = MACH_INST_TID.extend("status");
+    public static Type PEER_TYPE;
+    public static Type CLUSTER_TYPE;
 
     public static final Type FACTORY_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -115,14 +123,22 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_FIXPOINT_REWRITER_TID = MACH_REWRITER_TID.extend("fixpoint");
     public static Type MACH_REWRITER_TYPE;
     public static Type MACH_FIXPOINT_REWRITER_TYPE;
-    // the resolver family — structural resolve(code)->code contract, concrete scoring strategy
+    // the resolver family — structural resolve(code)->code contract, concrete scoring + firstfind strategies
     public static final fURI MACH_RESOLVER_TID = MACH_MACHINE_COMPONENT_TID.extend(RESOLVER);
     public static final fURI MACH_SCORING_RESOLVER_TID = MACH_RESOLVER_TID.extend("scoring");
+    public static final fURI MACH_FIRSTFIND_RESOLVER_TID = MACH_RESOLVER_TID.extend("firstfind");
     public static Type MACH_RESOLVER_TYPE;
     public static Type MACH_SCORING_RESOLVER_TYPE;
+    public static Type MACH_FIRSTFIND_RESOLVER_TYPE;
     // the typer family — structural type(code)->code contract
     public static final fURI MACH_TYPER_TID = MACH_MACHINE_COMPONENT_TID.extend(TYPER);
     public static Type MACH_TYPER_TYPE;
+    // memory — the machine's address space: relative bindings plus the index of absolute spaces
+    public static final fURI MACH_MEMORY_TID = MACH_MACHINE_COMPONENT_TID.extend(MEMORY);
+    public static Type MACH_MEMORY_TYPE;
+    // network — the peers a machine can reach: a roster of authority => transport
+    public static final fURI MACH_NETWORK_TID = MACH_MACHINE_COMPONENT_TID.extend(NETWORK);
+    public static Type MACH_NETWORK_TYPE;
     public static Type MACH_MACHINE_COMPONENT_TYPE;
 
 
@@ -188,7 +204,7 @@ public class machInstSet extends AbstractInstSet {
                                 .isaPredicate(rec(uri(MAX).maybe().asUri(), isa_(INT_TYPE).else_(jnt(2))))
                                 .constructor(arg -> new FixPointRewriter(arg.asRec().jvm(), MACH_FIXPOINT_REWRITER_TID, arg.vid()))
                                 .create(),
-                        // the resolver family — structural contract, concrete scoring strategy (empty config)
+                        // the resolver family — structural contract, concrete scoring + firstfind strategies (empty config)
                         MACH_RESOLVER_TYPE = Type.Builder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
                                 .vid(MACH_RESOLVER_TID)
@@ -198,18 +214,38 @@ public class machInstSet extends AbstractInstSet {
                                 .vid(MACH_SCORING_RESOLVER_TID)
                                 .constructor(arg -> new ScoringResolver(arg.asRec().jvm(), MACH_SCORING_RESOLVER_TID, arg.vid()))
                                 .create(),
+                        MACH_FIRSTFIND_RESOLVER_TYPE = Type.Builder.build()
+                                .tid(MACH_RESOLVER_TID)
+                                .vid(MACH_FIRSTFIND_RESOLVER_TID)
+                                .constructor(arg -> new FirstFindResolver(arg.asRec().jvm(), MACH_FIRSTFIND_RESOLVER_TID, arg.vid()))
+                                .create(),
                         // the typer family — structural contract, runtime type assertions (identity for now)
                         MACH_TYPER_TYPE = Type.Builder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
                                 .vid(MACH_TYPER_TID)
                                 .constructor(arg -> new TypeTyper(arg.asRec().jvm(), MACH_TYPER_TID, arg.vid()))
                                 .create(),
+                        // memory — a machine's address space: its relative bindings are the rec itself, and its
+                        // absolute index is the `space` entry inside it, so both are reachable from mtron
+                        MACH_MEMORY_TYPE = Type.Builder.build()
+                                .tid(MACH_MACHINE_COMPONENT_TID)
+                                .vid(MACH_MEMORY_TID)
+                                .constructor(arg -> new BasicMemory(arg.asRec().jvm(), arg.vid()))
+                                .create(),
+                        // network — a frame's reachable peers, read through to the ones it inherited
+                        MACH_NETWORK_TYPE = Type.Builder.build()
+                                .tid(MACH_MACHINE_COMPONENT_TID)
+                                .vid(MACH_NETWORK_TID)
+                                .constructor(arg -> new BasicNetwork(arg.asRec().jvm()))
+                                .create(),
                         MACH_MACHINE_TYPE = Type.Builder.build()
-                                .tid(REC_TID)
+                                .tid(SPACE_TID)
                                 .vid(MACH_MACHINE_TID)
                                 .isaPredicate(rec(
                                         uri(INSTSET).maybe().asUri(), INSTSET_TYPE,
                                         uri(COMPILER).maybe().asUri(), MACH_COMPILER_TYPE,
+                                        uri(MEMORY).maybe().asUri(), MACH_MEMORY_TYPE,
+                                        uri(NETWORK).maybe().asUri(), MACH_NETWORK_TYPE,
                                         uri(PROCESSOR).maybe().asUri(), MACH_PROCESSOR_TYPE))
                                 .create(),
                         /// /////////////////////
@@ -241,8 +277,37 @@ public class machInstSet extends AbstractInstSet {
                                                 (lhs, inst) -> new VirtualThread(inst.arg(0).jvm(), MACH_VIRTUAL_THREAD_TID, inst.arg(0).vid()).applyAsync(lhs)))
                                         .create(), null, null, Map.of(),
                                 "run a concurrent virtual thread",
-                                "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@/sys/thread/ping")),
-                uri(INST), lst(Stream.concat(Router.RouterType.insts().stream(), Stream.of(
+                                "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@/sys/thread/ping"),
+                        /// /// CLUSTER AWARENESS /// ///
+                        docWrap(PEER_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(PEER_TID)
+                                        .isaPredicate(rec(
+                                                uri(AUTHORITY), URI_TYPE,
+                                                // absent transport ⇒ a peer we know about but cannot reach from
+                                                // here — which is what a peer reference looks like after it has
+                                                // crossed a wire. One type, two honest states.
+                                                uri(TRANSPORT).maybe().asUri(), INST_TYPE,
+                                                uri(NAME).maybe().asUri(), STR_TYPE,
+                                                uri(TAG).maybe().asUri(), STR_TYPE,
+                                                uri(STATUS).maybe().asUri(), REC_TYPE))
+                                        .create(), null, null,
+                                Map.of(uri(AUTHORITY), "the peer's address, scheme and host:port",
+                                        uri(TRANSPORT), "the inst that reaches it; absent when only known, not reachable",
+                                        uri(STATUS), "the last health report computed for this peer"),
+                                "one metatron instance the local instance knows about"),
+                        docWrap(CLUSTER_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(CLUSTER_TID)
+                                        .isaPredicate(rec(
+                                                uri(PEER).maybe().asUri(), ALL_TYPE,
+                                                uri(STATUS).maybe().asUri(), INST_TYPE,
+                                                uri(NAME).maybe().asUri(), STR_TYPE))
+                                        .create(), null, null,
+                                Map.of(uri(PEER), "the declared roster — an auto pointer, never a stale copy",
+                                        uri(STATUS), "the health method: peer => status"),
+                                "this VM's static view of its cluster (fields + methods)")),
+                uri(INST), lst(Stream.concat(Stream.empty(), Stream.of(
                         instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
                             final fURI baseVID = f("/sys/thread");
                             final VirtualThread thread = new VirtualThread(mutableMap(uri(CODE), inst.arg(0)), MACH_VIRTUAL_THREAD_TID, CommonUtil.mintShortUUID(baseVID, true));

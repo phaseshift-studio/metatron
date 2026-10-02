@@ -25,8 +25,8 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.router.BasicRouter;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler;
 import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
 import studio.phaseshift.metatron.util.MTronException;
@@ -99,13 +99,15 @@ public class DistributedPeerTest extends AbstractMetatronTest {
         }
     }
 
-    /** the one peer's uri prefix: {@code ws://localhost:<port>/n} */
-    private static String remote() {
+    /**
+     * the one peer's uri prefix: {@code ws://localhost:<port>/n}
+     */
+    private static fURI remote() {
         return cluster.prefix(1);
     }
 
     private static fURI remoteVid(final String path) {
-        return f(remote() + path);
+        return remote().extend(path);
     }
 
     // ========================================================================
@@ -121,54 +123,54 @@ public class DistributedPeerTest extends AbstractMetatronTest {
      */
     @Test
     public void testReadsAValueOnlyThePeerHas() {
-        assertEquals(str(PeerCluster.probe(1)), Router.readFromSpace(remoteVid("/probe")),
+        assertEquals(str(PeerCluster.probe(1)), Machine.readFromSpace(remoteVid("/probe")),
                 "a value only the peer ever held must be readable across the boundary");
     }
 
     @Test
     public void testWriteLandsOnThePeer() {
         final fURI remote = remoteVid("/sent");
-        Router.writeToSpace(remote, str("node-a-sent-this"));
-        assertEquals(str("node-a-sent-this"), Router.readFromSpace(remote),
+        Machine.writeToSpace(remote, str("node-a-sent-this"));
+        assertEquals(str("node-a-sent-this"), Machine.readFromSpace(remote),
                 "a write addressed to the peer must land in the peer's store and read back from there");
     }
 
     @Test
     public void testPeerValueIsNotInTheLocalStore() {
-        assertEquals(jnt(PeerCluster.seedA(1)), Router.readFromSpace(remoteVid("/a")));
+        assertEquals(jnt(PeerCluster.seedA(1)), Machine.readFromSpace(remoteVid("/a")));
         // we own /a/# and nothing else, so the peer's namespace has no home here at all — the local read
         // cannot even resolve it, which is stronger than resolving to noobj
-        assertThrows(MTronException.class, () -> Router.readFromSpace(f(PeerCluster.DEFAULT_ROOT + "/a")),
+        assertThrows(MTronException.class, () -> Machine.readFromSpace(f(PeerCluster.DEFAULT_ROOT + "/a")),
                 "the peer's namespace must not appear in the local store (we own " + LOCAL_STORE + " only)");
     }
 
     @Test
     public void testSelfAuthorityResolvesLocally() {
         final fURI self = f("ws://localhost:" + selfPort + "/a/x");
-        Router.writeToSpace(self, str("node-a-value"));
-        assertEquals(str("node-a-value"), Router.readFromSpace(f("/a/x")),
+        Machine.writeToSpace(self, str("node-a-value"));
+        assertEquals(str("node-a-value"), Machine.readFromSpace(f("/a/x")),
                 "writing to our own authority should land in our own store");
-        assertEquals(str("node-a-value"), Router.readFromSpace(self),
+        assertEquals(str("node-a-value"), Machine.readFromSpace(self),
                 "the loopback alias of our own authority must resolve locally, not be delegated");
     }
 
     @Test
     public void testOwnershipAndPeerClassification() {
-        assertTrue(Router.global().own(f("ws://localhost:" + selfPort + "/a/x")),
+        assertTrue(Machine.current().own(f("ws://localhost:" + selfPort + "/a/x")),
                 "localhost:ourPort is the loopback alias of the wildcard host we bound");
-        assertFalse(Router.global().own(remoteVid("/a")), "the peer's authority is not ours");
+        assertFalse(Machine.current().own(remoteVid("/a")), "the peer's authority is not ours");
 
-        assertFalse(Router.global().isPeer(f("ws://localhost:" + selfPort + "/a/x")),
+        assertFalse(Machine.current().isPeer(f("ws://localhost:" + selfPort + "/a/x")),
                 "our own authority is ours, not a peer");
-        assertTrue(Router.global().isPeer(remoteVid("/a")), "the declared peer is a peer");
-        assertFalse(Router.global().isPeer(f("http://example.com/")),
+        assertTrue(Machine.current().isPeer(remoteVid("/a")), "the declared peer is a peer");
+        assertFalse(Machine.current().isPeer(f("http://example.com/")),
                 "a foreign authority that was never declared must not be treated as a metatron peer");
     }
 
     @Test
     public void testUndeclaredAuthorityDoesNotReachAPeer() {
         // port 1 has no listener: if the guard dialed, this would fail or hang rather than return promptly
-        final Obj result = Router.readFromSpace(f("ws://localhost:1/n/a"));
+        final Obj result = Machine.readFromSpace(f("ws://localhost:1/n/a"));
         assertFalse(result.isStr(), "an undeclared authority must not yield a value from a peer");
     }
 
@@ -186,13 +188,13 @@ public class DistributedPeerTest extends AbstractMetatronTest {
      */
     @Test
     public void testDeclaredRosterPersists() {
-        final Obj roster = Router.readFromSpace(BasicRouter.peerRosterPath());
-        assertTrue(roster.isRec(), "the declared roster must persist at " + BasicRouter.peerRosterPath());
+        final Obj roster = Machine.readFromSpace(Network.Helper.peerRosterPath());
+        assertTrue(roster.isRec(), "the declared roster must persist at " + Network.Helper.peerRosterPath());
         final Map<Obj, Obj> entries = roster.asRec().jvm();
         assertEquals(1, entries.size(), "exactly the one declared peer");
         final Map.Entry<Obj, Obj> entry = entries.entrySet().iterator().next();
         assertTrue(entry.getKey().isUri(), "a roster key is the peer's authority as a uri");
-        assertTrue(Router.Helper.sameAuthority(entry.getKey().uriValue().authority(), "localhost:" + cluster.port(1)),
+        assertTrue(Network.Helper.sameAuthority(entry.getKey().uriValue().authority(), "localhost:" + cluster.port(1)),
                 "the roster is keyed by the peer's authority");
         assertTrue(entry.getValue().isObjInst(), "the roster value is the transport inst, not a dropped write");
     }

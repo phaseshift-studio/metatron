@@ -406,7 +406,7 @@ public final class CommandPalette extends MRec {
         /*this.at("stop-agents", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             try {
                 BootLoader.getExecutor().elements()
-                        .filter(r -> Router.readFromSpace(r.first().uriValue().q(DOCQ_PATTERN)).toString().contains("agent"))
+                        .filter(r -> Machine.readFromSpace(r.first().uriValue().q(DOCQ_PATTERN)).toString().contains("agent"))
                         .forEach(r -> ((mThread) r.second()).stop());
             } catch (final Exception ignored) {
                 // readFromSpace can fail if no space supports the pattern

@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 import org.jline.terminal.Terminal;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.ScrollView;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
@@ -77,18 +77,20 @@ public class FloatingSurface {
         BOTTOM_MIDDLE,
         BOTTOM_RIGHT;
 
-        /** Parse a short name (e.g. "top_right", "tr", "middle", "m"). */
+        /**
+         * Parse a short name (e.g. "top_right", "tr", "middle", "m").
+         */
         public static Anchor parse(final String name) {
             if (name == null || name.isEmpty()) return TOP_RIGHT;
             return switch (name.toLowerCase()) {
-                case "top_left", "tl"        -> TOP_LEFT;
-                case "top_middle", "tm"      -> TOP_MIDDLE;
-                case "top_right", "tr"       -> TOP_RIGHT;
-                case "middle", "m"           -> MIDDLE;
-                case "bottom_left", "bl"     -> BOTTOM_LEFT;
-                case "bottom_middle", "bm"   -> BOTTOM_MIDDLE;
-                case "bottom_right", "br"    -> BOTTOM_RIGHT;
-                default                      -> TOP_RIGHT;
+                case "top_left", "tl" -> TOP_LEFT;
+                case "top_middle", "tm" -> TOP_MIDDLE;
+                case "top_right", "tr" -> TOP_RIGHT;
+                case "middle", "m" -> MIDDLE;
+                case "bottom_left", "bl" -> BOTTOM_LEFT;
+                case "bottom_middle", "bm" -> BOTTOM_MIDDLE;
+                case "bottom_right", "br" -> BOTTOM_RIGHT;
+                default -> TOP_RIGHT;
             };
         }
     }
@@ -120,24 +122,32 @@ public class FloatingSurface {
     private final java.util.concurrent.BlockingQueue<Runnable> urgentQueue =
             new java.util.concurrent.LinkedBlockingQueue<>();
 
-    /** How long the render thread waits for work before re-checking the urgent queue. */
+    /**
+     * How long the render thread waits for work before re-checking the urgent queue.
+     */
     private static final long RENDER_POLL_MS = 2;
 
-    /** {@code -Dmetatron.render.trace=true} logs a line per rendered pass. */
+    /**
+     * {@code -Dmetatron.render.trace=true} logs a line per rendered pass.
+     */
     private static final boolean RENDER_TRACE = Boolean.getBoolean("metatron.render.trace");
     private final Thread renderThread;
     private volatile boolean running = true;
 
-    /** Coalesce rapid-fire render() calls: only one render task can be
-     *  queued at a time.  After it completes, the next render() call
-     *  will queue a fresh task with the latest widget state. */
+    /**
+     * Coalesce rapid-fire render() calls: only one render task can be
+     * queued at a time.  After it completes, the next render() call
+     * will queue a fresh task with the latest widget state.
+     */
     private final java.util.concurrent.atomic.AtomicBoolean renderQueued =
             new java.util.concurrent.atomic.AtomicBoolean(false);
 
-    /** Terminal scrolls (output newlines written at the bottom) accumulated
-     *  since the last widget render pass.  Consumed by {@link #renderInternal}
-     *  to erase each widget's previous representation where the scroll carried
-     *  it, so stale copies don't rise up the screen. */
+    /**
+     * Terminal scrolls (output newlines written at the bottom) accumulated
+     * since the last widget render pass.  Consumed by {@link #renderInternal}
+     * to erase each widget's previous representation where the scroll carried
+     * it, so stale copies don't rise up the screen.
+     */
     private final java.util.concurrent.atomic.AtomicInteger scrollAccum =
             new java.util.concurrent.atomic.AtomicInteger(0);
 
@@ -164,10 +174,12 @@ public class FloatingSurface {
     // (targetWidth, heightCap — carried across replacements in add())
     // and the presentation focus hint below.
 
-    /** The stable key ({@link #widgetKey}) of the focused widget, or null
-     *  when nothing is focused.  The Console owns the focus registry
-     *  (analogous to {@code activePane}) and pushes its choice here so
-     *  {@link #renderWidget} knows which slot to mark. */
+    /**
+     * The stable key ({@link #widgetKey}) of the focused widget, or null
+     * when nothing is focused.  The Console owns the focus registry
+     * (analogous to {@code activePane}) and pushes its choice here so
+     * {@link #renderWidget} knows which slot to mark.
+     */
     private volatile String focusKey = null;
 
     /**
@@ -178,22 +190,30 @@ public class FloatingSurface {
      */
     private final java.util.Map<String, String> keyLineage = new java.util.concurrent.ConcurrentHashMap<>();
 
-    /** Cell of the focus marker drawn in the previous render pass (row 0
-     *  = none).  Blanked at the top of every pass so a stale marker can
-     *  never linger after focus moves, a widget relocates, or is removed. */
+    /**
+     * Cell of the focus marker drawn in the previous render pass (row 0
+     * = none).  Blanked at the top of every pass so a stale marker can
+     * never linger after focus moves, a widget relocates, or is removed.
+     */
     private int markerRow = 0;
     private int markerCol = 0;
     private int resizeMarkerRow = 0;
     private int resizeMarkerCol = 0;
 
-    /** The focus marker character, drawn in the focused widget's top-left cell,
-     *  pre-rendered ({{y}}…{{X}}) so the composed buffer needs no second Graphitty pass. */
+    /**
+     * The focus marker character, drawn in the focused widget's top-left cell,
+     * pre-rendered ({{y}}…{{X}}) so the composed buffer needs no second Graphitty pass.
+     */
     private static final String FOCUS_MARKER = Graphitty.string("{{y}}▶{{X}}");
-    /** The resize marker, drawn in the focused widget's bottom-right cell,
-     *  pre-rendered ({{y}}…{{X}}) so the composed buffer needs no second Graphitty pass. */
+    /**
+     * The resize marker, drawn in the focused widget's bottom-right cell,
+     * pre-rendered ({{y}}…{{X}}) so the composed buffer needs no second Graphitty pass.
+     */
     private static final String RESIZE_MARKER = Graphitty.string("{{y}}◢{{X}}");
 
-    /** Lower bounds for {@link #nudge} — resize can never demolish a widget. */
+    /**
+     * Lower bounds for {@link #nudge} — resize can never demolish a widget.
+     */
     private static final int MIN_WIDTH = 10;
     private static final int MIN_HEIGHT = 3;
 
@@ -226,31 +246,41 @@ public class FloatingSurface {
             }
             Runnable tail;
             while ((tail = renderQueue.poll()) != null) {
-                try { tail.run(); } catch (final Throwable t) { /* drain quietly */ }
+                try {
+                    tail.run();
+                } catch (final Throwable t) { /* drain quietly */ }
             }
         }, "terminal-writer");
         renderThread.setDaemon(true);
         renderThread.start();
     }
 
-    /** Fire-and-forget: enqueue a task for the render thread. */
+    /**
+     * Fire-and-forget: enqueue a task for the render thread.
+     */
     private void submit(final Runnable task) {
         this.renderQueue.offer(task);
     }
 
-    /** Fire-and-forget, ahead of console output: a widget pass the user waits on. */
+    /**
+     * Fire-and-forget, ahead of console output: a widget pass the user waits on.
+     */
     private void submitUrgent(final Runnable task) {
         this.urgentQueue.offer(task);
     }
 
-    /** Maximum seconds to wait for the render thread before falling back
-     *  to a direct terminal write.  Kept short because the calling thread
-     *  (often the console REPL) freezes while waiting. */
+    /**
+     * Maximum seconds to wait for the render thread before falling back
+     * to a direct terminal write.  Kept short because the calling thread
+     * (often the console REPL) freezes while waiting.
+     */
     private static final long SUBMIT_TIMEOUT_SECONDS = 3;
 
-    /** Enqueue a task and block until it completes.  If the render thread
-     *  is stalled (e.g. blocked on a slow Router write inside format()),
-     *  falls back to a direct write after the timeout. */
+    /**
+     * Enqueue a task and block until it completes.  If the render thread
+     * is stalled (e.g. blocked on a slow Router write inside format()),
+     * falls back to a direct write after the timeout.
+     */
     private void submitAndWait(final Runnable task) {
         submitAndWait(task, false);
     }
@@ -262,16 +292,24 @@ public class FloatingSurface {
         }
         final var latch = new java.util.concurrent.CountDownLatch(1);
         (urgent ? this.urgentQueue : this.renderQueue).offer(() -> {
-            try { task.run(); } finally { latch.countDown(); }
+            try {
+                task.run();
+            } finally {
+                latch.countDown();
+            }
         });
         try {
             if (!latch.await(SUBMIT_TIMEOUT_SECONDS, java.util.concurrent.TimeUnit.SECONDS)) {
                 studio.phaseshift.metatron.isa.mach.type.ui.console.Console.rawErr().println("[terminal-writer] timed out — direct write");
-                synchronized (this.terminal) { task.run(); }
+                synchronized (this.terminal) {
+                    task.run();
+                }
             }
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-            synchronized (this.terminal) { task.run(); }
+            synchronized (this.terminal) {
+                task.run();
+            }
         }
     }
 
@@ -317,7 +355,9 @@ public class FloatingSurface {
         this.damageListener = listener;
     }
 
-    /** True when something else owns the rows underneath the widgets. */
+    /**
+     * True when something else owns the rows underneath the widgets.
+     */
     public boolean rowsOwned() {
         return null != this.damageListener;
     }
@@ -452,7 +492,9 @@ public class FloatingSurface {
         return this.slots.size();
     }
 
-    /** The slot registry as a list, safe to iterate without the lock. */
+    /**
+     * The slot registry as a list, safe to iterate without the lock.
+     */
     private synchronized List<Map.Entry<Widget<?>, Slot>> slotSnapshot() {
         return new ArrayList<>(this.slots.entrySet());
     }
@@ -635,8 +677,10 @@ public class FloatingSurface {
         submitAndWait(this::renderInternal, true);
     }
 
-    /** Runs on the render thread.  Builds save-cursor + widgets + restore-cursor
-     *  in one StringBuilder, expands {{X}} codes, and writes atomically. */
+    /**
+     * Runs on the render thread.  Builds save-cursor + widgets + restore-cursor
+     * in one StringBuilder, expands {{X}} codes, and writes atomically.
+     */
     private void renderInternal() {
         this.renderInternal(null);
     }
@@ -793,7 +837,7 @@ public class FloatingSurface {
 
     /**
      * @return the slot holding the given pinned widget (null if not pinned).
-     *         Package-visible so in-package tests can inspect resize geometry.
+     * Package-visible so in-package tests can inspect resize geometry.
      */
     Slot slotOf(final Widget<?> widget) {
         return slot(widget);
@@ -834,7 +878,7 @@ public class FloatingSurface {
 
     /**
      * @return the focused widget's stable key (the presentation hint
-     *         consumed by {@link #renderWidget}), or null when nothing is focused
+     * consumed by {@link #renderWidget}), or null when nothing is focused
      */
     public String focusKey() {
         return this.focusKey;
@@ -890,9 +934,9 @@ public class FloatingSurface {
      * <p>The slot — not the widget instance — carries the new geometry, so a
      * later re-float keeps it.  Triggers a re-render.
      *
-     * @param widget       the pinned widget to resize
-     * @param widthDelta   column delta to apply to the slot's target width (0 = leave)
-     * @param heightDelta  row delta to apply to the effective height cap (0 = leave)
+     * @param widget      the pinned widget to resize
+     * @param widthDelta  column delta to apply to the slot's target width (0 = leave)
+     * @param heightDelta row delta to apply to the effective height cap (0 = leave)
      * @return true if the widget is pinned and was nudged
      */
     public boolean nudge(final Widget<?> widget, final int widthDelta, final int heightDelta) {
@@ -1178,7 +1222,9 @@ public class FloatingSurface {
         return true;
     }
 
-    /** One page for a vertical scroll: the body rows a viewport can show, minus one for context. */
+    /**
+     * One page for a vertical scroll: the body rows a viewport can show, minus one for context.
+     */
     public int pageRows(final Widget<?> widget) {
         final Slot slot = slot(widget);
         if (null == slot) return MIN_HEIGHT - 1;
@@ -1197,7 +1243,9 @@ public class FloatingSurface {
                 || ((axes & Stylable.SCROLL_X) != 0 && slot.maxScrollX > 0);
     }
 
-    /** True when the widget is scrolled away from the newest content. */
+    /**
+     * True when the widget is scrolled away from the newest content.
+     */
     public boolean isScrolled(final Widget<?> widget) {
         final Slot slot = slot(widget);
         return null != slot && (!slot.follow || slot.scrollX > 0);
@@ -1356,7 +1404,7 @@ public class FloatingSurface {
         final fURI vid = obj.vid();
         if (null == vid) return false;
         try {
-            return Router.global().read(vid).isNoObj();
+            return Machine.current().read(vid).isNoObj();
         } catch (final Exception e) {
             return false;
         }
@@ -1671,7 +1719,9 @@ public class FloatingSurface {
         // the reader's place in its own text must not be lost to that.
         volatile int scrollX = 0;
         volatile int scrollY = 0;
-        /** Show the newest content (the tail) — true until the user scrolls back. */
+        /**
+         * Show the newest content (the tail) — true until the user scrolls back.
+         */
         volatile boolean follow = true;
 
         // ---- content metrics, refreshed on every render ----
@@ -1735,7 +1785,9 @@ public class FloatingSurface {
                     Math.max(1, termWidth - width + 1));
         }
 
-        /** The terminal row this widget's top edge lands on for the given row offset. */
+        /**
+         * The terminal row this widget's top edge lands on for the given row offset.
+         */
         int rowFor(final int offset, final int termHeight, final int widgetHeight) {
             return switch (this.anchor) {
                 case TOP_LEFT, TOP_MIDDLE, TOP_RIGHT -> 2 + offset;
@@ -1744,7 +1796,9 @@ public class FloatingSurface {
             };
         }
 
-        /** The terminal column this widget's left edge lands on for the given column offset. */
+        /**
+         * The terminal column this widget's left edge lands on for the given column offset.
+         */
         int colFor(final int offset, final int termWidth, final int widgetWidth) {
             return switch (this.anchor) {
                 case TOP_LEFT, BOTTOM_LEFT -> 1 + offset;
@@ -1767,7 +1821,9 @@ public class FloatingSurface {
             };
         }
 
-        /** The column offset that puts this widget's left edge on {@code col}. */
+        /**
+         * The column offset that puts this widget's left edge on {@code col}.
+         */
         int offsetColFor(final int col, final int termWidth, final int widgetWidth) {
             return switch (this.anchor) {
                 case TOP_LEFT, BOTTOM_LEFT -> col - 1;

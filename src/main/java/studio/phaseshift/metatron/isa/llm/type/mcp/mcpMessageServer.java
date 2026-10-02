@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore;
 import studio.phaseshift.metatron.isa.llm.space.ToolPairGate;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import studio.phaseshift.metatron.util.MTronException;
@@ -266,7 +266,7 @@ public class mcpMessageServer {
             ToolPairGate.closeStale(ledger, boundaryChatId, callId -> lostToolResult(message, callId));
 
         // write to <root>/message/_?incrq and return the written rec (vid assigned by the space)
-        final Rec written = Router.writeToSpace(ledger.ledgerWritePath(), message).as();
+        final Rec written = Machine.writeToSpace(ledger.ledgerWritePath(), message).as();
         return withIdentity(written);
     }
 
@@ -346,7 +346,7 @@ public class mcpMessageServer {
      * no agent (the agent's root points at the agent — a different thing).
      */
     private static SpaceChatSessionStore storeAt(final fURI rootF, final fURI sessF) {
-        final Space space = Router.global().getSpaceFor(rootF);
+        final Space space = Machine.current().getSpaceFor(rootF);
         if (null == space)
             throw MTronException.of("no space serves the ledger root: %s", rootF);
         return new SpaceChatSessionStore(null, space, 1, 0, rootF);

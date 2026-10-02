@@ -28,7 +28,8 @@ import studio.phaseshift.metatron.isa.llm.llmInstSet;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.ui.uiInstSet;
@@ -610,8 +611,8 @@ public class MarkdownRunner {
                 new dcmntInstSet(), new rdfInstSet(), new dckrInstSet(),
                 new uiInstSet()
         }) {
-            Router.global().addSpace(is);
-            Router.writeToSpace(is);
+            Machine.current().addSpace(is);
+            Machine.writeToSpace(is);
             is.setup();
         }
         // hardcode type checker in support of runtime inst resolution

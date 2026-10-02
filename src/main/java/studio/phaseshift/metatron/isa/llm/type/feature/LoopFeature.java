@@ -9,7 +9,7 @@ import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -193,7 +193,7 @@ public class LoopFeature extends AbstractFeature {
      */
     private void persist(final Agent agent, final ChatFrame result) {
         try {
-            final Obj written = Router.writeToSpace(this.getRoot(agent).extend("_").addQ(INCRQ),
+            final Obj written = Machine.writeToSpace(this.getRoot(agent).extend("_").addQ(INCRQ),
                     rec(uri("iterations"), lst(this.iterations.stream().map(r -> (Obj) r).toList())));
             result.putRef("loop_results", written);
         } catch (final Exception e) {

@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.docs.NanorcUtil;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -391,7 +391,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         // through writeUri, not wrapUri: this is a uri written into the output, and a renderer tags
         // uris where the serializer writes them.  Going around it left every vid -- and every type
         // named inside a refinement or a collection -- unclickable while plain uri values were fine
-        final fURI vid = Router.loaded() ? Router.global().redirect(obj.vid(), false) : obj.vid();
+        final fURI vid = Machine.loaded() ? Machine.current().redirect(obj.vid(), false) : obj.vid();
         return sb.append("{{y}}@{{/y}}").append(this.writeUriExtension(vid.toUri(), "y", true));
     }
 

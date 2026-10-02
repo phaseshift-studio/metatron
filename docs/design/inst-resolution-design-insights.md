@@ -2,7 +2,7 @@
 
 ## Session Summary
 
-Rewrote the instruction resolver from scratch. The old `ScoringInstResolver` relied
+Rewrote the instruction resolver from scratch. The old `ScoringResolver` relied
 on a runtime fallback in `Inst.resolve()` that caught ~60% of resolutions. Our new
 `V2InstResolver` handles ~88% directly (76 failures from 618 tests without fallback,
 vs the old probably ~250+). The remaining failures cluster around metaprogramming

@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 
 import java.io.File;
@@ -71,16 +71,19 @@ public class DatetimeReadBackDiagTest extends AbstractMetatronTest {
             try (final ResultSet rs = stmt.executeQuery("SELECT * FROM events")) {
                 while (rs.next())
                     STATIC_LOG.info("  events row: {}", rs.toString());
-            } catch (final Exception ignored) { }
+            } catch (final Exception ignored) {
+            }
             try (final ResultSet rs = stmt.executeQuery("SELECT * FROM stamps")) {
                 while (rs.next())
                     STATIC_LOG.info("  stamps row: {}", rs.toString());
-            } catch (final Exception ignored) { }
+            } catch (final Exception ignored) {
+            }
             try (final ResultSet rs = stmt.executeQuery("SELECT * FROM _mtron_meta")) {
                 while (rs.next())
                     STATIC_LOG.info("  meta: {} {} base={} obj={} ref={}", rs.getString(1), rs.getString(2),
                             rs.getString(3), rs.getString(4), rs.getString(5));
-            } catch (final Exception ignored) { }
+            } catch (final Exception ignored) {
+            }
         } catch (final Exception e) {
             STATIC_LOG.warn("dump failed: {}", e.getMessage());
         }
@@ -92,15 +95,15 @@ public class DatetimeReadBackDiagTest extends AbstractMetatronTest {
         final tbleSpace spaceA = makeSpace("a");
         final Obj dt = mathInstSet.parseDatetime("2026-08-25T22:34:11.533-06:00");
         LOG.info("writing dt = {} tid={}", dt, dt.tid());
-        Router.writeToSpace(f("db:events/1"), rec(uri("label"), str("hello world"), uri("created"), dt));
+        Machine.writeToSpace(f("db:events/1"), rec(uri("label"), str("hello world"), uri("created"), dt));
         dump("caseA after write");
 
-        final Obj fieldBack = Router.readFromSpace(f("db:events/1/created")).selfVID(null);
+        final Obj fieldBack = Machine.readFromSpace(f("db:events/1/created")).selfVID(null);
         LOG.info("caseA field read-back: {} tid={} class={}", fieldBack, fieldBack.tid(), fieldBack.getClass().getSimpleName());
-        final Rec rowBack = (Rec) Router.readFromSpace(f("db:events/1")).selfVID(null);
+        final Rec rowBack = (Rec) Machine.readFromSpace(f("db:events/1")).selfVID(null);
         final Obj rowDt = rowBack.at(uri("created"));
         LOG.info("caseA row  read-back: {} tid={} class={}", rowDt, rowDt.tid(), rowDt.getClass().getSimpleName());
-        Router.global().removeSpace(spaceA.vid());
+        Machine.current().removeSpace(spaceA.vid());
         spaceA.close();
 
         // ── case B: pre-existing table with a native SQL TIMESTAMPe column ──
@@ -111,7 +114,7 @@ public class DatetimeReadBackDiagTest extends AbstractMetatronTest {
             stmt.executeUpdate("INSERT INTO stamps (id, ts) VALUES (7, '2026-08-25 22:34:11.533')");
         }
         // force table discovery with a fresh space over the current db
-        Router.global().removeSpace(spaceB.vid());
+        Machine.current().removeSpace(spaceB.vid());
         spaceB.close();
         final tbleSpace spaceB2 = tbleSpace.of(
                 rec(
@@ -123,15 +126,15 @@ public class DatetimeReadBackDiagTest extends AbstractMetatronTest {
                 ).jvm(),
                 f("/sys/space/dt-diag/b2")
         );
-        final Obj bBack = Router.readFromSpace(f("db:stamps/7/ts")).selfVID(null);
+        final Obj bBack = Machine.readFromSpace(f("db:stamps/7/ts")).selfVID(null);
         LOG.info("caseB pre-seeded read-back: {} tid={} class={}", bBack, bBack.tid(), bBack.getClass().getSimpleName());
         dump("caseB before write");
 
-        Router.writeToSpace(f("db:stamps/8"), rec(uri("ts"), dt));
+        Machine.writeToSpace(f("db:stamps/8"), rec(uri("ts"), dt));
         dump("caseB after write");
-        final Obj bBack2 = Router.readFromSpace(f("db:stamps/8/ts")).selfVID(null);
+        final Obj bBack2 = Machine.readFromSpace(f("db:stamps/8/ts")).selfVID(null);
         LOG.info("caseB write-then-read: {} tid={} class={}", bBack2, bBack2.tid(), bBack2.getClass().getSimpleName());
-        Router.global().removeSpace(spaceB2.vid());
+        Machine.current().removeSpace(spaceB2.vid());
         spaceB2.close();
     }
 }

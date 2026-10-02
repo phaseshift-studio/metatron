@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.resolver.InstSelector;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Processor;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -245,6 +245,16 @@ public interface Inst extends Call {
 
     @Override
     default Inst resolve(final Obj lhs) {
+        return this.resolve(lhs, InstSelector.get());
+    }
+
+    /**
+     * Resolve against an explicit {@link InstSelector} — the seam the compiler's resolver stages
+     * ({@code scoring_resolver::T}, {@code firstfind_resolver::T}) use to pin per-instruction
+     * selection without touching the active global selector. The one-arg overload delegates to
+     * the active selector.
+     */
+    default Inst resolve(final Obj lhs, final InstSelector sel) {
         if (this.hasf())
             return this;
         final GraphittyLogger LOG = Graphitty.log(lhs);
@@ -282,7 +292,7 @@ public interface Inst extends Call {
         */
 
         try {
-            final Inst resolved = InstSelector.get().resolveInst(lhs, this);
+            final Inst resolved = sel.resolveInst(lhs, this);
             if (null != resolved) {
                 LOG.trace("%s => %s is %s resolved", lhs, resolved, CommonUtil.lambda(() -> resolved.isResolved(false) ? "" : "not"));
                 // Cache disabled - see comment above
@@ -300,7 +310,7 @@ public interface Inst extends Call {
         // find all other insts of the same name
         // if they all have the same domain coefficient as the lhs obj,
         // then that can be hard coded into the compilation
-        Obj resolved2 = Router.readFromSpace(this.tid());
+        Obj resolved2 = Machine.readFromSpace(this.tid());
         final List<cInt> uniqueDomains = resolved2.stream().map(v -> v.tid().dom().c()).distinct().toList();
         final Inst domainInst = (uniqueDomains.size() == 1 && uniqueDomains.getFirst().equals(lhs.tid().c())) ? this.dom(lhs.type()) : this;
         this.logger().trace("performing runtime resolution of %s => %s", lhs, domainInst);

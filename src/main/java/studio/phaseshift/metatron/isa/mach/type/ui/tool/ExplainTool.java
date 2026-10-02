@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -436,7 +436,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
             // <j> — Java lambda
             String className = inst.functionClassName();
             fURI basePath = inst.tid().basePath();
-            Obj doc = Router.readFromSpace(basePath.addQ(QCollection.DOCQ));
+            Obj doc = Machine.readFromSpace(basePath.addQ(QCollection.DOCQ));
             String docBody = (doc.isRec() && !QCollection.isNoDocs(doc))
                     ? new QCollection.Docs(doc.asRec()).description()
                     : "{{y}}no documentation available{{X}}";
@@ -479,7 +479,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
 
     private void handleCoefSelect(ExplainLevel current, int row, boolean isDom) {
         int metaIdx = isDom ? 6 : 7;
-        cInt c = (cInt) current.table.rowMetadata(row).get(metaIdx);
+        cInt c = cInt.of(current.table.rowMetadata(row).get(metaIdx).toString());
         if (c == null) return;
         String label = (isDom ? "domain coefficient" : "range coefficient");
 

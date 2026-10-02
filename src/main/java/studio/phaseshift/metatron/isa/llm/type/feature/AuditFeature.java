@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.llm.type.feature.service.SkillService;
 import studio.phaseshift.metatron.isa.llm.type.feature.service.SystemService;
 import studio.phaseshift.metatron.isa.llm.type.feature.service.ToolService;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -71,7 +71,7 @@ public class AuditFeature extends AbstractFeature {
         this.trail.clear();
         this.partialResponses = 0;
         this.partialThinkings = 0;
-      /*  Router.writeToSpace(agent.getDataPath(this.getRoot(agent)).extend("on_before_chat"), rec(uri("features"), jnt(agent.features().lstValue().size()),
+      /*  Machine.writeToSpace(agent.getDataPath(this.getRoot(agent)).extend("on_before_chat"), rec(uri("features"), jnt(agent.features().lstValue().size()),
                 uri("systemMsgs"), jnt(agent.hasFeature(LLM_SYSTEM_FEATURE_TID) ? agent.requireService(SystemService.class).getSystemMessages().size() : 0),
                 uri("userMessage"), str(null == agent.userMessage() ? "" : agent.userMessage())));*/
         snapshot(agent, "before_chat",
@@ -112,7 +112,7 @@ public class AuditFeature extends AbstractFeature {
 
     @Override
     public void onToolExecuted(final Agent agent, final Obj result) {
-        // Router.writeToSpace(agent.getDataPath(this.getRoot(agent)).extend("on_tool_executed"), result);
+        // Machine.writeToSpace(agent.getDataPath(this.getRoot(agent)).extend("on_tool_executed"), result);
         snapshot(agent, "tool_exec",
                 result.isNoObj() ? rec() : result.asRec());
     }
@@ -121,7 +121,7 @@ public class AuditFeature extends AbstractFeature {
     public void onCompleteResponse(final Agent agent, final ChatFrame result) {
         final Obj chatObj = result.at(uri(CHAT));
         final int chatLen = chatObj.isStr() ? chatObj.strValue().length() : 0;
-       /* Router.writeToSpace(agent.getDataPath(this.getRoot(agent)).extend("on_complete_response"), rec(uri("chatLen"), jnt(chatLen),
+       /* Machine.writeToSpace(agent.getDataPath(this.getRoot(agent)).extend("on_complete_response"), rec(uri("chatLen"), jnt(chatLen),
                 uri("partialResponses"), jnt(this.partialResponses),
                 uri("partialThinkings"), jnt(this.partialThinkings)));*/
         snapshot(agent, "complete",
@@ -133,7 +133,7 @@ public class AuditFeature extends AbstractFeature {
 
     @Override
     public void onError(final Agent agent, final Fail fail) {
-        //Router.writeToSpace(agent.getDataPath(this.getRoot(agent)).extend("on_error"),fail.isNoObj() ? rec() : rec(uri("message"), fail));
+        //Machine.writeToSpace(agent.getDataPath(this.getRoot(agent)).extend("on_error"),fail.isNoObj() ? rec() : rec(uri("message"), fail));
         snapshot(agent, "error",
                 fail.isNoObj() ? rec() : rec(uri("message"), fail));
     }
@@ -183,7 +183,7 @@ public class AuditFeature extends AbstractFeature {
             final Map<Obj, Obj> row = new LinkedHashMap<>();
             row.put(uri("trail"), lst(rows.stream().map(r -> (Obj) r).toList()));
             row.put(uri("table"), str(sb.toString()));
-            final Obj written = Router.writeToSpace(this.getRoot(agent).extend("_").addQ(INCRQ), rec(row, null, null));
+            final Obj written = Machine.writeToSpace(this.getRoot(agent).extend("_").addQ(INCRQ), rec(row, null, null));
             result.putRef("audit", written);
         } catch (final Exception e) {
             LOG.warn("failed to persist audit trail: %s", e.getMessage());

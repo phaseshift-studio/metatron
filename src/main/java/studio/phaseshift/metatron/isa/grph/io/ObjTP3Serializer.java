@@ -152,7 +152,7 @@ private Map<Obj, Obj> createProperties(final Element element) {
             final Map<Obj, Obj> in = mutableMap();
             tpV.edges(Direction.IN).forEachRemaining(tpE -> in.compute(uri(tpE.label()), (k, v) -> null == v ? createEdge(tpE) : v.append(createEdge(tpE))));
             final Map<Obj, Obj> props = createProperties(tpV);
-            Router.writeToSpace(this.builder.root.extend("V").extend(tpV.id().toString()), rec(
+            Machine.writeToSpace(this.builder.root.extend("V").extend(tpV.id().toString()), rec(
                     Map.of(uri(ID), uri(tpV.id().toString()),
                             uri(LABEL), uri(tpV.label()),
                             uri(PROPS), props.isEmpty() ? noobj() : rec(props),
@@ -164,7 +164,7 @@ private Map<Obj, Obj> createProperties(final Element element) {
         });
         
               graph.edges().forEachRemaining(tpE -> {
-            Router.writeToSpace(Router.readFromSpace(this.builder.root.extend("V").extend(tpE.outVertex().id().toString()))
+            Machine.writeToSpace(Machine.readFromSpace(this.builder.root.extend("V").extend(tpE.outVertex().id().toString()))
                     .stream()
                     .map(v -> v.as(RVertex.class))
                     .map(v -> {
@@ -174,7 +174,7 @@ private Map<Obj, Obj> createProperties(final Element element) {
                     }).iterator().next());
         });
          
-        return Router.readFromSpace(this.builder.root.extend("+"));
+        return Machine.readFromSpace(this.builder.root.extend("+"));
 }
  */
 

@@ -50,14 +50,14 @@ mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-m
 mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>.as(html::T)
 ==>
    html::"""<h1>web instruction set (<code>/m/web</code>)</h1>
-   <p><code>/m/web</code> is the instruction set has web <em>transport protocol</em> types, <em>MIME</em>
-   types, and <em>endpoint</em> types to provide server logic. The two spaces of <code>/m/web</code> are
+   <p><code>/m/web</code> is the instruction set that carries the web <em>transport protocol</em> types, <em>MIME</em>
+   types, and <em>endpoint</em> types that provide the server logic. The two spaces of <code>/m/web</code> are
    <code>httpspace</code> and <code>wsspace</code> — each carrying a <code>route::T</code> rec for routing connections to mounted services.</p>
-   <pre><code class="language-mtron">mtron&gt; httpspace::[pattern=&gt; http://#,
-                      host   =&gt; http://localhost:8777,
-                      route  =&gt; [/mcp       =&gt; mcp_mtron,
-                                 /docker    =&gt; docker:,
-                                 /usr       =&gt; /usr,
+   <pre><code class="language-mtron">mtron&gt; dckrspace::[pattern =&gt; docker:#, route =&gt; [docker: =&gt; &lt;&gt;]]@/sys/space/docker
+   mtron&gt; [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
+   mtron&gt; mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/web_basic
+   ==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]]@/sys/space/mcp/web_basic
+   mtron&gt; httpspace::[pattern=&gt; http://#,
    ...
 mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>.as(html::T).as(rec::T)
 ==>[html=>[

@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.Map;
 
@@ -206,6 +206,6 @@ public class MessageBuilder {
      * @return the written Rec (with VID assigned by the space)
      */
     public Rec create(final fURI writePath) {
-        return Router.writeToSpace(writePath, this.create()).as();
+        return Machine.writeToSpace(writePath, this.create()).as();
     }
 }

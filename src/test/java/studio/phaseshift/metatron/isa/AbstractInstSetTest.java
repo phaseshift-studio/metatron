@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -54,7 +54,7 @@ public abstract class AbstractInstSetTest extends AbstractMetatronTest {
             this.space.setup();
             if (this.space.vid() == null)
                 LOG.warn("provided space has no vid and thus can not be shutdown automatically");
-            Router.global().addSpace(this.space);
+            Machine.current().addSpace(this.space);
         }
     }
 
@@ -63,7 +63,7 @@ public abstract class AbstractInstSetTest extends AbstractMetatronTest {
         if (null != this.space) {
             assertDoesNotThrow(this.space::close);
             if (null != this.space.vid())
-                Router.global().removeSpace(this.space.vid());
+                Machine.current().removeSpace(this.space.vid());
             this.space = null;
         }
     }
@@ -76,12 +76,12 @@ public abstract class AbstractInstSetTest extends AbstractMetatronTest {
         this.space.insts().forEach(inst -> {
             if (inst.hasDom() && inst.hasRng()) {
                 hasDomRng.getAndIncrement();
-                long d = Router.readFromSpace(inst.tid().dom(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
-                long dash = Router.readFromSpace(inst.tid().dom(ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
-                long r = Router.readFromSpace(inst.tid().rng(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
-                long rash = Router.readFromSpace(inst.tid().rng(ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
-                long dr = Router.readFromSpace(inst.tid().rng(null).dom(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
-                long drash = Router.readFromSpace(inst.tid().rng(ALL).dom(ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long d = Machine.readFromSpace(inst.tid().dom(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long dash = Machine.readFromSpace(inst.tid().dom(ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long r = Machine.readFromSpace(inst.tid().rng(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long rash = Machine.readFromSpace(inst.tid().rng(ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long dr = Machine.readFromSpace(inst.tid().rng(null).dom(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long drash = Machine.readFromSpace(inst.tid().rng(ALL).dom(ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
                 LOG.debug("inst [%s] dom [%s] rng [%s] domRng [%s]", inst.tid().basePath(), d, r, dr);
                 assertTrue(d > 0);
                 if (!inst.dom().c().isZeroable())

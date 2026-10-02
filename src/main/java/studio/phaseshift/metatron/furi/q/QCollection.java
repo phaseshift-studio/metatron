@@ -29,7 +29,8 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -272,14 +273,14 @@ public final class QCollection {
         return QProc.Helper.build(REFQ_TID, REFQ_PATTERN).postRead((u, o) ->
                         objs(Stream.of(u.q(REFQ_PATTERN).split(","))
                                 .map(fURI.Singleton::f)
-                                .map(Router::readFromSpace)).append(o))
+                                .map(Machine::readFromSpace)).append(o))
                 .create();
     }
 
     public static QProc lineQ() {
         return QProc.Helper.build(LINEQ_TID, LINEQ_PATTERN)
                 .preWrite((furi, obj) -> {
-                    final String objString = Str.Helper.cleanString(Router.readFromSpace(furi.removeQ(LINEQ_PATTERN)));
+                    final String objString = Str.Helper.cleanString(Machine.readFromSpace(furi.removeQ(LINEQ_PATTERN)));
                     // split with -1 so trailing empties (and thus blank-line structure) are preserved
                     final String[] split = objString.split("\n", -1);
                     final int[] lineRange = lineRange(furi, split.length);
@@ -290,7 +291,7 @@ public final class QCollection {
                     for (int i = 0; i < lineRange[0]; i++) result.add(split[i]);
                     result.addAll(Arrays.asList(replacement));
                     for (int i = lineRange[1] + 1; i < split.length; i++) result.add(split[i]);
-                    Router.writeToSpace(furi.removeQ(LINEQ_PATTERN), str(String.join("\n", result)));
+                    Machine.writeToSpace(furi.removeQ(LINEQ_PATTERN), str(String.join("\n", result)));
                     return obj;
                 }).postRead((furi, obj) -> {
                     final String objString = Str.Helper.cleanString(obj);
@@ -354,7 +355,7 @@ public final class QCollection {
                     final fURI mint = CommonUtil.mintShortUUID(furi.basePath(), true);
                     final Obj mintedObj = obj.vid(mint);
                     LOG.info("vid %s minted for %s", mint, mintedObj);
-                    Router.writeToSpace(mintedObj);
+                    Machine.writeToSpace(mintedObj);
                     return mintedObj;
                 }).create();
     }
@@ -445,7 +446,7 @@ public final class QCollection {
             if (inst.dom().isCode()) {
                 REWRITE_TABLE.put(inst.tid(), obj.asRec());
             } else {
-                Router.global().registerRedirect(f(vid.name()), vid);
+                Machine.current().registerRedirect(f(vid.name()), vid);
                 INST_TABLE.computeIfAbsent(inst.tid().basePath(), k -> Collections.synchronizedSet(new LinkedHashSet<>())).add(obj.asRec());
             }
             return obj;
@@ -504,7 +505,7 @@ public final class QCollection {
                 .preWrite((vid, obj) -> {
                     final fURI vidBig = vid.big();
                     if (!vidBig.equals(vid))
-                        return Router.writeToSpace(vidBig, obj);
+                        return Machine.writeToSpace(vidBig, obj);
                     final Rec doc = obj.tid().equals(DOCS_TID) ? obj.asRec() : new Docs(obj.toCleanString());
                     if (vid.hasRng()) {
                         INST_DOCS.write(vidBig.removeQ(DOCQ), doc);
@@ -516,10 +517,10 @@ public final class QCollection {
                 .preRead((vid) -> {
                     final fURI vidBig = vid.big();
                     if (!vidBig.equals(vid))
-                        return Router.readFromSpace(vidBig);
+                        return Machine.readFromSpace(vidBig);
                     final Obj instDoc = INST_DOCS.read(vidBig.removeQ(DOCQ));
                     final Obj doc = instDoc.isNoObj() ?
-                            OBJ_DOCS.read(vidBig.removeQ(DOCQ)).orElse(NO_DOCS.plus(rec(uri(OBJ), Router.global().read(vidBig.removeQ(DOCQ))))) :
+                            OBJ_DOCS.read(vidBig.removeQ(DOCQ)).orElse(NO_DOCS.plus(rec(uri(OBJ), Machine.current().read(vidBig.removeQ(DOCQ))))) :
                             instDoc;
                     // dual-mode interface doc: a doc carrying 'build' (how to implement) alongside
                     // 'desc' (how to use).  The branch is implementation status: an interface inst's
@@ -527,7 +528,7 @@ public final class QCollection {
                     // write — so implemented iff the live inst is no longer the interface.  Unimplemented
                     // → surface the build docs; implemented → surface the use docs.
                     if (doc.isRec() && doc.asRec().has(DOC_BUILD)) {
-                        final Obj live = Router.global().read(vidBig.removeQ(DOCQ));
+                        final Obj live = Machine.current().read(vidBig.removeQ(DOCQ));
                         final boolean implemented = !live.isNoObj() && live.isInst() &&
                                 !live.<Inst>as().tid().basePath().equals(vidBig.removeQ(DOCQ));
                         if (!implemented)
@@ -612,14 +613,14 @@ public final class QCollection {
                     final fURI sourceVid = vid.qLess();
                     final String hash = Integer.toHexString(sourceVid.toString().hashCode());
                     final fURI embedVid = f(sourceVid.scheme() + ":embedding/" + model + "/" + hash);
-                    final Obj embedding = Router.readFromSpace(embedVid);
+                    final Obj embedding = Machine.readFromSpace(embedVid);
                     if (!embedding.isNoObj())
                         return embedding;
                     // Lazy compute: read source, write to embedding URI.
-                    final Obj source = Router.readFromSpace(sourceVid);
+                    final Obj source = Machine.readFromSpace(sourceVid);
                     if (source.isNoObj())
                         return source;
-                    return Router.writeToSpace(embedVid, source);
+                    return Machine.writeToSpace(embedVid, source);
                 }).create();
     }
 
@@ -652,7 +653,7 @@ public final class QCollection {
                     final Obj stored = obj.vid(cleaned);
                     // QProc handles storage itself (same pattern as tbleIncrQ).
                     // cleaned URI has no ?incrq → won't rematch on recursive write.
-                    return Router.writeToSpace(cleaned, stored);
+                    return Machine.writeToSpace(cleaned, stored);
                     //return obj;
                 }).create();
     }
@@ -757,7 +758,7 @@ public final class QCollection {
     /**
      * Resolve the identity of the writing thread by walking the thread's {@code source}
      * spine to its root and reading {@code owner}.  Threads do not carry an {@code owner}
-     * field yet — once they do, resolve via {@code Router.THREAD_STACK}'s thread rec.
+     * field yet — once they do, resolve via {@code Memory.ARG_STACK}'s thread rec.
      */
     private static Obj currentOwner() {
         return noobj(); // TODO: walk thread source spine → owner when threads carry it
@@ -787,7 +788,7 @@ public final class QCollection {
             return new Docs("nothing").c(cInt.ZERO()).as();
         }
         final Docs doc = Docs.doc(obj, domDesc, rngDesc, argDescription, description, examples);
-        final Space objSpace = Router.global().getSpaceFor(objID);
+        final Space objSpace = Machine.current().getSpaceFor(objID);
         final Optional<QProc> docq = objSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<QProc>as).findAny();
         if (docq.isEmpty()) {
             if (objSpace.hasVID())// && !obj.tid().equals(NOOBJ_TID))
@@ -898,7 +899,7 @@ public final class QCollection {
         }
 
         public static Docs doc(final Inst inst) {
-            return doc(Router.readFromSpace(inst.tid().addQ(DOCQ)).stream().findFirst().orElse(NO_DOCS).asRec());
+            return doc(Machine.readFromSpace(inst.tid().addQ(DOCQ)).stream().findFirst().orElse(NO_DOCS).asRec());
         }
     }
 }

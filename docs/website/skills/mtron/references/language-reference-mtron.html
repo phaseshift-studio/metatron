@@ -639,7 +639,7 @@ mtron&gt; posint::2                    [-- posint::2  (admitted: the predicate l
 ==&gt;posint::2
 mtron&gt; posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ==&gt;fail::[-1 is not a int::T[is(gt(0))]@posint
-   	while parsing: posint::-1]@/sys/fail/462
+   	while parsing: posint::-1]@/sys/fail/118
 </code></pre>
 <hr />
 <h3>8. Mapping &amp; Filtering</h3>
@@ -824,15 +824,6 @@ mtron&gt; [1,2]@a &gt;&gt;= [_,+4]                      [-- [1,6]@a  (second ele
 mtron&gt; [a=&gt;1,b=&gt;2] &gt;&gt;= [b=&gt;none]               [-- [a=&gt;1]  (remove field b) --]
 ==&gt;[a=&gt;1]
 mtron&gt; @&lt;people/+&gt;.&gt;&gt;= [name=&gt;&quot;Micky Mouse&quot;]   [-- wildcard update --]
-==&gt;[
-    name=&gt;'Micky Mouse',
-    role=&gt;developer]
-==&gt;[
-    name=&gt;'Micky Mouse',
-    role=&gt;oracle]
-==&gt;[
-    name=&gt;'Micky Mouse',
-    role=&gt;architect]
 </code></pre>
 <p><code>@</code> means &quot;anchor the write-back to the VID&quot; (persist).  <code>*</code> means &quot;anonymous copy&quot; (no write-back):</p>
 <pre><code class="language-mtron">mtron&gt; @a/b/c&gt;&gt;= +10      [-- modifies *a/b/c and writes back --]

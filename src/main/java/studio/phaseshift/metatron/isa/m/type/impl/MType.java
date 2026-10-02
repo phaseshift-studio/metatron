@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.TypeGraph;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -43,8 +43,8 @@ public class MType extends MObj implements Type {
 
     private MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid, final boolean register) {
         super(jvm, tid.big(), null == vid ? null : vid.big());
-        if (register && Router.loaded() && null != this.vid() && !this.vid().equals(this.tid()) /*(this.hasPredicate() || this.hasConstructor())*/ && !this.isBaseType() && !this.isGeneric() && !this.isPattern()) {
-            Router.global().write(this.vid(), this);
+        if (register && Machine.loaded() && null != this.vid() && !this.vid().equals(this.tid()) /*(this.hasPredicate() || this.hasConstructor())*/ && !this.isBaseType() && !this.isGeneric() && !this.isPattern()) {
+            Machine.current().write(this.vid(), this);
         }
     }
 
@@ -79,8 +79,8 @@ public class MType extends MObj implements Type {
             return new MType(Tuple.Pair.with(null, null), checkID, checkID);
         if (!checkID.poly().isEmpty() && !checkID.basePath().equals(Tokens.REL_TID) && !checkID.basePath().equals(Tokens.LST_TID) && !checkID.basePath().equals(REC_TID))
             throw MTronException.of("only poly types can have polynomials: %s {{r}}X=>{{X}} %s", checkID.basePath(), checkID.poly());
-        if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && Router.loaded()) { // TODO: remove the pattern constraint - why not a type be the set of other types?
-            Obj obj = Router.readFromSpace(checkID);
+        if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && Machine.loaded()) { // TODO: remove the pattern constraint - why not a type be the set of other types?
+            Obj obj = Machine.readFromSpace(checkID);
             obj = obj.selfTID(obj.tid().c(checkID.c()));
             if (obj.isType()) {
                 if (checkID.c().equals(obj.c()) &&

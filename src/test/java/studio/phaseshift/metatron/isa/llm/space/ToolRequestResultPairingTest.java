@@ -37,7 +37,7 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -145,9 +145,11 @@ public class ToolRequestResultPairingTest extends AbstractMetatronTest {
         return messageFeature.store();
     }
 
-    /** Every ledger entry of the scenario, oldest → newest (append order). */
+    /**
+     * Every ledger entry of the scenario, oldest → newest (append order).
+     */
     private static List<Rec> ledger(final String scenario) {
-        return Router.readFromSpace(agentRoot(scenario).extend(MESSAGE).extend("+/"))
+        return Machine.readFromSpace(agentRoot(scenario).extend(MESSAGE).extend("+/"))
                 .stream()
                 .map(Obj::asRel)
                 .sorted(Comparator.comparing(rel -> Integer.parseInt(rel.first().uriValue().name())))
@@ -166,7 +168,9 @@ public class ToolRequestResultPairingTest extends AbstractMetatronTest {
         return AiMessage.from("calling %d tools".formatted(toolCalls), requests);
     }
 
-    /** A tool result as the agent dispatches it to {@code onToolExecuted}. */
+    /**
+     * A tool result as the agent dispatches it to {@code onToolExecuted}.
+     */
     private static Rec stagedResult(final int i) {
         return rec(uri(NAME), str("tool_" + i),
                 uri(TOOL_ARGUMENTS), str("{\"n\":" + i + "}"),

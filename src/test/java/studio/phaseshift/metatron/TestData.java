@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,7 +25,8 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Memory;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
@@ -116,7 +117,7 @@ public @interface TestData {
                         final Object testInstance = context.getRequiredTestInstance();
                         if (testInstance instanceof studio.phaseshift.metatron.isa.AbstractSpaceTest) {
                             final studio.phaseshift.metatron.isa.AbstractSpaceTest spaceTest =
-                                (studio.phaseshift.metatron.isa.AbstractSpaceTest) testInstance;
+                                    (studio.phaseshift.metatron.isa.AbstractSpaceTest) testInstance;
 
                             // Read file line by line and eval each statement separately
                             int recordCount = 0;
@@ -136,7 +137,7 @@ public @interface TestData {
 
                                     // Handle single-line comments [-- comment --] or [== comment ==]
                                     if ((processedLine.startsWith("[--") && processedLine.endsWith("--]")) ||
-                                        (processedLine.startsWith("[==") && processedLine.endsWith("==];"))) {
+                                            (processedLine.startsWith("[==") && processedLine.endsWith("==];"))) {
                                         continue;
                                     }
 
@@ -159,7 +160,8 @@ public @interface TestData {
                                     LOG.debug("line %d: evaluating: %s", lineNumber, processedLine);
                                     try {
                                         // Execute each write statement individually and consume the stream
-                                        ObjmtronSerializer.parse(processedLine).apply().forEach(obj -> {});
+                                        ObjmtronSerializer.parse(processedLine).apply().forEach(obj -> {
+                                        });
                                         System.out.println("==> TestData line " + lineNumber + ": completed");
                                         LOG.debug("line %d: completed", lineNumber);
                                         recordCount++;
@@ -219,7 +221,7 @@ public @interface TestData {
         public void afterTestExecution(final ExtensionContext context) {
             if (context.getRequiredTestMethod().getAnnotation(TestData.class) != null &&
                     context.getRequiredTestMethod().getAnnotation(TestData.class).oneTime() && this.testDataLoaded) {
-                Router.stack().clear();
+                Memory.argStack().clear();
                 LOG.debug("clearing %s test data from the stack", context.getRequiredTestMethod().getName());
             }
         }

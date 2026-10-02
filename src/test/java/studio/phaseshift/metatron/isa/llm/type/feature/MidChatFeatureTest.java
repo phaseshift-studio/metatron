@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.isa.llm.mToolExecutor;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -314,7 +314,7 @@ public class MidChatFeatureTest extends AbstractMetatronTest {
      * leaves are rels carrying the message as their second.
      */
     private static List<Rec> ledgerMessages(final fURI root) {
-        final Obj rows = Router.readFromSpace(root.extend(MESSAGE).extend("+/"));
+        final Obj rows = Machine.readFromSpace(root.extend(MESSAGE).extend("+/"));
         if (rows.isNoObj())
             return List.of();
         final List<Rec> messages = new ArrayList<>();

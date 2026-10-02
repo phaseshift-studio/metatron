@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.sys.space.fsSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -67,7 +67,7 @@ public class llmInstSetTest extends AbstractInstSetTest {
 
     @AfterAll
     public static void unloadFileSystem() {
-        Router.global().removeSpace(f("/sys/space/fs"));
+        Machine.current().removeSpace(f("/sys/space/fs"));
     }
 
     @ParameterizedTest

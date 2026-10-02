@@ -17,7 +17,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.ModalTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.SwipePanelWidgetTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.TreeSelectTool;
@@ -155,7 +155,7 @@ public class WidgetStateDisciplineTest extends AbstractInstSetTest {
      */
     private static Set<String> declaredKeys(final String tid) {
         final Set<String> keys = new LinkedHashSet<>();
-        final Obj registered = Router.global().read(f(tid));
+        final Obj registered = Machine.current().read(f(tid));
         if (!registered.isType()) return keys;
         final Obj predicate = registered.asType().isPredicateObj();
         if (null == predicate || !predicate.isRec()) return keys;

@@ -16,16 +16,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m.type.resolver;
+package studio.phaseshift.metatron.isa.mach.type.compiler.resolver;
 
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.m.type.resolver.InstSelector;
+import studio.phaseshift.metatron.isa.m.type.resolver.Resolver;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
@@ -39,14 +47,20 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_SCORING_RESOLVER_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-/**
- * Instruction resolver that scores candidates by specificity and selects the best match.
- * <p>
- * This resolver addresses the "resolve miss" problem where generic instructions
- * (e.g., {@code A.as(type)}) were being selected over more specific ones
- * (e.g., {@code str.as(int)}) due to insertion order dependence.
- * <p>
+/*
+ * ScoringResolver — the concrete {@code scoring_resolver::T}: the resolution stage of
+ * {@code compiler::T}. It carries no config (empty rec) and owns both halves of the work:
+ * <ul>
+ *   <li><b>whole-code threading</b> — {@link Resolver.Helper#resolveCode} threads the output type
+ *       of each inst as the input type of the next;</li>
+ *   <li><b>per-instruction scoring</b> — {@link #resolveInst} scores candidate instructions by
+ *       specificity and selects the best match, so this resolver is also the default
+ *       {@link InstSelector}.</li>
+ * </ul>
+ *
  * Scoring criteria (higher is better):
  * <ul>
  *   <li><b>Domain specificity (1000 pts)</b>: Non-generic domain type</li>
@@ -55,11 +69,26 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *   <li><b>Argument exact match (250 pts)</b>: First argument type matches user argument exactly</li>
  *   <li><b>Range specificity (100 pts)</b>: Non-generic range type</li>
  * </ul>
- * <p>
- * This follows the same pattern used by {@code BasicRouter.getSpace()} which uses
+ * This follows the same pattern used by {@code AbstractMachine.getSpace()} which uses
  * {@code min(Comparator.comparing(Space::pattern))} to select the most specific space.
+ *
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ScoringInstResolver implements InstSelector {
+public class ScoringResolver extends MRec implements Resolver, InstSelector {
+
+    private static final ScoringResolver INSTANCE = new ScoringResolver(mutableMap(), MACH_SCORING_RESOLVER_TID, null);
+
+    public static ScoringResolver single() {
+        return INSTANCE;
+    }
+
+    public ScoringResolver() {
+        this(mutableMap(), MACH_SCORING_RESOLVER_TID, null);
+    }
+
+    public ScoringResolver(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
+    }
 
     /**
      * A candidate instruction paired with its original (pre-transformation) form
@@ -81,6 +110,20 @@ public class ScoringInstResolver implements InstSelector {
     }
 
     @Override
+    public Code apply(final Obj code) {
+        return resolveCode(noobj(), code.asCode());
+    }
+
+    /**
+     * Resolve a full instruction chain — threads the output type of each inst as the input type of
+     * the next via {@link Resolver.Helper#resolveCode} — with the active {@link InstSelector} for
+     * per-instruction selection (which is this resolver's own {@link #resolveInst} by default).
+     */
+    public static Code resolveCode(final Obj lhs, final Code code) {
+        return Resolver.Helper.resolveCode(lhs, code, InstSelector.get());
+    }
+
+    @Override
     public Inst resolveInst(final Obj lhs, final Inst userInst) {
         if (userInst.hasf())
             return userInst;
@@ -91,13 +134,13 @@ public class ScoringInstResolver implements InstSelector {
             final Optional<fURI> fromOrAt = Inst.Helper.isFromOrAtInstToUri(userInst);
             if (fromOrAt.isPresent()) {
                 if (!fromOrAt.get().hasPattern()) {
-                    final Obj fromOrAtObj = Router.readFromSpace(fromOrAt.get());
+                    final Obj fromOrAtObj = Machine.readFromSpace(fromOrAt.get());
                     if (!fromOrAtObj.isNothing() && !fromOrAtObj.isCall()) {
                         userInst.logger().debug("fast from/at() resolution: %s", fromOrAt.get());
-                        return Inst.Helper.bindQ(lhs, userInst, Router.readFromSpace(userInst.tid()).asInst().args(lst(fromOrAt.get().toUri())).rng(T(fromOrAtObj.typeId().maybeSome())));
+                        return Inst.Helper.bindQ(lhs, userInst, Machine.readFromSpace(userInst.tid()).asInst().args(lst(fromOrAt.get().toUri())).rng(T(fromOrAtObj.typeId().maybeSome())));
                     }
                 }
-                return Inst.Helper.bindQ(lhs, userInst, Router.readFromSpace(userInst.tid()).asInst().args(lst(uri(fromOrAt.get()))).rng(T(ALL.maybeSome())));
+                return Inst.Helper.bindQ(lhs, userInst, Machine.readFromSpace(userInst.tid()).asInst().args(lst(uri(fromOrAt.get()))).rng(T(ALL.maybeSome())));
             }
         }
         // a cast names its target type in its own argument, and the general path rebinds the resolved contract's
@@ -106,7 +149,7 @@ public class ScoringInstResolver implements InstSelector {
         // contract un-rebound, so it serves only calls that name no type; a cast falls through and is resolved,
         // scored and rebound by the general path.
         if (userInst.tid().big().test(AS_INST_TID) && !userInst.args().elements().anyMatch(Obj::isType)) {
-            final List<Obj> result = Router.readFromSpace(AS_INST_TID
+            final List<Obj> result = Machine.readFromSpace(AS_INST_TID
                     .dom(Obj.Helper.specificTypeId(userInst.hasDom() ? userInst.dom() : lhs))
                     .rng(Obj.Helper.specificTypeId(userInst.arg(0)))).stream().toList();
             if (!result.isEmpty()) {
@@ -117,19 +160,14 @@ public class ScoringInstResolver implements InstSelector {
         /////////////////////////////////////////////////////////////////////
 
         final fURI basePath = userInst.tid().basePath();
-        Obj fetched = noobj();
-        if (lhs.isRec()) {
-            fetched = lhs.asRec().atDirect(basePath);
-            fetched = Obj.Helper.getAuto(fetched).orElse(Obj.Helper.isAutoPointer(fetched) ? fetched : null);
-            if (null != fetched && fetched.isObjInst())
+        if (lhs.isPoly()) {
+            final Obj fetched = Resolver.Helper.getPolyAutoInst(lhs.asPoly(), uri(basePath));
+            if (fetched.isObjInst())
                 return Inst.Helper.bindQ(lhs, userInst, fetched.asInst());
         }
-        if (null == fetched || fetched.isNoObj()) { // TODO: can't figure out why grphspace is yielding a null
-            final long t0 = System.nanoTime();
-            fetched = Router.readFromSpace(basePath);
-            T_RESOLVE.addAndGet(System.nanoTime() - t0);
-        }
-
+        final long t0 = System.nanoTime();
+        final Obj fetched = Machine.readFromSpace(basePath);
+        T_RESOLVE.addAndGet(System.nanoTime() - t0);
         return Inst.Helper.bindQ(lhs, userInst, resolve(lhs, userInst, fetched.stream()));
     }
 
@@ -157,7 +195,7 @@ public class ScoringInstResolver implements InstSelector {
                 }
             }
         } else {
-            int counter = -1; // rec inst_args, but lst user_args (index by counter) 
+            int counter = -1; // rec inst_args, but lst user_args (index by counter)
             for (final Map.Entry<Obj, Obj> entry : instArgs.recValue().entrySet()) {
                 counter++;
                 if (entry.getValue().isObjCall())
@@ -175,7 +213,7 @@ public class ScoringInstResolver implements InstSelector {
         return true;
     }
 
-    public Inst resolve(final Obj lhs, final Inst userInst, final Stream<Obj> candidates) {
+    private Inst resolve(final Obj lhs, final Inst userInst, final Stream<Obj> candidates) {
         //final GraphittyLogger LOG = Graphitty.log(lhs);
         if (userInst.isNoObj())
             return null;
@@ -202,13 +240,9 @@ public class ScoringInstResolver implements InstSelector {
         // Multiple candidates: score by specificity and select best
         return viable.stream()
                 .filter(apiInst -> apiInst.dom().isGeneric() || !apiInst.dom().isNominal() || Obj.Helper.specificType(lhs).test(apiInst.dom()))
-                //.filter(apiInst -> apiInst.rng().isGeneric() || !userInst.hasRng() || userInst.rng().equals(apiInst.rng()))
-                //.peek(apiInst -> LOG.error("\nlhs: %s\napi: %s\nusr: %s", lhs, apiInst, userInst))
-                // .filter(apiInst -> Obj.Helper.specificType(lhs).isRefinementOf(apiInst.dom()))
                 .map(apiInst -> {
                     final long t0 = System.nanoTime();
                     final int score = scoreSpecificity(lhs, userInst, apiInst);
-                    // Inst transformed = userInst.hasDom() ? apiInst.dom(userInst.dom()) : apiInst;
                     Inst transformed = userInst.hasDom() ? apiInst.dom(apiInst.dom().c(userInst.dom().c()).as()) : apiInst;
                     transformed = userInst.hasRng() ? transformed.rng(userInst.rng()) : transformed;
                     transformed = userInst.tid().basePath().equals(AS_INST_TID) ? transformed.rng(userInst.arg(0).isNoObj() ? NOOBJ_TYPE : Obj.Helper.specificType(userInst.arg(0))) : transformed;
@@ -240,7 +274,6 @@ public class ScoringInstResolver implements InstSelector {
                     T_COMPOSE.addAndGet(t1 - t0);
                     return new ScoredCandidate(sc.original, result, sc.score);
                 })
-                //.peek(sc -> LOG.warn("\nlhs: %s\nusr: %s\napi: %s\nfinal: %s", lhs, userInst, sc.original, sc.transformed))
                 .max(Comparator.comparingInt(ScoredCandidate::score))
                 .map(ScoredCandidate::transformed)
                 .orElse(null);

@@ -32,7 +32,7 @@ import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.io.File;
 import java.util.Map;
@@ -68,13 +68,13 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTe
                 uri(DATA), uri("/tmp/memspace-test.mtron"),
                 uri(PATTERN), uri("/tt/#")), f("/sys/space/mem_persist_1"));
         final Map<fURI, Obj> data = generateRandomData(space.pattern().retractPattern(), 10);
-        data.forEach(Router::writeToSpace);
-        data.forEach((k, v) -> assertEquals(v, Router.readFromSpace(k)));
+        data.forEach(Machine::writeToSpace);
+        data.forEach((k, v) -> assertEquals(v, Machine.readFromSpace(k)));
         space.close();
         final memSpace space2 = memSpace.of(rec(
                 uri(DATA), uri("/tmp/memspace-test.mtron"),
                 uri(PATTERN), uri("/tt/#")), f("/sys/space/mem_persist_2"));
-        data.forEach((k, v) -> assertEquals(v, Router.readFromSpace(k)));
+        data.forEach((k, v) -> assertEquals(v, Machine.readFromSpace(k)));
         space2.close();
     }
 

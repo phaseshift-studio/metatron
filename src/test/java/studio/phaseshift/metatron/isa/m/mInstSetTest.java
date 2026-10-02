@@ -587,6 +587,19 @@ public class mInstSetTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            // AN ARGUMENT IS REACHED BY SIGIL, NOT BY NAME — positionally with *<0>, or by the argument's own
+            // sigil with *a. The argument here is an INST (plus(2)) applied to the lhs, so both give 1+2=3:
+            //     "1.inst(+2){ *<0> }"                % 3
+            //     "1.inst(a=>plus(2)){ *a }"          % 3
+            // A bare word is not an argument reference at all: an unbound word is a URI. So `plus(a)` is
+            // `plus(uri a)` — `a.plus(a)`, a multiplicity `{2}a` when the lhs is a uri, and "unable to
+            // determine inst function" when the lhs is an int, because it tries to apply the uri as an
+            // instruction. Neither outcome is about the stack, so neither belongs in a test here.
+            // The constraint for the arg-frame walk: a plain-name lookup must NEVER match an argument entry.
+            // The 8 mInstSet cases below enforce that from the other side — they broke exactly when a plain
+            // name began matching an entry in an argument frame.
+            "1.inst(+2){ *<0> }                                                       % 3",
+            "1.inst(a=>plus(2)){ *a }                                                 % 3",
             "1.inst(a=>plus(2)){ plus(*a) }                                           % 4",
             "10.(a=>plus(2)){ plus(*a) }                                              % 22",
             "10.inst?int<=str(a=>plus(2)){ plus(*a) }                                 % <ERROR>",

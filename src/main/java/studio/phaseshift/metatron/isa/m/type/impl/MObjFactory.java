@@ -21,8 +21,8 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
-import studio.phaseshift.metatron.isa.mach.type.monad.BasicStatefulMonad;
+import studio.phaseshift.metatron.isa.mach.type.processor.monad.BasicStatefulMonad;
+import studio.phaseshift.metatron.isa.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -44,7 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.FACTORY_TID;
-import static studio.phaseshift.metatron.isa.mach.type.monad.BasicStatefulMonad.MACH_BASIC_MONAD_TID;
+import static studio.phaseshift.metatron.isa.mach.type.processor.monad.BasicStatefulMonad.MACH_BASIC_MONAD_TID;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 

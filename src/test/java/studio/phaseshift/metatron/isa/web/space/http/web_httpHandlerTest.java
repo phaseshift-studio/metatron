@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.space.http.handler.web_httpHandler;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 
@@ -62,14 +62,14 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
                 uri(ROUTE), rec()
         ), f("/sys/space/test/web-content/" + getClass().getSimpleName()));
         // Populate with test content
-        Router.writeToSpace(f("mem:test-pages/index.html"), str("<html><body><h1>Hello World</h1></body></html>"));
-        Router.writeToSpace(f("mem:test-pages/about.html"), str("<html><body><h1>About</h1></body></html>"));
+        Machine.writeToSpace(f("mem:test-pages/index.html"), str("<html><body><h1>Hello World</h1></body></html>"));
+        Machine.writeToSpace(f("mem:test-pages/about.html"), str("<html><body><h1>About</h1></body></html>"));
     }
 
     @AfterEach
     public void teardownContentSpace() {
         if (this.contentSpace != null) {
-            Router.global().removeSpace(this.contentSpace.vid());
+            Machine.current().removeSpace(this.contentSpace.vid());
             this.contentSpace.close();
             this.contentSpace = null;
         }
@@ -142,12 +142,12 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
         final fURI target = f("mem:test-pages/set-upd");
         // JSON-derived base (string keys) — mirrors the PUT body path
         final Obj jsonBase = ObjJSONSerializer.simple().inputBytes("{\"a\":{\"b\":2,\"c\":3},\"d\":4}");
-        Router.writeToSpace(target, jsonBase);
-        final Obj read = Router.readFromSpace(target);
+        Machine.writeToSpace(target, jsonBase);
+        final Obj read = Machine.readFromSpace(target);
         final Obj delta = ObjmtronSerializer.parse("+[d=>100]");
         final Obj updated = update_(delta).apply(read);
-        final Obj writeResult = Router.writeToSpace(target, updated);
-        final Obj after = Router.readFromSpace(target);
+        final Obj writeResult = Machine.writeToSpace(target, updated);
+        final Obj after = Machine.readFromSpace(target);
         System.out.printf("jsonBase=%s | delta=%s (tid=%s) | read=%s | updated=%s | writeResult=%s | after=%s%n",
                 jsonBase, delta, delta.tid(), read, updated, writeResult, after);
         assertFalse(after.isNoObj(),
@@ -165,7 +165,7 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
         @AfterAll
         public void teardownContentSpace() {
             if (this.contentSpace != null) {
-                Router.global().removeSpace(this.contentSpace.vid());
+                Machine.current().removeSpace(this.contentSpace.vid());
                 this.contentSpace.close();
                 this.contentSpace = null;
             }
@@ -178,11 +178,11 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
                     uri(PATTERN), uri("mem:test-pages/#"),
                     uri(ROUTE), rec()
             ), f("/sys/space/test/web-int/" + getClass().getSimpleName()));
-            Router.writeToSpace(f("mem:test-pages/index.html"),
+            Machine.writeToSpace(f("mem:test-pages/index.html"),
                     str("<html><body><h1>Hello World</h1></body></html>", HTML_TID, null));
-            Router.writeToSpace(f("mem:test-pages/about.html"),
+            Machine.writeToSpace(f("mem:test-pages/about.html"),
                     str("<html><body><h1>About</h1></body></html>", HTML_TID, null));
-            Router.writeToSpace(f("mem:test-pages/data.json"),
+            Machine.writeToSpace(f("mem:test-pages/data.json"),
                     str("{\"key\":\"value\"}", WEB_JSON_TID, null));
             super.setupHTTPSpace();
         }

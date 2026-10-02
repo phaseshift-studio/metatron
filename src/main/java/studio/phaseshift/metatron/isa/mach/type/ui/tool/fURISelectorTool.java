@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.isa.mach.type.ui.tool;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.SelectorWidget;
@@ -38,7 +38,7 @@ public class fURISelectorTool extends SelectorWidget<fURI, fURISelectorTool> {
         super(originalBufferText, List.of("furi", "", "furi"));
 
         if (!originalBufferText.isEmpty()) {
-            final Obj rels = Router.readFromSpace(f(originalBufferText.substring(1) + "+/"));
+            final Obj rels = Machine.readFromSpace(f(originalBufferText.substring(1) + "+/"));
             rels.stream().forEach(rel -> {
                 if (rel.isRel()) {
                     this.items.add(rel.asRel().first().uriValue());

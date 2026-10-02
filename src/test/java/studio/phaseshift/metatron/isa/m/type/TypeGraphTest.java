@@ -27,8 +27,8 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MType;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.router.NoObjRouter;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,7 +59,7 @@ public class TypeGraphTest extends AbstractMetatronTest {
     @AfterEach
     public void cleanTypeGraph() {
         try {
-            Router.writeToSpace(PROBE, noobj());
+            Machine.writeToSpace(PROBE, noobj());
         } finally {
             TypeGraph.global().clear();
         }
@@ -96,7 +96,7 @@ public class TypeGraphTest extends AbstractMetatronTest {
         graph.memo(key, resolve);
         assertEquals(1, resolves.get(), "first resolution must run the resolver");
         // register the type at the watched path -- the write must invalidate
-        Router.writeToSpace(typePath, type);
+        Machine.writeToSpace(typePath, type);
         graph.memo(key, resolve);
         assertEquals(2, resolves.get(), "a write to the type path must force a re-resolution: resolves=" + resolves.get());
     }
@@ -112,7 +112,7 @@ public class TypeGraphTest extends AbstractMetatronTest {
         final TypeGraph.Key key = new TypeGraph.Key(f("int").big(), null, null, null);
         graph.memo(key, resolve);
         // an unrelated data write must not disturb the memo
-        Router.writeToSpace(f("/m/tgraphUnrelated"), jnt(42));
+        Machine.writeToSpace(f("/m/tgraphUnrelated"), jnt(42));
         graph.memo(key, resolve);
         assertEquals(1, resolves.get(), "an unrelated write must not invalidate the memo: resolves=" + resolves.get());
     }
@@ -139,7 +139,7 @@ public class TypeGraphTest extends AbstractMetatronTest {
                     for (int j = 0; j < 25; j++) {
                         graph.memo(key, resolve);
                         if (j % 4 == 0)
-                            Router.writeToSpace(f("/m/tgraphHammer"), jnt(j));
+                            Machine.writeToSpace(f("/m/tgraphHammer"), jnt(j));
                     }
                 } catch (final Exception e) {
                     errors.incrementAndGet();
@@ -171,11 +171,11 @@ public class TypeGraphTest extends AbstractMetatronTest {
         final TypeGraph.Key key = new TypeGraph.Key(f("real").big(), null, null, null);
         graph.memo(key, resolve);
         assertEquals(1, resolves.get(), "first resolution must run the resolver");
-        final Router saved = Router.global();
+        final Machine saved = Machine.current();
         try {
             // a different router instance stands in for a re-boot / reload:
             // the stale registry must be dropped and the re-resolution forced
-            BootLoader.ROUTER = NoObjRouter.single();
+            BootLoader.ROUTER = Machine.mach0();
             graph.memo(key, resolve);
             assertEquals(2, resolves.get(), "a new router instance must clear the memo: resolves=" + resolves.get());
         } finally {

@@ -31,7 +31,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -89,7 +89,7 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
                                                     {"_tid":"/m/code","_value":"1.plus(mult(2))"}   | 1.plus(mult(2))
                                             """)
     public void testJSONTranslation(final String json, final String mtron) {
-        Router.writeToSpace("nat", INT_TYPE.predicate(is_(gt_(jnt(0)))));
+        Machine.writeToSpace("nat", INT_TYPE.predicate(is_(gt_(jnt(0)))));
         final ObjJSONSerializer translator = new ObjJSONSerializer();
         final Obj j_obj = translator.read(JsonParser.parseString(json));
         final Obj m_obj = ObjmtronSerializer.parse(mtron);

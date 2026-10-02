@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
@@ -131,7 +131,7 @@ public final class mcpMetatronBuilder {
             tools.at(uri(mTool.toolName(toolTid("write_memory"))), docWrap(instC(toolTid("write_memory").dom(ALL.maybe()).rng(ALL.maybeSome()),
                             rec(uri("current_memory"), ALL_TYPE,
                                     uri("previous_memory").maybe().asUri(), URI_TYPE), (lhs, inst) -> {
-                                final Obj previousMemory = Router.readFromSpace(inst.arg(f("previous_memory"), 1).uriValue());
+                                final Obj previousMemory = Machine.readFromSpace(inst.arg(f("previous_memory"), 1).uriValue());
                                 final fURI memoryBasePath = previousMemory.vid().retract(1).basePath();
                                 final Obj currentMemory = inst.arg(f("current_memory"), 0).vid(CommonUtil.mintShortUUID(memoryBasePath, true));
                                 return rel(previousMemory, currentMemory, REL_TID, CommonUtil.mintShortUUID(memoryBasePath, true));
@@ -143,7 +143,7 @@ public final class mcpMetatronBuilder {
                             rec(uri("memory_vid").maybe().asUri(), URI_TYPE), (lhs, inst) -> {
                                 final Obj memId = inst.arg(f("memory_vid"), 0);
                                 if (!memId.isNoObj())
-                                    return Router.readFromSpace(memId.uriValue());
+                                    return Machine.readFromSpace(memId.uriValue());
                                 else
                                     return noobj();
                             }), "noobj lhs", "the memory fragment by vid which can then be walked with >>",
@@ -175,7 +175,7 @@ public final class mcpMetatronBuilder {
                             toolTid("list_space").dom(ALL.maybe()).rng(ALL.maybe()),
                             lst(), (lhs, inst) -> {
                                 final Map<Obj, Obj> spaces = new LinkedHashMap<>();
-                                Router.global().spaces().jvm().entrySet().forEach(kv -> {
+                                Machine.current().spaces().jvm().entrySet().forEach(kv -> {
                                     spaces.put(kv.getKey(), uri(kv.getValue().<Space>as().pattern()));
                                 });
                                 return rec(spaces);
@@ -186,8 +186,8 @@ public final class mcpMetatronBuilder {
             tools.at(uri(mTool.toolName(toolTid("router_info"))), docWrap(instC(
                     toolTid("router_info").dom(ALL.maybe()).rng(ALL.maybe()),
                     lst(), (lhs, inst) -> {
-                        if (!Router.loaded()) return str("router not loaded");
-                        final Router router = Router.global();
+                        if (!Machine.loaded()) return str("router not loaded");
+                        final Machine router = Machine.current();
                         return rec(
                                 uri("router_vid"), uri(router.vid()),
                                 uri("router_tid"), uri(router.tid()),
@@ -206,7 +206,7 @@ public final class mcpMetatronBuilder {
                                     pattern = pattern.dom(inst.arg(f(DOM), 1).uriValue());
                                 if (inst.args().has(RNG))
                                     pattern = pattern.rng(inst.arg(f(RNG), 2).uriValue());
-                                return lst(Router.global().read(pattern.addQ(DOCQ))
+                                return lst(Machine.current().read(pattern.addQ(DOCQ))
                                         .stream()
                                         .map(Obj::asRec)
                                         .filter(o -> o.at(OBJ).isInst())
@@ -238,7 +238,7 @@ public final class mcpMetatronBuilder {
                                 final WebSocketRec server = new WebSocketRec(
                                         new LinkedHashMap<>(inst.args().jvm()),
                                         vid.extend("wsserver"), CommonUtil.mintShortUUID(vid, true));
-                                Router.writeToSpace(server);
+                                Machine.writeToSpace(server);
                                 return server;
                             }),
                     "noobj lhs",

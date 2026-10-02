@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.isa.mach.type.machine;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.m.space.stackSpace;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Compiler;
@@ -31,10 +33,12 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_SWARM_PROCESSOR_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -63,8 +67,46 @@ public class BasicMachine extends AbstractMachine {
         super(jvm, tid, vid);
     }
 
+    /**
+     * The outermost machine — pattern {@code ALL}, an index seeded with the {@code +/#} stack space, and no
+     * components of its own. This is what {@code BootLoader} instantiates as the root: every address resolves
+     * through it, and it delegates execution only if something is actually asked of it, which for the root
+     * never happens.
+     */
+    public BasicMachine(final fURI vid) {
+        super(vid);
+    }
+
+    public BasicMachine(final fURI pattern, final fURI vid) {
+        super(pattern, vid);
+    }
+
+    /**
+     * A machine's memory, seeded with the {@code +/#} stack space. The root is now minted from the template
+     * rather than built by the pattern/vid constructor, so this seed has to live here or the root loses the
+     * stack that the old constructor gave it.
+     */
+    private static BasicMemory rootMemory() {
+        final BasicMemory memory = new BasicMemory();
+        memory.spaces().jvm().put(uri("+/#"), new stackSpace(f("+/#")));
+        return memory;
+    }
+
     public static BasicMachine of(final fURI tid, final fURI vid) {
+        // Built once, here, and the slots close over them. Applying a slot therefore yields this instance rather
+        // than constructing one: `*/memory` reads a small template, `*/memory()` is the memory, and the accessor
+        // on the read path allocates nothing. A slot that constructed on apply would re-enter type resolution
+        // from inside `read` — the recursion that already bit MachineFrameTest once.
+        final BasicMemory memory = rootMemory();
+        final BasicNetwork network = new BasicNetwork();
         return new BasicMachine(mutableMap(
+                // a machine owns an address space: the pattern makes it the catch-all, and the index must be a
+                // live mutable rec from the start. `Rec.orElse` eagerly evaluates its fallback, so an absent
+                // index is a throwaway map and every addSpace into it would be silently lost.
+                uri(PATTERN), uri(ALL),
+                uri(QPROC), lst(QCollection.docQ()),
+                uri(MEMORY), instLambda(ignore -> memory),
+                uri(NETWORK), instLambda(ignore -> network),
                 uri(INSTSET), instLambda(ignore -> null),
                 uri(COMPILER), instLambda(ignore -> DefaultCompiler.fixpointScoringCompiler()),
                 uri(PROCESSOR), instLambda(ignore -> SwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null))), tid, vid);
@@ -125,8 +167,7 @@ public class BasicMachine extends AbstractMachine {
         return super.compiler(templateCompiler);
     }
 
-    @Override
-    public fURI tid() {
-        return MACH_MACHINE_TID;
-    }
+    // No tid() override: it used to hard-return MACH_MACHINE_TID, which made the reported tid disagree with
+    // the stored one for every construction path but of(). The stored tid is the truth — /sys/mach is built
+    // with MACH_MACHINE_TID, and the root with the router tid, exactly as before.
 }

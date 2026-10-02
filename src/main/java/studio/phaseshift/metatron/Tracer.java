@@ -20,7 +20,7 @@ package studio.phaseshift.metatron;
 
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -71,13 +71,13 @@ public enum Tracer {
     public static void enable(final Tracer... stages) {
         ACTIVE_TRACERS.addAll(List.of(stages));
         for (final Tracer stage : stages)
-            Router.writeToSpace(mInstSet.TRACER_TYPE_TID.extend("stack").extend(stage.name()), BOOL_TRUE);
+            Machine.writeToSpace(mInstSet.TRACER_TYPE_TID.extend("stack").extend(stage.name()), BOOL_TRUE);
     }
 
     public static void disable(final Tracer... stages) {
         List.of(stages).forEach(ACTIVE_TRACERS::remove);
         for (final Tracer stage : stages)
-            Router.writeToSpace(mInstSet.TRACER_TYPE_TID.extend("stack").extend(stage.name()), BOOL_FALSE);
+            Machine.writeToSpace(mInstSet.TRACER_TYPE_TID.extend("stack").extend(stage.name()), BOOL_FALSE);
     }
 
     public static Set<Tracer> getEnabled() {
