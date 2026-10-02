@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.math;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.type.InstSet.JREService;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Real;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -378,9 +379,15 @@ public class mathInstSet extends AbstractInstSet {
 
     private static Uri buildDatetimeUri(final int year, final int month, final int day,
                                         final int hour, final int minute, final int second, final int millis, final String tz) {
+        // The path MUST be absolute (leading empty segment) because this uri HAS an authority: the authority and
+        // the path are separated by `/`, and a relative path renders with no separator, gluing the day (port) to
+        // the hour — `//2026.10:221/26/…` for day 22 hour 21. Rendering is not just display here: the console and
+        // serializers round trip a datetime through its string, and the glued form REPARSES as a different (wrong)
+        // instant, so a lock expiry written correctly becomes an expiry in the past. datetimeToMillis already
+        // accepts either form (`off = path.get(0).isEmpty() ? 1 : 0`); this side must agree.
         return uri(fURI.of(null,
                 String.format("%04d.%02d", year, month), day,
-                List.of(String.format("%02d", hour), String.format("%02d", minute),
+                List.of("", String.format("%02d", hour), String.format("%02d", minute),
                         String.format("%02d", second), String.format("%03d", millis)),
                 null, null, Map.of("tz", tz), null), MATH_DATETIME_TID, null);
     }

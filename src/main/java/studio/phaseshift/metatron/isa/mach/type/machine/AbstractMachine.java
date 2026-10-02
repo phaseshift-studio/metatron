@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.mach.type.machine;
 
-import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
@@ -42,8 +41,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
@@ -106,7 +105,9 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
         this(seedConfig(pattern), MACH_MACHINE_TID, vid);
     }
 
-    /** the pattern/vid scaffolding, with the memory built once and closed over by its slot */
+    /**
+     * the pattern/vid scaffolding, with the memory built once and closed over by its slot
+     */
     private static Map<Obj, Obj> seedConfig(final fURI pattern) {
         final Memory memory = seedMemory();
         return new ConcurrentHashMap<>(Map.of(
@@ -262,7 +263,7 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
         temp = temp.c(furi.c()).q(furi.qMap());
         temp = furi.hasDom() ? temp.dom(this.redirect(furi.dom(), external)) : temp;
         temp = furi.hasRng() ? temp.rng(this.redirect(furi.rng(), external)) : temp;
-        return temp.resolve();
+        return temp;
     }
 
     @Override
@@ -477,7 +478,7 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
                         .filter(r -> r.hasPrefix(prefixed.toString()))
                         .findFirst();
                 if (target.isPresent())
-                    return target.get().c(suffix.c()).q(suffix.qMap()).resolve();
+                    return target.get().c(suffix.c()).q(suffix.qMap());
                 return prefixed.extend(suffix);
             }
         }
@@ -565,17 +566,18 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
 
     @Override
     public Machine clone() {
-        Space.Helper.noCloneWarning(this);
-        return this;
+        // A real shallow copy, as MObj already provides: the override exists only because Machine.clone() narrows the
+        // return type, and stubbing it made `Obj.vid(fURI)` (which IS this.clone(jvm, tid, vid)) a no-op on a
+        // machine — so `clone().selfVID(v)` silently retargeted the PARENT instead of minting a child.
+        // MObj.clone() already wraps the checked exception, so super.clone() here is unchecked.
+        return (Machine) super.clone();
     }
 
     @Override
     public Machine clone(final Object jvm, final fURI tid, final fURI vid) {
-        Space.Helper.noCloneWarning(this);
-        //this.jvm = jvm;
-        //this.tid = tid;
-        //this.vid = vid;
-        return this;
+        // set the fields on the COPY, never on this: that is what distinguishes vid() (copy then set) from
+        // selfVID() (set in place), and the difference is the whole point of the pair.
+        return (Machine) this.clone().self(jvm, tid, vid);
     }
 
     /*@Override

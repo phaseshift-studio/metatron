@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Stats;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -346,12 +345,12 @@ public interface Space extends Rec, Closeable {
             final Iterator<IdObj> current = directReader.apply(vid);
             if (current.hasNext() && vid.isNode()) {
                 writeComplete(obj, current.next().obj());
-                return directWriter.apply(vid, obj);
+                return directWriter.apply(vid.resolve(), obj);
             } else {
-                final Iterator<IdPoly> itty = Helper.locateBasePoly(space, vid.basePath()).iterator();
+                final Iterator<IdPoly> itty = Helper.locateBasePoly(space, vid.basePath().resolve()).iterator();
                 if (!itty.hasNext()) {
                     if (vid.isNode() || !obj.isPoly()) {
-                        return directWriter.apply(vid, obj);
+                        return directWriter.apply(vid.resolve(), obj);
                     } else if (obj.isRec()) { // branch
                         obj.recValue().forEach((key, value) -> {
                             Helper.resolveWrite(LOG, space, vid.extend(key.uriValue()), value, directWriter, directReader);
@@ -410,7 +409,7 @@ public interface Space extends Rec, Closeable {
          * path segments with {@code originalFuri.removePrefix(poly.furi())}.
          */
         public static Stream<IdPoly> locateBasePoly(final Space space, final fURI furi) {
-            fURI newFuri = furi.retract(1).asNode();
+            fURI newFuri = furi.retract(1).resolve().asNode();
             while (!newFuri.segments().isEmpty()) {
                 final List<IdPoly> polys = space.readStream(newFuri)
                         .filter(oi -> oi.obj().isPoly())
@@ -424,7 +423,7 @@ public interface Space extends Rec, Closeable {
         }
 
         public static IdObj locateBaseObj(final Space space, final fURI furi, final fURI stopURI) {
-            fURI newFuri = furi.retract(1).asNode();
+            fURI newFuri = furi.retract(1).resolve().asNode();
             while (!newFuri.segments().isEmpty()) {
                 space.logger().debug("checking %s", newFuri);
                 Obj obj = space.read(newFuri);

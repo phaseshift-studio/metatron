@@ -39,7 +39,6 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.gte_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.is_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -239,6 +238,14 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                 normalizedPath.add(segment);
             }
         }
+        // An authority implies an ABSOLUTE path: `scheme://host:port/path` separates authority from path with `/`,
+        // and a template can spell one WITHOUT that slash — `http://api.com:${>>port}${>>version}` — which leaves the
+        // path relative, so the rendering glues the port to the path (`:9000v1`). The marker goes back in here.
+        // This is the THIRD site of one rule (also buildDatetimeUri and the rec round trip in UriTest.testSelect):
+        // the general enforcement was tried in fURI.of and is DISABLED there — see the note in that file, it
+        // double-prepends the template path — so until that is resolved the rule lives at its call sites.
+        if (null != host && !normalizedPath.isEmpty() && !normalizedPath.getFirst().isEmpty())
+            normalizedPath.add(0, "");
         return fURI.of(scheme, host, finalPort, normalizedPath, template.c(), template.poly(), query, null);
     }
 
@@ -368,7 +375,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                     instC(PLUS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.jvm(lhs.uriValue().plus(inst.arg(0).uriValue()))),
                     instC(MULT_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.jvm(lhs.uriValue().mult(inst.arg(0).uriValue()))),
                     instC(SUM_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Uri) a).plus((Uri) b)).uriValue()), uri(NOOBJ)),
-                    instC(PROD_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(), (lhs, inst) -> lhs.stream().reduce(inst.seed(), (a, b) -> uri(a.uriValue().mult(b.uriValue()))), uri(".")),
+                    instC(PROD_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(), (lhs, inst) -> lhs.stream().reduce(inst.seed(), (a, b) -> uri(a.uriValue().mult(b.uriValue()))), uri("")),
                   /*  instC(URI_SCHEME_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().scheme())),
                     instC(URI_HOST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().host())),*/
                     instC(PATH_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().pathString())),

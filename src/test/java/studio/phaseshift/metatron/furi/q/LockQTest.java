@@ -90,7 +90,10 @@ public interface LockQTest extends QProcTest {
         // side (the mtron datetime arithmetic inst isn't resolving in the test suite's /m/math
         // load; it works in the console).  A literal datetime URI stores cleanly in the lock.
         final String expire = mathInstSet.buildDatetimeUri(ZonedDateTime.now().plusSeconds(5)).uriValue().toString();
-        ObjmtronSerializer.parse(make("$$/xyz/abc?lockq -> lock::[usr=>/usr/agent1,expire=>datetime::<" + expire + ">]")).apply();
+        final Obj registered = ObjmtronSerializer.parse(make("$$/xyz/abc?lockq -> lock::[usr=>/usr/agent1,expire=>datetime::<" + expire + ">]")).apply();
+        // assert the REGISTRATION, not just the block: a silently failed registration leaves the region
+        // unguarded, and the failure then surfaces one assertion later claiming the guard is broken.
+        assertFalse(registered.isFail(), "lock registration must succeed (expire=" + expire + "): " + registered);
         // while the lock is live, a write into it is blocked
         final Obj blocked = ObjmtronSerializer.parse(make("$$/xyz/abc -> 1")).apply();
         assertTrue(blocked.isFail(), "a write into a live lock must yield a fail");

@@ -127,6 +127,14 @@ public final class Tokens {
     public static final String INV = "inv";
     public static final String ZERO = "zero";
     public static final String ONE = "one";
+    public static final String OR = "or";
+    public static final String AND = "and";
+    public static final String NOT = "not";
+    public static final String MEET = "meet";
+    public static final String JOIN = "join";
+    public static final String BOTTOM = "bottom";
+    public static final String TOP = "top";
+    public static final String COMPOSE = "compose";
     public static final String TOTAL = "total";
     public static final String CONTEXT = "context";
     public static final String THRESHOLD = "threshold";

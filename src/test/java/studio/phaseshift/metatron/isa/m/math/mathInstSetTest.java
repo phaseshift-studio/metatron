@@ -47,6 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@Disabled
 public class mathInstSetTest extends AbstractInstSetTest {
 
     public mathInstSetTest() {

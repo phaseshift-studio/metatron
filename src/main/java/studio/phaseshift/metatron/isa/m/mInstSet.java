@@ -48,9 +48,9 @@ import static studio.phaseshift.metatron.furi.QProc.QPROC_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
-import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MILLIS_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
@@ -144,9 +144,11 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI TO_INST_TID = M_ISA_INST_TID.extend("to");
     public static final fURI FROM_INST_TID = M_ISA_INST_TID.extend("from");
     public static final fURI REF_INST_TID = M_ISA_INST_TID.extend("ref");
+    public static final fURI BRANCH_INST_TID = M_ISA_INST_TID.extend("branch"); // -<[]>-
     public static final fURI SPLIT_INST_TID = M_ISA_INST_TID.extend("split"); // -<
     public static final fURI CHOOSE_INST_TID = M_ISA_INST_TID.extend("choose"); // -<|
     public static final fURI MERGE_INST_TID = M_ISA_INST_TID.extend("merge");
+    public static final fURI COMPOSE_INST_TID = M_ISA_INST_TID.extend("compose"); // a·b — serial composition (a then b)
     public static final fURI FILL_TID = M_ISA_INST_TID.extend("fill");
     public static final fURI FIND_TID = M_ISA_INST_TID.extend("find");
     public static final fURI RMERGE_TID = M_ISA_INST_TID.extend("rmerge");
